@@ -1,0 +1,122 @@
+<div class="{{appCls}}">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><linearGradient id="brass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F8E4B8"/><stop offset=".6" stop-color="#E2BE7C"/><stop offset="1" stop-color="#BE8F49"/></linearGradient></defs>
+</svg>
+
+<sc-if value="{{pal}}">
+<div class="pback" onClick="{{closePal}}"></div>
+<div class="pal" role="dialog" aria-modal="true" aria-labelledby="pal-l" onClick="{{palBox}}">
+  <label id="pal-l" for="pal-in" class="sr">Search Ratchet</label>
+  <div class="pal-in">
+    <i class="ic l i-search" style="color: var(--ink3)"></i>
+    <input id="pal-in" ref="{{setPalIn}}" value="{{palQ}}" onChange="{{onPalQ}}" placeholder="Search experiments, projects, datasets and more" role="combobox" aria-expanded="true" aria-controls="pal-list" aria-activedescendant="{{palActive}}" aria-autocomplete="list" autoComplete="off" spellCheck="false">
+    <button class="icon-btn" tabIndex="-1" onClick="{{closePal}}" aria-label="Close search"><i class="ic i-close"></i></button>
+  </div>
+  <div class="pal-tabs" role="tablist" aria-label="Search in">
+    <sc-for list="{{palScopes}}" as="x" hint-placeholder-count="7"><button class="{{x.cls}}" role="tab" tabIndex="-1" aria-selected="{{x.sel}}" onClick="{{x.pick}}">{{x.label}}</button></sc-for>
+  </div>
+  <div class="pal-list" id="pal-list" role="listbox" aria-label="Results">
+    <sc-for list="{{palRows}}" as="g" hint-placeholder-count="3">
+      <div role="group" aria-label="{{g.title}}">
+        <div class="pgh"><span>{{g.title}}</span><sc-if value="{{g.more}}" hint-placeholder-val="{{ true }}"><button class="textbtn sm" tabIndex="-1" onClick="{{g.showMore}}">{{g.moreLabel}}<i class="ic s i-arrow"></i></button></sc-if></div>
+        <sc-for list="{{g.rows}}" as="x" hint-placeholder-count="4">
+          <div class="{{x.cls}}" id="{{x.dom}}" role="option" aria-selected="{{x.on}}" onMouseMove="{{x.hover}}" onClick="{{x.open}}">
+            <span class="pi" style="color: {{x.color}}"><i class="ic {{x.ic}}"></i></span>
+            <span class="pt"><span class="pn ell">{{x.a}}<sc-if value="{{x.hasMatch}}"><span class="hm">{{x.b}}</span></sc-if>{{x.c}}</span><span class="pc ell">{{x.ca}}<sc-if value="{{x.hasCm}}"><span class="hm">{{x.cb}}</span></sc-if>{{x.cc}}</span></span>
+            <sc-if value="{{x.hasHint}}"><span class="ph">{{x.hint}}</span></sc-if>
+            <sc-if value="{{x.on}}"><button class="icon-btn" tabIndex="-1" onClick="{{x.actions}}" aria-label="Actions for {{x.aria}}"><i class="ic s i-more"></i></button><span class="kc" aria-hidden="true">↵</span></sc-if>
+          </div>
+        </sc-for>
+      </div>
+    </sc-for>
+    <sc-if value="{{palEmpty}}"><div class="pal-empty"><span class="serif" style="font-size: 24px">{{palEmptyTxt}}</span><span class="sm mut">Try a shorter word, or change the type above.</span><button class="btn" tabIndex="-1" onClick="{{startAbout}}">Start a new experiment about it</button></div></sc-if>
+  </div>
+  <sc-if value="{{palActOpen}}"><div class="menu pal-act" role="menu" aria-label="Actions for {{palActTitle}}"><span class="lbl" style="padding: 8px 10px 4px">Actions</span><sc-for list="{{palActRows}}" as="x" hint-placeholder-count="3"><button class="{{x.cls}}" role="menuitem" tabIndex="-1" onMouseEnter="{{x.hover}}" onClick="{{x.pick}}">{{x.label}}</button></sc-for></div></sc-if>
+  <div class="pal-foot" aria-hidden="true"><span>Close <b class="kc">Esc</b></span><span>Change type <b class="kc">←</b><b class="kc">→</b></span><span>Open <b class="kc">↵</b></span><span>Actions <b class="kc">⌥↵</b></span><span class="push">Compose <b class="kc">Tab</b></span></div>
+</div>
+</sc-if>
+
+<sc-if value="{{hasMenu}}"><div class="backdrop" onClick="{{closeMenu}}"></div></sc-if>
+
+<nav class="side" aria-label="Main">
+  <div class="side-top">
+    <div class="brand"><svg aria-hidden="true" width="36" height="22" viewBox="218 338 600 369"><path d="M397.8 434.8L397.8 466.2A31.5 31.5 0 0 1 366.4 434.8Z" style="fill: var(--mark)" fill-opacity="0.12"/><path d="M407.7 434.8L407.7 466.2A31.5 31.5 0 0 0 439.2 434.8Z" style="fill: var(--mark)" fill-opacity="0.18"/><path d="M361.6 424.9L439.2 424.9A77.6 77.6 0 0 0 361.6 347.3Z" style="fill: var(--mark)" fill-opacity="0.28"/><path d="M351.7 471.0L227.9 471.0A123.8 123.8 0 0 1 351.7 347.3Z" style="fill: var(--mark)" fill-opacity="0.42"/><path d="M444.0 480.9L444.0 697.0A216.1 216.1 0 0 1 227.9 480.9Z" style="fill: var(--mark)" fill-opacity="0.6"/><path d="M453.9 342.5L453.9 697.0A354.5 354.5 0 0 0 808.4 342.5Z" fill="url(#brass)"/></svg>Ratchet</div>
+    <div class="col" style="gap: 2px">
+      <button class="nav" onClick="{{openPal}}" aria-haspopup="dialog"><i class="ic i-search"></i>Search<span class="kc" style="margin-left: auto" aria-hidden="true">⌘K</span></button>
+      <button class="{{navProjectsCls}}" onClick="{{goProjects}}"><i class="ic i-folder"></i>Projects</button>
+      <button class="{{navValueCls}}" onClick="{{goValue}}"><i class="ic i-chart"></i>Dashboard</button>
+      <button class="{{navCustomizeCls}}" onClick="{{goCustomize}}"><i class="ic i-sliders"></i>Customize</button>
+      <div class="pop">
+        <button class="{{navMoreCls}}" onClick="{{toggleMore}}" aria-expanded="{{moreOpen}}" aria-haspopup="menu"><i class="ic i-more"></i>More</button>
+        <sc-if value="{{moreOpen}}">
+          <div class="menu dn" role="menu" style="left: 0; right: 0; min-width: 0">
+            <button class="mi" role="menuitem" onClick="{{goHistory}}">Run history</button>
+            <button class="mi" role="menuitem" onClick="{{goSettings}}">Settings</button>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+    <button class="{{newCls}}" onClick="{{goNew}}"><i class="ic s i-plus"></i>New experiment</button>
+  </div>
+
+  <div class="side-scroll">
+    <sc-if value="{{hasPinned}}" hint-placeholder-val="{{ true }}">
+      <div class="col" style="gap: 2px">
+        <span class="lbl" style="padding: 4px 10px 6px">Pinned</span>
+        <sc-for list="{{pinned}}" as="x" hint-placeholder-count="1">
+          <div class="srow">
+            <button class="{{x.cls}}" onClick="{{x.open}}" style="padding-left: 10px"><span class="t">{{x.name}}</span><span class="tail"><sc-if value="{{x.hasCnt}}"><span class="cnt" title="{{x.cntTip}}">{{x.cnt}}</span></sc-if><span role="img" aria-label="{{x.stTip}}" title="{{x.stTip}}" class="{{x.stCls}}" style="color: {{x.stColor}}"></span></span></button>
+            <button class="pinb" onClick="{{x.pin}}" aria-label="{{x.pinTip}}" title="{{x.pinTip}}"><i class="ic s i-pin"></i></button>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+    <sc-for list="{{groups}}" as="g" hint-placeholder-count="3">
+      <sc-if value="{{g.show}}" hint-placeholder-val="{{ true }}">
+        <div class="col" style="gap: 2px">
+          <div class="gh">
+            <button class="rec" onClick="{{g.toggle}}" aria-expanded="{{g.open}}"><i class="ic s chev i-chev" style="transform: {{g.rot}}"></i><span class="t">{{g.name}}</span></button>
+            <sc-if value="{{g.canNew}}" hint-placeholder-val="{{ true }}"><button class="plus" onClick="{{g.plus}}" aria-label="{{g.plusTip}}" title="{{g.plusTip}}"><i class="ic s i-plus"></i></button></sc-if>
+          </div>
+          <sc-for list="{{g.items}}" as="x" hint-placeholder-count="3">
+            <div class="srow">
+              <button class="{{x.cls}}" onClick="{{x.open}}"><span class="t">{{x.name}}</span><span class="tail"><sc-if value="{{x.hasCnt}}"><span class="cnt" title="{{x.cntTip}}">{{x.cnt}}</span></sc-if><span role="img" aria-label="{{x.stTip}}" title="{{x.stTip}}" class="{{x.stCls}}" style="color: {{x.stColor}}"></span></span></button>
+              <button class="pinb" onClick="{{x.pin}}" aria-label="{{x.pinTip}}" title="{{x.pinTip}}"><i class="ic s i-pin"></i></button>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+    </sc-for>
+  </div>
+
+  <div class="side-foot">
+    <sc-if value="{{userOpen}}">
+      <div class="menu up" role="menu" style="bottom: calc(100% - 4px); left: 12px; right: 12px">
+        <div class="col" style="padding: 8px 10px 6px; gap: 2px"><span class="sm mut">Signed in to</span><span class="rw g8 mono xs"><span aria-hidden="true" class="dot" style="background: var(--good)"></span>{{hostName}}</span></div>
+        <div class="msep"></div>
+        <button class="mi" role="menuitem" onClick="{{goSettings}}"><i class="ic i-sliders"></i>Settings</button>
+        <button class="mi" role="menuitem" onClick="{{toggleTheme}}"><sc-if value="{{isDark}}" hint-placeholder-val="{{ true }}"><i class="ic i-sun"></i></sc-if><sc-if value="{{isLight}}"><i class="ic i-moon"></i></sc-if>{{themeLabel}}</button>
+        <div class="msep"></div>
+        <a class="mi" role="menuitem" href="SignIn.dc.html"><i class="ic i-out"></i>Sign out</a>
+      </div>
+    </sc-if>
+    <button class="nav" onClick="{{toggleUser}}" aria-expanded="{{userOpen}}" aria-haspopup="menu" style="height: 48px; gap: 12px">
+      <span aria-hidden="true" class="avatar round serif" style="width: 30px; height: 30px; font-size: 15px; font-weight: 400">P</span>
+      <span class="col grow" style="line-height: 1.25"><span style="color: var(--ink)">Priya Raman</span><span class="xs mut">via Okta</span></span>
+      <i class="ic s mut i-more"></i>
+    </button>
+  </div>
+</nav>
+
+<main class="main">
+  <div class="top">
+    <div class="crumbs">
+      <sc-for list="{{crumbs}}" as="c" hint-placeholder-count="2">
+        <span class="rw g8" style="min-width: 0">
+          <sc-if value="{{c.sep}}"><span class="mut" aria-hidden="true">/</span></sc-if>
+          <sc-if value="{{c.link}}"><button class="textbtn" onClick="{{c.go}}">{{c.label}}</button></sc-if>
+          <sc-if value="{{c.txt}}" hint-placeholder-val="{{ true }}"><span class="ell" style="font-weight: 500">{{c.label}}</span></sc-if>
+        </span>
+      </sc-for>
+    </div>
+    <div class="rw g8"><button class="tsearch" onClick="{{openPal}}" aria-label="Search" aria-haspopup="dialog"><i class="ic s i-search"></i>Search<span class="kc" aria-hidden="true">⌘K</span></button><sc-if value="{{topNew}}"><button class="btn sm" onClick="{{topNewGo}}"><i class="ic s i-plus"></i>New experiment</button></sc-if></div>
+  </div>

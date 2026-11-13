@@ -1,0 +1,239 @@
+
+  <!-- CUSTOMIZE -->
+  <sc-if value="{{isCustomize}}">
+    <section class="page cust">
+      <div class="hd"><h1 class="h1">Customize</h1></div>
+      <div class="ctl">
+        <div class="ctabs" role="tablist" aria-label="Customize"><sc-for list="{{cTabs}}" as="x" hint-placeholder-count="5"><button class="{{x.cls}}" role="tab" aria-selected="{{x.sel}}" onClick="{{x.pick}}">{{x.label}}</button></sc-for></div>
+        <span class="vdiv" aria-hidden="true"></span>
+        <div class="segs" role="group" aria-label="View"><sc-for list="{{cViews}}" as="x" hint-placeholder-count="2"><button class="{{x.cls}}" onClick="{{x.pick}}">{{x.label}}</button></sc-for></div>
+        <div class="ctools">
+          <label class="sfield"><i class="ic i-search" aria-hidden="true"></i><input value="{{cQuery}}" onChange="{{onCQuery}}" placeholder="{{cPlaceholder}}" aria-label="Search"></label>
+          <div class="pop">
+            <button class="{{filterCls}}" onClick="{{toggleFilter}}" aria-label="{{filterTip}}" aria-expanded="{{filterOpen}}" aria-haspopup="menu" title="{{filterTip}}"><i class="ic i-filter"></i></button>
+            <sc-if value="{{filterOpen}}"><div class="menu dr" role="menu" style="min-width: 220px; max-height: 560px; overflow-y: auto">
+              <sc-for list="{{filterGroups}}" as="g" hint-placeholder-count="3"><span class="lbl" style="padding: 8px 10px 4px">{{g.title}}</span><sc-for list="{{g.items}}" as="x" hint-placeholder-count="4"><button class="mi" style="min-height: 32px" role="menuitemradio" onClick="{{x.pick}}" aria-checked="{{x.on}}"><span>{{x.label}}</span><sc-if value="{{x.on}}"><i class="ic s i-check" style="margin-left: auto; color: var(--accent)"></i></sc-if></button></sc-for></sc-for>
+            </div></sc-if>
+          </div>
+          <div class="pop">
+            <button class="icon-btn" onClick="{{toggleSort}}" aria-label="{{sortTip}}" title="{{sortTip}}" aria-expanded="{{sortOpen}}" aria-haspopup="menu"><i class="ic i-sort"></i></button>
+            <sc-if value="{{sortOpen}}"><div class="menu dr" role="menu" style="min-width: 190px">
+              <span class="lbl" style="padding: 8px 10px 4px">Sort by</span>
+              <sc-for list="{{sortOpts}}" as="x" hint-placeholder-count="3"><button class="mi" role="menuitemradio" onClick="{{x.pick}}" aria-checked="{{x.on}}"><span>{{x.label}}</span><sc-if value="{{x.on}}"><i class="ic s i-check" style="margin-left: auto; color: var(--accent)"></i></sc-if></button></sc-for>
+            </div></sc-if>
+          </div>
+          <div class="pop">
+            <button class="btn primary sm" onClick="{{toggleAdd}}" aria-expanded="{{addOpen}}" aria-haspopup="menu"><i class="ic s i-plus"></i>Add<i class="ic s i-chev" style="transform: rotate(90deg)"></i></button>
+            <sc-if value="{{addOpen}}"><div class="menu dr" role="menu" style="min-width: 280px">
+              <sc-for list="{{addItems}}" as="x" hint-placeholder-count="2"><button class="mi" role="menuitem" onClick="{{x.go}}">{{x.label}}</button></sc-for>
+            </div></sc-if>
+          </div>
+        </div>
+      </div>
+      <sc-if value="{{hasFilterTags}}"><div class="rw g8 sm wrap"><sc-for list="{{filterTags}}" as="x" hint-placeholder-count="1"><span class="tag">{{x.t}}</span></sc-for><button class="textbtn" onClick="{{clearFilters}}">Clear filters</button></div></sc-if>
+      <sc-if value="{{hasNotice}}"><span class="notice" role="status"><i class="ic s i-check"></i>{{cNotice}}</span></sc-if>
+
+      <sc-if value="{{hasForm}}">
+        <div class="card" style="display: flex; flex-direction: column; gap: 16px">
+          <span class="sech">{{formTitle}}</span>
+          <div class="rw wrap g12" style="align-items: flex-start">
+            <sc-for list="{{formFields}}" as="f" hint-placeholder-count="2"><label class="fld" style="flex: 1 1 220px"><span class="cap">{{f.label}}</span>
+              <sc-if value="{{f.isLine}}" hint-placeholder-val="{{ true }}"><input class="{{f.mono}}" value="{{f.value}}" onChange="{{f.change}}" placeholder="{{f.ph}}"></sc-if>
+              <sc-if value="{{f.isArea}}"><textarea class="in" rows="4" value="{{f.value}}" onChange="{{f.change}}" placeholder="{{f.ph}}" style="padding: 8px 12px; resize: vertical; min-height: 96px"></textarea></sc-if>
+            </label></sc-for>
+          </div>
+          <sc-if value="{{formHasPicks}}"><div class="col" style="max-height: 220px; overflow-y: auto"><sc-for list="{{formPicks}}" as="x" hint-placeholder-count="4"><button class="chk" onClick="{{x.toggle}}" aria-pressed="{{x.on}}"><span aria-hidden="true" class="box" style="background: {{x.fill}}"></span><span class="grow">{{x.name}}</span><span class="xs mut">{{x.meta}}</span></button></sc-for></div></sc-if>
+          <div class="rw wrap g12"><button class="btn primary" onClick="{{submitForm}}">{{formSubmit}}</button><button class="btn" onClick="{{closeForms}}">Cancel</button><sc-if value="{{hasHelp}}"><span class="sm mut">{{formHelp}}</span></sc-if></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{isYours}}" hint-placeholder-val="{{ true }}">
+        <div class="col g16">
+          <div class="table"><div style="min-width: 680px">
+            <sc-for list="{{yourRows}}" as="x" hint-placeholder-count="4">
+              <div class="grid" style="grid-template-columns: 44px minmax(0, 2.4fr) minmax(0, 1.6fr) 100px 110px">
+                <span class="tile"><span class="gi {{x.gl}}"></span></span>
+                <span class="col" style="gap: 1px; min-width: 0"><span class="serif ell" style="font-size: 19px">{{x.name}}</span><span class="xs mut ell">{{x.desc}}</span></span>
+                <span class="sm ink2 ell">{{x.meta}}</span>
+                <span class="rw g8 sm"><i class="dot" style="background: {{x.stColor}}"></i>{{x.status}}</span>
+                <button class="btn sm" onClick="{{x.open}}" aria-label="Configure {{x.name}}">Configure</button>
+              </div>
+            </sc-for>
+          </div></div>
+          <sc-if value="{{yoursNone}}"><div class="empty"><span class="h2">{{yoursEmptyTxt}}</span><span class="ink2 sm" style="max-width: 420px">{{yoursEmptyHint}}</span><button class="btn primary" onClick="{{goDiscover}}" style="margin-top: 8px">Open Discover</button></div></sc-if>
+          <sc-if value="{{yoursNoMatch}}"><span class="mut">Nothing matches your search or filters.</span></sc-if>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{isDiscover}}">
+        <div class="col g32">
+          <sc-if value="{{hasBanner}}" hint-placeholder-val="{{ true }}">
+            <div class="fb" style="--t: {{bn.tint}}">
+              <div class="txt">
+                <span class="eyebrow">{{bnEyebrow}}</span>
+                <h2 class="nm0">{{bn.name}}</h2>
+                <span class="ink2">{{bn.desc}}</span>
+                <div class="rw g12 wrap" style="padding-top: 8px">
+                  <sc-if value="{{bn.notAdded}}" hint-placeholder-val="{{ true }}"><button class="btn primary" onClick="{{bnAdd}}" aria-label="{{bn.addLabel}}">Add</button></sc-if><sc-if value="{{bn.added}}"><span class="rw g8" style="color: var(--good); font-weight: 500; min-height: 36px"><i class="ic i-check"></i>Added</span></sc-if>
+                  <sc-if value="{{bnCanOpen}}"><button class="btn" onClick="{{bnOpen}}">See what is inside</button></sc-if>
+                </div>
+              </div>
+              <div class="ill" aria-hidden="true">
+                <sc-if value="{{illE}}"><span class="il" style="left: 8px; top: 6px; width: 214px; height: 128px; border-radius: 14px"></span><span class="il-ln" style="left: 24px; width: 182px; top: 76px; border-top-style: dashed"></span><span style="position: absolute; left: 24px; width: 182px; top: 58px; height: 36px; border-radius: 4px; background: var(--t); opacity: .2"></span><span class="il-d" style="left: 34px; top: 52px"></span><span class="il-d" style="left: 70px; top: 82px"></span><span class="il-d" style="left: 106px; top: 66px"></span><span class="il-d" style="left: 140px; top: 90px"></span><span class="il-ok" style="left: 170px; top: 90px"><i class="ic s i-check"></i></span><span class="il-ln" style="left: 36px; width: 0; top: 26px; opacity: 0"></span></sc-if>
+                <sc-if value="{{illS}}"><span class="il" style="left: 36px; top: 16px; width: 112px; height: 108px; transform: rotate(-7deg); opacity: .45"></span><span class="il" style="left: 62px; top: 10px; width: 118px; height: 112px; transform: rotate(3deg); background: var(--raised)"></span><span class="il-ln" style="left: 82px; top: 36px; width: 66px; transform: rotate(3deg)"></span><span class="il-ln" style="left: 82px; top: 54px; width: 80px; transform: rotate(3deg)"></span><span class="il-ln" style="left: 82px; top: 72px; width: 52px; transform: rotate(3deg)"></span><span class="il-ok" style="left: 160px; top: 88px"><i class="ic s i-check"></i></span></sc-if>
+                <sc-if value="{{illP}}"><span class="il" style="left: 30px; top: 14px; width: 54px; height: 54px"></span><span class="il" style="left: 92px; top: 14px; width: 54px; height: 54px"></span><span class="il" style="left: 30px; top: 76px; width: 54px; height: 54px"></span><span class="il" style="left: 112px; top: 74px; width: 54px; height: 54px; transform: rotate(12deg); background: color-mix(in srgb, var(--t) 28%, transparent)"></span><span class="il-ok" style="left: 158px; top: 6px"><i class="ic s i-plus"></i></span></sc-if>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{showCar}}">
+            <div class="col g16">
+              <div class="car" style="--t: {{carTint}}" role="group" aria-roledescription="carousel" aria-label="Featured connectors">
+                <button class="carb l" onClick="{{carPrev}}" aria-label="Previous slide"><i class="ic i-back"></i></button>
+                <span class="eyebrow">Featured connectors</span>
+                <h2>{{carTitle}}</h2>
+                <span class="ink2" style="max-width: 520px">{{carDesc}}</span>
+                <div class="cartiles" aria-hidden="true"><sc-for list="{{carTiles}}" as="x" hint-placeholder-count="4"><span class="cgl" style="transform: translateY({{x.off}})"><span class="mg">{{x.mg}}</span></span></sc-for></div>
+                <button class="btn" onClick="{{carExplore}}" aria-label="{{carExploreLabel}}">Explore</button>
+                <button class="carb r" onClick="{{carNext}}" aria-label="Next slide"><i class="ic i-chev"></i></button>
+              </div>
+              <div class="dots" role="group" aria-label="Featured slides"><sc-for list="{{carDots}}" as="x" hint-placeholder-count="4"><button class="{{x.cls}}" onClick="{{x.pick}}" aria-label="{{x.label}}"></button></sc-for></div>
+            </div>
+          </sc-if>
+          <sc-for list="{{secs}}" as="s" hint-placeholder-count="2">
+            <div class="col g16">
+              <div class="rw between g12"><div class="rw g12"><h2 class="h2">{{s.title}}</h2><sc-if value="{{s.hasBadge}}"><span class="cnb">{{s.badge}}</span></sc-if></div><sc-if value="{{s.toggle}}" hint-placeholder-val="{{ true }}"><button class="textbtn" onClick="{{toggleAll}}">{{allLabel}}<i class="ic s i-arrow"></i></button></sc-if></div>
+              <div class="cg2">
+                <sc-for list="{{s.cards}}" as="x" hint-placeholder-count="6">
+                  <div class="cc2">
+                    <sc-if value="{{x.notAdded}}" hint-placeholder-val="{{ true }}"><button class="addsq" onClick="{{x.add}}" aria-label="{{x.addLabel}}" title="{{x.addLabel}}"><i class="ic i-plus"></i></button></sc-if><sc-if value="{{x.added}}"><span class="addsq done" role="img" aria-label="Added" title="Added"><i class="ic i-check"></i></span></sc-if>
+                    <span class="tile"><sc-if value="{{x.hasGl}}" hint-placeholder-val="{{ true }}"><i class="gi {{x.gl}}"></i></sc-if><sc-if value="{{x.hasMg}}"><span class="mg">{{x.mg}}</span></sc-if></span>
+                    <div class="bd">
+                      <span class="nmw"><sc-if value="{{x.canOpen}}"><button class="nm" onClick="{{x.open}}">{{x.name}}</button></sc-if><sc-if value="{{x.plain}}" hint-placeholder-val="{{ true }}"><span class="nm">{{x.name}}</span></sc-if><sc-if value="{{x.verified}}"><i class="ic vf i-verify" role="img" aria-label="Made by Ratchet" title="Made by Ratchet"></i></sc-if></span>
+                      <span class="sm ink2 clamp2">{{x.desc}}</span>
+                      <span class="xs mut ell">{{x.meta}}</span>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+          <span class="mut">{{discEmpty}}</span>
+        </div>
+      </sc-if>
+    </section>
+  </sc-if>
+
+  <!-- DETAIL -->
+  <sc-if value="{{isDetail}}">
+    <section class="page">
+      <button class="textbtn" onClick="{{dBack}}" style="align-self: flex-start"><i class="ic s i-back"></i>{{dBackLabel}}</button>
+      <div class="rw between wrap g16">
+        <div class="rw g16" style="min-width: 0; flex: 1 1 360px">
+          <span class="tile lg"><span class="gi {{dGl}}"></span></span>
+          <div class="col g4" style="min-width: 0"><h1 class="h1" style="font-size: 36px">{{dName}}</h1><span class="ink2">{{dDesc}}</span><sc-if value="{{dHasMeta}}"><span class="xs mut">{{dMeta}}</span></sc-if><span class="rw g8 sm" style="color: {{dStatusColor}}"><i class="dot" style="background: {{dStatusColor}}"></i>{{dStatus}}</span></div>
+        </div>
+        <div class="rw g8 wrap">
+          <sc-if value="{{dReconnect}}"><button class="btn primary" onClick="{{reconnect}}">Reconnect</button></sc-if>
+          <sc-if value="{{dIsSkill}}"><sc-if value="{{skYours}}" hint-placeholder-val="{{ true }}"><span class="rw g8"><span class="xs mut">For {{skProject}}</span><span class="segs" role="group" aria-label="On for this project"><button class="{{skOnCls}}" onClick="{{skSetOn}}">On</button><button class="{{skOffCls}}" onClick="{{skSetOff}}">Off</button></span><button class="btn danger" onClick="{{skRemove}}">Remove</button></span></sc-if><sc-if value="{{skNotYours}}"><button class="btn primary" onClick="{{skAdd}}"><i class="ic s i-plus"></i>Add skill</button></sc-if></sc-if>
+          <sc-if value="{{dIsPlugin}}"><sc-if value="{{plYours}}" hint-placeholder-val="{{ true }}"><button class="btn danger" onClick="{{plAskRemove}}">Remove plugin</button></sc-if><sc-if value="{{plNotYours}}"><span class="rw g12"><span class="xs mut">{{plAddNote}}</span><button class="btn primary" onClick="{{plAdd}}"><i class="ic s i-plus"></i>Add plugin</button></span></sc-if></sc-if>
+          <sc-if value="{{dIsEval}}" hint-placeholder-val="{{ true }}"><button class="btn primary" onClick="{{recalibrate}}">Recalibrate</button></sc-if>
+          <sc-if value="{{dIsAgent}}"><span class="segs" role="group" aria-label="Enabled"><button class="{{aOnCls}}" onClick="{{aSetOn}}">On</button><button class="{{aOffCls}}" onClick="{{aSetOff}}">Off</button></span></sc-if>
+          <sc-if value="{{canDisconnect}}"><button class="btn danger" onClick="{{disconnect}}">Disconnect</button></sc-if>
+        </div>
+      </div>
+      <sc-if value="{{dHasNotice}}"><span class="notice" role="status"><i class="ic s i-check"></i>{{dNotice}}</span></sc-if>
+
+      <sc-if value="{{dIsSkill}}">
+        <span class="lock"><i class="ic s i-lock"></i>Agents read this. The evaluator does not.</span>
+        <div class="col g8"><h2 class="sech">About this skill</h2>
+          <div class="card" style="padding: 4px 20px"><sc-for list="{{skKv}}" as="x" hint-placeholder-count="5"><div class="kv"><span>{{x.k}}</span><span>{{x.v}}</span></div></sc-for></div></div>
+        <div class="col g8"><h2 class="sech">Files</h2>
+          <div class="skgrid">
+            <div class="card" style="padding: 8px"><sc-for list="{{skTree}}" as="f" hint-placeholder-count="2"><div class="col" style="gap: 2px; padding-bottom: 6px"><span class="mono xs mut" style="padding: 8px 10px 4px">{{f.file}}</span><sc-for list="{{f.items}}" as="x" hint-placeholder-count="2"><button class="{{x.cls}}" onClick="{{x.pick}}">{{x.h}}</button></sc-for></div></sc-for></div>
+            <sc-if value="{{hasSkSel}}" hint-placeholder-val="{{ true }}"><div class="card col g12" style="padding: 20px 24px"><span class="mono xs mut">{{skF}}</span><h3 class="h2" style="margin: 0">{{skH}}</h3><p style="margin: 0; font-size: 15.5px; line-height: 1.65; max-width: 62ch">{{skBody}}</p></div></sc-if>
+          </div></div>
+      </sc-if>
+
+      <sc-if value="{{dIsPlugin}}">
+        <sc-if value="{{plRemoving}}"><div class="card col g12"><span style="font-weight: 500">Remove this plugin?</span><span class="ink2 sm">Keep the evaluations, skills and connectors it added, or remove them with it. Items that experiments use stay either way.</span><div class="rw wrap g8"><button class="btn" onClick="{{plKeep}}">Keep its items</button><button class="btn danger" onClick="{{plDrop}}">Remove its items too</button><button class="btn ghost" onClick="{{plCancel}}">Cancel</button></div></div></sc-if>
+        <sc-for list="{{plSecs}}" as="g" hint-placeholder-count="3">
+          <div class="col g8"><h2 class="sech">{{g.title}}</h2>
+            <div class="table"><div style="min-width: 560px">
+              <sc-for list="{{g.rows}}" as="x" hint-placeholder-count="3">
+                <div class="grid" style="grid-template-columns: 44px minmax(0, 1fr) 110px 72px">
+                  <span class="tile"><sc-if value="{{x.hasGl}}" hint-placeholder-val="{{ true }}"><i class="gi {{x.gl}}"></i></sc-if><sc-if value="{{x.hasMg}}"><span class="mg">{{x.mg}}</span></sc-if></span>
+                  <span class="col" style="gap: 1px; min-width: 0"><span class="serif ell" style="font-size: 18px">{{x.name}}</span><span class="xs mut ell">{{x.desc}}</span></span>
+                  <span class="rw g8 sm"><i class="dot" style="background: {{x.stColor}}"></i>{{x.stTxt}}</span>
+                  <span><sc-if value="{{x.canOpen}}" hint-placeholder-val="{{ true }}"><button class="btn sm" onClick="{{x.open}}" aria-label="Open {{x.name}}">Open</button></sc-if></span>
+                </div>
+              </sc-for>
+            </div></div>
+          </div>
+        </sc-for>
+      </sc-if>
+
+      <sc-if value="{{dIsEval}}" hint-placeholder-val="{{ true }}">
+        <div class="col g8"><h2 class="sech">What it measures</h2>
+          <div class="card" style="padding: 4px 20px"><sc-for list="{{eKv}}" as="x" hint-placeholder-count="5"><div class="kv"><span>{{x.k}}</span><span class="{{x.mono}}">{{x.v}}</span></div></sc-for></div></div>
+        <div class="col g8"><h2 class="sech">Calibration</h2>
+          <div class="card" style="padding: 4px 20px"><sc-for list="{{eCal}}" as="x" hint-placeholder-count="3"><div class="kv"><span>{{x.k}}</span><span>{{x.v}}</span></div></sc-for></div></div>
+        <div class="col g8"><h2 class="sech">Holdout dataset</h2>
+          <div class="card rw wrap between g12"><span>{{eHold}}</span><span class="lock"><i class="ic s i-lock"></i>Restricted to evaluator</span></div></div>
+      </sc-if>
+      <sc-if value="{{dIsAgent}}">
+        <div class="col g8"><h2 class="sech">Model</h2>
+          <div class="card" style="padding: 4px 20px"><sc-for list="{{aKv}}" as="x" hint-placeholder-count="2"><div class="kv"><span>{{x.k}}</span><span>{{x.v}}</span></div></sc-for>
+            <div class="kv" style="align-items: center"><span>Model</span><input class="in mono" value="{{aModel}}" onChange="{{onAModel}}" aria-label="Model" style="max-width: 320px; font-size: 13px"></div>
+            <div class="kv" style="align-items: center"><span>Max parallel</span><span class="rw" style="border: 1px solid var(--line2); border-radius: 999px; padding: 2px; width: fit-content"><button class="icon-btn" onClick="{{aParDown}}" aria-label="Fewer in parallel">−</button><span class="mono" style="min-width: 28px; text-align: center">{{aPar}}</span><button class="icon-btn" onClick="{{aParUp}}" aria-label="More in parallel">+</button></span></div>
+          </div></div>
+      </sc-if>
+      <sc-if value="{{dHasExp}}" hint-placeholder-val="{{ true }}">
+        <div class="col g8"><h2 class="sech">Experiments using it</h2>
+          <div class="table"><div style="min-width: 520px"><sc-for list="{{dExp}}" as="x" hint-placeholder-count="2"><button class="grid" onClick="{{x.open}}" style="grid-template-columns: 1.6fr 1.4fr 1.2fr"><span class="serif" style="font-size: 18px">{{x.name}}</span><span class="sm ink2">{{x.project}}</span><span class="stc" style="color: {{x.stColor}}"><i class="{{x.stCls}}"></i><b>{{x.stLabel}}</b></span></button></sc-for></div></div>
+          <sc-if value="{{dExpEmpty}}"><span class="mut sm">Nothing uses this yet.</span></sc-if></div>
+      </sc-if>
+      <sc-if value="{{dIsAgent}}">
+        <div class="col g8"><h2 class="sech">Recent trials</h2>
+          <div class="table"><div style="min-width: 620px"><sc-for list="{{aTrials}}" as="x" hint-placeholder-count="3"><button class="grid" onClick="{{x.open}}" style="grid-template-columns: 1.2fr 2.4fr 1.2fr 1fr"><span class="serif" style="font-size: 18px">{{x.opt}}</span><span class="sm ink2">{{x.tried}}</span><span class="mono xs">{{x.result}}</span><span class="rw g8 sm"><i class="dot" style="background: {{x.color}}"></i>{{x.out}}</span></button></sc-for></div></div>
+          <sc-if value="{{aTrialsEmpty}}"><span class="mut sm">No measured trials yet.</span></sc-if></div>
+      </sc-if>
+
+      <sc-if value="{{dIsCData}}">
+        <div class="col g16">
+          <div class="table"><div style="min-width: 680px">
+            <div class="grid th" style="grid-template-columns: 1.8fr .9fr 1.4fr 1.1fr 1.1fr"><span>Dataset</span><span>Version</span><span>Marking</span><span>Agents</span><span>Evaluator</span></div>
+            <sc-for list="{{dsRows}}" as="x" hint-placeholder-count="2">
+              <div class="grid {{x.selCls}}" style="grid-template-columns: 1.8fr .9fr 1.4fr 1.1fr 1.1fr">
+                <button class="textbtn serif" onClick="{{x.pick}}" aria-label="Show versions of {{x.name}}" style="font-size: 18px; color: var(--ink); text-align: left">{{x.name}}</button>
+                <span class="mono xs">{{x.version}}</span>
+                <span class="segs" role="group" aria-label="Marking"><sc-for list="{{x.marks}}" as="y" hint-placeholder-count="2"><button class="{{y.cls}}" onClick="{{y.pick}}">{{y.label}}</button></sc-for></span>
+                <span>
+                  <sc-if value="{{x.notHold}}" hint-placeholder-val="{{ true }}"><button class="{{x.aCls}}" onClick="{{x.aToggle}}" aria-pressed="{{x.aOn}}">{{x.aLabel}}</button></sc-if>
+                  <sc-if value="{{x.hold}}"><span class="lock"><i class="ic s i-lock"></i>Restricted</span></sc-if>
+                </span>
+                <span><button class="{{x.eCls}}" onClick="{{x.eToggle}}" aria-pressed="{{x.eOn}}">{{x.eLabel}}</button></span>
+              </div>
+            </sc-for>
+          </div></div>
+          <sc-if value="{{dsEmpty}}"><span class="mut">No datasets yet.</span></sc-if>
+          <sc-if value="{{hasDs}}">
+            <div class="col g8" style="max-width: 600px"><h2 class="sech">Versions of {{dsName}}</h2>
+              <div class="card" style="padding: 4px 20px"><sc-for list="{{dsVersions}}" as="x" hint-placeholder-count="3"><div class="kv" style="grid-template-columns: 120px 1fr auto"><span class="mono xs" style="color: var(--ink)">{{x.v}}</span><span class="ink2">{{x.created}}</span><span class="xs mut">{{x.size}}</span></div></sc-for></div>
+              <span class="sm mut">{{markHelp}}</span></div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{dIsCCloud}}">
+        <div class="col g24">
+          <div class="card" style="padding: 4px 20px"><sc-for list="{{cloudKv}}" as="x" hint-placeholder-count="4"><div class="kv"><span>{{x.k}}</span><span class="{{x.mono}}">{{x.v}}</span></div></sc-for></div>
+          <div class="col g8"><div class="rw between wrap g8"><h2 class="sech">Instances running now · {{runCount}}</h2><button class="textbtn" onClick="{{goInstances}}">{{goneLink}}</button></div>
+            <div class="table"><div style="min-width: 640px">
+              <div class="grid th" style="grid-template-columns: 1.6fr 1fr 1.4fr .7fr .8fr"><span>Instance</span><span>Role</span><span>Experiment</span><span>Cloud</span><span>Age</span></div>
+              <sc-for list="{{runMach}}" as="x" hint-placeholder-count="2"><div class="grid" style="grid-template-columns: 1.6fr 1fr 1.4fr .7fr .8fr"><span class="mono xs">{{x.name}}</span><span class="sm">{{x.role}}</span><span class="sm ink2">{{x.opt}}</span><span class="sm">{{x.cloud}}</span><span class="mono xs ink2">{{x.age}}</span></div></sc-for>
+            </div></div>
+            <sc-if value="{{runEmpty}}"><span class="mut sm">Nothing is running.</span></sc-if></div>
+        </div>
+      </sc-if>
+    </section>
+  </sc-if>
