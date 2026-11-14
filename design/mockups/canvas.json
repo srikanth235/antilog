@@ -61,7 +61,7 @@
       "is_interactive": true
     },
     "AddBackend.dc.html": {
-      "x": 4560,
+      "x": 6080,
       "y": 8800,
       "w": 1440,
       "h": 900,
@@ -71,7 +71,7 @@
       "is_interactive": true
     },
     "AddBackendDark.dc.html": {
-      "x": 4560,
+      "x": 6080,
       "y": 8800,
       "w": 1440,
       "h": 900,
@@ -537,7 +537,7 @@
       "is_interactive": true
     },
     "LauncherDisconnected.dc.html": {
-      "x": 3040,
+      "x": 4560,
       "y": 8800,
       "w": 1440,
       "h": 900,
@@ -547,7 +547,7 @@
       "is_interactive": true
     },
     "LauncherDisconnectedDark.dc.html": {
-      "x": 3040,
+      "x": 4560,
       "y": 8800,
       "w": 1440,
       "h": 900,
@@ -1105,7 +1105,7 @@
       "is_interactive": true
     },
     "SettingsBudgets.dc.html": {
-      "x": 6080,
+      "x": 7600,
       "y": 8800,
       "w": 1440,
       "h": 900,
@@ -1115,7 +1115,7 @@
       "is_interactive": true
     },
     "SettingsBudgetsDark.dc.html": {
-      "x": 6080,
+      "x": 7600,
       "y": 8800,
       "w": 1440,
       "h": 900,
@@ -1473,6 +1473,26 @@
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Skills, empty \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "StartRunner.dc.html": {
+      "x": 3040,
+      "y": 8800,
+      "w": 1440,
+      "h": 900,
+      "title": "8 \u00b7 Settings, Start a runner",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "StartRunnerDark.dc.html": {
+      "x": 3040,
+      "y": 8800,
+      "w": 1440,
+      "h": 900,
+      "title": "8 \u00b7 Settings, Start a runner \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -2150,6 +2170,8 @@
     "SkillsDark.dc.html",
     "SkillsEmpty.dc.html",
     "SkillsEmptyDark.dc.html",
+    "StartRunner.dc.html",
+    "StartRunnerDark.dc.html",
     "ThreadBudgetHit.dc.html",
     "ThreadBudgetHitDark.dc.html",
     "ThreadFailed.dc.html",
