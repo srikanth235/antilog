@@ -84,6 +84,7 @@
           <sc-if value="{{orgRO}}"><div class="sd-ro"><i class="ic s i-lock" aria-hidden="true"></i><span>Only owners can change organization settings. You can read them.</span></div></sc-if>
           <sc-if value="{{grp.orgG}}"><h4 class="sd-gh">Details</h4></sc-if>
           <sc-if value="{{show.org}}"><div class="stg" id="sr-org"><div class="tx"><span class="t-item">Organization</span><span class="dd">The name your users see.</span></div><div class="ct"><span class="val">Acme</span></div></div></sc-if>
+          <sc-if value="{{show.deploy}}"><div class="stg" id="sr-deploy"><div class="tx"><span class="t-item">Deployment</span><span class="dd">{{deployDesc}}</span></div><div class="ct"><span class="val">{{deployText}}</span></div></div></sc-if>
           <sc-if value="{{show.host}}"><div class="stg" id="sr-host"><div class="tx"><span class="t-item">Server</span><span class="dd">The address of this Ratchet server.</span></div><div class="ct"><span class="val mono xs">{{hostName}}</span></div></div></sc-if>
           <sc-if value="{{grp.defG}}"><h4 class="sd-gh">Defaults</h4></sc-if>
           <sc-if value="{{show.defcap}}"><div class="stg" id="sr-defcap"><div class="tx"><span class="t-item">Default budget per experiment</span><span class="dd">New experiments start with this budget. Each one can change it.</span></div><div class="ct"><input class="in mono" value="{{defCap}}" onChange="{{onDefCap}}" disabled="{{orgRO}}" aria-label="Default budget per experiment, dollars" style="width: 110px; font-size: 13px"><span class="sm mut">dollars</span></div></div></sc-if>
@@ -127,6 +128,44 @@
           <sc-if value="{{grp.sessG}}"><h4 class="sd-gh">Sessions</h4></sc-if>
           <sc-if value="{{show.session}}"><div class="stg" id="sr-session"><div class="tx"><span class="t-item">Session length</span><span class="dd">How long a sign-in lasts before Okta asks again.</span></div><div class="ct"><span class="segs" role="group" aria-label="Session length"><sc-for list="{{sessionSeg}}" as="x" hint-placeholder-count="3"><button class="{{x.cls}}" aria-pressed="{{x.on}}" disabled="{{orgRO}}" onClick="{{x.pick}}">{{x.label}}</button></sc-for></span></div></div></sc-if>
           <sc-if value="{{show.sessactive}}"><div class="stg in2" id="sr-sessactive"><div class="tx"><span class="t-item">Signed in now</span><span class="dd">Sessions that are open right now.</span></div><div class="ct"><span class="val">14</span></div></div></sc-if>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{sec.infra}}">
+        <div class="sd-sec">
+          <h3 class="t-section">Infrastructure</h3><p class="sd-lead">Where work runs. Agents and the evaluator run in sandboxes in your infrastructure, on separate machines. Ratchet holds no access to your cloud.</p>
+          <sc-if value="{{orgRO}}"><div class="sd-ro"><i class="ic s i-lock" aria-hidden="true"></i><span>Only owners can change infrastructure. You can read it.</span></div></sc-if>
+          <sc-if value="{{grp.launchG}}"><h4 class="sd-gh">Launcher</h4></sc-if>
+          <sc-if value="{{show.launcher}}"><div id="sr-launcher"><p class="sd-lead" style="margin: 4px 0 8px">{{launchDesc}}</p>
+            <div class="table qt"><div style="min-width: 560px">
+              <div class="grid th" style="grid-template-columns: minmax(0, 1.6fr) 80px minmax(0, 1fr) minmax(0, 1fr)"><span>Launcher</span><span>Version</span><span>Last seen</span><span>Status</span></div>
+              <sc-for list="{{launcherRows}}" as="x" hint-placeholder-count="1">
+                <div class="grid" style="grid-template-columns: minmax(0, 1.6fr) 80px minmax(0, 1fr) minmax(0, 1fr)">
+                  <span class="col" style="gap: 1px; min-width: 0"><span class="t-item ell">{{x.name}}</span><span class="xs mut ell">{{x.kind}} · {{x.where}}</span></span>
+                  <span class="mono xs">{{x.version}}</span><span class="sm ink2">{{x.seen}}</span>
+                  <span class="rw g8 sm"><i class="dot" style="background: {{x.color}}"></i>{{x.st}}</span>
+                </div>
+              </sc-for>
+            </div></div>
+          </div></sc-if>
+          <sc-if value="{{grp.backendG}}"><div class="rw between wrap g8" style="align-items: flex-end"><h4 class="sd-gh">Sandbox backends</h4>
+            <div class="pop"><button class="btn sm" onClick="{{toggleAddBe}}" disabled="{{noAddBe}}" aria-expanded="{{addBeOpen}}" aria-haspopup="menu"><i class="ic s i-plus"></i>Add backend</button>
+              <sc-if value="{{addBeOpen}}"><div class="menu dr" role="menu" style="min-width: 300px"><sc-for list="{{addBeItems}}" as="x" hint-placeholder-count="2"><button class="mi" role="menuitem" onClick="{{x.go}}" style="height: auto; padding: 8px 10px"><span class="col" style="gap: 1px"><span>{{x.label}}</span><span class="xs mut">{{x.where}}</span></span></button></sc-for></div></sc-if>
+            </div></div></sc-if>
+          <sc-if value="{{show.backends}}"><div id="sr-backends"><p class="sd-lead" style="margin: 4px 0 8px">Kubernetes first, then VMs on AWS, GCP and Azure. A benchmark stays on one backend and one machine type, so its numbers compare.</p>
+            <div class="table qt"><div style="min-width: 680px">
+              <div class="grid th" style="grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.1fr) minmax(0, 1.3fr) minmax(0, .9fr) 84px"><span>Backend</span><span>Machine types</span><span>Evaluator image</span><span>Now</span><span></span></div>
+              <sc-for list="{{backendRows}}" as="x" hint-placeholder-count="2">
+                <div class="grid" style="grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.1fr) minmax(0, 1.3fr) minmax(0, .9fr) 84px">
+                  <span class="col" style="gap: 1px; min-width: 0"><span class="t-item ell">{{x.name}}</span><span class="xs mut">{{x.where}}</span></span>
+                  <span class="mono xs ink2">{{x.types}}</span><span class="mono xs ink2" style="overflow-wrap: anywhere">{{x.image}}</span><span class="sm ink2">{{x.runTxt}}</span>
+                  <button class="btn sm danger" onClick="{{x.remove}}" disabled="{{x.cantRemove}}" title="{{x.removeTip}}" aria-label="Remove {{x.name}}">Remove</button>
+                </div>
+              </sc-for>
+            </div></div>
+          </div></sc-if>
+          <sc-if value="{{grp.secretG}}"><h4 class="sd-gh">Secrets</h4></sc-if>
+          <sc-if value="{{show.secretmgr}}"><div class="stg" id="sr-secretmgr"><div class="tx"><span class="t-item">Secret manager</span><span class="dd">Connector admin secrets stay here. Ratchet stores only references to them and never sees a secret.</span></div><div class="ct"><label class="selw"><span class="sr">Secret manager</span><select value="{{secretMgr}}" onChange="{{onSecretMgr}}" disabled="{{orgRO}}"><sc-for list="{{secretOpts}}" as="x" hint-placeholder-count="4"><option value="{{x.v}}">{{x.v}}</option></sc-for></select><i class="ic s i-chev" aria-hidden="true"></i></label></div></div></sc-if>
         </div>
       </sc-if>
 

@@ -551,7 +551,7 @@ button.grid{cursor:pointer}button.grid:hover,.grid.sel{background:var(--sunk)}
 <div class="pop"><button class="{{cData}}" onClick="{{tData}}" aria-expanded="{{mData}}" aria-haspopup="menu" aria-label="Data: {{vData}}" title="Data"><i class="ic g-db"></i><span class="v">{{vData}}</span></button>
 <sc-if value="{{mData}}"><div class="menu dn" role="menu" style="width: 380px; max-height: 400px; overflow-y: auto; padding: 8px">
 <span class="lbl" style="padding: 6px 10px">Evaluator only</span>
-<div class="chk" style="color: var(--ink2); min-height: 44px"><i class="ic s i-lock"></i><span class="col grow" style="gap: 0"><span style="color: var(--ink)">{{holdName}}</span><span class="xs mut">Holdout · Restricted to evaluator</span></span></div>
+<div class="chk" style="color: var(--ink2); min-height: 44px"><i class="ic s i-lock"></i><span class="col grow" style="gap: 0"><span style="color: var(--ink)">{{holdName}}</span><span class="xs mut">Holdout · Restricted to evaluator, enforced by its credential</span></span></div>
 <div class="msep"></div>
 <span class="lbl" style="padding: 6px 10px">Datasets agents can read</span>
 <sc-for list="{{dataGroups}}" as="g" hint-placeholder-count="3"><div class="col" style="gap: 2px; padding-bottom: 6px"><span class="xs mut" style="padding: 4px 10px">{{g.name}}</span>
@@ -570,7 +570,10 @@ button.grid{cursor:pointer}button.grid:hover,.grid.sel{background:var(--sunk)}
 <div class="crow">
 <div class="pop"><button class="{{cEnv}}" onClick="{{tEnv}}" aria-expanded="{{mEnv}}" aria-haspopup="menu" aria-label="Environment: {{vEnv}}" title="Environment"><i class="ic g-cloud"></i><span class="v">{{vEnv}}</span></button>
 <sc-if value="{{mEnv}}"><div class="menu wide dn" role="menu" style="width: 320px">
-<span class="lbl">Environment</span><div class="rw wrap g8"><sc-for list="{{envSeg}}" as="x" hint-placeholder-count="3"><button class="{{x.cls}}" onClick="{{x.pick}}"><span>{{x.label}}</span><small>{{x.note}}</small></button></sc-for></div>
+<span class="lbl">Sandbox backend</span><div class="rw wrap g8"><sc-for list="{{envSeg}}" as="x" hint-placeholder-count="4"><button class="{{x.cls}}" onClick="{{x.pick}}"><span>{{x.label}}</span><small>{{x.note}}</small></button></sc-for></div>
+<span class="lbl">Machine type</span><div class="rw wrap g8"><sc-for list="{{mtSeg}}" as="x" hint-placeholder-count="2"><button class="{{x.cls}}" onClick="{{x.pick}}">{{x.label}}</button></sc-for></div>
+<span class="xs mut">{{envWhere}} Agents and the evaluator run in separate sandboxes on separate machines. A benchmark stays on one backend and one machine type.</span>
+<button class="textbtn" onClick="{{goInfra}}" style="align-self: flex-start">Manage infrastructure</button>
 </div></sc-if></div>
 <div class="pop"><button class="{{cAgents}}" onClick="{{tAgents}}" aria-expanded="{{mAgents}}" aria-haspopup="menu" aria-label="Agents: {{vAgents}}" title="Agents"><i class="ic g-term"></i><span class="v">{{vAgents}}</span></button>
 <sc-if value="{{mAgents}}"><div class="menu wide dn" role="menu" style="width: 300px">
@@ -646,7 +649,7 @@ button.grid{cursor:pointer}button.grid:hover,.grid.sel{background:var(--sunk)}
 </div>
 </sc-if>
 <div class="rw wrap between g12" style="padding-top: 16px">
-<span class="rw g16"><button class="textbtn" onClick="{{togglePlan}}" aria-expanded="{{planOpen}}">{{planLabel}}</button><sc-if value="{{isDraft}}"><span class="sm mut">Nothing is created in your cloud until you approve.</span></sc-if></span>
+<span class="rw g16"><button class="textbtn" onClick="{{togglePlan}}" aria-expanded="{{planOpen}}">{{planLabel}}</button><sc-if value="{{isDraft}}"><span class="sm mut">Nothing is created in your infrastructure until you approve.</span></sc-if></span>
 <sc-if value="{{isDraft}}"><span class="rw g8"><button class="btn" onClick="{{editDraft}}">Edit</button><button class="btn primary" onClick="{{approve}}">Approve and start</button></span></sc-if>
 <sc-if value="{{isApproved}}"><button class="textbtn" onClick="{{toggleDet}}">{{detLabel}}</button></sc-if>
 </div>
@@ -697,6 +700,7 @@ button.grid{cursor:pointer}button.grid:hover,.grid.sel{background:var(--sunk)}
 <sc-if value="{{x.open}}">
 <div class="tdet">
 <pre class="diff"><sc-for list="{{x.diff}}" as="l" hint-placeholder-count="5"><span class="{{l.cls}}" style="display: block">{{l.t}}</span></sc-for></pre>
+<span class="xs mut">The diff and logs are read from your infrastructure through the launcher. Ratchet does not store them.</span>
 <sc-if value="{{x.showLims}}" hint-placeholder-val="{{ true }}">
 <div class="col" style="gap: 4px">
 <sc-for list="{{x.lims}}" as="g" hint-placeholder-count="2"><div class="rw between sm"><span class="ink2">{{g.k}}: {{g.v}}</span><span style="color: {{g.color}}">{{g.tag}}</span></div></sc-for>
@@ -834,7 +838,7 @@ button.grid{cursor:pointer}button.grid:hover,.grid.sel{background:var(--sunk)}
 <!-- HISTORY -->
 <sc-if value="{{isHistory}}">
 <section class="page">
-<div class="hd"><h1 class="h1">Run history</h1><p class="sub">Every trial and every instance is kept. Agents read past trials before the next run.</p></div>
+<div class="hd"><h1 class="h1">Run history</h1><p class="sub">Every trial and every sandbox is kept. Agents read past trials before the next run.</p></div>
 <div class="rw between wrap g16">
 <div class="tabbar" role="tablist" style="border-bottom: 0"><sc-for list="{{histTabs}}" as="x" hint-placeholder-count="2"><button class="{{x.cls}}" role="tab" onClick="{{x.pick}}">{{x.label}}</button></sc-for></div>
 <div class="rw wrap g8">
@@ -856,15 +860,15 @@ button.grid{cursor:pointer}button.grid:hover,.grid.sel{background:var(--sunk)}
 </sc-if>
 <sc-if value="{{histIsInst}}">
 <div class="table"><div style="min-width: 680px">
-<div class="grid th" style="grid-template-columns: 1.6fr 1fr 1.4fr .7fr .9fr 1.2fr"><span>Instance</span><span>Role</span><span>Experiment</span><span>Cloud</span><span>Ran</span><span>Status</span></div>
+<div class="grid th" style="grid-template-columns: 1.6fr 1fr 1.4fr .7fr .9fr 1.2fr"><span>Sandbox</span><span>Role</span><span>Experiment</span><span>Backend</span><span>Ran</span><span>Status</span></div>
 <sc-for list="{{machRows}}" as="x" hint-placeholder-count="6">
 <button class="grid" onClick="{{x.open}}" style="grid-template-columns: 1.6fr 1fr 1.4fr .7fr .9fr 1.2fr">
-<span class="mono xs">{{x.name}}</span><span class="sm">{{x.role}}</span><span class="sm ink2">{{x.opt}}</span><span class="sm">{{x.cloud}}</span><span class="mono xs ink2">{{x.age}}</span>
+<span class="mono xs">{{x.name}}</span><span class="sm">{{x.roleLabel}}</span><span class="sm ink2">{{x.opt}}</span><span class="sm">{{x.be}}</span><span class="mono xs ink2">{{x.age}}</span>
 <span class="rw g8 sm"><i class="dot" style="background: {{x.color}}"></i>{{x.st}}</span>
 </button>
 </sc-for>
 </div></div>
-<sc-if value="{{machEmpty}}"><span class="mut">No instances match these filters.</span></sc-if>
+<sc-if value="{{machEmpty}}"><span class="mut">No sandboxes match these filters.</span></sc-if>
 </sc-if>
 </section>
 </sc-if>
@@ -1048,10 +1052,10 @@ button.grid{cursor:pointer}button.grid:hover,.grid.sel{background:var(--sunk)}
 <div class="col g8"><h2 class="sech">Calibration</h2>
 <div class="card" style="padding: 4px 20px"><sc-for list="{{eCal}}" as="x" hint-placeholder-count="3"><div class="kv"><span>{{x.k}}</span><span>{{x.v}}</span></div></sc-for></div></div>
 <div class="col g8"><h2 class="sech">Holdout dataset</h2>
-<div class="card rw wrap between g12"><span>{{eHold}}</span><span class="lock"><i class="ic s i-lock"></i>Restricted to evaluator</span></div></div>
+<div class="card col g8"><div class="rw wrap between g12"><span>{{eHold}}</span><span class="lock"><i class="ic s i-lock"></i>Restricted to evaluator</span></div><span class="sm mut">Enforced by the credentials. Agents get a read-only credential that leaves it out. Only the evaluator's own credential includes it.</span></div></div>
 </sc-if>
 <sc-if value="{{dIsAgent}}">
-<div class="col g8"><h2 class="sech">Model</h2>
+<div class="col g8"><h2 class="sech">Model and credentials</h2>
 <div class="card" style="padding: 4px 20px"><sc-for list="{{aKv}}" as="x" hint-placeholder-count="2"><div class="kv"><span>{{x.k}}</span><span>{{x.v}}</span></div></sc-for>
 <div class="kv" style="align-items: center"><span>Model</span><input class="in mono" value="{{aModel}}" onChange="{{onAModel}}" aria-label="Model" style="max-width: 320px; font-size: 13px"></div>
 <div class="kv" style="align-items: center"><span>Max parallel</span><span class="rw" style="border: 1px solid var(--line2); border-radius: 999px; padding: 2px; width: fit-content"><button class="icon-btn" onClick="{{aParDown}}" aria-label="Fewer in parallel">−</button><span class="mono" style="min-width: 28px; text-align: center">{{aPar}}</span><button class="icon-btn" onClick="{{aParUp}}" aria-label="More in parallel">+</button></span></div>
@@ -1068,8 +1072,11 @@ button.grid{cursor:pointer}button.grid:hover,.grid.sel{background:var(--sunk)}
 <sc-if value="{{aTrialsEmpty}}"><span class="mut sm">No measured trials yet.</span></sc-if></div>
 </sc-if>
 
-<sc-if value="{{dIsCData}}">
-<div class="col g16">
+<sc-if value="{{dIsConn}}">
+<span class="lock"><i class="ic s i-lock"></i>Ratchet stores a reference to the admin secret. The secret stays in your secret manager.</span>
+<div class="col g8"><h2 class="sech">How access is scoped</h2>
+<div class="card" style="padding: 4px 20px"><sc-for list="{{connAccess}}" as="x" hint-placeholder-count="4"><div class="kv"><span>{{x.k}}</span><span>{{x.v}}</span></div></sc-for></div></div>
+<div class="col g16"><h2 class="sech">Datasets</h2>
 <div class="table"><div style="min-width: 680px">
 <div class="grid th" style="grid-template-columns: 1.8fr .9fr 1.4fr 1.1fr 1.1fr"><span>Dataset</span><span>Version</span><span>Marking</span><span>Agents</span><span>Evaluator</span></div>
 <sc-for list="{{dsRows}}" as="x" hint-placeholder-count="2">
@@ -1094,17 +1101,6 @@ button.grid{cursor:pointer}button.grid:hover,.grid.sel{background:var(--sunk)}
 </div>
 </sc-if>
 
-<sc-if value="{{dIsCCloud}}">
-<div class="col g24">
-<div class="card" style="padding: 4px 20px"><sc-for list="{{cloudKv}}" as="x" hint-placeholder-count="4"><div class="kv"><span>{{x.k}}</span><span class="{{x.mono}}">{{x.v}}</span></div></sc-for></div>
-<div class="col g8"><div class="rw between wrap g8"><h2 class="sech">Instances running now · {{runCount}}</h2><button class="textbtn" onClick="{{goInstances}}">{{goneLink}}</button></div>
-<div class="table"><div style="min-width: 640px">
-<div class="grid th" style="grid-template-columns: 1.6fr 1fr 1.4fr .7fr .8fr"><span>Instance</span><span>Role</span><span>Experiment</span><span>Cloud</span><span>Age</span></div>
-<sc-for list="{{runMach}}" as="x" hint-placeholder-count="2"><div class="grid" style="grid-template-columns: 1.6fr 1fr 1.4fr .7fr .8fr"><span class="mono xs">{{x.name}}</span><span class="sm">{{x.role}}</span><span class="sm ink2">{{x.opt}}</span><span class="sm">{{x.cloud}}</span><span class="mono xs ink2">{{x.age}}</span></div></sc-for>
-</div></div>
-<sc-if value="{{runEmpty}}"><span class="mut sm">Nothing is running.</span></sc-if></div>
-</div>
-</sc-if>
 </section>
 </sc-if>
 
@@ -1193,6 +1189,7 @@ button.grid{cursor:pointer}button.grid:hover,.grid.sel{background:var(--sunk)}
 <sc-if value="{{orgRO}}"><div class="sd-ro"><i class="ic s i-lock" aria-hidden="true"></i><span>Only owners can change organization settings. You can read them.</span></div></sc-if>
 <sc-if value="{{grp.orgG}}"><h4 class="sd-gh">Details</h4></sc-if>
 <sc-if value="{{show.org}}"><div class="stg" id="sr-org"><div class="tx"><span class="t-item">Organization</span><span class="dd">The name your users see.</span></div><div class="ct"><span class="val">Acme</span></div></div></sc-if>
+<sc-if value="{{show.deploy}}"><div class="stg" id="sr-deploy"><div class="tx"><span class="t-item">Deployment</span><span class="dd">{{deployDesc}}</span></div><div class="ct"><span class="val">{{deployText}}</span></div></div></sc-if>
 <sc-if value="{{show.host}}"><div class="stg" id="sr-host"><div class="tx"><span class="t-item">Server</span><span class="dd">The address of this Ratchet server.</span></div><div class="ct"><span class="val mono xs">{{hostName}}</span></div></div></sc-if>
 <sc-if value="{{grp.defG}}"><h4 class="sd-gh">Defaults</h4></sc-if>
 <sc-if value="{{show.defcap}}"><div class="stg" id="sr-defcap"><div class="tx"><span class="t-item">Default budget per experiment</span><span class="dd">New experiments start with this budget. Each one can change it.</span></div><div class="ct"><input class="in mono" value="{{defCap}}" onChange="{{onDefCap}}" disabled="{{orgRO}}" aria-label="Default budget per experiment, dollars" style="width: 110px; font-size: 13px"><span class="sm mut">dollars</span></div></div></sc-if>
@@ -1236,6 +1233,44 @@ button.grid{cursor:pointer}button.grid:hover,.grid.sel{background:var(--sunk)}
 <sc-if value="{{grp.sessG}}"><h4 class="sd-gh">Sessions</h4></sc-if>
 <sc-if value="{{show.session}}"><div class="stg" id="sr-session"><div class="tx"><span class="t-item">Session length</span><span class="dd">How long a sign-in lasts before Okta asks again.</span></div><div class="ct"><span class="segs" role="group" aria-label="Session length"><sc-for list="{{sessionSeg}}" as="x" hint-placeholder-count="3"><button class="{{x.cls}}" aria-pressed="{{x.on}}" disabled="{{orgRO}}" onClick="{{x.pick}}">{{x.label}}</button></sc-for></span></div></div></sc-if>
 <sc-if value="{{show.sessactive}}"><div class="stg in2" id="sr-sessactive"><div class="tx"><span class="t-item">Signed in now</span><span class="dd">Sessions that are open right now.</span></div><div class="ct"><span class="val">14</span></div></div></sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{sec.infra}}">
+<div class="sd-sec">
+<h3 class="t-section">Infrastructure</h3><p class="sd-lead">Where work runs. Agents and the evaluator run in sandboxes in your infrastructure, on separate machines. Ratchet holds no access to your cloud.</p>
+<sc-if value="{{orgRO}}"><div class="sd-ro"><i class="ic s i-lock" aria-hidden="true"></i><span>Only owners can change infrastructure. You can read it.</span></div></sc-if>
+<sc-if value="{{grp.launchG}}"><h4 class="sd-gh">Launcher</h4></sc-if>
+<sc-if value="{{show.launcher}}"><div id="sr-launcher"><p class="sd-lead" style="margin: 4px 0 8px">{{launchDesc}}</p>
+<div class="table qt"><div style="min-width: 560px">
+<div class="grid th" style="grid-template-columns: minmax(0, 1.6fr) 80px minmax(0, 1fr) minmax(0, 1fr)"><span>Launcher</span><span>Version</span><span>Last seen</span><span>Status</span></div>
+<sc-for list="{{launcherRows}}" as="x" hint-placeholder-count="1">
+<div class="grid" style="grid-template-columns: minmax(0, 1.6fr) 80px minmax(0, 1fr) minmax(0, 1fr)">
+<span class="col" style="gap: 1px; min-width: 0"><span class="t-item ell">{{x.name}}</span><span class="xs mut ell">{{x.kind}} · {{x.where}}</span></span>
+<span class="mono xs">{{x.version}}</span><span class="sm ink2">{{x.seen}}</span>
+<span class="rw g8 sm"><i class="dot" style="background: {{x.color}}"></i>{{x.st}}</span>
+</div>
+</sc-for>
+</div></div>
+</div></sc-if>
+<sc-if value="{{grp.backendG}}"><div class="rw between wrap g8" style="align-items: flex-end"><h4 class="sd-gh">Sandbox backends</h4>
+<div class="pop"><button class="btn sm" onClick="{{toggleAddBe}}" disabled="{{noAddBe}}" aria-expanded="{{addBeOpen}}" aria-haspopup="menu"><i class="ic s i-plus"></i>Add backend</button>
+<sc-if value="{{addBeOpen}}"><div class="menu dr" role="menu" style="min-width: 300px"><sc-for list="{{addBeItems}}" as="x" hint-placeholder-count="2"><button class="mi" role="menuitem" onClick="{{x.go}}" style="height: auto; padding: 8px 10px"><span class="col" style="gap: 1px"><span>{{x.label}}</span><span class="xs mut">{{x.where}}</span></span></button></sc-for></div></sc-if>
+</div></div></sc-if>
+<sc-if value="{{show.backends}}"><div id="sr-backends"><p class="sd-lead" style="margin: 4px 0 8px">Kubernetes first, then VMs on AWS, GCP and Azure. A benchmark stays on one backend and one machine type, so its numbers compare.</p>
+<div class="table qt"><div style="min-width: 680px">
+<div class="grid th" style="grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.1fr) minmax(0, 1.3fr) minmax(0, .9fr) 84px"><span>Backend</span><span>Machine types</span><span>Evaluator image</span><span>Now</span><span></span></div>
+<sc-for list="{{backendRows}}" as="x" hint-placeholder-count="2">
+<div class="grid" style="grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.1fr) minmax(0, 1.3fr) minmax(0, .9fr) 84px">
+<span class="col" style="gap: 1px; min-width: 0"><span class="t-item ell">{{x.name}}</span><span class="xs mut">{{x.where}}</span></span>
+<span class="mono xs ink2">{{x.types}}</span><span class="mono xs ink2" style="overflow-wrap: anywhere">{{x.image}}</span><span class="sm ink2">{{x.runTxt}}</span>
+<button class="btn sm danger" onClick="{{x.remove}}" disabled="{{x.cantRemove}}" title="{{x.removeTip}}" aria-label="Remove {{x.name}}">Remove</button>
+</div>
+</sc-for>
+</div></div>
+</div></sc-if>
+<sc-if value="{{grp.secretG}}"><h4 class="sd-gh">Secrets</h4></sc-if>
+<sc-if value="{{show.secretmgr}}"><div class="stg" id="sr-secretmgr"><div class="tx"><span class="t-item">Secret manager</span><span class="dd">Connector admin secrets stay here. Ratchet stores only references to them and never sees a secret.</span></div><div class="ct"><label class="selw"><span class="sr">Secret manager</span><select value="{{secretMgr}}" onChange="{{onSecretMgr}}" disabled="{{orgRO}}"><sc-for list="{{secretOpts}}" as="x" hint-placeholder-count="4"><option value="{{x.v}}">{{x.v}}</option></sc-for></select><i class="ic s i-chev" aria-hidden="true"></i></label></div></div></sc-if>
 </div>
 </sc-if>
 
@@ -1310,7 +1345,7 @@ this.setMainRef = (el) => { this.sdMain = el; };
 this.K = this.mkK();
 const K = this.K;
 const CP = 'Checkout platform', SR = 'Search', DS = 'Data science forecasts';
-const X = (o) => ({ pinned: false, approved: true, hist: [], pr: [], ps: 0, fixed: null, lim: { error: true, cost: true, memory: false }, dir: null, path: null, env: 'aws', cloud: 'AWS', val: 0, mo: 5, act: '', ...o });
+const X = (o) => ({ pinned: false, approved: true, hist: [], pr: [], ps: 0, fixed: null, lim: { error: true, cost: true, memory: false }, dir: null, path: null, env: 'k8s', mt: 'm7i.2xlarge', val: 0, mo: 5, act: '', ...o });
 this.state = {
 screen: 'thread', theme: null, menu: null, collapsed: {}, settingsTab: 'profile', setOpen: false, setQ: '', auditQ: '', roleNote: '', 
 pal: false, palQ: '', palScope: 'all', palHi: 0, palAct: false, palActHi: 0, recent: ['x:o2', 'p:Search', 'd:eval:k6', 'd:skill:pgtune', 's:members', 'x:o6'], hlNote: null,
@@ -1322,13 +1357,15 @@ detail: { kind: 'eval', id: 'k6' }, connSel: 'gh', dsSel: 'traces',
 ex: {}, hl: null, confirmStop: false, renaming: false, renameVal: '',
 histTab: 'trials', histProj: 'All', histExp: 'All',
 defCap: '200', newToken: false, noteDraft: '', threadDraft: '', capDraft: '', monthly: 2500,
-d: { text: '', ev: null, dir: null, limits: { error: true, cost: true, memory: false }, path: null, name: null, env: 'aws', agents: 2, cap: '200', project: null, skills: null },
+d: { text: '', ev: null, dir: null, limits: { error: true, cost: true, memory: false }, path: null, name: null, env: 'k8s', mt: null, agents: 2, cap: '200', project: null, skills: null },
 newSel: { repo: true, traces: true, past: true },
-clouds: { aws: true, gcp: false, azure: false },
+deploy: 'Ratchet cloud', secretMgr: 'AWS Secrets Manager',
+launcher: { name: 'runner-acme-1', where: 'acme-prod VPC', version: '0.9.2', seen: '12 seconds ago', up: true },
+backends: { k8s: true, aws: true, gcp: false, azure: false },
 evals: K.EVS.map((e) => ({ ...e })),
 agentList: [
 { id: 'claude', name: 'Claude Code', desc: 'Terminal coding agent', provider: 'Anthropic', model: 'claude-sonnet-5-5', via: 'Bedrock endpoint in acme-prod', cat: 'Hosted', used: 18, par: 3, gl: 'g-term' },
-{ id: 'codex', name: 'Codex', desc: 'Terminal coding agent', provider: 'OpenAI', model: 'gpt-5-codex', via: 'Key ending 9c1d', cat: 'Hosted', used: 11, par: 2, gl: 'g-term' },
+{ id: 'codex', name: 'Codex', desc: 'Terminal coding agent', provider: 'OpenAI', model: 'gpt-5-codex', via: 'Key in your secret manager', cat: 'Hosted', used: 11, par: 2, gl: 'g-term' },
 { id: 'grok', name: 'Grok', desc: 'Terminal coding agent', provider: 'xAI', model: 'grok-code-fast', via: 'Acme gateway', cat: 'Hosted', used: 5, par: 2, gl: 'g-spark' }
 ],
 agents: { claude: true, codex: true, grok: true },
@@ -1349,9 +1386,9 @@ T: [{ a: 'grok', i: 0, v: 47.4, h: 47.9, m: '−6 MB', k: ['conv', 'Tests'] }, {
 X({ id: 'o6', skills: ['conv', 'pgtune'], name: 'Search relevance', project: SR, req: 'Improve search relevance for exact title queries', ev: 'rel', runs: 2, step: 8, status: 'Pending pull request', cap: 50, agents: ['claude', 'codex', 'grok'], ds: ['repo', 'judg', 'qlog'], pr: ['n'], ps: 33, fixed: 38, act: '2 days ago', val: 11200, mo: 4,
 hist: [[1, 'claude', 'Raise the title weight', 0.614], [1, 'codex', 'Add typo tolerance', 0.607]],
 T: [{ a: 'claude', i: 0, v: 0.665, h: 0.661 }, { a: 'codex', i: 1, v: 0.628 }, { a: 'grok', i: 2, v: 0.598, e: '0.9%', c: '+$0.01', f: 'e' }] }),
-X({ id: 'o7', skills: ['conv'], name: 'Autocomplete latency', project: SR, req: 'Lower autocomplete p95 latency', ev: 'qry', runs: 1, step: 6, status: 'Running', cap: 25, agents: ['claude', 'codex'], ds: ['repo', 'qlog'], act: '40 min ago',
+X({ id: 'o7', skills: ['conv'], name: 'Autocomplete latency', env: 'aws', mt: 'c7i.2xlarge', project: SR, req: 'Lower autocomplete p95 latency', ev: 'qry', runs: 1, step: 6, status: 'Running', cap: 25, agents: ['claude', 'codex'], ds: ['repo', 'qlog'], act: '40 min ago',
 T: [{ a: 'codex', i: 0, v: 79, h: 80, e: '0.1%', c: '+$0.01' }, { a: 'claude', i: 1, v: 94 }] }),
-X({ id: 'o8', skills: ['conv'], name: 'Feature pipeline cost', project: DS, req: 'Cut the cost of the nightly feature pipeline', ev: 'pipe', runs: 1, step: 8, status: 'Merged', cap: 25, agents: ['grok', 'codex'], ds: ['feat', 'sales', 'past'], fixed: 15, act: 'Last week', val: 6100, mo: 3,
+X({ id: 'o8', skills: ['conv'], name: 'Feature pipeline cost', env: 'aws', mt: 'c7i.2xlarge', project: DS, req: 'Cut the cost of the nightly feature pipeline', ev: 'pipe', runs: 1, step: 8, status: 'Merged', cap: 25, agents: ['grok', 'codex'], ds: ['feat', 'sales', 'past'], fixed: 15, act: 'Last week', val: 6100, mo: 3,
 T: [{ a: 'grok', i: 0, v: 12.7, h: 12.9, e: '0.0%', c: '−$5.70' }, { a: 'codex', i: 1, v: 17.95, e: '0.0%', c: '−$0.45' }] })
 ,
 X({ id: 'o9', skills: ['conv', 'flaky'], name: 'Smoke suite duration', project: CP, req: 'Cut the staging smoke suite duration without dropping coverage', ev: 'smoke', runs: 1, step: 0, status: 'Draft', approved: false, cap: 25, agents: ['claude', 'codex'], ds: ['repo', 'past'], act: '20 min ago', T: [] })
@@ -1362,29 +1399,28 @@ connectors: [
 { id: 'gh', name: 'GitHub acme/checkout', desc: 'Repository, design notes and CLI fixtures agents read', cat: 'Code', kind: 'GitHub', used: 14, added: false, gl: 'g-git' },
 { id: 'sf', name: 'Snowflake ANALYTICS', desc: 'Warehouse tables and the holdout datasets', cat: 'Data', kind: 'Snowflake', used: 9, added: false, gl: 'g-db' },
 { id: 'dd', name: 'Datadog monitoring', desc: 'Production traces, query logs and service metrics', cat: 'Monitoring', kind: 'Datadog', used: 11, added: false, gl: 'g-chart' },
-{ id: 'rh', name: 'Ratchet run history', desc: 'Every past trial, built in', cat: 'Data', kind: 'Ratchet', used: 31, added: false, gl: 'g-file' },
-{ id: 'aws', name: 'AWS acme-prod', desc: 'Account where runners and evaluators are created', cat: 'Cloud', kind: 'AWS', cloud: 'aws', used: 24, added: false, gl: 'g-cloud' }
+{ id: 'rh', name: 'Ratchet run history', desc: 'Every past trial, built in', cat: 'Data', kind: 'Ratchet', used: 31, added: false, gl: 'g-file' }
 ],
 notes: [
 { id: 'n1', text: 'The payment gateway is the slow part. Prefer fewer round trips.', author: 'Marco Bianchi', opt: 'Checkout p95', time: '02:05', run: 3 },
 { id: 'n2', text: 'Holiday calendar features helped last time, try them again.', author: 'Jun Park', opt: 'Forecast accuracy', time: 'Yesterday', run: 2 }
 ],
 machines: [
-{ id: 'm1', name: 'runner-checkout-3a', role: 'runner', opt: 'Checkout p95', cloud: 'AWS', age: '52 m', gone: false },
-{ id: 'm2', name: 'eval-checkout-3', role: 'evaluator', opt: 'Checkout p95', cloud: 'AWS', age: '14 m', gone: false },
-{ id: 'm3', name: 'runner-cli-1', role: 'runner', opt: 'CLI cold start', cloud: 'AWS', age: '9 m', gone: false },
-{ id: 'm4', name: 'runner-autocomplete-1', role: 'runner', opt: 'Autocomplete latency', cloud: 'AWS', age: '58 m', gone: false },
-{ id: 'm5', name: 'eval-autocomplete-1', role: 'evaluator', opt: 'Autocomplete latency', cloud: 'AWS', age: '31 m', gone: false },
-{ id: 'm6', name: 'runner-forecast-2', role: 'runner', opt: 'Forecast accuracy', cloud: 'AWS', age: '1 h 12 m', gone: true },
-{ id: 'm7', name: 'eval-forecast-2', role: 'evaluator', opt: 'Forecast accuracy', cloud: 'AWS', age: '44 m', gone: true },
-{ id: 'm8', name: 'runner-bundle-2', role: 'runner', opt: 'Bundle size', cloud: 'AWS', age: '58 m', gone: true },
-{ id: 'm9', name: 'eval-bundle-2', role: 'evaluator', opt: 'Bundle size', cloud: 'AWS', age: '33 m', gone: true },
-{ id: 'm10', name: 'runner-image-1', role: 'runner', opt: 'Image resize', cloud: 'AWS', age: '1 h 04 m', gone: true },
-{ id: 'm11', name: 'eval-image-1', role: 'evaluator', opt: 'Image resize', cloud: 'AWS', age: '39 m', gone: true },
-{ id: 'm12', name: 'runner-search-2', role: 'runner', opt: 'Search relevance', cloud: 'AWS', age: '1 h 20 m', gone: true },
-{ id: 'm13', name: 'eval-search-2', role: 'evaluator', opt: 'Search relevance', cloud: 'AWS', age: '47 m', gone: true },
-{ id: 'm14', name: 'runner-pipeline-1', role: 'runner', opt: 'Feature pipeline cost', cloud: 'AWS', age: '52 m', gone: true },
-{ id: 'm15', name: 'eval-pipeline-1', role: 'evaluator', opt: 'Feature pipeline cost', cloud: 'AWS', age: '28 m', gone: true }
+{ id: 'm1', name: 'ws-checkout-3a', role: 'workspace', opt: 'Checkout p95', be: 'Kubernetes', age: '52 m', gone: false },
+{ id: 'm2', name: 'eval-checkout-3', role: 'evaluator', opt: 'Checkout p95', be: 'Kubernetes', age: '14 m', gone: false },
+{ id: 'm3', name: 'ws-cli-1', role: 'workspace', opt: 'CLI cold start', be: 'Kubernetes', age: '9 m', gone: false },
+{ id: 'm4', name: 'ws-autocomplete-1', role: 'workspace', opt: 'Autocomplete latency', be: 'AWS VMs', age: '58 m', gone: false },
+{ id: 'm5', name: 'eval-autocomplete-1', role: 'evaluator', opt: 'Autocomplete latency', be: 'AWS VMs', age: '31 m', gone: false },
+{ id: 'm6', name: 'ws-forecast-2', role: 'workspace', opt: 'Forecast accuracy', be: 'Kubernetes', age: '1 h 12 m', gone: true },
+{ id: 'm7', name: 'eval-forecast-2', role: 'evaluator', opt: 'Forecast accuracy', be: 'Kubernetes', age: '44 m', gone: true },
+{ id: 'm8', name: 'ws-bundle-2', role: 'workspace', opt: 'Bundle size', be: 'Kubernetes', age: '58 m', gone: true },
+{ id: 'm9', name: 'eval-bundle-2', role: 'evaluator', opt: 'Bundle size', be: 'Kubernetes', age: '33 m', gone: true },
+{ id: 'm10', name: 'ws-image-1', role: 'workspace', opt: 'Image resize', be: 'Kubernetes', age: '1 h 04 m', gone: true },
+{ id: 'm11', name: 'eval-image-1', role: 'evaluator', opt: 'Image resize', be: 'Kubernetes', age: '39 m', gone: true },
+{ id: 'm12', name: 'ws-search-2', role: 'workspace', opt: 'Search relevance', be: 'Kubernetes', age: '1 h 20 m', gone: true },
+{ id: 'm13', name: 'eval-search-2', role: 'evaluator', opt: 'Search relevance', be: 'Kubernetes', age: '47 m', gone: true },
+{ id: 'm14', name: 'ws-pipeline-1', role: 'workspace', opt: 'Feature pipeline cost', be: 'AWS VMs', age: '52 m', gone: true },
+{ id: 'm15', name: 'eval-pipeline-1', role: 'evaluator', opt: 'Feature pipeline cost', be: 'AWS VMs', age: '28 m', gone: true }
 ],
 roles: { priya: 'Owner', marco: 'Editor', jun: 'Editor', ci: 'Viewer' },
 session: '12 hours',
@@ -1395,11 +1431,13 @@ tokens: [
 ],
 audit: [
 { time: '02:05', who: 'Marco Bianchi', action: 'note.send', resource: 'Checkout p95 · note' },
+{ time: '00:49', who: 'launcher', action: 'credential.mint', resource: 'Checkout p95 · run #3 · agents read-only, evaluator with holdout' },
 { time: '00:48', who: 'scheduler', action: 'run.start', resource: 'Checkout p95 · run #3' },
 { time: 'Yesterday', who: 'Priya Raman', action: 'pull_request.open', resource: 'Search relevance · PR #298' },
 { time: 'Yesterday', who: 'Jun Park', action: 'grant.change', resource: 'Past runs · Evaluator access removed' },
 { time: 'Mon', who: 'Priya Raman', action: 'budget.change', resource: 'Checkout p95 · $50 per run' },
-{ time: 'Mon', who: 'ci-bot (service principal)', action: 'token.revoke', resource: 'old-ci · ends 19d4' }
+{ time: 'Mon', who: 'ci-bot (service principal)', action: 'token.revoke', resource: 'old-ci · ends 19d4' },
+{ time: 'Last week', who: 'Priya Raman', action: 'launcher.connect', resource: 'runner-acme-1 · acme-prod VPC' }
 ]
 };
 this.state.grants = this.defaultGrants(this.state.datasets);
@@ -1485,7 +1523,7 @@ const GEN = [
 ['Remove an unneeded retry and a redundant check', 2, 9, 22, ['@@ src/call.ts', '-  return retry(() => send(req), 3);', '+  return send(req);', '-  validate(req);']]
 ];
 const EVS = [
-{ id: 'k6', name: 'k6 checkout load', cat: 'Speed', desc: 'Replays checkout traffic against a fresh host and reports request latency percentiles', metric: 'Checkout p95 latency', fmt: ['', ' ms', 0], dir: 'lower', base: 412, n: 2.1, cmd: 'k6 run bench/checkout.js --vus 200 --duration 5m', cal: 'Today', runs: 9, used: 14, path: 'services/checkout', ho: 'ho_checkout', kw: 'checkout latency p95 p99 request api payment cart',
+{ id: 'k6', name: 'k6 checkout load', cat: 'Speed', desc: 'Replays checkout traffic against a fresh machine and reports request latency percentiles', metric: 'Checkout p95 latency', fmt: ['', ' ms', 0], dir: 'lower', base: 412, n: 2.1, cmd: 'k6 run bench/checkout.js --vus 200 --duration 5m', cal: 'Today', runs: 9, used: 14, path: 'services/checkout', ho: 'ho_checkout', kw: 'checkout latency p95 p99 request api payment cart',
 ideas: [['Pool size 20 to 48, reuse clients', 3, 41, 17, ['@@ src/db/pool.ts', '-  max: 20,', '+  max: 48,', '+  idleTimeoutMillis: 30000,', '@@ src/payments/client.ts', '-  const c = new GatewayClient(cfg);', '+  const c = clients.get(cfg.id) ?? makeClient(cfg);']],
 ['Cache pricing lookups per request', 2, 28, 6, ['@@ src/pricing/lookup.ts', '+const memo = new Map<string, Price>();', ' export async function price(sku: string) {', '-  return fetchPrice(sku);', '+  if (!memo.has(sku)) memo.set(sku, await fetchPrice(sku));', '+  return memo.get(sku)!;']],
 ['Inline tax calculation, drop retry', 4, 52, 31, ['@@ src/tax/calc.ts', '-  const t = await taxService.quote(order);', '+  const t = order.total * 0.0825;', '@@ src/payments/charge.ts', '-  return retry(() => gateway.charge(o), 3);', '+  return gateway.charge(o);']]] },
@@ -1550,7 +1588,7 @@ SK('bundle', 'Bundle splitting playbook', 'Route-level splitting, shared chunks 
 SK('rustalloc', 'Rust allocation hygiene', 'Reuse buffers, avoid clones in hot loops and keep allocations off the critical path', 'Speed', 'C', 4, '0.9', ['img'], [['SKILL.md', 'Overview', 'Measure allocations with a counting allocator. Reuse buffers across iterations with thread-local storage.'], ['SKILL.md', 'Clones', 'Borrow instead of cloning in hot loops. Return slices, not Vec, when callers only read.']]),
 SK('fcfeat', 'Forecast feature engineering', 'Calendar, lag and promotion features that tend to help demand forecasts', 'Quality', 'C', 5, '1.1', ['fcst'], [['SKILL.md', 'Overview', 'Start with calendar features, then lags, then promotions. Validate each on the backtest folds, never on the holdout.'], ['SKILL.md', 'Leakage', 'A feature that uses information from after the forecast date is leakage. Drop it even if the error falls.']]),
 SK('prompt', 'Prompt and answer hygiene', 'Write prompts that are easy to score and keep answer formats stable', 'Quality', 'C', 3, '0.8', ['llm'], [['SKILL.md', 'Overview', 'Keep one instruction per paragraph and ask for a fixed answer shape so the evaluator can score it.'], ['SKILL.md', 'Regressions', 'Re-run the labelled set after every prompt edit. A gain on one slice that loses another is not a gain.']]),
-SK('ci', 'CI caching tactics', 'Dependency, build and test caches that cut wall time without stale results', 'Speed', 'R', 5, '1.2', ['bt', 'tests'], [['SKILL.md', 'Overview', 'Key caches by lockfile hash. Cache the slowest step first and measure on a cold runner.'], ['SKILL.md', 'Pitfalls', 'A cache that hides a broken build is a regression. Always run one uncached build before accepting.']]),
+SK('ci', 'CI caching tactics', 'Dependency, build and test caches that cut wall time without stale results', 'Speed', 'R', 5, '1.2', ['bt', 'tests'], [['SKILL.md', 'Overview', 'Key caches by lockfile hash. Cache the slowest step first and measure on a cold machine.'], ['SKILL.md', 'Pitfalls', 'A cache that hides a broken build is a regression. Always run one uncached build before accepting.']]),
 SK('cost', 'Cloud cost review checklist', 'Where spend hides: idle capacity, wide scans and repeated recomputation', 'Cost', 'R', 4, '1.0', ['cost', 'pipe'], [['SKILL.md', 'Overview', 'Rank services by daily cost, then look for recomputation that a cache or a partition would remove.'], ['SKILL.md', 'Warehouses', 'Prune by partition, select only the columns you need, and avoid cross joins in nightly jobs.']]),
 SK('rank', 'Ranking signal tuning', 'Weights, freshness and exact-match boosts for search relevance', 'Quality', 'C', 3, '0.7', ['rel'], [['SKILL.md', 'Overview', 'Change one weight at a time and read per-query deltas, not only the average NDCG.'], ['SKILL.md', 'Freshness', 'Prefer recency as a gentle multiplier. A hard cutoff hurts long-tail queries.']]),
 SK('cold', 'Cold start checklist', 'Defer work, trim imports and precompute schemas to shorten start-up', 'Speed', 'R', 5, '1.3', ['cli', 'mstart'], [['SKILL.md', 'Overview', 'List everything that runs before the first output. Move the rest behind first use.'], ['SKILL.md', 'Schemas', 'Precompile validators at build time instead of parsing schemas on launch.']])
@@ -1561,7 +1599,7 @@ PL('backend', 'Backend latency', 'Replay real traffic, find the slow call and tu
 PL('forecast', 'Forecasting', 'Backtest forecast error on held-out periods with feature know-how for demand models', 'Quality', 'R', 6, { eval: ['fcst'], skill: ['fcfeat'], conn: ['bq'] }),
 PL('llmq', 'LLM quality', 'Score model answers against a labelled set and keep prompts easy to evaluate', 'Quality', 'C', 4, { eval: ['llm'], skill: ['prompt'], agent: ['claude', 'gemini'] }),
 PL('buildci', 'Build and CI speed', 'Cut clean build time and test suite duration, and quiet flaky tests', 'Performance', 'R', 9, { eval: ['bt', 'tests', 'flaky'], skill: ['ci', 'flaky'], conn: ['gh'] }),
-PL('cloudcost', 'Cloud cost', 'Read billing exports, rank spend and find recomputation worth removing', 'Cost', 'R', 5, { eval: ['cost', 'pipe'], skill: ['cost'], conn: ['gcp', 'azure'] }),
+PL('cloudcost', 'Cloud cost', 'Read billing exports, rank spend and find recomputation worth removing', 'Cost', 'R', 5, { eval: ['cost', 'pipe'], skill: ['cost'], conn: ['bq', 'obj'] }),
 PL('searchrel', 'Search relevance', 'Judge ranking quality and autocomplete speed against labelled queries', 'Quality', 'C', 4, { eval: ['rel', 'qry'], skill: ['rank'], conn: ['pg'] }),
 PL('mobile', 'Mobile start-up', 'Time cold starts on a reference device and trim what runs before first paint', 'Performance', 'C', 3, { eval: ['mstart'], skill: ['cold'], conn: ['sen'] }),
 PL('pipes', 'Data pipelines', 'Track the cost and duration of nightly pipelines and the tables they build', 'Cost', 'R', 4, { eval: ['pipe', 'sql'], skill: ['cost', 'pgtune'], conn: ['sf', 'bq'] }),
@@ -1571,7 +1609,7 @@ return {
 EVS, DATASETS, GEN,
 MIN: [0, 1, 6, 9, 38, 52, 60, 66, 72],
 FR: [0, 0.02, 0.08, 0.12, 0.56, 0.76, 0.8, 0.82, 0.84],
-STEPS: [['opt', 'Experiments', 'Start run'], ['inf', 'Compute', 'Start runner'], ['ctx', 'Data', 'Allow read access'], ['inf', 'Compute', 'Agents propose changes'], ['inf', 'Compute', 'Evaluator measures'], ['opt', 'Experiments', 'Check acceptance criteria'], ['ctx', 'Data', 'Log to run history, open pull request'], ['inf', 'Compute', 'Terminate and clean up']],
+STEPS: [['opt', 'Experiment', 'Start run'], ['inf', 'Compute', 'Create workspace'], ['ctx', 'Data', 'Mint scoped credentials'], ['inf', 'Compute', 'Agents write and run code'], ['inf', 'Compute', 'Evaluator measures, holdout included'], ['opt', 'Experiment', 'Judge against acceptance criteria'], ['ctx', 'Data', 'Store history, open pull request'], ['inf', 'Compute', 'Clean up']],
 COL: { opt: 'var(--accent)', ctx: 'var(--good)', inf: 'var(--infra)' },
 STAT: { 'Draft': ['Draft', 'st-draft', 'var(--ink3)', 'st'], 'Running': ['Running', 'st-run', 'var(--accent)', 'st run'], 'Win': ['Win', 'st-win', 'var(--good)', 'st'], 'Pending pull request': ['Pull request open', 'st-pr', 'var(--accent)', 'st'], 'Merged': ['Merged', 'st-merged', 'var(--good)', 'st'], 'No win': ['No win', 'st-none', 'var(--ink3)', 'st'], 'Stopped': ['Stopped', 'st-stop', 'var(--ink3)', 'st'] },
 OUT: { accepted: ['Accepted', 'var(--good)'], pend: ['Beats noise', 'var(--good)'], noise: ['Within noise', 'var(--ink3)'], worse: ['Worse', 'var(--bad)'], holdout: ['Failed holdout', 'var(--warn)'], measuring: ['Measuring', 'var(--ink3)'], disc: ['Discarded', 'var(--ink3)'] },
@@ -1579,13 +1617,32 @@ PROJECTS: [['Checkout platform', 'Owner', 'Latency, forecasting and build health
 PEOPLE: { 'Priya Raman': 'P', 'Marco Bianchi': 'M', 'Jun Park': 'J' },
 AGN: { claude: 'Claude Code', codex: 'Codex', grok: 'Grok', gemini: 'Gemini CLI', aider: 'Aider', openhands: 'OpenHands' },
 LIMITS: [['error', 'Error rate'], ['cost', 'Cost'], ['memory', 'Memory']],
-CLOUDS: [['aws', 'AWS', 'AWS environment'], ['gcp', 'GCP', 'GCP environment'], ['azure', 'Azure', 'Azure environment']],
+BACKENDS: [
+{ id: 'k8s', name: 'Kubernetes', where: 'EKS acme-prod · us-east-1', types: ['m7i.2xlarge', 'm7i.4xlarge'], image: 'ratchet-bench-2026.11' },
+{ id: 'aws', name: 'AWS VMs', where: 'acme-prod · us-east-1', types: ['c7i.2xlarge', 'c7i.4xlarge'], image: 'ratchet-bench-2026.11' },
+{ id: 'gcp', name: 'GCP VMs', where: 'acme-staging · us-central1', types: ['n2-standard-8', 'n2-standard-16'], image: 'ratchet-bench-gcp-2026.11' },
+{ id: 'azure', name: 'Azure VMs', where: 'acme-staging · eastus', types: ['D8s v5', 'D16s v5'], image: 'ratchet-bench-az-2026.11' }
+],
+SECRETS: ['AWS Secrets Manager', 'Google Secret Manager', 'Azure Key Vault', 'HashiCorp Vault'],
+SCOPE: {
+sf: ['A read-only role on the views you list. Holdout tables are not granted.', 'Its own read-only role that also covers the holdout tables.'],
+dbx: ['A read-only token for a service principal with SELECT on the schemas you list. The holdout schema is excluded.', 'Its own token that also covers the holdout schema.'],
+ddb: ['A read-only IAM policy on the tables you list. The holdout table is excluded.', 'Its own policy that adds the holdout table.'],
+bq: ['A read-only service account on authorized views. Holdout views are not authorized.', 'Its own service account that also reads the holdout views.'],
+pg: ['A read-only role on a replica. Holdout tables are not granted.', 'Its own read-only role that also covers the holdout tables.'],
+obj: ['A read-only policy on the prefixes you list. The holdout prefix is excluded.', 'Its own policy that adds the holdout prefix.'],
+gh: ['A short-lived, read-only token scoped to one repository, with holdout paths excluded. Opening a pull request is a separate, audited action.', 'Its own short-lived token that includes the holdout paths.'],
+gl: ['A short-lived, read-only token scoped to one project, with holdout paths excluded. Opening a merge request is a separate, audited action.', 'Its own short-lived token that includes the holdout paths.'],
+mcp: ['A per-run token limited to the read-only tools you allow.', 'Its own per-run token.'],
+rh: ['Past trials of the same experiment, read-only.', 'Not used.'],
+any: ['A read-only key limited to the services and queries you list. Holdout data is excluded.', 'Its own read-only key that also covers the holdout data.']
+},
 MONTHS: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'],
 SUGG: [['Lower checkout p95 latency', 'Checkout latency'], ['Cut forecast error', 'Forecast error'], ['Speed up CLI cold start', 'CLI cold start'], ['Shrink the bundle', 'Bundle size']],
 CATALOG: [
-G('bq', 'BigQuery', 'Tables and views from your warehouse, read inside your cloud', 'Data', 'R', 21, { def: 'acme-analytics', gl: 'g-db', mg: 'BQ' }),
+G('bq', 'BigQuery', 'Tables and views from your warehouse, read where they live', 'Data', 'R', 21, { def: 'acme-analytics', gl: 'g-db', mg: 'BQ' }),
 G('pg', 'Postgres', 'Read-only queries against a database replica', 'Data', 'R', 17, { def: 'orders-db', gl: 'g-db', mg: 'PG' }),
-G('obj', 'Object storage', 'Files and exports in a bucket, versioned by prefix', 'Data', 'R', 9, { def: 's3://acme-data', gl: 'g-box', mg: 'OS' }),
+G('obj', 'Amazon S3', 'Files and exports in a bucket, versioned by prefix', 'Data', 'R', 9, { def: 's3://acme-data', gl: 'g-box', mg: 'OS' }),
 G('gl', 'GitLab', 'Repositories and merge requests', 'Code', 'R', 7, { def: 'acme/platform', gl: 'g-git', mg: 'GL' }),
 G('bb', 'Bitbucket', 'Repositories and pull requests in your account', 'Code', 'R', 3, { def: 'acme/services', gl: 'g-git', mg: 'BB' }),
 G('gf', 'Grafana', 'Dashboards and service metrics', 'Monitoring', 'C', 4, { def: 'metrics', gl: 'g-chart', mg: 'GF' }),
@@ -1593,18 +1650,17 @@ G('prom', 'Prometheus', 'Time series from your clusters, read-only', 'Monitoring
 G('sen', 'Sentry', 'Errors and release health, grouped by issue', 'Monitoring', 'R', 5, { def: 'acme-web', gl: 'g-gauge', mg: 'SN' }),
 G('lin', 'Linear', 'Issues and project notes agents can read for context', 'Code', 'C', 2, { def: 'Platform team', gl: 'g-file', mg: 'LN' }),
 G('mcp', 'Docs search', 'An MCP server over your internal documentation', 'Code', 'C', 3, { def: 'docs.acme.internal', gl: 'g-code', mg: 'DS' }),
-G('gcp', 'GCP', 'Account where runners and evaluators are created', 'Cloud', 'R', 12, { def: 'acme-staging', gl: 'g-cloud', mg: 'GC' }),
-G('azure', 'Azure', 'Subscription where runners and evaluators are created', 'Cloud', 'R', 6, { def: 'acme-staging', gl: 'g-cloud', mg: 'AZ' }),
+G('dbx', 'Databricks', 'Tables and volumes in your lakehouse, read through Unity Catalog', 'Data', 'R', 8, { def: 'acme-lakehouse', gl: 'g-db', mg: 'DB' }),
+G('ddb', 'DynamoDB', 'Items in your tables, read by key and query', 'Data', 'R', 5, { def: 'orders', gl: 'g-db', mg: 'DY' }),
 G('gh', 'GitHub', 'Repositories, pull requests and design notes agents read', 'Code', 'R', 14, { def: 'acme/checkout', gl: 'g-git', mg: 'GH' }),
 G('sf', 'Snowflake', 'Warehouse tables and the holdout datasets', 'Data', 'R', 9, { def: 'ANALYTICS', gl: 'g-db', mg: 'SF' }),
 G('dd', 'Datadog', 'Production traces, query logs and service metrics', 'Monitoring', 'R', 11, { def: 'production', gl: 'g-chart', mg: 'DD' }),
-G('aws', 'AWS', 'Account where runners and evaluators are created', 'Cloud', 'R', 24, { def: 'acme-prod', gl: 'g-cloud', mg: 'AW' })
 ],
 EVCAT: [
 G('http', 'HTTP latency', 'Request latency percentiles from a replayed HTTP workload', 'Speed', 'R', 9, { metric: 'HTTP p95 latency', fmt: ['', ' ms', 0], dir: 'lower', base: 230, n: 2.4, cmd: 'k6 run bench/http.js --vus 150', path: 'services/api', ho: 'ho_checkout', kw: 'http latency request p95 api', gl: 'g-gauge' }),
 G('mstart', 'App start-up', 'Cold start time of the mobile app on a reference device', 'Speed', 'C', 3, { metric: 'Cold start time', fmt: ['', ' ms', 0], dir: 'lower', base: 1380, n: 3.5, cmd: 'maestro test perf/cold-start.yaml', path: 'mobile/app', ho: 'ho_cli', kw: 'mobile app start startup cold', gl: 'g-gauge' }),
 G('mem', 'Memory', 'Peak resident memory during a fixed workload', 'Size', 'R', 5, { metric: 'Peak memory', fmt: ['', ' MB', 0], dir: 'lower', base: 512, n: 1.5, cmd: 'node bench/memory.js', path: 'src', ho: 'ho_checkout', kw: 'memory ram heap', gl: 'g-box' }),
-G('tests', 'Test suite time', 'Wall time of the full test suite on a fresh host', 'Speed', 'R', 6, { metric: 'Suite duration', fmt: ['', ' s', 0], dir: 'lower', base: 640, n: 3.8, cmd: 'pnpm test --run', path: 'tests', ho: 'ho_checkout', kw: 'test suite ci time', gl: 'g-gauge' }),
+G('tests', 'Test suite time', 'Wall time of the full test suite on a fresh machine', 'Speed', 'R', 6, { metric: 'Suite duration', fmt: ['', ' s', 0], dir: 'lower', base: 640, n: 3.8, cmd: 'pnpm test --run', path: 'tests', ho: 'ho_checkout', kw: 'test suite ci time', gl: 'g-gauge' }),
 G('llm', 'LLM eval', 'Scores model answers against a labelled set', 'Quality', 'C', 2, { metric: 'Answer score', fmt: ['', '', 2], dir: 'higher', base: 0.72, n: 1.9, cmd: 'python -m evals.run --set answers-v2', path: 'prompts', ho: 'ho_rel', kw: 'llm model answer score prompt', gl: 'g-spark' }),
 G('web', 'Page load', 'Largest contentful paint on a throttled browser', 'Speed', 'R', 7, { metric: 'Largest contentful paint', fmt: ['', ' ms', 0], dir: 'lower', base: 2100, n: 2.8, cmd: 'lhci autorun', path: 'web/src', ho: 'ho_build', kw: 'page load lcp web vitals', gl: 'g-gauge' }),
 G('docker', 'Image size', 'Compressed size of the container image after a clean build', 'Size', 'R', 4, { metric: 'Image size', fmt: ['', ' MB', 0], dir: 'lower', base: 380, n: 0.5, cmd: 'docker build . && ./size.sh', path: 'Dockerfile', ho: 'ho_build', kw: 'docker container image size', gl: 'g-box' }),
@@ -1616,24 +1672,24 @@ G('rpc', 'gRPC latency', 'Request latency percentiles for service to service cal
 G('flaky', 'Flaky tests', 'Share of test runs that fail then pass on retry', 'Quality', 'R', 4, { metric: 'Flake rate', fmt: ['', '%', 2], dir: 'lower', base: 3.4, n: 4.0, cmd: 'pnpm test --repeat 20', path: 'tests', ho: 'ho_checkout', kw: 'flaky test retry', gl: 'g-gauge' })
 ],
 AGENTCAT: [
-G('gemini', 'Gemini CLI', 'Terminal coding agent that works with Google models', 'Hosted', 'R', 4, { provider: 'Google', model: 'gemini-2.5-pro', via: 'Key ending 4d7e', gl: 'g-spark' }),
+G('gemini', 'Gemini CLI', 'Terminal coding agent that works with Google models', 'Hosted', 'R', 4, { provider: 'Google', model: 'gemini-2.5-pro', via: 'Key in your secret manager', gl: 'g-spark' }),
 G('aider', 'Aider', 'Edits files in your repository and commits each change with a message', 'Open source', 'C', 3, { provider: 'Bring your own model', model: 'configured per run', via: 'Acme gateway', gl: 'g-term' }),
 G('openhands', 'OpenHands', 'Plans a change, edits files and runs the tests before proposing it', 'Open source', 'C', 2, { provider: 'Bring your own model', model: 'configured per run', via: 'Acme gateway', gl: 'g-bot' }),
 G('goose', 'Goose', 'Extensible agent that works through tasks with your own tools', 'Open source', 'C', 2, { provider: 'Bring your own model', model: 'configured per run', via: 'Acme gateway', gl: 'g-bot' }),
 G('cline', 'Cline', 'Plans and edits step by step, asking for approval on risky changes', 'Open source', 'C', 2, { provider: 'Bring your own model', model: 'configured per run', via: 'Acme gateway', gl: 'g-code' }),
-G('amp', 'Amp', 'Terminal agent tuned for large codebases and long tasks', 'Hosted', 'R', 3, { provider: 'Sourcegraph', model: 'amp-default', via: 'Key ending 51ab', gl: 'g-spark' }),
+G('amp', 'Amp', 'Terminal agent tuned for large codebases and long tasks', 'Hosted', 'R', 3, { provider: 'Sourcegraph', model: 'amp-default', via: 'Key in your secret manager', gl: 'g-spark' }),
 G('qwen', 'Qwen Code', 'Coding agent built on open Qwen models you can host yourself', 'Open source', 'C', 1, { provider: 'Alibaba', model: 'qwen3-coder', via: 'Acme gateway', gl: 'g-term' }),
 G('opencode', 'OpenCode', 'Provider-agnostic terminal agent with a plain config file', 'Open source', 'C', 2, { provider: 'Bring your own model', model: 'configured per run', via: 'Acme gateway', gl: 'g-term' }),
 G('crush', 'Crush', 'Terminal agent with a focus on fast, small diffs', 'Hosted', 'C', 1, { provider: 'Bring your own model', model: 'configured per run', via: 'Acme gateway', gl: 'g-bot' }),
 G('kilo', 'Kilo Code', 'Agent that splits a goal into tasks and works through them', 'Open source', 'C', 1, { provider: 'Bring your own model', model: 'configured per run', via: 'Acme gateway', gl: 'g-bot' }),
 G('copilot', 'Copilot CLI', 'GitHub terminal agent that proposes changes as a branch', 'Hosted', 'R', 3, { provider: 'GitHub', model: 'default', via: 'GitHub organization acme', gl: 'g-git' })
 ],
-CATS: { eval: ['All', 'Speed', 'Size', 'Quality', 'Cost'], skill: ['All', 'Speed', 'Data', 'Size', 'Quality', 'Cost', 'Conventions'], conn: ['All', 'Data', 'Code', 'Cloud', 'Monitoring'], agent: ['All', 'Hosted', 'Open source'], plugin: ['All', 'Performance', 'Quality', 'Cost'] },
+CATS: { eval: ['All', 'Speed', 'Size', 'Quality', 'Cost'], skill: ['All', 'Speed', 'Data', 'Size', 'Quality', 'Cost', 'Conventions'], conn: ['All', 'Data', 'Code', 'Monitoring'], agent: ['All', 'Hosted', 'Open source'], plugin: ['All', 'Performance', 'Quality', 'Cost'] },
 TABS: [['eval', 'Evaluations'], ['skill', 'Skills'], ['conn', 'Connectors'], ['agent', 'Agents'], ['plugin', 'Plugins']],
 MORE: { eval: 'New evaluations', skill: 'New skills', conn: 'Top connectors', agent: 'More agents', plugin: 'New plugins' },
 FEAT: { eval: 'web', skill: 'bundle', plugin: 'webperf' },
 FEATTXT: { eval: 'Time a page load on a throttled browser and see which change makes it faster.', skill: 'Route-level splitting and dependency swaps that cut gzip size without breaking routes.', plugin: 'Page load, HTTP latency and build size, with the know-how to improve them.' },
-SLIDES: [{ t: 'Data warehouses', d: 'Read tables and exports inside your cloud. Nothing is copied out.', cat: 'Data', tint: 'var(--infra)', ids: ['bq', 'sf', 'pg', 'obj'] }, { t: 'Code hosts', d: 'Repositories and review threads that agents read before they propose a change.', cat: 'Code', tint: 'var(--accent)', ids: ['gh', 'gl', 'bb', 'lin'] }, { t: 'Clouds', d: 'Accounts where runners and evaluators are created, then removed.', cat: 'Cloud', tint: 'var(--good)', ids: ['aws', 'gcp', 'azure'] }, { t: 'Monitoring', d: 'Traces, metrics and errors from production, read-only.', cat: 'Monitoring', tint: 'var(--warn)', ids: ['dd', 'gf', 'prom', 'sen'] }],
+SLIDES: [{ t: 'Data warehouses', d: 'Agents read tables and views where they live, through a read-only credential. Nothing is copied.', cat: 'Data', tint: 'var(--infra)', ids: ['sf', 'dbx', 'bq', 'pg'] }, { t: 'Code hosts', d: 'Repositories and review threads that agents read before they propose a change.', cat: 'Code', tint: 'var(--accent)', ids: ['gh', 'gl', 'bb', 'lin'] }, { t: 'Storage and tables', d: 'Files in a bucket and items in a table, read through a policy that names what is allowed.', cat: 'Data', tint: 'var(--good)', ids: ['obj', 'ddb'] }, { t: 'Monitoring', d: 'Traces, metrics and errors from production, read-only.', cat: 'Monitoring', tint: 'var(--warn)', ids: ['dd', 'gf', 'prom', 'sen'] }],
 PSUGG: [['webperf', 'web', 'Add the Web performance plugin to measure page load'], ['llmq', 'llm', 'Add the LLM quality plugin to score model answers'], ['mobile', 'mstart', 'Add the Mobile start-up plugin to time cold starts']],
 NOUN: { eval: 'evaluations', skill: 'skills', conn: 'connectors', agent: 'agents', plugin: 'plugins' },
 TABN: { eval: 'Evaluations', skill: 'Skills', conn: 'Connectors', agent: 'Agents', plugin: 'Plugins' },
@@ -1650,8 +1706,8 @@ now() {
 const d = new Date();
 return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
 }
-log(action, resource) {
-this.setState((s) => ({ audit: [{ time: this.now(), who: 'Priya Raman', action, resource }, ...s.audit] }));
+log(action, resource, who) {
+this.setState((s) => ({ audit: [{ time: this.now(), who: who || 'Priya Raman', action, resource }, ...s.audit] }));
 }
 // ---- helpers
 initials(n) { const w = n.split(' '); return w.length > 1 ? w.map((x) => x.charAt(0)).join('').slice(0, 2) : n.charAt(0) + n.charAt(n.length - 1); }
@@ -1724,7 +1780,8 @@ const K = this.K, ev = a.ev;
 const lim = K.LIMITS.filter(([k]) => o.lim[k]).map(([, l]) => l.toLowerCase());
 const pk = s.datasets.filter((x) => o.ds.includes(x.id));
 const hold = s.datasets.find((x) => x.id === ev.ho && x.marking === 'Holdout') || s.datasets.find((x) => x.marking === 'Holdout');
-const cl = K.CLOUDS.find((c) => c[0] === o.env) || K.CLOUDS[0];
+const be = K.BACKENDS.find((c) => c.id === o.env) || K.BACKENDS[0];
+const dv = (x) => (x.name.endsWith(x.version) ? x.name : x.name + ' ' + x.version);
 const ag = o.agents.length + (o.agents.length === 1 ? ' agent' : ' agents');
 const sk = (o.skills || []).map((id) => s.skills.find((k) => k.id === id)).filter(Boolean);
 return {
@@ -1734,12 +1791,14 @@ lines: [
 { k: 'Primary metric', v: ev.metric + ' · ' + ev.dir + ' is better · baseline ' + this.fv(ev, ev.base) + ', noise ±' + ev.n + '%', c: K.COL.opt },
 { k: 'Guardrail metrics', v: lim.length ? lim.join(', ') : 'none', c: K.COL.opt },
 { k: 'Editable paths', v: o.path || ev.path, c: K.COL.opt },
-{ k: 'Data', v: (pk.length ? pk.map((x) => x.name).join(', ') : 'no datasets') + (hold ? '. ' + hold.name + ' is restricted to the evaluator.' : '. No dataset is marked Holdout.'), c: K.COL.ctx },
+{ k: 'Data', v: (pk.length ? pk.map(dv).join(', ') : 'no datasets') + (hold ? '. ' + hold.name + ' is the holdout and is restricted to the evaluator.' : '. No dataset is marked Holdout.'), c: K.COL.ctx },
+{ k: 'Credentials', v: 'Minted for each run by the launcher. Agents get read-only credentials that leave out the holdout. The evaluator gets its own, which includes it. Model keys are added by a proxy, so agents never hold one.', c: K.COL.ctx },
 { k: 'Skills', v: sk.length ? sk.map((k) => k.name).join(', ') + '. Agents read these. The evaluator does not.' : 'No skills selected', c: K.COL.ctx },
-{ k: 'Environment', v: cl[2] + ', ' + ag + ', ' + this.money(o.cap) + ' budget, removed after the last run', c: K.COL.inf }
+{ k: 'Environment', v: be.name + ' (' + be.where + '), ' + (o.mt || be.types[0]) + '. Agents and the evaluator run in separate sandboxes on separate machines, and every sandbox is removed after the last run.', c: K.COL.inf },
+{ k: 'Agents and budget', v: ag + ', ' + this.money(o.cap) + ' budget', c: K.COL.inf }
 ],
-chips: ['Data · ' + pk.length + (pk.length === 1 ? ' dataset' : ' datasets'), 'Skills · ' + sk.length, 'Environment · ' + cl[1], 'Agents · ' + o.agents.length, 'Budget · ' + this.money(o.cap)],
-summary: ev.metric + ', ' + pk.length + (pk.length === 1 ? ' dataset, ' : ' datasets, ') + sk.length + (sk.length === 1 ? ' skill, ' : ' skills, ') + cl[1] + ', ' + ag + ', ' + this.money(o.cap)
+chips: ['Data · ' + pk.length + (pk.length === 1 ? ' dataset' : ' datasets'), 'Skills · ' + sk.length, 'Environment · ' + be.name, 'Agents · ' + o.agents.length, 'Budget · ' + this.money(o.cap)],
+summary: ev.metric + ', ' + pk.length + (pk.length === 1 ? ' dataset, ' : ' datasets, ') + sk.length + (sk.length === 1 ? ' skill, ' : ' skills, ') + be.name + ', ' + ag + ', ' + this.money(o.cap)
 };
 }
 renderVals() {
@@ -1758,7 +1817,9 @@ const gl = (id) => id;
 const st0 = (o) => K.STAT[o.status];
 const stOf = (o) => { const t = st0(o); return { stLabel: t[0], stColor: t[2], stCls: t[3] + ' gi ' + t[1] }; };
 const selOpt = s.opts.find((o) => o.id === s.selId) || s.opts[0];
-const cloudLabel = (k) => K.CLOUDS.find((c) => c[0] === k)[1];
+const beOf = (k) => K.BACKENDS.find((c) => c.id === k) || K.BACKENDS[0];
+const beOn = (k) => !!s.backends[k];
+const mtOf = (k, mt) => (beOf(k).types.includes(mt) ? mt : beOf(k).types[0]);
 const roleOf = (p) => (K.PROJECTS.find((x) => x[0] === p) || [0, 'Viewer'])[1];
 const evAll = (o) => this.an(o, s);
 
@@ -1816,6 +1877,7 @@ const SETSEC = [
 ['general', 'General', 'i-org', 'org', 'Settings for everyone in Acme.'],
 ['members', 'Users and groups', 'i-users', 'org', 'Roles on your projects.'],
 ['signin', 'Single sign-on', 'i-lock', 'org', 'How people sign in to Acme.'],
+['infra', 'Infrastructure', 'g-cloud', 'org', 'Where sandboxes run, and where secrets stay.'],
 ['budgets', 'Budgets', 'g-gauge', 'org', 'When a budget is reached, work stops.'],
 ['notes', 'Notes', 'g-note', 'org', 'Guidance from people that agents read.'],
 ['audit', 'Audit logs', 'g-hist', 'org', 'Every change anyone made in Acme.']
@@ -1830,7 +1892,8 @@ const SETROW = [
 ['tokens', 'tokcreate', 'Create an access token', 'It acts as you, with everything you can do.', 'api key cli mcp ci new'],
 ['tokens', 'toklist', 'Your access tokens', 'Revoke a token you no longer use.', 'revoke fingerprint service principal'],
 ['general', 'org', 'Organization', 'The name your users see.', 'acme name'],
-['general', 'host', 'Server', 'The address of this Ratchet server.', 'host url ratchet.acme.internal'],
+['general', 'deploy', 'Deployment', 'Where the Ratchet server runs.', 'ratchet cloud self-hosted docker compose'],
+['general', 'host', 'Server', 'The address of this Ratchet server.', 'host url acme.ratchet.cloud'],
 ['general', 'defcap', 'Default budget per experiment', 'New experiments start with this budget.', 'default budget cap dollars'],
 ['members', 'users', 'Users', 'Roles on your projects. Each change is recorded in the audit logs.', 'people members roles invite owner editor viewer'],
 ['members', 'groups', 'Groups', 'Users in these Okta groups get a role automatically.', 'okta group mapping'],
@@ -1838,6 +1901,9 @@ const SETROW = [
 ['signin', 'newusers', 'New users', 'Who can sign in and how roles are assigned.', 'okta:engineering group mapping'],
 ['signin', 'session', 'Session length', 'How long a sign-in lasts before Okta asks again.', 'hours login timeout'],
 ['signin', 'sessactive', 'Signed in now', 'Sessions that are open right now.', 'active sessions'],
+['infra', 'launcher', 'Launcher', 'Starts and removes sandboxes in your infrastructure.', 'runner connected version last seen'],
+['infra', 'backends', 'Sandbox backends', 'Where agent and evaluator sandboxes run.', 'kubernetes aws gcp azure vms machine type image cluster'],
+['infra', 'secretmgr', 'Secret manager', 'Where connector admin secrets stay.', 'vault secrets key vault reference'],
 ['budgets', 'monthly', 'Total monthly budget', 'When it is reached, running work stops at the next trial.', 'spend cap limit cost dollars'],
 ['budgets', 'perexp', 'Per experiment', 'Spent against each experiment budget.', 'experiment cap spend'],
 ['notes', 'notenew', 'Add a note', 'Say something every agent should know, for all experiments.', 'guidance write'],
@@ -1887,9 +1953,9 @@ const trialCount = a.seq.length;
 const nm = o.agents.length;
 const measuring = a.cur.filter((t) => !t.mes).length;
 const stepText = [
-'', 'Starting the run.', 'A runner is starting in ' + cloudLabel(o.env) + '.', 'Agents are getting read access to ' + dc.pk.length + (dc.pk.length === 1 ? ' dataset.' : ' datasets.'),
-nm + (nm === 1 ? ' agent is' : ' agents are') + ' proposing changes.', 'The evaluator is measuring ' + measuring + (measuring === 1 ? ' trial' : ' trials') + ' on a fresh host.',
-'Checking each result against the acceptance criteria.', 'Logging the run to history and preparing the pull request.', 'Terminating hosts and verifying clean-up.'
+'', 'Starting the run.', 'The launcher is creating a workspace on ' + beOf(o.env).name + '.', 'The launcher is minting scoped credentials: read-only for agents, without the holdout.',
+nm + (nm === 1 ? ' agent is' : ' agents are') + ' writing and running code.', 'The evaluator is measuring ' + measuring + (measuring === 1 ? ' trial' : ' trials') + ' with the holdout, on separate machines.',
+'Judging each result against the acceptance criteria.', 'Storing the run in history and preparing the pull request.', 'Removing every sandbox and verifying clean-up.'
 ][curStep] || '';
 const nodes = [];
 K.STEPS.forEach(([c, who, what], i) => {
@@ -1912,7 +1978,7 @@ return { k: l, v: val, ok: !fail, tag: fail ? 'Fail' : 'Pass', color: fail ? 'va
 const open = !!s.ex['tr:' + t.key];
 return {
 dom: 'tr-' + t.key.replace(':', '-'), agent: t.agent, init: this.initials(t.agent), text: t.text, files: t.files + (t.files === 1 ? ' file' : ' files'), add: '+' + t.add, del: '−' + t.del,
-value: t.mes ? this.fv(ev, ev.base) + ' → ' + this.fv(ev, t.v) : (t.out === 'disc' ? 'Not measured' : 'Measuring on a fresh host'),
+value: t.mes ? this.fv(ev, ev.base) + ' → ' + this.fv(ev, t.v) : (t.out === 'disc' ? 'Not measured' : 'Measuring in the evaluator sandbox'),
 mes: t.mes, delta: t.mes ? this.pt(t.p) : '', deltaColor: t.mes ? (O[1] === 'var(--ink3)' ? 'var(--ink2)' : O[1]) : 'var(--ink3)',
 out: O[0], outColor: O[1], outCls: t.mes ? 'tg' : 'tg hollow', tm: t.mes ? t.tm + ' m' : '',
 open, rot: open ? 'rotate(90deg)' : 'rotate(0deg)', hl: hl === t.key, rowCls: hl === t.key ? 'trow hl' : 'trow',
@@ -1981,7 +2047,7 @@ ack: n.ack || (done || stopped ? 'Noted. I will use this in the next run.' : o.s
 }));
 const winPct = winT ? this.pt(winT.p) : '';
 const hitCap = this.spend(o) >= o.cap;
-const resSum = winT ? ev.metric + (ev.dir === 'lower' ? ' fell from ' : ' rose from ') + this.fv(ev, ev.base) + ' to ' + this.fv(ev, winT.v) + ', confirmed on a fresh host and held on data the agents never saw.' : '';
+const resSum = winT ? ev.metric + (ev.dir === 'lower' ? ' fell from ' : ' rose from ') + this.fv(ev, ev.base) + ' to ' + this.fv(ev, winT.v) + ', confirmed in a fresh evaluator sandbox and held on data the agents never saw.' : '';
 const wcount = Math.min(o.agents.length, 3);
 const triedList = a.cur.map((t) => ({ agent: t.agent, text: t.text, value: this.fv(ev, t.v) + ' (' + this.pt(t.p) + ')', out: K.OUT[t.out][0], color: K.OUT[t.out][1] }));
 const nHold = a.cur.filter((t) => t.out === 'holdout').length;
@@ -1989,9 +2055,12 @@ const ag = Math.round(oSpend * 0.49), hosts = Math.round(oSpend * 0.41);
 const kvs = (list) => list.map(([k, v]) => ({ k, v }));
 const hasBest = !!a.best;
 const reqChips = dc.chips.map((t) => ({ t }));
-const optCol = winT ? kvs([['Baseline', this.fv(ev, ev.base) + ' over 9 runs'], ['Best trial', this.fv(ev, winT.v) + ' over 5 runs, same on a second host'], ['Holdout', winT.h != null ? this.fv(ev, winT.h) + ', passed' : 'Passed'], ['Noise', '±' + ev.n + '%']]) : [];
-const ctxCol = kvs([['Read by agents', dc.pk.length ? dc.pk.map((x) => x.name).join(', ') : 'No datasets'], ['Skills read by agents', dc.sk.length ? dc.sk.map((x) => x.name).join(', ') : 'None'], ['Used by evaluator', dc.hold ? dc.hold.name : 'None marked'], ['Notes considered', oNotes.length + (oNotes.length === 1 ? ' note' : ' notes') + ' from people']]);
-const infCol = kvs([['Environment', (K.CLOUDS.find((c) => c[0] === o.env) || K.CLOUDS[0])[2] + ', ' + ['c7i.2xlarge', 'n2-standard-8', 'D8s v5'][Math.max(0, K.CLOUDS.findIndex((c) => c[0] === o.env))]], ['Agents used', String(wcount)], ['Spend', money(oSpend) + ' (agents ' + money(ag) + ', hosts ' + money(hosts) + ')'], ['Clean-up', o.step >= 8 || stopped ? 'Verified' : 'Pending until step 8']]);
+const optCol = winT ? kvs([['Baseline', this.fv(ev, ev.base) + ' over 9 runs'], ['Best trial', this.fv(ev, winT.v) + ' over 5 runs, same on a second evaluator sandbox'], ['Holdout', winT.h != null ? this.fv(ev, winT.h) + ', passed' : 'Passed'], ['Noise', '±' + ev.n + '%']]) : [];
+const dvs = (x) => (x.name.endsWith(x.version) ? x.name : x.name + ' ' + x.version);
+const beR = beOf(o.env), mtR = mtOf(o.env, o.mt);
+const agR = o.agents.slice(0, wcount).map((id) => { const g = s.agentList.find((q) => q.id === id); return g ? g.name + ' (' + g.model + ')' : this.agName(s, id); }).join(', ');
+const ctxCol = kvs([['Datasets read by agents', dc.pk.length ? dc.pk.map(dvs).join(', ') : 'No datasets'], ['Agent credential', 'Read-only, minted for this run, holdout excluded'], ['Evaluator credential', dc.hold ? 'Its own, includes ' + dvs(dc.hold) : 'Its own, no holdout marked'], ['Skills read by agents', dc.sk.length ? dc.sk.map((x) => x.name + ' v' + x.ver).join(', ') : 'None'], ['Notes considered', oNotes.length + (oNotes.length === 1 ? ' note' : ' notes') + ' from people']]);
+const infCol = kvs([['Backend and machine type', beR.name + ', ' + mtR], ['Evaluator image', beR.image], ['Agents used', agR], ['Spend', money(oSpend) + ' (agents ' + money(ag) + ', sandboxes ' + money(hosts) + ')'], ['Numbers', 'Signed by the evaluator'], ['Clean-up', o.step >= 8 || stopped ? 'Verified' : 'Pending until step 8']]);
 const mach = s.machines.filter((m) => m.opt === o.name);
 const placeholders = { Draft: 'Ask Ratchet to change the draft, e.g. also guard memory use', Running: 'Steer the next trial, e.g. focus on database queries' };
 const ph = placeholders[o.status] || 'Start another run with a note, e.g. try the cache layer';
@@ -2068,7 +2137,7 @@ histAll.push({ optId: x.id, opt: x.name, project: x.project, run: t.run, agent: 
 });
 const hExpOptions = ['All', ...s.opts.filter((x) => s.histProj === 'All' || x.project === s.histProj).map((x) => x.name)];
 const hFilter = (r) => (s.histProj === 'All' || r.project === s.histProj) && (s.histExp === 'All' || r.opt === s.histExp);
-const machAll = s.machines.map((m) => ({ ...m, project: optProj(m.opt), st: m.gone ? 'Terminated, clean-up verified' : 'Running', color: m.gone ? 'var(--ink3)' : 'var(--good)', open: () => { const x = s.opts.find((q) => q.name === m.opt); if (x) openOpt(x)(); } }));
+const machAll = s.machines.map((m) => ({ ...m, project: optProj(m.opt), roleLabel: m.role === 'evaluator' ? 'Evaluator sandbox' : 'Agent sandbox', st: m.gone ? 'Removed, clean-up verified' : 'Running', color: m.gone ? 'var(--ink3)' : 'var(--good)', open: () => { const x = s.opts.find((q) => q.name === m.opt); if (x) openOpt(x)(); } }));
 const machRows = machAll.filter((m) => (s.histProj === 'All' || m.project === s.histProj) && (s.histExp === 'All' || m.opt === s.histExp));
 
 // ---------- customize
@@ -2093,15 +2162,14 @@ const matchC = (x) => (!cq || (x.name + ' ' + (x.desc || '') + ' ' + (x.cat || '
 const sortC = (p, q) => (s.cSort === 'used' ? q._u - p._u || p.name.localeCompare(q.name) : s.cSort === 'new' ? (yoursView ? q._i - p._i : p._i - q._i) : p.name.localeCompare(q.name));
 const glFor = (x, t) => x.gl || (t === 'eval' ? (x.cat === 'Size' ? 'g-box' : x.cat === 'Quality' ? 'g-chart' : x.cat === 'Cost' ? 'g-cloud' : 'g-gauge') : t === 'agent' ? 'g-term' : t === 'skill' ? 'g-book' : t === 'plugin' ? 'g-blocks' : (x.cat === 'Cloud' ? 'g-cloud' : x.cat === 'Code' ? 'g-git' : 'g-db'));
 const note = (m) => ({ cNotice: m });
-const mkConn = (cx) => ({ id: cx.id, name: cx.name + ' ' + cx.def, desc: cx.desc, cat: cx.cat, kind: cx.name, used: cx.used, added: true, gl: cx.gl, byk: cx.byk, ...(cx.cat === 'Cloud' ? { cloud: cx.id } : {}) });
+const mkConn = (cx) => ({ id: cx.id, name: cx.name + ' ' + cx.def, desc: cx.desc, cat: cx.cat, kind: cx.name, used: cx.used, added: true, gl: cx.gl, byk: cx.byk });
 const mkEval = (e) => ({ ...e, cal: 'Today', runs: 9, ideas: K.GEN });
 const mkAgent = (g) => ({ id: g.id, name: g.name, desc: g.desc, provider: g.provider, model: g.model, via: g.via, cat: g.cat, used: 0, par: 2, gl: g.gl, byk: g.byk });
 const mkSkill = (k) => ({ ...k, yours: true });
 const addConn = (cx) => {
 if (isY('conn', cx.id)) return;
-const isCloud = cx.cat === 'Cloud';
-this.setState((st) => ({ connectors: [mkConn(cx), ...st.connectors], clouds: isCloud ? { ...st.clouds, [cx.id]: true } : st.clouds, ...note(cx.name + ' added to Yours.') }));
-this.log(isCloud ? 'cloud.connect' : 'connector.add', isCloud ? cx.name : cx.name + ' · ' + cx.def);
+this.setState((st) => ({ connectors: [mkConn(cx), ...st.connectors], ...note(cx.name + ' added to Yours. Ratchet keeps a reference to its admin secret in ' + st.secretMgr + ', never the secret.') }));
+this.log('connector.add', cx.name + ' · ' + cx.def);
 };
 const addEval = (e) => { if (isY('eval', e.id)) return; this.setState((st) => ({ evals: [...st.evals, mkEval(e)], ...note(e.name + ' added to Yours. It can now be chosen in a new experiment.') })); this.log('evaluation.add', e.name + ' · template'); };
 const addAgent = (g) => { if (isY('agent', g.id)) return; this.setState((st) => ({ agentList: [...st.agentList, mkAgent(g)], agents: { ...st.agents, [g.id]: true }, ...note(g.name + ' added to Yours and switched on.') })); this.log('agent.add', g.name + ' · ' + g.provider); };
@@ -2110,13 +2178,13 @@ const addPlugin = (p) => {
 if (isY('plugin', p.id)) return;
 this.setState((st) => {
 const rec = { eval: [], skill: [], conn: [], agent: [] };
-let { evals, skills, connectors, agentList, agents, clouds } = st;
+let { evals, skills, connectors, agentList, agents } = st;
 p.items.eval.forEach((id) => { const e = K.EVCAT.find((q) => q.id === id); if (e && !evals.some((q) => q.id === id)) { evals = [...evals, mkEval(e)]; rec.eval.push(id); } });
 p.items.skill.forEach((id) => { const k = K.SKILLS.find((q) => q.id === id); if (k && !skills.some((q) => q.id === id)) { skills = [...skills, mkSkill(k)]; rec.skill.push(id); } });
-p.items.conn.forEach((id) => { const cx = K.CATALOG.find((q) => q.id === id); if (cx && !connectors.some((q) => q.id === id)) { connectors = [mkConn(cx), ...connectors]; rec.conn.push(id); if (cx.cat === 'Cloud') clouds = { ...clouds, [id]: true }; } });
+p.items.conn.forEach((id) => { const cx = K.CATALOG.find((q) => q.id === id); if (cx && !connectors.some((q) => q.id === id)) { connectors = [mkConn(cx), ...connectors]; rec.conn.push(id); } });
 p.items.agent.forEach((id) => { const g = K.AGENTCAT.find((q) => q.id === id); if (g && !agentList.some((q) => q.id === id)) { agentList = [...agentList, mkAgent(g)]; agents = { ...agents, [id]: true }; rec.agent.push(id); } });
 const parts = KN.filter(([k]) => rec[k].length).map(([k, w]) => plural(rec[k].length, w));
-return { evals, skills, connectors, agentList, agents, clouds, plugins: [...st.plugins, p], pluginRec: { ...st.pluginRec, [p.id]: rec }, ...note(p.name + ' added. ' + (parts.length ? joinAnd(parts) + (parts.length === 1 && rec.eval.length + rec.skill.length + rec.conn.length + rec.agent.length === 1 ? ' was added to Yours.' : ' were added to Yours.') : 'Everything it contains was already in Yours.')) };
+return { evals, skills, connectors, agentList, agents, plugins: [...st.plugins, p], pluginRec: { ...st.pluginRec, [p.id]: rec }, ...note(p.name + ' added. ' + (parts.length ? joinAnd(parts) + (parts.length === 1 && rec.eval.length + rec.skill.length + rec.conn.length + rec.agent.length === 1 ? ' was added to Yours.' : ' were added to Yours.') : 'Everything it contains was already in Yours.')) };
 });
 this.log('plugin.add', p.name + ' · ' + plCount(p));
 };
@@ -2137,7 +2205,6 @@ patch.evals = st.evals.filter((e) => !evG.includes(e.id));
 patch.skills = st.skills.filter((k) => !skG.includes(k.id));
 patch.connectors = st.connectors.filter((c) => !cnG.includes(c.id));
 patch.agentList = st.agentList.filter((g) => !agG.includes(g.id));
-patch.clouds = { ...st.clouds, ...Object.fromEntries(st.connectors.filter((c) => cnG.includes(c.id) && c.cloud).map((c) => [c.cloud, false])) };
 }
 patch.cNotice = p.name + ' removed. ' + (withItems ? (gone ? plural(gone, 'item') + ' removed from Yours.' : 'Nothing else was removed.') + (kept ? ' ' + plural(kept, 'item') + ' stayed because experiments use ' + (kept === 1 ? 'it.' : 'them.') : '') : 'Its items stay in Yours.');
 return patch;
@@ -2153,12 +2220,12 @@ const openForm = (id) => () => this.setState({ form: id, ff: { a: '', b: '', c: 
 const addItems = ({
 eval: [['Add evaluation from repository', openForm('evrepo')]],
 skill: [['Write a skill', openForm('skillw')], ['Import from repository', openForm('skillr')], ['Upload a folder', openForm('skillu')]],
-conn: [['Add custom connector', openForm('conn')], ['Connect a cloud', goCust({ cTab: 'conn', cView: 'discover', cCat: 'Cloud' })]],
+conn: [['Add an MCP server', openForm('conn')]],
 agent: [['Add a custom agent', openForm('agentc')]],
 plugin: [['Add from a Git URL', openForm('plgit')], ['Create a plugin from your items', openForm('plmake')]]
 })[tab].map(([label, go]) => ({ label, go }));
 const FORMS = {
-conn: ['Add custom connector', [['Name', 'a', 'Internal tools'], ['Server URL', 'b', 'https://mcp.acme.internal/tools', 1]], 'Add', ''],
+conn: ['Add an MCP server', [['Name', 'a', 'Internal tools'], ['Server URL', 'b', 'https://mcp.acme.internal/tools', 1], ['Secret in your secret manager', 'c', 'ratchet/mcp-internal-tools', 1]], 'Add', 'Ratchet stores the reference, never the secret.'],
 evrepo: ['Add evaluation from repository', [['Name', 'a', 'Cart load test'], ['Path', 'b', 'bench/cart-load.js', 1]], 'Add', ''],
 skillw: ['Write a skill', [['Name', 'a', 'Retry budgets'], ['Description', 'b', 'When and how to add a retry'], ['What agents should know', 'c', 'Write the guidance in plain sentences.', 2]], 'Add skill', 'Agents read this. The evaluator does not.'],
 skillr: ['Import skills from a repository', [['Folder in the repository', 'a', 'docs/agent-notes', 1], ['Name', 'b', 'Agent notes']], 'Import', 'Reads the Markdown files at the current commit of your repository.'],
@@ -2176,7 +2243,7 @@ const done = (tb, m, extra) => this.setState({ form: null, ff: { a: '', b: '', c
 const slug = (x) => x.split(/[\/\\]/).filter(Boolean).pop() || x;
 const title = (x) => this.cap1(slug(x).replace(/\.git$/, '').replace(/[-_]+/g, ' '));
 const sk = (name, desc, sec) => ({ id: 'sk' + id, name, desc, cat: 'Conventions', byk: 'T', used: 0, ver: '1.0', ev: ['*'], sec, gl: 'g-book', yours: true });
-if (f === 'conn') { if (!a) return; this.setState((st) => ({ connectors: [{ id: 'x' + id, name: a, desc: b ? 'MCP server · ' + b : 'Custom MCP server', cat: 'Data', kind: 'MCP server', used: 0, added: true, gl: 'g-code' }, ...st.connectors] })); done('conn', a + ' added to Yours.'); this.log('connector.add', 'MCP server · ' + a); }
+if (f === 'conn') { if (!a) return; this.setState((st) => ({ connectors: [{ id: 'x' + id, name: a, desc: b ? 'MCP server · ' + b : 'Custom MCP server', cat: 'Code', kind: 'MCP server', used: 0, added: true, gl: 'g-code' }, ...st.connectors] })); done('conn', a + ' added to Yours. Ratchet keeps a reference to ' + (c || 'its secret') + ' in ' + s.secretMgr + ', never the secret.'); this.log('connector.add', 'MCP server · ' + a); }
 else if (f === 'evrepo') { if (!a) return; this.setState((st) => ({ evals: [...st.evals, { id: 'ev' + id, name: a, cat: 'Quality', desc: b ? 'Defined in ' + b : 'Defined in the repository', metric: 'Score from ' + (b || 'the repository'), fmt: ['', '', 2], dir: 'higher', base: 1, n: 2, cmd: b || 'bench/run.sh', cal: 'Not yet', runs: 0, used: 0, path: 'src', ho: 'ho_checkout', kw: a.toLowerCase(), ideas: K.GEN }] })); done('eval', a + ' added to Yours. It can now be chosen in a new experiment.'); this.log('evaluation.add', a + ' · ' + (b || 'repository')); }
 else if (f === 'skillw') { if (!a) return; this.setState((st) => ({ skills: [...st.skills, sk(a, b || 'Written by your team', [['SKILL.md', 'Overview', c || 'Describe what agents should know before they touch this part of the code.']])] })); done('skill', a + ' added to Yours. Agents can read it in new experiments.'); this.log('skill.add', a + ' · written'); }
 else if (f === 'skillr') { if (!a) return; const nm = b || title(a); this.setState((st) => ({ skills: [...st.skills, sk(nm, 'Imported from ' + a, [['SKILL.md', 'Overview', 'Imported from ' + a + ' at main@9f3c1e7. Agents read the Markdown files in this folder.'], ['SKILL.md', 'Files', 'One file per topic. Re-import to pick up newer commits.']])] })); done('skill', nm + ' imported from ' + a + '.'); this.log('skill.add', nm + ' · import'); }
@@ -2273,10 +2340,8 @@ const m2 = /^([\d,.]+)([MKk]?)(.*)$/.exec(x.sz);
 const sz = (f) => { if (!m2) return x.sz; const raw = Number(m2[1].replace(/,/g, '')); const v = raw * f; const dec = m2[1].includes('.') ? 1 : 0; const out = dec ? v.toFixed(1) : Math.max(1, Math.round(v)).toLocaleString('en-US'); return out + m2[2] + m2[3]; };
 return [[x.version, dates[0], x.sz], ['v' + Math.max(1, n - 1), dates[1], sz(0.93)], ['v' + Math.max(1, n - 2), dates[2], sz(0.86)]];
 };
-const ck = conn.cloud || 'aws';
-const ci = Math.max(0, K.CLOUDS.findIndex((c) => c[0] === ck));
-const runMach = s.machines.filter((m) => m.cloud === K.CLOUDS[ci][1] && !m.gone);
-const goneN = s.machines.filter((m) => m.cloud === K.CLOUDS[ci][1] && m.gone).length;
+const scope = K.SCOPE[conn.id] || (conn.kind === 'MCP server' ? K.SCOPE.mcp : K.SCOPE.any);
+const connAccess = [['Admin secret', 'A reference to ratchet/' + conn.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-$/, '') + ' in ' + s.secretMgr + '. Ratchet never sees the secret.'], ['Agents get', scope[0]], ['Evaluator gets', scope[1]], ['Lifetime', 'Minted for each run by the launcher. Gone when the run ends.']];
 const aTrials = detAgent ? s.opts.flatMap((x) => { const ax = evAll(x); return ax.cur.filter((t) => t.a === detAgent.id && t.mes).map((t) => ({ opt: x.name, tried: t.text, result: this.fv(ax.ev, t.v) + ' (' + this.pt(t.p) + ')', out: K.OUT[t.out][0], color: K.OUT[t.out][1], open: openOpt(x) })); }) : [];
 const eExp = detEval ? evUsers(detEval.id).map((x) => ({ name: x.name, project: x.project, ...stOf(x), open: openOpt(x) })) : [];
 const aExp = detAgent ? s.opts.filter((x) => x.agents.includes(detAgent.id)).map((x) => ({ name: x.name, project: x.project, ...stOf(x), open: openOpt(x) })) : [];
@@ -2302,12 +2367,12 @@ const people = [
 { id: 'jun', name: 'Jun Park', email: 'jun@acme.com', source: 'invited by Priya' },
 { id: 'ci', name: 'ci-bot', email: 'Service principal · token ends 7f2a', source: 'created by Jun' }
 ];
-const actLabels = { 'optimization.create': 'Experiment created', 'run.start': 'Run started', 'run.stop': 'Run stopped', 'pull_request.open': 'Pull request opened', 'note.send': 'Note added', 'connector.add': 'Connector added', 'connector.remove': 'Connector removed', 'marking.set': 'Marking changed', 'grant.change': 'Permission changed', 'cloud.connect': 'Cloud connector added', 'agent.enable': 'Agent enabled', 'agent.disable': 'Agent disabled', 'agent.add': 'Agent added', 'evaluation.add': 'Evaluation added', 'evaluation.calibrate': 'Evaluation recalibrated', 'skill.add': 'Skill added', 'skill.remove': 'Skill removed', 'plugin.add': 'Plugin added', 'plugin.remove': 'Plugin removed', 'connector.reconnect': 'Connector reconnected', 'budget.change': 'Budget changed', 'role.change': 'Role changed', 'signin.change': 'Single sign-on changed', 'token.create': 'Access token created', 'token.revoke': 'Access token revoked' };
+const actLabels = { 'optimization.create': 'Experiment created', 'run.start': 'Run started', 'run.stop': 'Run stopped', 'pull_request.open': 'Pull request opened', 'note.send': 'Note added', 'connector.add': 'Connector added', 'connector.remove': 'Connector removed', 'marking.set': 'Marking changed', 'grant.change': 'Permission changed', 'backend.add': 'Sandbox backend added', 'backend.remove': 'Sandbox backend removed', 'launcher.connect': 'Launcher connected', 'credential.mint': 'Credentials minted', 'secretmanager.change': 'Secret manager changed', 'agent.enable': 'Agent enabled', 'agent.disable': 'Agent disabled', 'agent.add': 'Agent added', 'evaluation.add': 'Evaluation added', 'evaluation.calibrate': 'Evaluation recalibrated', 'skill.add': 'Skill added', 'skill.remove': 'Skill removed', 'plugin.add': 'Plugin added', 'plugin.remove': 'Plugin removed', 'connector.reconnect': 'Connector reconnected', 'budget.change': 'Budget changed', 'role.change': 'Role changed', 'signin.change': 'Single sign-on changed', 'token.create': 'Access token created', 'token.revoke': 'Access token revoked' };
 const actColor = (x) => {
 const p = x.split('.')[0];
 if (['optimization', 'run', 'pull_request', 'evaluation'].includes(p)) return 'var(--accent)';
-if (['connector', 'marking', 'grant', 'note', 'skill', 'plugin'].includes(p)) return 'var(--good)';
-if (['cloud', 'agent', 'budget'].includes(p)) return 'var(--infra)';
+if (['connector', 'credential', 'marking', 'grant', 'note', 'skill', 'plugin'].includes(p)) return 'var(--good)';
+if (['backend', 'launcher', 'secretmanager', 'agent', 'budget'].includes(p)) return 'var(--infra)';
 return 'var(--ink3)';
 };
 const orgSpent = totalSpend;
@@ -2327,7 +2392,7 @@ this._effTab = effTab;
 const secOn = {}, rowOn = {}, grpOn = {};
 SETSEC.forEach((x) => { secOn[x[0]] = s.setOpen && visSecs.length > 0 && x[0] === effTab; });
 SETROW.forEach((r) => { const x = SETSEC.find((q) => q[0] === r[0]); rowOn[r[1]] = r[0] === effTab && (!sTok.length || secHit(x) || rowHit(r)); });
-[['account', ['name', 'email', 'role']], ['signinG', ['via', 'signout']], ['orgG', ['org', 'host']], ['defG', ['defcap']], ['provG', ['provider', 'newusers']], ['sessG', ['session', 'sessactive']], ['orgBudG', ['monthly']]].forEach(([g, ids]) => { grpOn[g] = ids.some((id) => rowOn[id]); });
+[['account', ['name', 'email', 'role']], ['signinG', ['via', 'signout']], ['orgG', ['org', 'deploy', 'host']], ['launchG', ['launcher']], ['backendG', ['backends']], ['secretG', ['secretmgr']], ['defG', ['defcap']], ['provG', ['provider', 'newusers']], ['sessG', ['session', 'sessactive']], ['orgBudG', ['monthly']]].forEach(([g, ids]) => { grpOn[g] = ids.some((id) => rowOn[id]); });
 const aq = (s.auditQ || '').trim().toLowerCase();
 const auditRows = s.audit.map((e) => ({ ...e, color: actColor(e.action), label: actLabels[e.action] || e.action.replace(/[._]/g, ' ') }))
 .filter((e) => !aq || [e.who, e.label, e.resource].join(' ').toLowerCase().includes(aq));
@@ -2395,14 +2460,14 @@ have.forEach((x) => P(mkItem(kind, x.name, ctxf(x), [x.desc || '', x.cat || ''],
 catOf[k].filter((x) => !have.some((q) => q.id === x.id)).forEach((x) => P(mkItem(kind, x.name, ctxf(x), [x.desc || '', x.cat || ''], k === 'skill' || k === 'plugin' ? openDet(k, x.id) : custFind(k, x.name), { ic: x.gl || ic, hint: 'Not added' })));
 });
 [['priya', 'Priya Raman', 'priya@acme.com', 'okta:platform-leads'], ['marco', 'Marco Bianchi', 'marco@acme.com', 'okta:perf-engineering'], ['jun', 'Jun Park', 'jun@acme.com', 'an invitation'], ['ci', 'ci-bot', 'Service principal', 'a service principal']].forEach(([id, nm, em, src]) => P(mkItem('person', nm, em + ' · added through ' + src, [em], settingsGo('members'), { ic: 'g-user', hint: s.roles[id] })));
-const SETKW = { profile: 'account name email sign in okta', appearance: 'theme dark light system colour mode', general: 'organization default budget server', notes: 'guidance notes agents read', budgets: 'budget spend monthly cap limit cost', members: 'users groups roles invite owner editor viewer people access', signin: 'okta sso sign-in session login identity', tokens: 'access token api key cli mcp ci service', audit: 'audit log history changes record' };
+const SETKW = { profile: 'account name email sign in okta', appearance: 'theme dark light system colour mode', general: 'organization default budget server deployment self-hosted cloud', infra: 'infrastructure launcher runner sandbox backend kubernetes aws gcp azure machine type secret manager', notes: 'guidance notes agents read', budgets: 'budget spend monthly cap limit cost', members: 'users groups roles invite owner editor viewer people access', signin: 'okta sso sign-in session login identity', tokens: 'access token api key cli mcp ci service', audit: 'audit log history changes record' };
 const SETWHO = { you: 'You', org: 'Organization' };
 SETSEC.forEach(([id, label, sic, who, lead]) => P(mkItem('setting', label, 'Settings · ' + SETWHO[who], [lead, SETKW[id]], settingsGo(id), { ic: sic })));
 SETROW.forEach(([sid, rid, title, desc, kw]) => { const sc = SETSEC.find((q) => q[0] === sid); if (title === sc[1]) return; P(mkItem('setting', title, 'Settings · ' + sc[1], [desc, kw], settingsGo(sid, rid), { ic: sc[2] })); });
 s.audit.forEach((e) => P(mkItem('audit', (actLabels[e.action] || e.action) + ' · ' + e.resource, e.who + ' · ' + e.time, [e.action, e.who], settingsGo('audit'), { ic: 'g-file', hint: e.time })));
 const dk = theme === 'dark';
 [['New experiment', 'Start a draft from a goal', 'i-plus', palGo({ screen: 'new', editId: null, d: { ...s.d, text: '', name: null, ev: null, path: null, dir: null, project: null, skills: null }, needText: false }), 'create start draft goal'],
-['Add a connector', 'Customize · Connectors', 'i-plus', palGo({ screen: 'customize', ...custReset, cTab: 'conn', cView: 'discover' }), 'connect source warehouse repository'],
+['Add a connector', 'Customize · Connectors', 'i-plus', palGo({ screen: 'customize', ...custReset, cTab: 'conn', cView: 'discover' }), 'connect warehouse database repository mcp secret'],
 ['Add a skill', 'Customize · Skills', 'g-book', palGo({ screen: 'customize', ...custReset, cTab: 'skill', cView: 'discover' }), 'skills know-how guidance'],
 ['Open Settings', 'Profile, appearance, access tokens and organization', 'i-sliders', settingsGo(), 'settings preferences account'],
 ['Open Dashboard', 'Value, spend and win rate', 'i-chart', palGo({ screen: 'value' }), 'dashboard value return wins'],
@@ -2487,7 +2552,7 @@ goHistory: goTo('history', { histTab: 'trials', histProj: 'All', histExp: 'All' 
 newCls: is('new') ? 'btn primary full on' : 'btn primary full',
 goNew: () => this.setState({ screen: 'new', menu: null, editId: null, d: { ...s.d, text: '', name: null, ev: null, path: null, dir: null, project: null, skills: null }, needText: false, confirmStop: false, renaming: false }),
 hasPinned: pinned.length > 0, pinned, groups,
-userOpen: menu === 'user', toggleUser: tmenu('user'), hostName: 'ratchet.acme.internal',
+userOpen: menu === 'user', toggleUser: tmenu('user'), hostName: 'acme.ratchet.cloud',
 themeLabel: theme === 'dark' ? 'Switch to light' : 'Switch to dark',
 toggleTheme: () => this.setState({ theme: theme === 'dark' ? 'light' : 'dark', menu: null }),
 
@@ -2497,7 +2562,7 @@ needText: s.needText && !(d.text || '').trim(),
 vProject: dProj, vSkills: selSk.length ? plural(selSk.length, 'skill') : 'No skills', mSkills: mopen('p:skills'), tSkills: tmenu('p:skills'), cSkills: mopen('p:skills') ? 'pill on' : 'pill',
 skillOpts: onSk.map((k) => ({ name: k.name, meta: 'v' + k.ver, on: selSkIds.includes(k.id), fill: selSkIds.includes(k.id) ? 'var(--good)' : 'transparent', toggle: () => setD({ skills: selSkIds.includes(k.id) ? selSkIds.filter((i) => i !== k.id) : [...selSkIds, k.id] }) })), noSkillOn: onSk.length === 0, goSkills: goCust({ cTab: 'skill', cView: 'yours' }),
 pluginSugg: K.PSUGG.filter(([pid, evid]) => !isY('eval', evid) && !isY('plugin', pid)).slice(0, 2).map(([pid, , label]) => ({ label, open: openDet('plugin', pid) })),
-vEval: dEv.name, vData: selIds.length + (selIds.length === 1 ? ' dataset' : ' datasets'), vEnv: cloudLabel(d.env), vAgents: plural(d.agents, 'agent'), vBudget: money(d.cap || 0),
+vEval: dEv.name, vData: selIds.length + (selIds.length === 1 ? ' dataset' : ' datasets'), vEnv: beOf(d.env).name + ' · ' + mtOf(d.env, d.mt), vAgents: plural(d.agents, 'agent'), vBudget: money(d.cap || 0),
 mProj: mopen('p:proj'), mEv: mopen('p:ev'), mData: mopen('p:data'), mEnv: mopen('p:env'), mAgents: mopen('p:agents'), mBudget: mopen('p:budget'), mGuard: mopen('p:guard'),
 tProj: tmenu('p:proj'), tEv: tmenu('p:ev'), tData: tmenu('p:data'), tEnv: tmenu('p:env'), tAgents: tmenu('p:agents'), tBudget: tmenu('p:budget'), tGuard: tmenu('p:guard'),
 cProj: mopen('p:proj') ? 'pill on' : 'pill', cEv: mopen('p:ev') ? 'pill on' : 'pill', cData: mopen('p:data') ? 'pill on' : 'pill', cEnv: mopen('p:env') ? 'pill on' : 'pill', cAgents: mopen('p:agents') ? 'pill on' : 'pill', cBudget: mopen('p:budget') ? 'pill on' : 'pill', cGuard: mopen('p:guard') ? 'pill quiet on' : 'pill quiet',
@@ -2507,7 +2572,9 @@ goEvals: goCust({ cTab: 'eval', cView: 'yours' }),
 dataGroups: s.connectors.map((c) => ({ name: c.name, items: s.datasets.filter((x) => x.conn === c.id && x.marking !== 'Holdout').map((x) => ({ name: x.name, meta: x.version, on: !!s.newSel[x.id], fill: s.newSel[x.id] ? 'var(--good)' : 'transparent', toggle: () => this.setState((st) => ({ newSel: { ...st.newSel, [x.id]: !st.newSel[x.id] } })) })) })).filter((g) => g.items.length > 0),
 holdName: dHold ? dHold.name : 'No dataset is marked Holdout',
 goConnectors: goCust({ cTab: 'conn', cView: 'yours' }),
-envSeg: K.CLOUDS.map(([k, , label]) => ({ label, note: s.clouds[k] ? '' : 'Connect', cls: !s.clouds[k] ? 'chip dis' : (d.env === k ? 'chip on' : 'chip'), pick: () => (s.clouds[k] ? (setD({ env: k }), this.setState({ menu: null })) : goCust({ cTab: 'conn', cView: 'discover', cCat: 'Cloud' })()) })),
+envSeg: K.BACKENDS.map((b) => ({ label: b.name, note: beOn(b.id) ? '' : 'Set up', cls: !beOn(b.id) ? 'chip dis' : (d.env === b.id ? 'chip on' : 'chip'), pick: () => (beOn(b.id) ? setD({ env: b.id, mt: null }) : this.openSettings('infra', null, 'backends')) })),
+mtSeg: beOf(d.env).types.map((t) => ({ label: t, cls: t === mtOf(d.env, d.mt) ? 'chip on mono' : 'chip mono', pick: () => setD({ mt: t }) })), envWhere: beOf(d.env).where + '. Image ' + beOf(d.env).image + '.',
+goInfra: () => this.openSettings('infra', null),
 dAgents: d.agents, agentNames: enabled.length ? enabled.map((i) => this.agName(s, i)).join(', ') : 'No agent is on',
 agentsDown: () => setD({ agents: Math.max(1, d.agents - 1) }), agentsUp: () => setD({ agents: Math.min(8, d.agents + 1) }),
 dCap: d.cap, onCap: (e) => setD({ cap: digits(e) }),
@@ -2522,7 +2589,7 @@ if (!(d.text || '').trim()) { this.setState({ needText: true, menu: null }); ret
 if (roleOf(dProj) === 'Viewer') return;
 const ids = enabled.length ? enabled : ['claude'];
 const ags = Array.from({ length: d.agents }, (_, i) => ids[i % ids.length]);
-const fields = { skills: selSkIds, project: dProj, req: d.text.trim(), ev: dEv.id, dir: d.dir, lim: { ...d.limits }, path: d.path, env: d.env, cloud: cloudLabel(d.env), cap: Number(d.cap) || 200, agents: ags, ds: [...selIds] };
+const fields = { skills: selSkIds, project: dProj, req: d.text.trim(), ev: dEv.id, dir: d.dir, lim: { ...d.limits }, path: d.path, env: d.env, mt: mtOf(d.env, d.mt), cap: Number(d.cap) || 200, agents: ags, ds: [...selIds] };
 const reset = { text: '', name: null, ev: null, path: null, dir: null, project: null, skills: null };
 if (s.editId) {
 const old = s.opts.find((x) => x.id === s.editId);
@@ -2572,14 +2639,14 @@ ticks, seps, segs, dots, noChartTxt: 'No trials yet. The chart fills in as agent
 reqText: o.req, reqChips, pastRuns, sayDraft, declLines: dc.lines, acceptLine: 'Acceptance criteria: a change must beat twice the noise (' + (2 * ev.n).toFixed(1) + '%) and pass the holdout.',
 detOpen, detSummary: 'Draft approved by Priya Raman · ' + dc.summary, toggleDet: toggleEx(exKey('det')), detLabel: s.ex[exKey('det')] ? 'Hide details' : 'Show details',
 isDraft: !approvedAt, isApproved: approvedAt, detClosed: approvedAt && !detOpen, planOpen: !!s.ex[exKey('plan')], togglePlan: toggleEx(exKey('plan')), planLabel: s.ex[exKey('plan')] ? 'Hide plan' : 'Show plan', plan,
-editDraft: () => this.setState({ screen: 'new', menu: null, editId: o.id, d: { text: o.req, ev: o.ev, dir: o.dir, limits: { ...o.lim }, path: o.path, name: o.name, env: o.env, agents: o.agents.length, cap: String(o.cap), project: o.project, skills: [...(o.skills || [])] }, newSel: Object.fromEntries(o.ds.map((i) => [i, true])), needText: false }),
+editDraft: () => this.setState({ screen: 'new', menu: null, editId: o.id, d: { text: o.req, ev: o.ev, dir: o.dir, limits: { ...o.lim }, path: o.path, name: o.name, env: o.env, mt: o.mt, agents: o.agents.length, cap: String(o.cap), project: o.project, skills: [...(o.skills || [])] }, newSel: Object.fromEntries(o.ds.map((i) => [i, true])), needText: false }),
 approve: () => {
 if (o.approved) return;
 this.setState((st) => ({ opts: st.opts.map((x) => (x.id === o.id ? { ...x, status: 'Running', step: 1, approved: true, T: this.genT(x, st), act: 'Just now' } : x)) }));
 if (o.runs === 1) this.log('optimization.create', o.name);
 this.log('run.start', o.name + ' · run #' + o.runs);
 },
-showProg, progSay: stopped ? 'The run was stopped. Running trials were discarded and nothing new will start.' : done ? 'Run ' + o.runs + ' is complete. All hosts are terminated and clean-up is verified.' : 'Approved. Run ' + o.runs + ' is under way.',
+showProg, progSay: stopped ? 'The run was stopped. Running trials were discarded and nothing new will start.' : done ? 'Run ' + o.runs + ' is complete. Every sandbox is removed and clean-up is verified.' : 'Approved. Run ' + o.runs + ' is under way.',
 nodes, stepLine: stopped ? 'Stopped at step ' + o.step + ' of 8.' : o.step >= 8 ? 'Step 8 of 8 · ' + this.fmtMin(K.MIN[8]) + ' in total.' : 'Step ' + o.step + ' of 8 · ' + stepText.charAt(0).toLowerCase() + stepText.slice(1),
 stepsOpen: !!s.ex[exKey('steps')], toggleSteps: toggleEx(exKey('steps')), stepsLabel: s.ex[exKey('steps')] ? 'Hide steps' : 'Show steps', prog,
 canAdvance: live && o.step < 8,
@@ -2590,8 +2657,8 @@ const slug = o.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, 
 this.setState((st) => {
 let machines = st.machines;
 let opts = st.opts.map((x) => (x.id === o.id ? { ...x, step: n } : x));
-if (n === 2 && !machines.some((m) => m.opt === o.name && m.role === 'runner' && !m.gone)) machines = [{ id: 'mr' + Date.now(), name: 'runner-' + slug + '-' + o.runs, role: 'runner', opt: o.name, cloud: o.cloud, age: '0 m', gone: false }, ...machines];
-if (n === 5 && !machines.some((m) => m.opt === o.name && m.role === 'evaluator' && !m.gone)) machines = [{ id: 'me' + Date.now(), name: 'eval-' + slug + '-' + o.runs, role: 'evaluator', opt: o.name, cloud: o.cloud, age: '0 m', gone: false }, ...machines];
+if (n === 2 && !machines.some((m) => m.opt === o.name && m.role === 'workspace' && !m.gone)) machines = [{ id: 'mr' + Date.now(), name: 'ws-' + slug + '-' + o.runs, role: 'workspace', opt: o.name, be: beOf(o.env).name, age: '0 m', gone: false }, ...machines];
+if (n === 5 && !machines.some((m) => m.opt === o.name && m.role === 'evaluator' && !m.gone)) machines = [{ id: 'me' + Date.now(), name: 'eval-' + slug + '-' + o.runs, role: 'evaluator', opt: o.name, be: beOf(o.env).name, age: '0 m', gone: false }, ...machines];
 if (n === 8) {
 machines = machines.map((m) => (m.opt === o.name && !m.gone ? { ...m, gone: true, age: this.fmtMin(K.MIN[8]) } : m));
 const w = this.an({ ...opts.find((x) => x.id === o.id), step: 8 }, st).win;
@@ -2599,6 +2666,7 @@ opts = opts.map((x) => (x.id === o.id ? { ...x, status: w ? 'Win' : 'No win', fi
 }
 return { opts, machines };
 });
+if (n === 3) this.log('credential.mint', o.name + ' · run #' + o.runs + ' · agents read-only, evaluator with holdout', 'launcher');
 },
 showTrials: o.step >= 4 && trials.length > 0, trialsTitle: 'Trials · run ' + o.runs, trials,
 threadNotes,
@@ -2630,7 +2698,7 @@ pEmpty: pj.list.length === 0,
 // dashboard
 dTiles: [
 { k: 'Value per year', v: kfmt(totalVal), sub: 'from ' + winN + (winN === 1 ? ' accepted win' : ' accepted wins'), color: 'var(--ink)' },
-{ k: 'Spent', v: money(totalSpend), sub: 'agents ' + money(Math.round(totalSpend * 0.49)) + ' · evaluation hosts ' + money(Math.round(totalSpend * 0.41)), color: 'var(--ink)' },
+{ k: 'Spent', v: money(totalSpend), sub: 'agents ' + money(Math.round(totalSpend * 0.49)) + ' · evaluation sandboxes ' + money(Math.round(totalSpend * 0.41)), color: 'var(--ink)' },
 { k: 'Return', v: (totalSpend ? Math.round(totalVal / totalSpend) : 0) + '×', sub: 'yearly value over spend', color: 'var(--accent)' },
 { k: 'Win rate', v: winN + ' of ' + finishedRuns, sub: 'finished runs ended in an accepted change', color: 'var(--ink)' }
 ],
@@ -2639,7 +2707,7 @@ dWins: sortedWins.slice().reverse().map((w) => { const wi = winInfo(w); return {
 
 // history
 histIsTrials: s.histTab === 'trials', histIsInst: s.histTab === 'inst',
-histTabs: [['trials', 'Trials'], ['inst', 'Instances']].map(([id, label]) => ({ label, cls: s.histTab === id ? 'tab on' : 'tab', pick: () => this.setState({ histTab: id }) })),
+histTabs: [['trials', 'Trials'], ['inst', 'Sandboxes']].map(([id, label]) => ({ label, cls: s.histTab === id ? 'tab on' : 'tab', pick: () => this.setState({ histTab: id }) })),
 histProj: s.histProj, histExp: s.histExp,
 onHistProj: (e) => this.setState({ histProj: e.target.value, histExp: 'All' }), onHistExp: (e) => this.setState({ histExp: e.target.value }),
 projOptions: ['All', ...K.PROJECTS.map((p) => p[0])].map((v) => ({ v, l: v === 'All' ? 'All projects' : v })),
@@ -2666,7 +2734,7 @@ formHasPicks: s.form === 'plmake',
 formPicks: [...s.skills.map((k) => ({ key: 'skill:' + k.id, name: k.name, meta: 'Skill' })), ...s.evals.map((e) => ({ key: 'eval:' + e.id, name: e.name, meta: 'Evaluation' }))].map((x) => ({ ...x, fill: s.fpick[x.key] ? 'var(--good)' : 'transparent', on: !!s.fpick[x.key], toggle: () => this.setState((st) => ({ fpick: { ...st.fpick, [x.key]: !st.fpick[x.key] } })) })),
 submitForm, closeForms: () => this.setState({ form: null }),
 yourRows: yours, yoursNone: yoursAll === 0, yoursNoMatch: yoursAll > 0 && yours.length === 0,
-yoursEmptyTxt: 'No ' + K.NOUN[tab] + ' in Yours yet.', yoursEmptyHint: ({ eval: 'Evaluations decide whether a change counts as a win.', skill: 'Skills are written know-how that agents read before they propose a change.', conn: 'Connectors let agents read your code and data inside your cloud.', agent: 'Agents propose the changes that evaluations then measure.', plugin: 'A plugin adds evaluations, skills and connectors for one domain in a single step.' })[tab],
+yoursEmptyTxt: 'No ' + K.NOUN[tab] + ' in Yours yet.', yoursEmptyHint: ({ eval: 'Evaluations decide whether a change counts as a win.', skill: 'Skills are written know-how that agents read before they propose a change.', conn: 'Connectors are the code host and data systems that agents\' code reads, through read-only credentials.', agent: 'Agents propose the changes that evaluations then measure.', plugin: 'A plugin adds evaluations, skills and connectors for one domain in a single step.' })[tab],
 goDiscover: () => this.setState({ cView: 'discover', menu: null, cNotice: '' }),
 hasBanner: !!featured, bn, bnAdd: () => featured && !inY(featured) && adder(featured), bnOpen: openDet(tab, featId || ''), bnCanOpen: tab === 'skill' || tab === 'plugin', bnEyebrow: 'From Ratchet', illE: tab === 'eval', illS: tab === 'skill', illP: tab === 'plugin',
 showCar, carTitle: slide.t, carDesc: slide.d, carTint: slide.tint, carTiles, carPrev: addSlide(-1), carNext: addSlide(1), carExplore: () => this.setState({ cCat: slide.cat, menu: null }), carExploreLabel: 'Explore ' + slide.t.toLowerCase(),
@@ -2675,7 +2743,7 @@ secs, allLabel: s.showAll[tab] ? 'Show fewer' : 'Show all', toggleAll: () => thi
 discEmpty: rest.length === 0 && !featured ? 'Nothing matches your filters.' : '',
 
 // detail
-dIsEval: detKind === 'eval', dIsAgent: detKind === 'agent', dIsCData: detKind === 'conn' && conn.cat !== 'Cloud', dIsCCloud: detKind === 'conn' && conn.cat === 'Cloud',
+dIsEval: detKind === 'eval', dIsAgent: detKind === 'agent', dIsConn: detKind === 'conn', connAccess: connAccess.map(([k, v]) => ({ k, v })),
 dBack: goCust({ cTab: detKind, cView: 'yours' }), dBackLabel: 'Back to ' + K.TABN[detKind].toLowerCase(),
 dNotice: s.cNotice, dHasNotice: !!s.cNotice,
 dGl: gl(detSkill ? 'g-book' : detPlugin ? 'g-blocks' : detEval ? glFor(detEval, 'eval') : detAgent ? glFor(detAgent, 'agent') : glFor(conn, 'conn')),
@@ -2703,7 +2771,7 @@ eHold: detEval ? ((s.datasets.find((x) => x.id === detEval.ho) || {}).name || 'N
 dHasExp: !!(detEval || detAgent || detSkill), dExp: detEval ? eExp : detSkill ? skExp : aExp, dExpEmpty: (detEval ? eExp : detSkill ? skExp : aExp).length === 0,
 recalibrate: () => { if (!detEval) return; this.setState((st) => ({ evals: st.evals.map((e) => (e.id === detEval.id ? { ...e, cal: 'Today' } : e)), cNotice: 'Recalibrated just now. Noise is ±' + detEval.n + '% over ' + detEval.runs + ' fresh baseline runs.' })); this.log('evaluation.calibrate', detEval.name + ' · noise ±' + detEval.n + '%'); },
 // agent
-aKv: detAgent ? [['Model provider', detAgent.provider], ['Reached through', detAgent.via]].map(([k, v]) => ({ k, v })) : [],
+aKv: detAgent ? [['Model provider', detAgent.provider], ['Reached through', detAgent.via], ['Model key', 'Added by the egress proxy on the way out. The agent never holds it.'], ['Other credentials', 'None kept. Each run gives it short-lived, scoped ones.']].map(([k, v]) => ({ k, v })) : [],
 aModel: detAgent ? detAgent.model : '', onAModel: (e) => detAgent && this.setState((st) => ({ agentList: st.agentList.map((g) => (g.id === detAgent.id ? { ...g, model: e.target.value } : g)) })),
 aPar: detAgent ? detAgent.par : 0, aParDown: () => detAgent && this.setState((st) => ({ agentList: st.agentList.map((g) => (g.id === detAgent.id ? { ...g, par: Math.max(1, g.par - 1) } : g)) })), aParUp: () => detAgent && this.setState((st) => ({ agentList: st.agentList.map((g) => (g.id === detAgent.id ? { ...g, par: Math.min(8, g.par + 1) } : g)) })),
 aOnCls: detOn ? 'seg on' : 'seg', aOffCls: detOn ? 'seg' : 'seg on', aSetOn: () => detAgent && setAgentOn(detAgent, true), aSetOff: () => detAgent && setAgentOn(detAgent, false),
@@ -2711,7 +2779,7 @@ aTrials, aTrialsEmpty: aTrials.length === 0,
 // connector
 disconnect: () => {
 if (conn.id === 'rh') return;
-this.setState((st) => ({ connectors: st.connectors.filter((c) => c.id !== conn.id), clouds: conn.cloud ? { ...st.clouds, [conn.cloud]: false } : st.clouds, d: conn.cloud && st.d.env === conn.cloud ? { ...st.d, env: 'aws' } : st.d, screen: 'customize', cTab: 'conn', cView: 'yours', ...custReset }));
+this.setState((st) => ({ connectors: st.connectors.filter((c) => c.id !== conn.id), screen: 'customize', cTab: 'conn', cView: 'yours', ...custReset }));
 this.log('connector.remove', conn.kind + ' · ' + conn.name);
 },
 canDisconnect: detKind === 'conn' && conn.id !== 'rh',
@@ -2726,10 +2794,7 @@ eCls: g.evaluator ? 'tog on' : 'tog', eLabel: g.evaluator ? 'Can read' : 'No acc
 };
 }),
 dsEmpty: connDs.length === 0, hasDs: !!dsSel, dsName: dsSel ? dsSel.name : '', dsVersions: dsSel ? versOf(dsSel).map(([v, created, size]) => ({ v, created, size })) : [],
-markHelp: dsSel && dsSel.marking === 'Holdout' ? 'Marked Holdout. Restricted to evaluator. Agents cannot read it, and their access is removed.' : 'Agents can read it when permitted.',
-cloudKv: [['Account', ck === 'aws' ? 'acme-prod · us-east-1 · role ratchet' : 'acme-staging · role ratchet'], ['Environment', K.CLOUDS[ci][2]], ['Machine type', ['c7i.2xlarge', 'n2-standard-8', 'D8s v5'][ci]], ['Image', ['ratchet-bench-2026.11', 'ratchet-bench-gcp-2026.11', 'ratchet-bench-az-2026.11'][ci]]].map(([k, v]) => ({ k, v, mono: k === 'Machine type' || k === 'Image' ? 'mono xs' : '' })),
-runMach, runCount: runMach.length, runEmpty: runMach.length === 0, goneLink: goneN + (goneN === 1 ? ' terminated instance' : ' terminated instances') + ' in Run history',
-goInstances: goTo('history', { histTab: 'inst', histProj: 'All', histExp: 'All' }),
+markHelp: dsSel && dsSel.marking === 'Holdout' ? 'Marked Holdout. Restricted to evaluator. Enforced by the credentials: agents never receive one that reaches it.' : 'Agents can read it when permitted, with a read-only credential.',
 
 // settings
 setOpen: s.setOpen, setQ: s.setQ, closeSettings: () => this.closeSettings(), setSdBox: this.setSdBox, setMainRef: this.setMainRef,
@@ -2749,6 +2814,18 @@ noCap: orgRO || !Number(s.capDraft),
 budgetRows: s.opts.map((x) => ({ name: x.name, pct: Math.min(100, Math.round((this.spend(x) / x.cap) * 100)) + '%', text: money(this.spend(x)) + ' of ' + money(x.cap), open: openOpt(x) })),
 members: people.map((p) => ({ ...p, init: p.name.charAt(0), role: s.roles[p.id], ro: orgRO, roles: ['Owner', 'Editor', 'Viewer'].map((r) => ({ v: r })), pick: (e) => setRole(p, e.target.value) })),
 sessionSeg: seg([['8 hours'], ['12 hours'], ['24 hours']], s.session, (v) => { if (isOwner && v !== s.session) { this.setState({ session: v }); this.log('signin.change', 'Session length · ' + v); } }),
+deployText: s.deploy, deployDesc: s.deploy === 'Ratchet cloud' ? 'We host the server. A runner in your infrastructure does the work.' : 'The server runs in your infrastructure with Docker Compose.',
+launchDesc: s.deploy === 'Ratchet cloud' ? 'A small runner in your infrastructure. It connects out to Ratchet over HTTPS, so no inbound port is opened.' : 'Built into your server. It needs no separate install.',
+launcherRows: [s.deploy === 'Ratchet cloud' ? { name: s.launcher.name, kind: 'Runner', where: s.launcher.where, version: s.launcher.version, seen: s.launcher.seen, st: s.launcher.up ? 'Connected' : 'Not connected', color: s.launcher.up ? 'var(--good)' : 'var(--warn)' } : { name: 'Built into the server', kind: 'Launcher', where: s.deploy, version: s.launcher.version, seen: 'Always on', st: 'Connected', color: 'var(--good)' }],
+backendRows: K.BACKENDS.filter((b) => beOn(b.id)).map((b) => {
+const run = s.machines.filter((m) => m.be === b.name && !m.gone).length;
+const only = K.BACKENDS.filter((q) => beOn(q.id)).length === 1;
+return { name: b.name, where: b.where, types: b.types.join(', '), image: b.image, runTxt: run ? run + (run === 1 ? ' sandbox running' : ' sandboxes running') : 'Nothing running', cantRemove: !!(orgRO || run || only), removeTip: run ? 'Sandboxes are running here' : only ? 'Keep at least one backend' : '',
+remove: () => { if (!isOwner || run || only) return; this.setState((st) => ({ backends: { ...st.backends, [b.id]: false }, d: st.d.env === b.id ? { ...st.d, env: 'k8s', mt: null } : st.d })); this.log('backend.remove', b.name + ' · ' + b.where); } };
+}),
+addBeItems: K.BACKENDS.filter((b) => !beOn(b.id)).map((b) => ({ label: b.name, where: b.where, go: () => { if (!isOwner) return; this.setState((st) => ({ backends: { ...st.backends, [b.id]: true }, menu: null })); this.log('backend.add', b.name + ' · ' + b.where); } })),
+noAddBe: orgRO || K.BACKENDS.every((b) => beOn(b.id)), addBeOpen: menu === 'addbe', toggleAddBe: tmenu('addbe'),
+secretMgr: s.secretMgr, secretOpts: K.SECRETS.map((v) => ({ v })), onSecretMgr: (e) => { if (!isOwner || e.target.value === s.secretMgr) return; this.setState({ secretMgr: e.target.value }); this.log('secretmanager.change', 'Secret manager · ' + e.target.value); },
 hasNewToken: s.newToken,
 createToken: () => { if (s.newToken) return; this.setState({ newToken: true, tokens: [{ id: 't' + Date.now(), name: 'New access token', tail: 'b4c0', kind: 'Personal', scope: 'Everything you can', used: 'Never', expires: 'in 90 days' }, ...s.tokens] }); this.log('token.create', 'New access token · ends b4c0'); },
 tokens: s.tokens.map((t) => ({ ...t, revoke: () => { this.setState({ tokens: s.tokens.filter((x) => x.id !== t.id), newToken: t.tail === 'b4c0' ? false : s.newToken }); this.log('token.revoke', t.name + ' · ends ' + t.tail); } })),

@@ -25,13 +25,14 @@ The table above is the vocabulary of the daemon, the CLI and the docs today. The
 | Experiment | A goal Ratchet works on, opened as one thread | Optimization |
 | Trial | One change an agent proposed and the evaluator measured | Candidate |
 | Evaluation | The trusted measurement, added under Customize | Benchmark |
-| Connector | A connection to an outside system that datasets come from. Do not say "source" | Connector (a signed-in account) |
+| Connector | A connection to a data system or the code host, with a reference to its admin secret in your secret manager. A cloud account is not a connector. Do not say "source" | Connector (a signed-in account) |
 | Skill | A versioned pack of know-how agents read. Not the agent guidance in `.claude/skills/` | none |
 | Plugin | A bundle that adds evaluations, skills, connectors and agents for a domain | none |
 | Customize | One page with Evaluations, Skills, Connectors, Agents and Plugins | none |
 | Draft | An experiment created but not approved; nothing runs until Approve | Draft (a chat card) |
-| Settings | A dialog over the app, opened from the user menu or More. A rail of sections in two groups: You (Profile, Appearance, Access tokens) and Organization (General, Users and groups, Single sign-on, Budgets, Notes, Audit logs) | none |
+| Settings | A dialog over the app, opened from the user menu or More. A rail of sections in two groups: You (Profile, Appearance, Access tokens) and Organization (General, Users and groups, Single sign-on, Infrastructure, Budgets, Notes, Audit logs) | none |
 | Launcher | The one component that starts and removes sandboxes and mints their scoped credentials. Built into the server when self-hosted | none |
 | Runner | The launcher installed in your infrastructure for Ratchet cloud. It connects out to the hosted server and opens no inbound port | none |
 | Sandbox | One isolated place where an agent's or the evaluator's code runs, started and removed by the launcher | none |
+| Sandbox backend | Where sandboxes run: Kubernetes, or VMs on AWS, GCP or Azure. Set up under Settings, Infrastructure | none |
 | Scoped credential | A short-lived, read-only connector credential minted for one run. An agent's never reaches the holdout | none |

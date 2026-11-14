@@ -70,7 +70,7 @@
   <!-- HISTORY -->
   <sc-if value="{{isHistory}}">
     <section class="page">
-      <div class="hd"><h1 class="h1">Run history</h1><p class="sub">Every trial and every instance is kept. Agents read past trials before the next run.</p></div>
+      <div class="hd"><h1 class="h1">Run history</h1><p class="sub">Every trial and every sandbox is kept. Agents read past trials before the next run.</p></div>
       <div class="rw between wrap g16">
         <div class="tabbar" role="tablist" style="border-bottom: 0"><sc-for list="{{histTabs}}" as="x" hint-placeholder-count="2"><button class="{{x.cls}}" role="tab" onClick="{{x.pick}}">{{x.label}}</button></sc-for></div>
         <div class="rw wrap g8">
@@ -92,15 +92,15 @@
       </sc-if>
       <sc-if value="{{histIsInst}}">
         <div class="table"><div style="min-width: 680px">
-          <div class="grid th" style="grid-template-columns: 1.6fr 1fr 1.4fr .7fr .9fr 1.2fr"><span>Instance</span><span>Role</span><span>Experiment</span><span>Cloud</span><span>Ran</span><span>Status</span></div>
+          <div class="grid th" style="grid-template-columns: 1.6fr 1fr 1.4fr .7fr .9fr 1.2fr"><span>Sandbox</span><span>Role</span><span>Experiment</span><span>Backend</span><span>Ran</span><span>Status</span></div>
           <sc-for list="{{machRows}}" as="x" hint-placeholder-count="6">
             <button class="grid" onClick="{{x.open}}" style="grid-template-columns: 1.6fr 1fr 1.4fr .7fr .9fr 1.2fr">
-              <span class="mono xs">{{x.name}}</span><span class="sm">{{x.role}}</span><span class="sm ink2">{{x.opt}}</span><span class="sm">{{x.cloud}}</span><span class="mono xs ink2">{{x.age}}</span>
+              <span class="mono xs">{{x.name}}</span><span class="sm">{{x.roleLabel}}</span><span class="sm ink2">{{x.opt}}</span><span class="sm">{{x.be}}</span><span class="mono xs ink2">{{x.age}}</span>
               <span class="rw g8 sm"><i class="dot" style="background: {{x.color}}"></i>{{x.st}}</span>
             </button>
           </sc-for>
         </div></div>
-        <sc-if value="{{machEmpty}}"><span class="mut">No instances match these filters.</span></sc-if>
+        <sc-if value="{{machEmpty}}"><span class="mut">No sandboxes match these filters.</span></sc-if>
       </sc-if>
     </section>
   </sc-if>

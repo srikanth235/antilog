@@ -25,7 +25,7 @@
       newCls: is('new') ? 'btn primary full on' : 'btn primary full',
       goNew: () => this.setState({ screen: 'new', menu: null, editId: null, d: { ...s.d, text: '', name: null, ev: null, path: null, dir: null, project: null, skills: null }, needText: false, confirmStop: false, renaming: false }),
       hasPinned: pinned.length > 0, pinned, groups,
-      userOpen: menu === 'user', toggleUser: tmenu('user'), hostName: 'ratchet.acme.internal',
+      userOpen: menu === 'user', toggleUser: tmenu('user'), hostName: 'acme.ratchet.cloud',
       themeLabel: theme === 'dark' ? 'Switch to light' : 'Switch to dark',
       toggleTheme: () => this.setState({ theme: theme === 'dark' ? 'light' : 'dark', menu: null }),
 
@@ -35,7 +35,7 @@
       vProject: dProj, vSkills: selSk.length ? plural(selSk.length, 'skill') : 'No skills', mSkills: mopen('p:skills'), tSkills: tmenu('p:skills'), cSkills: mopen('p:skills') ? 'pill on' : 'pill',
       skillOpts: onSk.map((k) => ({ name: k.name, meta: 'v' + k.ver, on: selSkIds.includes(k.id), fill: selSkIds.includes(k.id) ? 'var(--good)' : 'transparent', toggle: () => setD({ skills: selSkIds.includes(k.id) ? selSkIds.filter((i) => i !== k.id) : [...selSkIds, k.id] }) })), noSkillOn: onSk.length === 0, goSkills: goCust({ cTab: 'skill', cView: 'yours' }),
       pluginSugg: K.PSUGG.filter(([pid, evid]) => !isY('eval', evid) && !isY('plugin', pid)).slice(0, 2).map(([pid, , label]) => ({ label, open: openDet('plugin', pid) })),
-      vEval: dEv.name, vData: selIds.length + (selIds.length === 1 ? ' dataset' : ' datasets'), vEnv: cloudLabel(d.env), vAgents: plural(d.agents, 'agent'), vBudget: money(d.cap || 0),
+      vEval: dEv.name, vData: selIds.length + (selIds.length === 1 ? ' dataset' : ' datasets'), vEnv: beOf(d.env).name + ' · ' + mtOf(d.env, d.mt), vAgents: plural(d.agents, 'agent'), vBudget: money(d.cap || 0),
       mProj: mopen('p:proj'), mEv: mopen('p:ev'), mData: mopen('p:data'), mEnv: mopen('p:env'), mAgents: mopen('p:agents'), mBudget: mopen('p:budget'), mGuard: mopen('p:guard'),
       tProj: tmenu('p:proj'), tEv: tmenu('p:ev'), tData: tmenu('p:data'), tEnv: tmenu('p:env'), tAgents: tmenu('p:agents'), tBudget: tmenu('p:budget'), tGuard: tmenu('p:guard'),
       cProj: mopen('p:proj') ? 'pill on' : 'pill', cEv: mopen('p:ev') ? 'pill on' : 'pill', cData: mopen('p:data') ? 'pill on' : 'pill', cEnv: mopen('p:env') ? 'pill on' : 'pill', cAgents: mopen('p:agents') ? 'pill on' : 'pill', cBudget: mopen('p:budget') ? 'pill on' : 'pill', cGuard: mopen('p:guard') ? 'pill quiet on' : 'pill quiet',
@@ -45,7 +45,9 @@
       dataGroups: s.connectors.map((c) => ({ name: c.name, items: s.datasets.filter((x) => x.conn === c.id && x.marking !== 'Holdout').map((x) => ({ name: x.name, meta: x.version, on: !!s.newSel[x.id], fill: s.newSel[x.id] ? 'var(--good)' : 'transparent', toggle: () => this.setState((st) => ({ newSel: { ...st.newSel, [x.id]: !st.newSel[x.id] } })) })) })).filter((g) => g.items.length > 0),
       holdName: dHold ? dHold.name : 'No dataset is marked Holdout',
       goConnectors: goCust({ cTab: 'conn', cView: 'yours' }),
-      envSeg: K.CLOUDS.map(([k, , label]) => ({ label, note: s.clouds[k] ? '' : 'Connect', cls: !s.clouds[k] ? 'chip dis' : (d.env === k ? 'chip on' : 'chip'), pick: () => (s.clouds[k] ? (setD({ env: k }), this.setState({ menu: null })) : goCust({ cTab: 'conn', cView: 'discover', cCat: 'Cloud' })()) })),
+      envSeg: K.BACKENDS.map((b) => ({ label: b.name, note: beOn(b.id) ? '' : 'Set up', cls: !beOn(b.id) ? 'chip dis' : (d.env === b.id ? 'chip on' : 'chip'), pick: () => (beOn(b.id) ? setD({ env: b.id, mt: null }) : this.openSettings('infra', null, 'backends')) })),
+      mtSeg: beOf(d.env).types.map((t) => ({ label: t, cls: t === mtOf(d.env, d.mt) ? 'chip on mono' : 'chip mono', pick: () => setD({ mt: t }) })), envWhere: beOf(d.env).where + '. Image ' + beOf(d.env).image + '.',
+      goInfra: () => this.openSettings('infra', null),
       dAgents: d.agents, agentNames: enabled.length ? enabled.map((i) => this.agName(s, i)).join(', ') : 'No agent is on',
       agentsDown: () => setD({ agents: Math.max(1, d.agents - 1) }), agentsUp: () => setD({ agents: Math.min(8, d.agents + 1) }),
       dCap: d.cap, onCap: (e) => setD({ cap: digits(e) }),
@@ -60,7 +62,7 @@
         if (roleOf(dProj) === 'Viewer') return;
         const ids = enabled.length ? enabled : ['claude'];
         const ags = Array.from({ length: d.agents }, (_, i) => ids[i % ids.length]);
-        const fields = { skills: selSkIds, project: dProj, req: d.text.trim(), ev: dEv.id, dir: d.dir, lim: { ...d.limits }, path: d.path, env: d.env, cloud: cloudLabel(d.env), cap: Number(d.cap) || 200, agents: ags, ds: [...selIds] };
+        const fields = { skills: selSkIds, project: dProj, req: d.text.trim(), ev: dEv.id, dir: d.dir, lim: { ...d.limits }, path: d.path, env: d.env, mt: mtOf(d.env, d.mt), cap: Number(d.cap) || 200, agents: ags, ds: [...selIds] };
         const reset = { text: '', name: null, ev: null, path: null, dir: null, project: null, skills: null };
         if (s.editId) {
           const old = s.opts.find((x) => x.id === s.editId);
@@ -110,14 +112,14 @@
       reqText: o.req, reqChips, pastRuns, sayDraft, declLines: dc.lines, acceptLine: 'Acceptance criteria: a change must beat twice the noise (' + (2 * ev.n).toFixed(1) + '%) and pass the holdout.',
       detOpen, detSummary: 'Draft approved by Priya Raman · ' + dc.summary, toggleDet: toggleEx(exKey('det')), detLabel: s.ex[exKey('det')] ? 'Hide details' : 'Show details',
       isDraft: !approvedAt, isApproved: approvedAt, detClosed: approvedAt && !detOpen, planOpen: !!s.ex[exKey('plan')], togglePlan: toggleEx(exKey('plan')), planLabel: s.ex[exKey('plan')] ? 'Hide plan' : 'Show plan', plan,
-      editDraft: () => this.setState({ screen: 'new', menu: null, editId: o.id, d: { text: o.req, ev: o.ev, dir: o.dir, limits: { ...o.lim }, path: o.path, name: o.name, env: o.env, agents: o.agents.length, cap: String(o.cap), project: o.project, skills: [...(o.skills || [])] }, newSel: Object.fromEntries(o.ds.map((i) => [i, true])), needText: false }),
+      editDraft: () => this.setState({ screen: 'new', menu: null, editId: o.id, d: { text: o.req, ev: o.ev, dir: o.dir, limits: { ...o.lim }, path: o.path, name: o.name, env: o.env, mt: o.mt, agents: o.agents.length, cap: String(o.cap), project: o.project, skills: [...(o.skills || [])] }, newSel: Object.fromEntries(o.ds.map((i) => [i, true])), needText: false }),
       approve: () => {
         if (o.approved) return;
         this.setState((st) => ({ opts: st.opts.map((x) => (x.id === o.id ? { ...x, status: 'Running', step: 1, approved: true, T: this.genT(x, st), act: 'Just now' } : x)) }));
         if (o.runs === 1) this.log('optimization.create', o.name);
         this.log('run.start', o.name + ' · run #' + o.runs);
       },
-      showProg, progSay: stopped ? 'The run was stopped. Running trials were discarded and nothing new will start.' : done ? 'Run ' + o.runs + ' is complete. All hosts are terminated and clean-up is verified.' : 'Approved. Run ' + o.runs + ' is under way.',
+      showProg, progSay: stopped ? 'The run was stopped. Running trials were discarded and nothing new will start.' : done ? 'Run ' + o.runs + ' is complete. Every sandbox is removed and clean-up is verified.' : 'Approved. Run ' + o.runs + ' is under way.',
       nodes, stepLine: stopped ? 'Stopped at step ' + o.step + ' of 8.' : o.step >= 8 ? 'Step 8 of 8 · ' + this.fmtMin(K.MIN[8]) + ' in total.' : 'Step ' + o.step + ' of 8 · ' + stepText.charAt(0).toLowerCase() + stepText.slice(1),
       stepsOpen: !!s.ex[exKey('steps')], toggleSteps: toggleEx(exKey('steps')), stepsLabel: s.ex[exKey('steps')] ? 'Hide steps' : 'Show steps', prog,
       canAdvance: live && o.step < 8,
@@ -128,8 +130,8 @@
         this.setState((st) => {
           let machines = st.machines;
           let opts = st.opts.map((x) => (x.id === o.id ? { ...x, step: n } : x));
-          if (n === 2 && !machines.some((m) => m.opt === o.name && m.role === 'runner' && !m.gone)) machines = [{ id: 'mr' + Date.now(), name: 'runner-' + slug + '-' + o.runs, role: 'runner', opt: o.name, cloud: o.cloud, age: '0 m', gone: false }, ...machines];
-          if (n === 5 && !machines.some((m) => m.opt === o.name && m.role === 'evaluator' && !m.gone)) machines = [{ id: 'me' + Date.now(), name: 'eval-' + slug + '-' + o.runs, role: 'evaluator', opt: o.name, cloud: o.cloud, age: '0 m', gone: false }, ...machines];
+          if (n === 2 && !machines.some((m) => m.opt === o.name && m.role === 'workspace' && !m.gone)) machines = [{ id: 'mr' + Date.now(), name: 'ws-' + slug + '-' + o.runs, role: 'workspace', opt: o.name, be: beOf(o.env).name, age: '0 m', gone: false }, ...machines];
+          if (n === 5 && !machines.some((m) => m.opt === o.name && m.role === 'evaluator' && !m.gone)) machines = [{ id: 'me' + Date.now(), name: 'eval-' + slug + '-' + o.runs, role: 'evaluator', opt: o.name, be: beOf(o.env).name, age: '0 m', gone: false }, ...machines];
           if (n === 8) {
             machines = machines.map((m) => (m.opt === o.name && !m.gone ? { ...m, gone: true, age: this.fmtMin(K.MIN[8]) } : m));
             const w = this.an({ ...opts.find((x) => x.id === o.id), step: 8 }, st).win;
@@ -137,6 +139,7 @@
           }
           return { opts, machines };
         });
+        if (n === 3) this.log('credential.mint', o.name + ' · run #' + o.runs + ' · agents read-only, evaluator with holdout', 'launcher');
       },
       showTrials: o.step >= 4 && trials.length > 0, trialsTitle: 'Trials · run ' + o.runs, trials,
       threadNotes,
@@ -168,7 +171,7 @@
       // dashboard
       dTiles: [
         { k: 'Value per year', v: kfmt(totalVal), sub: 'from ' + winN + (winN === 1 ? ' accepted win' : ' accepted wins'), color: 'var(--ink)' },
-        { k: 'Spent', v: money(totalSpend), sub: 'agents ' + money(Math.round(totalSpend * 0.49)) + ' · evaluation hosts ' + money(Math.round(totalSpend * 0.41)), color: 'var(--ink)' },
+        { k: 'Spent', v: money(totalSpend), sub: 'agents ' + money(Math.round(totalSpend * 0.49)) + ' · evaluation sandboxes ' + money(Math.round(totalSpend * 0.41)), color: 'var(--ink)' },
         { k: 'Return', v: (totalSpend ? Math.round(totalVal / totalSpend) : 0) + '×', sub: 'yearly value over spend', color: 'var(--accent)' },
         { k: 'Win rate', v: winN + ' of ' + finishedRuns, sub: 'finished runs ended in an accepted change', color: 'var(--ink)' }
       ],
@@ -177,7 +180,7 @@
 
       // history
       histIsTrials: s.histTab === 'trials', histIsInst: s.histTab === 'inst',
-      histTabs: [['trials', 'Trials'], ['inst', 'Instances']].map(([id, label]) => ({ label, cls: s.histTab === id ? 'tab on' : 'tab', pick: () => this.setState({ histTab: id }) })),
+      histTabs: [['trials', 'Trials'], ['inst', 'Sandboxes']].map(([id, label]) => ({ label, cls: s.histTab === id ? 'tab on' : 'tab', pick: () => this.setState({ histTab: id }) })),
       histProj: s.histProj, histExp: s.histExp,
       onHistProj: (e) => this.setState({ histProj: e.target.value, histExp: 'All' }), onHistExp: (e) => this.setState({ histExp: e.target.value }),
       projOptions: ['All', ...K.PROJECTS.map((p) => p[0])].map((v) => ({ v, l: v === 'All' ? 'All projects' : v })),
@@ -204,7 +207,7 @@
       formPicks: [...s.skills.map((k) => ({ key: 'skill:' + k.id, name: k.name, meta: 'Skill' })), ...s.evals.map((e) => ({ key: 'eval:' + e.id, name: e.name, meta: 'Evaluation' }))].map((x) => ({ ...x, fill: s.fpick[x.key] ? 'var(--good)' : 'transparent', on: !!s.fpick[x.key], toggle: () => this.setState((st) => ({ fpick: { ...st.fpick, [x.key]: !st.fpick[x.key] } })) })),
       submitForm, closeForms: () => this.setState({ form: null }),
       yourRows: yours, yoursNone: yoursAll === 0, yoursNoMatch: yoursAll > 0 && yours.length === 0,
-      yoursEmptyTxt: 'No ' + K.NOUN[tab] + ' in Yours yet.', yoursEmptyHint: ({ eval: 'Evaluations decide whether a change counts as a win.', skill: 'Skills are written know-how that agents read before they propose a change.', conn: 'Connectors let agents read your code and data inside your cloud.', agent: 'Agents propose the changes that evaluations then measure.', plugin: 'A plugin adds evaluations, skills and connectors for one domain in a single step.' })[tab],
+      yoursEmptyTxt: 'No ' + K.NOUN[tab] + ' in Yours yet.', yoursEmptyHint: ({ eval: 'Evaluations decide whether a change counts as a win.', skill: 'Skills are written know-how that agents read before they propose a change.', conn: 'Connectors are the code host and data systems that agents\' code reads, through read-only credentials.', agent: 'Agents propose the changes that evaluations then measure.', plugin: 'A plugin adds evaluations, skills and connectors for one domain in a single step.' })[tab],
       goDiscover: () => this.setState({ cView: 'discover', menu: null, cNotice: '' }),
       hasBanner: !!featured, bn, bnAdd: () => featured && !inY(featured) && adder(featured), bnOpen: openDet(tab, featId || ''), bnCanOpen: tab === 'skill' || tab === 'plugin', bnEyebrow: 'From Ratchet', illE: tab === 'eval', illS: tab === 'skill', illP: tab === 'plugin',
       showCar, carTitle: slide.t, carDesc: slide.d, carTint: slide.tint, carTiles, carPrev: addSlide(-1), carNext: addSlide(1), carExplore: () => this.setState({ cCat: slide.cat, menu: null }), carExploreLabel: 'Explore ' + slide.t.toLowerCase(),
@@ -213,7 +216,7 @@
       discEmpty: rest.length === 0 && !featured ? 'Nothing matches your filters.' : '',
 
       // detail
-      dIsEval: detKind === 'eval', dIsAgent: detKind === 'agent', dIsCData: detKind === 'conn' && conn.cat !== 'Cloud', dIsCCloud: detKind === 'conn' && conn.cat === 'Cloud',
+      dIsEval: detKind === 'eval', dIsAgent: detKind === 'agent', dIsConn: detKind === 'conn', connAccess: connAccess.map(([k, v]) => ({ k, v })),
       dBack: goCust({ cTab: detKind, cView: 'yours' }), dBackLabel: 'Back to ' + K.TABN[detKind].toLowerCase(),
       dNotice: s.cNotice, dHasNotice: !!s.cNotice,
       dGl: gl(detSkill ? 'g-book' : detPlugin ? 'g-blocks' : detEval ? glFor(detEval, 'eval') : detAgent ? glFor(detAgent, 'agent') : glFor(conn, 'conn')),
@@ -241,7 +244,7 @@
       dHasExp: !!(detEval || detAgent || detSkill), dExp: detEval ? eExp : detSkill ? skExp : aExp, dExpEmpty: (detEval ? eExp : detSkill ? skExp : aExp).length === 0,
       recalibrate: () => { if (!detEval) return; this.setState((st) => ({ evals: st.evals.map((e) => (e.id === detEval.id ? { ...e, cal: 'Today' } : e)), cNotice: 'Recalibrated just now. Noise is ±' + detEval.n + '% over ' + detEval.runs + ' fresh baseline runs.' })); this.log('evaluation.calibrate', detEval.name + ' · noise ±' + detEval.n + '%'); },
       // agent
-      aKv: detAgent ? [['Model provider', detAgent.provider], ['Reached through', detAgent.via]].map(([k, v]) => ({ k, v })) : [],
+      aKv: detAgent ? [['Model provider', detAgent.provider], ['Reached through', detAgent.via], ['Model key', 'Added by the egress proxy on the way out. The agent never holds it.'], ['Other credentials', 'None kept. Each run gives it short-lived, scoped ones.']].map(([k, v]) => ({ k, v })) : [],
       aModel: detAgent ? detAgent.model : '', onAModel: (e) => detAgent && this.setState((st) => ({ agentList: st.agentList.map((g) => (g.id === detAgent.id ? { ...g, model: e.target.value } : g)) })),
       aPar: detAgent ? detAgent.par : 0, aParDown: () => detAgent && this.setState((st) => ({ agentList: st.agentList.map((g) => (g.id === detAgent.id ? { ...g, par: Math.max(1, g.par - 1) } : g)) })), aParUp: () => detAgent && this.setState((st) => ({ agentList: st.agentList.map((g) => (g.id === detAgent.id ? { ...g, par: Math.min(8, g.par + 1) } : g)) })),
       aOnCls: detOn ? 'seg on' : 'seg', aOffCls: detOn ? 'seg' : 'seg on', aSetOn: () => detAgent && setAgentOn(detAgent, true), aSetOff: () => detAgent && setAgentOn(detAgent, false),
@@ -249,7 +252,7 @@
       // connector
       disconnect: () => {
         if (conn.id === 'rh') return;
-        this.setState((st) => ({ connectors: st.connectors.filter((c) => c.id !== conn.id), clouds: conn.cloud ? { ...st.clouds, [conn.cloud]: false } : st.clouds, d: conn.cloud && st.d.env === conn.cloud ? { ...st.d, env: 'aws' } : st.d, screen: 'customize', cTab: 'conn', cView: 'yours', ...custReset }));
+        this.setState((st) => ({ connectors: st.connectors.filter((c) => c.id !== conn.id), screen: 'customize', cTab: 'conn', cView: 'yours', ...custReset }));
         this.log('connector.remove', conn.kind + ' · ' + conn.name);
       },
       canDisconnect: detKind === 'conn' && conn.id !== 'rh',
@@ -264,10 +267,7 @@
         };
       }),
       dsEmpty: connDs.length === 0, hasDs: !!dsSel, dsName: dsSel ? dsSel.name : '', dsVersions: dsSel ? versOf(dsSel).map(([v, created, size]) => ({ v, created, size })) : [],
-      markHelp: dsSel && dsSel.marking === 'Holdout' ? 'Marked Holdout. Restricted to evaluator. Agents cannot read it, and their access is removed.' : 'Agents can read it when permitted.',
-      cloudKv: [['Account', ck === 'aws' ? 'acme-prod · us-east-1 · role ratchet' : 'acme-staging · role ratchet'], ['Environment', K.CLOUDS[ci][2]], ['Machine type', ['c7i.2xlarge', 'n2-standard-8', 'D8s v5'][ci]], ['Image', ['ratchet-bench-2026.11', 'ratchet-bench-gcp-2026.11', 'ratchet-bench-az-2026.11'][ci]]].map(([k, v]) => ({ k, v, mono: k === 'Machine type' || k === 'Image' ? 'mono xs' : '' })),
-      runMach, runCount: runMach.length, runEmpty: runMach.length === 0, goneLink: goneN + (goneN === 1 ? ' terminated instance' : ' terminated instances') + ' in Run history',
-      goInstances: goTo('history', { histTab: 'inst', histProj: 'All', histExp: 'All' }),
+      markHelp: dsSel && dsSel.marking === 'Holdout' ? 'Marked Holdout. Restricted to evaluator. Enforced by the credentials: agents never receive one that reaches it.' : 'Agents can read it when permitted, with a read-only credential.',
 
       // settings
       setOpen: s.setOpen, setQ: s.setQ, closeSettings: () => this.closeSettings(), setSdBox: this.setSdBox, setMainRef: this.setMainRef,
@@ -287,6 +287,18 @@
       budgetRows: s.opts.map((x) => ({ name: x.name, pct: Math.min(100, Math.round((this.spend(x) / x.cap) * 100)) + '%', text: money(this.spend(x)) + ' of ' + money(x.cap), open: openOpt(x) })),
       members: people.map((p) => ({ ...p, init: p.name.charAt(0), role: s.roles[p.id], ro: orgRO, roles: ['Owner', 'Editor', 'Viewer'].map((r) => ({ v: r })), pick: (e) => setRole(p, e.target.value) })),
       sessionSeg: seg([['8 hours'], ['12 hours'], ['24 hours']], s.session, (v) => { if (isOwner && v !== s.session) { this.setState({ session: v }); this.log('signin.change', 'Session length · ' + v); } }),
+      deployText: s.deploy, deployDesc: s.deploy === 'Ratchet cloud' ? 'We host the server. A runner in your infrastructure does the work.' : 'The server runs in your infrastructure with Docker Compose.',
+      launchDesc: s.deploy === 'Ratchet cloud' ? 'A small runner in your infrastructure. It connects out to Ratchet over HTTPS, so no inbound port is opened.' : 'Built into your server. It needs no separate install.',
+      launcherRows: [s.deploy === 'Ratchet cloud' ? { name: s.launcher.name, kind: 'Runner', where: s.launcher.where, version: s.launcher.version, seen: s.launcher.seen, st: s.launcher.up ? 'Connected' : 'Not connected', color: s.launcher.up ? 'var(--good)' : 'var(--warn)' } : { name: 'Built into the server', kind: 'Launcher', where: s.deploy, version: s.launcher.version, seen: 'Always on', st: 'Connected', color: 'var(--good)' }],
+      backendRows: K.BACKENDS.filter((b) => beOn(b.id)).map((b) => {
+        const run = s.machines.filter((m) => m.be === b.name && !m.gone).length;
+        const only = K.BACKENDS.filter((q) => beOn(q.id)).length === 1;
+        return { name: b.name, where: b.where, types: b.types.join(', '), image: b.image, runTxt: run ? run + (run === 1 ? ' sandbox running' : ' sandboxes running') : 'Nothing running', cantRemove: !!(orgRO || run || only), removeTip: run ? 'Sandboxes are running here' : only ? 'Keep at least one backend' : '',
+          remove: () => { if (!isOwner || run || only) return; this.setState((st) => ({ backends: { ...st.backends, [b.id]: false }, d: st.d.env === b.id ? { ...st.d, env: 'k8s', mt: null } : st.d })); this.log('backend.remove', b.name + ' · ' + b.where); } };
+      }),
+      addBeItems: K.BACKENDS.filter((b) => !beOn(b.id)).map((b) => ({ label: b.name, where: b.where, go: () => { if (!isOwner) return; this.setState((st) => ({ backends: { ...st.backends, [b.id]: true }, menu: null })); this.log('backend.add', b.name + ' · ' + b.where); } })),
+      noAddBe: orgRO || K.BACKENDS.every((b) => beOn(b.id)), addBeOpen: menu === 'addbe', toggleAddBe: tmenu('addbe'),
+      secretMgr: s.secretMgr, secretOpts: K.SECRETS.map((v) => ({ v })), onSecretMgr: (e) => { if (!isOwner || e.target.value === s.secretMgr) return; this.setState({ secretMgr: e.target.value }); this.log('secretmanager.change', 'Secret manager · ' + e.target.value); },
       hasNewToken: s.newToken,
       createToken: () => { if (s.newToken) return; this.setState({ newToken: true, tokens: [{ id: 't' + Date.now(), name: 'New access token', tail: 'b4c0', kind: 'Personal', scope: 'Everything you can', used: 'Never', expires: 'in 90 days' }, ...s.tokens] }); this.log('token.create', 'New access token · ends b4c0'); },
       tokens: s.tokens.map((t) => ({ ...t, revoke: () => { this.setState({ tokens: s.tokens.filter((x) => x.id !== t.id), newToken: t.tail === 'b4c0' ? false : s.newToken }); this.log('token.revoke', t.name + ' · ends ' + t.tail); } })),

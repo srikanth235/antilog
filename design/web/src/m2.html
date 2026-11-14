@@ -50,7 +50,7 @@
           <div class="pop"><button class="{{cData}}" onClick="{{tData}}" aria-expanded="{{mData}}" aria-haspopup="menu" aria-label="Data: {{vData}}" title="Data"><i class="ic g-db"></i><span class="v">{{vData}}</span></button>
             <sc-if value="{{mData}}"><div class="menu dn" role="menu" style="width: 380px; max-height: 400px; overflow-y: auto; padding: 8px">
               <span class="lbl" style="padding: 6px 10px">Evaluator only</span>
-              <div class="chk" style="color: var(--ink2); min-height: 44px"><i class="ic s i-lock"></i><span class="col grow" style="gap: 0"><span style="color: var(--ink)">{{holdName}}</span><span class="xs mut">Holdout · Restricted to evaluator</span></span></div>
+              <div class="chk" style="color: var(--ink2); min-height: 44px"><i class="ic s i-lock"></i><span class="col grow" style="gap: 0"><span style="color: var(--ink)">{{holdName}}</span><span class="xs mut">Holdout · Restricted to evaluator, enforced by its credential</span></span></div>
               <div class="msep"></div>
               <span class="lbl" style="padding: 6px 10px">Datasets agents can read</span>
               <sc-for list="{{dataGroups}}" as="g" hint-placeholder-count="3"><div class="col" style="gap: 2px; padding-bottom: 6px"><span class="xs mut" style="padding: 4px 10px">{{g.name}}</span>
@@ -69,7 +69,10 @@
         <div class="crow">
           <div class="pop"><button class="{{cEnv}}" onClick="{{tEnv}}" aria-expanded="{{mEnv}}" aria-haspopup="menu" aria-label="Environment: {{vEnv}}" title="Environment"><i class="ic g-cloud"></i><span class="v">{{vEnv}}</span></button>
             <sc-if value="{{mEnv}}"><div class="menu wide dn" role="menu" style="width: 320px">
-              <span class="lbl">Environment</span><div class="rw wrap g8"><sc-for list="{{envSeg}}" as="x" hint-placeholder-count="3"><button class="{{x.cls}}" onClick="{{x.pick}}"><span>{{x.label}}</span><small>{{x.note}}</small></button></sc-for></div>
+              <span class="lbl">Sandbox backend</span><div class="rw wrap g8"><sc-for list="{{envSeg}}" as="x" hint-placeholder-count="4"><button class="{{x.cls}}" onClick="{{x.pick}}"><span>{{x.label}}</span><small>{{x.note}}</small></button></sc-for></div>
+              <span class="lbl">Machine type</span><div class="rw wrap g8"><sc-for list="{{mtSeg}}" as="x" hint-placeholder-count="2"><button class="{{x.cls}}" onClick="{{x.pick}}">{{x.label}}</button></sc-for></div>
+              <span class="xs mut">{{envWhere}} Agents and the evaluator run in separate sandboxes on separate machines. A benchmark stays on one backend and one machine type.</span>
+              <button class="textbtn" onClick="{{goInfra}}" style="align-self: flex-start">Manage infrastructure</button>
             </div></sc-if></div>
           <div class="pop"><button class="{{cAgents}}" onClick="{{tAgents}}" aria-expanded="{{mAgents}}" aria-haspopup="menu" aria-label="Agents: {{vAgents}}" title="Agents"><i class="ic g-term"></i><span class="v">{{vAgents}}</span></button>
             <sc-if value="{{mAgents}}"><div class="menu wide dn" role="menu" style="width: 300px">
@@ -145,7 +148,7 @@
                 </div>
               </sc-if>
               <div class="rw wrap between g12" style="padding-top: 16px">
-                <span class="rw g16"><button class="textbtn" onClick="{{togglePlan}}" aria-expanded="{{planOpen}}">{{planLabel}}</button><sc-if value="{{isDraft}}"><span class="sm mut">Nothing is created in your cloud until you approve.</span></sc-if></span>
+                <span class="rw g16"><button class="textbtn" onClick="{{togglePlan}}" aria-expanded="{{planOpen}}">{{planLabel}}</button><sc-if value="{{isDraft}}"><span class="sm mut">Nothing is created in your infrastructure until you approve.</span></sc-if></span>
                 <sc-if value="{{isDraft}}"><span class="rw g8"><button class="btn" onClick="{{editDraft}}">Edit</button><button class="btn primary" onClick="{{approve}}">Approve and start</button></span></sc-if>
                 <sc-if value="{{isApproved}}"><button class="textbtn" onClick="{{toggleDet}}">{{detLabel}}</button></sc-if>
               </div>
@@ -196,6 +199,7 @@
               <sc-if value="{{x.open}}">
                 <div class="tdet">
                   <pre class="diff"><sc-for list="{{x.diff}}" as="l" hint-placeholder-count="5"><span class="{{l.cls}}" style="display: block">{{l.t}}</span></sc-for></pre>
+                  <span class="xs mut">The diff and logs are read from your infrastructure through the launcher. Ratchet does not store them.</span>
                   <sc-if value="{{x.showLims}}" hint-placeholder-val="{{ true }}">
                     <div class="col" style="gap: 4px">
                       <sc-for list="{{x.lims}}" as="g" hint-placeholder-count="2"><div class="rw between sm"><span class="ink2">{{g.k}}: {{g.v}}</span><span style="color: {{g.color}}">{{g.tag}}</span></div></sc-for>

@@ -69,7 +69,8 @@
     const lim = K.LIMITS.filter(([k]) => o.lim[k]).map(([, l]) => l.toLowerCase());
     const pk = s.datasets.filter((x) => o.ds.includes(x.id));
     const hold = s.datasets.find((x) => x.id === ev.ho && x.marking === 'Holdout') || s.datasets.find((x) => x.marking === 'Holdout');
-    const cl = K.CLOUDS.find((c) => c[0] === o.env) || K.CLOUDS[0];
+    const be = K.BACKENDS.find((c) => c.id === o.env) || K.BACKENDS[0];
+    const dv = (x) => (x.name.endsWith(x.version) ? x.name : x.name + ' ' + x.version);
     const ag = o.agents.length + (o.agents.length === 1 ? ' agent' : ' agents');
     const sk = (o.skills || []).map((id) => s.skills.find((k) => k.id === id)).filter(Boolean);
     return {
@@ -79,12 +80,14 @@
         { k: 'Primary metric', v: ev.metric + ' · ' + ev.dir + ' is better · baseline ' + this.fv(ev, ev.base) + ', noise ±' + ev.n + '%', c: K.COL.opt },
         { k: 'Guardrail metrics', v: lim.length ? lim.join(', ') : 'none', c: K.COL.opt },
         { k: 'Editable paths', v: o.path || ev.path, c: K.COL.opt },
-        { k: 'Data', v: (pk.length ? pk.map((x) => x.name).join(', ') : 'no datasets') + (hold ? '. ' + hold.name + ' is restricted to the evaluator.' : '. No dataset is marked Holdout.'), c: K.COL.ctx },
+        { k: 'Data', v: (pk.length ? pk.map(dv).join(', ') : 'no datasets') + (hold ? '. ' + hold.name + ' is the holdout and is restricted to the evaluator.' : '. No dataset is marked Holdout.'), c: K.COL.ctx },
+        { k: 'Credentials', v: 'Minted for each run by the launcher. Agents get read-only credentials that leave out the holdout. The evaluator gets its own, which includes it. Model keys are added by a proxy, so agents never hold one.', c: K.COL.ctx },
         { k: 'Skills', v: sk.length ? sk.map((k) => k.name).join(', ') + '. Agents read these. The evaluator does not.' : 'No skills selected', c: K.COL.ctx },
-        { k: 'Environment', v: cl[2] + ', ' + ag + ', ' + this.money(o.cap) + ' budget, removed after the last run', c: K.COL.inf }
+        { k: 'Environment', v: be.name + ' (' + be.where + '), ' + (o.mt || be.types[0]) + '. Agents and the evaluator run in separate sandboxes on separate machines, and every sandbox is removed after the last run.', c: K.COL.inf },
+        { k: 'Agents and budget', v: ag + ', ' + this.money(o.cap) + ' budget', c: K.COL.inf }
       ],
-      chips: ['Data · ' + pk.length + (pk.length === 1 ? ' dataset' : ' datasets'), 'Skills · ' + sk.length, 'Environment · ' + cl[1], 'Agents · ' + o.agents.length, 'Budget · ' + this.money(o.cap)],
-      summary: ev.metric + ', ' + pk.length + (pk.length === 1 ? ' dataset, ' : ' datasets, ') + sk.length + (sk.length === 1 ? ' skill, ' : ' skills, ') + cl[1] + ', ' + ag + ', ' + this.money(o.cap)
+      chips: ['Data · ' + pk.length + (pk.length === 1 ? ' dataset' : ' datasets'), 'Skills · ' + sk.length, 'Environment · ' + be.name, 'Agents · ' + o.agents.length, 'Budget · ' + this.money(o.cap)],
+      summary: ev.metric + ', ' + pk.length + (pk.length === 1 ? ' dataset, ' : ' datasets, ') + sk.length + (sk.length === 1 ? ' skill, ' : ' skills, ') + be.name + ', ' + ag + ', ' + this.money(o.cap)
     };
   }
   renderVals() {
@@ -103,7 +106,9 @@
     const st0 = (o) => K.STAT[o.status];
     const stOf = (o) => { const t = st0(o); return { stLabel: t[0], stColor: t[2], stCls: t[3] + ' gi ' + t[1] }; };
     const selOpt = s.opts.find((o) => o.id === s.selId) || s.opts[0];
-    const cloudLabel = (k) => K.CLOUDS.find((c) => c[0] === k)[1];
+    const beOf = (k) => K.BACKENDS.find((c) => c.id === k) || K.BACKENDS[0];
+    const beOn = (k) => !!s.backends[k];
+    const mtOf = (k, mt) => (beOf(k).types.includes(mt) ? mt : beOf(k).types[0]);
     const roleOf = (p) => (K.PROJECTS.find((x) => x[0] === p) || [0, 'Viewer'])[1];
     const evAll = (o) => this.an(o, s);
 
@@ -161,6 +166,7 @@
       ['general', 'General', 'i-org', 'org', 'Settings for everyone in Acme.'],
       ['members', 'Users and groups', 'i-users', 'org', 'Roles on your projects.'],
       ['signin', 'Single sign-on', 'i-lock', 'org', 'How people sign in to Acme.'],
+      ['infra', 'Infrastructure', 'g-cloud', 'org', 'Where sandboxes run, and where secrets stay.'],
       ['budgets', 'Budgets', 'g-gauge', 'org', 'When a budget is reached, work stops.'],
       ['notes', 'Notes', 'g-note', 'org', 'Guidance from people that agents read.'],
       ['audit', 'Audit logs', 'g-hist', 'org', 'Every change anyone made in Acme.']
@@ -175,7 +181,8 @@
       ['tokens', 'tokcreate', 'Create an access token', 'It acts as you, with everything you can do.', 'api key cli mcp ci new'],
       ['tokens', 'toklist', 'Your access tokens', 'Revoke a token you no longer use.', 'revoke fingerprint service principal'],
       ['general', 'org', 'Organization', 'The name your users see.', 'acme name'],
-      ['general', 'host', 'Server', 'The address of this Ratchet server.', 'host url ratchet.acme.internal'],
+      ['general', 'deploy', 'Deployment', 'Where the Ratchet server runs.', 'ratchet cloud self-hosted docker compose'],
+      ['general', 'host', 'Server', 'The address of this Ratchet server.', 'host url acme.ratchet.cloud'],
       ['general', 'defcap', 'Default budget per experiment', 'New experiments start with this budget.', 'default budget cap dollars'],
       ['members', 'users', 'Users', 'Roles on your projects. Each change is recorded in the audit logs.', 'people members roles invite owner editor viewer'],
       ['members', 'groups', 'Groups', 'Users in these Okta groups get a role automatically.', 'okta group mapping'],
@@ -183,6 +190,9 @@
       ['signin', 'newusers', 'New users', 'Who can sign in and how roles are assigned.', 'okta:engineering group mapping'],
       ['signin', 'session', 'Session length', 'How long a sign-in lasts before Okta asks again.', 'hours login timeout'],
       ['signin', 'sessactive', 'Signed in now', 'Sessions that are open right now.', 'active sessions'],
+      ['infra', 'launcher', 'Launcher', 'Starts and removes sandboxes in your infrastructure.', 'runner connected version last seen'],
+      ['infra', 'backends', 'Sandbox backends', 'Where agent and evaluator sandboxes run.', 'kubernetes aws gcp azure vms machine type image cluster'],
+      ['infra', 'secretmgr', 'Secret manager', 'Where connector admin secrets stay.', 'vault secrets key vault reference'],
       ['budgets', 'monthly', 'Total monthly budget', 'When it is reached, running work stops at the next trial.', 'spend cap limit cost dollars'],
       ['budgets', 'perexp', 'Per experiment', 'Spent against each experiment budget.', 'experiment cap spend'],
       ['notes', 'notenew', 'Add a note', 'Say something every agent should know, for all experiments.', 'guidance write'],
@@ -232,9 +242,9 @@
     const nm = o.agents.length;
     const measuring = a.cur.filter((t) => !t.mes).length;
     const stepText = [
-      '', 'Starting the run.', 'A runner is starting in ' + cloudLabel(o.env) + '.', 'Agents are getting read access to ' + dc.pk.length + (dc.pk.length === 1 ? ' dataset.' : ' datasets.'),
-      nm + (nm === 1 ? ' agent is' : ' agents are') + ' proposing changes.', 'The evaluator is measuring ' + measuring + (measuring === 1 ? ' trial' : ' trials') + ' on a fresh host.',
-      'Checking each result against the acceptance criteria.', 'Logging the run to history and preparing the pull request.', 'Terminating hosts and verifying clean-up.'
+      '', 'Starting the run.', 'The launcher is creating a workspace on ' + beOf(o.env).name + '.', 'The launcher is minting scoped credentials: read-only for agents, without the holdout.',
+      nm + (nm === 1 ? ' agent is' : ' agents are') + ' writing and running code.', 'The evaluator is measuring ' + measuring + (measuring === 1 ? ' trial' : ' trials') + ' with the holdout, on separate machines.',
+      'Judging each result against the acceptance criteria.', 'Storing the run in history and preparing the pull request.', 'Removing every sandbox and verifying clean-up.'
     ][curStep] || '';
     const nodes = [];
     K.STEPS.forEach(([c, who, what], i) => {
@@ -257,7 +267,7 @@
       const open = !!s.ex['tr:' + t.key];
       return {
         dom: 'tr-' + t.key.replace(':', '-'), agent: t.agent, init: this.initials(t.agent), text: t.text, files: t.files + (t.files === 1 ? ' file' : ' files'), add: '+' + t.add, del: '−' + t.del,
-        value: t.mes ? this.fv(ev, ev.base) + ' → ' + this.fv(ev, t.v) : (t.out === 'disc' ? 'Not measured' : 'Measuring on a fresh host'),
+        value: t.mes ? this.fv(ev, ev.base) + ' → ' + this.fv(ev, t.v) : (t.out === 'disc' ? 'Not measured' : 'Measuring in the evaluator sandbox'),
         mes: t.mes, delta: t.mes ? this.pt(t.p) : '', deltaColor: t.mes ? (O[1] === 'var(--ink3)' ? 'var(--ink2)' : O[1]) : 'var(--ink3)',
         out: O[0], outColor: O[1], outCls: t.mes ? 'tg' : 'tg hollow', tm: t.mes ? t.tm + ' m' : '',
         open, rot: open ? 'rotate(90deg)' : 'rotate(0deg)', hl: hl === t.key, rowCls: hl === t.key ? 'trow hl' : 'trow',
@@ -326,7 +336,7 @@
     }));
     const winPct = winT ? this.pt(winT.p) : '';
     const hitCap = this.spend(o) >= o.cap;
-    const resSum = winT ? ev.metric + (ev.dir === 'lower' ? ' fell from ' : ' rose from ') + this.fv(ev, ev.base) + ' to ' + this.fv(ev, winT.v) + ', confirmed on a fresh host and held on data the agents never saw.' : '';
+    const resSum = winT ? ev.metric + (ev.dir === 'lower' ? ' fell from ' : ' rose from ') + this.fv(ev, ev.base) + ' to ' + this.fv(ev, winT.v) + ', confirmed in a fresh evaluator sandbox and held on data the agents never saw.' : '';
     const wcount = Math.min(o.agents.length, 3);
     const triedList = a.cur.map((t) => ({ agent: t.agent, text: t.text, value: this.fv(ev, t.v) + ' (' + this.pt(t.p) + ')', out: K.OUT[t.out][0], color: K.OUT[t.out][1] }));
     const nHold = a.cur.filter((t) => t.out === 'holdout').length;
@@ -334,9 +344,12 @@
     const kvs = (list) => list.map(([k, v]) => ({ k, v }));
     const hasBest = !!a.best;
     const reqChips = dc.chips.map((t) => ({ t }));
-    const optCol = winT ? kvs([['Baseline', this.fv(ev, ev.base) + ' over 9 runs'], ['Best trial', this.fv(ev, winT.v) + ' over 5 runs, same on a second host'], ['Holdout', winT.h != null ? this.fv(ev, winT.h) + ', passed' : 'Passed'], ['Noise', '±' + ev.n + '%']]) : [];
-    const ctxCol = kvs([['Read by agents', dc.pk.length ? dc.pk.map((x) => x.name).join(', ') : 'No datasets'], ['Skills read by agents', dc.sk.length ? dc.sk.map((x) => x.name).join(', ') : 'None'], ['Used by evaluator', dc.hold ? dc.hold.name : 'None marked'], ['Notes considered', oNotes.length + (oNotes.length === 1 ? ' note' : ' notes') + ' from people']]);
-    const infCol = kvs([['Environment', (K.CLOUDS.find((c) => c[0] === o.env) || K.CLOUDS[0])[2] + ', ' + ['c7i.2xlarge', 'n2-standard-8', 'D8s v5'][Math.max(0, K.CLOUDS.findIndex((c) => c[0] === o.env))]], ['Agents used', String(wcount)], ['Spend', money(oSpend) + ' (agents ' + money(ag) + ', hosts ' + money(hosts) + ')'], ['Clean-up', o.step >= 8 || stopped ? 'Verified' : 'Pending until step 8']]);
+    const optCol = winT ? kvs([['Baseline', this.fv(ev, ev.base) + ' over 9 runs'], ['Best trial', this.fv(ev, winT.v) + ' over 5 runs, same on a second evaluator sandbox'], ['Holdout', winT.h != null ? this.fv(ev, winT.h) + ', passed' : 'Passed'], ['Noise', '±' + ev.n + '%']]) : [];
+    const dvs = (x) => (x.name.endsWith(x.version) ? x.name : x.name + ' ' + x.version);
+    const beR = beOf(o.env), mtR = mtOf(o.env, o.mt);
+    const agR = o.agents.slice(0, wcount).map((id) => { const g = s.agentList.find((q) => q.id === id); return g ? g.name + ' (' + g.model + ')' : this.agName(s, id); }).join(', ');
+    const ctxCol = kvs([['Datasets read by agents', dc.pk.length ? dc.pk.map(dvs).join(', ') : 'No datasets'], ['Agent credential', 'Read-only, minted for this run, holdout excluded'], ['Evaluator credential', dc.hold ? 'Its own, includes ' + dvs(dc.hold) : 'Its own, no holdout marked'], ['Skills read by agents', dc.sk.length ? dc.sk.map((x) => x.name + ' v' + x.ver).join(', ') : 'None'], ['Notes considered', oNotes.length + (oNotes.length === 1 ? ' note' : ' notes') + ' from people']]);
+    const infCol = kvs([['Backend and machine type', beR.name + ', ' + mtR], ['Evaluator image', beR.image], ['Agents used', agR], ['Spend', money(oSpend) + ' (agents ' + money(ag) + ', sandboxes ' + money(hosts) + ')'], ['Numbers', 'Signed by the evaluator'], ['Clean-up', o.step >= 8 || stopped ? 'Verified' : 'Pending until step 8']]);
     const mach = s.machines.filter((m) => m.opt === o.name);
     const placeholders = { Draft: 'Ask Ratchet to change the draft, e.g. also guard memory use', Running: 'Steer the next trial, e.g. focus on database queries' };
     const ph = placeholders[o.status] || 'Start another run with a note, e.g. try the cache layer';
@@ -413,7 +426,7 @@
     });
     const hExpOptions = ['All', ...s.opts.filter((x) => s.histProj === 'All' || x.project === s.histProj).map((x) => x.name)];
     const hFilter = (r) => (s.histProj === 'All' || r.project === s.histProj) && (s.histExp === 'All' || r.opt === s.histExp);
-    const machAll = s.machines.map((m) => ({ ...m, project: optProj(m.opt), st: m.gone ? 'Terminated, clean-up verified' : 'Running', color: m.gone ? 'var(--ink3)' : 'var(--good)', open: () => { const x = s.opts.find((q) => q.name === m.opt); if (x) openOpt(x)(); } }));
+    const machAll = s.machines.map((m) => ({ ...m, project: optProj(m.opt), roleLabel: m.role === 'evaluator' ? 'Evaluator sandbox' : 'Agent sandbox', st: m.gone ? 'Removed, clean-up verified' : 'Running', color: m.gone ? 'var(--ink3)' : 'var(--good)', open: () => { const x = s.opts.find((q) => q.name === m.opt); if (x) openOpt(x)(); } }));
     const machRows = machAll.filter((m) => (s.histProj === 'All' || m.project === s.histProj) && (s.histExp === 'All' || m.opt === s.histExp));
 
     // ---------- customize
@@ -438,15 +451,14 @@
     const sortC = (p, q) => (s.cSort === 'used' ? q._u - p._u || p.name.localeCompare(q.name) : s.cSort === 'new' ? (yoursView ? q._i - p._i : p._i - q._i) : p.name.localeCompare(q.name));
     const glFor = (x, t) => x.gl || (t === 'eval' ? (x.cat === 'Size' ? 'g-box' : x.cat === 'Quality' ? 'g-chart' : x.cat === 'Cost' ? 'g-cloud' : 'g-gauge') : t === 'agent' ? 'g-term' : t === 'skill' ? 'g-book' : t === 'plugin' ? 'g-blocks' : (x.cat === 'Cloud' ? 'g-cloud' : x.cat === 'Code' ? 'g-git' : 'g-db'));
     const note = (m) => ({ cNotice: m });
-    const mkConn = (cx) => ({ id: cx.id, name: cx.name + ' ' + cx.def, desc: cx.desc, cat: cx.cat, kind: cx.name, used: cx.used, added: true, gl: cx.gl, byk: cx.byk, ...(cx.cat === 'Cloud' ? { cloud: cx.id } : {}) });
+    const mkConn = (cx) => ({ id: cx.id, name: cx.name + ' ' + cx.def, desc: cx.desc, cat: cx.cat, kind: cx.name, used: cx.used, added: true, gl: cx.gl, byk: cx.byk });
     const mkEval = (e) => ({ ...e, cal: 'Today', runs: 9, ideas: K.GEN });
     const mkAgent = (g) => ({ id: g.id, name: g.name, desc: g.desc, provider: g.provider, model: g.model, via: g.via, cat: g.cat, used: 0, par: 2, gl: g.gl, byk: g.byk });
     const mkSkill = (k) => ({ ...k, yours: true });
     const addConn = (cx) => {
       if (isY('conn', cx.id)) return;
-      const isCloud = cx.cat === 'Cloud';
-      this.setState((st) => ({ connectors: [mkConn(cx), ...st.connectors], clouds: isCloud ? { ...st.clouds, [cx.id]: true } : st.clouds, ...note(cx.name + ' added to Yours.') }));
-      this.log(isCloud ? 'cloud.connect' : 'connector.add', isCloud ? cx.name : cx.name + ' · ' + cx.def);
+      this.setState((st) => ({ connectors: [mkConn(cx), ...st.connectors], ...note(cx.name + ' added to Yours. Ratchet keeps a reference to its admin secret in ' + st.secretMgr + ', never the secret.') }));
+      this.log('connector.add', cx.name + ' · ' + cx.def);
     };
     const addEval = (e) => { if (isY('eval', e.id)) return; this.setState((st) => ({ evals: [...st.evals, mkEval(e)], ...note(e.name + ' added to Yours. It can now be chosen in a new experiment.') })); this.log('evaluation.add', e.name + ' · template'); };
     const addAgent = (g) => { if (isY('agent', g.id)) return; this.setState((st) => ({ agentList: [...st.agentList, mkAgent(g)], agents: { ...st.agents, [g.id]: true }, ...note(g.name + ' added to Yours and switched on.') })); this.log('agent.add', g.name + ' · ' + g.provider); };
@@ -455,13 +467,13 @@
       if (isY('plugin', p.id)) return;
       this.setState((st) => {
         const rec = { eval: [], skill: [], conn: [], agent: [] };
-        let { evals, skills, connectors, agentList, agents, clouds } = st;
+        let { evals, skills, connectors, agentList, agents } = st;
         p.items.eval.forEach((id) => { const e = K.EVCAT.find((q) => q.id === id); if (e && !evals.some((q) => q.id === id)) { evals = [...evals, mkEval(e)]; rec.eval.push(id); } });
         p.items.skill.forEach((id) => { const k = K.SKILLS.find((q) => q.id === id); if (k && !skills.some((q) => q.id === id)) { skills = [...skills, mkSkill(k)]; rec.skill.push(id); } });
-        p.items.conn.forEach((id) => { const cx = K.CATALOG.find((q) => q.id === id); if (cx && !connectors.some((q) => q.id === id)) { connectors = [mkConn(cx), ...connectors]; rec.conn.push(id); if (cx.cat === 'Cloud') clouds = { ...clouds, [id]: true }; } });
+        p.items.conn.forEach((id) => { const cx = K.CATALOG.find((q) => q.id === id); if (cx && !connectors.some((q) => q.id === id)) { connectors = [mkConn(cx), ...connectors]; rec.conn.push(id); } });
         p.items.agent.forEach((id) => { const g = K.AGENTCAT.find((q) => q.id === id); if (g && !agentList.some((q) => q.id === id)) { agentList = [...agentList, mkAgent(g)]; agents = { ...agents, [id]: true }; rec.agent.push(id); } });
         const parts = KN.filter(([k]) => rec[k].length).map(([k, w]) => plural(rec[k].length, w));
-        return { evals, skills, connectors, agentList, agents, clouds, plugins: [...st.plugins, p], pluginRec: { ...st.pluginRec, [p.id]: rec }, ...note(p.name + ' added. ' + (parts.length ? joinAnd(parts) + (parts.length === 1 && rec.eval.length + rec.skill.length + rec.conn.length + rec.agent.length === 1 ? ' was added to Yours.' : ' were added to Yours.') : 'Everything it contains was already in Yours.')) };
+        return { evals, skills, connectors, agentList, agents, plugins: [...st.plugins, p], pluginRec: { ...st.pluginRec, [p.id]: rec }, ...note(p.name + ' added. ' + (parts.length ? joinAnd(parts) + (parts.length === 1 && rec.eval.length + rec.skill.length + rec.conn.length + rec.agent.length === 1 ? ' was added to Yours.' : ' were added to Yours.') : 'Everything it contains was already in Yours.')) };
       });
       this.log('plugin.add', p.name + ' · ' + plCount(p));
     };
@@ -482,7 +494,6 @@
           patch.skills = st.skills.filter((k) => !skG.includes(k.id));
           patch.connectors = st.connectors.filter((c) => !cnG.includes(c.id));
           patch.agentList = st.agentList.filter((g) => !agG.includes(g.id));
-          patch.clouds = { ...st.clouds, ...Object.fromEntries(st.connectors.filter((c) => cnG.includes(c.id) && c.cloud).map((c) => [c.cloud, false])) };
         }
         patch.cNotice = p.name + ' removed. ' + (withItems ? (gone ? plural(gone, 'item') + ' removed from Yours.' : 'Nothing else was removed.') + (kept ? ' ' + plural(kept, 'item') + ' stayed because experiments use ' + (kept === 1 ? 'it.' : 'them.') : '') : 'Its items stay in Yours.');
         return patch;
@@ -498,12 +509,12 @@
     const addItems = ({
       eval: [['Add evaluation from repository', openForm('evrepo')]],
       skill: [['Write a skill', openForm('skillw')], ['Import from repository', openForm('skillr')], ['Upload a folder', openForm('skillu')]],
-      conn: [['Add custom connector', openForm('conn')], ['Connect a cloud', goCust({ cTab: 'conn', cView: 'discover', cCat: 'Cloud' })]],
+      conn: [['Add an MCP server', openForm('conn')]],
       agent: [['Add a custom agent', openForm('agentc')]],
       plugin: [['Add from a Git URL', openForm('plgit')], ['Create a plugin from your items', openForm('plmake')]]
     })[tab].map(([label, go]) => ({ label, go }));
     const FORMS = {
-      conn: ['Add custom connector', [['Name', 'a', 'Internal tools'], ['Server URL', 'b', 'https://mcp.acme.internal/tools', 1]], 'Add', ''],
+      conn: ['Add an MCP server', [['Name', 'a', 'Internal tools'], ['Server URL', 'b', 'https://mcp.acme.internal/tools', 1], ['Secret in your secret manager', 'c', 'ratchet/mcp-internal-tools', 1]], 'Add', 'Ratchet stores the reference, never the secret.'],
       evrepo: ['Add evaluation from repository', [['Name', 'a', 'Cart load test'], ['Path', 'b', 'bench/cart-load.js', 1]], 'Add', ''],
       skillw: ['Write a skill', [['Name', 'a', 'Retry budgets'], ['Description', 'b', 'When and how to add a retry'], ['What agents should know', 'c', 'Write the guidance in plain sentences.', 2]], 'Add skill', 'Agents read this. The evaluator does not.'],
       skillr: ['Import skills from a repository', [['Folder in the repository', 'a', 'docs/agent-notes', 1], ['Name', 'b', 'Agent notes']], 'Import', 'Reads the Markdown files at the current commit of your repository.'],
@@ -521,7 +532,7 @@
       const slug = (x) => x.split(/[\/\\]/).filter(Boolean).pop() || x;
       const title = (x) => this.cap1(slug(x).replace(/\.git$/, '').replace(/[-_]+/g, ' '));
       const sk = (name, desc, sec) => ({ id: 'sk' + id, name, desc, cat: 'Conventions', byk: 'T', used: 0, ver: '1.0', ev: ['*'], sec, gl: 'g-book', yours: true });
-      if (f === 'conn') { if (!a) return; this.setState((st) => ({ connectors: [{ id: 'x' + id, name: a, desc: b ? 'MCP server · ' + b : 'Custom MCP server', cat: 'Data', kind: 'MCP server', used: 0, added: true, gl: 'g-code' }, ...st.connectors] })); done('conn', a + ' added to Yours.'); this.log('connector.add', 'MCP server · ' + a); }
+      if (f === 'conn') { if (!a) return; this.setState((st) => ({ connectors: [{ id: 'x' + id, name: a, desc: b ? 'MCP server · ' + b : 'Custom MCP server', cat: 'Code', kind: 'MCP server', used: 0, added: true, gl: 'g-code' }, ...st.connectors] })); done('conn', a + ' added to Yours. Ratchet keeps a reference to ' + (c || 'its secret') + ' in ' + s.secretMgr + ', never the secret.'); this.log('connector.add', 'MCP server · ' + a); }
       else if (f === 'evrepo') { if (!a) return; this.setState((st) => ({ evals: [...st.evals, { id: 'ev' + id, name: a, cat: 'Quality', desc: b ? 'Defined in ' + b : 'Defined in the repository', metric: 'Score from ' + (b || 'the repository'), fmt: ['', '', 2], dir: 'higher', base: 1, n: 2, cmd: b || 'bench/run.sh', cal: 'Not yet', runs: 0, used: 0, path: 'src', ho: 'ho_checkout', kw: a.toLowerCase(), ideas: K.GEN }] })); done('eval', a + ' added to Yours. It can now be chosen in a new experiment.'); this.log('evaluation.add', a + ' · ' + (b || 'repository')); }
       else if (f === 'skillw') { if (!a) return; this.setState((st) => ({ skills: [...st.skills, sk(a, b || 'Written by your team', [['SKILL.md', 'Overview', c || 'Describe what agents should know before they touch this part of the code.']])] })); done('skill', a + ' added to Yours. Agents can read it in new experiments.'); this.log('skill.add', a + ' · written'); }
       else if (f === 'skillr') { if (!a) return; const nm = b || title(a); this.setState((st) => ({ skills: [...st.skills, sk(nm, 'Imported from ' + a, [['SKILL.md', 'Overview', 'Imported from ' + a + ' at main@9f3c1e7. Agents read the Markdown files in this folder.'], ['SKILL.md', 'Files', 'One file per topic. Re-import to pick up newer commits.']])] })); done('skill', nm + ' imported from ' + a + '.'); this.log('skill.add', nm + ' · import'); }
@@ -618,10 +629,8 @@
       const sz = (f) => { if (!m2) return x.sz; const raw = Number(m2[1].replace(/,/g, '')); const v = raw * f; const dec = m2[1].includes('.') ? 1 : 0; const out = dec ? v.toFixed(1) : Math.max(1, Math.round(v)).toLocaleString('en-US'); return out + m2[2] + m2[3]; };
       return [[x.version, dates[0], x.sz], ['v' + Math.max(1, n - 1), dates[1], sz(0.93)], ['v' + Math.max(1, n - 2), dates[2], sz(0.86)]];
     };
-    const ck = conn.cloud || 'aws';
-    const ci = Math.max(0, K.CLOUDS.findIndex((c) => c[0] === ck));
-    const runMach = s.machines.filter((m) => m.cloud === K.CLOUDS[ci][1] && !m.gone);
-    const goneN = s.machines.filter((m) => m.cloud === K.CLOUDS[ci][1] && m.gone).length;
+    const scope = K.SCOPE[conn.id] || (conn.kind === 'MCP server' ? K.SCOPE.mcp : K.SCOPE.any);
+    const connAccess = [['Admin secret', 'A reference to ratchet/' + conn.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-$/, '') + ' in ' + s.secretMgr + '. Ratchet never sees the secret.'], ['Agents get', scope[0]], ['Evaluator gets', scope[1]], ['Lifetime', 'Minted for each run by the launcher. Gone when the run ends.']];
     const aTrials = detAgent ? s.opts.flatMap((x) => { const ax = evAll(x); return ax.cur.filter((t) => t.a === detAgent.id && t.mes).map((t) => ({ opt: x.name, tried: t.text, result: this.fv(ax.ev, t.v) + ' (' + this.pt(t.p) + ')', out: K.OUT[t.out][0], color: K.OUT[t.out][1], open: openOpt(x) })); }) : [];
     const eExp = detEval ? evUsers(detEval.id).map((x) => ({ name: x.name, project: x.project, ...stOf(x), open: openOpt(x) })) : [];
     const aExp = detAgent ? s.opts.filter((x) => x.agents.includes(detAgent.id)).map((x) => ({ name: x.name, project: x.project, ...stOf(x), open: openOpt(x) })) : [];
@@ -647,12 +656,12 @@
       { id: 'jun', name: 'Jun Park', email: 'jun@acme.com', source: 'invited by Priya' },
       { id: 'ci', name: 'ci-bot', email: 'Service principal · token ends 7f2a', source: 'created by Jun' }
     ];
-    const actLabels = { 'optimization.create': 'Experiment created', 'run.start': 'Run started', 'run.stop': 'Run stopped', 'pull_request.open': 'Pull request opened', 'note.send': 'Note added', 'connector.add': 'Connector added', 'connector.remove': 'Connector removed', 'marking.set': 'Marking changed', 'grant.change': 'Permission changed', 'cloud.connect': 'Cloud connector added', 'agent.enable': 'Agent enabled', 'agent.disable': 'Agent disabled', 'agent.add': 'Agent added', 'evaluation.add': 'Evaluation added', 'evaluation.calibrate': 'Evaluation recalibrated', 'skill.add': 'Skill added', 'skill.remove': 'Skill removed', 'plugin.add': 'Plugin added', 'plugin.remove': 'Plugin removed', 'connector.reconnect': 'Connector reconnected', 'budget.change': 'Budget changed', 'role.change': 'Role changed', 'signin.change': 'Single sign-on changed', 'token.create': 'Access token created', 'token.revoke': 'Access token revoked' };
+    const actLabels = { 'optimization.create': 'Experiment created', 'run.start': 'Run started', 'run.stop': 'Run stopped', 'pull_request.open': 'Pull request opened', 'note.send': 'Note added', 'connector.add': 'Connector added', 'connector.remove': 'Connector removed', 'marking.set': 'Marking changed', 'grant.change': 'Permission changed', 'backend.add': 'Sandbox backend added', 'backend.remove': 'Sandbox backend removed', 'launcher.connect': 'Launcher connected', 'credential.mint': 'Credentials minted', 'secretmanager.change': 'Secret manager changed', 'agent.enable': 'Agent enabled', 'agent.disable': 'Agent disabled', 'agent.add': 'Agent added', 'evaluation.add': 'Evaluation added', 'evaluation.calibrate': 'Evaluation recalibrated', 'skill.add': 'Skill added', 'skill.remove': 'Skill removed', 'plugin.add': 'Plugin added', 'plugin.remove': 'Plugin removed', 'connector.reconnect': 'Connector reconnected', 'budget.change': 'Budget changed', 'role.change': 'Role changed', 'signin.change': 'Single sign-on changed', 'token.create': 'Access token created', 'token.revoke': 'Access token revoked' };
     const actColor = (x) => {
       const p = x.split('.')[0];
       if (['optimization', 'run', 'pull_request', 'evaluation'].includes(p)) return 'var(--accent)';
-      if (['connector', 'marking', 'grant', 'note', 'skill', 'plugin'].includes(p)) return 'var(--good)';
-      if (['cloud', 'agent', 'budget'].includes(p)) return 'var(--infra)';
+      if (['connector', 'credential', 'marking', 'grant', 'note', 'skill', 'plugin'].includes(p)) return 'var(--good)';
+      if (['backend', 'launcher', 'secretmanager', 'agent', 'budget'].includes(p)) return 'var(--infra)';
       return 'var(--ink3)';
     };
     const orgSpent = totalSpend;
@@ -672,7 +681,7 @@
     const secOn = {}, rowOn = {}, grpOn = {};
     SETSEC.forEach((x) => { secOn[x[0]] = s.setOpen && visSecs.length > 0 && x[0] === effTab; });
     SETROW.forEach((r) => { const x = SETSEC.find((q) => q[0] === r[0]); rowOn[r[1]] = r[0] === effTab && (!sTok.length || secHit(x) || rowHit(r)); });
-    [['account', ['name', 'email', 'role']], ['signinG', ['via', 'signout']], ['orgG', ['org', 'host']], ['defG', ['defcap']], ['provG', ['provider', 'newusers']], ['sessG', ['session', 'sessactive']], ['orgBudG', ['monthly']]].forEach(([g, ids]) => { grpOn[g] = ids.some((id) => rowOn[id]); });
+    [['account', ['name', 'email', 'role']], ['signinG', ['via', 'signout']], ['orgG', ['org', 'deploy', 'host']], ['launchG', ['launcher']], ['backendG', ['backends']], ['secretG', ['secretmgr']], ['defG', ['defcap']], ['provG', ['provider', 'newusers']], ['sessG', ['session', 'sessactive']], ['orgBudG', ['monthly']]].forEach(([g, ids]) => { grpOn[g] = ids.some((id) => rowOn[id]); });
     const aq = (s.auditQ || '').trim().toLowerCase();
     const auditRows = s.audit.map((e) => ({ ...e, color: actColor(e.action), label: actLabels[e.action] || e.action.replace(/[._]/g, ' ') }))
       .filter((e) => !aq || [e.who, e.label, e.resource].join(' ').toLowerCase().includes(aq));
@@ -740,14 +749,14 @@
         catOf[k].filter((x) => !have.some((q) => q.id === x.id)).forEach((x) => P(mkItem(kind, x.name, ctxf(x), [x.desc || '', x.cat || ''], k === 'skill' || k === 'plugin' ? openDet(k, x.id) : custFind(k, x.name), { ic: x.gl || ic, hint: 'Not added' })));
       });
       [['priya', 'Priya Raman', 'priya@acme.com', 'okta:platform-leads'], ['marco', 'Marco Bianchi', 'marco@acme.com', 'okta:perf-engineering'], ['jun', 'Jun Park', 'jun@acme.com', 'an invitation'], ['ci', 'ci-bot', 'Service principal', 'a service principal']].forEach(([id, nm, em, src]) => P(mkItem('person', nm, em + ' · added through ' + src, [em], settingsGo('members'), { ic: 'g-user', hint: s.roles[id] })));
-      const SETKW = { profile: 'account name email sign in okta', appearance: 'theme dark light system colour mode', general: 'organization default budget server', notes: 'guidance notes agents read', budgets: 'budget spend monthly cap limit cost', members: 'users groups roles invite owner editor viewer people access', signin: 'okta sso sign-in session login identity', tokens: 'access token api key cli mcp ci service', audit: 'audit log history changes record' };
+      const SETKW = { profile: 'account name email sign in okta', appearance: 'theme dark light system colour mode', general: 'organization default budget server deployment self-hosted cloud', infra: 'infrastructure launcher runner sandbox backend kubernetes aws gcp azure machine type secret manager', notes: 'guidance notes agents read', budgets: 'budget spend monthly cap limit cost', members: 'users groups roles invite owner editor viewer people access', signin: 'okta sso sign-in session login identity', tokens: 'access token api key cli mcp ci service', audit: 'audit log history changes record' };
       const SETWHO = { you: 'You', org: 'Organization' };
       SETSEC.forEach(([id, label, sic, who, lead]) => P(mkItem('setting', label, 'Settings · ' + SETWHO[who], [lead, SETKW[id]], settingsGo(id), { ic: sic })));
       SETROW.forEach(([sid, rid, title, desc, kw]) => { const sc = SETSEC.find((q) => q[0] === sid); if (title === sc[1]) return; P(mkItem('setting', title, 'Settings · ' + sc[1], [desc, kw], settingsGo(sid, rid), { ic: sc[2] })); });
       s.audit.forEach((e) => P(mkItem('audit', (actLabels[e.action] || e.action) + ' · ' + e.resource, e.who + ' · ' + e.time, [e.action, e.who], settingsGo('audit'), { ic: 'g-file', hint: e.time })));
       const dk = theme === 'dark';
       [['New experiment', 'Start a draft from a goal', 'i-plus', palGo({ screen: 'new', editId: null, d: { ...s.d, text: '', name: null, ev: null, path: null, dir: null, project: null, skills: null }, needText: false }), 'create start draft goal'],
-        ['Add a connector', 'Customize · Connectors', 'i-plus', palGo({ screen: 'customize', ...custReset, cTab: 'conn', cView: 'discover' }), 'connect source warehouse repository'],
+        ['Add a connector', 'Customize · Connectors', 'i-plus', palGo({ screen: 'customize', ...custReset, cTab: 'conn', cView: 'discover' }), 'connect warehouse database repository mcp secret'],
         ['Add a skill', 'Customize · Skills', 'g-book', palGo({ screen: 'customize', ...custReset, cTab: 'skill', cView: 'discover' }), 'skills know-how guidance'],
         ['Open Settings', 'Profile, appearance, access tokens and organization', 'i-sliders', settingsGo(), 'settings preferences account'],
         ['Open Dashboard', 'Value, spend and win rate', 'i-chart', palGo({ screen: 'value' }), 'dashboard value return wins'],

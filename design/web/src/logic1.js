@@ -8,7 +8,7 @@ class Component extends DCLogic {
     this.K = this.mkK();
     const K = this.K;
     const CP = 'Checkout platform', SR = 'Search', DS = 'Data science forecasts';
-    const X = (o) => ({ pinned: false, approved: true, hist: [], pr: [], ps: 0, fixed: null, lim: { error: true, cost: true, memory: false }, dir: null, path: null, env: 'aws', cloud: 'AWS', val: 0, mo: 5, act: '', ...o });
+    const X = (o) => ({ pinned: false, approved: true, hist: [], pr: [], ps: 0, fixed: null, lim: { error: true, cost: true, memory: false }, dir: null, path: null, env: 'k8s', mt: 'm7i.2xlarge', val: 0, mo: 5, act: '', ...o });
     this.state = {
       screen: 'thread', theme: null, menu: null, collapsed: {}, settingsTab: 'profile', setOpen: false, setQ: '', auditQ: '', roleNote: '', 
       pal: false, palQ: '', palScope: 'all', palHi: 0, palAct: false, palActHi: 0, recent: ['x:o2', 'p:Search', 'd:eval:k6', 'd:skill:pgtune', 's:members', 'x:o6'], hlNote: null,
@@ -20,13 +20,15 @@ class Component extends DCLogic {
       ex: {}, hl: null, confirmStop: false, renaming: false, renameVal: '',
       histTab: 'trials', histProj: 'All', histExp: 'All',
       defCap: '200', newToken: false, noteDraft: '', threadDraft: '', capDraft: '', monthly: 2500,
-      d: { text: '', ev: null, dir: null, limits: { error: true, cost: true, memory: false }, path: null, name: null, env: 'aws', agents: 2, cap: '200', project: null, skills: null },
+      d: { text: '', ev: null, dir: null, limits: { error: true, cost: true, memory: false }, path: null, name: null, env: 'k8s', mt: null, agents: 2, cap: '200', project: null, skills: null },
       newSel: { repo: true, traces: true, past: true },
-      clouds: { aws: true, gcp: false, azure: false },
+      deploy: 'Ratchet cloud', secretMgr: 'AWS Secrets Manager',
+      launcher: { name: 'runner-acme-1', where: 'acme-prod VPC', version: '0.9.2', seen: '12 seconds ago', up: true },
+      backends: { k8s: true, aws: true, gcp: false, azure: false },
       evals: K.EVS.map((e) => ({ ...e })),
       agentList: [
         { id: 'claude', name: 'Claude Code', desc: 'Terminal coding agent', provider: 'Anthropic', model: 'claude-sonnet-5-5', via: 'Bedrock endpoint in acme-prod', cat: 'Hosted', used: 18, par: 3, gl: 'g-term' },
-        { id: 'codex', name: 'Codex', desc: 'Terminal coding agent', provider: 'OpenAI', model: 'gpt-5-codex', via: 'Key ending 9c1d', cat: 'Hosted', used: 11, par: 2, gl: 'g-term' },
+        { id: 'codex', name: 'Codex', desc: 'Terminal coding agent', provider: 'OpenAI', model: 'gpt-5-codex', via: 'Key in your secret manager', cat: 'Hosted', used: 11, par: 2, gl: 'g-term' },
         { id: 'grok', name: 'Grok', desc: 'Terminal coding agent', provider: 'xAI', model: 'grok-code-fast', via: 'Acme gateway', cat: 'Hosted', used: 5, par: 2, gl: 'g-spark' }
       ],
       agents: { claude: true, codex: true, grok: true },
@@ -47,9 +49,9 @@ class Component extends DCLogic {
         X({ id: 'o6', skills: ['conv', 'pgtune'], name: 'Search relevance', project: SR, req: 'Improve search relevance for exact title queries', ev: 'rel', runs: 2, step: 8, status: 'Pending pull request', cap: 50, agents: ['claude', 'codex', 'grok'], ds: ['repo', 'judg', 'qlog'], pr: ['n'], ps: 33, fixed: 38, act: '2 days ago', val: 11200, mo: 4,
           hist: [[1, 'claude', 'Raise the title weight', 0.614], [1, 'codex', 'Add typo tolerance', 0.607]],
           T: [{ a: 'claude', i: 0, v: 0.665, h: 0.661 }, { a: 'codex', i: 1, v: 0.628 }, { a: 'grok', i: 2, v: 0.598, e: '0.9%', c: '+$0.01', f: 'e' }] }),
-        X({ id: 'o7', skills: ['conv'], name: 'Autocomplete latency', project: SR, req: 'Lower autocomplete p95 latency', ev: 'qry', runs: 1, step: 6, status: 'Running', cap: 25, agents: ['claude', 'codex'], ds: ['repo', 'qlog'], act: '40 min ago',
+        X({ id: 'o7', skills: ['conv'], name: 'Autocomplete latency', env: 'aws', mt: 'c7i.2xlarge', project: SR, req: 'Lower autocomplete p95 latency', ev: 'qry', runs: 1, step: 6, status: 'Running', cap: 25, agents: ['claude', 'codex'], ds: ['repo', 'qlog'], act: '40 min ago',
           T: [{ a: 'codex', i: 0, v: 79, h: 80, e: '0.1%', c: '+$0.01' }, { a: 'claude', i: 1, v: 94 }] }),
-        X({ id: 'o8', skills: ['conv'], name: 'Feature pipeline cost', project: DS, req: 'Cut the cost of the nightly feature pipeline', ev: 'pipe', runs: 1, step: 8, status: 'Merged', cap: 25, agents: ['grok', 'codex'], ds: ['feat', 'sales', 'past'], fixed: 15, act: 'Last week', val: 6100, mo: 3,
+        X({ id: 'o8', skills: ['conv'], name: 'Feature pipeline cost', env: 'aws', mt: 'c7i.2xlarge', project: DS, req: 'Cut the cost of the nightly feature pipeline', ev: 'pipe', runs: 1, step: 8, status: 'Merged', cap: 25, agents: ['grok', 'codex'], ds: ['feat', 'sales', 'past'], fixed: 15, act: 'Last week', val: 6100, mo: 3,
           T: [{ a: 'grok', i: 0, v: 12.7, h: 12.9, e: '0.0%', c: '−$5.70' }, { a: 'codex', i: 1, v: 17.95, e: '0.0%', c: '−$0.45' }] })
         ,
         X({ id: 'o9', skills: ['conv', 'flaky'], name: 'Smoke suite duration', project: CP, req: 'Cut the staging smoke suite duration without dropping coverage', ev: 'smoke', runs: 1, step: 0, status: 'Draft', approved: false, cap: 25, agents: ['claude', 'codex'], ds: ['repo', 'past'], act: '20 min ago', T: [] })
@@ -60,29 +62,28 @@ class Component extends DCLogic {
         { id: 'gh', name: 'GitHub acme/checkout', desc: 'Repository, design notes and CLI fixtures agents read', cat: 'Code', kind: 'GitHub', used: 14, added: false, gl: 'g-git' },
         { id: 'sf', name: 'Snowflake ANALYTICS', desc: 'Warehouse tables and the holdout datasets', cat: 'Data', kind: 'Snowflake', used: 9, added: false, gl: 'g-db' },
         { id: 'dd', name: 'Datadog monitoring', desc: 'Production traces, query logs and service metrics', cat: 'Monitoring', kind: 'Datadog', used: 11, added: false, gl: 'g-chart' },
-        { id: 'rh', name: 'Ratchet run history', desc: 'Every past trial, built in', cat: 'Data', kind: 'Ratchet', used: 31, added: false, gl: 'g-file' },
-        { id: 'aws', name: 'AWS acme-prod', desc: 'Account where runners and evaluators are created', cat: 'Cloud', kind: 'AWS', cloud: 'aws', used: 24, added: false, gl: 'g-cloud' }
+        { id: 'rh', name: 'Ratchet run history', desc: 'Every past trial, built in', cat: 'Data', kind: 'Ratchet', used: 31, added: false, gl: 'g-file' }
       ],
       notes: [
         { id: 'n1', text: 'The payment gateway is the slow part. Prefer fewer round trips.', author: 'Marco Bianchi', opt: 'Checkout p95', time: '02:05', run: 3 },
         { id: 'n2', text: 'Holiday calendar features helped last time, try them again.', author: 'Jun Park', opt: 'Forecast accuracy', time: 'Yesterday', run: 2 }
       ],
       machines: [
-        { id: 'm1', name: 'runner-checkout-3a', role: 'runner', opt: 'Checkout p95', cloud: 'AWS', age: '52 m', gone: false },
-        { id: 'm2', name: 'eval-checkout-3', role: 'evaluator', opt: 'Checkout p95', cloud: 'AWS', age: '14 m', gone: false },
-        { id: 'm3', name: 'runner-cli-1', role: 'runner', opt: 'CLI cold start', cloud: 'AWS', age: '9 m', gone: false },
-        { id: 'm4', name: 'runner-autocomplete-1', role: 'runner', opt: 'Autocomplete latency', cloud: 'AWS', age: '58 m', gone: false },
-        { id: 'm5', name: 'eval-autocomplete-1', role: 'evaluator', opt: 'Autocomplete latency', cloud: 'AWS', age: '31 m', gone: false },
-        { id: 'm6', name: 'runner-forecast-2', role: 'runner', opt: 'Forecast accuracy', cloud: 'AWS', age: '1 h 12 m', gone: true },
-        { id: 'm7', name: 'eval-forecast-2', role: 'evaluator', opt: 'Forecast accuracy', cloud: 'AWS', age: '44 m', gone: true },
-        { id: 'm8', name: 'runner-bundle-2', role: 'runner', opt: 'Bundle size', cloud: 'AWS', age: '58 m', gone: true },
-        { id: 'm9', name: 'eval-bundle-2', role: 'evaluator', opt: 'Bundle size', cloud: 'AWS', age: '33 m', gone: true },
-        { id: 'm10', name: 'runner-image-1', role: 'runner', opt: 'Image resize', cloud: 'AWS', age: '1 h 04 m', gone: true },
-        { id: 'm11', name: 'eval-image-1', role: 'evaluator', opt: 'Image resize', cloud: 'AWS', age: '39 m', gone: true },
-        { id: 'm12', name: 'runner-search-2', role: 'runner', opt: 'Search relevance', cloud: 'AWS', age: '1 h 20 m', gone: true },
-        { id: 'm13', name: 'eval-search-2', role: 'evaluator', opt: 'Search relevance', cloud: 'AWS', age: '47 m', gone: true },
-        { id: 'm14', name: 'runner-pipeline-1', role: 'runner', opt: 'Feature pipeline cost', cloud: 'AWS', age: '52 m', gone: true },
-        { id: 'm15', name: 'eval-pipeline-1', role: 'evaluator', opt: 'Feature pipeline cost', cloud: 'AWS', age: '28 m', gone: true }
+        { id: 'm1', name: 'ws-checkout-3a', role: 'workspace', opt: 'Checkout p95', be: 'Kubernetes', age: '52 m', gone: false },
+        { id: 'm2', name: 'eval-checkout-3', role: 'evaluator', opt: 'Checkout p95', be: 'Kubernetes', age: '14 m', gone: false },
+        { id: 'm3', name: 'ws-cli-1', role: 'workspace', opt: 'CLI cold start', be: 'Kubernetes', age: '9 m', gone: false },
+        { id: 'm4', name: 'ws-autocomplete-1', role: 'workspace', opt: 'Autocomplete latency', be: 'AWS VMs', age: '58 m', gone: false },
+        { id: 'm5', name: 'eval-autocomplete-1', role: 'evaluator', opt: 'Autocomplete latency', be: 'AWS VMs', age: '31 m', gone: false },
+        { id: 'm6', name: 'ws-forecast-2', role: 'workspace', opt: 'Forecast accuracy', be: 'Kubernetes', age: '1 h 12 m', gone: true },
+        { id: 'm7', name: 'eval-forecast-2', role: 'evaluator', opt: 'Forecast accuracy', be: 'Kubernetes', age: '44 m', gone: true },
+        { id: 'm8', name: 'ws-bundle-2', role: 'workspace', opt: 'Bundle size', be: 'Kubernetes', age: '58 m', gone: true },
+        { id: 'm9', name: 'eval-bundle-2', role: 'evaluator', opt: 'Bundle size', be: 'Kubernetes', age: '33 m', gone: true },
+        { id: 'm10', name: 'ws-image-1', role: 'workspace', opt: 'Image resize', be: 'Kubernetes', age: '1 h 04 m', gone: true },
+        { id: 'm11', name: 'eval-image-1', role: 'evaluator', opt: 'Image resize', be: 'Kubernetes', age: '39 m', gone: true },
+        { id: 'm12', name: 'ws-search-2', role: 'workspace', opt: 'Search relevance', be: 'Kubernetes', age: '1 h 20 m', gone: true },
+        { id: 'm13', name: 'eval-search-2', role: 'evaluator', opt: 'Search relevance', be: 'Kubernetes', age: '47 m', gone: true },
+        { id: 'm14', name: 'ws-pipeline-1', role: 'workspace', opt: 'Feature pipeline cost', be: 'AWS VMs', age: '52 m', gone: true },
+        { id: 'm15', name: 'eval-pipeline-1', role: 'evaluator', opt: 'Feature pipeline cost', be: 'AWS VMs', age: '28 m', gone: true }
       ],
       roles: { priya: 'Owner', marco: 'Editor', jun: 'Editor', ci: 'Viewer' },
       session: '12 hours',
@@ -93,11 +94,13 @@ class Component extends DCLogic {
       ],
       audit: [
         { time: '02:05', who: 'Marco Bianchi', action: 'note.send', resource: 'Checkout p95 · note' },
+        { time: '00:49', who: 'launcher', action: 'credential.mint', resource: 'Checkout p95 · run #3 · agents read-only, evaluator with holdout' },
         { time: '00:48', who: 'scheduler', action: 'run.start', resource: 'Checkout p95 · run #3' },
         { time: 'Yesterday', who: 'Priya Raman', action: 'pull_request.open', resource: 'Search relevance · PR #298' },
         { time: 'Yesterday', who: 'Jun Park', action: 'grant.change', resource: 'Past runs · Evaluator access removed' },
         { time: 'Mon', who: 'Priya Raman', action: 'budget.change', resource: 'Checkout p95 · $50 per run' },
-        { time: 'Mon', who: 'ci-bot (service principal)', action: 'token.revoke', resource: 'old-ci · ends 19d4' }
+        { time: 'Mon', who: 'ci-bot (service principal)', action: 'token.revoke', resource: 'old-ci · ends 19d4' },
+        { time: 'Last week', who: 'Priya Raman', action: 'launcher.connect', resource: 'runner-acme-1 · acme-prod VPC' }
       ]
     };
     this.state.grants = this.defaultGrants(this.state.datasets);
@@ -183,7 +186,7 @@ class Component extends DCLogic {
       ['Remove an unneeded retry and a redundant check', 2, 9, 22, ['@@ src/call.ts', '-  return retry(() => send(req), 3);', '+  return send(req);', '-  validate(req);']]
     ];
     const EVS = [
-      { id: 'k6', name: 'k6 checkout load', cat: 'Speed', desc: 'Replays checkout traffic against a fresh host and reports request latency percentiles', metric: 'Checkout p95 latency', fmt: ['', ' ms', 0], dir: 'lower', base: 412, n: 2.1, cmd: 'k6 run bench/checkout.js --vus 200 --duration 5m', cal: 'Today', runs: 9, used: 14, path: 'services/checkout', ho: 'ho_checkout', kw: 'checkout latency p95 p99 request api payment cart',
+      { id: 'k6', name: 'k6 checkout load', cat: 'Speed', desc: 'Replays checkout traffic against a fresh machine and reports request latency percentiles', metric: 'Checkout p95 latency', fmt: ['', ' ms', 0], dir: 'lower', base: 412, n: 2.1, cmd: 'k6 run bench/checkout.js --vus 200 --duration 5m', cal: 'Today', runs: 9, used: 14, path: 'services/checkout', ho: 'ho_checkout', kw: 'checkout latency p95 p99 request api payment cart',
         ideas: [['Pool size 20 to 48, reuse clients', 3, 41, 17, ['@@ src/db/pool.ts', '-  max: 20,', '+  max: 48,', '+  idleTimeoutMillis: 30000,', '@@ src/payments/client.ts', '-  const c = new GatewayClient(cfg);', '+  const c = clients.get(cfg.id) ?? makeClient(cfg);']],
           ['Cache pricing lookups per request', 2, 28, 6, ['@@ src/pricing/lookup.ts', '+const memo = new Map<string, Price>();', ' export async function price(sku: string) {', '-  return fetchPrice(sku);', '+  if (!memo.has(sku)) memo.set(sku, await fetchPrice(sku));', '+  return memo.get(sku)!;']],
           ['Inline tax calculation, drop retry', 4, 52, 31, ['@@ src/tax/calc.ts', '-  const t = await taxService.quote(order);', '+  const t = order.total * 0.0825;', '@@ src/payments/charge.ts', '-  return retry(() => gateway.charge(o), 3);', '+  return gateway.charge(o);']]] },
@@ -248,7 +251,7 @@ class Component extends DCLogic {
       SK('rustalloc', 'Rust allocation hygiene', 'Reuse buffers, avoid clones in hot loops and keep allocations off the critical path', 'Speed', 'C', 4, '0.9', ['img'], [['SKILL.md', 'Overview', 'Measure allocations with a counting allocator. Reuse buffers across iterations with thread-local storage.'], ['SKILL.md', 'Clones', 'Borrow instead of cloning in hot loops. Return slices, not Vec, when callers only read.']]),
       SK('fcfeat', 'Forecast feature engineering', 'Calendar, lag and promotion features that tend to help demand forecasts', 'Quality', 'C', 5, '1.1', ['fcst'], [['SKILL.md', 'Overview', 'Start with calendar features, then lags, then promotions. Validate each on the backtest folds, never on the holdout.'], ['SKILL.md', 'Leakage', 'A feature that uses information from after the forecast date is leakage. Drop it even if the error falls.']]),
       SK('prompt', 'Prompt and answer hygiene', 'Write prompts that are easy to score and keep answer formats stable', 'Quality', 'C', 3, '0.8', ['llm'], [['SKILL.md', 'Overview', 'Keep one instruction per paragraph and ask for a fixed answer shape so the evaluator can score it.'], ['SKILL.md', 'Regressions', 'Re-run the labelled set after every prompt edit. A gain on one slice that loses another is not a gain.']]),
-      SK('ci', 'CI caching tactics', 'Dependency, build and test caches that cut wall time without stale results', 'Speed', 'R', 5, '1.2', ['bt', 'tests'], [['SKILL.md', 'Overview', 'Key caches by lockfile hash. Cache the slowest step first and measure on a cold runner.'], ['SKILL.md', 'Pitfalls', 'A cache that hides a broken build is a regression. Always run one uncached build before accepting.']]),
+      SK('ci', 'CI caching tactics', 'Dependency, build and test caches that cut wall time without stale results', 'Speed', 'R', 5, '1.2', ['bt', 'tests'], [['SKILL.md', 'Overview', 'Key caches by lockfile hash. Cache the slowest step first and measure on a cold machine.'], ['SKILL.md', 'Pitfalls', 'A cache that hides a broken build is a regression. Always run one uncached build before accepting.']]),
       SK('cost', 'Cloud cost review checklist', 'Where spend hides: idle capacity, wide scans and repeated recomputation', 'Cost', 'R', 4, '1.0', ['cost', 'pipe'], [['SKILL.md', 'Overview', 'Rank services by daily cost, then look for recomputation that a cache or a partition would remove.'], ['SKILL.md', 'Warehouses', 'Prune by partition, select only the columns you need, and avoid cross joins in nightly jobs.']]),
       SK('rank', 'Ranking signal tuning', 'Weights, freshness and exact-match boosts for search relevance', 'Quality', 'C', 3, '0.7', ['rel'], [['SKILL.md', 'Overview', 'Change one weight at a time and read per-query deltas, not only the average NDCG.'], ['SKILL.md', 'Freshness', 'Prefer recency as a gentle multiplier. A hard cutoff hurts long-tail queries.']]),
       SK('cold', 'Cold start checklist', 'Defer work, trim imports and precompute schemas to shorten start-up', 'Speed', 'R', 5, '1.3', ['cli', 'mstart'], [['SKILL.md', 'Overview', 'List everything that runs before the first output. Move the rest behind first use.'], ['SKILL.md', 'Schemas', 'Precompile validators at build time instead of parsing schemas on launch.']])
@@ -259,7 +262,7 @@ class Component extends DCLogic {
       PL('forecast', 'Forecasting', 'Backtest forecast error on held-out periods with feature know-how for demand models', 'Quality', 'R', 6, { eval: ['fcst'], skill: ['fcfeat'], conn: ['bq'] }),
       PL('llmq', 'LLM quality', 'Score model answers against a labelled set and keep prompts easy to evaluate', 'Quality', 'C', 4, { eval: ['llm'], skill: ['prompt'], agent: ['claude', 'gemini'] }),
       PL('buildci', 'Build and CI speed', 'Cut clean build time and test suite duration, and quiet flaky tests', 'Performance', 'R', 9, { eval: ['bt', 'tests', 'flaky'], skill: ['ci', 'flaky'], conn: ['gh'] }),
-      PL('cloudcost', 'Cloud cost', 'Read billing exports, rank spend and find recomputation worth removing', 'Cost', 'R', 5, { eval: ['cost', 'pipe'], skill: ['cost'], conn: ['gcp', 'azure'] }),
+      PL('cloudcost', 'Cloud cost', 'Read billing exports, rank spend and find recomputation worth removing', 'Cost', 'R', 5, { eval: ['cost', 'pipe'], skill: ['cost'], conn: ['bq', 'obj'] }),
       PL('searchrel', 'Search relevance', 'Judge ranking quality and autocomplete speed against labelled queries', 'Quality', 'C', 4, { eval: ['rel', 'qry'], skill: ['rank'], conn: ['pg'] }),
       PL('mobile', 'Mobile start-up', 'Time cold starts on a reference device and trim what runs before first paint', 'Performance', 'C', 3, { eval: ['mstart'], skill: ['cold'], conn: ['sen'] }),
       PL('pipes', 'Data pipelines', 'Track the cost and duration of nightly pipelines and the tables they build', 'Cost', 'R', 4, { eval: ['pipe', 'sql'], skill: ['cost', 'pgtune'], conn: ['sf', 'bq'] }),
@@ -269,7 +272,7 @@ class Component extends DCLogic {
       EVS, DATASETS, GEN,
       MIN: [0, 1, 6, 9, 38, 52, 60, 66, 72],
       FR: [0, 0.02, 0.08, 0.12, 0.56, 0.76, 0.8, 0.82, 0.84],
-      STEPS: [['opt', 'Experiments', 'Start run'], ['inf', 'Compute', 'Start runner'], ['ctx', 'Data', 'Allow read access'], ['inf', 'Compute', 'Agents propose changes'], ['inf', 'Compute', 'Evaluator measures'], ['opt', 'Experiments', 'Check acceptance criteria'], ['ctx', 'Data', 'Log to run history, open pull request'], ['inf', 'Compute', 'Terminate and clean up']],
+      STEPS: [['opt', 'Experiment', 'Start run'], ['inf', 'Compute', 'Create workspace'], ['ctx', 'Data', 'Mint scoped credentials'], ['inf', 'Compute', 'Agents write and run code'], ['inf', 'Compute', 'Evaluator measures, holdout included'], ['opt', 'Experiment', 'Judge against acceptance criteria'], ['ctx', 'Data', 'Store history, open pull request'], ['inf', 'Compute', 'Clean up']],
       COL: { opt: 'var(--accent)', ctx: 'var(--good)', inf: 'var(--infra)' },
       STAT: { 'Draft': ['Draft', 'st-draft', 'var(--ink3)', 'st'], 'Running': ['Running', 'st-run', 'var(--accent)', 'st run'], 'Win': ['Win', 'st-win', 'var(--good)', 'st'], 'Pending pull request': ['Pull request open', 'st-pr', 'var(--accent)', 'st'], 'Merged': ['Merged', 'st-merged', 'var(--good)', 'st'], 'No win': ['No win', 'st-none', 'var(--ink3)', 'st'], 'Stopped': ['Stopped', 'st-stop', 'var(--ink3)', 'st'] },
       OUT: { accepted: ['Accepted', 'var(--good)'], pend: ['Beats noise', 'var(--good)'], noise: ['Within noise', 'var(--ink3)'], worse: ['Worse', 'var(--bad)'], holdout: ['Failed holdout', 'var(--warn)'], measuring: ['Measuring', 'var(--ink3)'], disc: ['Discarded', 'var(--ink3)'] },
@@ -277,13 +280,32 @@ class Component extends DCLogic {
       PEOPLE: { 'Priya Raman': 'P', 'Marco Bianchi': 'M', 'Jun Park': 'J' },
       AGN: { claude: 'Claude Code', codex: 'Codex', grok: 'Grok', gemini: 'Gemini CLI', aider: 'Aider', openhands: 'OpenHands' },
       LIMITS: [['error', 'Error rate'], ['cost', 'Cost'], ['memory', 'Memory']],
-      CLOUDS: [['aws', 'AWS', 'AWS environment'], ['gcp', 'GCP', 'GCP environment'], ['azure', 'Azure', 'Azure environment']],
+      BACKENDS: [
+        { id: 'k8s', name: 'Kubernetes', where: 'EKS acme-prod · us-east-1', types: ['m7i.2xlarge', 'm7i.4xlarge'], image: 'ratchet-bench-2026.11' },
+        { id: 'aws', name: 'AWS VMs', where: 'acme-prod · us-east-1', types: ['c7i.2xlarge', 'c7i.4xlarge'], image: 'ratchet-bench-2026.11' },
+        { id: 'gcp', name: 'GCP VMs', where: 'acme-staging · us-central1', types: ['n2-standard-8', 'n2-standard-16'], image: 'ratchet-bench-gcp-2026.11' },
+        { id: 'azure', name: 'Azure VMs', where: 'acme-staging · eastus', types: ['D8s v5', 'D16s v5'], image: 'ratchet-bench-az-2026.11' }
+      ],
+      SECRETS: ['AWS Secrets Manager', 'Google Secret Manager', 'Azure Key Vault', 'HashiCorp Vault'],
+      SCOPE: {
+        sf: ['A read-only role on the views you list. Holdout tables are not granted.', 'Its own read-only role that also covers the holdout tables.'],
+        dbx: ['A read-only token for a service principal with SELECT on the schemas you list. The holdout schema is excluded.', 'Its own token that also covers the holdout schema.'],
+        ddb: ['A read-only IAM policy on the tables you list. The holdout table is excluded.', 'Its own policy that adds the holdout table.'],
+        bq: ['A read-only service account on authorized views. Holdout views are not authorized.', 'Its own service account that also reads the holdout views.'],
+        pg: ['A read-only role on a replica. Holdout tables are not granted.', 'Its own read-only role that also covers the holdout tables.'],
+        obj: ['A read-only policy on the prefixes you list. The holdout prefix is excluded.', 'Its own policy that adds the holdout prefix.'],
+        gh: ['A short-lived, read-only token scoped to one repository, with holdout paths excluded. Opening a pull request is a separate, audited action.', 'Its own short-lived token that includes the holdout paths.'],
+        gl: ['A short-lived, read-only token scoped to one project, with holdout paths excluded. Opening a merge request is a separate, audited action.', 'Its own short-lived token that includes the holdout paths.'],
+        mcp: ['A per-run token limited to the read-only tools you allow.', 'Its own per-run token.'],
+        rh: ['Past trials of the same experiment, read-only.', 'Not used.'],
+        any: ['A read-only key limited to the services and queries you list. Holdout data is excluded.', 'Its own read-only key that also covers the holdout data.']
+      },
       MONTHS: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'],
       SUGG: [['Lower checkout p95 latency', 'Checkout latency'], ['Cut forecast error', 'Forecast error'], ['Speed up CLI cold start', 'CLI cold start'], ['Shrink the bundle', 'Bundle size']],
       CATALOG: [
-        G('bq', 'BigQuery', 'Tables and views from your warehouse, read inside your cloud', 'Data', 'R', 21, { def: 'acme-analytics', gl: 'g-db', mg: 'BQ' }),
+        G('bq', 'BigQuery', 'Tables and views from your warehouse, read where they live', 'Data', 'R', 21, { def: 'acme-analytics', gl: 'g-db', mg: 'BQ' }),
         G('pg', 'Postgres', 'Read-only queries against a database replica', 'Data', 'R', 17, { def: 'orders-db', gl: 'g-db', mg: 'PG' }),
-        G('obj', 'Object storage', 'Files and exports in a bucket, versioned by prefix', 'Data', 'R', 9, { def: 's3://acme-data', gl: 'g-box', mg: 'OS' }),
+        G('obj', 'Amazon S3', 'Files and exports in a bucket, versioned by prefix', 'Data', 'R', 9, { def: 's3://acme-data', gl: 'g-box', mg: 'OS' }),
         G('gl', 'GitLab', 'Repositories and merge requests', 'Code', 'R', 7, { def: 'acme/platform', gl: 'g-git', mg: 'GL' }),
         G('bb', 'Bitbucket', 'Repositories and pull requests in your account', 'Code', 'R', 3, { def: 'acme/services', gl: 'g-git', mg: 'BB' }),
         G('gf', 'Grafana', 'Dashboards and service metrics', 'Monitoring', 'C', 4, { def: 'metrics', gl: 'g-chart', mg: 'GF' }),
@@ -291,18 +313,17 @@ class Component extends DCLogic {
         G('sen', 'Sentry', 'Errors and release health, grouped by issue', 'Monitoring', 'R', 5, { def: 'acme-web', gl: 'g-gauge', mg: 'SN' }),
         G('lin', 'Linear', 'Issues and project notes agents can read for context', 'Code', 'C', 2, { def: 'Platform team', gl: 'g-file', mg: 'LN' }),
         G('mcp', 'Docs search', 'An MCP server over your internal documentation', 'Code', 'C', 3, { def: 'docs.acme.internal', gl: 'g-code', mg: 'DS' }),
-        G('gcp', 'GCP', 'Account where runners and evaluators are created', 'Cloud', 'R', 12, { def: 'acme-staging', gl: 'g-cloud', mg: 'GC' }),
-        G('azure', 'Azure', 'Subscription where runners and evaluators are created', 'Cloud', 'R', 6, { def: 'acme-staging', gl: 'g-cloud', mg: 'AZ' }),
+        G('dbx', 'Databricks', 'Tables and volumes in your lakehouse, read through Unity Catalog', 'Data', 'R', 8, { def: 'acme-lakehouse', gl: 'g-db', mg: 'DB' }),
+        G('ddb', 'DynamoDB', 'Items in your tables, read by key and query', 'Data', 'R', 5, { def: 'orders', gl: 'g-db', mg: 'DY' }),
         G('gh', 'GitHub', 'Repositories, pull requests and design notes agents read', 'Code', 'R', 14, { def: 'acme/checkout', gl: 'g-git', mg: 'GH' }),
         G('sf', 'Snowflake', 'Warehouse tables and the holdout datasets', 'Data', 'R', 9, { def: 'ANALYTICS', gl: 'g-db', mg: 'SF' }),
         G('dd', 'Datadog', 'Production traces, query logs and service metrics', 'Monitoring', 'R', 11, { def: 'production', gl: 'g-chart', mg: 'DD' }),
-        G('aws', 'AWS', 'Account where runners and evaluators are created', 'Cloud', 'R', 24, { def: 'acme-prod', gl: 'g-cloud', mg: 'AW' })
       ],
       EVCAT: [
         G('http', 'HTTP latency', 'Request latency percentiles from a replayed HTTP workload', 'Speed', 'R', 9, { metric: 'HTTP p95 latency', fmt: ['', ' ms', 0], dir: 'lower', base: 230, n: 2.4, cmd: 'k6 run bench/http.js --vus 150', path: 'services/api', ho: 'ho_checkout', kw: 'http latency request p95 api', gl: 'g-gauge' }),
         G('mstart', 'App start-up', 'Cold start time of the mobile app on a reference device', 'Speed', 'C', 3, { metric: 'Cold start time', fmt: ['', ' ms', 0], dir: 'lower', base: 1380, n: 3.5, cmd: 'maestro test perf/cold-start.yaml', path: 'mobile/app', ho: 'ho_cli', kw: 'mobile app start startup cold', gl: 'g-gauge' }),
         G('mem', 'Memory', 'Peak resident memory during a fixed workload', 'Size', 'R', 5, { metric: 'Peak memory', fmt: ['', ' MB', 0], dir: 'lower', base: 512, n: 1.5, cmd: 'node bench/memory.js', path: 'src', ho: 'ho_checkout', kw: 'memory ram heap', gl: 'g-box' }),
-        G('tests', 'Test suite time', 'Wall time of the full test suite on a fresh host', 'Speed', 'R', 6, { metric: 'Suite duration', fmt: ['', ' s', 0], dir: 'lower', base: 640, n: 3.8, cmd: 'pnpm test --run', path: 'tests', ho: 'ho_checkout', kw: 'test suite ci time', gl: 'g-gauge' }),
+        G('tests', 'Test suite time', 'Wall time of the full test suite on a fresh machine', 'Speed', 'R', 6, { metric: 'Suite duration', fmt: ['', ' s', 0], dir: 'lower', base: 640, n: 3.8, cmd: 'pnpm test --run', path: 'tests', ho: 'ho_checkout', kw: 'test suite ci time', gl: 'g-gauge' }),
         G('llm', 'LLM eval', 'Scores model answers against a labelled set', 'Quality', 'C', 2, { metric: 'Answer score', fmt: ['', '', 2], dir: 'higher', base: 0.72, n: 1.9, cmd: 'python -m evals.run --set answers-v2', path: 'prompts', ho: 'ho_rel', kw: 'llm model answer score prompt', gl: 'g-spark' }),
         G('web', 'Page load', 'Largest contentful paint on a throttled browser', 'Speed', 'R', 7, { metric: 'Largest contentful paint', fmt: ['', ' ms', 0], dir: 'lower', base: 2100, n: 2.8, cmd: 'lhci autorun', path: 'web/src', ho: 'ho_build', kw: 'page load lcp web vitals', gl: 'g-gauge' }),
         G('docker', 'Image size', 'Compressed size of the container image after a clean build', 'Size', 'R', 4, { metric: 'Image size', fmt: ['', ' MB', 0], dir: 'lower', base: 380, n: 0.5, cmd: 'docker build . && ./size.sh', path: 'Dockerfile', ho: 'ho_build', kw: 'docker container image size', gl: 'g-box' }),
@@ -314,24 +335,24 @@ class Component extends DCLogic {
         G('flaky', 'Flaky tests', 'Share of test runs that fail then pass on retry', 'Quality', 'R', 4, { metric: 'Flake rate', fmt: ['', '%', 2], dir: 'lower', base: 3.4, n: 4.0, cmd: 'pnpm test --repeat 20', path: 'tests', ho: 'ho_checkout', kw: 'flaky test retry', gl: 'g-gauge' })
       ],
       AGENTCAT: [
-        G('gemini', 'Gemini CLI', 'Terminal coding agent that works with Google models', 'Hosted', 'R', 4, { provider: 'Google', model: 'gemini-2.5-pro', via: 'Key ending 4d7e', gl: 'g-spark' }),
+        G('gemini', 'Gemini CLI', 'Terminal coding agent that works with Google models', 'Hosted', 'R', 4, { provider: 'Google', model: 'gemini-2.5-pro', via: 'Key in your secret manager', gl: 'g-spark' }),
         G('aider', 'Aider', 'Edits files in your repository and commits each change with a message', 'Open source', 'C', 3, { provider: 'Bring your own model', model: 'configured per run', via: 'Acme gateway', gl: 'g-term' }),
         G('openhands', 'OpenHands', 'Plans a change, edits files and runs the tests before proposing it', 'Open source', 'C', 2, { provider: 'Bring your own model', model: 'configured per run', via: 'Acme gateway', gl: 'g-bot' }),
         G('goose', 'Goose', 'Extensible agent that works through tasks with your own tools', 'Open source', 'C', 2, { provider: 'Bring your own model', model: 'configured per run', via: 'Acme gateway', gl: 'g-bot' }),
         G('cline', 'Cline', 'Plans and edits step by step, asking for approval on risky changes', 'Open source', 'C', 2, { provider: 'Bring your own model', model: 'configured per run', via: 'Acme gateway', gl: 'g-code' }),
-        G('amp', 'Amp', 'Terminal agent tuned for large codebases and long tasks', 'Hosted', 'R', 3, { provider: 'Sourcegraph', model: 'amp-default', via: 'Key ending 51ab', gl: 'g-spark' }),
+        G('amp', 'Amp', 'Terminal agent tuned for large codebases and long tasks', 'Hosted', 'R', 3, { provider: 'Sourcegraph', model: 'amp-default', via: 'Key in your secret manager', gl: 'g-spark' }),
         G('qwen', 'Qwen Code', 'Coding agent built on open Qwen models you can host yourself', 'Open source', 'C', 1, { provider: 'Alibaba', model: 'qwen3-coder', via: 'Acme gateway', gl: 'g-term' }),
         G('opencode', 'OpenCode', 'Provider-agnostic terminal agent with a plain config file', 'Open source', 'C', 2, { provider: 'Bring your own model', model: 'configured per run', via: 'Acme gateway', gl: 'g-term' }),
         G('crush', 'Crush', 'Terminal agent with a focus on fast, small diffs', 'Hosted', 'C', 1, { provider: 'Bring your own model', model: 'configured per run', via: 'Acme gateway', gl: 'g-bot' }),
         G('kilo', 'Kilo Code', 'Agent that splits a goal into tasks and works through them', 'Open source', 'C', 1, { provider: 'Bring your own model', model: 'configured per run', via: 'Acme gateway', gl: 'g-bot' }),
         G('copilot', 'Copilot CLI', 'GitHub terminal agent that proposes changes as a branch', 'Hosted', 'R', 3, { provider: 'GitHub', model: 'default', via: 'GitHub organization acme', gl: 'g-git' })
       ],
-      CATS: { eval: ['All', 'Speed', 'Size', 'Quality', 'Cost'], skill: ['All', 'Speed', 'Data', 'Size', 'Quality', 'Cost', 'Conventions'], conn: ['All', 'Data', 'Code', 'Cloud', 'Monitoring'], agent: ['All', 'Hosted', 'Open source'], plugin: ['All', 'Performance', 'Quality', 'Cost'] },
+      CATS: { eval: ['All', 'Speed', 'Size', 'Quality', 'Cost'], skill: ['All', 'Speed', 'Data', 'Size', 'Quality', 'Cost', 'Conventions'], conn: ['All', 'Data', 'Code', 'Monitoring'], agent: ['All', 'Hosted', 'Open source'], plugin: ['All', 'Performance', 'Quality', 'Cost'] },
       TABS: [['eval', 'Evaluations'], ['skill', 'Skills'], ['conn', 'Connectors'], ['agent', 'Agents'], ['plugin', 'Plugins']],
       MORE: { eval: 'New evaluations', skill: 'New skills', conn: 'Top connectors', agent: 'More agents', plugin: 'New plugins' },
       FEAT: { eval: 'web', skill: 'bundle', plugin: 'webperf' },
       FEATTXT: { eval: 'Time a page load on a throttled browser and see which change makes it faster.', skill: 'Route-level splitting and dependency swaps that cut gzip size without breaking routes.', plugin: 'Page load, HTTP latency and build size, with the know-how to improve them.' },
-      SLIDES: [{ t: 'Data warehouses', d: 'Read tables and exports inside your cloud. Nothing is copied out.', cat: 'Data', tint: 'var(--infra)', ids: ['bq', 'sf', 'pg', 'obj'] }, { t: 'Code hosts', d: 'Repositories and review threads that agents read before they propose a change.', cat: 'Code', tint: 'var(--accent)', ids: ['gh', 'gl', 'bb', 'lin'] }, { t: 'Clouds', d: 'Accounts where runners and evaluators are created, then removed.', cat: 'Cloud', tint: 'var(--good)', ids: ['aws', 'gcp', 'azure'] }, { t: 'Monitoring', d: 'Traces, metrics and errors from production, read-only.', cat: 'Monitoring', tint: 'var(--warn)', ids: ['dd', 'gf', 'prom', 'sen'] }],
+      SLIDES: [{ t: 'Data warehouses', d: 'Agents read tables and views where they live, through a read-only credential. Nothing is copied.', cat: 'Data', tint: 'var(--infra)', ids: ['sf', 'dbx', 'bq', 'pg'] }, { t: 'Code hosts', d: 'Repositories and review threads that agents read before they propose a change.', cat: 'Code', tint: 'var(--accent)', ids: ['gh', 'gl', 'bb', 'lin'] }, { t: 'Storage and tables', d: 'Files in a bucket and items in a table, read through a policy that names what is allowed.', cat: 'Data', tint: 'var(--good)', ids: ['obj', 'ddb'] }, { t: 'Monitoring', d: 'Traces, metrics and errors from production, read-only.', cat: 'Monitoring', tint: 'var(--warn)', ids: ['dd', 'gf', 'prom', 'sen'] }],
       PSUGG: [['webperf', 'web', 'Add the Web performance plugin to measure page load'], ['llmq', 'llm', 'Add the LLM quality plugin to score model answers'], ['mobile', 'mstart', 'Add the Mobile start-up plugin to time cold starts']],
       NOUN: { eval: 'evaluations', skill: 'skills', conn: 'connectors', agent: 'agents', plugin: 'plugins' },
       TABN: { eval: 'Evaluations', skill: 'Skills', conn: 'Connectors', agent: 'Agents', plugin: 'Plugins' },
@@ -348,6 +369,6 @@ class Component extends DCLogic {
     const d = new Date();
     return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
   }
-  log(action, resource) {
-    this.setState((s) => ({ audit: [{ time: this.now(), who: 'Priya Raman', action, resource }, ...s.audit] }));
+  log(action, resource, who) {
+    this.setState((s) => ({ audit: [{ time: this.now(), who: who || 'Priya Raman', action, resource }, ...s.audit] }));
   }

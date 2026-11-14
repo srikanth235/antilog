@@ -178,10 +178,10 @@
         <div class="col g8"><h2 class="sech">Calibration</h2>
           <div class="card" style="padding: 4px 20px"><sc-for list="{{eCal}}" as="x" hint-placeholder-count="3"><div class="kv"><span>{{x.k}}</span><span>{{x.v}}</span></div></sc-for></div></div>
         <div class="col g8"><h2 class="sech">Holdout dataset</h2>
-          <div class="card rw wrap between g12"><span>{{eHold}}</span><span class="lock"><i class="ic s i-lock"></i>Restricted to evaluator</span></div></div>
+          <div class="card col g8"><div class="rw wrap between g12"><span>{{eHold}}</span><span class="lock"><i class="ic s i-lock"></i>Restricted to evaluator</span></div><span class="sm mut">Enforced by the credentials. Agents get a read-only credential that leaves it out. Only the evaluator's own credential includes it.</span></div></div>
       </sc-if>
       <sc-if value="{{dIsAgent}}">
-        <div class="col g8"><h2 class="sech">Model</h2>
+        <div class="col g8"><h2 class="sech">Model and credentials</h2>
           <div class="card" style="padding: 4px 20px"><sc-for list="{{aKv}}" as="x" hint-placeholder-count="2"><div class="kv"><span>{{x.k}}</span><span>{{x.v}}</span></div></sc-for>
             <div class="kv" style="align-items: center"><span>Model</span><input class="in mono" value="{{aModel}}" onChange="{{onAModel}}" aria-label="Model" style="max-width: 320px; font-size: 13px"></div>
             <div class="kv" style="align-items: center"><span>Max parallel</span><span class="rw" style="border: 1px solid var(--line2); border-radius: 999px; padding: 2px; width: fit-content"><button class="icon-btn" onClick="{{aParDown}}" aria-label="Fewer in parallel">−</button><span class="mono" style="min-width: 28px; text-align: center">{{aPar}}</span><button class="icon-btn" onClick="{{aParUp}}" aria-label="More in parallel">+</button></span></div>
@@ -198,8 +198,11 @@
           <sc-if value="{{aTrialsEmpty}}"><span class="mut sm">No measured trials yet.</span></sc-if></div>
       </sc-if>
 
-      <sc-if value="{{dIsCData}}">
-        <div class="col g16">
+      <sc-if value="{{dIsConn}}">
+        <span class="lock"><i class="ic s i-lock"></i>Ratchet stores a reference to the admin secret. The secret stays in your secret manager.</span>
+        <div class="col g8"><h2 class="sech">How access is scoped</h2>
+          <div class="card" style="padding: 4px 20px"><sc-for list="{{connAccess}}" as="x" hint-placeholder-count="4"><div class="kv"><span>{{x.k}}</span><span>{{x.v}}</span></div></sc-for></div></div>
+        <div class="col g16"><h2 class="sech">Datasets</h2>
           <div class="table"><div style="min-width: 680px">
             <div class="grid th" style="grid-template-columns: 1.8fr .9fr 1.4fr 1.1fr 1.1fr"><span>Dataset</span><span>Version</span><span>Marking</span><span>Agents</span><span>Evaluator</span></div>
             <sc-for list="{{dsRows}}" as="x" hint-placeholder-count="2">
@@ -224,16 +227,5 @@
         </div>
       </sc-if>
 
-      <sc-if value="{{dIsCCloud}}">
-        <div class="col g24">
-          <div class="card" style="padding: 4px 20px"><sc-for list="{{cloudKv}}" as="x" hint-placeholder-count="4"><div class="kv"><span>{{x.k}}</span><span class="{{x.mono}}">{{x.v}}</span></div></sc-for></div>
-          <div class="col g8"><div class="rw between wrap g8"><h2 class="sech">Instances running now · {{runCount}}</h2><button class="textbtn" onClick="{{goInstances}}">{{goneLink}}</button></div>
-            <div class="table"><div style="min-width: 640px">
-              <div class="grid th" style="grid-template-columns: 1.6fr 1fr 1.4fr .7fr .8fr"><span>Instance</span><span>Role</span><span>Experiment</span><span>Cloud</span><span>Age</span></div>
-              <sc-for list="{{runMach}}" as="x" hint-placeholder-count="2"><div class="grid" style="grid-template-columns: 1.6fr 1fr 1.4fr .7fr .8fr"><span class="mono xs">{{x.name}}</span><span class="sm">{{x.role}}</span><span class="sm ink2">{{x.opt}}</span><span class="sm">{{x.cloud}}</span><span class="mono xs ink2">{{x.age}}</span></div></sc-for>
-            </div></div>
-            <sc-if value="{{runEmpty}}"><span class="mut sm">Nothing is running.</span></sc-if></div>
-        </div>
-      </sc-if>
     </section>
   </sc-if>

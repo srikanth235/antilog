@@ -4,7 +4,7 @@ The approved direction for the web client of the server product. It is a clickab
 
 | File | What it is |
 | --- | --- |
-| `Main.dc.html` | The app: sidebar, experiment threads, New experiment, Projects, Customize, search, Dashboard, Run history, and the Settings dialog. Generated from `src/`. |
+| `Main.dc.html` | The app: sidebar, experiment threads, New experiment, Projects, Customize, search, Dashboard, Run history, and the Settings dialog (including Infrastructure: launcher, sandbox backends, secret manager). Generated from `src/`. |
 | `SignIn.dc.html` | The sign-in screen. |
 | `support.js` | The runtime the two files load. Not edited. |
 | `canvas.json` | The Design canvas layout: the two boards and the launch file. |

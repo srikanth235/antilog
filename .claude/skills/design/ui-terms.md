@@ -16,9 +16,10 @@ The web client (target, mockup in `design/web/`) is organised around experiments
 | find anything | Search | |
 | evaluations, skill packs, connectors, agents, plugins | Customize, with tabs Evaluations, Skills, Connectors, Agents, Plugins | Claude app |
 | own items, catalogue | Yours, Discover | Claude app |
-| history | More, then Run history (tabs Trials, Instances) | Databricks |
-| machines | Instances | cloud providers |
-| settings | Settings, a dialog opened from the user menu or More. Group You: Profile, Appearance, Access tokens. Group Organization: General, Users and groups, Single sign-on, Budgets, Notes, Audit logs | Claude app, Databricks |
+| history | More, then Run history (tabs Trials, Sandboxes) | Databricks |
+| sandboxes | Sandboxes (each belongs to a backend) | cloud providers |
+| where work runs | Settings, Infrastructure: launcher, sandbox backends, secret manager | Databricks |
+| settings | Settings, a dialog opened from the user menu or More. Group You: Profile, Appearance, Access tokens. Group Organization: General, Users and groups, Single sign-on, Infrastructure, Budgets, Notes, Audit logs | Claude app, Databricks |
 | one setting | a settings row: title, one-line description, control on the right | Claude app |
 | datasets | Datasets (found by Search and chosen in New experiment; no page of its own yet) | Foundry |
 | grants | Permissions | Databricks, Foundry |
@@ -56,7 +57,11 @@ Experiment, Data and Compute still name the owning area, but only as labels: on 
 | marking, holdout | marking, Holdout | Foundry markings |
 | evaluator only | Restricted to evaluator | Foundry |
 | evaluator | evaluator | |
-| workspace | runner | CI systems |
+| launcher | launcher (a runner when it is installed in the customer's infrastructure for Ratchet cloud) | CI systems |
+| workspace | agent sandbox (the stepper step is "Create workspace") | |
+| sandbox backend | backend: Kubernetes, AWS VMs, GCP VMs, Azure VMs | |
+| scoped credential | read-only credential, minted per run | |
+| deployment | Ratchet cloud or Self-hosted | Databricks |
 | environment | environment | Databricks |
 | spend cap | budget | Databricks |
 | organization, project | organization, project | Foundry |
@@ -87,7 +92,8 @@ Unchanged: win, agent, note, pull request, Delivered, Pending, Return.
 ## Rules
 
 - Prefer the term Foundry or Databricks already uses. If a screen needs a word that is not in this table, find their word first and add the row.
-- "Workspace" is not used on screen. It means something else in Databricks, and here it would name a machine.
+- "Workspace" appears on screen only as the stepper step "Create workspace". It means something else in Databricks, so everywhere else say sandbox.
+- A cloud account is not a connector. Cloud and cluster words (AWS, GCP, Azure, Kubernetes) appear only as sandbox backends under Infrastructure and where a run names its backend.
 - Audit logs show a readable label ("Experiment created", "Permission changed"), not a raw action code such as `optimization.create`.
 - The command line and MCP tools are read by people too. They use the screen words in what they print, and may keep code names in flags and JSON keys.
 - "Skill" on screen means a skill pack, a product object that belongs to Context. It is not the agent guidance in this repo's `.claude/skills/`. In code and docs say "skill pack" where the two could be confused.
