@@ -1,21 +1,33 @@
 # Checks
 
-There is no single gate command yet. One command with profiles (local, pull request, nightly, release) is (target). Until then, run the commands below for the kind of change. They come from the README and `.github/workflows/`.
+## Today
 
-Set `export CARGO_INCREMENTAL=0 CARGO_PROFILE_DEV_DEBUG=0` first.
+On this branch there is one real check, for a design change:
 
-| Kind of change | Run |
-| --- | --- |
-| Any Rust | `cargo fmt --all --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo test --workspace --no-fail-fast` |
-| An API type, route or event | the Rust checks, then `cargo run -p ratchetd -- openapi` and `cargo test -p ratchetd`; see [change/api-endpoint.md](../change/api-endpoint.md) |
-| The CLI or its MCP tools | `cargo build -p ratchet-cli -p ratchetd`, then `bash crates/ratchet-cli/tests/contract.sh target/debug/ratchet target/debug/ratchetd` |
-| The ledger or a migration | `cargo test -p ratchet-ledger` |
-| The engine or a demo | `cargo test -p ratchet-engine`; the end-to-end demos: build the demos, then `RATCHET_E2E=1 cargo test -p ratchet-engine --test engine runtime_simulation -- --nocapture --test-threads=1` and `target/debug/ratchetd simulate --project search` (or `forecast`, `cli`) |
-| A design board or token | `python3 design/tools/tokens.py`, then `python3 design/tools/tokens.py --check` |
-| TypeScript demos and infra tests | `pnpm install --frozen-lockfile && pnpm build && pnpm typecheck && pnpm test` |
-| OpenTofu | `cd infra/aws && tofu fmt -check -recursive && tofu init -backend=false -input=false && tofu validate && tofu test` |
-| Packer images | `packer fmt -check -diff infra/images` and the validate step in [ci.md](ci.md) |
-| A doc only | read the links; fix every statement the change made false |
+```
+python3 design/tools/tokens.py
+python3 design/tools/tokens.py --check
+```
+
+The prototype in `design/web/` is rebuilt with `bash design/web/src/assemble.sh`. A doc-only change has no command: read the links and fix every statement the change made false. Everything else below is target. Say so in the report; never call an unrun layer verified.
+
+## Target
+
+One gate command with profiles (local, pull request, nightly, release) is the target, `cargo xtask gate --profile <name>`. The design check moves into it as `cargo xtask design` (see [design mockups](../design/mockups.md)). Until the gate exists, run the commands for the layer. The language rules and exact flags are in the stack skill for each layer.
+
+| Layer | Run (all target) | Stack |
+| --- | --- | --- |
+| Rust (`ratchet-server`, `ratchet-runner`, `ratchet`) | `cargo fmt --all --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo test --workspace --no-fail-fast`, `cargo deny check` | [stack/rust/ratchet.md](../stack/rust/ratchet.md) |
+| An API type, route or event | the Rust checks, `cargo xtask openapi --check`, the generated TypeScript client up to date; see [change/api-endpoint.md](../change/api-endpoint.md) | [stack/rust/ratchet.md](../stack/rust/ratchet.md) |
+| The CLI or its MCP tools | the Rust checks, then the CLI contract script against a built `ratchet` and a test server | [stack/rust/ratchet.md](../stack/rust/ratchet.md) |
+| TypeScript (the web app, the generated client) | `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm lint`, `pnpm test` | [stack/typescript/ratchet.md](../stack/typescript/ratchet.md) |
+| Swift (the macOS app) | `swift build`, `swift test`, and the lint the stack names, on macOS only | [stack/swift/ratchet.md](../stack/swift/ratchet.md) |
+| Postgres: a migration or query | `cargo test` with a Postgres container, `cargo sqlx prepare --check`, a migration applied to an empty database and to the last release | [stack/postgres/ratchet.md](../stack/postgres/ratchet.md) |
+| Infra: OpenTofu, Packer, Kubernetes manifests | `tofu fmt -check -recursive`, `tofu init -backend=false`, `tofu validate`, `tofu test`; `packer fmt -check` and `packer validate`; the backend contract suite | [stack/infra/ratchet.md](../stack/infra/ratchet.md) |
+| A design board or token | `python3 design/tools/tokens.py`, then `python3 design/tools/tokens.py --check` (works today) | [design mockups](../design/mockups.md) |
+| A doc only | read the links; fix every statement the change made false | |
+
+Docs that change with the code: [change](../change/SKILL.md) says which.
 
 ## Fix the code, not the check
 

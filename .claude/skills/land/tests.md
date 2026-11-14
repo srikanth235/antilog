@@ -1,13 +1,19 @@
 # Tests
 
-- **Simulation mode.** `ratchetd serve --mode sim --ledger :memory:` runs the whole product on one machine: scripted agents, mock AWS, a local git remote. `ratchetd simulate --project <search|forecast|cli>` runs a demo through the real engine and exits 0 on a verified win. Simulation is a developer and demo tool. It shows the code works, not that a real cloud does.
-- **Ports with a real and a mock implementation.** Every outside system sits behind a port in `crates/ratchet-core/src/ports.rs`, with mocks in `ports::mock`. Tests use the mock. Example: `crates/ratchet-engine/tests/engine/common.rs` builds an engine over mock ports; `crates/ratchet-agents/src/scripted.rs` is the scripted agent.
-- **Contract tests.** `crates/ratchetd/tests/api/contract.rs` parses every route's response into its Rust type and checks it round-trips; a meta-test fails when a route has no case. `crates/ratchetd/tests/api/openapi.rs` checks the committed `api/openapi.yaml` is current. See `api/CONTRACT.md`.
-- **Snapshots.** `insta` in `crates/ratchetd/tests/api/snapshots/` (routes, schemas, the event union) and in `ratchet-core`, `ratchet-bench`, `ratchet-agents`, `ratchet-sandbox`, `ratchet-env`. Review a change with `cargo insta review`.
-- **Properties.** `proptest` in `crates/ratchet-core/tests/properties.rs`, `crates/ratchet-bench/tests/properties.rs` and `crates/ratchet-ledger/tests/properties.rs`.
-- **Ledger.** In-memory ledger per test; `crates/ratchet-ledger/tests/migration.rs` checks migrations.
-- **CLI.** `crates/ratchet-cli/tests/cli/` runs commands in process; `crates/ratchet-cli/tests/contract.sh` runs the same contract on a built binary.
+None of this exists yet; it is how tests are written once code lands (target). Earlier practice is in [today.md](today.md).
+
+## Approach (target)
+
+- **Contract tests on the OpenAPI document.** Every route in the document has a case; each answer parses into its Rust type; a meta-test fails when a route has no case. The committed document and the generated TypeScript client must be current.
+- **A fake runner and fake backends, not a simulation mode.** The server is tested against a fake runner that takes and finishes jobs. The real runner is tested against fake sandbox backends that record tags, caps and clean-up. There is no `--mode sim`, and no product feature exists only for demos. See [change/runner-job.md](../change/runner-job.md).
+- **One suite for every backend.** The sandbox backend contract suite runs against every backend, fake and real (see [infra/add-backend.md](../infra/add-backend.md)).
+- **Postgres in a container.** Database tests run against a real Postgres through testcontainers, never a stand-in. Migrations apply to an empty database and to the last release's schema.
+- **Snapshots with insta.** For the document, the event union, receipts and error bodies. A snapshot changes only when behaviour was meant to, and the diff is reviewed.
+- **Properties.** `proptest` for the accept rule, the noise floor and the budget arithmetic.
+- **The action layer.** Allowed role writes and audits once; denied role writes nothing and audits the denial; the event follows the commit. A route-walk test calls every route as each role and compares with the matrix.
+- **Secrets never leave.** A test that sets a key, a token and a connector secret, then checks no response, event, error, log, audit entry or receipt carries it.
+- **The server never connects to data.** A test that the server process opens no connection to a connector or to any host its configuration does not name. Self-hosted, only configured endpoints are contacted; a runner contacts only its server.
+- **Receipts.** A receipt read back has every field, and one whose numbers were changed after signing fails verification.
+- **Clients.** The CLI contract script runs against a built binary and a test server. Web tests run against the generated client. Swift tests cover state and words shared with the web app.
 - **No test asserts on a wall-clock duration.** Assert on counts.
-- **Secrets.** A test that sets a key or token checks that no response, event or error carries it (`secrets_never_leave` in `crates/ratchetd/tests/api/real_service.rs`).
-- Each crate has a `PARITY.md` mapping the tests of the TypeScript it replaced to Rust tests. Update it when a mapped test moves.
 - Never skip, ignore or delete a test to get green.

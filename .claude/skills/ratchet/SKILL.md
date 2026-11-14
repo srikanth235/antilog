@@ -1,43 +1,49 @@
 ---
 name: ratchet
-description: Drive Ratchet from the shell with the `ratchet` command. Use when the user asks about their optimizations (list, show, status, spend, wins, report), wants to start, stop or open a pull request for one, wants to talk to Ratchet's assistant (`ratchet chat`), wants Ratchet as an MCP server (`ratchet mcp`), or names Ratchet.
+description: Drive Ratchet from the shell with the `ratchet` command (target; not built on this branch). Use when the user asks about their experiments or optimizations (list, show, status, spend, wins, report), wants to sign in to a Ratchet server, start or stop one, open a pull request for a win, or wants Ratchet as an MCP server (`ratchet mcp`), or names Ratchet.
 ---
 
 # Ratchet
 
-`ratchet` is a client of the Ratchet daemon (`ratchetd`), the same one every client talks to. If the daemon is down, on a Mac with the LaunchAgent installed the command asks launchd to start it; if that fails it prints what to do (`ratchetd serve`, or `ratchetd launchagent install`).
+`ratchet` is a command-line client of a Ratchet server, and `ratchet mcp` is the same client as an MCP server. It is (target): it does not exist on this branch, so the commands below are the design and may change as the program is built. The earlier daemon-based CLI is in [today.md](today.md).
+
+There is no daemon, no LaunchAgent and no simulation mode. The server is Ratchet cloud or a self-hosted server at a URL. The client holds no data and runs no sandbox: it asks the server, and the server's runner does the work in the customer's infrastructure.
+
+## Sign in
+
+- `ratchet login <server-url>` opens browser sign-in (OpenID Connect) and stores a session for that server. With no URL it uses Ratchet cloud.
+- For CI, scripts and MCP, use an access token: `RATCHET_TOKEN` with `RATCHET_SERVER`, or `ratchet login --token`. A token is shown once when a member creates it under Settings, Access tokens, and acts with that member's role.
+- Never print or log a token. Never write one into a file in the repo.
+- A viewer can read and not change; an editor can start and stop; an owner can also manage members and settings. A refused command says which role it needs.
 
 ## Rules
 
-- Always add `--json` and read the JSON. Exit 0 is ok, 1 is a failure (read `error.message` and `error.hint`), 2 is a usage
-  error or a command that needs `--yes`.
+- Always add `--json` and read the JSON. Exit 0 is ok, 1 is a failure (read `error.message` and `error.hint`), 2 is a usage error or a command that needs `--yes`.
 - Ids are in `ratchet list --json`. A wrong id exits 1 with a hint.
-- `run`, `stop`, `pr` and `env end` spend money or change things. Without `--yes` they only print what they would do and exit
-  2. Show that preview to the user and ask before you run it again with `--yes`.
-- Say "optimization", not "automation".
-- To try things without real data, point the command at a simulation: `ratchetd serve --mode sim` in one terminal, then
-  `RATCHET_HOME=<its folder> ratchet status --json`.
+- `start`, `stop` and `pr` spend money or change things. Without `--yes` they only print what they would do and exit 2. Show that preview to the user and ask before you run it again with `--yes`. A start with no budget is refused.
+- Say "experiment" where the screen does and "optimization" in code and docs; see `docs/GLOSSARY.md`. Never "automation".
 
 ## Commands you will use most
 
 | Command | Does |
 | --- | --- |
-| `ratchet status --json` | The daemon and the optimizations at a glance |
-| `ratchet list --json` | All optimizations with ids, status, best result, spend |
-| `ratchet show <id> --json` | One optimization: agents, baseline vs best, receipt |
-| `ratchet run owner/name --budget 50 --time-limit 2h --yes` | Create an optimization and start it (preview without `--yes`; `--demo` runs a simulation) |
+| `ratchet status --json` | The server you are signed in to and your experiments at a glance |
+| `ratchet list --json` | All experiments with ids, state, best result, spend |
+| `ratchet show <id> --json` | One experiment: agents, baseline vs best, receipt |
+| `ratchet spend <id> --json` | Spend against the budget |
+| `ratchet wins <id> --json` | Verified wins and their receipts |
+| `ratchet report <id>` | The markdown report |
+| `ratchet start <id> --budget 50 --yes` | Start an approved experiment (preview without `--yes`) |
 | `ratchet stop <id> --yes` | Stop one. Wins found so far are kept |
 | `ratchet pr <id> --yes` | Open the pull request with the verified wins |
-| `ratchet report <id>` | The markdown report |
 
-Others: `candidates`, `history`, `spend`, `activity`, `agent pause|resume|message|log`, `agents show|set` (an optimization's agent order and fallback rules), `events`, `env list|end`, `cost
-reconcile`, `repos`, `inspect`, `overview`, `home` (the value line above the composer), `value` and `schedule` (what an improvement is worth, how often it runs), `pr-merged` (record a merged pull request), `connectors`, and the offline `validate`, `init`, `baseline`, `templates`.
+Anything not listed is whatever `ratchet --help` shows; it is the source once the program exists.
 
-## Chat and MCP
+## MCP
 
-- `ratchet chat new`, `chat send`, `chat show`, `chat stop`, `chat end` talk to Ratchet's assistant: your own Claude Code, Codex
-  or Grok, acting on Ratchet through its tools. `chat end` needs `--yes`.
-- `ratchet mcp` serves every command above as an MCP tool on stdio, for clients with no shell. Register it with
-  `claude mcp add ratchet -- ratchet mcp`. The tools that need `--yes` take `confirm: true` instead.
+`ratchet mcp` serves the commands above as MCP tools on stdio, for clients with no shell. It signs in the same way, with an access token. Register it with `claude mcp add ratchet -- ratchet mcp`. A tool that needs `--yes` takes `confirm: true`, and shows its preview first.
 
-Everything else: `ratchet --help`, and `ratchet <command> --help` for its options.
+## Open for the owner
+
+- Whether `ratchet chat` returns, and where chat and drafting run (see [product rulings](../product/rulings.md)).
+- Whether `start` creates the experiment too, or only starts one that exists as an approved draft. Recommendation: only start an approved one, so Approve stays a deliberate step.

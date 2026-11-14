@@ -9,10 +9,14 @@
 
 ## How each is checked
 
-**Permission.** Check: one test per route that the role matrix is applied, driven from the route table, so a new route without a check fails. The route-table approach exists for authentication: `every_route_needs_the_token` in `crates/ratchetd/tests/api/auth.rs` walks `route_table()` in `crates/ratchetd/src/openapi.rs`. Role checks do not exist, so the role version is to add.
+Each check is (target) unless it says "today".
 
-**Audit.** Check: a test that every write route produces exactly one audit entry with an actor and a name. To add. There is no audit log in the repo.
+**Permission.** Check: one test per route that the role matrix is applied, driven from the route table in the OpenAPI document, so a new route without a check fails. Today the route-table approach exists for authentication only, in the earlier code (`every_route_needs_the_token` in `crates/ratchetd/tests/api/auth.rs`). Role checks do not exist.
 
-**Secrets.** Check: tests that settings and connector responses carry only "is set", never a value. Partly exists: `crates/ratchetd/tests/api/contract.rs` checks that settings secrets answer as flags, and `api/CONTRACT.md` records that no response can carry a secret. A scan of events and logs for secret values is to add.
+**Audit.** Check: a test that every write route produces exactly one audit entry with an actor and a name, in the same transaction as the change, and that a denial is audited too. There is no audit log yet.
 
-**No surprise calls.** Check: a test that a self-hosted build makes no request to a host the configuration does not name. To add. Today base URLs for GitHub are overridable by environment variable (`crates/ratchet-github/src/lib.rs`), but no test asserts the rule.
+**Secrets.** Check: a test that sets a key, a token and a connector secret and finds none in any response, event, error, log or audit entry. Today, in the earlier code, settings secrets answered as flags (`crates/ratchetd/tests/api/contract.rs`, `api/CONTRACT.md`); a scan of events and logs was to add.
+
+**No surprise calls.** Check: a test that a self-hosted server makes no request to a host its configuration does not name, and that a runner contacts only its server. To add. Today, in the earlier code, base URLs for GitHub were overridable by environment variable (`crates/ratchet-github/src/lib.rs`), with no test for the rule.
+
+Earlier-code facts are in [today.md](today.md).

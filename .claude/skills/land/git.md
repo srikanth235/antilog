@@ -4,10 +4,10 @@
 - Commit only when asked. Open a pull request only when asked.
 - Do not force-push a branch someone else is working on.
 - Never skip, disable or delete a test, hook or check to get green. Fix the code.
-- Do not commit generated files by hand. Regenerate them: `api/openapi.yaml`, `design/mockups/tokens.css` and the dark twins (from `python3 design/tools/tokens.py`).
+- Do not commit generated files by hand. Regenerate them: `design/mockups/tokens.css` and the dark twins (from `python3 design/tools/tokens.py`), and (target) the OpenAPI document and the generated TypeScript client.
 - Never commit a secret, a token or a `.env` file.
-- `Cargo.lock` is not committed; leave it out.
+- No model names in commits, code, docs or pull request text.
 
 ## Commit subjects
 
-Read from `git log --oneline -20`. The subject is a short imperative or descriptive line, prefixed by the work item or area, then a colon, then lower case text with no full stop: `F6: contrast check calibrated on real pictures`, `P5b: steering field height`, `CI: cache the Rust build`, `Merge F6: app polish after P5b`. Follow that: a prefix, a colon, what changed and why in one line. There is no pull request number suffix.
+A short line, prefixed by the work item or area, then a colon, then lower case text with no full stop: `design: sign-in board for single sign-on`, `server: audit entry on token revoke`. A prefix, a colon, what changed and why in one line. Read `git log --oneline -20` for the current habit. Add trailers only when the session's instructions say to.

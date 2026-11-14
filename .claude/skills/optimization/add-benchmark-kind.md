@@ -10,7 +10,7 @@ A kind is a new way to measure, such as a replay of recorded traffic or a scored
 6. **Noise.** The kind defines repeats and how the noise floor is derived from the baseline, using `crates/ratchet-core/src/bench/calibrate.rs`. The accept rule is not changed by a new kind.
 7. **A template.** Add a folder under `templates/` with the evaluator, a starter config and a short doc in `docs/packs/`. Register it in `crates/ratchet-core/src/templates/registry.rs`.
 8. **Tests.** A golden test of the template in `crates/ratchet-core/tests/templates.rs`, a parse test of the output, and one end-to-end run on a scripted agent.
-9. **Receipt.** The win from this kind carries the fields in [owes.md](owes.md). Dataset versions and machines in the receipt are (target).
+9. **Receipt.** The win from this kind carries the fields in [owes.md](owes.md). The receipt is signed (target) and also carries the signed numbers, the evaluator image, the machine type and the credential scopes used. Say which of those the new kind produces. Today only the ledger rows exist; see [today.md](today.md).
 
 ## Proving it
 

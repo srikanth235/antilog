@@ -41,3 +41,14 @@ Every path below was checked to exist.
 - A refusal to start a run with no stated budget.
 - Model providers as a stored object, separate from the agent.
 - Environments as named, versioned objects referenced by id from a benchmark.
+
+## Adding a backend, as the earlier code did it
+
+Reference for the earlier code on the other branch. The target steps are in [add-backend.md](add-backend.md).
+
+- The module lived under `infra/<cloud>/` and satisfied `infra/contract.md`. The AWS module in `infra/aws/` is the model.
+- Sealed isolation was a holdout bucket: the evaluator identity sat outside any agent identity's reach, and the bucket denied agents twice, on the store and in the agent boundary (`infra/aws/policies/sealed_bucket_policy.json.tftpl`, `infra/aws/policies/agent_boundary.json.tftpl`). The target replaces this with the credential model: the evaluator's own credential includes the holdout, and agents never get it.
+- Tag keys were in `crates/ratchet-sandbox/src/util.rs`. The compute port (launch, list by tag, terminate) was in `crates/ratchet-sandbox/src/compute/mod.rs`, AWS in `compute/aws.rs`, the double in `compute/mock.rs`. Launch failed closed on a missing tag.
+- The reaper was `crates/ratchet-sandbox/src/reaper.rs`. Price table and billing reconcile were `crates/ratchet-sandbox/src/pricing.rs` and `cost_explorer.rs`. Images were in `infra/images/`.
+- Providers were the two-value `SandboxProviderKind` in `crates/ratchet-core/src/enums.rs`; widen it only after the contract tests pass.
+- Tests were `infra/tests/src/` and `infra/aws/tests/`, plus a job beside `infra` in `.github/workflows/ci.yml`.

@@ -4,7 +4,7 @@ Mockup first, then the web app and, where it applies, the macOS app (target). Th
 
 ## 1. The mockup
 
-Start with a board in `design/mockups/`: edit the light board, change `design/tokens.toml` only if a value moves, and run `python3 design/tools/tokens.py`. A Mac board only where the Mac differs. See [mockups](../design/mockups.md) and [`design/README.md`](../../../design/README.md). Behaviour and words: [design](../design/SKILL.md).
+Start with a board in `design/mockups/`: edit the light board, change `design/tokens.toml` only if a value moves, and run `python3 design/tools/tokens.py`, then `python3 design/tools/tokens.py --check`. A Mac board only where the Mac differs. See [mockups](../design/mockups.md) and [`design/README.md`](../../../design/README.md). Behaviour and words: [design](../design/SKILL.md).
 
 ## 2. The web app (target)
 

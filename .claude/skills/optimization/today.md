@@ -32,7 +32,7 @@ Every path below was checked to exist. Names in the code differ from the target 
 
 ## Target, not built
 
-- A receipt record per win with dataset versions and machines.
+- A signed receipt record per win: baseline, candidate, confirmation, holdout, noise, the signed numbers, dataset versions, the evaluator image, the machine type and the credential scopes used.
 - Re-checking a merged win on a schedule ("Keep").
 - Subjects other than a git repository (a prompt, a query, a config with a version and a diff).
 - Benchmarks that name dataset versions and an environment id, as in [model.md](model.md).

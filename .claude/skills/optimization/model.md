@@ -14,7 +14,7 @@ Where `docs/GLOSSARY.md` already defines a word, this file keeps its meaning and
 | run | One execution of an optimization, numbered `#14` (glossary) | attempt, session |
 | candidate | One proposed change to the subject, submitted by an agent | win |
 | verdict | The accept rule's answer for a candidate: verified, rejected, failed confirm, blocked, pending confirm | opinion, label |
-| receipt | The evidence a win carries: baseline, candidate, confirmation, holdout, noise, dataset versions, machines | log, report text |
+| receipt | The signed evidence a win carries: baseline, candidate, confirmation, holdout, noise, signed numbers, dataset versions, the evaluator image, the machine type and the credential scopes used | log, report text |
 | win | A candidate with a verified verdict that moved the best value | any candidate that looked good |
 | delivered | Yearly value of merged wins (glossary) | locked in, realised |
 | pending | Yearly value of wins in an open PR; not counted in Return (glossary) | unclaimed, waiting |

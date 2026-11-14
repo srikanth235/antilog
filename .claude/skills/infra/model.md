@@ -30,6 +30,14 @@
 
 Provider words (regions, instance ids, bucket names, role ARNs, node pools, NetworkPolicy) stay in this area, inside each backend's adapter.
 
+## How the runner and the server talk (target)
+
+- The runner connects out to the server over HTTPS and long-polls or streams for jobs. It opens no inbound port.
+- Jobs go down: start a workspace, start an evaluator, remove a run's sandboxes, fetch a diff or log. Up come ids, numbers, states and spend. Connector secrets, credentials, data, diffs and logs do not travel up on their own.
+- Self-hosted, the launcher runs in process in the server and the same job contract applies, with no network between them.
+- A diff or a log is fetched through the runner when someone asks to see it, and is never stored by the server.
+- If the server is away, the runner keeps enforcing the spend cap and the clean-up check on what it already runs, and reports when it can. It starts nothing new without a job.
+
 ## How work runs (target)
 
 1. The launcher reads the connector admin secrets from the customer's secret manager and mints a scoped credential per run: read-only and holdout-excluding for the agent's sandbox, a separate one with the holdout for the evaluator's.

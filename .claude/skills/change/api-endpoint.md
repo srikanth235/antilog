@@ -1,24 +1,29 @@
 # An API endpoint
 
-`api/openapi.yaml` is generated from the Rust types and is the one description of the wire format. The full contract and its checks are in `api/CONTRACT.md` (on the earlier code branch, see `AGENTS.md`). Read it first.
+The OpenAPI document is generated from the Rust types in `ratchet-server` and is the one description of the wire format. The web client, the CLI and the contract tests all read it. Never edit it by hand. (target: nothing here is built yet.)
 
-## Steps today
+## Steps (target)
 
-1. **Edit the Rust types.** Request and response types live in `crates/ratchetd/src/api/`. The handler lives in `crates/ratchetd/src/routes/` and carries its `#[utoipa::path]`. The handler is thin: it decodes, calls one method of the `AppService` trait (`crates/ratchetd/src/service.rs`) and encodes the answer. Implement the method for the simulation (`crates/ratchetd/src/sim/`) and for the real service (`crates/ratchetd/src/real/`).
-2. **Regenerate the contract.** `cargo run -p ratchetd -- openapi` rewrites `api/openapi.yaml` (`--check` exits 1 when it differs).
-3. **Contract tests and snapshots.** `cargo test -p ratchetd` fails when the committed file is stale and round-trips every route (`crates/ratchetd/tests/api/`). Review the diff of `api/openapi.yaml` and of the insta snapshots with `cargo insta review`.
-4. **CLI.** Add the command in `crates/ratchet-cli/src/cli.rs` and `crates/ratchet-cli/src/commands/`. Every command takes `--json`. A command that spends or changes things needs `--yes` and previews without it. Add the command name to the list in `crates/ratchet-cli/tests/contract.sh`.
-5. **MCP tool.** `ratchet mcp` generates one tool per CLI command from the clap definition (`crates/ratchet-cli/src/mcp.rs`), so step 4 normally creates the tool. The chat's own tools are in `crates/ratchetd/src/mcp/tools.rs` and call the same `AppService` methods.
-6. **TypeScript client (target).** The web app's client is generated from the same `api/openapi.yaml` with `openapi-typescript` and `openapi-fetch`. Nothing generates it today.
-7. **Docs.** Fix `api/CONTRACT.md` if a convention changed, and the CLI help text.
+1. **Decide the product call first.** An endpoint that exposes a new thing is a product change; see [product](../product/SKILL.md). An endpoint never returns data from a customer's systems: the server stores only ids, versions, numbers, states and audit rows.
+2. **Write the types.** Request and response types live in `crates/ratchet-server/src/api/` and derive their schema with utoipa. Follow [stack/rust/ratchet.md](../stack/rust/ratchet.md).
+3. **Write the handler.** `crates/ratchet-server/src/routes/`, with `#[utoipa::path]`. The handler is thin: it decodes, calls the action layer (a write, see [write-action.md](write-action.md)) or one read function, and encodes the answer. It tests no role and writes no audit row.
+4. **Regenerate the document.** `cargo xtask openapi` writes the committed document; `cargo xtask openapi --check` fails when it differs (target commands).
+5. **Regenerate the TypeScript client.** The web app's client is generated from the document (`openapi-typescript` and `openapi-fetch`, see [stack/libraries.md](../stack/libraries.md)). Never edit the output. See [stack/typescript/ratchet.md](../stack/typescript/ratchet.md).
+6. **CLI command.** Add it in the `ratchet` program. Every command takes `--json`. A command that spends or changes things needs `--yes` and previews without it. Add it to the CLI contract list.
+7. **MCP tool.** `ratchet mcp` makes one tool per CLI command, so step 6 normally creates the tool. A tool that needs `--yes` takes `confirm: true`.
+8. **The macOS app.** If the Mac app shows it, it reads the same document (see [stack/swift/ratchet.md](../stack/swift/ratchet.md)).
+9. **Tests.** A contract test that every route in the document has a case and its answer parses into its type; insta snapshots of the document and of the event union; a test that the route is refused without a token and as a role the matrix denies. See [../land/tests.md](../land/tests.md).
+10. **Docs.** Fix the wire conventions below if one changed, the CLI help text and the glossary if a word is new.
 
-## Wire conventions
+## Wire conventions (target)
 
-Summarised from `api/CONTRACT.md`; that file wins.
+These are the conventions the earlier code settled on; keep them unless the owner rules otherwise.
 
 - Property names are camelCase. Ids are strings. Times are epoch milliseconds unless a field says otherwise.
-- Nullable response fields are required and carry `null` (`#[schema(required = true)]` on every `Option` in a response). Inputs and query structs stay optional.
+- Nullable response fields are required and carry `null`. Inputs and query structs stay optional.
 - Errors are `{ "code", "message", "fields" }` with the usual statuses.
-- Live updates are server-sent events on `GET /v1/events` (see [live-event.md](live-event.md)).
-- Every route needs the bearer token (`crates/ratchetd/src/auth.rs`).
-- No response, event or error carries a secret (see [product promises](../product/promises.md)).
+- Live updates are server-sent events (see [live-event.md](live-event.md)).
+- Every route needs a signed-in member or an access token, and every route is permission-checked.
+- No response, event or error carries a secret or customer data (see [product promises](../product/promises.md)).
+
+Facts from the earlier daemon's contract are in [today.md](today.md).

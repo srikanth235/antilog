@@ -1,17 +1,24 @@
 # A write
 
-## The rule (target)
+Every write goes through one action layer, and nowhere else. A write that skips a step is a bug. A new write is an entry in the action layer, not a handler with its own checks. (target: the layer is not built yet.)
 
-(target) Every write goes through one action layer, and nowhere else. The layer does three things, in this order: it checks the caller's role, it writes one audit entry, and it publishes one live event. A write that skips any of the three is a bug. A new write is an entry in the action layer, not a handler with its own checks. The area's recipe `add-audited-action.md` in [organization](../organization/add-audited-action.md) says how to register one.
+## The three steps, in order (target)
 
-Nothing in the repository implements this layer yet. There is no role check, no audit entry and no organization.
+1. **Check.** The caller's role on the project is checked first, in one place. A denied call changes nothing and records the denial.
+2. **Write and audit.** The change and its audit entry happen in one Postgres transaction, or neither does. Every row carries its organization.
+3. **Publish.** After the commit, the layer publishes one live event naming what changed (see [live-event.md](live-event.md)).
 
-## What a write does today
+An action that needs work in the customer's infrastructure queues a job in the same transaction. The runner executes it (see [runner-job.md](runner-job.md)). The action layer never calls a runner or a connector directly.
 
-- The route handler (`crates/ratchetd/src/routes/`) decodes the request and calls one `AppService` method (`crates/ratchetd/src/service.rs`). Examples: `create_optimization`, `stop_optimization`.
-- The method changes the ledger and the engine, in `crates/ratchetd/src/real/service.rs` for real runs and `crates/ratchetd/src/sim/` for the simulation.
-- The service broadcasts an `ApiEvent` (`AppService::subscribe`); `EventHub::publish` in `crates/ratchetd/src/hub.rs` numbers it and sends it to every client. See [live-event.md](live-event.md).
-- Authorization today is one per-boot bearer token on a 0600 unix socket (`crates/ratchetd/src/auth.rs`). There are no users or roles.
-- The CLI preview rule applies: a command that spends or changes things needs `--yes` and previews without it (`crates/ratchet-cli/src/cli.rs`). See [api-endpoint.md](api-endpoint.md).
+## Adding a write (target)
 
-When you add a write today, follow the steps in [api-endpoint.md](api-endpoint.md) and keep it in one `AppService` method, so moving it behind the action layer later is one change.
+1. Name it, verb-object, such as `experiment.stop`, and register it with [organization/add-audited-action.md](../organization/add-audited-action.md). That page owns the matrix, the audit fields and the denial rules.
+2. Add the types and handler by [api-endpoint.md](api-endpoint.md). The handler calls the layer.
+3. Add the CLI command and MCP tool. A command that spends or changes things needs `--yes`.
+4. Tests: allowed role writes and audits once; denied role writes nothing and audits the denial; the event is published after the commit and not on a denial; no secret in the entry or the event; the audit row and the change roll back together.
+
+## Open
+
+- Whether an audit entry for a denied read is kept, or only for denied writes. The organization rules say every write; reads are not settled.
+
+Today's path, one `AppService` method per write with no actor, is in [today.md](today.md).
