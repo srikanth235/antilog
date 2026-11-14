@@ -34,4 +34,6 @@ Fix the code, not the check. Do not add TypeScript to the product without the ow
 | End to end | Playwright |
 | Lint and format | Biome |
 
+Versions are in [libraries.md](libraries.md).
+
 Tokens come from the one design system; see [design/tokens.md](../design/tokens.md). A library outside this list is a product call; see [libraries.md](libraries.md).
