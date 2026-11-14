@@ -11,7 +11,7 @@ A visual or UX change starts in `design/mockups/`. Boards are static pictures of
 - `design/mockups/canvas.json` places every board on a canvas page: Design rules, Components, Web light, Web dark, macOS light, macOS dark, Archive.
 - `DesignRules.dc.html` shows the look. `Decisions.dc.html` lists the owner's calls, each dated and marked DECIDED or OPEN.
 - A control that leads to another board is a link, `<a href="X.dc.html">`, styled as the button (never a `<button>` inside it). In the Design canvas, Play follows it; in a browser it navigates. A control for a board not drawn yet is `<button data-next="X">`, and the check asks for a link once `X` exists.
-- Shared chrome is a component: `Sidebar`, `Topbar`, `SettingsRail`, `MacSidebar`, `MacToolbar`, on the Components page. A board mounts it with `<dc-import name="Sidebar" active="Connectors" hint-size="256px,900px"></dc-import>`. Change the sidebar in `Sidebar.dc.html`, never inside a board. Components take the theme of the board around them and have no dark twins.
+- Shared chrome is a part: `Sidebar`, `MacSidebar`, `SettingsRail`, boards on the Components page, plain static files. A board marks a place with `<!-- part:Sidebar active="connectors" --><!-- /part -->` and the generator fills it (`active` sets `aria-current="page"` on the `data-item`; other keys fill `data-slot` text). Change the sidebar in `Sidebar.dc.html`, never inside a board. The top bar and macOS toolbar vary per screen, so they are board content.
 
 ## Authored and generated
 
@@ -29,25 +29,19 @@ A visual or UX change starts in `design/mockups/`. Boards are static pictures of
 2. Add its entry to `canvas.json` on the light page.
 3. Draw a Mac board only where the Mac differs from the web.
 4. Change `design/tokens.toml` only when a value changes. Never put a value in a board.
-5. Make every control that leads to another board a link, and mount shared chrome with `<dc-import>`.
-6. Run `python3 design/tools/tokens.py`. It writes `tokens.css`, every dark twin and its `canvas.json` entry.
+5. Make every control that leads to another board a link, and mark places for shared chrome with part markers.
+6. Run `python3 design/tools/tokens.py`. It fills the part markers, and writes `tokens.css`, every dark twin and its `canvas.json` entry.
 7. Commit the light boards, the dark twins and the generated files together.
 
 ## The checks
 
-`python3 design/tools/tokens.py --check` fails on drift (a generated file that is not what the generator writes), a raw colour in a board or stylesheet, a link or `<dc-import>` that names no board, a `<button>` inside a link, a board with links missing `is_interactive`, a board missing from `canvas.json`, and DesignRules swatches that do not match `tokens.toml`. Run it before calling a design change done.
+`python3 design/tools/tokens.py --check` fails on drift (a generated file that is not what the generator writes), a raw colour in a board or stylesheet, part content that is not what the generator writes (it names the part file to edit), an unknown or unclosed part marker, any `<dc-import>`, `{{`, `<sc-for>` or `<sc-if>`, a link that names no board, a `<button>` inside a link, a board with links or parts missing `is_interactive`, a board missing from `canvas.json`, and DesignRules swatches that do not match `tokens.toml`. Run it before calling a design change done.
 
 It moves to a Rust `cargo xtask design` with the first code (target), which will also write the web app's CSS and the Mac app's Swift colours. The check then joins the gate; see [land](../land/SKILL.md).
 
 ## Looking at boards
 
-Components are mounted by the Design canvas runtime, `design/mockups/support.js` (vendored, never edited), which fetches them. So outside the canvas, serve the folder:
-
-```bash
-python3 -m http.server -d design/mockups
-```
-
-Then open `http://localhost:8000/ThreadRunning.dc.html` and follow the links. From `file://` a board renders without its sidebar. Links between boards are the clickable flow; a flow that needs live state is drawn as more boards, not scripted.
+Open the file in a browser; no server is needed. Links between boards are the clickable flow; a flow that needs live state is drawn as more boards, not scripted.
 
 ## Not here
 

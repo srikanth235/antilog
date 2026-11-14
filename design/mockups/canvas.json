@@ -104,14 +104,6 @@
       "title": "macOS sidebar",
       "page": "components"
     },
-    "MacToolbar.dc.html": {
-      "x": 2280,
-      "y": 0,
-      "w": 1112,
-      "h": 52,
-      "title": "macOS toolbar",
-      "page": "components"
-    },
     "SettingsProfile.dc.html": {
       "x": 0,
       "y": 9900,
@@ -167,14 +159,6 @@
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
-    },
-    "Topbar.dc.html": {
-      "x": 336,
-      "y": 0,
-      "w": 1184,
-      "h": 52,
-      "title": "Top bar",
-      "page": "components"
     }
   },
   "notes": {
@@ -190,7 +174,7 @@
     "comp0": {
       "kind": "title1",
       "page": "components",
-      "text": "Components, imported by the boards with dc-import",
+      "text": "Components, inserted into the boards by the generator",
       "x": 0,
       "y": -130,
       "w": 240,
@@ -571,13 +555,11 @@
     "MacMain.dc.html",
     "MacMainDark.dc.html",
     "MacSidebar.dc.html",
-    "MacToolbar.dc.html",
     "SettingsProfile.dc.html",
     "SettingsProfileDark.dc.html",
     "SettingsRail.dc.html",
     "Sidebar.dc.html",
     "ThreadRunning.dc.html",
-    "ThreadRunningDark.dc.html",
-    "Topbar.dc.html"
+    "ThreadRunningDark.dc.html"
   ]
 }

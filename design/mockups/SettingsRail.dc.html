@@ -17,31 +17,23 @@
 <div class="sd-rail">
   <label class="sfield"><i class="ic i-search" aria-hidden="true"></i><input placeholder="Search settings" aria-label="Search settings" autocomplete="off" spellcheck="false"></label>
   <nav class="sd-groups" aria-label="Settings sections">
-    <sc-for list="{{groups}}" as="g">
-      <div class="sd-grp" role="group" aria-label="{{g.name}}"><span class="t-label">{{g.name}}</span>
-        <sc-for list="{{g.items}}" as="i"><a class="{{i.cls}}" href="{{i.href}}"><i class="ic {{i.icon}}" aria-hidden="true"></i><span class="grow ell">{{i.label}}</span></a></sc-for>
-      </div>
-    </sc-for>
+    <div class="sd-grp" role="group" aria-label="You"><span class="t-label">You</span>
+      <a class="sd-nav" data-item="profile" href="SettingsProfile.dc.html"><i class="ic g-user" aria-hidden="true"></i><span class="grow ell">Profile</span></a>
+      <a class="sd-nav" data-item="appearance" href="SettingsAppearance.dc.html"><i class="ic i-sun" aria-hidden="true"></i><span class="grow ell">Appearance</span></a>
+      <a class="sd-nav" data-item="access-tokens" href="SettingsTokens.dc.html"><i class="ic i-key" aria-hidden="true"></i><span class="grow ell">Access tokens</span></a>
+    </div>
+    <div class="sd-grp" role="group" aria-label="Organization"><span class="t-label">Organization</span>
+      <a class="sd-nav" data-item="general" href="SettingsGeneral.dc.html"><i class="ic i-org" aria-hidden="true"></i><span class="grow ell">General</span></a>
+      <a class="sd-nav" data-item="users-and-groups" href="SettingsUsers.dc.html"><i class="ic i-users" aria-hidden="true"></i><span class="grow ell">Users and groups</span></a>
+      <a class="sd-nav" data-item="single-sign-on" href="SettingsSso.dc.html"><i class="ic i-lock" aria-hidden="true"></i><span class="grow ell">Single sign-on</span></a>
+      <a class="sd-nav" data-item="infrastructure" href="Infrastructure.dc.html"><i class="ic g-cloud" aria-hidden="true"></i><span class="grow ell">Infrastructure</span></a>
+      <a class="sd-nav" data-item="budgets" href="SettingsBudgets.dc.html"><i class="ic g-gauge" aria-hidden="true"></i><span class="grow ell">Budgets</span></a>
+      <a class="sd-nav" data-item="notes" href="SettingsNotes.dc.html"><i class="ic g-note" aria-hidden="true"></i><span class="grow ell">Notes</span></a>
+      <a class="sd-nav" data-item="audit-logs" href="SettingsAudit.dc.html"><i class="ic g-hist" aria-hidden="true"></i><span class="grow ell">Audit logs</span></a>
+    </div>
   </nav>
 </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"active":{"editor":"text","default":"Profile"},"dark":{"editor":"text","default":""},"$preview":{"width":272,"height":660}}'>
-// Props: active = the section label (Profile, Appearance, Access tokens, General, Users and groups,
-// Single sign-on, Infrastructure, Budgets, Notes, Audit logs); dark = "1" in a dark twin.
-// links: SettingsProfile SettingsAppearance SettingsTokens SettingsGeneral SettingsUsers SettingsSso Infrastructure SettingsBudgets SettingsNotes SettingsAudit
-class Component extends DCLogic {
-  renderVals() {
-    const active = this.props.active ?? 'Profile';
-    const sfx = this.props.dark ? 'Dark' : '';
-    const link = (b) => b + sfx + '.dc.html';
-    const G = [
-      ['You', [['Profile', 'g-user', 'SettingsProfile'], ['Appearance', 'i-sun', 'SettingsAppearance'], ['Access tokens', 'i-key', 'SettingsTokens']]],
-      ['Organization', [['General', 'i-org', 'SettingsGeneral'], ['Users and groups', 'i-users', 'SettingsUsers'], ['Single sign-on', 'i-lock', 'SettingsSso'], ['Infrastructure', 'g-cloud', 'Infrastructure'], ['Budgets', 'g-gauge', 'SettingsBudgets'], ['Notes', 'g-note', 'SettingsNotes'], ['Audit logs', 'g-hist', 'SettingsAudit']]],
-    ];
-    return { groups: G.map(([name, items]) => ({ name, items: items.map(([label, icon, b]) => ({ label, icon, href: link(b), cls: label === active ? 'sd-nav on' : 'sd-nav' })) })) };
-  }
-}
-</script>
 </body>
 </html>

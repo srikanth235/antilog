@@ -9,16 +9,23 @@ Writes, under design/mockups/:
                     (.t-hero .t-display .t-title .t-section .t-item .t-body .t-meta .t-label
                     .t-big) and the base rules for a board root (.board).
   XDark.dc.html     for every board on a "*-light" page of canvas.json: the same file with
-                    data-theme="dark" on the board root, "dark" in the title and every link
-                    href="Y.dc.html" rewritten to "YDark.dc.html" and dark="1" added to every
-                    <dc-import> so a click stays in dark. Boards on other pages (rules,
-                    components) get no twin; components inherit the theme of their board.
+                    data-theme="dark" on the board root, "dark" in the title and every
+                    href="Y.dc.html" rewritten to "YDark.dc.html" (inserted parts included),
+                    so a click stays in dark. Boards on other pages (rules, components) get
+                    no twin.
+  parts             in every board, <!-- part:Name key="v" --> ... <!-- /part --> is rewritten
+                    to hold the content of Name.dc.html (the inside of its display:contents
+                    wrapper). active="x" puts aria-current="page" on the element with
+                    data-item="x"; any other key="v" replaces the text of the element with
+                    data-slot="key". Parts may nest; a cycle is an error.
   canvas.json       the twin's entry on the matching "*-dark" page, same x/y/w/h. Humans own
                     the light entries; this tool owns the dark ones.
 
 --check regenerates in memory and reports: changed, missing or stray generated files; a raw
 colour (hex, rgb(), hsl(), a colour name) in the style or colour attributes or a <style> of a
-board outside an element marked data-keep (third-party logos); a data-go whose X.dc.html does
+board outside an element marked data-keep (third-party logos); any <dc-import>, {{ }}, <sc-for>
+or <sc-if> in a board; part content that is not what the generator writes (edit the part file);
+an unknown part, or a part marker without its closing marker; a link whose X.dc.html does
 not exist; a board file not in canvas.json or an entry without a file; and, in DesignRules, a
 token value or contrast ratio that does not match tokens.toml.
 (target) The Mac app's Swift colours are a future output of this tool.
@@ -77,8 +84,85 @@ def css(t):
     return "\n".join(out) + "\n"
 
 
-def canvas_and_twins():
-    """Return (canvas dict, {twin filename: text}, set of light boards)."""
+PART_OPEN = re.compile(r"^([ \t]*)<!-- part:(\w+)((?:\s+[\w-]+=\"[^\"]*\")*)\s*-->[ \t]*$", re.M)
+PART_ANY = re.compile(r"<!-- part:|<!-- /part -->")
+WRAP = re.compile(r"</helmet>\s*<div class=\"board\" style=\"display: contents;\">\n(.*)\n</div>\s*</x-dc>", re.S)
+RUNTIME = re.compile(r"<dc-import|\{\{|<sc-for|<sc-if")
+
+
+class PartError(Exception):
+    pass
+
+
+def part_body(name, stack=()):
+    """The flattened content of a part: its wrapper's inside, nested parts expanded, markers dropped."""
+    f = MOCK / f"{name}.dc.html"
+    if not f.exists():
+        raise PartError(f"unknown part {name} (no {name}.dc.html)")
+    if name in stack:
+        raise PartError(f"part cycle: {' > '.join(stack + (name,))}")
+    m = WRAP.search(f.read_text())
+    if not m:
+        raise PartError(f"{name}.dc.html has no <div class=\"board\" style=\"display: contents;\"> root inside <x-dc>")
+    return flatten(m.group(1), stack + (name,), keep_markers=False)
+
+
+def apply_params(name, body, attrs):
+    for key, val in attrs.items():
+        if key == "active":
+            tag = re.search(rf"<(\w+)\b[^>]*\bdata-item=\"{re.escape(val)}\"[^>]*>", body)
+            if not tag:
+                raise PartError(f"part {name}: no data-item=\"{val}\"")
+            t = tag.group(0)
+            if "aria-current" in t:
+                continue
+            body = body.replace(t, t[:-1] + ' aria-current="page">', 1)
+        else:
+            pat = re.compile(rf"(<(\w+)\b[^>]*\bdata-slot=\"{re.escape(key)}\"[^>]*>)(.*?)(</\2>)", re.S)
+            if not pat.search(body):
+                raise PartError(f"part {name}: no data-slot=\"{key}\"")
+            body = pat.sub(lambda m: m.group(1) + val + m.group(4), body, count=1)
+    return body
+
+
+def flatten(text, stack=(), keep_markers=True):
+    """Rewrite every part region in text. keep_markers=False drops the markers (for nesting)."""
+    out, pos = [], 0
+    while True:
+        m = PART_OPEN.search(text, pos)
+        if not m:
+            break
+        end = text.find("<!-- /part -->", m.end())
+        if end < 0:
+            raise PartError(f"part {m.group(2)} has no closing <!-- /part -->")
+        out.append(text[pos:m.start()])
+        indent, name = m.group(1), m.group(2)
+        attrs = dict(re.findall(r"([\w-]+)=\"([^\"]*)\"", m.group(3)))
+        body = apply_params(name, part_body(name, stack), attrs)
+        body = "\n".join(indent + ln if ln else ln for ln in body.split("\n"))
+        if keep_markers:
+            out.append(f"{m.group(0)}\n{body}\n{indent}<!-- /part -->")
+        else:
+            out.append(body)
+        pos = end + len("<!-- /part -->")
+    out.append(text[pos:])
+    res = "".join(out)
+    if keep_markers and re.search(r"<!-- /part -->", re.sub(r"<!-- part:.*?<!-- /part -->", "", res, flags=re.S)):
+        raise PartError("a closing <!-- /part --> has no opening marker")
+    return res
+
+
+def part_drift(src, want):
+    """Names of the parts whose region in src differs from what the generator writes."""
+    names = []
+    for a, b in zip(re.finditer(r"<!-- part:(\w+).*?<!-- /part -->", src, re.S), re.finditer(r"<!-- part:(\w+).*?<!-- /part -->", want, re.S)):
+        if a.group(0) != b.group(0):
+            names.append(a.group(1))
+    return names
+
+
+def canvas_and_twins(problems):
+    """Return (canvas dict, {twin filename: text})."""
     cv = json.loads(CANVAS.read_text())
     twins, new_boards = {}, {}
     light = {k for k, v in cv["boards"].items() if v["page"].endswith("-light")}
@@ -91,11 +175,14 @@ def canvas_and_twins():
         twin = name.replace(".dc.html", "Dark.dc.html")
         src = MOCK / name
         if src.exists():
-            txt = src.read_text()
+            try:
+                txt = flatten(src.read_text())
+            except PartError as e:
+                problems.append(f"{name}: {e}")
+                continue
             txt = re.sub(r"<title>(.*?)</title>", lambda m: f"<title>{m.group(1)} · dark</title>", txt, count=1)
             txt = re.sub(r"(</helmet>\s*<div)(?![^>]*data-theme)", r'\1 data-theme="dark"', txt, count=1)
             txt = re.sub(r'href="(\w+)\.dc\.html"', lambda m: f'href="{m.group(1)}Dark.dc.html"' if f"{m.group(1)}.dc.html" in light else m.group(0), txt)
-            txt = txt.replace("<dc-import ", '<dc-import dark="1" ')  # components keep their links in dark
             twins[twin] = txt
         d = dict(e, page=e["page"][:-6] + "-dark", title=e["title"] + " · dark")
         new_boards[twin] = d
@@ -109,7 +196,7 @@ class Scan(HTMLParser):
     def __init__(self):
         super().__init__()
         self.stack, self.problems, self.gos, self.text, self.ratios, self._r = [], [], [], [], {}, None
-        self.imports, self.nexts = [], []
+        self.nexts, self.in_part, self.parts = [], 0, 0
 
     def keep(self):
         return any(k for _, k, _ in self.stack)
@@ -122,10 +209,8 @@ class Scan(HTMLParser):
         a = dict(attrs)
         keep = "data-keep" in a
         m = tag == "a" and re.fullmatch(r"(\w+)\.dc\.html", a.get("href", ""))
-        if m:
+        if m and not self.in_part:
             self.gos.append(m.group(1))
-        if tag == "dc-import" and a.get("name"):
-            self.imports.append(a["name"])
         if "data-next" in a:
             self.nexts.append(a["data-next"])
         if tag == "button" and any(t == "a" and lk for t, _, lk in self.stack):
@@ -138,6 +223,14 @@ class Scan(HTMLParser):
                     self.problems.append(f"raw colour in <{tag} {k}=\"{v[:50]}\">")
         if tag not in VOID and not selfclose:
             self.stack.append((tag, keep, bool(m)))
+
+    def handle_comment(self, data):
+        d = data.strip()
+        if d.startswith("part:"):
+            self.in_part += 1
+            self.parts += 1
+        elif d == "/part":
+            self.in_part = max(0, self.in_part - 1)
 
     def handle_startendtag(self, tag, attrs):
         self.handle_starttag(tag, attrs, True)
@@ -187,10 +280,25 @@ def rules_problems(t, scan):
 def main():
     check = "--check" in sys.argv
     t = load()
-    cv, twins = canvas_and_twins()
+    problems = []
+    cv, twins = canvas_and_twins(problems)
     want = {MOCK / "tokens.css": css(t), CANVAS: json.dumps(cv, indent=2) + "\n"}
     want.update({MOCK / k: v for k, v in twins.items()})
-    problems = []
+    for f in sorted(MOCK.glob("*.dc.html")):  # light boards and parts: part regions must be what the generator writes
+        if f.name in twins:
+            continue
+        src = f.read_text()
+        try:
+            want[f] = flatten(src)
+        except PartError as e:
+            problems.append(f"{f.name}: {e}")
+            continue
+        if want[f] != src and check:
+            for n in part_drift(src, want[f]):
+                problems.append(f"{f.name}: part {n} is not what the generator writes; edit {n}.dc.html, not {f.name}, then run the generator")
+            want.pop(f)
+        if RUNTIME.search(src):
+            problems.append(f"{f.name}: <dc-import>, {{{{ }}}}, <sc-for> or <sc-if> (boards and parts are plain static files)")
     existing_twins = {p for p in MOCK.glob("*Dark.dc.html")}
     for f, txt in want.items():
         if not f.exists():
@@ -212,21 +320,23 @@ def main():
         s.feed(src)
         problems += [f"{f}: {x}" for x in s.problems]
         have = lambda g: (MOCK / f"{g}.dc.html").exists()
-        problems += [f"{f}: link to {g}.dc.html, which does not exist" for g in sorted(set(s.gos)) if not have(g)]
-        problems += [f"{f}: <dc-import name=\"{g}\"> has no {g}.dc.html" for g in sorted(set(s.imports)) if not have(g)]
+        is_part = cv["boards"].get(f, {}).get("page") == "components"
+        if is_part:  # a part's links to boards not drawn yet are planned
+            planned |= {g for g in s.gos if not have(g)}
+        else:
+            problems += [f"{f}: link to {g}.dc.html, which does not exist" for g in sorted(set(s.gos)) if not have(g)]
         problems += [f"{f}: data-next=\"{g}\" now exists, make it a link" for g in sorted(set(s.nexts)) if have(g)]
         planned |= {g for g in s.nexts if not have(g)}
-        # components list the boards their script links to in a "// links: A B" comment; a missing one is planned
-        planned |= {g for m in re.findall(r"// links: (.*)", src) for g in m.split() if not have(g)}
         page = cv["boards"].get(f, {}).get("page")
-        if (s.gos or s.imports) and page not in ("components", None) and not cv["boards"][f].get("is_interactive"):
-            problems.append(f"{f}: has links or imports but its canvas entry lacks is_interactive")
+        if (s.gos or s.parts) and page not in ("components", None) and not cv["boards"][f].get("is_interactive"):
+            problems.append(f"{f}: has links or parts but its canvas entry lacks is_interactive")
         if f == "DesignRules.dc.html":
             problems += [f"{f}: {x}" for x in rules_problems(t, s)]
     for f in ("components.css", "icons.css"):  # authored stylesheets: values only through var()
         body = re.sub(r"/\*.*?\*/", "", (MOCK / f).read_text(), flags=re.S)
         if Scan().raw(body):
             problems.append(f"{f}: raw colour (use var(--token))")
+    problems = list(dict.fromkeys(problems))
     if check:
         for x in problems:
             print("FAIL", x)
