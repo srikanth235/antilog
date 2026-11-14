@@ -68,6 +68,27 @@ One detail-page layout, one popover, one palette and one dialog. A new kind of t
 - **Same in every client.** If the web app, the macOS app, the CLI and MCP disagree about state or words, one is wrong.
 - **Status is never colour alone.** Every status and outcome has a word, and a status has its own icon shape.
 
+### Empty states
+
+One sentence and at most one action, no feature explanation. A list gets its own board only because the screen looks different. The sidebar is `SidebarEmpty` only when the organization has nothing at all. A count that is zero stays on screen (the Dashboard shows `$0`, `0×`), never hidden.
+
+| Screen | Empty when | Sentence | The one action | Board |
+| --- | --- | --- | --- | --- |
+| Projects | no project or experiment in the organization | No experiments yet. | New experiment | `HomeEmpty` |
+| Project | the project has no experiment | No experiments in this project yet. | New experiment (header) | `ProjectEmpty` |
+| Dashboard | no win yet; tiles show zeros and spend | No wins yet. | New experiment | `DashboardEmpty` |
+| Run history, Trials (Sandboxes the same) | nothing has run | No trials yet. | New experiment | `RunHistoryEmpty` |
+| Evaluations, Skills, Agents | none added | No evaluations / skills / agents yet. | Add evaluation / skill / agent | `EvaluationsEmpty`, `SkillsEmpty`, `AgentsEmpty` |
+| Plugins, Yours | none installed | No plugins installed. | Add plugin | `PluginsEmpty` |
+| Connectors | none added | No connectors yet. | Add connector | `ConnectorsEmpty` |
+| Search | no match | No results for “query”. | none | `SearchEmpty` |
+| Settings, Access tokens | you made none | No access tokens yet. | Create access token (row above) | `SettingsTokensEmpty` |
+| Settings, Notes | no note | No notes yet. | Add note (row above) | `SettingsNotesEmpty` |
+| Settings, Infrastructure | Ratchet cloud, no runner connected (self-hosted has the launcher built in) | No runner is connected to Ratchet cloud yet. | Start a runner | `InfrastructureEmpty` |
+| This machine (Mac) | the local runner is off | This Mac is not running agents. | Turn on | `MacThisMachineOff` |
+
+Never empty, so no board: Users and groups (you are in it, and one owner always remains), Audit logs (signing in is the first entry), Budgets, General and Single sign-on (settings rows, not lists), a thread (it starts as a Draft).
+
 ## Colour and type
 
 Midnight Brass. The values are in `design/tokens.toml`; these are the rules.

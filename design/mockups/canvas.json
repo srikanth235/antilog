@@ -40,8 +40,28 @@
     }
   ],
   "boards": {
+    "AddAgent.dc.html": {
+      "x": 12160,
+      "y": 6600,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Add agent",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AddAgentDark.dc.html": {
+      "x": 12160,
+      "y": 6600,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Add agent \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "AddBackend.dc.html": {
-      "x": 3040,
+      "x": 4560,
       "y": 8800,
       "w": 1440,
       "h": 900,
@@ -51,7 +71,7 @@
       "is_interactive": true
     },
     "AddBackendDark.dc.html": {
-      "x": 3040,
+      "x": 4560,
       "y": 8800,
       "w": 1440,
       "h": 900,
@@ -100,8 +120,68 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "AddEvaluation.dc.html": {
+      "x": 9120,
+      "y": 6600,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Add evaluation",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AddEvaluationDark.dc.html": {
+      "x": 9120,
+      "y": 6600,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Add evaluation \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AddPlugin.dc.html": {
+      "x": 13680,
+      "y": 6600,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Add plugin",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AddPluginDark.dc.html": {
+      "x": 13680,
+      "y": 6600,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Add plugin \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AddSkill.dc.html": {
+      "x": 10640,
+      "y": 6600,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Add skill",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AddSkillDark.dc.html": {
+      "x": 10640,
+      "y": 6600,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Add skill \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "AgentDetail.dc.html": {
-      "x": 6080,
+      "x": 10640,
       "y": 6600,
       "w": 1440,
       "h": 900,
@@ -111,7 +191,7 @@
       "is_interactive": true
     },
     "AgentDetailDark.dc.html": {
-      "x": 6080,
+      "x": 10640,
       "y": 6600,
       "w": 1440,
       "h": 900,
@@ -121,7 +201,7 @@
       "is_interactive": true
     },
     "Agents.dc.html": {
-      "x": 4560,
+      "x": 7600,
       "y": 6600,
       "w": 1440,
       "h": 900,
@@ -131,11 +211,31 @@
       "is_interactive": true
     },
     "AgentsDark.dc.html": {
-      "x": 4560,
+      "x": 7600,
       "y": 6600,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Agents \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AgentsEmpty.dc.html": {
+      "x": 9120,
+      "y": 6600,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Agents, empty",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AgentsEmptyDark.dc.html": {
+      "x": 9120,
+      "y": 6600,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Agents, empty \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -240,6 +340,26 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "DashboardEmpty.dc.html": {
+      "x": 1520,
+      "y": 5500,
+      "w": 1440,
+      "h": 900,
+      "title": "5 \u00b7 Dashboard, empty",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "DashboardEmptyDark.dc.html": {
+      "x": 1520,
+      "y": 5500,
+      "w": 1440,
+      "h": 900,
+      "title": "5 \u00b7 Dashboard, empty \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "DatasetHoldout.dc.html": {
       "x": 9120,
       "y": 7700,
@@ -277,7 +397,7 @@
       "page": "rules"
     },
     "EvaluationDetail.dc.html": {
-      "x": 1520,
+      "x": 3040,
       "y": 6600,
       "w": 1440,
       "h": 900,
@@ -287,7 +407,7 @@
       "is_interactive": true
     },
     "EvaluationDetailDark.dc.html": {
-      "x": 1520,
+      "x": 3040,
       "y": 6600,
       "w": 1440,
       "h": 900,
@@ -312,6 +432,26 @@
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Evaluations \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "EvaluationsEmpty.dc.html": {
+      "x": 1520,
+      "y": 6600,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Evaluations, empty",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "EvaluationsEmptyDark.dc.html": {
+      "x": 1520,
+      "y": 6600,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Evaluations, empty \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -376,8 +516,28 @@
       "expand": "fill",
       "is_interactive": true
     },
-    "LauncherDisconnected.dc.html": {
+    "InfrastructureEmpty.dc.html": {
       "x": 1520,
+      "y": 8800,
+      "w": 1440,
+      "h": 900,
+      "title": "8 \u00b7 Settings, Infrastructure, no runner",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "InfrastructureEmptyDark.dc.html": {
+      "x": 1520,
+      "y": 8800,
+      "w": 1440,
+      "h": 900,
+      "title": "8 \u00b7 Settings, Infrastructure, no runner \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "LauncherDisconnected.dc.html": {
+      "x": 3040,
       "y": 8800,
       "w": 1440,
       "h": 900,
@@ -387,7 +547,7 @@
       "is_interactive": true
     },
     "LauncherDisconnectedDark.dc.html": {
-      "x": 1520,
+      "x": 3040,
       "y": 8800,
       "w": 1440,
       "h": 900,
@@ -417,7 +577,7 @@
       "is_interactive": true
     },
     "MacMenuBarExtra.dc.html": {
-      "x": 1520,
+      "x": 3040,
       "y": 8800,
       "w": 1440,
       "h": 900,
@@ -427,7 +587,7 @@
       "is_interactive": true
     },
     "MacMenuBarExtraDark.dc.html": {
-      "x": 1520,
+      "x": 3040,
       "y": 8800,
       "w": 1440,
       "h": 900,
@@ -477,7 +637,7 @@
       "is_interactive": true
     },
     "MacRunnerBusy.dc.html": {
-      "x": 3040,
+      "x": 4560,
       "y": 8800,
       "w": 1440,
       "h": 900,
@@ -487,7 +647,7 @@
       "is_interactive": true
     },
     "MacRunnerBusyDark.dc.html": {
-      "x": 3040,
+      "x": 4560,
       "y": 8800,
       "w": 1440,
       "h": 900,
@@ -564,6 +724,26 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "MacThisMachineOff.dc.html": {
+      "x": 1520,
+      "y": 8800,
+      "w": 1440,
+      "h": 900,
+      "title": "8 \u00b7 Infrastructure, macOS, this machine off",
+      "page": "mac-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "MacThisMachineOffDark.dc.html": {
+      "x": 1520,
+      "y": 8800,
+      "w": 1440,
+      "h": 900,
+      "title": "8 \u00b7 Infrastructure, macOS, this machine off \u00b7 dark",
+      "page": "mac-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "NewExperiment.dc.html": {
       "x": 3040,
       "y": 2200,
@@ -624,8 +804,28 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "PluginDetail.dc.html": {
+      "x": 16720,
+      "y": 6600,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Plugin detail",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "PluginDetailDark.dc.html": {
+      "x": 16720,
+      "y": 6600,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Plugin detail \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "Plugins.dc.html": {
-      "x": 7600,
+      "x": 12160,
       "y": 6600,
       "w": 1440,
       "h": 900,
@@ -635,11 +835,71 @@
       "is_interactive": true
     },
     "PluginsDark.dc.html": {
-      "x": 7600,
+      "x": 12160,
       "y": 6600,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Plugins \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "PluginsEmpty.dc.html": {
+      "x": 13680,
+      "y": 6600,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Plugins, empty",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "PluginsEmptyDark.dc.html": {
+      "x": 13680,
+      "y": 6600,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Plugins, empty \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Project.dc.html": {
+      "x": 7600,
+      "y": 2200,
+      "w": 1440,
+      "h": 900,
+      "title": "2 \u00b7 Start, project",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "ProjectDark.dc.html": {
+      "x": 7600,
+      "y": 2200,
+      "w": 1440,
+      "h": 900,
+      "title": "2 \u00b7 Start, project \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "ProjectEmpty.dc.html": {
+      "x": 9120,
+      "y": 2200,
+      "w": 1440,
+      "h": 900,
+      "title": "2 \u00b7 Start, project, empty",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "ProjectEmptyDark.dc.html": {
+      "x": 9120,
+      "y": 2200,
+      "w": 1440,
+      "h": 900,
+      "title": "2 \u00b7 Start, project, empty \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -705,7 +965,7 @@
       "is_interactive": true
     },
     "RunHistory.dc.html": {
-      "x": 1520,
+      "x": 3040,
       "y": 5500,
       "w": 1440,
       "h": 900,
@@ -715,7 +975,7 @@
       "is_interactive": true
     },
     "RunHistoryDark.dc.html": {
-      "x": 1520,
+      "x": 3040,
       "y": 5500,
       "w": 1440,
       "h": 900,
@@ -724,8 +984,28 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "RunHistoryEmpty.dc.html": {
+      "x": 4560,
+      "y": 5500,
+      "w": 1440,
+      "h": 900,
+      "title": "5 \u00b7 Run history, empty",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "RunHistoryEmptyDark.dc.html": {
+      "x": 4560,
+      "y": 5500,
+      "w": 1440,
+      "h": 900,
+      "title": "5 \u00b7 Run history, empty \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "RunHistorySandboxes.dc.html": {
-      "x": 3040,
+      "x": 6080,
       "y": 5500,
       "w": 1440,
       "h": 900,
@@ -735,7 +1015,7 @@
       "is_interactive": true
     },
     "RunHistorySandboxesDark.dc.html": {
-      "x": 3040,
+      "x": 6080,
       "y": 5500,
       "w": 1440,
       "h": 900,
@@ -745,7 +1025,7 @@
       "is_interactive": true
     },
     "Search.dc.html": {
-      "x": 4560,
+      "x": 7600,
       "y": 5500,
       "w": 1440,
       "h": 900,
@@ -755,7 +1035,7 @@
       "is_interactive": true
     },
     "SearchDark.dc.html": {
-      "x": 4560,
+      "x": 7600,
       "y": 5500,
       "w": 1440,
       "h": 900,
@@ -765,7 +1045,7 @@
       "is_interactive": true
     },
     "SearchEmpty.dc.html": {
-      "x": 6080,
+      "x": 9120,
       "y": 5500,
       "w": 1440,
       "h": 900,
@@ -775,7 +1055,7 @@
       "is_interactive": true
     },
     "SearchEmptyDark.dc.html": {
-      "x": 6080,
+      "x": 9120,
       "y": 5500,
       "w": 1440,
       "h": 900,
@@ -805,7 +1085,7 @@
       "is_interactive": true
     },
     "SettingsAudit.dc.html": {
-      "x": 10640,
+      "x": 13680,
       "y": 9900,
       "w": 1440,
       "h": 900,
@@ -815,7 +1095,7 @@
       "is_interactive": true
     },
     "SettingsAuditDark.dc.html": {
-      "x": 10640,
+      "x": 13680,
       "y": 9900,
       "w": 1440,
       "h": 900,
@@ -825,7 +1105,7 @@
       "is_interactive": true
     },
     "SettingsBudgets.dc.html": {
-      "x": 4560,
+      "x": 6080,
       "y": 8800,
       "w": 1440,
       "h": 900,
@@ -835,7 +1115,7 @@
       "is_interactive": true
     },
     "SettingsBudgetsDark.dc.html": {
-      "x": 4560,
+      "x": 6080,
       "y": 8800,
       "w": 1440,
       "h": 900,
@@ -845,7 +1125,7 @@
       "is_interactive": true
     },
     "SettingsGeneral.dc.html": {
-      "x": 4560,
+      "x": 6080,
       "y": 9900,
       "w": 1440,
       "h": 900,
@@ -855,7 +1135,7 @@
       "is_interactive": true
     },
     "SettingsGeneralDark.dc.html": {
-      "x": 4560,
+      "x": 6080,
       "y": 9900,
       "w": 1440,
       "h": 900,
@@ -865,7 +1145,7 @@
       "is_interactive": true
     },
     "SettingsNotes.dc.html": {
-      "x": 9120,
+      "x": 10640,
       "y": 9900,
       "w": 1440,
       "h": 900,
@@ -875,11 +1155,31 @@
       "is_interactive": true
     },
     "SettingsNotesDark.dc.html": {
-      "x": 9120,
+      "x": 10640,
       "y": 9900,
       "w": 1440,
       "h": 900,
       "title": "9 \u00b7 Settings, Notes \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SettingsNotesEmpty.dc.html": {
+      "x": 12160,
+      "y": 9900,
+      "w": 1440,
+      "h": 900,
+      "title": "9 \u00b7 Settings, Notes, empty",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SettingsNotesEmptyDark.dc.html": {
+      "x": 12160,
+      "y": 9900,
+      "w": 1440,
+      "h": 900,
+      "title": "9 \u00b7 Settings, Notes, empty \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -913,7 +1213,7 @@
       "page": "components"
     },
     "SettingsReadOnly.dc.html": {
-      "x": 12160,
+      "x": 15200,
       "y": 9900,
       "w": 1440,
       "h": 900,
@@ -923,7 +1223,7 @@
       "is_interactive": true
     },
     "SettingsReadOnlyDark.dc.html": {
-      "x": 12160,
+      "x": 15200,
       "y": 9900,
       "w": 1440,
       "h": 900,
@@ -933,7 +1233,7 @@
       "is_interactive": true
     },
     "SettingsSso.dc.html": {
-      "x": 7600,
+      "x": 9120,
       "y": 9900,
       "w": 1440,
       "h": 900,
@@ -943,7 +1243,7 @@
       "is_interactive": true
     },
     "SettingsSsoDark.dc.html": {
-      "x": 7600,
+      "x": 9120,
       "y": 9900,
       "w": 1440,
       "h": 900,
@@ -972,8 +1272,28 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "SettingsTokensEmpty.dc.html": {
+      "x": 4560,
+      "y": 9900,
+      "w": 1440,
+      "h": 900,
+      "title": "9 \u00b7 Settings, Access tokens, empty",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SettingsTokensEmptyDark.dc.html": {
+      "x": 4560,
+      "y": 9900,
+      "w": 1440,
+      "h": 900,
+      "title": "9 \u00b7 Settings, Access tokens, empty \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "SettingsUsers.dc.html": {
-      "x": 6080,
+      "x": 7600,
       "y": 9900,
       "w": 1440,
       "h": 900,
@@ -983,7 +1303,7 @@
       "is_interactive": true
     },
     "SettingsUsersDark.dc.html": {
-      "x": 6080,
+      "x": 7600,
       "y": 9900,
       "w": 1440,
       "h": 900,
@@ -998,7 +1318,26 @@
       "w": 256,
       "h": 900,
       "title": "Sidebar",
-      "page": "components"
+      "page": "components",
+      "is_interactive": true
+    },
+    "SidebarEmpty.dc.html": {
+      "x": 3120,
+      "y": 0,
+      "w": 256,
+      "h": 900,
+      "title": "Sidebar, empty",
+      "page": "components",
+      "is_interactive": true
+    },
+    "SidebarFoot.dc.html": {
+      "x": 2840,
+      "y": 0,
+      "w": 256,
+      "h": 70,
+      "title": "Sidebar foot",
+      "page": "components",
+      "is_interactive": true
     },
     "SidebarRows.dc.html": {
       "x": 2280,
@@ -1006,7 +1345,17 @@
       "w": 256,
       "h": 900,
       "title": "Sidebar rows",
-      "page": "components"
+      "page": "components",
+      "is_interactive": true
+    },
+    "SidebarTop.dc.html": {
+      "x": 2560,
+      "y": 0,
+      "w": 256,
+      "h": 230,
+      "title": "Sidebar top",
+      "page": "components",
+      "is_interactive": true
     },
     "SignIn.dc.html": {
       "x": 0,
@@ -1068,8 +1417,28 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "SkillDetail.dc.html": {
+      "x": 15200,
+      "y": 6600,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Skill detail",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SkillDetailDark.dc.html": {
+      "x": 15200,
+      "y": 6600,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Skill detail \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "Skills.dc.html": {
-      "x": 3040,
+      "x": 4560,
       "y": 6600,
       "w": 1440,
       "h": 900,
@@ -1079,11 +1448,31 @@
       "is_interactive": true
     },
     "SkillsDark.dc.html": {
-      "x": 3040,
+      "x": 4560,
       "y": 6600,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Skills \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SkillsEmpty.dc.html": {
+      "x": 6080,
+      "y": 6600,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Skills, empty",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SkillsEmptyDark.dc.html": {
+      "x": 6080,
+      "y": 6600,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Skills, empty \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -1616,16 +2005,26 @@
   "attachments": {},
   "designSystems": [],
   "order": [
+    "AddAgent.dc.html",
+    "AddAgentDark.dc.html",
     "AddBackend.dc.html",
     "AddBackendDark.dc.html",
     "AddConnector.dc.html",
     "AddConnectorDark.dc.html",
     "AddConnectorMcp.dc.html",
     "AddConnectorMcpDark.dc.html",
+    "AddEvaluation.dc.html",
+    "AddEvaluationDark.dc.html",
+    "AddPlugin.dc.html",
+    "AddPluginDark.dc.html",
+    "AddSkill.dc.html",
+    "AddSkillDark.dc.html",
     "AgentDetail.dc.html",
     "AgentDetailDark.dc.html",
     "Agents.dc.html",
     "AgentsDark.dc.html",
+    "AgentsEmpty.dc.html",
+    "AgentsEmptyDark.dc.html",
     "ConnectorDetail.dc.html",
     "ConnectorDetailDark.dc.html",
     "ConnectorError.dc.html",
@@ -1636,6 +2035,8 @@
     "ConnectorsEmptyDark.dc.html",
     "Dashboard.dc.html",
     "DashboardDark.dc.html",
+    "DashboardEmpty.dc.html",
+    "DashboardEmptyDark.dc.html",
     "DatasetHoldout.dc.html",
     "DatasetHoldoutDark.dc.html",
     "Decisions.dc.html",
@@ -1644,12 +2045,16 @@
     "EvaluationDetailDark.dc.html",
     "Evaluations.dc.html",
     "EvaluationsDark.dc.html",
+    "EvaluationsEmpty.dc.html",
+    "EvaluationsEmptyDark.dc.html",
     "Home.dc.html",
     "HomeDark.dc.html",
     "HomeEmpty.dc.html",
     "HomeEmptyDark.dc.html",
     "Infrastructure.dc.html",
     "InfrastructureDark.dc.html",
+    "InfrastructureEmpty.dc.html",
+    "InfrastructureEmptyDark.dc.html",
     "LauncherDisconnected.dc.html",
     "LauncherDisconnectedDark.dc.html",
     "MacMain.dc.html",
@@ -1669,14 +2074,24 @@
     "MacSignInDark.dc.html",
     "MacThisMachine.dc.html",
     "MacThisMachineDark.dc.html",
+    "MacThisMachineOff.dc.html",
+    "MacThisMachineOffDark.dc.html",
     "NewExperiment.dc.html",
     "NewExperimentDark.dc.html",
     "NewExperimentDraft.dc.html",
     "NewExperimentDraftDark.dc.html",
     "NewExperimentEnvironment.dc.html",
     "NewExperimentEnvironmentDark.dc.html",
+    "PluginDetail.dc.html",
+    "PluginDetailDark.dc.html",
     "Plugins.dc.html",
     "PluginsDark.dc.html",
+    "PluginsEmpty.dc.html",
+    "PluginsEmptyDark.dc.html",
+    "Project.dc.html",
+    "ProjectDark.dc.html",
+    "ProjectEmpty.dc.html",
+    "ProjectEmptyDark.dc.html",
     "ResultLineage.dc.html",
     "ResultLineageDark.dc.html",
     "ResultOpenPR.dc.html",
@@ -1685,6 +2100,8 @@
     "ResultReceiptDark.dc.html",
     "RunHistory.dc.html",
     "RunHistoryDark.dc.html",
+    "RunHistoryEmpty.dc.html",
+    "RunHistoryEmptyDark.dc.html",
     "RunHistorySandboxes.dc.html",
     "RunHistorySandboxesDark.dc.html",
     "Search.dc.html",
@@ -1701,6 +2118,8 @@
     "SettingsGeneralDark.dc.html",
     "SettingsNotes.dc.html",
     "SettingsNotesDark.dc.html",
+    "SettingsNotesEmpty.dc.html",
+    "SettingsNotesEmptyDark.dc.html",
     "SettingsProfile.dc.html",
     "SettingsProfileDark.dc.html",
     "SettingsRail.dc.html",
@@ -1710,18 +2129,27 @@
     "SettingsSsoDark.dc.html",
     "SettingsTokens.dc.html",
     "SettingsTokensDark.dc.html",
+    "SettingsTokensEmpty.dc.html",
+    "SettingsTokensEmptyDark.dc.html",
     "SettingsUsers.dc.html",
     "SettingsUsersDark.dc.html",
     "Sidebar.dc.html",
+    "SidebarEmpty.dc.html",
+    "SidebarFoot.dc.html",
     "SidebarRows.dc.html",
+    "SidebarTop.dc.html",
     "SignIn.dc.html",
     "SignInDark.dc.html",
     "SignInError.dc.html",
     "SignInErrorDark.dc.html",
     "SignInNoAccess.dc.html",
     "SignInNoAccessDark.dc.html",
+    "SkillDetail.dc.html",
+    "SkillDetailDark.dc.html",
     "Skills.dc.html",
     "SkillsDark.dc.html",
+    "SkillsEmpty.dc.html",
+    "SkillsEmptyDark.dc.html",
     "ThreadBudgetHit.dc.html",
     "ThreadBudgetHitDark.dc.html",
     "ThreadFailed.dc.html",

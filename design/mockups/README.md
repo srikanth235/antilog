@@ -5,7 +5,7 @@ One board per screen state, for the web app and the macOS app (target). There is
 ## What is here
 
 - `*.dc.html`: boards, each one fixed-size root element. Web boards are 1440 by 900; the rules boards are taller.
-- Parts, the shared chrome, on the Components page: `Sidebar`, `MacSidebar` (the macOS variant, its own part) and `SettingsRail`. A part is a plain static board; the generator inserts its content into every board that marks a place for it (see Parts below). The top bar and the macOS toolbar vary per screen, so they are board content, not parts.
+- Parts, the shared chrome, on the Components page: `Sidebar`, `SidebarEmpty` (no rows, for an empty organization), `MacSidebar` (the macOS variant, its own part), `SettingsRail`, and the nested pieces `SidebarRows`, `SidebarTop` and `SidebarFoot`. A part is a plain static board; the generator inserts its content into every board that marks a place for it (see Parts below). The top bar and the macOS toolbar vary per screen, so they are board content, not parts.
 - `canvas.json`: the pages and where each board sits. Pages: Design rules, Components, Web light, Web dark, macOS light, macOS dark, Archive. Rows are 1100px apart and each has a title note: 0 Rules, 1 Sign in, 2 Start, 3 Thread, 4 Results, 5 History, 6 Customize, 7 Connectors, 8 Infrastructure, 9 Organization. Boards in a row are 1440 wide with 80px gaps.
 - `tokens.css` (generated), `icons.css` and `components.css` (authored, values only through `var()`). Boards are plain files with no runtime: open one from disk.
 - `DesignRules.dc.html` shows every token in light and dark with its contrast ratio, the type scale, radii and button kinds. `Decisions.dc.html` lists the owner's calls, DECIDED with a date or OPEN.
