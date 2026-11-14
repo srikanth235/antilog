@@ -9,10 +9,10 @@
 
 ## How each is checked
 
-**Tamper-proof.** Check: a test that an agent identity cannot read a holdout-marked dataset, run against the single place that enforces grants. Partly exists for the sealed bucket: the infra module denies agent roles, covered by `infra/tests/src/agent-boundary.test.ts` and `infra/aws/tests/sandbox.tftest.hcl`. A check at the credential level is to add: the credential minted for an agent is refused by the source when it reads holdout data, run against each connector. Datasets and connectors do not exist yet.
+**Tamper-proof.** Check: a test that an agent identity cannot read a holdout-marked dataset, run against the single place that enforces grants. Partly exists for the sealed bucket: the infra module denies agent roles, covered by `infra/tests/src/agent-boundary.test.ts` and `infra/aws/tests/sandbox.tftest.hcl`. A check at the credential level is to add: the credential minted for an agent is refused by the connector when it reads holdout data, run against each connector. Datasets and connectors do not exist yet.
 
 **Pinned.** Check: a test that a run record lists a version for every dataset the benchmark read and every skill pack agents read, and that a read of an unpinned name fails. To add. The ledger has no dataset versions today.
 
-**Stays put.** Check: a test that no Ratchet server route returns dataset rows, and that the server holds no connector credential and opens no connection to a source. To add. Today the daemon runs on the user's machine and there is no Ratchet-operated server, so the promise holds by construction, not by test.
+**Stays put.** Check: a test that no Ratchet server route returns dataset rows, and that the server holds no connector credential and opens no connection to an outside system. To add. Today the daemon runs on the user's machine and there is no Ratchet-operated server, so the promise holds by construction, not by test.
 
 **Read-only.** Check: every connector mints read-only credentials, a test per connector tries a write and expects a refusal, and every write-back is a named action in the audit log. To add. Today the one write-out, a pull request, is made by the engine through `crates/ratchet-github/src/github_host.rs` with no audit entry.

@@ -233,7 +233,7 @@
       plRemoving: !!detPlugin && s.plRemove === detPlugin.id, plKeep: () => detPlugin && removePlugin(detPlugin, false), plDrop: () => detPlugin && removePlugin(detPlugin, true), plCancel: () => this.setState({ plRemove: null }),
       plAddNote: detPlugin && !plYours ? (plNew ? 'Adds ' + plNew + (plNew === 1 ? ' item' : ' items') + ' to Yours.' : 'Everything it contains is already in Yours.') : '',
       dReconnect: detKind === 'conn' && !!s.reconnect[conn.id],
-      reconnect: () => { this.setState((st) => ({ reconnect: { ...st.reconnect, [conn.id]: false }, cNotice: conn.name + ' reconnected.' })); this.log('source.reconnect', conn.name); },
+      reconnect: () => { this.setState((st) => ({ reconnect: { ...st.reconnect, [conn.id]: false }, cNotice: conn.name + ' reconnected.' })); this.log('connector.reconnect', conn.name); },
       // eval
       eKv: detEval ? [['Primary metric', detEval.metric], ['Unit', detEval.fmt[1].trim() || detEval.fmt[0] || 'score'], ['Direction', this.cap1(detEval.dir) + ' is better'], ['Baseline', this.fv(detEval, detEval.base)], ['Command', detEval.cmd]].map(([k, v]) => ({ k, v, mono: k === 'Command' ? 'mono xs' : '' })) : [],
       eCal: detEval ? [['Last calibrated', detEval.cal], ['Noise', '±' + detEval.n + '% over ' + detEval.runs + ' baseline runs'], ['Acceptance', 'A win must beat twice the noise (' + (2 * detEval.n).toFixed(1) + '%)']].map(([k, v]) => ({ k, v })) : [],
@@ -250,7 +250,7 @@
       disconnect: () => {
         if (conn.id === 'rh') return;
         this.setState((st) => ({ connectors: st.connectors.filter((c) => c.id !== conn.id), clouds: conn.cloud ? { ...st.clouds, [conn.cloud]: false } : st.clouds, d: conn.cloud && st.d.env === conn.cloud ? { ...st.d, env: 'aws' } : st.d, screen: 'customize', cTab: 'conn', cView: 'yours', ...custReset }));
-        this.log('source.remove', conn.kind + ' · ' + conn.name);
+        this.log('connector.remove', conn.kind + ' · ' + conn.name);
       },
       canDisconnect: detKind === 'conn' && conn.id !== 'rh',
       dsRows: connDs.map((x) => {

@@ -2101,7 +2101,7 @@ const addConn = (cx) => {
 if (isY('conn', cx.id)) return;
 const isCloud = cx.cat === 'Cloud';
 this.setState((st) => ({ connectors: [mkConn(cx), ...st.connectors], clouds: isCloud ? { ...st.clouds, [cx.id]: true } : st.clouds, ...note(cx.name + ' added to Yours.') }));
-this.log(isCloud ? 'cloud.connect' : 'source.add', isCloud ? cx.name : cx.name + ' · ' + cx.def);
+this.log(isCloud ? 'cloud.connect' : 'connector.add', isCloud ? cx.name : cx.name + ' · ' + cx.def);
 };
 const addEval = (e) => { if (isY('eval', e.id)) return; this.setState((st) => ({ evals: [...st.evals, mkEval(e)], ...note(e.name + ' added to Yours. It can now be chosen in a new experiment.') })); this.log('evaluation.add', e.name + ' · template'); };
 const addAgent = (g) => { if (isY('agent', g.id)) return; this.setState((st) => ({ agentList: [...st.agentList, mkAgent(g)], agents: { ...st.agents, [g.id]: true }, ...note(g.name + ' added to Yours and switched on.') })); this.log('agent.add', g.name + ' · ' + g.provider); };
@@ -2176,7 +2176,7 @@ const done = (tb, m, extra) => this.setState({ form: null, ff: { a: '', b: '', c
 const slug = (x) => x.split(/[\/\\]/).filter(Boolean).pop() || x;
 const title = (x) => this.cap1(slug(x).replace(/\.git$/, '').replace(/[-_]+/g, ' '));
 const sk = (name, desc, sec) => ({ id: 'sk' + id, name, desc, cat: 'Conventions', byk: 'T', used: 0, ver: '1.0', ev: ['*'], sec, gl: 'g-book', yours: true });
-if (f === 'conn') { if (!a) return; this.setState((st) => ({ connectors: [{ id: 'x' + id, name: a, desc: b ? 'MCP server · ' + b : 'Custom MCP server', cat: 'Data', kind: 'MCP server', used: 0, added: true, gl: 'g-code' }, ...st.connectors] })); done('conn', a + ' added to Yours.'); this.log('source.add', 'MCP server · ' + a); }
+if (f === 'conn') { if (!a) return; this.setState((st) => ({ connectors: [{ id: 'x' + id, name: a, desc: b ? 'MCP server · ' + b : 'Custom MCP server', cat: 'Data', kind: 'MCP server', used: 0, added: true, gl: 'g-code' }, ...st.connectors] })); done('conn', a + ' added to Yours.'); this.log('connector.add', 'MCP server · ' + a); }
 else if (f === 'evrepo') { if (!a) return; this.setState((st) => ({ evals: [...st.evals, { id: 'ev' + id, name: a, cat: 'Quality', desc: b ? 'Defined in ' + b : 'Defined in the repository', metric: 'Score from ' + (b || 'the repository'), fmt: ['', '', 2], dir: 'higher', base: 1, n: 2, cmd: b || 'bench/run.sh', cal: 'Not yet', runs: 0, used: 0, path: 'src', ho: 'ho_checkout', kw: a.toLowerCase(), ideas: K.GEN }] })); done('eval', a + ' added to Yours. It can now be chosen in a new experiment.'); this.log('evaluation.add', a + ' · ' + (b || 'repository')); }
 else if (f === 'skillw') { if (!a) return; this.setState((st) => ({ skills: [...st.skills, sk(a, b || 'Written by your team', [['SKILL.md', 'Overview', c || 'Describe what agents should know before they touch this part of the code.']])] })); done('skill', a + ' added to Yours. Agents can read it in new experiments.'); this.log('skill.add', a + ' · written'); }
 else if (f === 'skillr') { if (!a) return; const nm = b || title(a); this.setState((st) => ({ skills: [...st.skills, sk(nm, 'Imported from ' + a, [['SKILL.md', 'Overview', 'Imported from ' + a + ' at main@9f3c1e7. Agents read the Markdown files in this folder.'], ['SKILL.md', 'Files', 'One file per topic. Re-import to pick up newer commits.']])] })); done('skill', nm + ' imported from ' + a + '.'); this.log('skill.add', nm + ' · import'); }
@@ -2302,11 +2302,11 @@ const people = [
 { id: 'jun', name: 'Jun Park', email: 'jun@acme.com', source: 'invited by Priya' },
 { id: 'ci', name: 'ci-bot', email: 'Service principal · token ends 7f2a', source: 'created by Jun' }
 ];
-const actLabels = { 'optimization.create': 'Experiment created', 'run.start': 'Run started', 'run.stop': 'Run stopped', 'pull_request.open': 'Pull request opened', 'note.send': 'Note added', 'source.add': 'Connector added', 'source.remove': 'Connector removed', 'marking.set': 'Marking changed', 'grant.change': 'Permission changed', 'cloud.connect': 'Cloud connector added', 'agent.enable': 'Agent enabled', 'agent.disable': 'Agent disabled', 'agent.add': 'Agent added', 'evaluation.add': 'Evaluation added', 'evaluation.calibrate': 'Evaluation recalibrated', 'skill.add': 'Skill added', 'skill.remove': 'Skill removed', 'plugin.add': 'Plugin added', 'plugin.remove': 'Plugin removed', 'source.reconnect': 'Connector reconnected', 'budget.change': 'Budget changed', 'role.change': 'Role changed', 'signin.change': 'Single sign-on changed', 'token.create': 'Access token created', 'token.revoke': 'Access token revoked' };
+const actLabels = { 'optimization.create': 'Experiment created', 'run.start': 'Run started', 'run.stop': 'Run stopped', 'pull_request.open': 'Pull request opened', 'note.send': 'Note added', 'connector.add': 'Connector added', 'connector.remove': 'Connector removed', 'marking.set': 'Marking changed', 'grant.change': 'Permission changed', 'cloud.connect': 'Cloud connector added', 'agent.enable': 'Agent enabled', 'agent.disable': 'Agent disabled', 'agent.add': 'Agent added', 'evaluation.add': 'Evaluation added', 'evaluation.calibrate': 'Evaluation recalibrated', 'skill.add': 'Skill added', 'skill.remove': 'Skill removed', 'plugin.add': 'Plugin added', 'plugin.remove': 'Plugin removed', 'connector.reconnect': 'Connector reconnected', 'budget.change': 'Budget changed', 'role.change': 'Role changed', 'signin.change': 'Single sign-on changed', 'token.create': 'Access token created', 'token.revoke': 'Access token revoked' };
 const actColor = (x) => {
 const p = x.split('.')[0];
 if (['optimization', 'run', 'pull_request', 'evaluation'].includes(p)) return 'var(--accent)';
-if (['source', 'marking', 'grant', 'note', 'skill', 'plugin'].includes(p)) return 'var(--good)';
+if (['connector', 'marking', 'grant', 'note', 'skill', 'plugin'].includes(p)) return 'var(--good)';
 if (['cloud', 'agent', 'budget'].includes(p)) return 'var(--infra)';
 return 'var(--ink3)';
 };
@@ -2695,7 +2695,7 @@ plAskRemove: () => { if (!detPlugin) return; if (plHasRec) this.setState({ plRem
 plRemoving: !!detPlugin && s.plRemove === detPlugin.id, plKeep: () => detPlugin && removePlugin(detPlugin, false), plDrop: () => detPlugin && removePlugin(detPlugin, true), plCancel: () => this.setState({ plRemove: null }),
 plAddNote: detPlugin && !plYours ? (plNew ? 'Adds ' + plNew + (plNew === 1 ? ' item' : ' items') + ' to Yours.' : 'Everything it contains is already in Yours.') : '',
 dReconnect: detKind === 'conn' && !!s.reconnect[conn.id],
-reconnect: () => { this.setState((st) => ({ reconnect: { ...st.reconnect, [conn.id]: false }, cNotice: conn.name + ' reconnected.' })); this.log('source.reconnect', conn.name); },
+reconnect: () => { this.setState((st) => ({ reconnect: { ...st.reconnect, [conn.id]: false }, cNotice: conn.name + ' reconnected.' })); this.log('connector.reconnect', conn.name); },
 // eval
 eKv: detEval ? [['Primary metric', detEval.metric], ['Unit', detEval.fmt[1].trim() || detEval.fmt[0] || 'score'], ['Direction', this.cap1(detEval.dir) + ' is better'], ['Baseline', this.fv(detEval, detEval.base)], ['Command', detEval.cmd]].map(([k, v]) => ({ k, v, mono: k === 'Command' ? 'mono xs' : '' })) : [],
 eCal: detEval ? [['Last calibrated', detEval.cal], ['Noise', '±' + detEval.n + '% over ' + detEval.runs + ' baseline runs'], ['Acceptance', 'A win must beat twice the noise (' + (2 * detEval.n).toFixed(1) + '%)']].map(([k, v]) => ({ k, v })) : [],
@@ -2712,7 +2712,7 @@ aTrials, aTrialsEmpty: aTrials.length === 0,
 disconnect: () => {
 if (conn.id === 'rh') return;
 this.setState((st) => ({ connectors: st.connectors.filter((c) => c.id !== conn.id), clouds: conn.cloud ? { ...st.clouds, [conn.cloud]: false } : st.clouds, d: conn.cloud && st.d.env === conn.cloud ? { ...st.d, env: 'aws' } : st.d, screen: 'customize', cTab: 'conn', cView: 'yours', ...custReset }));
-this.log('source.remove', conn.kind + ' · ' + conn.name);
+this.log('connector.remove', conn.kind + ' · ' + conn.name);
 },
 canDisconnect: detKind === 'conn' && conn.id !== 'rh',
 dsRows: connDs.map((x) => {

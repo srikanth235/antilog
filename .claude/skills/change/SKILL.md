@@ -1,7 +1,7 @@
 ---
 name: change
 description: >-
-  How does this kind of change travel through the layers? Use to add or change an API endpoint, a write, a live event, a ledger table or migration, or a screen; or to add a benchmark kind, subject kind, accept rule, source, dataset kind, marking, cloud, agent, environment, role, sign-in provider or audited action.
+  How does this kind of change travel through the layers? Use to add or change an API endpoint, a write, a live event, a ledger table or migration, or a screen; or to add a benchmark kind, subject kind, accept rule, connector, dataset kind, marking, cloud, agent, environment, role, sign-in provider or audited action.
 ---
 
 # Change
@@ -18,7 +18,7 @@ A change crosses layers that must agree: Rust types, the generated OpenAPI file,
 | A benchmark kind | [optimization/add-benchmark-kind.md](../optimization/add-benchmark-kind.md) |
 | A subject kind (what may change) | [optimization/add-subject-kind.md](../optimization/add-subject-kind.md) |
 | The accept rule | [optimization/change-accept-rule.md](../optimization/change-accept-rule.md) |
-| A source | [context/add-source.md](../context/add-source.md) |
+| A connector | [context/add-connector.md](../context/add-connector.md) |
 | A dataset kind | [context/add-dataset-kind.md](../context/add-dataset-kind.md) |
 | A marking (such as the holdout) | [context/add-marking.md](../context/add-marking.md) |
 | A cloud | [infra/add-cloud.md](../infra/add-cloud.md) |

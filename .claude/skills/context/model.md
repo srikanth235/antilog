@@ -1,13 +1,13 @@
 # Context: objects and words
 
-`docs/GLOSSARY.md` defines "Note" and "Connectors". This file keeps the glossary's Note. The glossary's "connector" means a signed-in account today (GitHub, AWS, an agent login). The target word for a connection to a data system is "source" (on screen: "connector"). Say which one you mean.
+`docs/GLOSSARY.md` defines "Note" and "Connector". This file keeps the glossary's Note. In the target, "connector" is the connection to an outside system, on screen and in code. Today's "connector" is a signed-in account (GitHub, AWS, an agent login) in the earlier code. Do not say "source" for either.
 
 | Object | Means | Not |
 | --- | --- | --- |
-| source | A connection to an outside system that the agent's code reads through: Snowflake, Databricks, DynamoDB, BigQuery, Postgres, S3, GitHub, GitLab, any MCP server. Screen word: connector. It knows how to mint a scoped credential for its system | a dataset, a credential, a pipe that Ratchet reads through |
-| scoped credential | A short-lived, read-only credential for one source, minted per run by the launcher. The agent's has the holdout left out; the evaluator's is separate and includes it | a stored secret, the connector admin secret |
+| connector | A connection to an outside system that the agent's code reads through: Snowflake, Databricks, DynamoDB, BigQuery, Postgres, S3, GitHub, GitLab, any MCP server. It knows how to mint a scoped credential for its system | a dataset, a credential, a pipe that Ratchet reads through, "source" (the old word) |
+| scoped credential | A short-lived, read-only credential for one connector, minted per run by the launcher. The agent's has the holdout left out; the evaluator's is separate and includes it | a stored secret, the connector admin secret |
 | connector admin secret | The secret the launcher uses to mint scoped credentials. It stays in the customer's infrastructure, in their secret manager, and no agent or server ever holds it | a scoped credential |
-| dataset | A named, governed table or file set that experiments read. Ratchet records its id and versions, never its rows | a source, a query |
+| dataset | A named, governed table or file set that experiments read. Ratchet records its id and versions, never its rows | a connector, a query |
 | dataset version | One immutable state of a dataset, with an id | latest, a snapshot someone can edit |
 | virtual dataset | A dataset that points at data left in place, pinned by an as-of time | a copy |
 | grant | A rule that says which audience gets a scoped credential that reaches a dataset | a credential |
@@ -17,15 +17,15 @@
 | skill pack | A versioned pack of written know-how that agents read before proposing changes, for example "Postgres query tuning". Screen word: Skill. Audience: agents only | a dataset, an agent instruction file in `.claude/skills/`, a plugin |
 | note | Text left on a run to steer the next candidate (glossary) | comment, prompt |
 | history | Every past attempt and its result, failures included, stored as a dataset | a log |
-| write-back action | A separate, explicit, audited action that writes to an outside system, such as opening a pull request; requested by an optimization | a source feature |
+| write-back action | A separate, explicit, audited action that writes to an outside system, such as opening a pull request; requested by an optimization | a connector feature |
 
 ## Skill pack
 
 A skill pack is not the agent guidance in this repo's `.claude/skills/`; that is for people and agents working on Ratchet's code. A skill pack is a product object. It has a version, it is chosen per experiment and it can be turned On or Off per project. The experiment records which skill versions were read. A plugin may bring skill packs, but a pack is governed here, whatever added it.
 
-## Source kinds
+## Connector kinds
 
-Snowflake, Databricks, DynamoDB, BigQuery, Postgres, S3, GitHub, GitLab, any MCP server. Each has one translator and one way to mint a scoped, read-only, holdout-excluding credential. None is built as a source today.
+Snowflake, Databricks, DynamoDB, BigQuery, Postgres, S3, GitHub, GitLab, any MCP server. Each has one translator and one way to mint a scoped, read-only, holdout-excluding credential. None is built as a connector today.
 
 ## How data is read
 

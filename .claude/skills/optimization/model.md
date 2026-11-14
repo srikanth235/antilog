@@ -22,6 +22,6 @@ Where `docs/GLOSSARY.md` already defines a word, this file keeps its meaning and
 
 ## How this area refers to the others
 
-- Context: by dataset id and dataset version only. A benchmark names the exact versions it reads. It never names a source, a connector or a credential.
+- Context: by dataset id and dataset version only. A benchmark names the exact versions it reads. It never names a connector or a credential.
 - Infra: by environment id and machine type only. A benchmark names the environment it is measured in. It never names a provider, region or instance id.
 - Organization: by project id. Every optimization belongs to one project.

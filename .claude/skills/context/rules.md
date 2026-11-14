@@ -5,7 +5,7 @@
 - Give the evaluator its own credential that includes the holdout, because the holdout is enforced by credentials and the agent's must never be able to reach it.
 - Keep connector admin secrets in the customer's infrastructure, in their secret manager, used only by the launcher to mint scoped credentials, because the server must hold no access to customer data.
 - Never change a dataset version after it is created, because a run that names a version must be reproducible.
-- Treat the code host as a source here, and a pull request as a write-back action requested by optimization, because writing out must be explicit and audited.
+- Treat the code host as a connector here, and a pull request as a write-back action requested by optimization, because writing out must be explicit and audited.
 - Give each outside system exactly one translator and stop its vocabulary there, because a second translator forks the meaning of a column.
 - Build no transforms or pipelines. The customer prepares data in their own warehouse, because a transform layer makes Ratchet responsible for data quality it cannot see.
 - Never connect the Ratchet server to data and never route dataset rows through it, because data stays in the customer's infrastructure. The agent's code reads through connectors.

@@ -31,7 +31,7 @@ Use the governing principles and the non-goals below as settled. Apply them dire
 | What we decided not to build | [non-goals.md](non-goals.md) |
 | Boundaries between areas, and the open questions | [rulings.md](rulings.md) |
 | The benchmark, the accept rule, what may change | [optimization owes](../optimization/owes.md), [rules](../optimization/rules.md) |
-| Sources, datasets, grants, the holdout, notes | [context owes](../context/owes.md), [rules](../context/rules.md) |
+| Connectors, datasets, grants, the holdout, notes | [context owes](../context/owes.md), [rules](../context/rules.md) |
 | Clouds, environments, workspaces, agents, budgets, clean-up | [infra owes](../infra/owes.md), [rules](../infra/rules.md) |
 | Members, roles, sign-in, tokens, the audit log | [organization owes](../organization/owes.md), [rules](../organization/rules.md) |
 | The web client's shape, skills and plugins | [rulings.md](rulings.md) |

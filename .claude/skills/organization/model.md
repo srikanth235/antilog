@@ -5,7 +5,7 @@
 | Object | Means | Not |
 | --- | --- | --- |
 | organization | The top owner of projects, members and settings; every table row carries one | a GitHub org, a cloud account |
-| project | A unit of work inside an organization; optimizations, sources and accounts belong to one | a repo |
+| project | A unit of work inside an organization; optimizations, connectors and accounts belong to one | a repo |
 | member | A person in an organization, known by an identity from a sign-in provider | an account with a password |
 | role | What a member may do on a project: owner, editor or viewer | a job title |
 | group mapping | A rule that maps a group claim from the identity provider to a role | a separate permission system |

@@ -25,7 +25,7 @@ The table above is the vocabulary of the daemon, the CLI and the docs today. The
 | Experiment | A goal Ratchet works on, opened as one thread | Optimization |
 | Trial | One change an agent proposed and the evaluator measured | Candidate |
 | Evaluation | The trusted measurement, added under Customize | Benchmark |
-| Connector | A connection to an outside system that datasets come from | Connector (a signed-in account) |
+| Connector | A connection to an outside system that datasets come from. Do not say "source" | Connector (a signed-in account) |
 | Skill | A versioned pack of know-how agents read. Not the agent guidance in `.claude/skills/` | none |
 | Plugin | A bundle that adds evaluations, skills, connectors and agents for a domain | none |
 | Customize | One page with Evaluations, Skills, Connectors, Agents and Plugins | none |

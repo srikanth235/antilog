@@ -14,7 +14,7 @@ The web client (target, mockup in `design/web/`) is organised around experiments
 | project | Projects | Foundry |
 | value | Dashboard | Databricks |
 | find anything | Search | |
-| evaluations, skill packs, sources, agents, plugins | Customize, with tabs Evaluations, Skills, Connectors, Agents, Plugins | Claude app |
+| evaluations, skill packs, connectors, agents, plugins | Customize, with tabs Evaluations, Skills, Connectors, Agents, Plugins | Claude app |
 | own items, catalogue | Yours, Discover | Claude app |
 | history | More, then Run history (tabs Trials, Instances) | Databricks |
 | machines | Instances | cloud providers |
@@ -44,7 +44,7 @@ Experiment, Data and Compute still name the owning area, but only as labels: on 
 | accept rule | acceptance criteria | |
 | verdict | result | |
 | receipt | lineage | Foundry, Databricks |
-| source | connector | Claude app, Databricks |
+| connector | connector | Claude app, Databricks |
 | skill pack | Skill | Claude app |
 | plugin | Plugin | Claude app |
 | benchmark template | Evaluation (added under Customize, picked in New experiment) | Databricks, MLflow |
