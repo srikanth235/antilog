@@ -30,3 +30,4 @@ The table above is the vocabulary of the daemon, the CLI and the docs today. The
 | Plugin | A bundle that adds evaluations, skills, connectors and agents for a domain | none |
 | Customize | One page with Evaluations, Skills, Connectors, Agents and Plugins | none |
 | Draft | An experiment created but not approved; nothing runs until Approve | Draft (a chat card) |
+| Settings | A dialog over the app, opened from the user menu or More. A rail of sections in two groups: You (Profile, Appearance, Notifications, Access tokens) and Organization (General, Users and groups, Single sign-on, Budgets, Notes, Audit logs) | none |

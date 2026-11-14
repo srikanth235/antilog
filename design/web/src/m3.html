@@ -74,8 +74,8 @@
       <div class="rw between wrap g16">
         <div class="tabbar" role="tablist" style="border-bottom: 0"><sc-for list="{{histTabs}}" as="x" hint-placeholder-count="2"><button class="{{x.cls}}" role="tab" onClick="{{x.pick}}">{{x.label}}</button></sc-for></div>
         <div class="rw wrap g8">
-          <select class="in" value="{{histProj}}" onChange="{{onHistProj}}" aria-label="Project" style="width: auto; min-width: 180px"><sc-for list="{{projOptions}}" as="x" hint-placeholder-count="4"><option value="{{x.v}}">{{x.l}}</option></sc-for></select>
-          <select class="in" value="{{histExp}}" onChange="{{onHistExp}}" aria-label="Experiment" style="width: auto; min-width: 200px"><sc-for list="{{expOptions}}" as="x" hint-placeholder-count="4"><option value="{{x.v}}">{{x.l}}</option></sc-for></select>
+          <label class="selw"><select value="{{histProj}}" onChange="{{onHistProj}}" aria-label="Project" style="min-width: 180px"><sc-for list="{{projOptions}}" as="x" hint-placeholder-count="4"><option value="{{x.v}}">{{x.l}}</option></sc-for></select><i class="ic s i-chev" aria-hidden="true"></i></label>
+          <label class="selw"><select value="{{histExp}}" onChange="{{onHistExp}}" aria-label="Experiment" style="min-width: 200px"><sc-for list="{{expOptions}}" as="x" hint-placeholder-count="4"><option value="{{x.v}}">{{x.l}}</option></sc-for></select><i class="ic s i-chev" aria-hidden="true"></i></label>
         </div>
       </div>
       <sc-if value="{{histIsTrials}}" hint-placeholder-val="{{ true }}">

@@ -3,8 +3,7 @@
       appCls: 'app ' + theme, isDark: theme === 'dark', isLight: theme === 'light',
       setScroll: this.setScroll,
       hasMenu: !!menu, closeMenu: () => this.setState({ menu: null }),
-      isNew: is('new'), isThread: is('thread'), isProjects: is('projects'), isProject: is('project'), isValue: is('value'), isCustomize: is('customize'), isDetail: is('detail'), isHistory: is('history'), isSettings: is('settings'),
-      tGeneral: s.settingsTab === 'general', tNotes: s.settingsTab === 'notes', tBudgets: s.settingsTab === 'budgets', tMembers: s.settingsTab === 'members', tSignin: s.settingsTab === 'signin', tTokens: s.settingsTab === 'tokens', tAudit: s.settingsTab === 'audit',
+      isNew: is('new'), isThread: is('thread'), isProjects: is('projects'), isProject: is('project'), isValue: is('value'), isCustomize: is('customize'), isDetail: is('detail'), isHistory: is('history'),
       crumbs: crumbRows, topNew: is('project') && roleOf(s.projSel) !== 'Viewer',
       topNewGo: () => this.setState({ screen: 'new', menu: null, editId: null, d: { ...s.d, text: '', name: null, ev: null, path: null, dir: null, project: s.projSel, skills: null }, needText: false }),
 
@@ -22,7 +21,7 @@
       navValueCls: nav('value'), goValue: goTo('value'),
       navCustomizeCls: nav('customize'), goCustomize: goCust({}),
       navMoreCls: is('history') ? 'nav on' : menu === 'more' ? 'nav open' : 'nav', moreOpen: menu === 'more', toggleMore: tmenu('more'),
-      goHistory: goTo('history', { histTab: 'trials', histProj: 'All', histExp: 'All' }), goSettings: goTo('settings', { settingsTab: 'general' }),
+      goHistory: goTo('history', { histTab: 'trials', histProj: 'All', histExp: 'All' }), goSettingsUser: () => this.openSettings(null, '#btn-user'), goSettingsMore: () => this.openSettings(null, '#btn-more'),
       newCls: is('new') ? 'btn primary full on' : 'btn primary full',
       goNew: () => this.setState({ screen: 'new', menu: null, editId: null, d: { ...s.d, text: '', name: null, ev: null, path: null, dir: null, project: null, skills: null }, needText: false, confirmStop: false, renaming: false }),
       hasPinned: pinned.length > 0, pinned, groups,
@@ -271,21 +270,31 @@
       goInstances: goTo('history', { histTab: 'inst', histProj: 'All', histExp: 'All' }),
 
       // settings
-      tabList: settingsTabs.map(([id, label]) => ({ label, cls: id === s.settingsTab ? 'nav on' : 'nav', go: () => this.setState({ settingsTab: id }) })),
-      defCap: s.defCap, onDefCap: (e) => { const v = digits(e); this.setState((st) => ({ defCap: v, d: { ...st.d, cap: v } })); },
+      setOpen: s.setOpen, setQ: s.setQ, closeSettings: () => this.closeSettings(), setSdBox: this.setSdBox, setMainRef: this.setMainRef,
+      onSetQ: (e) => this.setState({ setQ: e.target.value }), clearSetQ: () => this.setState({ setQ: '' }),
+      onSetSel: (e) => this.setState({ settingsTab: e.target.value }), setTab: effTab,
+      railGroups: SETGRP.map(([gid, gt]) => ({ title: gt, items: visSecs.filter((x) => x[3] === gid).map((x) => ({ id: x[0], label: x[1], ic: x[2], cur: x[0] === effTab, cls: x[0] === effTab ? 'sd-nav on' : 'sd-nav', ro: gid === 'org' && (x[0] === 'notes' ? noteRO : x[0] === 'audit' ? false : orgRO), go: () => this.setState({ settingsTab: x[0] }) })) })).filter((g) => g.items.length),
+      noSetHits: visSecs.length === 0, sec: secOn, show: rowOn, grp: grpOn, myRole, orgRO, noteRO,
+      nMaster: s.notify.on, nMasterCls: s.notify.on ? 'sw on' : 'sw', toggleNMaster: () => this.setState((st) => ({ notify: { ...st.notify, on: !st.notify.on } })), nOff: !s.notify.on,
+      nApprove: s.notify.approve, nApproveCls: s.notify.approve ? 'sw on' : 'sw', toggleNApprove: () => this.setState((st) => ({ notify: { ...st.notify, approve: !st.notify.approve } })),
+      nWin: s.notify.win, nWinCls: s.notify.win ? 'sw on' : 'sw', toggleNWin: () => this.setState((st) => ({ notify: { ...st.notify, win: !st.notify.win } })),
+      nBudget: s.notify.budget, nBudgetCls: s.notify.budget ? 'sw on' : 'sw', toggleNBudget: () => this.setState((st) => ({ notify: { ...st.notify, budget: !st.notify.budget } })),
+      noTokens: s.tokens.length === 0, noNotes: s.notes.length === 0, auditQ: s.auditQ, onAuditQ: (e) => this.setState({ auditQ: e.target.value }), noAudit: auditRows.length === 0,
+      hasRoleNote: !!s.roleNote, roleNote: s.roleNote,
+      defCap: s.defCap, onDefCap: (e) => { if (!isOwner) return; const v = digits(e); this.setState((st) => ({ defCap: v, d: { ...st.d, cap: v } })); },
       themeSeg, noteRows: s.notes, noteDraft: s.noteDraft, onNoteDraft: (e) => this.setState({ noteDraft: e.target.value }),
-      onNoteKey: (e) => { if (e.key === 'Enter') this.addNoteGlobal(); }, addNote: () => this.addNoteGlobal(), noNote: !(s.noteDraft || '').trim(),
+      onNoteKey: (e) => { if (e.key === 'Enter') this.addNoteGlobal(); }, addNote: () => this.addNoteGlobal(), noNote: noteRO || !(s.noteDraft || '').trim(),
       orgSpentText: money(orgSpent), monthlyText: money(s.monthly), orgPct: Math.min(100, Math.round((orgSpent / s.monthly) * 100)) + '%',
       capDraft: s.capDraft, onCapDraft: (e) => this.setState({ capDraft: digits(e) }),
-      setMonthly: () => { const v = Number(s.capDraft); if (!v) return; this.setState({ monthly: v, capDraft: '' }); this.log('budget.change', 'Total monthly budget · ' + money(v)); },
-      noCap: !Number(s.capDraft),
+      setMonthly: () => { const v = Number(s.capDraft); if (!v || !isOwner) return; this.setState({ monthly: v, capDraft: '' }); this.log('budget.change', 'Total monthly budget · ' + money(v)); },
+      noCap: orgRO || !Number(s.capDraft),
       budgetRows: s.opts.map((x) => ({ name: x.name, pct: Math.min(100, Math.round((this.spend(x) / x.cap) * 100)) + '%', text: money(this.spend(x)) + ' of ' + money(x.cap), open: openOpt(x) })),
-      members: people.map((p) => ({ ...p, init: p.name.charAt(0), roles: ['Owner', 'Editor', 'Viewer'].map((r) => ({ label: r, cls: s.roles[p.id] === r ? 'seg on' : 'seg', pick: () => { if (s.roles[p.id] === r) return; this.setState({ roles: { ...s.roles, [p.id]: r } }); this.log('role.change', p.name + ' → ' + r + ' on ' + s.lastProject); } })) })),
-      sessionSeg: seg([['8 hours'], ['12 hours'], ['24 hours']], s.session, (v) => { if (v !== s.session) { this.setState({ session: v }); this.log('signin.change', 'Session length · ' + v); } }),
+      members: people.map((p) => ({ ...p, init: p.name.charAt(0), role: s.roles[p.id], ro: orgRO, roles: ['Owner', 'Editor', 'Viewer'].map((r) => ({ v: r })), pick: (e) => setRole(p, e.target.value) })),
+      sessionSeg: seg([['8 hours'], ['12 hours'], ['24 hours']], s.session, (v) => { if (isOwner && v !== s.session) { this.setState({ session: v }); this.log('signin.change', 'Session length · ' + v); } }),
       hasNewToken: s.newToken,
       createToken: () => { if (s.newToken) return; this.setState({ newToken: true, tokens: [{ id: 't' + Date.now(), name: 'New access token', tail: 'b4c0', kind: 'Personal', scope: 'Everything you can', used: 'Never', expires: 'in 90 days' }, ...s.tokens] }); this.log('token.create', 'New access token · ends b4c0'); },
       tokens: s.tokens.map((t) => ({ ...t, revoke: () => { this.setState({ tokens: s.tokens.filter((x) => x.id !== t.id), newToken: t.tail === 'b4c0' ? false : s.newToken }); this.log('token.revoke', t.name + ' · ends ' + t.tail); } })),
-      audit: s.audit.map((e) => ({ ...e, color: actColor(e.action), label: actLabels[e.action] || e.action.replace(/[._]/g, ' ') }))
+      audit: auditRows
     };
   }
   saveRename() {
@@ -312,14 +321,21 @@
     this.setState({ pal: true, palQ: '', palScope: 'all', palHi: 0, palAct: false, menu: null });
   }
   closePal() { this.setState({ pal: false, palAct: false, palQ: '' }); }
+  openSettings(tab, fall, row) {
+    const s = this.state;
+    if (!s.setOpen) { this._setPrev = fall ? null : (s.pal ? this._prevFocus : document.activeElement); this._setFall = fall || null; }
+    if (row) this._scrollTo = 'sr-' + row;
+    this.setState((st) => ({ setOpen: true, settingsTab: tab || st.settingsTab, setQ: '', menu: null, pal: false, palAct: false, palQ: '', recent: tab ? ['s:' + tab, ...st.recent.filter((q) => q !== 's:' + tab)].slice(0, 10) : st.recent }));
+  }
+  closeSettings() { this.setState({ setOpen: false, setQ: '' }); }
   compose() {
     const s = this.state, q = (s.palQ || '').trim();
     this._compose = true;
     if (s.screen === 'thread') {
-      this.setState({ pal: false, palAct: false, palQ: '', threadDraft: q || s.threadDraft });
+      this.setState({ pal: false, palAct: false, palQ: '', setOpen: false, threadDraft: q || s.threadDraft });
       setTimeout(() => { const ta = document.querySelector('.dock textarea'); if (ta) ta.focus(); }, 40);
     } else {
-      this.setState({ pal: false, palAct: false, palQ: '', screen: 'new', editId: null, menu: null, d: { ...s.d, text: q || s.d.text, name: null, ev: null, path: null, dir: null, project: null, skills: null }, needText: false });
+      this.setState({ pal: false, palAct: false, palQ: '', setOpen: false, screen: 'new', editId: null, menu: null, d: { ...s.d, text: q || s.d.text, name: null, ev: null, path: null, dir: null, project: null, skills: null }, needText: false });
       setTimeout(() => { const ta = document.querySelector('.composer textarea'); if (ta) ta.focus(); }, 40);
     }
   }
@@ -328,12 +344,26 @@
     const mod = e.metaKey || e.ctrlKey;
     if (mod && (e.key === 'k' || e.key === 'K')) { e.preventDefault(); if (s.pal) this.closePal(); else this.openPal(); return; }
     if (!s.pal) {
+      if (s.setOpen && e.key === 'Tab' && this.sdBox) {
+        const f = Array.from(this.sdBox.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])')).filter((x) => x.offsetParent !== null);
+        if (f.length) {
+          const first = f[0], last = f[f.length - 1], cur = document.activeElement;
+          if (e.shiftKey && (cur === first || cur === this.sdBox)) { e.preventDefault(); last.focus(); }
+          else if (!e.shiftKey && cur === last) { e.preventDefault(); first.focus(); }
+          else if (!this.sdBox.contains(cur)) { e.preventDefault(); first.focus(); }
+        }
+        return;
+      }
       if (e.key === '/' && !mod && !e.altKey) {
         const t = e.target, tag = t && t.tagName;
         if (!(tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (t && t.isContentEditable))) { e.preventDefault(); this.openPal(); }
         return;
       }
-      if (e.key === 'Escape') { if (s.menu) this.setState({ menu: null }); else if (s.renaming) this.setState({ renaming: false }); }
+      if (e.key === 'Escape') {
+        if (s.menu) this.setState({ menu: null });
+        else if (s.setOpen) { e.preventDefault(); const t = e.target; if (t && t.tagName === 'INPUT' && s.setQ && t.getAttribute('aria-label') === 'Search settings') this.setState({ setQ: '' }); else this.closeSettings(); }
+        else if (s.renaming) this.setState({ renaming: false });
+      }
       return;
     }
     const P = this._pal || { items: [], acts: [], hi: 0, scopes: ['all'] };

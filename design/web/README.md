@@ -4,7 +4,7 @@ The approved direction for the web client of the server product. It is a clickab
 
 | File | What it is |
 | --- | --- |
-| `Main.dc.html` | The app: sidebar, experiment threads, New experiment, Projects, Customize, search, Dashboard, Run history, Settings. Generated from `src/`. |
+| `Main.dc.html` | The app: sidebar, experiment threads, New experiment, Projects, Customize, search, Dashboard, Run history, and the Settings dialog. Generated from `src/`. |
 | `SignIn.dc.html` | The sign-in screen. |
 | `support.js` | The runtime the two files load. Not edited. |
 | `canvas.json` | The Design canvas layout: the two boards and the launch file. |
@@ -25,7 +25,7 @@ Edit the parts in `src/`, then run `bash design/web/src/assemble.sh`. It writes 
 | Part | Holds |
 | --- | --- |
 | `style.css`, `extra.css` | Styles and tokens. |
-| `m1.html` to `m5.html` | Markup, in page order. |
+| `m1.html` to `m5.html` | Markup, in page order. `m5.html` ends with the Settings dialog, which sits over the app rather than being a page. |
 | `logic1.js` to `logic3.js` | State, seeded data and handlers, in order. |
 | `strip.py` | Removes leading whitespace from the assembled file. |
 

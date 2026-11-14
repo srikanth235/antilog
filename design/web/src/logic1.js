@@ -3,12 +3,14 @@ class Component extends DCLogic {
     super(props);
     this.setScroll = (el) => { this.scrollEl = el; };
     this.setPalIn = (el) => { this.palIn = el; };
+    this.setSdBox = (el) => { this.sdBox = el; };
+    this.setMainRef = (el) => { this.sdMain = el; };
     this.K = this.mkK();
     const K = this.K;
     const CP = 'Checkout platform', SR = 'Search', DS = 'Data science forecasts';
     const X = (o) => ({ pinned: false, approved: true, hist: [], pr: [], ps: 0, fixed: null, lim: { error: true, cost: true, memory: false }, dir: null, path: null, env: 'aws', cloud: 'AWS', val: 0, mo: 5, act: '', ...o });
     this.state = {
-      screen: 'thread', theme: null, menu: null, collapsed: {}, settingsTab: 'general',
+      screen: 'thread', theme: null, menu: null, collapsed: {}, settingsTab: 'profile', setOpen: false, setQ: '', auditQ: '', roleNote: '', notify: { on: true, approve: true, win: true, budget: false },
       pal: false, palQ: '', palScope: 'all', palHi: 0, palAct: false, palActHi: 0, recent: ['x:o2', 'p:Search', 'd:eval:k6', 'd:skill:pgtune', 's:members', 'x:o6'], hlNote: null,
       selId: 'o1', projSel: CP, lastProject: CP, needText: false, editId: null,
       cTab: 'eval', cView: 'yours', cQuery: '', cCat: 'All', cAuth: 'All', cAdded: 'All', cSort: 'az', cNotice: '', showAll: {}, justAdded: {}, cSlide: 0,
@@ -125,7 +127,7 @@ class Component extends DCLogic {
     this.afterRender();
   }
   locKey(s) {
-    return s.screen === 'thread' ? 'x:' + s.selId : s.screen === 'project' ? 'p:' + s.projSel : s.screen === 'detail' ? 'd:' + s.detail.kind + ':' + s.detail.id : s.screen === 'settings' ? 's:' + s.settingsTab : ['projects', 'value', 'history'].includes(s.screen) ? 'g:' + s.screen : null;
+    return s.screen === 'thread' ? 'x:' + s.selId : s.screen === 'project' ? 'p:' + s.projSel : s.screen === 'detail' ? 'd:' + s.detail.kind + ':' + s.detail.id : ['projects', 'value', 'history'].includes(s.screen) ? 'g:' + s.screen : null;
   }
   afterRender() {
     const s = this.state;
@@ -143,12 +145,28 @@ class Component extends DCLogic {
       const r = document.getElementById('pr-' + (this._pal ? this._pal.hi : 0));
       if (r && r.scrollIntoView) r.scrollIntoView({ block: 'nearest' });
     }
+    if (s.setOpen && !this._setWas) {
+      this._setWas = true;
+      this._setKey = '';
+      if (this.sdBox) this.sdBox.focus();
+    } else if (!s.setOpen && this._setWas) {
+      this._setWas = false;
+      let ft = this._setPrev;
+      if (!ft || !ft.focus || !document.contains(ft)) ft = document.querySelector(this._setFall || '#btn-user');
+      if (ft && ft.focus) ft.focus();
+      this._setPrev = null;
+    }
+    if (s.setOpen && this.sdMain && this._effTab !== this._setKey) { this._setKey = this._effTab; this.sdMain.scrollTop = 0; }
+    if (this._scrollTo && /^sr-/.test(this._scrollTo)) {
+      const rg = document.getElementById(this._scrollTo);
+      if (rg) { this._scrollTo = null; if (rg.scrollIntoView) rg.scrollIntoView({ block: 'center' }); rg.classList.add('flash'); setTimeout(() => rg.classList.remove('flash'), 2500); }
+    }
     const el = this.scrollEl;
     if (!el) return;
     const o = s.opts.find((x) => x.id === s.selId);
     const key = s.screen === 'thread' && o
       ? ['t', o.id, o.step, o.status, o.runs, o.T.length, s.notes.filter((n) => n.opt === o.name).length, o.lim.memory ? 1 : 0, o.approved ? 1 : 0].join(':')
-      : 's:' + s.screen + ':' + (s.screen === 'settings' ? s.settingsTab : '') + ':' + (s.detail ? s.detail.id : '') + s.projSel;
+      : 's:' + s.screen + ':' + ':' + (s.detail ? s.detail.id : '') + s.projSel;
     if (key !== this._key) {
       this._key = key;
       el.scrollTop = s.screen === 'thread' ? el.scrollHeight : 0;

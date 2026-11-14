@@ -93,7 +93,7 @@
     const money = (n) => this.money(n);
     const upd = (id, patch) => this.setState((st) => ({ opts: st.opts.map((x) => (x.id === id ? { ...x, ...patch } : x)) }));
     const setD = (patch) => this.setState((st) => ({ d: { ...st.d, ...patch } }));
-    const seg = (list, cur, pick) => list.map(([v, l]) => ({ label: l || v, cls: v === cur ? 'seg on' : 'seg', pick: () => pick(v) }));
+    const seg = (list, cur, pick) => list.map(([v, l]) => ({ label: l || v, cls: v === cur ? 'seg on' : 'seg', on: v === cur, pick: () => pick(v) }));
     const digits = (e) => String(e.target.value).replace(/\D/g, '').slice(0, 7);
     const is = (id) => s.screen === id;
     const menu = s.menu;
@@ -107,10 +107,10 @@
     const roleOf = (p) => (K.PROJECTS.find((x) => x[0] === p) || [0, 'Viewer'])[1];
     const evAll = (o) => this.an(o, s);
 
-    const goTo = (screen, extra) => () => this.setState({ screen, menu: null, confirmStop: false, renaming: false, ...(extra || {}) });
-    const openOpt = (o) => () => this.setState({ screen: 'thread', selId: o.id, lastProject: o.project, projSel: o.project, menu: null, confirmStop: false, renaming: false, hl: null, pal: false });
+    const goTo = (screen, extra) => () => this.setState({ screen, setOpen: false, menu: null, confirmStop: false, renaming: false, ...(extra || {}) });
+    const openOpt = (o) => () => this.setState({ screen: 'thread', setOpen: false, selId: o.id, lastProject: o.project, projSel: o.project, menu: null, confirmStop: false, renaming: false, hl: null, pal: false });
     const custReset = { cQuery: '', cCat: 'All', cAuth: 'All', cAdded: 'All', cNotice: '', form: null, justAdded: {}, plRemove: null, skSec: 0 };
-    const goCust = (patch) => () => this.setState({ screen: 'customize', menu: null, ...custReset, ...patch });
+    const goCust = (patch) => () => this.setState({ screen: 'customize', setOpen: false, menu: null, ...custReset, ...patch });
 
     // ---------- composer draft
     const d = s.d;
@@ -153,8 +153,49 @@
     const nav = (id) => (sideActive === id ? 'nav on' : 'nav');
 
     // ---------- breadcrumb
-    const settingsTabs = [['general', 'General'], ['notes', 'Notes'], ['budgets', 'Budgets'], ['members', 'Users and groups'], ['signin', 'Single sign-on'], ['tokens', 'Access tokens'], ['audit', 'Audit logs']];
-    const tabLabel = (settingsTabs.find((t) => t[0] === s.settingsTab) || settingsTabs[0])[1];
+    // Settings: sections by whose setting it is, and the rows in each (rows are what the rail search matches)
+    const SETSEC = [
+      ['profile', 'Profile', 'g-user', 'you', 'Who you are in Acme and how you sign in.'],
+      ['appearance', 'Appearance', 'i-sun', 'you', 'How Ratchet looks on this device.'],
+      ['notifications', 'Notifications', 'i-bell', 'you', 'What Ratchet tells you, and when.'],
+      ['tokens', 'Access tokens', 'i-key', 'you', 'For the command line, the MCP server and CI.'],
+      ['general', 'General', 'i-org', 'org', 'Settings for everyone in Acme.'],
+      ['members', 'Users and groups', 'i-users', 'org', 'Roles on your projects.'],
+      ['signin', 'Single sign-on', 'i-lock', 'org', 'How people sign in to Acme.'],
+      ['budgets', 'Budgets', 'g-gauge', 'org', 'When a budget is reached, work stops.'],
+      ['notes', 'Notes', 'g-note', 'org', 'Guidance from people that agents read.'],
+      ['audit', 'Audit logs', 'g-hist', 'org', 'Every change anyone made in Acme.']
+    ];
+    const SETROW = [
+      ['profile', 'name', 'Name', 'How you appear on notes and in the audit logs.', 'display name priya'],
+      ['profile', 'email', 'Email', 'Comes from your identity provider.', 'address priya@acme.com'],
+      ['profile', 'role', 'Role in Acme', 'Set by an owner. Owners manage users, budgets and sign-in.', 'owner editor viewer permission'],
+      ['profile', 'via', 'Signed in with', 'Your name and email are managed there.', 'okta identity provider'],
+      ['profile', 'signout', 'Sign out', 'Ends this session on this device.', 'log out logout'],
+      ['appearance', 'theme', 'Theme', 'System follows your device. Light or dark.', 'appearance dark light system mode colour'],
+      ['notifications', 'nmaster', 'Email me', 'Send an email when something needs you.', 'notifications email alerts'],
+      ['notifications', 'napprove', 'A draft is waiting for approval', 'Nothing is created in your cloud until someone approves.', 'notifications draft approve'],
+      ['notifications', 'nwin', 'A win is ready for a pull request', 'An accepted change beat the baseline and the holdout.', 'notifications win pull request'],
+      ['notifications', 'nbudget', 'A budget is reached', 'Running work stops at the next trial.', 'notifications budget spend cap'],
+      ['tokens', 'tokcreate', 'Create an access token', 'It acts as you, with everything you can do.', 'api key cli mcp ci new'],
+      ['tokens', 'toklist', 'Your access tokens', 'Revoke a token you no longer use.', 'revoke fingerprint service principal'],
+      ['general', 'org', 'Organization', 'The name your users see.', 'acme name'],
+      ['general', 'host', 'Server', 'The address of this Ratchet server.', 'host url ratchet.acme.internal'],
+      ['general', 'defcap', 'Default budget per experiment', 'New experiments start with this budget.', 'default budget cap dollars'],
+      ['members', 'users', 'Users', 'Roles on your projects. Each change is recorded in the audit logs.', 'people members roles invite owner editor viewer'],
+      ['members', 'groups', 'Groups', 'Users in these Okta groups get a role automatically.', 'okta group mapping'],
+      ['signin', 'provider', 'Provider', 'Okta, acme.okta.com.', 'okta sso identity working'],
+      ['signin', 'newusers', 'New users', 'Who can sign in and how roles are assigned.', 'okta:engineering group mapping'],
+      ['signin', 'session', 'Session length', 'How long a sign-in lasts before Okta asks again.', 'hours login timeout'],
+      ['signin', 'sessactive', 'Signed in now', 'Sessions that are open right now.', 'active sessions'],
+      ['budgets', 'monthly', 'Total monthly budget', 'When it is reached, running work stops at the next trial.', 'spend cap limit cost dollars'],
+      ['budgets', 'perexp', 'Per experiment', 'Spent against each experiment budget.', 'experiment cap spend'],
+      ['notes', 'notenew', 'Add a note', 'Say something every agent should know, for all experiments.', 'guidance write'],
+      ['notes', 'notelist', 'All notes', 'Guidance from people. Agents read these before each run.', 'guidance'],
+      ['audit', 'auditlog', 'Audit logs', 'Every change anyone made in Acme, newest first.', 'history changes record log']
+    ];
+    const SETGRP = [['you', 'You'], ['org', 'Organization']];
+    const settingsTabs = SETSEC.map((x) => [x[0], x[1]]);
     const detKind = s.detail ? s.detail.kind : 'eval';
     const detEval = detKind === 'eval' ? s.evals.find((e) => e.id === s.detail.id) : null;
     const detAgent = detKind === 'agent' ? s.agentList.find((a) => a.id === s.detail.id) : null;
@@ -171,8 +212,7 @@
       value: [cr('Dashboard')],
       customize: [cr('Customize')],
       detail: [cr('Customize', goCust({})), cr(K.TABN[detKind === 'conn' ? 'conn' : detKind], goCust({ cTab: detKind, cView: 'yours' })), cr(detName)],
-      history: [cr('Run history')],
-      settings: [cr('Settings'), cr(tabLabel)]
+      history: [cr('Run history')]
     })[s.screen] || [cr('Ratchet')];
     const crumbRows = crumbs.map((c, i) => ({ ...c, txt: !c.link, sep: i > 0 }));
 
@@ -622,6 +662,32 @@
     };
     const orgSpent = totalSpend;
     const cphase = o.status === 'Draft' ? 'draft' : live ? 'live' : done || stopped ? 'end' : 'draft';
+    // ---------- settings dialog
+    const myRole = s.roles.priya;
+    const isOwner = myRole === 'Owner';
+    const orgRO = !isOwner;
+    const noteRO = myRole === 'Viewer';
+    const sTok = (s.setQ || '').trim().toLowerCase().split(/\s+/).filter(Boolean);
+    const sHay = (parts) => parts.join(' ').toLowerCase();
+    const secHit = (sec) => sTok.every((q) => sHay([sec[1]]).includes(q));
+    const rowHit = (r) => sTok.every((q) => sHay([r[2], r[3], r[4]]).includes(q));
+    const visSecs = SETSEC.filter((x) => !sTok.length || secHit(x) || SETROW.some((r) => r[0] === x[0] && rowHit(r)));
+    const effTab = visSecs.some((x) => x[0] === s.settingsTab) ? s.settingsTab : (visSecs[0] || SETSEC[0])[0];
+    this._effTab = effTab;
+    const secOn = {}, rowOn = {}, grpOn = {};
+    SETSEC.forEach((x) => { secOn[x[0]] = s.setOpen && visSecs.length > 0 && x[0] === effTab; });
+    SETROW.forEach((r) => { const x = SETSEC.find((q) => q[0] === r[0]); rowOn[r[1]] = r[0] === effTab && (!sTok.length || secHit(x) || rowHit(r)); });
+    [['account', ['name', 'email', 'role']], ['signinG', ['via', 'signout']], ['orgG', ['org', 'host']], ['defG', ['defcap']], ['provG', ['provider', 'newusers']], ['sessG', ['session', 'sessactive']], ['orgBudG', ['monthly']]].forEach(([g, ids]) => { grpOn[g] = ids.some((id) => rowOn[id]); });
+    const aq = (s.auditQ || '').trim().toLowerCase();
+    const auditRows = s.audit.map((e) => ({ ...e, color: actColor(e.action), label: actLabels[e.action] || e.action.replace(/[._]/g, ' ') }))
+      .filter((e) => !aq || [e.who, e.label, e.resource].join(' ').toLowerCase().includes(aq));
+    const setRole = (p, r) => {
+      if (!isOwner || s.roles[p.id] === r) return;
+      const owners = Object.values(s.roles).filter((x) => x === 'Owner').length;
+      if (s.roles[p.id] === 'Owner' && r !== 'Owner' && owners < 2) { this.setState({ roleNote: 'Acme needs at least one owner. Make someone else an owner first.' }); return; }
+      this.setState({ roles: { ...s.roles, [p.id]: r }, roleNote: '' });
+      this.log('role.change', p.name + ' → ' + r + ' on ' + s.lastProject);
+    };
     const themeSeg = seg([['system', 'System'], ['light', 'Light'], ['dark', 'Dark']], s.theme || 'system', (v) => this.setState({ theme: v === 'system' ? null : v, menu: null }));
 
     // ---------- palette
@@ -631,7 +697,7 @@
     const PORD = Object.keys(PK);
     const PSC = { experiments: ['experiment', 'trial', 'note'], projects: ['project'], datasets: ['dataset', 'conn'], customize: ['eval', 'skill', 'plugin', 'agent', 'conn'], runs: ['run', 'trial'], people: ['person', 'setting', 'audit'] };
     const palScopes = [['all', 'All'], ['experiments', 'Experiments'], ['projects', 'Projects'], ['datasets', 'Datasets'], ['customize', 'Customize'], ['runs', 'Runs'], ['people', 'People']];
-    const palGo = (patch) => () => this.setState({ pal: false, palAct: false, palQ: '', menu: null, confirmStop: false, renaming: false, ...patch });
+    const palGo = (patch) => () => this.setState({ pal: false, palAct: false, palQ: '', menu: null, setOpen: false, confirmStop: false, renaming: false, ...patch });
     const splitAt = (text, key) => { const i = text.toLowerCase().indexOf(key); return i < 0 ? [text, '', ''] : [text.slice(0, i), text.slice(i, i + key.length), text.slice(i + key.length)]; };
     const mkItem = (kind, title, ctx, fields, go, extra) => {
       const tl = title.toLowerCase();
@@ -652,11 +718,11 @@
     const HINT = { Draft: 'Draft', Running: 'Running', Win: 'Win', 'Pending pull request': 'PR open', Merged: 'Merged', 'No win': 'No win', Stopped: 'Stopped' };
     const optGo = (x) => palGo({ screen: 'thread', selId: x.id, lastProject: x.project, projSel: x.project, hl: null });
     const openTrial = (x, key) => () => { this._scrollTo = 'tr-' + key.replace(':', '-'); palGo({ screen: 'thread', selId: x.id, lastProject: x.project, projSel: x.project, hl: key, ex: { ...s.ex, ['tr:' + key]: true } })(); };
-    const settingsGo = (tb) => palGo({ screen: 'settings', settingsTab: tb });
+    const settingsGo = (tb, row) => () => this.openSettings(tb, null, row);
     const custFind = (tb, name) => palGo({ screen: 'customize', ...custReset, cTab: tb, cView: 'discover', cQuery: name });
     const palItems = [];
     const P = (it) => { if (it) palItems.push(it); };
-    const expAct = (x, ax) => ({ expId: x.id, pinned: x.pinned, again: this.isDone(x) || x.status === 'Stopped' ? () => { this.setState((st) => ({ opts: st.opts.map((q) => (q.id === x.id ? this.nextRun(q, ax, this.isWin(x) ? 'w' : x.status === 'Stopped' ? 's' : 'n') : q)), screen: 'thread', selId: x.id, pal: false, palAct: false, palQ: '', hl: null })); } : null });
+    const expAct = (x, ax) => ({ expId: x.id, pinned: x.pinned, again: this.isDone(x) || x.status === 'Stopped' ? () => { this.setState((st) => ({ opts: st.opts.map((q) => (q.id === x.id ? this.nextRun(q, ax, this.isWin(x) ? 'w' : x.status === 'Stopped' ? 's' : 'n') : q)), screen: 'thread', setOpen: false, selId: x.id, pal: false, palAct: false, palQ: '', hl: null })); } : null });
     if (s.pal) {
       s.opts.forEach((x) => {
         const ax = evAll(x), t = st0(x);
@@ -679,13 +745,16 @@
         catOf[k].filter((x) => !have.some((q) => q.id === x.id)).forEach((x) => P(mkItem(kind, x.name, ctxf(x), [x.desc || '', x.cat || ''], k === 'skill' || k === 'plugin' ? openDet(k, x.id) : custFind(k, x.name), { ic: x.gl || ic, hint: 'Not added' })));
       });
       [['priya', 'Priya Raman', 'priya@acme.com', 'okta:platform-leads'], ['marco', 'Marco Bianchi', 'marco@acme.com', 'okta:perf-engineering'], ['jun', 'Jun Park', 'jun@acme.com', 'an invitation'], ['ci', 'ci-bot', 'Service principal', 'a service principal']].forEach(([id, nm, em, src]) => P(mkItem('person', nm, em + ' · added through ' + src, [em], settingsGo('members'), { ic: 'g-user', hint: s.roles[id] })));
-      const SETKW = { general: 'organization theme default budget dark light appearance', notes: 'guidance notes agents read', budgets: 'budget spend monthly cap limit cost', members: 'users groups roles invite owner editor viewer people access', signin: 'okta sso sign-in session login identity', tokens: 'access token api key cli mcp ci service', audit: 'audit log history changes record' };
-      settingsTabs.forEach(([id, label]) => P(mkItem('setting', label, 'Settings', [SETKW[id]], settingsGo(id), { ic: 'i-sliders' })));
+      const SETKW = { profile: 'account name email sign in okta', appearance: 'theme dark light system colour mode', notifications: 'email alerts approve win budget', general: 'organization default budget server', notes: 'guidance notes agents read', budgets: 'budget spend monthly cap limit cost', members: 'users groups roles invite owner editor viewer people access', signin: 'okta sso sign-in session login identity', tokens: 'access token api key cli mcp ci service', audit: 'audit log history changes record' };
+      const SETWHO = { you: 'You', org: 'Organization' };
+      SETSEC.forEach(([id, label, sic, who, lead]) => P(mkItem('setting', label, 'Settings · ' + SETWHO[who], [lead, SETKW[id]], settingsGo(id), { ic: sic })));
+      SETROW.forEach(([sid, rid, title, desc, kw]) => { const sc = SETSEC.find((q) => q[0] === sid); if (title === sc[1]) return; P(mkItem('setting', title, 'Settings · ' + sc[1], [desc, kw], settingsGo(sid, rid), { ic: sc[2] })); });
       s.audit.forEach((e) => P(mkItem('audit', (actLabels[e.action] || e.action) + ' · ' + e.resource, e.who + ' · ' + e.time, [e.action, e.who], settingsGo('audit'), { ic: 'g-file', hint: e.time })));
       const dk = theme === 'dark';
       [['New experiment', 'Start a draft from a goal', 'i-plus', palGo({ screen: 'new', editId: null, d: { ...s.d, text: '', name: null, ev: null, path: null, dir: null, project: null, skills: null }, needText: false }), 'create start draft goal'],
         ['Add a connector', 'Customize · Connectors', 'i-plus', palGo({ screen: 'customize', ...custReset, cTab: 'conn', cView: 'discover' }), 'connect source warehouse repository'],
         ['Add a skill', 'Customize · Skills', 'g-book', palGo({ screen: 'customize', ...custReset, cTab: 'skill', cView: 'discover' }), 'skills know-how guidance'],
+        ['Open Settings', 'Profile, appearance, access tokens and organization', 'i-sliders', settingsGo(), 'settings preferences account'],
         ['Open Dashboard', 'Value, spend and win rate', 'i-chart', palGo({ screen: 'value' }), 'dashboard value return wins'],
         ['Invite a user', 'Settings · Users and groups', 'g-user', settingsGo('members'), 'people member add team'],
         [dk ? 'Switch to light theme' : 'Switch to dark theme', 'Appearance', dk ? 'i-sun' : 'i-moon', () => this.setState({ pal: false, palAct: false, palQ: '', theme: dk ? 'light' : 'dark' }), 'theme appearance dark light mode']
