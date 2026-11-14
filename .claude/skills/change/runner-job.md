@@ -25,7 +25,7 @@ A job is work the server queues and the runner executes in the customer's infras
 5. Tests: with a fake runner against the real server (the job is queued, taken, finished, and a lost lease is retaken); with the real runner against fake backends (tags, caps, clean-up); a test that the payload and result carry no secret; a test that the server opens no connection to a connector.
 6. Version the contract. A runner may be older than the server, so a new job type is additive and an old runner refuses a job it does not know with a visible state.
 
-## Open
+## Decided
 
-- Long-poll or a stream as the first transport. Recommendation: long-poll, because it works through every proxy.
-- How long a runner may be away before the server marks its runs as needing attention.
+- The first transport is long-poll over HTTPS, because it works through every proxy. A stream can come later behind the same contract.
+- A runner sends a heartbeat with each poll. After 5 minutes without one, the server marks the runner away and its runs as needing attention. The server starts nothing to replace it; the runner keeps enforcing caps and clean-up on what it already runs.

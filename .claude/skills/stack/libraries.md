@@ -28,7 +28,7 @@ Read from the crate manifests under `crates/*/Cargo.toml`. The workspace manifes
 | `security-framework` (macOS only) | The Keychain for secrets |
 | `insta`, `proptest`, `aws-smithy-mocks` | Snapshot, property and AWS mock tests |
 
-TypeScript in use: `typescript`, `vitest`, `yaml` (see [typescript.md](typescript.md)).
+TypeScript in use: `typescript`, `vitest`, `yaml` (see [typescript.md](typescript/ratchet.md)).
 
 ## Chosen for the target
 
@@ -105,7 +105,7 @@ Azure compute goes through the ARM REST API with `azure_core`, because `azure_mg
 
 Background jobs use a small queue in Postgres (`FOR UPDATE SKIP LOCKED`). No Redis, no message bus.
 
-**Web app (TypeScript)**: see [typescript.md](typescript.md).
+**Web app (TypeScript)**: see [typescript.md](typescript/ratchet.md).
 
 | Package | Version |
 | --- | --- |
@@ -120,7 +120,7 @@ Background jobs use a small queue in Postgres (`FOR UPDATE SKIP LOCKED`). No Red
 
 **macOS app (target)**
 
-A proposal, not yet built. The app is SwiftUI and macOS only; Windows and Linux use the web app. See [swift.md](swift.md).
+A proposal, not yet built. The app is SwiftUI and macOS only; Windows and Linux use the web app. See [swift.md](swift/ratchet.md).
 
 | Tool | Version |
 | --- | --- |
@@ -146,4 +146,4 @@ A proposal, not yet built. The app is SwiftUI and macOS only; Windows and Linux 
 | cosign | 3.1.4 |
 | syft | 1.57.1 |
 
-Rules for any addition: self-hosting must keep working (no call to a service the administrator did not configure), the licence must suit a product we ship, and the crate must be maintained. A new outside system also needs a port with a real and a mock implementation; see [rust.md](rust.md).
+Rules for any addition: self-hosting must keep working (no call to a service the administrator did not configure), the licence must suit a product we ship, and the crate must be maintained. A new outside system also needs a port with a real and a mock implementation; see [rust.md](rust/ratchet.md).

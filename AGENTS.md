@@ -6,13 +6,9 @@ Ratchet points coding agents at one measurable goal and lets only the changes th
 
 `main` holds the agreed design and no product code: these skills, the design boards and tokens in `design/` (`mockups/`, `tokens.toml`, `tools/`), the logo in `design/icon/` and the glossary. The clickable prototype in `design/web/` is retired. Nothing is built here yet.
 
-An earlier Rust daemon and CLI live on the branch `claude/peaceful-lamport-leak6p`. They are reference, not a base to build on. Where a skill names a path under `crates/`, `api/`, `infra/`, `scripts/` or `docs/` that is not on this branch, or quotes a `cargo` or `pnpm` command, it describes that earlier code:
+An earlier Rust daemon and CLI live on the branch `claude/peaceful-lamport-leak6p`. They are reference, not a base to build on. Every skill describes the target. A path or command that does not exist on this branch yet is marked "(target)". What the earlier code did, and what it taught, is in the `today.md` of `optimization`, `context`, `infra`, `organization`, `change`, `land` and `ratchet`.
 
-- the `today.md` file in `optimization`, `context`, `infra` and `organization`;
-- `stack`, `land` and `change`, which describe how that code is written, checked and changed;
-- `ratchet`, which drives that code's CLI.
-
-Use those for what was learned, such as the gaps each `today.md` lists. When code lands on this branch, rewrite them to describe it, in the same change.
+When code lands on this branch, update the pages that name its paths and commands and drop their "(target)" marks, in the same change.
 
 ## Checks
 
@@ -31,7 +27,7 @@ Guidance lives in [`.claude/skills/`](.claude/skills), each a short router. Star
 - `organization`: who may do what, and how is it recorded?
 - `design`: what does it look like and say? Boards, light and dark, the macOS app.
 - `change`: how does this kind of change travel through the layers?
-- `stack`: how do I write this language here, and which library may I use?
+- `stack`: how do I write this language here (Rust, TypeScript and React, Swift for macOS, Postgres, OpenTofu, Packer, Helm), and which library may I use?
 - `land`: how do I prove it and ship it?
 - `orchestrate`: how is multi-session work run? Only for a session that directs other sessions.
 - `ratchet`: how to drive Ratchet from the shell.

@@ -20,15 +20,15 @@ Today only the earlier code's AWS and mock providers exist; see [today.md](today
 5. **Implement the backend trait.** Launch, list by tag, remove. Plus a test double (a fake backend) the whole suite can use.
 6. **Clean-up.** The launcher must find and remove everything the provider can leave behind, and report what it could not remove. A run is not finished until clean-up is verified.
 7. **Spend.** Provide a price table and a billing reconcile for the provider. Spend rows are append-only and corrected, never edited. The launcher stops a run at its cap.
-8. **Images.** Build the sandbox and evaluator images for the provider (Packer, or container images for Kubernetes). See [../stack/infra-code.md](../stack/infra-code.md).
+8. **Images.** Build the sandbox and evaluator images for the provider (Packer, or container images for Kubernetes). See [../stack/infra/ratchet.md](../stack/infra/ratchet.md).
 9. **Provider words stay here.** Regions, project ids, instance ids and node pools appear in no other skill and in no public type outside the adapter.
 10. **Same promises.** Run the checks in [owes.md](owes.md) against the new backend. A promise that holds on one backend and not another is a defect in the new one.
 11. **One benchmark, one provider.** A benchmark never spans backends. Do not add cross-provider comparison.
 12. **Tests.** Run the shared backend contract suite against the new adapter and add a CI job for it. A run on a real account needs the owner's go-ahead; see [../land/real-cloud.md](../land/real-cloud.md).
 
-## Open for the owner
+## Isolation is required
 
-- Whether a backend that cannot isolate the two sides at the platform level (no NetworkPolicy equivalent) may exist at all. Recommendation: no.
+- A backend that cannot isolate the agent side from the evaluator side at the platform level (a NetworkPolicy or its equivalent) is not a valid backend and is not added.
 
 ## Proving it
 

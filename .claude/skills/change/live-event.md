@@ -8,7 +8,7 @@ Events tell a client that something changed so it can refetch. An event is not t
 - Each event has a kebab-case type, a sequence id and the JSON of the whole event.
 - The first message on a connection is `hello`. A client that reconnects sends `Last-Event-ID` and receives what it missed. If the server no longer has it, the first message is `resync` and the client refetches what it shows.
 - The action layer publishes the event after the write commits (see [write-action.md](write-action.md)). The runner's reports of state and spend come in as writes, so they publish events the same way.
-- With more than one server process, replay needs a shared store or Postgres notifications. That choice is open for the owner; the stream's behaviour does not change.
+- Events are rows. The action layer writes the event to an append-only Postgres table in the same transaction as the change, and `NOTIFY` wakes every server process. A stream replays from that table by `Last-Event-ID`, so any process can serve any client. Rows older than the replay window are pruned; a client further behind gets `resync`. No Redis.
 
 ## Adding an event (target)
 

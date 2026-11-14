@@ -17,8 +17,9 @@ An action that needs work in the customer's infrastructure queues a job in the s
 3. Add the CLI command and MCP tool. A command that spends or changes things needs `--yes`.
 4. Tests: allowed role writes and audits once; denied role writes nothing and audits the denial; the event is published after the commit and not on a denial; no secret in the entry or the event; the audit row and the change roll back together.
 
-## Open
+## Refusals
 
-- Whether an audit entry for a denied read is kept, or only for denied writes. The organization rules say every write; reads are not settled.
+- A refused write is audited, with the actor, the action and the reason.
+- A refused read is not audited. It is logged with the actor for operators, and repeated refusals can raise an alert.
 
 Today's path, one `AppService` method per write with no actor, is in [today.md](today.md).

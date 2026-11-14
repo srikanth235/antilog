@@ -43,7 +43,7 @@ Anything not listed is whatever `ratchet --help` shows; it is the source once th
 
 `ratchet mcp` serves the commands above as MCP tools on stdio, for clients with no shell. It signs in the same way, with an access token. Register it with `claude mcp add ratchet -- ratchet mcp`. A tool that needs `--yes` takes `confirm: true`, and shows its preview first.
 
-## Open for the owner
+## Decided
 
-- Whether `ratchet chat` returns, and where chat and drafting run (see [product rulings](../product/rulings.md)).
-- Whether `start` creates the experiment too, or only starts one that exists as an approved draft. Recommendation: only start an approved one, so Approve stays a deliberate step.
+- There is no `ratchet chat`. Drafting an experiment with the assistant happens in the web and Mac apps; another agent drives Ratchet through `ratchet mcp`.
+- `start` only starts an experiment that exists as an approved draft, so Approve stays a deliberate step.

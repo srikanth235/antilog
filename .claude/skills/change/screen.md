@@ -8,10 +8,10 @@ Start with a board in `design/mockups/`: edit the light board, change `design/to
 
 ## 2. The web app (target)
 
-(target) A screen is built for the web client. It is React and TypeScript over the same API and the same behaviour and words. It does not exist yet. See [stack/typescript.md](../stack/typescript.md). If the screen needs new data, do [api-endpoint.md](api-endpoint.md) first.
+(target) A screen is built for the web client. It is React and TypeScript over the same API and the same behaviour and words. It does not exist yet. See [stack/typescript/ratchet.md](../stack/typescript/ratchet.md). If the screen needs new data, do [api-endpoint.md](api-endpoint.md) first.
 
 ## 3. The macOS app (target)
 
-SwiftUI, macOS only; Windows and Linux use the web app. It shares behaviour, words and element ids with the web app, never pixels, and reads colours and words generated from the same sources. See [stack/swift.md](../stack/swift.md).
+SwiftUI, macOS only; Windows and Linux use the web app. It shares behaviour, words and element ids with the web app, never pixels, and reads colours and words generated from the same sources. See [stack/swift/ratchet.md](../stack/swift/ratchet.md).
 
 Build to the boards' shared patterns: one detail-page layout for every kind under Customize, one popover, one palette for global search. The page types are in [design behaviour](../design/behaviour.md); the words are in [wording](../design/wording.md) and the glossary's "On screen" column.

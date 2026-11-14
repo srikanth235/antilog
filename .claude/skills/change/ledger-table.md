@@ -20,8 +20,8 @@ The ledger is Postgres 18 and the only state. It holds ids, versions, numbers, s
 4. Tests with a real Postgres in a container (testcontainers): the migration applies to an empty database and to the last release's schema; every table has an organization column; append-only tables refuse an update; a role without the permission cannot read the row through the API.
 5. Check the SQL by [stack/postgres/ratchet.md](../stack/postgres/ratchet.md).
 
-## Open
+## Row-level security
 
-- Whether a row-level security policy backs the organization column as a second guard. Recommendation: yes, as defence behind the query filter.
+- Every table with an organization column has a row-level security policy on it, as a second guard behind the query filter. The server sets the organization for each transaction; a query that forgets the filter returns nothing instead of another organization's rows.
 
 The earlier SQLite ledger is in [today.md](today.md).

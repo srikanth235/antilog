@@ -17,11 +17,11 @@ One gate command with profiles (local, pull request, nightly, release) is the ta
 
 | Layer | Run (all target) | Stack |
 | --- | --- | --- |
-| Rust (`ratchet-server`, `ratchet-runner`, `ratchet`) | `cargo fmt --all --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo test --workspace --no-fail-fast`, `cargo deny check` | [stack/rust/ratchet.md](../stack/rust/ratchet.md) |
+| Rust (`ratchet-server`, `ratchet-runner`, `ratchet`) | `cargo fmt --all --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo nextest run --workspace` (`cargo test --doc` for doctests), `cargo deny check` | [stack/rust/ratchet.md](../stack/rust/ratchet.md) |
 | An API type, route or event | the Rust checks, `cargo xtask openapi --check`, the generated TypeScript client up to date; see [change/api-endpoint.md](../change/api-endpoint.md) | [stack/rust/ratchet.md](../stack/rust/ratchet.md) |
 | The CLI or its MCP tools | the Rust checks, then the CLI contract script against a built `ratchet` and a test server | [stack/rust/ratchet.md](../stack/rust/ratchet.md) |
 | TypeScript (the web app, the generated client) | `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm lint`, `pnpm test` | [stack/typescript/ratchet.md](../stack/typescript/ratchet.md) |
-| Swift (the macOS app) | `swift build`, `swift test`, and the lint the stack names, on macOS only | [stack/swift/ratchet.md](../stack/swift/ratchet.md) |
+| Swift (the macOS app) | `xcodebuild -project Ratchet.xcodeproj -scheme Ratchet -destination 'platform=macOS' test`, on macOS only | [stack/swift/ratchet.md](../stack/swift/ratchet.md) |
 | Postgres: a migration or query | `cargo test` with a Postgres container, `cargo sqlx prepare --check`, a migration applied to an empty database and to the last release | [stack/postgres/ratchet.md](../stack/postgres/ratchet.md) |
 | Infra: OpenTofu, Packer, Kubernetes manifests | `tofu fmt -check -recursive`, `tofu init -backend=false`, `tofu validate`, `tofu test`; `packer fmt -check` and `packer validate`; the backend contract suite | [stack/infra/ratchet.md](../stack/infra/ratchet.md) |
 | A design board or token | `python3 design/tools/tokens.py`, then `python3 design/tools/tokens.py --check` (works today) | [design mockups](../design/mockups.md) |
