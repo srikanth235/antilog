@@ -20,7 +20,7 @@
 | spend record | One append-only row of money or tokens, tied to a run | an invoice |
 | machine | One launched instance, tagged with its run | a server someone owns |
 | clean-up check | The verification that every tagged resource of a run is gone | a hope |
-| where | This machine or Cloud: where agents run (glossary) | location |
+| where | This machine or Cloud: where agents run (glossary). This machine is a Mac running the macOS app (target), a backend like any other; measuring never runs there | location |
 
 ## How this area refers to the others
 
@@ -37,4 +37,4 @@ Provider words (regions, instance ids, bucket names, role ARNs, node pools, Netw
 3. The agent's code runs the experiment and reads data through connectors itself.
 4. It starts the evaluator on different machines, measures, then removes every sandbox and shows it removed.
 
-The server orchestrates and records: ids, versions, numbers, states and audit rows. It never connects to data, and Ratchet holds no access to the customer's cloud. There is no cross-account role and no serverless compute in Ratchet's account for now. A runner on someone's laptop is not supported.
+The server orchestrates and records: ids, versions, numbers, states and audit rows. It never connects to data, and Ratchet holds no access to the customer's cloud. There is no cross-account role and no serverless compute in Ratchet's account for now. Measuring on someone's laptop is not supported; a Mac may be the "This machine" backend where agents propose, with the same scoped credentials, budget and clean-up as any backend.

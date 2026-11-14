@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SettingsRail</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="./tokens.css">
+<link rel="stylesheet" href="./icons.css">
+<link rel="stylesheet" href="./components.css">
+</helmet>
+<div class="board" style="display: contents;">
+<div class="sd-rail">
+  <label class="sfield"><i class="ic i-search" aria-hidden="true"></i><input placeholder="Search settings" aria-label="Search settings" autocomplete="off" spellcheck="false"></label>
+  <nav class="sd-groups" aria-label="Settings sections">
+    <sc-for list="{{groups}}" as="g">
+      <div class="sd-grp" role="group" aria-label="{{g.name}}"><span class="t-label">{{g.name}}</span>
+        <sc-for list="{{g.items}}" as="i"><a class="{{i.cls}}" href="{{i.href}}"><i class="ic {{i.icon}}" aria-hidden="true"></i><span class="grow ell">{{i.label}}</span></a></sc-for>
+      </div>
+    </sc-for>
+  </nav>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"active":{"editor":"text","default":"Profile"},"dark":{"editor":"text","default":""},"$preview":{"width":272,"height":660}}'>
+// Props: active = the section label (Profile, Appearance, Access tokens, General, Users and groups,
+// Single sign-on, Infrastructure, Budgets, Notes, Audit logs); dark = "1" in a dark twin.
+// links: SettingsProfile SettingsAppearance SettingsTokens SettingsGeneral SettingsUsers SettingsSso Infrastructure SettingsBudgets SettingsNotes SettingsAudit
+class Component extends DCLogic {
+  renderVals() {
+    const active = this.props.active ?? 'Profile';
+    const sfx = this.props.dark ? 'Dark' : '';
+    const link = (b) => b + sfx + '.dc.html';
+    const G = [
+      ['You', [['Profile', 'g-user', 'SettingsProfile'], ['Appearance', 'i-sun', 'SettingsAppearance'], ['Access tokens', 'i-key', 'SettingsTokens']]],
+      ['Organization', [['General', 'i-org', 'SettingsGeneral'], ['Users and groups', 'i-users', 'SettingsUsers'], ['Single sign-on', 'i-lock', 'SettingsSso'], ['Infrastructure', 'g-cloud', 'Infrastructure'], ['Budgets', 'g-gauge', 'SettingsBudgets'], ['Notes', 'g-note', 'SettingsNotes'], ['Audit logs', 'g-hist', 'SettingsAudit']]],
+    ];
+    return { groups: G.map(([name, items]) => ({ name, items: items.map(([label, icon, b]) => ({ label, icon, href: link(b), cls: label === active ? 'sd-nav on' : 'sd-nav' })) })) };
+  }
+}
+</script>
+</body>
+</html>

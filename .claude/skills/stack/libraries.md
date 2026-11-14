@@ -118,6 +118,23 @@ Background jobs use a small queue in Postgres (`FOR UPDATE SKIP LOCKED`). No Red
 | `vitest` / `@playwright/test` | 5.1.0 / 1.65.1 |
 | `@biomejs/biome` | 2.6.7 |
 
+**macOS app (target)**
+
+A proposal, not yet built. The app is SwiftUI and macOS only; Windows and Linux use the web app. See [swift.md](swift.md).
+
+| Tool | Version |
+| --- | --- |
+| Xcode | 27.2 |
+| Swift | 6.4.2 |
+| UI | SwiftUI |
+| SDK | macOS 27 |
+| Deployment target | macOS 26 (a proposal) |
+| Sparkle (updates) | 2.10.0 |
+
+- **OPEN:** Sparkle against the Mac App Store. Sparkle suits a direct download; the Mac App Store has its own updates and a sandbox that may limit the local runner. The owner decides, and Sparkle is not adopted until then.
+- The runner is the same Rust `ratchet-runner`, bundled as a helper inside the app. There is no second implementation in Swift.
+- Colours and words are generated from `design/tokens.toml` and the words catalogue, never written by hand.
+
 **Delivery**
 
 | Tool | Version |

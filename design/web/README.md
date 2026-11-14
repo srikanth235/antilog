@@ -10,7 +10,7 @@ The approved direction for the web client of the server product. It is a clickab
 | `canvas.json` | The Design canvas layout: the two boards and the launch file. |
 | `src/` | The parts of `Main.dc.html` and the script that assembles them. |
 
-The shape of the app and the words on it are in [`.claude/skills/design/behaviour.md`](../../.claude/skills/design/behaviour.md) and [`.claude/skills/design/ui-terms.md`](../../.claude/skills/design/ui-terms.md).
+The shape of the app and the words on it are in [`.claude/skills/design/behaviour.md`](../../.claude/skills/design/behaviour.md) and [`docs/GLOSSARY.md`](../../docs/GLOSSARY.md).
 
 ## View it
 

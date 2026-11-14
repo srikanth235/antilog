@@ -1,0 +1,583 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-11-14T09:00:00Z"
+  },
+  "title": "Ratchet Mockups",
+  "launch": {
+    "view": "canvas",
+    "page": "web-light"
+  },
+  "pages": [
+    {
+      "id": "rules",
+      "name": "Design rules"
+    },
+    {
+      "id": "components",
+      "name": "Components"
+    },
+    {
+      "id": "web-light",
+      "name": "Web \u00b7 light"
+    },
+    {
+      "id": "web-dark",
+      "name": "Web \u00b7 dark"
+    },
+    {
+      "id": "mac-light",
+      "name": "macOS \u00b7 light"
+    },
+    {
+      "id": "mac-dark",
+      "name": "macOS \u00b7 dark"
+    },
+    {
+      "id": "archive",
+      "name": "Archive"
+    }
+  ],
+  "boards": {
+    "Connectors.dc.html": {
+      "x": 0,
+      "y": 7700,
+      "w": 1440,
+      "h": 900,
+      "title": "Connectors",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "ConnectorsDark.dc.html": {
+      "x": 0,
+      "y": 7700,
+      "w": 1440,
+      "h": 900,
+      "title": "Connectors \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Decisions.dc.html": {
+      "x": 1520,
+      "y": 0,
+      "w": 1440,
+      "h": 1400,
+      "title": "Decisions",
+      "page": "rules"
+    },
+    "DesignRules.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 4880,
+      "title": "Design rules",
+      "page": "rules"
+    },
+    "MacMain.dc.html": {
+      "x": 0,
+      "y": 3300,
+      "w": 1440,
+      "h": 900,
+      "title": "Thread running",
+      "page": "mac-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "MacMainDark.dc.html": {
+      "x": 0,
+      "y": 3300,
+      "w": 1440,
+      "h": 900,
+      "title": "Thread running \u00b7 dark",
+      "page": "mac-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "MacSidebar.dc.html": {
+      "x": 1952,
+      "y": 0,
+      "w": 248,
+      "h": 844,
+      "title": "macOS sidebar",
+      "page": "components"
+    },
+    "MacToolbar.dc.html": {
+      "x": 2280,
+      "y": 0,
+      "w": 1112,
+      "h": 52,
+      "title": "macOS toolbar",
+      "page": "components"
+    },
+    "SettingsProfile.dc.html": {
+      "x": 0,
+      "y": 9900,
+      "w": 1440,
+      "h": 900,
+      "title": "Settings, Profile",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SettingsProfileDark.dc.html": {
+      "x": 0,
+      "y": 9900,
+      "w": 1440,
+      "h": 900,
+      "title": "Settings, Profile \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SettingsRail.dc.html": {
+      "x": 1600,
+      "y": 0,
+      "w": 272,
+      "h": 660,
+      "title": "Settings rail",
+      "page": "components"
+    },
+    "Sidebar.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 256,
+      "h": 900,
+      "title": "Sidebar",
+      "page": "components"
+    },
+    "ThreadRunning.dc.html": {
+      "x": 0,
+      "y": 3300,
+      "w": 1440,
+      "h": 900,
+      "title": "Thread running",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "ThreadRunningDark.dc.html": {
+      "x": 0,
+      "y": 3300,
+      "w": 1440,
+      "h": 900,
+      "title": "Thread running \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Topbar.dc.html": {
+      "x": 336,
+      "y": 0,
+      "w": 1184,
+      "h": 52,
+      "title": "Top bar",
+      "page": "components"
+    }
+  },
+  "notes": {
+    "rules0": {
+      "kind": "title1",
+      "page": "rules",
+      "text": "0 \u00b7 Rules",
+      "x": 0,
+      "y": -130,
+      "w": 240,
+      "maxW": 2960
+    },
+    "comp0": {
+      "kind": "title1",
+      "page": "components",
+      "text": "Components, imported by the boards with dc-import",
+      "x": 0,
+      "y": -130,
+      "w": 240,
+      "maxW": 3400
+    },
+    "web-light1": {
+      "kind": "title1",
+      "page": "web-light",
+      "text": "1 \u00b7 Sign in",
+      "x": 0,
+      "y": 970,
+      "w": 240,
+      "maxW": 2960
+    },
+    "web-dark1": {
+      "kind": "title1",
+      "page": "web-dark",
+      "text": "1 \u00b7 Sign in",
+      "x": 0,
+      "y": 970,
+      "w": 240,
+      "maxW": 2960
+    },
+    "mac-light1": {
+      "kind": "title1",
+      "page": "mac-light",
+      "text": "1 \u00b7 Sign in",
+      "x": 0,
+      "y": 970,
+      "w": 240,
+      "maxW": 2960
+    },
+    "mac-dark1": {
+      "kind": "title1",
+      "page": "mac-dark",
+      "text": "1 \u00b7 Sign in",
+      "x": 0,
+      "y": 970,
+      "w": 240,
+      "maxW": 2960
+    },
+    "web-light2": {
+      "kind": "title1",
+      "page": "web-light",
+      "text": "2 \u00b7 Start",
+      "x": 0,
+      "y": 2070,
+      "w": 240,
+      "maxW": 2960
+    },
+    "web-dark2": {
+      "kind": "title1",
+      "page": "web-dark",
+      "text": "2 \u00b7 Start",
+      "x": 0,
+      "y": 2070,
+      "w": 240,
+      "maxW": 2960
+    },
+    "mac-light2": {
+      "kind": "title1",
+      "page": "mac-light",
+      "text": "2 \u00b7 Start",
+      "x": 0,
+      "y": 2070,
+      "w": 240,
+      "maxW": 2960
+    },
+    "mac-dark2": {
+      "kind": "title1",
+      "page": "mac-dark",
+      "text": "2 \u00b7 Start",
+      "x": 0,
+      "y": 2070,
+      "w": 240,
+      "maxW": 2960
+    },
+    "web-light3": {
+      "kind": "title1",
+      "page": "web-light",
+      "text": "3 \u00b7 Thread",
+      "x": 0,
+      "y": 3170,
+      "w": 240,
+      "maxW": 2960
+    },
+    "web-dark3": {
+      "kind": "title1",
+      "page": "web-dark",
+      "text": "3 \u00b7 Thread",
+      "x": 0,
+      "y": 3170,
+      "w": 240,
+      "maxW": 2960
+    },
+    "mac-light3": {
+      "kind": "title1",
+      "page": "mac-light",
+      "text": "3 \u00b7 Thread",
+      "x": 0,
+      "y": 3170,
+      "w": 240,
+      "maxW": 2960
+    },
+    "mac-dark3": {
+      "kind": "title1",
+      "page": "mac-dark",
+      "text": "3 \u00b7 Thread",
+      "x": 0,
+      "y": 3170,
+      "w": 240,
+      "maxW": 2960
+    },
+    "web-light4": {
+      "kind": "title1",
+      "page": "web-light",
+      "text": "4 \u00b7 Results",
+      "x": 0,
+      "y": 4270,
+      "w": 240,
+      "maxW": 2960
+    },
+    "web-dark4": {
+      "kind": "title1",
+      "page": "web-dark",
+      "text": "4 \u00b7 Results",
+      "x": 0,
+      "y": 4270,
+      "w": 240,
+      "maxW": 2960
+    },
+    "mac-light4": {
+      "kind": "title1",
+      "page": "mac-light",
+      "text": "4 \u00b7 Results",
+      "x": 0,
+      "y": 4270,
+      "w": 240,
+      "maxW": 2960
+    },
+    "mac-dark4": {
+      "kind": "title1",
+      "page": "mac-dark",
+      "text": "4 \u00b7 Results",
+      "x": 0,
+      "y": 4270,
+      "w": 240,
+      "maxW": 2960
+    },
+    "web-light5": {
+      "kind": "title1",
+      "page": "web-light",
+      "text": "5 \u00b7 History",
+      "x": 0,
+      "y": 5370,
+      "w": 240,
+      "maxW": 2960
+    },
+    "web-dark5": {
+      "kind": "title1",
+      "page": "web-dark",
+      "text": "5 \u00b7 History",
+      "x": 0,
+      "y": 5370,
+      "w": 240,
+      "maxW": 2960
+    },
+    "mac-light5": {
+      "kind": "title1",
+      "page": "mac-light",
+      "text": "5 \u00b7 History",
+      "x": 0,
+      "y": 5370,
+      "w": 240,
+      "maxW": 2960
+    },
+    "mac-dark5": {
+      "kind": "title1",
+      "page": "mac-dark",
+      "text": "5 \u00b7 History",
+      "x": 0,
+      "y": 5370,
+      "w": 240,
+      "maxW": 2960
+    },
+    "web-light6": {
+      "kind": "title1",
+      "page": "web-light",
+      "text": "6 \u00b7 Customize",
+      "x": 0,
+      "y": 6470,
+      "w": 240,
+      "maxW": 2960
+    },
+    "web-dark6": {
+      "kind": "title1",
+      "page": "web-dark",
+      "text": "6 \u00b7 Customize",
+      "x": 0,
+      "y": 6470,
+      "w": 240,
+      "maxW": 2960
+    },
+    "mac-light6": {
+      "kind": "title1",
+      "page": "mac-light",
+      "text": "6 \u00b7 Customize",
+      "x": 0,
+      "y": 6470,
+      "w": 240,
+      "maxW": 2960
+    },
+    "mac-dark6": {
+      "kind": "title1",
+      "page": "mac-dark",
+      "text": "6 \u00b7 Customize",
+      "x": 0,
+      "y": 6470,
+      "w": 240,
+      "maxW": 2960
+    },
+    "web-light7": {
+      "kind": "title1",
+      "page": "web-light",
+      "text": "7 \u00b7 Connectors",
+      "x": 0,
+      "y": 7570,
+      "w": 240,
+      "maxW": 2960
+    },
+    "web-dark7": {
+      "kind": "title1",
+      "page": "web-dark",
+      "text": "7 \u00b7 Connectors",
+      "x": 0,
+      "y": 7570,
+      "w": 240,
+      "maxW": 2960
+    },
+    "mac-light7": {
+      "kind": "title1",
+      "page": "mac-light",
+      "text": "7 \u00b7 Connectors",
+      "x": 0,
+      "y": 7570,
+      "w": 240,
+      "maxW": 2960
+    },
+    "mac-dark7": {
+      "kind": "title1",
+      "page": "mac-dark",
+      "text": "7 \u00b7 Connectors",
+      "x": 0,
+      "y": 7570,
+      "w": 240,
+      "maxW": 2960
+    },
+    "web-light8": {
+      "kind": "title1",
+      "page": "web-light",
+      "text": "8 \u00b7 Infrastructure",
+      "x": 0,
+      "y": 8670,
+      "w": 240,
+      "maxW": 2960
+    },
+    "web-dark8": {
+      "kind": "title1",
+      "page": "web-dark",
+      "text": "8 \u00b7 Infrastructure",
+      "x": 0,
+      "y": 8670,
+      "w": 240,
+      "maxW": 2960
+    },
+    "mac-light8": {
+      "kind": "title1",
+      "page": "mac-light",
+      "text": "8 \u00b7 Infrastructure",
+      "x": 0,
+      "y": 8670,
+      "w": 240,
+      "maxW": 2960
+    },
+    "mac-dark8": {
+      "kind": "title1",
+      "page": "mac-dark",
+      "text": "8 \u00b7 Infrastructure",
+      "x": 0,
+      "y": 8670,
+      "w": 240,
+      "maxW": 2960
+    },
+    "web-light9": {
+      "kind": "title1",
+      "page": "web-light",
+      "text": "9 \u00b7 Organization",
+      "x": 0,
+      "y": 9770,
+      "w": 240,
+      "maxW": 2960
+    },
+    "web-dark9": {
+      "kind": "title1",
+      "page": "web-dark",
+      "text": "9 \u00b7 Organization",
+      "x": 0,
+      "y": 9770,
+      "w": 240,
+      "maxW": 2960
+    },
+    "mac-light9": {
+      "kind": "title1",
+      "page": "mac-light",
+      "text": "9 \u00b7 Organization",
+      "x": 0,
+      "y": 9770,
+      "w": 240,
+      "maxW": 2960
+    },
+    "mac-dark9": {
+      "kind": "title1",
+      "page": "mac-dark",
+      "text": "9 \u00b7 Organization",
+      "x": 0,
+      "y": 9770,
+      "w": 240,
+      "maxW": 2960
+    }
+  },
+  "noteOrder": [
+    "rules0",
+    "comp0",
+    "web-light1",
+    "web-dark1",
+    "mac-light1",
+    "mac-dark1",
+    "web-light2",
+    "web-dark2",
+    "mac-light2",
+    "mac-dark2",
+    "web-light3",
+    "web-dark3",
+    "mac-light3",
+    "mac-dark3",
+    "web-light4",
+    "web-dark4",
+    "mac-light4",
+    "mac-dark4",
+    "web-light5",
+    "web-dark5",
+    "mac-light5",
+    "mac-dark5",
+    "web-light6",
+    "web-dark6",
+    "mac-light6",
+    "mac-dark6",
+    "web-light7",
+    "web-dark7",
+    "mac-light7",
+    "mac-dark7",
+    "web-light8",
+    "web-dark8",
+    "mac-light8",
+    "mac-dark8",
+    "web-light9",
+    "web-dark9",
+    "mac-light9",
+    "mac-dark9"
+  ],
+  "attachments": {},
+  "designSystems": [],
+  "order": [
+    "Connectors.dc.html",
+    "ConnectorsDark.dc.html",
+    "Decisions.dc.html",
+    "DesignRules.dc.html",
+    "MacMain.dc.html",
+    "MacMainDark.dc.html",
+    "MacSidebar.dc.html",
+    "MacToolbar.dc.html",
+    "SettingsProfile.dc.html",
+    "SettingsProfileDark.dc.html",
+    "SettingsRail.dc.html",
+    "Sidebar.dc.html",
+    "ThreadRunning.dc.html",
+    "ThreadRunningDark.dc.html",
+    "Topbar.dc.html"
+  ]
+}

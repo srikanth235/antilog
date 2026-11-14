@@ -4,7 +4,7 @@
 - Commit only when asked. Open a pull request only when asked.
 - Do not force-push a branch someone else is working on.
 - Never skip, disable or delete a test, hook or check to get green. Fix the code.
-- Do not commit generated files by hand. Regenerate them: `api/openapi.yaml`, `design/web/Main.dc.html` (from `design/web/src/assemble.sh`).
+- Do not commit generated files by hand. Regenerate them: `api/openapi.yaml`, `design/mockups/tokens.css` and the dark twins (from `python3 design/tools/tokens.py`).
 - Never commit a secret, a token or a `.env` file.
 - `Cargo.lock` is not committed; leave it out.
 

@@ -6,7 +6,7 @@
 - **Agents are infrastructure workers.** An agent is something infrastructure runs. An optimization picks which agents and how many. The model provider is a field on the agent.
 - **Infrastructure records spend; the optimization sets the cap.** The limit belongs to the goal; the meter belongs to the place work runs.
 - **A benchmark belongs to the optimization.** It points at data (context) and machines (infrastructure). It is not a context or infrastructure object.
-- **The native Mac app was removed.** The web app is the client (target). Whether a native client returns is the owner's call.
+- **The earlier native Mac app was removed.** The web app is the client (target). A new native macOS app is ruled in the next section (target).
 - **Sign-in is OpenID Connect only.** Ratchet cloud offers GitHub and Google. A self-hosted server uses the administrator's provider.
 
 ## Architecture (target)
@@ -21,9 +21,19 @@ Decided by the owner. Everything here is target; nothing is built on this branch
 - **Sandboxes are cloud-agnostic.** Backends sit behind one trait. Kubernetes comes first, with separate node pools for workspace and evaluator and a NetworkPolicy for "no route". Then VMs on AWS, GCP and Azure. Measuring still runs on different machines from proposing, and a benchmark stays on one provider and one machine type. Provider words stay inside each adapter. On-prem Kubernetes counts as the customer's infrastructure.
 - **Connectors** an agent's code may use: Snowflake, Databricks, DynamoDB, BigQuery, Postgres, S3, GitHub, GitLab and any MCP server. Each knows how to mint a scoped, read-only, holdout-excluding credential for its system.
 
+## The macOS app and the "This machine" backend (target)
+
+Decided by the owner, 14 Nov.
+
+- **A native macOS app, SwiftUI, macOS only at launch.** Windows and Linux use the web app. It is a client of the server's API and a local runner.
+- **The Mac can be the "This machine" sandbox backend.** Agents propose there, with the same short-lived, read-only, scoped credentials as on any backend, governed, budgeted and cleaned up the same way.
+- **Measuring never runs on the laptop.** The evaluator stays in the customer's infrastructure, so a Mac can never hold the holdout credential or produce a number that counts.
+- **Clients share behaviour, words and element ids, never pixels.** The web app and the Mac app do not diverge on state or words; see [design behaviour](../design/behaviour.md).
+- **Open:** how the Mac app is distributed, direct with Sparkle or the Mac App Store; see [stack/libraries.md](../stack/libraries.md).
+
 ## The web client (target)
 
-The owner approved a web-client direction, shown as a clickable prototype in `design/web/`.
+The owner approved a web-client direction, shown as boards in `design/mockups/` (the earlier clickable prototype in `design/web/` is retired).
 
 - **The screen is organised around experiments as sessions and one Customize page.** This replaces the four navigation groups (Experiments, Data, Compute, Admin). The three basics still own everything underneath. Area colour survives in the stepper and in the lineage columns (Experiment, Data, Compute). Behaviour is in [design behaviour](../design/behaviour.md).
 - **An experiment is a session.** It opens as one thread: header, chart, conversation, trials, result. "Draft experiment" creates it at once as a Draft, and nothing is created in the customer's cloud until Approve.

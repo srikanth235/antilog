@@ -14,7 +14,7 @@ What every area owes the customer, and the one rule each follows. A promise kept
 | Context | **Read-only** | Writing out needs an explicit, audited action. |
 | Infrastructure | **Spend** | No spend without a limit. |
 | Infrastructure | **Clean up** | Everything created is removed, and shown. |
-| Infrastructure | **Customer's account** | Work runs in the customer's infrastructure, and Ratchet holds no access to it. |
+| Infrastructure | **Customer's account** | Work runs in the customer's infrastructure, and Ratchet holds no access to it. Measuring never leaves it; a Mac may propose as "This machine" (target). |
 | Infrastructure | **Any cloud** | The same promises hold on every provider. |
 | Organization | **Permission** | Every read and write is role-checked. |
 | Organization | **Audit** | Every write is a logged action. |

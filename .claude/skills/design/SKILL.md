@@ -1,19 +1,20 @@
 ---
 name: design
 description: >-
-  What does it look like and say? Use for any visual or UX change, a mockup, a design token or icon, a screen's behaviour (navigation, page states, the holdout marking, colour, accessibility, the web client prototype), or any word a user reads (strings, the glossary).
+  What does it look like and say? Use for any visual or UX change, a mockup board, light and dark, a design token or icon, a screen's behaviour (page types, navigation, states, the holdout marking, colour, accessibility), the macOS app (target) next to the web app, or any word a user reads (strings, the glossary).
 ---
 
 # Design
 
-Every visual or UX change starts in `design/`. The look is Midnight Brass: brass is the one accent, calm, dark and light both designed. The web client (target) has its approved prototype in `design/web/`. Behaviour and words live here. Every client shares behaviour and words, never pixels.
+Every visual or UX change starts in `design/mockups/`, as a board. The look is Midnight Brass: a calm, exact dark instrument panel with one brass accent, and the same palette on warm paper, both designed from day zero. Values live in `design/tokens.toml` and nowhere else. Behaviour and words live here. The web app and the macOS app (target) share behaviour, words and element ids, never pixels.
 
 | If you are doing | Read |
 | --- | --- |
-| A token, a colour, a size, the three basics' colours | [tokens.md](tokens.md) |
-| Deciding how a screen behaves: navigation, states, the holdout, a new optimization | [behaviour.md](behaviour.md) |
+| Changing a board, a token or an icon; running the generator | [mockups.md](mockups.md) |
+| Deciding how a screen behaves: page types, navigation, states, the holdout, colour and type, clients, accessibility | [behaviour.md](behaviour.md) |
 | Writing or changing a word a user reads | [wording.md](wording.md) |
-| Naming anything on a screen: what the code calls it and what the user reads | [ui-terms.md](ui-terms.md) |
-| The web client's look and flow: sessions sidebar, thread, Customize, search | [`design/web/`](../../../design/web/README.md), then [behaviour.md](behaviour.md) |
-| Building a screen for the web client (target) | [change/screen.md](../change/screen.md) |
+| The look at a glance, and the owner's dated calls | `design/mockups/DesignRules.dc.html`, `design/mockups/Decisions.dc.html` |
+| A value (colour, size, radius, type) | `design/tokens.toml` |
+| What the user reads for a code name | the "On screen" column of [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md) |
+| Building a screen in the web app or the macOS app (target) | [change/screen.md](../change/screen.md) |
 | Deciding what the product should do | [product](../product/SKILL.md) |

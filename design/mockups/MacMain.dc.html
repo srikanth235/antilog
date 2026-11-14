@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>macOS, Thread running</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="./tokens.css">
+<link rel="stylesheet" href="./icons.css">
+<link rel="stylesheet" href="./components.css">
+
+</helmet>
+<div class="board mdesk" style="width: 1440px; height: 900px; position: relative; overflow: hidden;">
+  <div class="mwin">
+    <dc-import name="MacSidebar" active="ThreadRunning" hint-size="248px,844px"></dc-import>
+    <main class="main">
+      <dc-import name="MacToolbar" title="Checkout p95" status="Running" actions="1" hint-size="1112px,52px"></dc-import>
+      <header class="thead"><div class="c760" style="padding-top: 12px;"><div class="stats">
+      <div class="stat"><span class="k ell">Checkout p95 latency</span><span class="v"><span class="mono" style="font-size: 13px;">412 ms → 344 ms</span> <span class="mono" style="font-size: 13px; margin-left: 6px; color: var(--good);">−16.5%</span></span></div>
+      <div class="stat"><span class="k">Run</span><span class="v">3</span></div>
+      <div class="stat"><span class="k">Trials</span><span class="v">9<span class="sub2"> 3 in this run</span></span></div>
+      <div class="stat"><span class="k">Spend</span><span class="v">$38 <span class="xs mut" style="font-weight: 400;">of $50</span></span><span class="bar" style="margin-top: 4px;"><span style="width: 76%;"></span></span></div>
+      <div class="stat"><span class="k">Elapsed</span><span class="v">52 m</span></div>
+    </div></div></header>
+      <div class="scroll" style="display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden;">
+  <div class="c760 thread" style="gap: 16px; padding-top: 16px; padding-bottom: 20px;">
+    <div class="card" style="padding: 14px 20px 10px;"><div class="rw between wrap g8"><span style="font-weight: 500;">Checkout p95 latency per trial</span><span class="legend"><span><i class="dot" style="background: var(--good);"></i>Accepted</span><span><i class="dot" style="background: var(--ink3);"></i>Within noise</span><span><i class="dot" style="background: var(--bad);"></i>Worse</span><span><i class="dot" style="background: var(--warn);"></i>Failed holdout</span><span><i class="dot" style="box-shadow: inset 0 0 0 1.5px var(--ink3);"></i>Measuring</span></span></div><div class="plot" role="group" aria-label="Checkout p95 latency per trial" style="height: 84px;"><div class="band" style="top: 33.61%; height: 12.52%;"></div><div class="basel" style="top: 39.87%;"></div><span class="basel-l" style="top: 39.87%;">Baseline 412 ms</span><span class="tick" style="top: 10.94%;">452 ms</span><span class="tick" style="top: 50%;">398 ms</span><span class="tick" style="top: 89.06%;">344 ms</span><span class="sepl" style="left: 0%;">Run 1</span><span class="sep" style="left: 32.75%;"></span><span class="sepl" style="left: 32.75%;">Run 2</span><span class="sep" style="left: 67.25%;"></span><span class="sepl" style="left: 67.25%;">Run 3</span><span class="sg h" style="left: 4%; top: 42.04%; width: 11.5%; height: 0;"></span><span class="sg h" style="left: 15.5%; top: 42.04%; width: 11.5%; height: 0;"></span><span class="sg h" style="left: 27%; top: 42.04%; width: 11.5%; height: 0;"></span><span class="sg v" style="left: 38.5%; top: 42.04%; width: 0; height: 2.89%;"></span><span class="sg h" style="left: 38.5%; top: 44.94%; width: 11.5%; height: 0;"></span><span class="sg h" style="left: 50%; top: 44.94%; width: 11.5%; height: 0;"></span><span class="sg h" style="left: 61.5%; top: 44.94%; width: 11.5%; height: 0;"></span><span class="sg v" style="left: 73%; top: 44.94%; width: 0; height: 44.13%;"></span><span class="dot2" title="Claude Code, run 1: 409 ms, within noise" style="left: 4%; top: 42.04%; --c: var(--ink3);"></span><span class="dot2" style="left: 15.5%; top: 37.7%; --c: var(--ink3);"></span><span class="dot2" title="Grok, run 1: 452 ms, worse" style="left: 27%; top: 10.94%; --c: var(--bad);"></span><span class="dot2" style="left: 38.5%; top: 44.94%; --c: var(--ink3);"></span><span class="dot2" style="left: 50%; top: 36.98%; --c: var(--ink3);"></span><span class="dot2" style="left: 61.5%; top: 34.81%; --c: var(--ink3);"></span><span class="dot2" title="Claude Code, run 3: 344 ms, beats noise" style="left: 73%; top: 89.06%; --c: var(--good);"></span><span class="dot2 hollow" style="left: 84.5%; top: 39.87%; --c: var(--ink3);"></span><span class="dot2 hollow" style="left: 96%; top: 39.87%; --c: var(--ink3);"></span></div><div class="rw between xs mut" style="padding: 8px 8px 0 52px;"><span>Dashed line is the baseline, the shaded strip is noise</span><span>Lower is better</span></div></div>
+    <div class="msg"><span class="rm" aria-hidden="true"></span><div class="body"><p class="say">Approved. Run 3 is under way.</p><div class="card" style="display: flex; flex-direction: column; gap: 10px; padding: 14px 20px;"><div class="stp" role="img" aria-label="Step 5 of 8, the evaluator is measuring"><span class="nd done" style="--c: var(--accent);"></span><span class="ln done"></span><span class="nd done" style="--c: var(--infra);"></span><span class="ln done"></span><span class="nd done" style="--c: var(--good);"></span><span class="ln done"></span><span class="nd done" style="--c: var(--infra);"></span><span class="ln done"></span><span class="nd cur" style="--c: var(--infra);"></span><span class="ln"></span><span class="nd up" style="--c: var(--accent);"></span><span class="ln"></span><span class="nd up" style="--c: var(--good);"></span><span class="ln"></span><span class="nd up" style="--c: var(--infra);"></span></div><span class="sm ink2">Step 5 of 8 · agents propose on This machine; the evaluator measures with the holdout elsewhere.</span></div></div></div>
+    <div class="indent"><div class="card flush"><div class="rw between" style="padding: 10px 16px; border-bottom: 1px solid var(--line);"><span class="t-label">Trials · run 3</span></div>
+      <div class="trow"><div class="thb"><span class="rw g12"><span class="avatar" aria-hidden="true">CC</span><span class="grow rw g8" style="min-width: 0;"><span style="font-weight: 500; white-space: nowrap;">Claude Code</span><span class="ink2 ell">Pool size 20 to 48, reuse clients</span></span><span class="tg" style="--c: var(--good);">Beats noise</span><i class="ic s mut chev i-chev"></i></span><span class="rw wrap xs mut" style="gap: 2px 16px; padding-left: 40px;"><span>3 files <span style="color: var(--good);">+41</span> <span style="color: var(--bad);">−17</span></span><span class="mono">412 ms → 344 ms</span><span class="mono" style="color: var(--good);">−16.5%</span><span>6 m</span></span></div></div>
+      <div class="trow"><div class="thb"><span class="rw g12"><span class="avatar" aria-hidden="true">Cx</span><span class="grow rw g8" style="min-width: 0;"><span style="font-weight: 500; white-space: nowrap;">Codex</span><span class="ink2 ell">Cache pricing lookups per request</span></span><span class="tg hollow" style="--c: var(--ink3);">Measuring</span><i class="ic s mut chev i-chev"></i></span><span class="rw wrap xs mut" style="gap: 2px 16px; padding-left: 40px;"><span>2 files <span style="color: var(--good);">+28</span> <span style="color: var(--bad);">−6</span></span><span class="mono">Measuring in the evaluator sandbox</span></span></div></div>
+      <div class="trow"><div class="thb"><span class="rw g12"><span class="avatar" aria-hidden="true">Gk</span><span class="grow rw g8" style="min-width: 0;"><span style="font-weight: 500; white-space: nowrap;">Grok</span><span class="ink2 ell">Inline tax calculation, drop retry</span></span><span class="tg hollow" style="--c: var(--ink3);">Measuring</span><i class="ic s mut chev i-chev"></i></span><span class="rw wrap xs mut" style="gap: 2px 16px; padding-left: 40px;"><span>4 files <span style="color: var(--good);">+52</span> <span style="color: var(--bad);">−31</span></span><span class="mono">Measuring in the evaluator sandbox</span></span></div></div>
+    </div></div>
+  </div>
+</div>
+<div class="dock"><div class="c760"><div class="dockbox"><span class="grow ink2" style="padding: 8px 0; color: var(--ink3);">Steer the next trial, e.g. focus on database queries</span><button class="btn primary off" style="min-height: 36px;">Send</button></div></div></div>
+    </main>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

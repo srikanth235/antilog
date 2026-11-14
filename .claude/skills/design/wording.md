@@ -1,8 +1,10 @@
 # Wording
 
-The vocabulary source is [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md). Read it before writing a word a user sees. Where it and this page disagree, the glossary wins and this page is fixed.
+The vocabulary source is [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md), including its "On screen" column. Read it before writing a word a user sees. Where it and this page disagree, the glossary wins and this page is fixed.
 
-## Preferred and banned (from the glossary)
+**Copy is signage, not conversation**: calm, concrete, specific, read at a glance. "Win merged" is the register; a sentence that pads a fact is not.
+
+## Say and never say
 
 | Say | Never say |
 | --- | --- |
@@ -17,10 +19,56 @@ The vocabulary source is [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md). Read i
 | Note (text left on a run to steer the next candidate) | comment, prompt |
 | Pause Agent | Pause alone |
 | Config branch (`ratchet/config`) | draft PR |
+| connector | source |
+| sandbox (and "Create workspace" only as the stepper step) | workspace, anywhere else |
+| trial | candidate (on screen) |
+| evaluation | benchmark (on screen) |
+| primary metric, guardrail metrics | goal metric, limits (on screen) |
+| acceptance criteria, result, lineage | accept rule, verdict, receipt (on screen) |
+| permission ("Can read", "No access") | grant |
+| user, service principal | member, service account (on screen) |
+| Restricted to evaluator | evaluator only, hidden |
+| Skill (a skill pack) | skill pack on screen; never the repo's guidance files |
+| launcher; runner when installed for Ratchet cloud | agent host, worker |
+| Ratchet cloud, Self-hosted | SaaS, on-prem |
+| a readable label ("Experiment created") | a raw action code (`optimization.create`) |
+| experiment (screen, target) | optimization on screen: OPEN, see below |
 
-The glossary also defines Chat and Draft. Terms for context, infrastructure and organization (dataset, grant, workspace, role) are not in the glossary yet. Add each to the glossary in the same change that introduces it.
+The glossary also defines Chat and Draft. Add each new term to the glossary in the same change that introduces it. Prefer the term Palantir Foundry or Databricks already uses; if a screen needs a word that is not in the glossary, find theirs first and add the row.
 
-What the user reads for those terms, and for the areas themselves, is in [ui-terms.md](ui-terms.md) (target). It borrows the terms of Palantir Foundry and Databricks, and renames "optimization" to "experiment" on screen, which the glossary does not yet say; that conflict is the owner's to settle.
+**OPEN, the owner's call:** whether the screen says "experiment" or "optimization". The glossary's table says optimization; the web terms say experiment. Until the owner settles it, a board follows the web terms and the CLI, MCP and docs keep "optimization".
+
+The CLI and MCP tools are read by people too. They print the screen words, and may keep code names in flags and JSON keys.
+
+## Budget by surface
+
+| Surface | Budget |
+| --- | --- |
+| Button, action, menu row | 1 to 2 words, verb first |
+| Status | a fragment ("Win merged"), never "successfully" |
+| Empty state | one sentence and at most one action; no feature explanation |
+| Banner (offline, degraded) | one sentence: the state, plus one action or one consequence |
+| Error | what happened and what to do, about 12 words; no apology, no "Please try again" |
+| Settings label and description | the label carries the meaning; the description is one sentence or absent |
+| Placeholder | a short noun phrase |
+| Destructive confirm, consent, security or privacy disclosure | full sentences: the one home for reassurance |
+
+## Banned words
+
+Banned everywhere: "please", "successfully", "simply", "in order to", "you can", "we're sorry".
+
+## Hard caps
+
+By string-key suffix, in words (a `{placeholder}` counts as one):
+
+| Suffix | Words |
+| --- | --- |
+| `_LABEL`, `_ACTION`, `_BUTTON` | 4 |
+| `_NOTE`, `_HINT`, `_STATUS` | 12 |
+| `_BODY`, and errors | 25 |
+| `_TITLE` | 6 |
+
+A `·` never joins two thoughts in one string; it survives only between short metadata facts ("Edited · 3 days ago").
 
 ## Rules
 
@@ -30,3 +78,11 @@ What the user reads for those terms, and for the areas themselves, is in [ui-ter
 - A control states exactly what it does: "Stop optimization", not "OK".
 - A word means one thing. Do not give one object two names across pages or clients.
 - Money and units are worded the same on every page.
+- Defensive reassurance (a fact followed by what was not lost, deleted or sent) belongs only where the risk decision is made, in full sentences. A status or an empty state repeating the promise is noise.
+- A cloud account is not a connector. Cloud and cluster words (AWS, GCP, Azure, Kubernetes) appear only as sandbox backends under Infrastructure and where a run names its backend.
+- "Session" describes an experiment thread in code and in these skills; the screen never says it.
+- Model providers are a field on an agent, not a connector category.
+
+## The words catalogue (target)
+
+One catalogue of strings, generated into the web app's TypeScript and the Mac app's Swift, so both clients say the same thing and the caps above are checked in one place. Until code exists, the words live in the boards, and a board is where a new word is first written.

@@ -42,7 +42,7 @@ Use the governing principles and the non-goals below as settled. Apply them dire
 
 Ask these in order. The first one that bites usually settles it.
 
-1. **Is it a non-goal?** A shaped version of one (a "light" local runner, a "just this once" stored password) is still the non-goal.
+1. **Is it a non-goal?** A shaped version of one (a "light" evaluator on a laptop, a "just this once" stored password) is still the non-goal.
 2. **Which basic owns it?** Optimization, context, infrastructure or the organization floor. If none, question the feature before building it.
 3. **Does it break a promise, or a never-bend rule, of that area?** Read the area's `owes.md` and `rules.md`.
 4. **Does it move data or work out of the customer's infrastructure, or make the server connect to data?** If yes, the design is wrong.

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MacSidebar</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="./tokens.css">
+<link rel="stylesheet" href="./icons.css">
+<link rel="stylesheet" href="./components.css">
+</helmet>
+<div class="board" style="display: contents;">
+<dc-import name="Sidebar" variant="mac" active="{{active}}" dark="{{dark}}" hint-size="248px,844px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"active":{"editor":"text","default":"ThreadRunning"},"dark":{"editor":"text","default":""},"$preview":{"width":248,"height":844}}'>
+// The macOS window sidebar: the web Sidebar with traffic lights, a translucent ground and a
+// "This machine" status row. Same props as Sidebar (active, dark).
+class Component extends DCLogic {
+  renderVals() { return { active: this.props.active ?? 'ThreadRunning', dark: this.props.dark ?? '' }; }
+}
+</script>
+</body>
+</html>

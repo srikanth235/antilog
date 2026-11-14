@@ -6,7 +6,7 @@ This branch starts fresh. It holds the agreed design and no product code yet.
 
 - [`AGENTS.md`](AGENTS.md): what Ratchet is, how this branch is organised, and the index of the skills.
 - [`.claude/skills/`](.claude/skills): the product's promises, the three basics (optimization, context, infrastructure) over the organization, the design rules, and how work is done.
-- [`design/web/`](design/web/README.md): the approved web client prototype. Open `design/web/Main.dc.html` in a browser.
+- [`design/mockups/`](design/mockups/): the design boards, light and dark. Values are in `design/tokens.toml`; see [`design/README.md`](design/README.md).
 - [`design/icon/`](design/icon): the logo.
 - [`docs/GLOSSARY.md`](docs/GLOSSARY.md): the words.
 

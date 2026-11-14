@@ -20,7 +20,7 @@ Fix the code, not the check. Do not add TypeScript to the product without the ow
 
 ## The web app stack (target)
 
-(target) A desktop-only web app (PWA) serves Windows and Linux. Nothing of it exists. The chosen stack:
+(target) A desktop-only web app (PWA) serves Windows and Linux; macOS gets the native app too ([swift.md](swift.md)), and the web app works there as well. Nothing of it exists. The chosen stack:
 
 | Job | Choice |
 | --- | --- |
@@ -36,4 +36,4 @@ Fix the code, not the check. Do not add TypeScript to the product without the ow
 
 Versions are in [libraries.md](libraries.md).
 
-Tokens come from the one design system; see [design/tokens.md](../design/tokens.md). A library outside this list is a product call; see [libraries.md](libraries.md).
+Tokens come from `design/tokens.toml`, generated into the web app's CSS (target); see [design mockups](../design/mockups.md). A library outside this list is a product call; see [libraries.md](libraries.md).

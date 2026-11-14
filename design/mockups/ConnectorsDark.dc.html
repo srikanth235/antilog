@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Customize, Connectors · dark</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="./tokens.css">
+<link rel="stylesheet" href="./icons.css">
+<link rel="stylesheet" href="./components.css">
+
+</helmet>
+<div data-theme="dark" class="board app" style="width: 1440px; height: 900px;">
+  <dc-import dark="1" name="Sidebar" active="Customize" hint-size="256px,900px"></dc-import>
+  <main class="main">
+    <dc-import dark="1" name="Topbar" trail="Customize" hint-size="1184px,52px"></dc-import>
+    <div class="scroll">
+      <section class="page cust">
+        <div class="hd"><h1 class="t-display">Customize</h1></div>
+        <div class="ctl">
+          <div class="ctabs" role="tablist" aria-label="Customize"><button class="ptab" role="tab" aria-selected="false">Evaluations</button><button class="ptab" role="tab" aria-selected="false">Skills</button><button class="ptab on" role="tab" aria-selected="true">Connectors</button><button class="ptab" role="tab" aria-selected="false">Agents</button><button class="ptab" role="tab" aria-selected="false">Plugins</button></div>
+          <span class="vdiv" aria-hidden="true"></span>
+          <div class="segs" role="group" aria-label="View"><button class="seg on">Yours</button><button class="seg">Discover</button></div>
+          <div class="ctools"><label class="sfield"><i class="ic i-search" aria-hidden="true"></i><input placeholder="Search connectors" aria-label="Search connectors"></label><button class="icon-btn" aria-label="Filter"><i class="ic i-filter"></i></button><button class="icon-btn" aria-label="Sort: A to Z"><i class="ic i-sort"></i></button><button class="btn primary sm" data-next="AddConnector"><i class="ic s i-plus"></i>Add<i class="ic s i-chev" style="transform: rotate(90deg);"></i></button></div>
+        </div>
+        <div class="col g16"><div class="table"><div style="min-width: 680px;">
+          <div class="grid" style="grid-template-columns: 44px minmax(0, 2.4fr) minmax(0, 1.6fr) 120px 110px;"><span class="tile"><span class="gi g-chart"></span></span><span class="col" style="gap: 1px; min-width: 0;"><span class="t-item ell">Datadog monitoring</span><span class="xs mut ell">Production traces, query logs and service metrics</span></span><span class="sm ink2 ell">Monitoring</span><span class="rw g8 sm"><i class="dot" style="background: var(--good);"></i>Connected</span><button class="btn sm" data-next="ConnectorDetail" aria-label="Configure Datadog monitoring">Configure</button></div>
+          <div class="grid" style="grid-template-columns: 44px minmax(0, 2.4fr) minmax(0, 1.6fr) 120px 110px;"><span class="tile"><span class="gi g-git"></span></span><span class="col" style="gap: 1px; min-width: 0;"><span class="t-item ell">GitHub acme/checkout</span><span class="xs mut ell">Repository, design notes and CLI fixtures agents read</span></span><span class="sm ink2 ell">Code</span><span class="rw g8 sm"><i class="dot" style="background: var(--good);"></i>Connected</span><button class="btn sm" data-next="ConnectorDetail" aria-label="Configure GitHub acme/checkout">Configure</button></div>
+          <div class="grid" style="grid-template-columns: 44px minmax(0, 2.4fr) minmax(0, 1.6fr) 120px 110px;"><span class="tile"><span class="gi g-file"></span></span><span class="col" style="gap: 1px; min-width: 0;"><span class="t-item ell">Ratchet run history</span><span class="xs mut ell">Every past trial, built in</span></span><span class="sm ink2 ell">Data</span><span class="rw g8 sm"><i class="dot" style="background: var(--good);"></i>Connected</span><button class="btn sm" data-next="ConnectorDetail" aria-label="Configure Ratchet run history">Configure</button></div>
+          <div class="grid" style="grid-template-columns: 44px minmax(0, 2.4fr) minmax(0, 1.6fr) 120px 110px;"><span class="tile"><span class="gi g-db"></span></span><span class="col" style="gap: 1px; min-width: 0;"><span class="t-item ell">Snowflake ANALYTICS</span><span class="xs mut ell">Warehouse tables and the holdout datasets</span></span><span class="sm ink2 ell">Data</span><span class="rw g8 sm"><i class="dot" style="background: var(--warn);"></i>Reconnect</span><button class="btn sm" data-next="ConnectorDetail" aria-label="Configure Snowflake ANALYTICS">Configure</button></div>
+        </div></div></div>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+</body>
+</html>

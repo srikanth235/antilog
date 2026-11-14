@@ -10,7 +10,7 @@ A skill pack is a versioned pack of written know-how that agents read before pro
 6. **Record the read.** The result's lineage, in the Data column of the three-column lineage, lists the pack versions the agents read, next to the dataset versions. (target)
 7. **A plugin brings it, governance stays here.** A plugin may add a pack. The pack is governed by context like any other. Removing the plugin asks whether to keep the pack, and a pack in use by an experiment is never removed. (target)
 8. **Audit.** Adding, changing, turning On or Off and removing a pack are named actions with an actor (see [../organization/SKILL.md](../organization/SKILL.md)). (target)
-9. **Words.** Add the word to [model.md](model.md) and check the screen word in [../design/ui-terms.md](../design/ui-terms.md). Say "skill pack" in code and docs where "skill" could mean the repo's guidance files.
+9. **Words.** Add the word to [model.md](model.md) and check the screen word in the "On screen" column of [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md). Say "skill pack" in code and docs where "skill" could mean the repo's guidance files.
 10. **Tests.** An evaluator identity cannot read a pack. A pack with holdout content is refused. A run record lists a version for every pack read. A pack in use cannot be removed.
 
 ## Proving it
