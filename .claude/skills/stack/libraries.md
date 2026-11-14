@@ -36,8 +36,8 @@ TypeScript in use: `typescript`, `vitest`, `yaml` (see [typescript.md](typescrip
 
 **Shape.** One Cargo workspace builds three programs:
 
-- `ratchet-server`: the control plane. The API, the embedded web app, Postgres.
-- `ratchet-runner`: one per cloud account, in the customer's cloud. The context plane, the compute plane and the egress proxy. It connects out over HTTPS: it pulls jobs and the server streams updates to it. No inbound port, no gRPC.
+- `ratchet-server`: the control plane. The API, the embedded web app, Postgres. It never connects to data. The launcher is built in when self-hosted.
+- `ratchet-runner`: the launcher for Ratchet cloud, the same code, installed in the customer's infrastructure. It starts and removes sandboxes, mints scoped credentials and runs the egress proxy. It connects out over HTTPS: it pulls jobs and the server streams updates to it. No inbound port, no gRPC.
 - `ratchet`: the CLI and the MCP server, built on the API's types.
 
 Start fresh. Copy only proven pieces from the earlier code on `claude/peaceful-lamport-leak6p` (the AWS sandbox, the clean-up checks, the ledger tests); do not rebase on it.
@@ -84,7 +84,24 @@ Start fresh. Copy only proven pieces from the earlier code on `claude/peaceful-l
 | Postgres in tests | `testcontainers` / `testcontainers-modules` | 0.28.0 / 0.15.0 |
 | Test runner, licences | `cargo-nextest` / `cargo-deny` | 0.9.152 / 0.20.2 |
 
-Snowflake, Databricks and BigQuery have no maintained Rust client we would ship; their connectors call each vendor's REST API through `reqwest`. Every connector sits behind one `Connector` trait, so its vocabulary stops there. GCP and Azure come behind the same cloud trait as AWS.
+Snowflake, Databricks and BigQuery have no maintained Rust client we would ship; their connectors call each vendor's REST API through `reqwest`. Every connector sits behind one `Connector` trait, so its vocabulary stops there, and each knows how to mint a scoped, read-only, holdout-excluding credential. Sandbox backends sit behind one trait: Kubernetes first, then VMs on AWS, GCP and Azure. Provider crates stay inside each adapter.
+
+**Cloud adapters**
+
+| Need | Crate | Version |
+| --- | --- | --- |
+| Kubernetes sandboxes | `kube` | 5.1.0 |
+| Kubernetes types | `k8s-openapi` | 0.29.0 |
+| Object storage (S3, GCS, Azure Blob) | `object_store` | 0.14.2 |
+| GCP compute | `google-cloud-compute-v1` | 4.2.0 |
+| GCP secrets | `google-cloud-secretmanager-v1` | 2.0.0 |
+| GCP auth | `google-cloud-auth` | 1.19.0 |
+| Azure core | `azure_core` | 1.1.0 |
+| Azure sign-in | `azure_identity` | 1.0.0 |
+| Azure secrets | `azure_security_keyvault_secrets` | 1.0.1 |
+| Secrets in Vault | `vaultrs` | 0.8.0 |
+
+Azure compute goes through the ARM REST API with `azure_core`, because `azure_mgmt_compute` has not been updated since 2024. AWS uses the `aws-sdk-*` crates above.
 
 Background jobs use a small queue in Postgres (`FOR UPDATE SKIP LOCKED`). No Redis, no message bus.
 

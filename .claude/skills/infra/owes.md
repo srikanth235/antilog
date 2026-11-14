@@ -4,8 +4,8 @@
 | --- | --- |
 | Spend | Nothing is spent without a stated limit. A cap stops the run. Every dollar is tied to a run. |
 | Clean up | Everything Ratchet creates is tagged, removed, and shown as removed. |
-| Customer's account | Work runs in the customer's cloud account. |
-| Any cloud | The same promises hold on every provider. |
+| Customer's account | Work runs in the customer's infrastructure. Ratchet holds no access to it. |
+| Any cloud | The same promises hold on every sandbox backend. |
 
 ## How each is checked
 
@@ -13,6 +13,6 @@
 
 **Clean up.** Check: after a run, a tag-scoped listing finds nothing, and the page shows removed. Partly exists: a reaper terminates tagged instances that should not exist (`crates/ratchet-sandbox/src/reaper.rs`, tests in `crates/ratchet-sandbox/tests/suite/reaper.rs`), and the teardown checks for orphans (`crates/ratchet-engine/tests/engine/sandbox_lifecycle.rs`). The reaper keys on `ratchet:opt`, not a run tag, and no screen shows "removed". The run tag and the verified-removed state are to add.
 
-**Customer's account.** Check: the module is applied with the customer's profile into a dedicated account, and no Ratchet-operated account appears in any path. Exists by construction: the app drives OpenTofu with the user's AWS profile (`infra/README.md`). A test that asserts it is to add.
+**Customer's account.** Check: sandboxes start only through the launcher in the customer's infrastructure, and no Ratchet-operated account, cross-account role or stored cloud key appears in any path. Exists by construction: the app drives OpenTofu with the user's AWS profile (`infra/README.md`). A test that asserts it is to add.
 
-**Any cloud.** Check: one contract test suite that every provider module must pass (`infra/contract.md` lists the invariants). Exists for AWS only: `infra/tests/src/` and `infra/aws/tests/`. A second provider is target, so the check has never run across providers.
+**Any cloud.** Check: one contract test suite that every sandbox backend must pass (`infra/contract.md` lists the invariants). Exists for AWS only: `infra/tests/src/` and `infra/aws/tests/`. Kubernetes and other providers are target, so the check has never run across backends.

@@ -5,7 +5,7 @@
 | Permission | Every read and write is checked against the organization and project role, in one place. |
 | Audit | Every write is a named action with an actor, recorded in the audit log. |
 | Secrets | No response, event or log carries a secret. |
-| No surprise calls | A self-hosted server contacts only the endpoints its administrator configured. |
+| No surprise calls | A self-hosted server contacts only the endpoints its administrator configured. A runner contacts only the Ratchet server it was installed for. |
 
 ## How each is checked
 

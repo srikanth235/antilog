@@ -8,13 +8,13 @@ What every area owes the customer, and the one rule each follows. A promise kept
 | Optimization | **Receipt** | Every win carries its full measurements, the dataset versions and the machines it ran on. |
 | Optimization | **Honest numbers** | Pending is never counted as delivered. |
 | Optimization | **Keep** | A win is re-checked and never slips back. |
-| Context | **Tamper-proof** | A proposer never reads the holdout. |
+| Context | **Tamper-proof** | A proposer never reads the holdout; its credentials cannot. |
 | Context | **Pinned** | Every run names its dataset versions. |
-| Context | **Stays put** | Data never passes through the server. |
+| Context | **Stays put** | The server never connects to data, and data never passes through it. |
 | Context | **Read-only** | Writing out needs an explicit, audited action. |
 | Infrastructure | **Spend** | No spend without a limit. |
 | Infrastructure | **Clean up** | Everything created is removed, and shown. |
-| Infrastructure | **Customer's account** | Work runs in the customer's cloud. |
+| Infrastructure | **Customer's account** | Work runs in the customer's infrastructure, and Ratchet holds no access to it. |
 | Infrastructure | **Any cloud** | The same promises hold on every provider. |
 | Organization | **Permission** | Every read and write is role-checked. |
 | Organization | **Audit** | Every write is a logged action. |

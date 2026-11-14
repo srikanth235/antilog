@@ -7,7 +7,19 @@
 - **Infrastructure records spend; the optimization sets the cap.** The limit belongs to the goal; the meter belongs to the place work runs.
 - **A benchmark belongs to the optimization.** It points at data (context) and machines (infrastructure). It is not a context or infrastructure object.
 - **The native Mac app was removed.** The web app is the client (target). Whether a native client returns is the owner's call.
-- **Sign-in is OpenID Connect only.** The hosted service offers GitHub and Google. A self-hosted server uses the administrator's provider.
+- **Sign-in is OpenID Connect only.** Ratchet cloud offers GitHub and Google. A self-hosted server uses the administrator's provider.
+
+## Architecture (target)
+
+Decided by the owner. Everything here is target; nothing is built on this branch.
+
+- **Two ways to run.** Self-hosted: the Ratchet server is a Docker Compose service (server and Postgres) in the customer's infrastructure. Ratchet cloud: we host the server, as Databricks hosts its control plane. Both are supported, and the same code serves both.
+- **One launcher starts and removes sandboxes.** Self-hosted, it is built into the server. On Ratchet cloud, the same code is installed as a small runner in the customer's infrastructure. The runner connects out to the hosted server over HTTPS: it pulls jobs and the server streams updates. It opens no inbound port. Ratchet never holds access to the customer's cloud: no cross-account role, and no serverless compute in Ratchet's account for now.
+- **The server never connects to data.** It orchestrates and records. Ratchet stores no data, only ids, versions, numbers, states and audit rows.
+- **The coding agent's code runs the experiment.** The agent writes code, that code runs the experiment, and it reads data through connectors itself. There is no separate context plane that pulls or brokers data. This replaces the earlier idea that a context plane pulls and never copies.
+- **Credentials are scoped, short-lived and minted per run.** The launcher mints them from connector admin secrets that stay in the customer's infrastructure (their secret manager). An agent gets read-only connector credentials that exclude the holdout. The evaluator gets a separate credential that includes the holdout. The holdout is enforced by those credentials: a read-only role, view or policy that leaves holdout data out. Model keys go through an egress proxy that adds them on the way out. Git access is a short-lived scoped token. This reverses the earlier ruling that an agent never holds a source credential.
+- **Sandboxes are cloud-agnostic.** Backends sit behind one trait. Kubernetes comes first, with separate node pools for workspace and evaluator and a NetworkPolicy for "no route". Then VMs on AWS, GCP and Azure. Measuring still runs on different machines from proposing, and a benchmark stays on one provider and one machine type. Provider words stay inside each adapter. On-prem Kubernetes counts as the customer's infrastructure.
+- **Connectors** an agent's code may use: Snowflake, Databricks, DynamoDB, BigQuery, Postgres, S3, GitHub, GitLab and any MCP server. Each knows how to mint a scoped, read-only, holdout-excluding credential for its system.
 
 ## The web client (target)
 

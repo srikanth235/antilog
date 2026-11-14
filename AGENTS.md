@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Ratchet points coding agents at one measurable goal and lets only the changes that beat a trusted benchmark move forward. It is organised around three basics: **optimization** (what "better" means), **context** (what a proposer may know) and **infrastructure** (where work happens), over a shared floor, the **organization** (members, roles, sign-in, tokens, audit log). The target is a self-hosted server with a web app as the client of its API. Target design is marked "(target)".
+Ratchet points coding agents at one measurable goal and lets only the changes that beat a trusted benchmark move forward. It is organised around three basics: **optimization** (what "better" means), **context** (what a proposer may know) and **infrastructure** (where work happens), over a shared floor, the **organization** (members, roles, sign-in, tokens, audit log). The target is a server with a web app as the client of its API, self-hosted (Docker Compose) or run by us as Ratchet cloud, with work and data staying in the customer's infrastructure. Target design is marked "(target)".
 
 ## This branch starts fresh
 
