@@ -40,7 +40,7 @@
         <div class="crow">
           <div class="pop"><button class="{{cProj}}" onClick="{{tProj}}" aria-expanded="{{mProj}}" aria-haspopup="menu" aria-label="Project: {{vProject}}" title="Project"><i class="ic i-folder"></i><span class="v">{{vProject}}</span></button>
             <sc-if value="{{mProj}}"><div class="menu dn" role="menu" style="min-width: 280px">
-              <sc-for list="{{projOpts}}" as="x" hint-placeholder-count="3"><button class="{{x.cls}}" role="menuitemradio" onClick="{{x.pick}}" disabled="{{x.dis}}" aria-checked="{{x.on}}"><span>{{x.label}}</span><span class="sub">{{x.role}}</span><sc-if value="{{x.on}}"><i class="ic s i-check"></i></sc-if></button></sc-for>
+              <sc-for list="{{projOpts}}" as="x" hint-placeholder-count="3"><button class="mi" role="menuitemradio" onClick="{{x.pick}}" disabled="{{x.dis}}" aria-checked="{{x.on}}" style="height: auto; padding: 8px 10px"><span class="col grow" style="gap: 1px"><span>{{x.label}}</span><span class="xs mut">{{x.role}}</span></span><sc-if value="{{x.on}}"><i class="ic s i-check"></i></sc-if></button></sc-for>
             </div></sc-if></div>
           <div class="pop"><button class="{{cEv}}" onClick="{{tEv}}" aria-expanded="{{mEv}}" aria-haspopup="menu" aria-label="Evaluation: {{vEval}}" title="Evaluation"><i class="ic g-gauge"></i><span class="v">{{vEval}}</span></button>
             <sc-if value="{{mEv}}"><div class="menu dn" role="menu" style="min-width: 360px; max-height: 440px; overflow-y: auto">

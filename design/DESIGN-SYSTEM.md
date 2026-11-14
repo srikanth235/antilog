@@ -43,7 +43,7 @@ Two families: Instrument Sans for everything (system fonts as the fallback) and 
 
 | Role | Class | Size / weight | Letter-spacing | Line-height | Use |
 |---|---|---|---|---|---|
-| Display | `.t-display`, `.h1` | 40 / 600 | -0.025em | 1.1 | Page titles |
+| Display | `.t-display`, `.h1` | 40 / 600 | -0.025em | 1.1 | Page titles; the sign-in hero is the one larger use, at 56px |
 | Title | `.t-title` | 28 / 600 | -0.02em | 1.15 | Experiment title and its rename input, detail page titles, banner and empty-state headings |
 | Section | `.t-section`, `.h2` | 18 / 600 | -0.01em | 1.3 | Section headings, project card names |
 | Item | `.t-item` | 15 / 500 | normal | 1.35 | Names in lists, tables and rows, and notes from people (at weight 400) |
