@@ -1,6 +1,6 @@
 # TypeScript and React in Ratchet
 
-(target) The web client does not exist on this branch; the prototype in `design/web/` is retired and the owner-approved boards are in `design/mockups/`. This page says how the client is written when it lands. On the earlier daemon's branch TypeScript was only demos and infra tests; that is not the product and is not described here.
+(target) The web client does not exist on this branch; the owner-approved boards are in `design/mockups/`. This page says how the client is written when it lands. On the earlier daemon's branch TypeScript was only demos and infra tests; that is not the product and is not described here.
 
 ## Workflow and done criteria
 

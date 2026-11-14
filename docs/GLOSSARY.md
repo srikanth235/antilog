@@ -64,5 +64,11 @@ Code, the API and the skills use the names of the three basics; the screen borro
 | own items, catalogue | Yours, Discover |
 | running, draft, win, merged win, no win, stopped | Running, Draft, Win, Merged, No win, Stopped |
 | candidate beat noise, inside noise, regressed, lost on holdout, being measured | Beats noise, Within noise, Worse, Failed holdout, Measuring |
+| signed receipt, signature verified | Signed numbers, Verified (Verify again) |
+| sandbox clean-up state | Cleaned up: Running, Removed, Not removed |
+| the Mac's local runner taking jobs | Accepting work (menu bar), Run agents on this Mac (Settings, This machine) |
+| quit after the Mac's agents finish | Quit when idle |
+| keep a stopped run stopped | Leave stopped |
+| a trial's steps | Steps for this trial |
 
 Unchanged on screen: win, agent, note, pull request, Delivered, Pending, Return. "Skill" on screen means a skill pack; in code and docs say "skill pack" where it could be confused with this repo's guidance files. Experiment, Data and Compute name the owning area only on the eight-step stepper of a thread and as the three lineage columns of a result; they are not navigation groups.

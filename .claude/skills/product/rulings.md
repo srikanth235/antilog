@@ -33,7 +33,7 @@ Decided by the owner, 14 Nov.
 
 ## The web client (target)
 
-The owner approved a web-client direction, shown as boards in `design/mockups/` (the earlier clickable prototype in `design/web/` is retired).
+The owner approved a web-client direction, shown as boards in `design/mockups/`.
 
 - **The screen is organised around experiments as sessions and one Customize page.** This replaces the four navigation groups (Experiments, Data, Compute, Admin). The three basics still own everything underneath. Area colour survives in the stepper and in the lineage columns (Experiment, Data, Compute). Behaviour is in [design behaviour](../design/behaviour.md).
 - **An experiment is a session.** It opens as one thread: header, chart, conversation, trials, result. "Draft experiment" creates it at once as a Draft, and nothing is created in the customer's cloud until Approve.

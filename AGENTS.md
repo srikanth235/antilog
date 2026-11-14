@@ -4,7 +4,7 @@ Ratchet points coding agents at one measurable goal and lets only the changes th
 
 ## This branch starts fresh
 
-`main` holds the agreed design and no product code: these skills, the design boards and tokens in `design/` (`mockups/`, `tokens.toml`, `tools/`), the logo in `design/icon/` and the glossary. The clickable prototype in `design/web/` is retired. Nothing is built here yet.
+`main` holds the agreed design and no product code: these skills, the design boards and tokens in `design/` (`mockups/`, `tokens.toml`, `tools/`), the logo in `design/icon/` and the glossary. Nothing is built here yet.
 
 An earlier Rust daemon and CLI live on the branch `claude/peaceful-lamport-leak6p`. They are reference, not a base to build on. Every skill describes the target. A path or command that does not exist on this branch yet is marked "(target)". What the earlier code did, and what it taught, is in the `today.md` of `optimization`, `context`, `infra`, `organization`, `change`, `land` and `ratchet`.
 

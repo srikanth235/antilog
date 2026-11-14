@@ -19,6 +19,7 @@ The vocabulary source is [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md), includ
 | Note (text left on a run to steer the next candidate) | comment, prompt |
 | Pause Agent | Pause alone |
 | Config branch (`ratchet/config`) | draft PR |
+| Try again | Retry |
 | connector | source |
 | sandbox (and "Create workspace" only as the stepper step) | workspace, anywhere else |
 | trial | candidate (on screen) |

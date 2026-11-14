@@ -9,7 +9,7 @@ python3 design/tools/tokens.py
 python3 design/tools/tokens.py --check
 ```
 
-The prototype in `design/web/` is rebuilt with `bash design/web/src/assemble.sh`. A doc-only change has no command: read the links and fix every statement the change made false. Everything else below is target. Say so in the report; never call an unrun layer verified.
+A doc-only change has no command: read the links and fix every statement the change made false. Everything else below is target. Say so in the report; never call an unrun layer verified.
 
 ## Target
 

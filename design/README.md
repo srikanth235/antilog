@@ -9,6 +9,5 @@ What is here:
 | `mockups/` | The boards: one static `X.dc.html` per screen state (web, 1440 by 900), `MacX.dc.html` only where the Mac app differs, `canvas.json` with the pages, `DesignRules.dc.html` (the look) and `Decisions.dc.html` (the owner's dated calls). Shared chrome as parts (`Sidebar.dc.html` and others) that the generator inserts at `<!-- part:Name -->` markers; the generated `tokens.css` and dark twins `XDark.dc.html`. Boards are plain static files: open one from disk. |
 | `icon/` | The logo. `icon/AppIcon.icon` is the Icon Composer source; `icon/ratchet-icon.svg` is the flat 1024 px icon, `icon/ratchet-mark.svg` the full mark, `icon/ratchet-icon-mono.svg` and `icon/ratchet-menubar.svg` single-colour cuts. |
 
-`web/`, the clickable prototype, is retired: the boards replace it.
 
 Every visual or UX change starts in `mockups/`; the flow and the checks are in [`.claude/skills/design/mockups.md`](../.claude/skills/design/mockups.md). Behaviour and words are in [`.claude/skills/design/`](../.claude/skills/design/SKILL.md).

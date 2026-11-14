@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Result open pull request</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="./tokens.css">
+<link rel="stylesheet" href="./icons.css">
+<link rel="stylesheet" href="./components.css">
+
+</helmet>
+<div class="board app" style="width: 1440px; height: 900px;">
+  <!-- part:Sidebar active="forecast-accuracy" -->
+  <nav class="side" aria-label="Main">
+      <div class="side-top">
+        <a class="brand" href="Home.dc.html"><svg aria-hidden="true" width="36" height="22" viewBox="218 338 600 369" data-keep><defs><linearGradient id="brass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F8E4B8"/><stop offset=".6" stop-color="#E2BE7C"/><stop offset="1" stop-color="#BE8F49"/></linearGradient></defs><path d="M397.8 434.8L397.8 466.2A31.5 31.5 0 0 1 366.4 434.8Z" style="fill:var(--mark)" fill-opacity="0.12"/><path d="M407.7 434.8L407.7 466.2A31.5 31.5 0 0 0 439.2 434.8Z" style="fill:var(--mark)" fill-opacity="0.18"/><path d="M361.6 424.9L439.2 424.9A77.6 77.6 0 0 0 361.6 347.3Z" style="fill:var(--mark)" fill-opacity="0.28"/><path d="M351.7 471.0L227.9 471.0A123.8 123.8 0 0 1 351.7 347.3Z" style="fill:var(--mark)" fill-opacity="0.42"/><path d="M444.0 480.9L444.0 697.0A216.1 216.1 0 0 1 227.9 480.9Z" style="fill:var(--mark)" fill-opacity="0.6"/><path d="M453.9 342.5L453.9 697.0A354.5 354.5 0 0 0 808.4 342.5Z" fill="url(#brass)"/></svg>Ratchet</a>
+        <div class="col" style="gap: 2px;">
+          <button class="nav"><i class="ic i-search"></i>Search<span class="kc" aria-hidden="true" style="margin-left: auto;">⌘K</span></button>
+          <a class="nav" data-item="projects" href="Home.dc.html"><i class="ic i-folder"></i>Projects</a>
+          <a class="nav" data-item="dashboard" href="Dashboard.dc.html"><i class="ic i-chart"></i>Dashboard</a>
+          <a class="nav" data-item="customize" href="Connectors.dc.html"><i class="ic i-sliders"></i>Customize</a>
+          <button class="nav"><i class="ic i-more"></i>More</button>
+        </div>
+        <a class="btn primary full" href="NewExperiment.dc.html"><i class="ic s i-plus"></i>New experiment</a>
+      </div>
+      <div class="side-scroll">
+          <div class="col" style="gap: 2px;">
+            <span class="t-label" style="padding: 4px 10px 6px;">Pinned</span>
+            <div class="srow"><a class="rec" data-item="checkout-p95" href="ThreadRunning.dc.html" data-mac="MacMain.dc.html"><span class="t">Checkout p95</span><span class="tail"><span class="cnt">3</span><span role="img" aria-label="Running" title="Running" class="st gi st-run run" style="color: var(--accent);"></span></span></a><button class="pinb" aria-label="Pin Checkout p95"><i class="ic s i-pin"></i></button></div>
+          </div>
+          <div class="col" style="gap: 2px;">
+            <div class="gh"><button class="rec" aria-expanded="true"><i class="ic s chev i-chev" style="transform: rotate(90deg);"></i><span class="t">Checkout platform</span></button><a class="plus" href="NewExperiment.dc.html" aria-label="New experiment in Checkout platform"><i class="ic s i-plus"></i></a></div>
+            <div class="srow"><a class="rec" data-item="forecast-accuracy" href="ThreadWin.dc.html" aria-current="page"><span class="t">Forecast accuracy</span><span class="tail"><span class="cnt">2</span><span role="img" aria-label="Win" title="Win" class="st gi st-win" style="color: var(--good);"></span></span></a><button class="pinb" aria-label="Pin Forecast accuracy"><i class="ic s i-pin"></i></button></div>
+            <div class="srow"><a class="rec" data-item="cli-cold-start" href="ThreadRunning.dc.html" data-mac="MacMain.dc.html"><span class="t">CLI cold start</span><span class="tail"><span role="img" aria-label="Running" title="Running" class="st gi st-run run" style="color: var(--accent);"></span></span></a><button class="pinb" aria-label="Pin CLI cold start"><i class="ic s i-pin"></i></button></div>
+            <div class="srow"><a class="rec" data-item="bundle-size" href="ThreadNoWin.dc.html"><span class="t">Bundle size</span><span class="tail"><span class="cnt">2</span><span role="img" aria-label="No win" title="No win" class="st gi st-none" style="color: var(--ink3);"></span></span></a><button class="pinb" aria-label="Pin Bundle size"><i class="ic s i-pin"></i></button></div>
+            <div class="srow"><a class="rec" data-item="image-resize" href="ThreadWin.dc.html"><span class="t">Image resize</span><span class="tail"><span role="img" aria-label="Merged" title="Merged" class="st gi st-merged" style="color: var(--good);"></span></span></a><button class="pinb" aria-label="Pin Image resize"><i class="ic s i-pin"></i></button></div>
+            <div class="srow"><a class="rec" data-item="smoke-suite-duration" href="NewExperiment.dc.html"><span class="t">Smoke suite duration</span><span class="tail"><span role="img" aria-label="Draft" title="Draft" class="st gi st-draft" style="color: var(--ink3);"></span></span></a><button class="pinb" aria-label="Pin Smoke suite duration"><i class="ic s i-pin"></i></button></div>
+          </div>
+          <div class="col" style="gap: 2px;">
+            <div class="gh"><button class="rec" aria-expanded="true"><i class="ic s chev i-chev" style="transform: rotate(90deg);"></i><span class="t">Search</span></button><a class="plus" href="NewExperiment.dc.html" aria-label="New experiment in Search"><i class="ic s i-plus"></i></a></div>
+            <div class="srow"><a class="rec" data-item="search-relevance" href="ThreadWin.dc.html"><span class="t">Search relevance</span><span class="tail"><span class="cnt">2</span><span role="img" aria-label="Pull request open" title="Pull request open" class="st gi st-pr" style="color: var(--accent);"></span></span></a><button class="pinb" aria-label="Pin Search relevance"><i class="ic s i-pin"></i></button></div>
+            <div class="srow"><a class="rec" data-item="autocomplete-latency" href="ThreadRunning.dc.html" data-mac="MacMain.dc.html"><span class="t">Autocomplete latency</span><span class="tail"><span role="img" aria-label="Running" title="Running" class="st gi st-run run" style="color: var(--accent);"></span></span></a><button class="pinb" aria-label="Pin Autocomplete latency"><i class="ic s i-pin"></i></button></div>
+          </div>
+          <div class="col" style="gap: 2px;">
+            <div class="gh"><button class="rec" aria-expanded="true"><i class="ic s chev i-chev" style="transform: rotate(90deg);"></i><span class="t">Data science forecasts</span></button></div>
+            <div class="srow"><a class="rec" data-item="feature-pipeline-cost" href="ThreadWin.dc.html"><span class="t">Feature pipeline cost</span><span class="tail"><span role="img" aria-label="Merged" title="Merged" class="st gi st-merged" style="color: var(--good);"></span></span></a><button class="pinb" aria-label="Pin Feature pipeline cost"><i class="ic s i-pin"></i></button></div>
+          </div>
+      </div>
+    <div class="side-foot">
+      <a class="nav" href="SettingsProfile.dc.html" aria-label="Priya Raman, user menu" style="height: 48px; gap: 12px;"><span aria-hidden="true" class="avatar round" style="width: 30px; height: 30px; font-size: 14px;">P</span><span class="col grow" style="line-height: 1.25;"><span style="color: var(--ink);">Priya Raman</span><span class="xs mut">via Okta</span></span><i class="ic s mut i-more"></i></a>
+    </div>
+  </nav>
+  <!-- /part -->
+  <main class="main">
+    <div class="top">
+      <div class="crumbs"><a class="textbtn" href="Home.dc.html">Checkout platform</a><span class="mut">/</span><span class="ell" style="font-weight: 500;">Forecast accuracy</span></div>
+      <div class="rw g8"><a class="tsearch" href="Search.dc.html" aria-label="Search"><i class="ic s i-search"></i>Search<span class="kc" aria-hidden="true">⌘K</span></a></div>
+    </div>
+    <div class="scroll">
+      <div class="page"><div class="col g4"><h1 class="t-title">Forecast accuracy</h1><span class="ink2">Win, run #2</span></div><div class="card" style="height: 280px;"></div></div>
+    </div>
+  </main>
+  <div class="pback"></div>
+  <div class="pal" role="dialog" aria-modal="true" aria-labelledby="pr-t" style="height: auto; max-height: calc(100% - 80px); top: 40px; width: min(760px, calc(100% - 32px));"><div class="sd-top"><h2 id="pr-t" class="t-section">Open pull request</h2><a class="icon-btn" href="ResultLineage.dc.html" aria-label="Close"><i class="ic i-close"></i></a></div><div class="col g16" style="padding: 20px 24px; overflow-y: auto;"><div class="rw g12 wrap" style="align-items: flex-start;"><div class="col g4" style="flex: 1 1 260px; min-width: 0;"><span class="xs mut">Repository</span><span class="rw g8"><span class="tile" style="width: 28px; height: 28px;"><i class="gi g-git"></i></span><span class="t-item">GitHub acme/checkout</span></span></div><div class="col g4" style="flex: 1 1 260px; min-width: 0;"><span class="xs mut">Branch into base</span><span class="mono sm ell">ratchet/forecast-accuracy-run-2 → main</span></div></div><label class="fld"><span class="cap">Title</span><input class="in" value="Forecast accuracy: seasonal features, boosting depth 8" aria-label="Title"></label><div class="col g8"><span class="cap xs mut">Description</span><div class="card col g8" style="padding: 12px 16px; background: var(--sunk);"><span class="sm">Forecast error (MAPE) 18.4% to 15.2%, −17.4%, on 6 folds. Held on Forecast holdout v2 at 15.9%.</span><span class="sm ink2">Nightly job time +1.8%, inside the 5% limit. Written by Claude Code in run #2, signed numbers and lineage linked.</span></div></div><div class="col g8"><span class="xs mut">Changes · 2 files <span style="color: var(--good);">+34</span> <span style="color: var(--bad);">−4</span></span><div class="col" style="border: 1px solid var(--line); border-radius: var(--r2); overflow: hidden;"><div class="rw between" style="padding: 8px 12px; border-bottom: 1px solid var(--line);"><span class="mono xs">models/forecast/features.py</span><span class="xs"><span style="color: var(--good);">+31</span> <span style="color: var(--bad);">−1</span></span></div><div class="rw between" style="padding: 8px 12px;"><span class="mono xs">models/forecast/train.py</span><span class="xs"><span style="color: var(--good);">+3</span> <span style="color: var(--bad);">−3</span></span></div></div></div><div class="banner" style="padding: 14px 16px; gap: 6px 16px;"><span class="spill" style="--c: var(--accent);"><span class="st gi st-pr"></span>Pending</span><span class="sm" style="flex: 1 1 360px;">Worth $27,400 a year. It stays Pending while the pull request is open and is not counted in Return. Merging moves it to Delivered.</span></div><span class="sm ink2">Ratchet opens the pull request through the GitHub connector as an audited action. Nothing merges until a person merges it.</span></div><div class="rw g8" style="justify-content: flex-end; padding: 14px 20px; border-top: 1px solid var(--line);"><a class="btn" href="ResultLineage.dc.html">Cancel</a><button class="btn primary">Open pull request</button></div></div>
+</div>
+</x-dc>
+</body>
+</html>

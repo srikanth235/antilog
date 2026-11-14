@@ -17,7 +17,11 @@ Writes, under design/mockups/:
                     to hold the content of Name.dc.html (the inside of its display:contents
                     wrapper). active="x" puts aria-current="page" on the element with
                     data-item="x"; any other key="v" replaces the text of the element with
-                    data-slot="key". Parts may nest; a cycle is an error.
+                    data-slot="key". Parts may nest; a cycle is an error. A nested marker takes
+                    its own keys; active on an outer marker reaches the data-item inside nested
+                    parts. variant="mac" sets href to the element's data-mac value (the Mac
+                    boards for the rows that open a thread). A part edited inside a nested part
+                    is reported by the nested part's name.
   canvas.json       the twin's entry on the matching "*-dark" page, same x/y/w/h. Humans own
                     the light entries; this tool owns the dark ones.
 
@@ -109,7 +113,11 @@ def part_body(name, stack=()):
 
 def apply_params(name, body, attrs):
     for key, val in attrs.items():
-        if key == "active":
+        if key == "variant":
+            if val != "mac":
+                raise PartError(f"part {name}: unknown variant {val}")
+            body = re.sub(r'href="[^"]*"([^>]*?) data-mac="([^"]*)"', r'href="\2"\1 data-mac="\2"', body)
+        elif key == "active":
             tag = re.search(rf"<(\w+)\b[^>]*\bdata-item=\"{re.escape(val)}\"[^>]*>", body)
             if not tag:
                 raise PartError(f"part {name}: no data-item=\"{val}\"")
@@ -152,12 +160,37 @@ def flatten(text, stack=(), keep_markers=True):
     return res
 
 
+def nested_names(name, seen=()):
+    f = MOCK / f"{name}.dc.html"
+    out = []
+    for n in re.findall(r"<!-- part:(\w+)", f.read_text() if f.exists() else ""):
+        if n not in seen:
+            out += [n] + nested_names(n, seen + (n,))
+    return out
+
+
+def norm(ln):
+    return re.sub(r'\s+aria-current="page"|href="[^"]*"', "", ln).strip()
+
+
+def blame(name, src_region, want_region):
+    """The deepest nested part whose own text holds a line that differs, else name."""
+    import difflib
+    a, b = src_region.split("\n"), want_region.split("\n")
+    bad = [norm(l) for t, i1, i2, j1, j2 in difflib.SequenceMatcher(None, a, b).get_opcodes() if t != "equal" for l in b[j1:j2] + a[i1:i2]]
+    for n in reversed(nested_names(name)):
+        body = {norm(l) for l in part_body(n).split("\n")}
+        if any(l in body for l in bad if l):
+            return n
+    return name
+
+
 def part_drift(src, want):
     """Names of the parts whose region in src differs from what the generator writes."""
     names = []
     for a, b in zip(re.finditer(r"<!-- part:(\w+).*?<!-- /part -->", src, re.S), re.finditer(r"<!-- part:(\w+).*?<!-- /part -->", want, re.S)):
         if a.group(0) != b.group(0):
-            names.append(a.group(1))
+            names.append(blame(a.group(1), a.group(0), b.group(0)))
     return names
 
 
