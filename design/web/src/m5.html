@@ -55,17 +55,6 @@
         </div>
       </sc-if>
 
-      <sc-if value="{{sec.notifications}}">
-        <div class="sd-sec">
-          <h3 class="t-section">Notifications</h3><p class="sd-lead">What Ratchet tells you, and when.</p>
-          <h4 class="sd-gh">Email</h4>
-          <sc-if value="{{show.nmaster}}"><div class="stg" id="sr-nmaster"><div class="tx"><span class="t-item">Email me</span><span class="dd">Send an email to priya@acme.com when something needs you.</span></div><div class="ct"><button class="{{nMasterCls}}" role="switch" aria-checked="{{nMaster}}" aria-label="Email me" onClick="{{toggleNMaster}}"></button></div></div></sc-if>
-          <sc-if value="{{show.napprove}}"><div class="stg in2" id="sr-napprove"><div class="tx"><span class="t-item">A draft is waiting for approval</span><span class="dd">Nothing is created in your cloud until someone approves.</span></div><div class="ct"><button class="{{nApproveCls}}" role="switch" aria-checked="{{nApprove}}" aria-label="A draft is waiting for approval" disabled="{{nOff}}" onClick="{{toggleNApprove}}"></button></div></div></sc-if>
-          <sc-if value="{{show.nwin}}"><div class="stg in2" id="sr-nwin"><div class="tx"><span class="t-item">A win is ready for a pull request</span><span class="dd">An accepted change beat the baseline and the holdout.</span></div><div class="ct"><button class="{{nWinCls}}" role="switch" aria-checked="{{nWin}}" aria-label="A win is ready for a pull request" disabled="{{nOff}}" onClick="{{toggleNWin}}"></button></div></div></sc-if>
-          <sc-if value="{{show.nbudget}}"><div class="stg in2" id="sr-nbudget"><div class="tx"><span class="t-item">A budget is reached</span><span class="dd">Running work stops at the next trial.</span></div><div class="ct"><button class="{{nBudgetCls}}" role="switch" aria-checked="{{nBudget}}" aria-label="A budget is reached" disabled="{{nOff}}" onClick="{{toggleNBudget}}"></button></div></div></sc-if>
-        </div>
-      </sc-if>
-
       <sc-if value="{{sec.tokens}}">
         <div class="sd-sec">
           <h3 class="t-section">Access tokens</h3><p class="sd-lead">For the command line, the MCP server and CI. An access token is shown once. Ratchet keeps only a fingerprint.</p>

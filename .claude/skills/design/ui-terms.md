@@ -18,7 +18,7 @@ The web client (target, mockup in `design/web/`) is organised around experiments
 | own items, catalogue | Yours, Discover | Claude app |
 | history | More, then Run history (tabs Trials, Instances) | Databricks |
 | machines | Instances | cloud providers |
-| settings | Settings, a dialog opened from the user menu or More. Group You: Profile, Appearance, Notifications, Access tokens. Group Organization: General, Users and groups, Single sign-on, Budgets, Notes, Audit logs | Claude app, Databricks |
+| settings | Settings, a dialog opened from the user menu or More. Group You: Profile, Appearance, Access tokens. Group Organization: General, Users and groups, Single sign-on, Budgets, Notes, Audit logs | Claude app, Databricks |
 | one setting | a settings row: title, one-line description, control on the right | Claude app |
 | datasets | Datasets (found by Search and chosen in New experiment; no page of its own yet) | Foundry |
 | grants | Permissions | Databricks, Foundry |

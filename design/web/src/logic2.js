@@ -157,7 +157,6 @@
     const SETSEC = [
       ['profile', 'Profile', 'g-user', 'you', 'Who you are in Acme and how you sign in.'],
       ['appearance', 'Appearance', 'i-sun', 'you', 'How Ratchet looks on this device.'],
-      ['notifications', 'Notifications', 'i-bell', 'you', 'What Ratchet tells you, and when.'],
       ['tokens', 'Access tokens', 'i-key', 'you', 'For the command line, the MCP server and CI.'],
       ['general', 'General', 'i-org', 'org', 'Settings for everyone in Acme.'],
       ['members', 'Users and groups', 'i-users', 'org', 'Roles on your projects.'],
@@ -173,10 +172,6 @@
       ['profile', 'via', 'Signed in with', 'Your name and email are managed there.', 'okta identity provider'],
       ['profile', 'signout', 'Sign out', 'Ends this session on this device.', 'log out logout'],
       ['appearance', 'theme', 'Theme', 'System follows your device. Light or dark.', 'appearance dark light system mode colour'],
-      ['notifications', 'nmaster', 'Email me', 'Send an email when something needs you.', 'notifications email alerts'],
-      ['notifications', 'napprove', 'A draft is waiting for approval', 'Nothing is created in your cloud until someone approves.', 'notifications draft approve'],
-      ['notifications', 'nwin', 'A win is ready for a pull request', 'An accepted change beat the baseline and the holdout.', 'notifications win pull request'],
-      ['notifications', 'nbudget', 'A budget is reached', 'Running work stops at the next trial.', 'notifications budget spend cap'],
       ['tokens', 'tokcreate', 'Create an access token', 'It acts as you, with everything you can do.', 'api key cli mcp ci new'],
       ['tokens', 'toklist', 'Your access tokens', 'Revoke a token you no longer use.', 'revoke fingerprint service principal'],
       ['general', 'org', 'Organization', 'The name your users see.', 'acme name'],
@@ -745,7 +740,7 @@
         catOf[k].filter((x) => !have.some((q) => q.id === x.id)).forEach((x) => P(mkItem(kind, x.name, ctxf(x), [x.desc || '', x.cat || ''], k === 'skill' || k === 'plugin' ? openDet(k, x.id) : custFind(k, x.name), { ic: x.gl || ic, hint: 'Not added' })));
       });
       [['priya', 'Priya Raman', 'priya@acme.com', 'okta:platform-leads'], ['marco', 'Marco Bianchi', 'marco@acme.com', 'okta:perf-engineering'], ['jun', 'Jun Park', 'jun@acme.com', 'an invitation'], ['ci', 'ci-bot', 'Service principal', 'a service principal']].forEach(([id, nm, em, src]) => P(mkItem('person', nm, em + ' · added through ' + src, [em], settingsGo('members'), { ic: 'g-user', hint: s.roles[id] })));
-      const SETKW = { profile: 'account name email sign in okta', appearance: 'theme dark light system colour mode', notifications: 'email alerts approve win budget', general: 'organization default budget server', notes: 'guidance notes agents read', budgets: 'budget spend monthly cap limit cost', members: 'users groups roles invite owner editor viewer people access', signin: 'okta sso sign-in session login identity', tokens: 'access token api key cli mcp ci service', audit: 'audit log history changes record' };
+      const SETKW = { profile: 'account name email sign in okta', appearance: 'theme dark light system colour mode', general: 'organization default budget server', notes: 'guidance notes agents read', budgets: 'budget spend monthly cap limit cost', members: 'users groups roles invite owner editor viewer people access', signin: 'okta sso sign-in session login identity', tokens: 'access token api key cli mcp ci service', audit: 'audit log history changes record' };
       const SETWHO = { you: 'You', org: 'Organization' };
       SETSEC.forEach(([id, label, sic, who, lead]) => P(mkItem('setting', label, 'Settings · ' + SETWHO[who], [lead, SETKW[id]], settingsGo(id), { ic: sic })));
       SETROW.forEach(([sid, rid, title, desc, kw]) => { const sc = SETSEC.find((q) => q[0] === sid); if (title === sc[1]) return; P(mkItem('setting', title, 'Settings · ' + sc[1], [desc, kw], settingsGo(sid, rid), { ic: sc[2] })); });

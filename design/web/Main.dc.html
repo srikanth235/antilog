@@ -339,7 +339,7 @@ button.grid{cursor:pointer}button.grid:hover,.grid.sel{background:var(--sunk)}
 .sw.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 22%,var(--sunk))}
 .sw.on::after{transform:translateX(18px);background:var(--accent)}
 .sw:disabled{opacity:.45;cursor:not-allowed}
-.selw{position:relative;display:inline-flex;align-items:center;max-width:100%}
+.selw{position:relative;display:inline-flex;align-items:center;max-width:100%;width:fit-content;justify-self:start;align-self:center}
 .selw select{appearance:none;-webkit-appearance:none;min-height:36px;max-width:100%;padding:0 34px 0 12px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--sunk);color:var(--ink);font-size:13.5px;cursor:pointer}
 .selw select:hover:not(:disabled){border-color:var(--ink3)}
 .selw select:disabled{opacity:.5;cursor:not-allowed}
@@ -1164,17 +1164,6 @@ button.grid{cursor:pointer}button.grid:hover,.grid.sel{background:var(--sunk)}
 </div>
 </sc-if>
 
-<sc-if value="{{sec.notifications}}">
-<div class="sd-sec">
-<h3 class="t-section">Notifications</h3><p class="sd-lead">What Ratchet tells you, and when.</p>
-<h4 class="sd-gh">Email</h4>
-<sc-if value="{{show.nmaster}}"><div class="stg" id="sr-nmaster"><div class="tx"><span class="t-item">Email me</span><span class="dd">Send an email to priya@acme.com when something needs you.</span></div><div class="ct"><button class="{{nMasterCls}}" role="switch" aria-checked="{{nMaster}}" aria-label="Email me" onClick="{{toggleNMaster}}"></button></div></div></sc-if>
-<sc-if value="{{show.napprove}}"><div class="stg in2" id="sr-napprove"><div class="tx"><span class="t-item">A draft is waiting for approval</span><span class="dd">Nothing is created in your cloud until someone approves.</span></div><div class="ct"><button class="{{nApproveCls}}" role="switch" aria-checked="{{nApprove}}" aria-label="A draft is waiting for approval" disabled="{{nOff}}" onClick="{{toggleNApprove}}"></button></div></div></sc-if>
-<sc-if value="{{show.nwin}}"><div class="stg in2" id="sr-nwin"><div class="tx"><span class="t-item">A win is ready for a pull request</span><span class="dd">An accepted change beat the baseline and the holdout.</span></div><div class="ct"><button class="{{nWinCls}}" role="switch" aria-checked="{{nWin}}" aria-label="A win is ready for a pull request" disabled="{{nOff}}" onClick="{{toggleNWin}}"></button></div></div></sc-if>
-<sc-if value="{{show.nbudget}}"><div class="stg in2" id="sr-nbudget"><div class="tx"><span class="t-item">A budget is reached</span><span class="dd">Running work stops at the next trial.</span></div><div class="ct"><button class="{{nBudgetCls}}" role="switch" aria-checked="{{nBudget}}" aria-label="A budget is reached" disabled="{{nOff}}" onClick="{{toggleNBudget}}"></button></div></div></sc-if>
-</div>
-</sc-if>
-
 <sc-if value="{{sec.tokens}}">
 <div class="sd-sec">
 <h3 class="t-section">Access tokens</h3><p class="sd-lead">For the command line, the MCP server and CI. An access token is shown once. Ratchet keeps only a fingerprint.</p>
@@ -1323,7 +1312,7 @@ const K = this.K;
 const CP = 'Checkout platform', SR = 'Search', DS = 'Data science forecasts';
 const X = (o) => ({ pinned: false, approved: true, hist: [], pr: [], ps: 0, fixed: null, lim: { error: true, cost: true, memory: false }, dir: null, path: null, env: 'aws', cloud: 'AWS', val: 0, mo: 5, act: '', ...o });
 this.state = {
-screen: 'thread', theme: null, menu: null, collapsed: {}, settingsTab: 'profile', setOpen: false, setQ: '', auditQ: '', roleNote: '', notify: { on: true, approve: true, win: true, budget: false },
+screen: 'thread', theme: null, menu: null, collapsed: {}, settingsTab: 'profile', setOpen: false, setQ: '', auditQ: '', roleNote: '', 
 pal: false, palQ: '', palScope: 'all', palHi: 0, palAct: false, palActHi: 0, recent: ['x:o2', 'p:Search', 'd:eval:k6', 'd:skill:pgtune', 's:members', 'x:o6'], hlNote: null,
 selId: 'o1', projSel: CP, lastProject: CP, needText: false, editId: null,
 cTab: 'eval', cView: 'yours', cQuery: '', cCat: 'All', cAuth: 'All', cAdded: 'All', cSort: 'az', cNotice: '', showAll: {}, justAdded: {}, cSlide: 0,
@@ -1823,7 +1812,6 @@ const nav = (id) => (sideActive === id ? 'nav on' : 'nav');
 const SETSEC = [
 ['profile', 'Profile', 'g-user', 'you', 'Who you are in Acme and how you sign in.'],
 ['appearance', 'Appearance', 'i-sun', 'you', 'How Ratchet looks on this device.'],
-['notifications', 'Notifications', 'i-bell', 'you', 'What Ratchet tells you, and when.'],
 ['tokens', 'Access tokens', 'i-key', 'you', 'For the command line, the MCP server and CI.'],
 ['general', 'General', 'i-org', 'org', 'Settings for everyone in Acme.'],
 ['members', 'Users and groups', 'i-users', 'org', 'Roles on your projects.'],
@@ -1839,10 +1827,6 @@ const SETROW = [
 ['profile', 'via', 'Signed in with', 'Your name and email are managed there.', 'okta identity provider'],
 ['profile', 'signout', 'Sign out', 'Ends this session on this device.', 'log out logout'],
 ['appearance', 'theme', 'Theme', 'System follows your device. Light or dark.', 'appearance dark light system mode colour'],
-['notifications', 'nmaster', 'Email me', 'Send an email when something needs you.', 'notifications email alerts'],
-['notifications', 'napprove', 'A draft is waiting for approval', 'Nothing is created in your cloud until someone approves.', 'notifications draft approve'],
-['notifications', 'nwin', 'A win is ready for a pull request', 'An accepted change beat the baseline and the holdout.', 'notifications win pull request'],
-['notifications', 'nbudget', 'A budget is reached', 'Running work stops at the next trial.', 'notifications budget spend cap'],
 ['tokens', 'tokcreate', 'Create an access token', 'It acts as you, with everything you can do.', 'api key cli mcp ci new'],
 ['tokens', 'toklist', 'Your access tokens', 'Revoke a token you no longer use.', 'revoke fingerprint service principal'],
 ['general', 'org', 'Organization', 'The name your users see.', 'acme name'],
@@ -2411,7 +2395,7 @@ have.forEach((x) => P(mkItem(kind, x.name, ctxf(x), [x.desc || '', x.cat || ''],
 catOf[k].filter((x) => !have.some((q) => q.id === x.id)).forEach((x) => P(mkItem(kind, x.name, ctxf(x), [x.desc || '', x.cat || ''], k === 'skill' || k === 'plugin' ? openDet(k, x.id) : custFind(k, x.name), { ic: x.gl || ic, hint: 'Not added' })));
 });
 [['priya', 'Priya Raman', 'priya@acme.com', 'okta:platform-leads'], ['marco', 'Marco Bianchi', 'marco@acme.com', 'okta:perf-engineering'], ['jun', 'Jun Park', 'jun@acme.com', 'an invitation'], ['ci', 'ci-bot', 'Service principal', 'a service principal']].forEach(([id, nm, em, src]) => P(mkItem('person', nm, em + ' · added through ' + src, [em], settingsGo('members'), { ic: 'g-user', hint: s.roles[id] })));
-const SETKW = { profile: 'account name email sign in okta', appearance: 'theme dark light system colour mode', notifications: 'email alerts approve win budget', general: 'organization default budget server', notes: 'guidance notes agents read', budgets: 'budget spend monthly cap limit cost', members: 'users groups roles invite owner editor viewer people access', signin: 'okta sso sign-in session login identity', tokens: 'access token api key cli mcp ci service', audit: 'audit log history changes record' };
+const SETKW = { profile: 'account name email sign in okta', appearance: 'theme dark light system colour mode', general: 'organization default budget server', notes: 'guidance notes agents read', budgets: 'budget spend monthly cap limit cost', members: 'users groups roles invite owner editor viewer people access', signin: 'okta sso sign-in session login identity', tokens: 'access token api key cli mcp ci service', audit: 'audit log history changes record' };
 const SETWHO = { you: 'You', org: 'Organization' };
 SETSEC.forEach(([id, label, sic, who, lead]) => P(mkItem('setting', label, 'Settings · ' + SETWHO[who], [lead, SETKW[id]], settingsGo(id), { ic: sic })));
 SETROW.forEach(([sid, rid, title, desc, kw]) => { const sc = SETSEC.find((q) => q[0] === sid); if (title === sc[1]) return; P(mkItem('setting', title, 'Settings · ' + sc[1], [desc, kw], settingsGo(sid, rid), { ic: sc[2] })); });
@@ -2753,10 +2737,6 @@ onSetQ: (e) => this.setState({ setQ: e.target.value }), clearSetQ: () => this.se
 onSetSel: (e) => this.setState({ settingsTab: e.target.value }), setTab: effTab,
 railGroups: SETGRP.map(([gid, gt]) => ({ title: gt, items: visSecs.filter((x) => x[3] === gid).map((x) => ({ id: x[0], label: x[1], ic: x[2], cur: x[0] === effTab, cls: x[0] === effTab ? 'sd-nav on' : 'sd-nav', ro: gid === 'org' && (x[0] === 'notes' ? noteRO : x[0] === 'audit' ? false : orgRO), go: () => this.setState({ settingsTab: x[0] }) })) })).filter((g) => g.items.length),
 noSetHits: visSecs.length === 0, sec: secOn, show: rowOn, grp: grpOn, myRole, orgRO, noteRO,
-nMaster: s.notify.on, nMasterCls: s.notify.on ? 'sw on' : 'sw', toggleNMaster: () => this.setState((st) => ({ notify: { ...st.notify, on: !st.notify.on } })), nOff: !s.notify.on,
-nApprove: s.notify.approve, nApproveCls: s.notify.approve ? 'sw on' : 'sw', toggleNApprove: () => this.setState((st) => ({ notify: { ...st.notify, approve: !st.notify.approve } })),
-nWin: s.notify.win, nWinCls: s.notify.win ? 'sw on' : 'sw', toggleNWin: () => this.setState((st) => ({ notify: { ...st.notify, win: !st.notify.win } })),
-nBudget: s.notify.budget, nBudgetCls: s.notify.budget ? 'sw on' : 'sw', toggleNBudget: () => this.setState((st) => ({ notify: { ...st.notify, budget: !st.notify.budget } })),
 noTokens: s.tokens.length === 0, noNotes: s.notes.length === 0, auditQ: s.auditQ, onAuditQ: (e) => this.setState({ auditQ: e.target.value }), noAudit: auditRows.length === 0,
 hasRoleNote: !!s.roleNote, roleNote: s.roleNote,
 defCap: s.defCap, onDefCap: (e) => { if (!isOwner) return; const v = digits(e); this.setState((st) => ({ defCap: v, d: { ...st.d, cap: v } })); },

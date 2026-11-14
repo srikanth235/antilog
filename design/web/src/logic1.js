@@ -10,7 +10,7 @@ class Component extends DCLogic {
     const CP = 'Checkout platform', SR = 'Search', DS = 'Data science forecasts';
     const X = (o) => ({ pinned: false, approved: true, hist: [], pr: [], ps: 0, fixed: null, lim: { error: true, cost: true, memory: false }, dir: null, path: null, env: 'aws', cloud: 'AWS', val: 0, mo: 5, act: '', ...o });
     this.state = {
-      screen: 'thread', theme: null, menu: null, collapsed: {}, settingsTab: 'profile', setOpen: false, setQ: '', auditQ: '', roleNote: '', notify: { on: true, approve: true, win: true, budget: false },
+      screen: 'thread', theme: null, menu: null, collapsed: {}, settingsTab: 'profile', setOpen: false, setQ: '', auditQ: '', roleNote: '', 
       pal: false, palQ: '', palScope: 'all', palHi: 0, palAct: false, palActHi: 0, recent: ['x:o2', 'p:Search', 'd:eval:k6', 'd:skill:pgtune', 's:members', 'x:o6'], hlNote: null,
       selId: 'o1', projSel: CP, lastProject: CP, needText: false, editId: null,
       cTab: 'eval', cView: 'yours', cQuery: '', cCat: 'All', cAuth: 'All', cAdded: 'All', cSort: 'az', cNotice: '', showAll: {}, justAdded: {}, cSlide: 0,
