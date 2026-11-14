@@ -3,11 +3,11 @@
     <div class="rw between wrap g12" style="padding-top: 16px">
       <div class="rw g12 grow" style="min-width: 0; flex-wrap: wrap">
         <sc-if value="{{renaming}}">
-          <input class="in serif" value="{{renameVal}}" onChange="{{onRename}}" onKeyDown="{{onRenameKey}}" aria-label="Experiment name" autoFocus="{{ true }}" style="font-size: 22px; max-width: 340px; min-height: 40px">
+          <input class="in t-title" value="{{renameVal}}" onChange="{{onRename}}" onKeyDown="{{onRenameKey}}" aria-label="Experiment name" autoFocus="{{ true }}" style="max-width: 440px; min-height: 48px; padding: 0 12px">
           <button class="btn sm primary" onClick="{{saveRename}}">Save</button><button class="btn sm" onClick="{{cancelRename}}">Cancel</button>
         </sc-if>
         <sc-if value="{{notRenaming}}" hint-placeholder-val="{{ true }}">
-          <h1 class="serif ell" style="margin: 0; font-size: 30px; line-height: 1.15; max-width: 100%">{{tTitle}}</h1>
+          <h1 class="t-title ell" style="max-width: 100%">{{tTitle}}</h1>
           <span class="spill" style="--c: {{stColor}}"><span class="{{stCls}}"></span>{{stLabel}}</span>
         </sc-if>
       </div>
@@ -34,7 +34,7 @@
   <!-- NEW EXPERIMENT -->
   <sc-if value="{{isNew}}">
     <section class="page" style="max-width: 800px; padding-top: 88px; gap: 24px">
-      <h1 class="h1" style="text-align: center; font-size: 46px; margin-bottom: 8px">What do you want to improve?</h1>
+      <h1 class="h1" style="text-align: center; margin-bottom: 8px">What do you want to improve?</h1>
       <div class="composer">
         <textarea aria-label="What do you want to improve" value="{{dText}}" onChange="{{onText}}" rows="3" placeholder="e.g. Lower checkout p95 latency without raising error rate" style="display: block; width: 100%; min-height: 84px; border: 0; background: transparent; resize: none; font-size: 17px; line-height: 1.5; outline: none"></textarea>
         <div class="crow">
@@ -231,7 +231,7 @@
             <div class="card" style="display: flex; flex-direction: column; gap: 20px">
               <sc-if value="{{hasWin}}" hint-placeholder-val="{{ true }}">
                 <div class="banner" style="gap: 12px 24px">
-                  <span class="serif" style="font-size: 56px; line-height: .95; color: var(--accent)">{{resHead}}</span>
+                  <span class="big" style="font-size: 56px; color: var(--accent)">{{resHead}}</span>
                   <div class="col grow g4" style="flex: 1 1 240px">
                     <span style="font-size: 15px">{{resSum}}</span>
                     <span style="font-weight: 500; padding-top: 4px">{{resChange}}</span>

@@ -8,7 +8,7 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
 body{margin:0}
 html:has(.app.dark){background:#0B1019;color-scheme:dark}
@@ -16,7 +16,8 @@ html:has(.app.light){background:#FBFAF6;color-scheme:light}
 .app.dark{--mark:#8E9BB2;--canvas:#0B1019;--side:#080C14;--raised:#101724;--line:#182031;--line2:#2A3447;--ink:#ECEFF4;--ink2:#A7B1C2;--ink3:#8291A9;--accent:#D9B26F;--fill:#D9B26F;--fillHover:#EBCB8E;--onFill:#16110A;--good:#7FD1AE}
 .app.light{--mark:#5C6676;--canvas:#FBFAF6;--side:#F4F2EB;--raised:#FFFFFF;--line:#E6E1D5;--line2:#CFC8B8;--ink:#15181F;--ink2:#4A5363;--ink3:#5C6676;--accent:#8A5E0B;--fill:#15181F;--fillHover:#2B303B;--onFill:#FBFAF6;--good:#187250}
 .app{background:var(--canvas);color:var(--ink);font:400 14px/1.45 'Instrument Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
-.serif{font-family:'Instrument Serif',Georgia,serif;font-weight:400;letter-spacing:-.01em}
+.t-display{margin:0;font:600 40px/1.1 'Instrument Sans',system-ui,sans-serif;letter-spacing:-.025em}
+.t-title{margin:0;font:600 28px/1.15 'Instrument Sans',system-ui,sans-serif;letter-spacing:-.02em}
 .mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 .lbl{font:500 10.5px 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)}
 .app a.idp{display:flex;align-items:center;justify-content:center;gap:10px;min-height:50px;border:1px solid var(--line2);border-radius:999px;background:transparent;color:var(--ink);font:500 14px 'Instrument Sans',system-ui,sans-serif;text-decoration:none}
@@ -39,7 +40,7 @@ html:has(.app.light){background:#FBFAF6;color-scheme:light}
       <svg aria-hidden="true" width="36" height="22" viewBox="218 338 600 369"><defs><linearGradient id="brass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F8E4B8"/><stop offset=".6" stop-color="#E2BE7C"/><stop offset="1" stop-color="#BE8F49"/></linearGradient></defs><path d="M397.8 434.8L397.8 466.2A31.5 31.5 0 0 1 366.4 434.8Z" style="fill: var(--mark)" fill-opacity="0.12"/><path d="M407.7 434.8L407.7 466.2A31.5 31.5 0 0 0 439.2 434.8Z" style="fill: var(--mark)" fill-opacity="0.18"/><path d="M361.6 424.9L439.2 424.9A77.6 77.6 0 0 0 361.6 347.3Z" style="fill: var(--mark)" fill-opacity="0.28"/><path d="M351.7 471.0L227.9 471.0A123.8 123.8 0 0 1 351.7 347.3Z" style="fill: var(--mark)" fill-opacity="0.42"/><path d="M444.0 480.9L444.0 697.0A216.1 216.1 0 0 1 227.9 480.9Z" style="fill: var(--mark)" fill-opacity="0.6"/><path d="M453.9 342.5L453.9 697.0A354.5 354.5 0 0 0 808.4 342.5Z" fill="url(#brass)"/></svg>Ratchet
     </span>
     <div style="display: flex; flex-direction: column; gap: 40px; max-width: 560px">
-      <h1 class="serif" style="margin: 0; font-size: 76px; line-height: .98">Agents propose.<br>A benchmark <span style="font-style: italic; color: var(--accent)">decides.</span></h1>
+      <h1 class="t-display">Agents propose.<br>A benchmark <span style="color: var(--accent)">decides.</span></h1>
       <svg role="img" aria-label="A staircase of verified wins: 412, 344 and 288 milliseconds" viewBox="0 0 480 120" style="width: 100%; max-width: 480px; height: auto">
         <polyline points="2,14 160,14 160,62 320,62 320,104 478,104" fill="none" style="stroke: var(--accent)" stroke-width="1.5"/>
         <circle cx="478" cy="104" r="3.5" style="fill: var(--accent)"/>
@@ -66,7 +67,7 @@ html:has(.app.light){background:#FBFAF6;color-scheme:light}
     <div style="flex: 1; display: flex; align-items: center; justify-content: center">
       <div style="width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 32px">
         <div style="display: flex; flex-direction: column; gap: 8px">
-          <h2 class="serif" style="margin: 0; font-size: 44px; line-height: 1.05">Sign in</h2>
+          <h2 class="t-title">Sign in</h2>
           <span style="color: var(--ink2)">{{hint}}</span>
         </div>
 

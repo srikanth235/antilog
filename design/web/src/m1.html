@@ -28,7 +28,7 @@
         </sc-for>
       </div>
     </sc-for>
-    <sc-if value="{{palEmpty}}"><div class="pal-empty"><span class="serif" style="font-size: 24px">{{palEmptyTxt}}</span><span class="sm mut">Try a shorter word, or change the type above.</span><button class="btn" tabIndex="-1" onClick="{{startAbout}}">Start a new experiment about it</button></div></sc-if>
+    <sc-if value="{{palEmpty}}"><div class="pal-empty"><span class="t-title">{{palEmptyTxt}}</span><span class="sm mut">Try a shorter word, or change the type above.</span><button class="btn" tabIndex="-1" onClick="{{startAbout}}">Start a new experiment about it</button></div></sc-if>
   </div>
   <sc-if value="{{palActOpen}}"><div class="menu pal-act" role="menu" aria-label="Actions for {{palActTitle}}"><span class="lbl" style="padding: 8px 10px 4px">Actions</span><sc-for list="{{palActRows}}" as="x" hint-placeholder-count="3"><button class="{{x.cls}}" role="menuitem" tabIndex="-1" onMouseEnter="{{x.hover}}" onClick="{{x.pick}}">{{x.label}}</button></sc-for></div></sc-if>
   <div class="pal-foot" aria-hidden="true"><span>Close <b class="kc">Esc</b></span><span>Change type <b class="kc">←</b><b class="kc">→</b></span><span>Open <b class="kc">↵</b></span><span>Actions <b class="kc">⌥↵</b></span><span class="push">Compose <b class="kc">Tab</b></span></div>
@@ -100,7 +100,7 @@
       </div>
     </sc-if>
     <button class="nav" onClick="{{toggleUser}}" aria-expanded="{{userOpen}}" aria-haspopup="menu" style="height: 48px; gap: 12px">
-      <span aria-hidden="true" class="avatar round serif" style="width: 30px; height: 30px; font-size: 15px; font-weight: 400">P</span>
+      <span aria-hidden="true" class="avatar round" style="width: 30px; height: 30px; font-size: 14px">P</span>
       <span class="col grow" style="line-height: 1.25"><span style="color: var(--ink)">Priya Raman</span><span class="xs mut">via Okta</span></span>
       <i class="ic s mut i-more"></i>
     </button>

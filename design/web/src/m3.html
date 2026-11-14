@@ -6,7 +6,7 @@
       <div class="cgrid">
         <sc-for list="{{projectCards}}" as="p" hint-placeholder-count="3">
           <button class="card" onClick="{{p.pick}}" style="gap: 16px; padding: 20px">
-            <span class="rw between g8"><span class="serif" style="font-size: 26px">{{p.name}}</span><span class="tag">{{p.role}}</span></span>
+            <span class="rw between g8"><span class="t-section">{{p.name}}</span><span class="tag">{{p.role}}</span></span>
             <span class="sm ink2">{{p.blurb}}</span>
             <span class="rw g24"><span class="col"><span class="xs mut">Experiments</span><span class="mono" style="font-size: 14px">{{p.count}}</span></span><span class="col"><span class="xs mut">Wins</span><span class="mono" style="font-size: 14px">{{p.wins}}</span></span><span class="col"><span class="xs mut">Spend this month</span><span class="mono" style="font-size: 14px">{{p.spend}}</span></span></span>
           </button>
@@ -26,7 +26,7 @@
         <div class="grid th" style="grid-template-columns: 1.8fr 1.1fr 2.2fr .6fr .8fr 1fr"><span>Experiment</span><span>Status</span><span>Primary metric</span><span>Runs</span><span>Spend</span><span>Last activity</span></div>
         <sc-for list="{{pRows}}" as="x" hint-placeholder-count="3">
           <button class="grid" onClick="{{x.open}}" style="grid-template-columns: 1.8fr 1.1fr 2.2fr .6fr .8fr 1fr">
-            <span class="serif ell" style="font-size: 19px">{{x.name}}</span>
+            <span class="t-item ell">{{x.name}}</span>
             <span class="rw g8" style="color: {{x.stColor}}"><span class="{{x.stCls}}"></span><span style="color: var(--ink)">{{x.stLabel}}</span></span>
             <span class="sm ink2">{{x.metric}}</span>
             <span class="mono xs">{{x.runs}}</span><span class="mono xs">{{x.spend}}</span><span class="sm ink2">{{x.act}}</span>
@@ -58,7 +58,7 @@
           <div class="grid th" style="grid-template-columns: 1.4fr 1.2fr 1.6fr .8fr .8fr 1.2fr"><span>Experiment</span><span>Project</span><span>Primary metric</span><span>Change</span><span>Per year</span><span>Status</span></div>
           <sc-for list="{{dWins}}" as="x" hint-placeholder-count="4">
             <button class="grid" onClick="{{x.open}}" style="grid-template-columns: 1.4fr 1.2fr 1.6fr .8fr .8fr 1.2fr">
-              <span class="serif ell" style="font-size: 19px">{{x.name}}</span><span class="sm ink2">{{x.project}}</span><span class="sm ink2">{{x.metric}}</span><span class="mono xs" style="color: var(--good)">{{x.delta}}</span><span class="mono xs">{{x.val}}</span>
+              <span class="t-item ell">{{x.name}}</span><span class="sm ink2">{{x.project}}</span><span class="sm ink2">{{x.metric}}</span><span class="mono xs" style="color: var(--good)">{{x.delta}}</span><span class="mono xs">{{x.val}}</span>
               <span class="rw g8" style="color: {{x.stColor}}"><span class="{{x.stCls}}"></span><span style="color: var(--ink)">{{x.stLabel}}</span></span>
             </button>
           </sc-for>
@@ -83,7 +83,7 @@
           <div class="grid th" style="grid-template-columns: 1.3fr .5fr 1fr 2.4fr 1.3fr 1.1fr"><span>Experiment</span><span>Run</span><span>Agent</span><span>What was tried</span><span>Measured</span><span>Outcome</span></div>
           <sc-for list="{{historyRows}}" as="x" hint-placeholder-count="8">
             <button class="grid" onClick="{{x.open}}" style="grid-template-columns: 1.3fr .5fr 1fr 2.4fr 1.3fr 1.1fr">
-              <span class="serif ell" style="font-size: 18px">{{x.opt}}</span><span class="mono xs">{{x.run}}</span><span class="sm" style="white-space: nowrap">{{x.agent}}</span><span class="sm ink2">{{x.tried}}</span><span class="mono xs">{{x.result}}</span>
+              <span class="t-item ell">{{x.opt}}</span><span class="mono xs">{{x.run}}</span><span class="sm" style="white-space: nowrap">{{x.agent}}</span><span class="sm ink2">{{x.tried}}</span><span class="mono xs">{{x.result}}</span>
               <span class="rw g8 sm"><i class="dot" style="background: {{x.color}}"></i>{{x.verdict}}</span>
             </button>
           </sc-for>

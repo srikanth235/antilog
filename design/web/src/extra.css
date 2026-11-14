@@ -42,7 +42,7 @@
 .fb{--t:var(--accent);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:24px;padding:28px 32px;min-height:200px;border-radius:var(--r3);background:color-mix(in srgb,var(--t) 13%,var(--raised));border:1px solid color-mix(in srgb,var(--t) 26%,var(--line))}
 .fb .txt{display:flex;flex-direction:column;align-items:flex-start;gap:8px;max-width:540px;position:relative;z-index:1}
 .fb .eyebrow{font-size:13px;color:var(--ink2)}
-.fb .nm0{font:400 34px/1.1 'Instrument Serif',Georgia,serif;margin:0;letter-spacing:-.01em}
+.fb .nm0{font:600 28px/1.15 'Instrument Sans',system-ui,sans-serif;margin:0;letter-spacing:-.02em}
 .ill{position:relative;width:230px;height:140px;flex:none;color:var(--ink);margin-right:24px}
 .il{position:absolute;border:2px solid currentColor;border-radius:10px;background:transparent}
 .il-ln{position:absolute;height:0;border-top:2px solid currentColor;opacity:.55;border-radius:2px}
@@ -64,7 +64,7 @@
 .cnb{display:inline-grid;place-items:center;min-height:22px;padding:0 8px;border-radius:999px;background:var(--hover);color:var(--ink2);font:500 12px/1 'JetBrains Mono',ui-monospace,monospace}
 .car{--t:var(--infra);position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:280px;padding:32px 76px;text-align:center;border-radius:var(--r3);border:1px solid color-mix(in srgb,var(--t) 24%,var(--line));background:linear-gradient(180deg,color-mix(in srgb,var(--t) 6%,var(--raised)),color-mix(in srgb,var(--t) 22%,var(--raised)))}
 .car .eyebrow{font-size:13px;color:var(--ink2)}
-.car h2{margin:0;font:400 36px/1.1 'Instrument Serif',Georgia,serif;letter-spacing:-.01em}
+.car h2{margin:0;font:600 28px/1.15 'Instrument Sans',system-ui,sans-serif;letter-spacing:-.02em}
 .cartiles{display:flex;gap:14px;align-items:center;height:96px}
 .cgl{display:grid;place-items:center;width:58px;height:58px;border-radius:14px;background:var(--raised);border:1px solid var(--line2);box-shadow:0 8px 18px rgba(0,0,0,.16)}
 .carb{position:absolute;top:50%;margin-top:-20px;width:40px;height:40px;border-radius:50%;border:0;background:color-mix(in srgb,var(--ink) 12%,transparent);color:var(--ink);display:grid;place-items:center;cursor:pointer}

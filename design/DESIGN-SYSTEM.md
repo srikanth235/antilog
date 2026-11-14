@@ -39,7 +39,18 @@ Each area keeps one colour in diagrams and navigation (target). Optimization is 
 
 ## Type
 
-Instrument Sans for text (system fonts as the fallback), Instrument Serif for titles and big numbers only, JetBrains Mono for numbers, code and small labels. Body text is 14px.
+Two families: Instrument Sans for everything (system fonts as the fallback) and JetBrains Mono for code, small uppercase labels and inline mono values. There is no serif. Big numbers are Instrument Sans, not mono. Each role has a class in `style.css`; use the class, not an inline size.
+
+| Role | Class | Size / weight | Letter-spacing | Line-height | Use |
+|---|---|---|---|---|---|
+| Display | `.t-display`, `.h1` | 40 / 600 | -0.025em | 1.1 | Page titles |
+| Title | `.t-title` | 28 / 600 | -0.02em | 1.15 | Experiment title and its rename input, detail page titles, banner and empty-state headings |
+| Section | `.t-section`, `.h2` | 18 / 600 | -0.01em | 1.3 | Section headings, project card names |
+| Item | `.t-item` | 15 / 500 | normal | 1.35 | Names in lists, tables and rows, and notes from people (at weight 400) |
+| Body | (default) | 14 / 400 | normal | 1.45 | Text |
+| Meta | `.sm`, `.xs` | 12 to 12.5 / 400 | normal | | Descriptions under item names |
+| Label | `.lbl` | JetBrains Mono 10.5 to 11 / 500, uppercase | 0.06em to 0.1em | | Small labels |
+| Number | `.big` | 40 / 600, tabular figures | -0.02em | 1 | Figures in tiles; the result headline keeps 56px |
 
 ## Shape
 

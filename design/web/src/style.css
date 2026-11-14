@@ -10,7 +10,6 @@ html:has(.app.light){background:#FBFAF6;color-scheme:light}
 .app button{transition:background-color .14s,color .14s,border-color .14s,box-shadow .14s,opacity .14s}
 .app :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .app textarea:focus-visible,.app .sqin:focus-visible{outline:none}
-.serif{font-family:'Instrument Serif',Georgia,serif;font-weight:400;letter-spacing:-.01em}
 .mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 .lbl{font:500 10.5px 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)}
 .mut{color:var(--ink3)}.ink2{color:var(--ink2)}.sm{font-size:12.5px}.xs{font-size:12px}
@@ -82,8 +81,10 @@ label.nav{cursor:text}
 .crumbs .textbtn{min-height:28px;color:var(--ink3)}
 .scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:var(--line2) transparent}
 .page{width:100%;max-width:1040px;margin:0 auto;padding:32px 32px 48px;display:flex;flex-direction:column;gap:24px}
-.h1{margin:0;font:400 40px/1.1 'Instrument Serif',Georgia,serif;letter-spacing:-.01em}
-.h2{margin:0;font:400 24px/1.2 'Instrument Serif',Georgia,serif}
+.h1,.t-display{margin:0;font:600 40px/1.1 'Instrument Sans',system-ui,sans-serif;letter-spacing:-.025em}
+.t-title{margin:0;font:600 28px/1.15 'Instrument Sans',system-ui,sans-serif;letter-spacing:-.02em}
+.h2,.t-section{margin:0;font:600 18px/1.3 'Instrument Sans',system-ui,sans-serif;letter-spacing:-.01em}
+.t-item{font:500 15px/1.35 'Instrument Sans',system-ui,sans-serif}
 .sub{margin:0;color:var(--ink2);max-width:640px}
 .hd{display:flex;flex-direction:column;gap:8px}
 .head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px}
@@ -179,7 +180,7 @@ button.chk{cursor:pointer}button.chk:hover{background:var(--hover)}
 button.grid{cursor:pointer}button.grid:hover,.grid.sel{background:var(--sunk)}
 .grid.th{padding-top:0;padding-bottom:8px;border-bottom-color:var(--line2);font-size:12.5px;color:var(--ink3)}
 .stile{display:flex;flex-direction:column;gap:4px;padding:16px 20px;background:var(--raised);border:1px solid var(--line);border-radius:var(--r3)}
-.big{font:400 40px/1 'Instrument Serif',Georgia,serif}
+.big{font:600 40px/1 'Instrument Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 .cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:16px}
 .ccard{position:relative;display:flex;flex-direction:column;gap:8px;padding:16px;background:var(--raised);border:1px solid var(--line);border-radius:var(--r3)}
 .ccard:hover{border-color:var(--line2)}

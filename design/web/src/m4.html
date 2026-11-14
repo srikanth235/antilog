@@ -53,7 +53,7 @@
             <sc-for list="{{yourRows}}" as="x" hint-placeholder-count="4">
               <div class="grid" style="grid-template-columns: 44px minmax(0, 2.4fr) minmax(0, 1.6fr) 100px 110px">
                 <span class="tile"><span class="gi {{x.gl}}"></span></span>
-                <span class="col" style="gap: 1px; min-width: 0"><span class="serif ell" style="font-size: 19px">{{x.name}}</span><span class="xs mut ell">{{x.desc}}</span></span>
+                <span class="col" style="gap: 1px; min-width: 0"><span class="t-item ell">{{x.name}}</span><span class="xs mut ell">{{x.desc}}</span></span>
                 <span class="sm ink2 ell">{{x.meta}}</span>
                 <span class="rw g8 sm"><i class="dot" style="background: {{x.stColor}}"></i>{{x.status}}</span>
                 <button class="btn sm" onClick="{{x.open}}" aria-label="Configure {{x.name}}">Configure</button>
@@ -130,7 +130,7 @@
       <div class="rw between wrap g16">
         <div class="rw g16" style="min-width: 0; flex: 1 1 360px">
           <span class="tile lg"><span class="gi {{dGl}}"></span></span>
-          <div class="col g4" style="min-width: 0"><h1 class="h1" style="font-size: 36px">{{dName}}</h1><span class="ink2">{{dDesc}}</span><sc-if value="{{dHasMeta}}"><span class="xs mut">{{dMeta}}</span></sc-if><span class="rw g8 sm" style="color: {{dStatusColor}}"><i class="dot" style="background: {{dStatusColor}}"></i>{{dStatus}}</span></div>
+          <div class="col g4" style="min-width: 0"><h1 class="t-title">{{dName}}</h1><span class="ink2">{{dDesc}}</span><sc-if value="{{dHasMeta}}"><span class="xs mut">{{dMeta}}</span></sc-if><span class="rw g8 sm" style="color: {{dStatusColor}}"><i class="dot" style="background: {{dStatusColor}}"></i>{{dStatus}}</span></div>
         </div>
         <div class="rw g8 wrap">
           <sc-if value="{{dReconnect}}"><button class="btn primary" onClick="{{reconnect}}">Reconnect</button></sc-if>
@@ -162,7 +162,7 @@
               <sc-for list="{{g.rows}}" as="x" hint-placeholder-count="3">
                 <div class="grid" style="grid-template-columns: 44px minmax(0, 1fr) 110px 72px">
                   <span class="tile"><sc-if value="{{x.hasGl}}" hint-placeholder-val="{{ true }}"><i class="gi {{x.gl}}"></i></sc-if><sc-if value="{{x.hasMg}}"><span class="mg">{{x.mg}}</span></sc-if></span>
-                  <span class="col" style="gap: 1px; min-width: 0"><span class="serif ell" style="font-size: 18px">{{x.name}}</span><span class="xs mut ell">{{x.desc}}</span></span>
+                  <span class="col" style="gap: 1px; min-width: 0"><span class="t-item ell">{{x.name}}</span><span class="xs mut ell">{{x.desc}}</span></span>
                   <span class="rw g8 sm"><i class="dot" style="background: {{x.stColor}}"></i>{{x.stTxt}}</span>
                   <span><sc-if value="{{x.canOpen}}" hint-placeholder-val="{{ true }}"><button class="btn sm" onClick="{{x.open}}" aria-label="Open {{x.name}}">Open</button></sc-if></span>
                 </div>
@@ -189,12 +189,12 @@
       </sc-if>
       <sc-if value="{{dHasExp}}" hint-placeholder-val="{{ true }}">
         <div class="col g8"><h2 class="sech">Experiments using it</h2>
-          <div class="table"><div style="min-width: 520px"><sc-for list="{{dExp}}" as="x" hint-placeholder-count="2"><button class="grid" onClick="{{x.open}}" style="grid-template-columns: 1.6fr 1.4fr 1.2fr"><span class="serif" style="font-size: 18px">{{x.name}}</span><span class="sm ink2">{{x.project}}</span><span class="stc" style="color: {{x.stColor}}"><i class="{{x.stCls}}"></i><b>{{x.stLabel}}</b></span></button></sc-for></div></div>
+          <div class="table"><div style="min-width: 520px"><sc-for list="{{dExp}}" as="x" hint-placeholder-count="2"><button class="grid" onClick="{{x.open}}" style="grid-template-columns: 1.6fr 1.4fr 1.2fr"><span class="t-item">{{x.name}}</span><span class="sm ink2">{{x.project}}</span><span class="stc" style="color: {{x.stColor}}"><i class="{{x.stCls}}"></i><b>{{x.stLabel}}</b></span></button></sc-for></div></div>
           <sc-if value="{{dExpEmpty}}"><span class="mut sm">Nothing uses this yet.</span></sc-if></div>
       </sc-if>
       <sc-if value="{{dIsAgent}}">
         <div class="col g8"><h2 class="sech">Recent trials</h2>
-          <div class="table"><div style="min-width: 620px"><sc-for list="{{aTrials}}" as="x" hint-placeholder-count="3"><button class="grid" onClick="{{x.open}}" style="grid-template-columns: 1.2fr 2.4fr 1.2fr 1fr"><span class="serif" style="font-size: 18px">{{x.opt}}</span><span class="sm ink2">{{x.tried}}</span><span class="mono xs">{{x.result}}</span><span class="rw g8 sm"><i class="dot" style="background: {{x.color}}"></i>{{x.out}}</span></button></sc-for></div></div>
+          <div class="table"><div style="min-width: 620px"><sc-for list="{{aTrials}}" as="x" hint-placeholder-count="3"><button class="grid" onClick="{{x.open}}" style="grid-template-columns: 1.2fr 2.4fr 1.2fr 1fr"><span class="t-item">{{x.opt}}</span><span class="sm ink2">{{x.tried}}</span><span class="mono xs">{{x.result}}</span><span class="rw g8 sm"><i class="dot" style="background: {{x.color}}"></i>{{x.out}}</span></button></sc-for></div></div>
           <sc-if value="{{aTrialsEmpty}}"><span class="mut sm">No measured trials yet.</span></sc-if></div>
       </sc-if>
 
@@ -204,7 +204,7 @@
             <div class="grid th" style="grid-template-columns: 1.8fr .9fr 1.4fr 1.1fr 1.1fr"><span>Dataset</span><span>Version</span><span>Marking</span><span>Agents</span><span>Evaluator</span></div>
             <sc-for list="{{dsRows}}" as="x" hint-placeholder-count="2">
               <div class="grid {{x.selCls}}" style="grid-template-columns: 1.8fr .9fr 1.4fr 1.1fr 1.1fr">
-                <button class="textbtn serif" onClick="{{x.pick}}" aria-label="Show versions of {{x.name}}" style="font-size: 18px; color: var(--ink); text-align: left">{{x.name}}</button>
+                <button class="textbtn t-item" onClick="{{x.pick}}" aria-label="Show versions of {{x.name}}" style="color: var(--ink); text-align: left">{{x.name}}</button>
                 <span class="mono xs">{{x.version}}</span>
                 <span class="segs" role="group" aria-label="Marking"><sc-for list="{{x.marks}}" as="y" hint-placeholder-count="2"><button class="{{y.cls}}" onClick="{{y.pick}}">{{y.label}}</button></sc-for></span>
                 <span>
