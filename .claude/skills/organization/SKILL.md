@@ -1,7 +1,7 @@
 ---
 name: organization
 description: >-
-  Who may do what, and how is it recorded? Use for organizations, projects, members and roles (owner, editor, viewer), sign-in with OpenID Connect, access tokens and service accounts, the audit log, notifications, live events, permission checks, and adding a role, a sign-in provider or an audited action.
+  Who may do what, and how is it recorded? Use for organizations, projects, members and roles (owner, editor, viewer), sign-in with OpenID Connect and GitHub, access tokens and service accounts, the audit log, notifications, live events, permission checks, and adding a role, a sign-in provider or an audited action.
 ---
 
 # Organization

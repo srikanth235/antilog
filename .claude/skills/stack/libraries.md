@@ -62,15 +62,14 @@ Start fresh. Copy only proven pieces from the earlier code on `claude/peaceful-l
 | HTTP server, live events | `axum` | 0.8.9 |
 | Middleware | `tower` / `tower-http` | 0.5.3 / 0.7.1 |
 | HTTP | `hyper` | 1.12.0 |
-| TLS | `rustls` | 0.23.46 |
+| TLS (self-hosted server and runner only; its `aws-lc-rs` provider never enters the core) | `rustls` | 0.23.46 |
 | HTTP client | `reqwest` | 0.13.5 |
 | Serialization | `serde` / `serde_json` | 1.0.229 / 1.0.154 |
 | Postgres, migrations (self-hosted store) | `sqlx` (+ `sqlx-cli`) | 0.9.0 |
 | Cloud shell (Cloudflare Worker, runs the axum router with the `http` feature) | `worker` (workers-rs) | 0.8.7 |
 | OpenAPI from Rust types | `utoipa` / `utoipa-axum` | 6.0.0 / 0.3.0 |
-| Sign-in | `openidconnect` | 4.1.0 |
-| Sessions | `tower-sessions` / `tower-sessions-sqlx-store` | 0.15.0 / 0.16.0 |
-| Crypto, receipt signing (ed25519), token hashes | `aws-lc-rs` | 1.19.0 |
+| Sign-in: OpenID Connect, and GitHub's OAuth (default features off; each shell supplies the HTTP client) | `openidconnect` / `oauth2` | 4.1.0 / 5.0.0 |
+| Receipt signing (ed25519), token and session hashes, constant-time compare (pure Rust, builds for wasm) | `ed25519-dalek` / `sha2` / `subtle` | 3.0.0 / 0.11.1 / 2.6.1 |
 | Embedded web app | `rust-embed` | 8.14.0 |
 | AWS | `aws-config` | 1.13.2 |
 | | `aws-sdk-ec2` / `aws-sdk-s3` / `aws-sdk-sts` | 1.280.0 / 1.159.0 / 1.126.0 |
@@ -87,6 +86,8 @@ Start fresh. Copy only proven pieces from the earlier code on `claude/peaceful-l
 | Tests | `insta` / `proptest` | 1.49.0 / 1.12.0 |
 | Postgres in tests | `testcontainers` / `testcontainers-modules` | 0.28.0 / 0.15.0 |
 | Test runner, licences | `cargo-nextest` / `cargo-deny` | 0.9.152 / 0.20.2 |
+
+Sessions and access tokens need no library: each is 32 random bytes shown once, stored as a SHA-256 hash through the `Store` and compared in constant time, so both stores behave the same. `tower-sessions` and `aws-lc-rs` were dropped (November 2026): the first ties sessions to a `sqlx` store the cloud cannot use, the second is C code that does not build for wasm. Better Auth was considered and refused: it is TypeScript and keeps its own user, session and organization tables beside ours.
 
 Snowflake, Databricks and BigQuery have no maintained Rust client we would ship; their connectors call each vendor's REST API through `reqwest`. Every connector sits behind one `Connector` trait, so its vocabulary stops there, and each knows how to mint a scoped, read-only, holdout-excluding credential. Sandbox backends sit behind one trait: Kubernetes first, then VMs on AWS, GCP and Azure. Provider crates stay inside each adapter.
 

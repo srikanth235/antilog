@@ -2,7 +2,7 @@
 
 - Send every write through one action layer that checks permission, writes the audit entry and emits the event, because three separate steps get skipped one at a time.
 - Put the organization on every table row, because a query without it can cross customers.
-- Build no built-in passwords, because Ratchet never stores a password. Sign-in is OpenID Connect only: GitHub and Google on Ratchet cloud, the customer's own identity provider when self-hosted.
+- Build no built-in passwords, because Ratchet never stores a password. Sign-in is OpenID Connect, plus GitHub's OAuth: GitHub and Google on Ratchet cloud, the customer's own OpenID Connect provider when self-hosted.
 - Make every external endpoint configuration, never a constant, because a self-hosted server must contact only what its administrator set.
 - Show a token once and store only its hash, because a stored token is a stolen token waiting.
 - Use one cryptography stack, because two stacks mean two sets of bugs to patch.

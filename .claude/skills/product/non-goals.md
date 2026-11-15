@@ -3,7 +3,7 @@
 These are decided. Do not build them, propose them in passing, or leave a hook "for later". Raising one means asking the owner to reverse a ruling, not slipping it into a change.
 
 - **An evaluator on a laptop.** Measuring never runs on a user's machine: the evaluator stays in the customer's infrastructure. A Mac may be the "This machine" backend where agents propose, with short-lived, read-only, scoped credentials, governed, budgeted and cleaned up like any backend (see [rulings](rulings.md)). Nothing else runs locally.
-- **Stored passwords or a built-in user database.** Sign-in is OpenID Connect only. We do not want to hold credentials worth stealing.
+- **Stored passwords or a built-in user database.** Sign-in is through an identity provider: OpenID Connect, plus GitHub's OAuth on Ratchet cloud. We do not want to hold credentials worth stealing.
 - **A hosted third-party auth service.** Self-hosting must not depend on a vendor the administrator did not choose.
 - **A separate policy engine.** Roles are checked in the one action layer. A second place that decides who may do what is a second truth.
 - **Running the simulation in the browser.** The benchmark runs in the customer's infrastructure, never in a page.
