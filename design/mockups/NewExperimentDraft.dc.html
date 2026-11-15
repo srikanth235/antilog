@@ -14,7 +14,7 @@
 <link rel="stylesheet" href="./components.css">
 
 </helmet>
-<div class="board app" style="width: 1440px; height: 900px;">
+<div class="board app" style="width: 1440px; height: 970px;">
   <!-- part:Sidebar active="smoke-suite-duration" -->
   <nav class="side" aria-label="Main">
         <div class="side-top">
@@ -69,11 +69,11 @@
             <div class="dl"><span><i class="dot" style="background: var(--accent);"></i>Primary metric</span><span>Smoke suite duration, lower is better. Baseline 240 s, noise ±1.2%.</span></div>
             <div class="dl"><span><i class="dot" style="background: var(--accent);"></i>Guardrail metrics</span><span>Error rate and cost must not get worse. Agents may change tests/smoke.</span></div>
             <div class="dl"><span><i class="dot" style="background: var(--accent);"></i>Evaluation</span><span>Staging smoke test, run as pnpm test:smoke --env staging.</span></div>
-            <div class="dl"><span><i class="dot" style="background: var(--accent);"></i>Acceptance criteria</span><span>A change must beat twice the noise (2.4%) and pass the holdout.</span></div>
-            <div class="dl"><span><i class="dot" style="background: var(--infra);"></i>Agents</span><span>Claude Code, then Codex. Each proposes in its own sandbox.</span></div>
+            <div class="dl"><span><i class="dot" style="background: var(--accent);"></i>Acceptance criteria</span><span>A trial is kept if it beats its agent’s own best by twice the noise (2.4%) and is confirmed on the holdout.</span></div>
+            <div class="dl"><span><i class="dot" style="background: var(--infra);"></i>Agents</span><span>Claude Code and Codex. Each loops in its own sandbox and sees each trial’s measured value, never the holdout.</span></div>
             <div class="dl"><span><i class="dot" style="background: var(--good);"></i>Credentials</span><span>Minted for each run by the launcher. Agents get read-only credentials that leave out the holdout. The evaluator gets its own, which includes Checkout replay holdout v4.</span></div>
             <div class="dl"><span><i class="dot" style="background: var(--infra);"></i>Environment</span><span>Kubernetes (EKS acme-prod · us-east-1), m7i.2xlarge. Agents and the evaluator run on separate machines, and every sandbox is removed after the last run.</span></div>
-            <div class="dl"><span><i class="dot" style="background: var(--infra);"></i>Budget</span><span>$25. Work stops at the next trial once it is reached.</span></div>
+            <div class="dl"><span><i class="dot" style="background: var(--infra);"></i>Budget</span><span>$25, split evenly: $12.50 per agent. An agent stops when its share is spent or after 8 trials with no gain. The run stops at $25, its deadline, or when no agent has gained in 12 trials.</span></div>
           </div>
           <div class="rw wrap between g12" style="padding-top: 12px;">
             <span class="sm mut">Nothing is created in your infrastructure until you approve.</span>

@@ -4,7 +4,7 @@ What every area owes the customer, and the one rule each follows. A promise kept
 
 | Area | Promise | The rule |
 | --- | --- | --- |
-| Optimization | **Decide** | Only changes that beat the benchmark, are confirmed, and hold on the holdout move forward. |
+| Optimization | **Decide** | Only trials that beat the agent's best, are confirmed, and hold on the holdout move forward. Only the evaluator's numbers count. |
 | Optimization | **Receipt** | Every win carries its full measurements, the dataset versions and the machines it ran on. |
 | Optimization | **Honest numbers** | Pending is never counted as delivered. |
 | Optimization | **Keep** | A win is re-checked and never slips back. |

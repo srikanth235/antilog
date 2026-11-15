@@ -6,7 +6,7 @@ description: >-
 
 # Infra
 
-Infra runs the work in the customer's own infrastructure and keeps it cheap and clean. One launcher starts and removes sandboxes behind one backend trait. Self-hosted, it is built into the server. On Ratchet cloud, the same code runs as a small runner in the customer's infrastructure and connects out to the hosted server. Proposing and measuring happen on different machines. A Mac running the macOS app may be the "This machine" backend for proposing (target); measuring never runs there. Only AWS VMs exist today (target: Kubernetes first); [today.md](today.md) says what is built.
+Infra runs the work in the customer's own infrastructure and keeps it cheap and clean. One launcher starts and removes sandboxes behind one backend trait. Self-hosted, it is built into the server. On Ratchet cloud, the same code runs as a small runner in the customer's infrastructure and connects out to the hosted server. Each agent works in its own sandbox and loops until it stops; a measurement job starts an evaluator sandbox for one trial. Proposing and measuring happen on different machines. A Mac running the macOS app may be the "This machine" backend for proposing (target); measuring never runs there. Only AWS VMs exist today (target: Kubernetes first); [today.md](today.md) says what is built.
 
 | If you are doing | Read |
 | --- | --- |

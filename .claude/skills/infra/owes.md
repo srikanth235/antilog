@@ -2,7 +2,7 @@
 
 | Promise | The rule |
 | --- | --- |
-| Spend | Nothing is spent without a stated limit. A cap stops the run. Every dollar is tied to a run. |
+| Spend | Nothing is spent without a stated limit. A cap stops the run. Every dollar is tied to a run and an agent, and each agent has its share (target). |
 | Clean up | Everything Ratchet creates is tagged, removed, and shown as removed. |
 | Customer's account | Work runs in the customer's infrastructure. Ratchet holds no access to it. |
 | Any cloud | The same promises hold on every sandbox backend. |

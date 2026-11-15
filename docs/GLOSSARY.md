@@ -10,8 +10,8 @@
 | Agent | A Claude Code, Codex or Grok login or key that proposes changes | harness (code only), connection | agent |
 | Agent order | The fallback sequence, "Claude Code → Codex → Grok · on this machine" | priority | agent order |
 | Where | This machine or Cloud: where agents run. This machine is a Mac running the macOS app (target); measuring never runs there | location | Where |
-| Note | Text left on a run to steer the next candidate | comment, prompt | note |
-| Pause Agent | Stop one agent inside a run | | Pause agent |
+| Note | Text that steers the agents of a run: all of them, or one with @ ("@Codex focus on database queries") | comment, prompt | note |
+| Pause Agent | Stop one agent inside a run; its loop waits until resumed | | Pause agent |
 | Chat | A conversation with your own agent (Claude Code, Codex or Grok) that acts on Ratchet through its tools | assistant session, thread | Chat |
 | Draft | An experiment the chat proposed as a card, or created but not approved; nothing runs until Approve | proposal | Draft |
 | Config branch | `ratchet/config`, where a new experiment's files go before any PR | draft PR | config branch |
@@ -26,7 +26,9 @@ Code and the API use the names of the three basics for their areas; the screen b
 
 | Term | Means | Earlier code and docs said |
 |---|---|---|
-| Trial | One change an agent proposed and the evaluator measured | Candidate |
+| Trial | One measurement of one agent's change by the evaluator. A run has many per agent, numbered per agent ("Claude Code trial 11") (target) | Candidate |
+| Kept | A trial's outcome: it beat its agent's best by more than the acceptance criteria require, held the guardrails and was confirmed on the holdout. The agent learns only "Kept" or "Failed holdout", never the holdout value (target) | Accepted, Beats noise (as an outcome) |
+| Agent's best | The best kept value in one agent's lineage; what its next trial must beat. The run's result is the best kept trial across all agents (target) | none |
 | Evaluation | The trusted measurement, added under Customize | Benchmark |
 | Connector | A connection to a data system or the code host, with a reference to its admin secret in your secret manager. A cloud account is not a connector. Do not say "source" | Connector (a signed-in account) |
 | Skill | A versioned pack of know-how agents read. Not the agent guidance in `.claude/skills/` | none |
@@ -52,7 +54,7 @@ Code and the API use the names of the three basics for their areas; the screen b
 | grant | permission ("Can read", "No access") |
 | marking, holdout | marking, Holdout |
 | evaluator only | Restricted to evaluator |
-| workspace | agent sandbox (the stepper step is "Create workspace"; elsewhere say sandbox) |
+| workspace | agent sandbox (the stepper step is "Create workspaces"; elsewhere say sandbox) |
 | deployment | Ratchet cloud or Self-hosted |
 | spend cap | budget |
 | role | Owner, Editor, Viewer |
@@ -63,7 +65,11 @@ Code and the API use the names of the three basics for their areas; the screen b
 | featured pick, suggestions, recent additions, list all | Featured evaluation, Featured skill pack, Featured agent, Featured plugin, Featured connectors (banner labels), For you, New, Show all, Top connectors |
 | add from the catalogue, already added, browse the featured connectors | + (Add NAME), check (NAME is added), Explore |
 | running, draft, win, merged win, no win, stopped | Running, Draft, Win, Merged, No win, Stopped |
-| candidate beat noise, inside noise, regressed, lost on holdout, being measured | Beats noise, Within noise, Worse, Failed holdout, Measuring |
+| trial outcome: beat the agent's best and confirmed, inside noise, regressed, a guardrail broke, lost on holdout, did not run, being measured | Kept, Within noise, Worse, Guardrail failed, Failed holdout, Failed, Measuring ("Beats noise" and "Holdout passed" stay as evidence badges on the result card) |
+| agent status in a run | Iterating, Measuring trial 9, Paused, Stopped, no gain in 8 trials, Stopped, its budget share is spent |
+| an agent building on another's trial | Started from Claude Code's trial 11 |
+| an agent's totals | "11 trials · 3 kept · best 344 ms · $15 of $16.67" |
+| steering while running | "Steer the agents, or @ one, e.g. @Codex focus on database queries" |
 | signed receipt, signature verified | Signed numbers, Verified (Verify again) |
 | sandbox clean-up state | Cleaned up: Running, Removed, Not removed |
 | the Mac's local runner taking jobs | Accepting work (menu bar), Run agents on this Mac (Settings, This machine) |
@@ -73,10 +79,10 @@ Code and the API use the names of the three basics for their areas; the screen b
 | ask for push notifications after starting a run | Notify me when this run finishes |
 | notification titles | Win, Needs attention, No win, Failed, Stopped, Stopped at the budget, Runner not connected |
 | the server cannot be reached | Can't reach acme.ratchet.cloud. (the server's address), Try again |
-| a trial's steps | Steps for this trial |
+| a trial's steps | Steps for this trial (hypothesis, wrote the change, checked it in its sandbox (does not count), asked for a measurement, evaluator measured, beat the agent's best, confirmed in a fresh evaluator sandbox, Kept) |
 | the settings that apply to this browser only | This device, with the lead "These apply to this browser only." |
 | the server cannot be reached, what that blocks | "New experiments can't start until it is back." |
 | when the offline view was last fresh | Last updated 10:42 (the time of the last good load) |
 | row descriptions on This device | Install app: "Opens in its own window, with a badge for what needs attention." Notifications: "A notice here when an experiment needs you or a run finishes." |
 
-Unchanged between code and screen: win, agent, note, pull request, Delivered, Pending, Return. "Skill" on screen means a skill pack; in code and docs say "skill pack" where it could be confused with this repo's guidance files. Experiment, Data and Compute name the owning area only on the eight-step stepper of a thread and as the three lineage columns of a result; they are not navigation groups.
+Unchanged between code and screen: win, agent, note, pull request, Delivered, Pending, Return. "Skill" on screen means a skill pack; in code and docs say "skill pack" where it could be confused with this repo's guidance files. Experiment, Data and Compute name the owning area only on the seven-step stepper of a thread and as the three lineage columns of a result; they are not navigation groups.

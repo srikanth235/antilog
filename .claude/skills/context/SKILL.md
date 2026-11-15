@@ -1,7 +1,7 @@
 ---
 name: context
 description: >-
-  What may a proposer know? Use for connectors (connections to outside systems), datasets and their versions, grants and audiences, markings such as holdout, skill packs (versioned know-how agents read, shown as Skills), notes from people, the history of past attempts, write-back actions such as opening a pull request, and adding a Snowflake, Databricks, DynamoDB, BigQuery, Postgres, S3, GitHub, GitLab or MCP connector, and scoped credentials.
+  What may a proposer know? Use for connectors (connections to outside systems), datasets and their versions, grants and audiences, markings such as holdout, skill packs (versioned know-how agents read, shown as Skills), notes from people (to all agents or one), the history of past trials (read by every agent live), write-back actions such as opening a pull request, and adding a Snowflake, Databricks, DynamoDB, BigQuery, Postgres, S3, GitHub, GitLab or MCP connector, and scoped credentials.
 ---
 
 # Context

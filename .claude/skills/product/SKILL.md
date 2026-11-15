@@ -46,7 +46,7 @@ Ask these in order. The first one that bites usually settles it.
 2. **Which basic owns it?** Optimization, context, infrastructure or the organization floor. If none, question the feature before building it.
 3. **Does it break a promise, or a never-bend rule, of that area?** Read the area's `owes.md` and `rules.md`.
 4. **Does it move data or work out of the customer's infrastructure, or make the server connect to data?** If yes, the design is wrong.
-5. **Does it let a proposer see or change the scoring?** The holdout, the benchmark and the accept rule are not the proposer's.
+5. **Does it let a proposer change the scoring or read the holdout?** The holdout, the evaluation, the evaluator and the accept rule are not the proposer's. It may see each trial's measured value on the evaluation data.
 6. **Does it add a second mechanism for a job that has one?** Use the one that exists.
 7. **Does it work self-hosted, with no outside calls?** Only configured endpoints may be contacted.
 8. **Is it the same in every client?** Same state, same words, same behaviour.

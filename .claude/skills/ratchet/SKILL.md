@@ -29,15 +29,21 @@ There is no daemon, no LaunchAgent and no simulation mode. The server is Ratchet
 | --- | --- |
 | `ratchet status --json` | The server you are signed in to and your experiments at a glance |
 | `ratchet list --json` | All experiments with ids, state, best result, spend |
-| `ratchet show <id> --json` | One experiment: agents, baseline vs best, receipt |
+| `ratchet show <id> --json` | One experiment: agents (each with trials, kept, best and spend share), baseline vs best, receipt |
 | `ratchet spend <id> --json` | Spend against the budget |
 | `ratchet wins <id> --json` | Verified wins and their receipts |
 | `ratchet report <id>` | The markdown report |
 | `ratchet start <id> --budget 50 --yes` | Start an approved experiment (preview without `--yes`) |
 | `ratchet stop <id> --yes` | Stop one. Wins found so far are kept |
+| `ratchet note <id> "@Codex focus on database queries" --json` | Steer all agents, or one with @ (target) |
+| `ratchet measure --json` | Inside an agent sandbox only: ask for a measurement of the current change (target) |
 | `ratchet pr <id> --yes` | Open the pull request with the verified wins |
 
 Anything not listed is whatever `ratchet --help` shows; it is the source once the program exists.
+
+## Measuring from an agent sandbox (target)
+
+An agent inside its sandbox asks for a measurement with `ratchet measure --json` or the `measure` MCP tool. It uses the sandbox's own scoped credential, not a member's token. It starts one trial: the evaluator measures the agent's current change on separate machines. The result has the trial id, the measured value on the evaluation data, the guardrail values, the noise band and the outcome (Kept, Within noise, Worse, Guardrail failed, Failed holdout, Failed). It never has the holdout value: a Kept trial reads "Kept", a trial that fails the holdout reads "Failed holdout". Numbers an agent makes in its own sandbox never count. It spends from the agent's budget share and takes no `--yes`. It works only inside an agent sandbox, because that is where its credential is; a person signed in with an access token gets an error that says so.
 
 ## MCP
 

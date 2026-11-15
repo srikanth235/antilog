@@ -16,13 +16,14 @@ The vocabulary source is [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md), includ
 | Agent | connection (and "harness" outside code) |
 | Agent order | priority |
 | Where (This machine or Cloud) | location |
-| Note (text left on a run to steer the next candidate) | comment, prompt |
+| Note (text that steers all agents, or one with @) | comment, prompt |
 | Pause Agent | Pause alone |
 | Config branch (`ratchet/config`) | draft PR |
 | Try again | Retry |
 | connector | source |
 | sandbox (and "Create workspace" only as the stepper step) | workspace, anywhere else |
-| trial | candidate (on screen) |
+| trial (one measurement of one agent's change) | candidate (on screen) |
+| Kept (a trial's outcome) | Accepted, Beats noise (as an outcome; "Beats noise" stays an evidence badge on the result card) |
 | evaluation | benchmark (on screen) |
 | primary metric, guardrail metrics | goal metric, limits (on screen) |
 | acceptance criteria, result, lineage | accept rule, verdict, receipt (on screen) |
@@ -39,6 +40,22 @@ The glossary also defines Chat and Draft. Add each new term to the glossary in t
 "Experiment" is the noun for the object everywhere a user reads it (settled 15 Nov 2026). "Optimization" names the basic, never the object.
 
 The CLI and MCP tools are read by people too. They print the screen words, and may keep code names in flags and JSON keys.
+
+## The agent loop (target)
+
+| Where | Words |
+| --- | --- |
+| Trial outcome tags, one per trial | Kept, Within noise, Worse, Guardrail failed, Failed holdout, Failed (did not run), Measuring |
+| Agent lane status | Iterating, Measuring trial 9, Paused, Stopped, no gain in 8 trials, Stopped, its budget share is spent |
+| Lane facts | "11 trials · 3 kept · best 344 ms · $15 of $16.67" |
+| Adopting | "Started from Claude Code's trial 11" |
+| Stepper | 1 Start run, 2 Create workspaces, 3 Mint scoped credentials, 4 Agents iterate: change, measure, keep or discard, 5 Pick the best kept trial, 6 Store history, open pull request, 7 Clean up |
+| Stepper status line | "Step 4 of 7 · 2 agents iterating · 28 trials, 4 kept." |
+| Steps for this trial | Hypothesis, Wrote the change, Checked it in its sandbox (does not count), Asked for a measurement, Evaluator measured, Beat Claude Code's best by 4.7%, Confirmed in a fresh evaluator sandbox, holdout passed, Kept |
+| Composer while running | "Steer the agents, or @ one, e.g. @Codex focus on database queries" |
+| Pause one agent | Pause agent |
+
+Trial numbers are per agent ("Claude Code trial 11"). The holdout value is never worded for an agent, only "Kept" or "Failed holdout".
 
 ## Budget by surface
 

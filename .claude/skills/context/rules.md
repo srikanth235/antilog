@@ -13,4 +13,5 @@
 - Never let the evaluator read a skill pack, and never put holdout data in one, because a pack agents read must not carry what only the evaluator may see.
 - Pin the skill pack versions an experiment read, and record them on the receipt, because a run that names a version must be reproducible.
 - Let a plugin add skill packs and connectors but never mark, unmark or grant a dataset, because grants and markings are enforced in one place.
-- Store every result, failures included, in history, because a history of only successes hides what was tried.
+- Store every result, failures included, in history, and let every agent in the run read it live, because a history of only successes hides what was tried and an agent that cannot see others' trials repeats them.
+- Never put a holdout value in history, a note or a trial result an agent reads, because the history is what agents read.

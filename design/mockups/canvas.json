@@ -42,7 +42,7 @@
   "boards": {
     "AddAgent.dc.html": {
       "x": 12160,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Add agent",
@@ -52,7 +52,7 @@
     },
     "AddAgentDark.dc.html": {
       "x": 12160,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Add agent \u00b7 dark",
@@ -62,7 +62,7 @@
     },
     "AddBackend.dc.html": {
       "x": 6080,
-      "y": 8800,
+      "y": 9450,
       "w": 1440,
       "h": 900,
       "title": "8 \u00b7 Infrastructure, add backend",
@@ -72,7 +72,7 @@
     },
     "AddBackendDark.dc.html": {
       "x": 6080,
-      "y": 8800,
+      "y": 9450,
       "w": 1440,
       "h": 900,
       "title": "8 \u00b7 Infrastructure, add backend \u00b7 dark",
@@ -82,7 +82,7 @@
     },
     "AddConnector.dc.html": {
       "x": 4560,
-      "y": 7700,
+      "y": 8350,
       "w": 1440,
       "h": 900,
       "title": "7 \u00b7 Add connector",
@@ -92,7 +92,7 @@
     },
     "AddConnectorDark.dc.html": {
       "x": 4560,
-      "y": 7700,
+      "y": 8350,
       "w": 1440,
       "h": 900,
       "title": "7 \u00b7 Add connector \u00b7 dark",
@@ -102,7 +102,7 @@
     },
     "AddConnectorMcp.dc.html": {
       "x": 6080,
-      "y": 7700,
+      "y": 8350,
       "w": 1440,
       "h": 900,
       "title": "7 \u00b7 Add MCP server",
@@ -112,7 +112,7 @@
     },
     "AddConnectorMcpDark.dc.html": {
       "x": 6080,
-      "y": 7700,
+      "y": 8350,
       "w": 1440,
       "h": 900,
       "title": "7 \u00b7 Add MCP server \u00b7 dark",
@@ -122,7 +122,7 @@
     },
     "AddEvaluation.dc.html": {
       "x": 9120,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Add evaluation",
@@ -132,7 +132,7 @@
     },
     "AddEvaluationDark.dc.html": {
       "x": 9120,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Add evaluation \u00b7 dark",
@@ -142,7 +142,7 @@
     },
     "AddPlugin.dc.html": {
       "x": 13680,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Add plugin",
@@ -152,7 +152,7 @@
     },
     "AddPluginDark.dc.html": {
       "x": 13680,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Add plugin \u00b7 dark",
@@ -162,7 +162,7 @@
     },
     "AddSkill.dc.html": {
       "x": 10640,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Add skill",
@@ -172,7 +172,7 @@
     },
     "AddSkillDark.dc.html": {
       "x": 10640,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Add skill \u00b7 dark",
@@ -182,7 +182,7 @@
     },
     "AgentDetail.dc.html": {
       "x": 10640,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Agent detail",
@@ -192,7 +192,7 @@
     },
     "AgentDetailDark.dc.html": {
       "x": 10640,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Agent detail \u00b7 dark",
@@ -202,7 +202,7 @@
     },
     "Agents.dc.html": {
       "x": 7600,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Agents",
@@ -212,7 +212,7 @@
     },
     "AgentsDark.dc.html": {
       "x": 7600,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Agents \u00b7 dark",
@@ -222,7 +222,7 @@
     },
     "AgentsDiscover.dc.html": {
       "x": 22800,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Agents, discover",
@@ -232,7 +232,7 @@
     },
     "AgentsDiscoverDark.dc.html": {
       "x": 22800,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Agents, discover \u00b7 dark",
@@ -242,7 +242,7 @@
     },
     "AgentsEmpty.dc.html": {
       "x": 9120,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Agents, empty",
@@ -252,7 +252,7 @@
     },
     "AgentsEmptyDark.dc.html": {
       "x": 9120,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Agents, empty \u00b7 dark",
@@ -262,7 +262,7 @@
     },
     "ConnectorDetail.dc.html": {
       "x": 3040,
-      "y": 7700,
+      "y": 8350,
       "w": 1440,
       "h": 900,
       "title": "7 \u00b7 Connector, Snowflake",
@@ -272,7 +272,7 @@
     },
     "ConnectorDetailDark.dc.html": {
       "x": 3040,
-      "y": 7700,
+      "y": 8350,
       "w": 1440,
       "h": 900,
       "title": "7 \u00b7 Connector, Snowflake \u00b7 dark",
@@ -282,7 +282,7 @@
     },
     "ConnectorError.dc.html": {
       "x": 7600,
-      "y": 7700,
+      "y": 8350,
       "w": 1440,
       "h": 900,
       "title": "7 \u00b7 Connector, check failed",
@@ -292,7 +292,7 @@
     },
     "ConnectorErrorDark.dc.html": {
       "x": 7600,
-      "y": 7700,
+      "y": 8350,
       "w": 1440,
       "h": 900,
       "title": "7 \u00b7 Connector, check failed \u00b7 dark",
@@ -302,7 +302,7 @@
     },
     "Connectors.dc.html": {
       "x": 0,
-      "y": 7700,
+      "y": 8350,
       "w": 1440,
       "h": 900,
       "title": "Connectors",
@@ -312,7 +312,7 @@
     },
     "ConnectorsDark.dc.html": {
       "x": 0,
-      "y": 7700,
+      "y": 8350,
       "w": 1440,
       "h": 900,
       "title": "Connectors \u00b7 dark",
@@ -322,7 +322,7 @@
     },
     "ConnectorsDiscover.dc.html": {
       "x": 21280,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Connectors, discover",
@@ -332,7 +332,7 @@
     },
     "ConnectorsDiscoverDark.dc.html": {
       "x": 21280,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Connectors, discover \u00b7 dark",
@@ -342,7 +342,7 @@
     },
     "ConnectorsEmpty.dc.html": {
       "x": 1520,
-      "y": 7700,
+      "y": 8350,
       "w": 1440,
       "h": 900,
       "title": "7 \u00b7 Connectors, empty",
@@ -352,7 +352,7 @@
     },
     "ConnectorsEmptyDark.dc.html": {
       "x": 1520,
-      "y": 7700,
+      "y": 8350,
       "w": 1440,
       "h": 900,
       "title": "7 \u00b7 Connectors, empty \u00b7 dark",
@@ -362,7 +362,7 @@
     },
     "Dashboard.dc.html": {
       "x": 0,
-      "y": 5500,
+      "y": 6150,
       "w": 1440,
       "h": 900,
       "title": "5 \u00b7 Dashboard",
@@ -372,7 +372,7 @@
     },
     "DashboardDark.dc.html": {
       "x": 0,
-      "y": 5500,
+      "y": 6150,
       "w": 1440,
       "h": 900,
       "title": "5 \u00b7 Dashboard \u00b7 dark",
@@ -382,7 +382,7 @@
     },
     "DashboardEmpty.dc.html": {
       "x": 1520,
-      "y": 5500,
+      "y": 6150,
       "w": 1440,
       "h": 900,
       "title": "5 \u00b7 Dashboard, empty",
@@ -392,7 +392,7 @@
     },
     "DashboardEmptyDark.dc.html": {
       "x": 1520,
-      "y": 5500,
+      "y": 6150,
       "w": 1440,
       "h": 900,
       "title": "5 \u00b7 Dashboard, empty \u00b7 dark",
@@ -402,7 +402,7 @@
     },
     "DatasetHoldout.dc.html": {
       "x": 9120,
-      "y": 7700,
+      "y": 8350,
       "w": 1440,
       "h": 900,
       "title": "7 \u00b7 Dataset, holdout",
@@ -412,7 +412,7 @@
     },
     "DatasetHoldoutDark.dc.html": {
       "x": 9120,
-      "y": 7700,
+      "y": 8350,
       "w": 1440,
       "h": 900,
       "title": "7 \u00b7 Dataset, holdout \u00b7 dark",
@@ -438,7 +438,7 @@
     },
     "EvaluationDetail.dc.html": {
       "x": 3040,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Evaluation detail",
@@ -448,7 +448,7 @@
     },
     "EvaluationDetailDark.dc.html": {
       "x": 3040,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Evaluation detail \u00b7 dark",
@@ -458,7 +458,7 @@
     },
     "Evaluations.dc.html": {
       "x": 0,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Evaluations",
@@ -468,7 +468,7 @@
     },
     "EvaluationsDark.dc.html": {
       "x": 0,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Evaluations \u00b7 dark",
@@ -478,7 +478,7 @@
     },
     "EvaluationsDiscover.dc.html": {
       "x": 18240,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Evaluations, discover",
@@ -488,7 +488,7 @@
     },
     "EvaluationsDiscoverDark.dc.html": {
       "x": 18240,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Evaluations, discover \u00b7 dark",
@@ -498,7 +498,7 @@
     },
     "EvaluationsEmpty.dc.html": {
       "x": 1520,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Evaluations, empty",
@@ -508,7 +508,7 @@
     },
     "EvaluationsEmptyDark.dc.html": {
       "x": 1520,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Evaluations, empty \u00b7 dark",
@@ -558,7 +558,7 @@
     },
     "Infrastructure.dc.html": {
       "x": 0,
-      "y": 8800,
+      "y": 9450,
       "w": 1440,
       "h": 900,
       "title": "8 \u00b7 Settings, Infrastructure",
@@ -568,7 +568,7 @@
     },
     "InfrastructureDark.dc.html": {
       "x": 0,
-      "y": 8800,
+      "y": 9450,
       "w": 1440,
       "h": 900,
       "title": "8 \u00b7 Settings, Infrastructure \u00b7 dark",
@@ -578,7 +578,7 @@
     },
     "InfrastructureEmpty.dc.html": {
       "x": 1520,
-      "y": 8800,
+      "y": 9450,
       "w": 1440,
       "h": 900,
       "title": "8 \u00b7 Settings, Infrastructure, no runner",
@@ -588,7 +588,7 @@
     },
     "InfrastructureEmptyDark.dc.html": {
       "x": 1520,
-      "y": 8800,
+      "y": 9450,
       "w": 1440,
       "h": 900,
       "title": "8 \u00b7 Settings, Infrastructure, no runner \u00b7 dark",
@@ -598,7 +598,7 @@
     },
     "LauncherDisconnected.dc.html": {
       "x": 4560,
-      "y": 8800,
+      "y": 9450,
       "w": 1440,
       "h": 900,
       "title": "8 \u00b7 Infrastructure, runner away",
@@ -608,7 +608,7 @@
     },
     "LauncherDisconnectedDark.dc.html": {
       "x": 4560,
-      "y": 8800,
+      "y": 9450,
       "w": 1440,
       "h": 900,
       "title": "8 \u00b7 Infrastructure, runner away \u00b7 dark",
@@ -828,7 +828,7 @@
       "x": 6080,
       "y": 2200,
       "w": 1440,
-      "h": 900,
+      "h": 970,
       "title": "2 \u00b7 Start, draft",
       "page": "web-light",
       "expand": "fill",
@@ -838,7 +838,7 @@
       "x": 6080,
       "y": 2200,
       "w": 1440,
-      "h": 900,
+      "h": 970,
       "title": "2 \u00b7 Start, draft \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
@@ -866,7 +866,7 @@
     },
     "PluginDetail.dc.html": {
       "x": 16720,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Plugin detail",
@@ -876,7 +876,7 @@
     },
     "PluginDetailDark.dc.html": {
       "x": 16720,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Plugin detail \u00b7 dark",
@@ -886,7 +886,7 @@
     },
     "Plugins.dc.html": {
       "x": 12160,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Plugins",
@@ -896,7 +896,7 @@
     },
     "PluginsDark.dc.html": {
       "x": 12160,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Plugins \u00b7 dark",
@@ -906,7 +906,7 @@
     },
     "PluginsDiscover.dc.html": {
       "x": 24320,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Plugins, discover",
@@ -916,7 +916,7 @@
     },
     "PluginsDiscoverDark.dc.html": {
       "x": 24320,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Plugins, discover \u00b7 dark",
@@ -926,7 +926,7 @@
     },
     "PluginsEmpty.dc.html": {
       "x": 13680,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Plugins, empty",
@@ -936,7 +936,7 @@
     },
     "PluginsEmptyDark.dc.html": {
       "x": 13680,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Plugins, empty \u00b7 dark",
@@ -986,7 +986,7 @@
     },
     "ResultLineage.dc.html": {
       "x": 0,
-      "y": 4400,
+      "y": 5050,
       "w": 1440,
       "h": 900,
       "title": "4 \u00b7 Result lineage",
@@ -996,7 +996,7 @@
     },
     "ResultLineageDark.dc.html": {
       "x": 0,
-      "y": 4400,
+      "y": 5050,
       "w": 1440,
       "h": 900,
       "title": "4 \u00b7 Result lineage \u00b7 dark",
@@ -1006,7 +1006,7 @@
     },
     "ResultOpenPR.dc.html": {
       "x": 3040,
-      "y": 4400,
+      "y": 5050,
       "w": 1440,
       "h": 900,
       "title": "4 \u00b7 Result, open pull request",
@@ -1016,7 +1016,7 @@
     },
     "ResultOpenPRDark.dc.html": {
       "x": 3040,
-      "y": 4400,
+      "y": 5050,
       "w": 1440,
       "h": 900,
       "title": "4 \u00b7 Result, open pull request \u00b7 dark",
@@ -1026,7 +1026,7 @@
     },
     "ResultReceipt.dc.html": {
       "x": 1520,
-      "y": 4400,
+      "y": 5050,
       "w": 1440,
       "h": 900,
       "title": "4 \u00b7 Result, signed numbers",
@@ -1036,7 +1036,7 @@
     },
     "ResultReceiptDark.dc.html": {
       "x": 1520,
-      "y": 4400,
+      "y": 5050,
       "w": 1440,
       "h": 900,
       "title": "4 \u00b7 Result, signed numbers \u00b7 dark",
@@ -1046,7 +1046,7 @@
     },
     "RunHistory.dc.html": {
       "x": 3040,
-      "y": 5500,
+      "y": 6150,
       "w": 1440,
       "h": 900,
       "title": "5 \u00b7 Run history, Trials",
@@ -1056,7 +1056,7 @@
     },
     "RunHistoryDark.dc.html": {
       "x": 3040,
-      "y": 5500,
+      "y": 6150,
       "w": 1440,
       "h": 900,
       "title": "5 \u00b7 Run history, Trials \u00b7 dark",
@@ -1066,7 +1066,7 @@
     },
     "RunHistoryEmpty.dc.html": {
       "x": 4560,
-      "y": 5500,
+      "y": 6150,
       "w": 1440,
       "h": 900,
       "title": "5 \u00b7 Run history, empty",
@@ -1076,7 +1076,7 @@
     },
     "RunHistoryEmptyDark.dc.html": {
       "x": 4560,
-      "y": 5500,
+      "y": 6150,
       "w": 1440,
       "h": 900,
       "title": "5 \u00b7 Run history, empty \u00b7 dark",
@@ -1086,7 +1086,7 @@
     },
     "RunHistorySandboxes.dc.html": {
       "x": 6080,
-      "y": 5500,
+      "y": 6150,
       "w": 1440,
       "h": 900,
       "title": "5 \u00b7 Run history, Sandboxes",
@@ -1096,7 +1096,7 @@
     },
     "RunHistorySandboxesDark.dc.html": {
       "x": 6080,
-      "y": 5500,
+      "y": 6150,
       "w": 1440,
       "h": 900,
       "title": "5 \u00b7 Run history, Sandboxes \u00b7 dark",
@@ -1106,7 +1106,7 @@
     },
     "Search.dc.html": {
       "x": 7600,
-      "y": 5500,
+      "y": 6150,
       "w": 1440,
       "h": 900,
       "title": "5 \u00b7 Search",
@@ -1116,7 +1116,7 @@
     },
     "SearchDark.dc.html": {
       "x": 7600,
-      "y": 5500,
+      "y": 6150,
       "w": 1440,
       "h": 900,
       "title": "5 \u00b7 Search \u00b7 dark",
@@ -1126,7 +1126,7 @@
     },
     "SearchEmpty.dc.html": {
       "x": 9120,
-      "y": 5500,
+      "y": 6150,
       "w": 1440,
       "h": 900,
       "title": "5 \u00b7 Search, no results",
@@ -1136,7 +1136,7 @@
     },
     "SearchEmptyDark.dc.html": {
       "x": 9120,
-      "y": 5500,
+      "y": 6150,
       "w": 1440,
       "h": 900,
       "title": "5 \u00b7 Search, no results \u00b7 dark",
@@ -1146,7 +1146,7 @@
     },
     "SettingsAppearance.dc.html": {
       "x": 1520,
-      "y": 9900,
+      "y": 10550,
       "w": 1440,
       "h": 900,
       "title": "9 \u00b7 Settings, Appearance",
@@ -1156,7 +1156,7 @@
     },
     "SettingsAppearanceDark.dc.html": {
       "x": 1520,
-      "y": 9900,
+      "y": 10550,
       "w": 1440,
       "h": 900,
       "title": "9 \u00b7 Settings, Appearance \u00b7 dark",
@@ -1166,7 +1166,7 @@
     },
     "SettingsAudit.dc.html": {
       "x": 16720,
-      "y": 9900,
+      "y": 10550,
       "w": 1440,
       "h": 900,
       "title": "9 \u00b7 Settings, Audit logs",
@@ -1176,7 +1176,7 @@
     },
     "SettingsAuditDark.dc.html": {
       "x": 16720,
-      "y": 9900,
+      "y": 10550,
       "w": 1440,
       "h": 900,
       "title": "9 \u00b7 Settings, Audit logs \u00b7 dark",
@@ -1186,7 +1186,7 @@
     },
     "SettingsBudgets.dc.html": {
       "x": 7600,
-      "y": 8800,
+      "y": 9450,
       "w": 1440,
       "h": 900,
       "title": "8 \u00b7 Settings, Budgets",
@@ -1196,7 +1196,7 @@
     },
     "SettingsBudgetsDark.dc.html": {
       "x": 7600,
-      "y": 8800,
+      "y": 9450,
       "w": 1440,
       "h": 900,
       "title": "8 \u00b7 Settings, Budgets \u00b7 dark",
@@ -1206,7 +1206,7 @@
     },
     "SettingsDevice.dc.html": {
       "x": 6080,
-      "y": 9900,
+      "y": 10550,
       "w": 1440,
       "h": 900,
       "title": "9 \u00b7 Settings, This device",
@@ -1216,7 +1216,7 @@
     },
     "SettingsDeviceDark.dc.html": {
       "x": 6080,
-      "y": 9900,
+      "y": 10550,
       "w": 1440,
       "h": 900,
       "title": "9 \u00b7 Settings, This device \u00b7 dark",
@@ -1226,7 +1226,7 @@
     },
     "SettingsDeviceMac.dc.html": {
       "x": 7600,
-      "y": 9900,
+      "y": 10550,
       "w": 1440,
       "h": 900,
       "title": "9 \u00b7 Settings, This device, Mac browser",
@@ -1236,7 +1236,7 @@
     },
     "SettingsDeviceMacDark.dc.html": {
       "x": 7600,
-      "y": 9900,
+      "y": 10550,
       "w": 1440,
       "h": 900,
       "title": "9 \u00b7 Settings, This device, Mac browser \u00b7 dark",
@@ -1246,7 +1246,7 @@
     },
     "SettingsGeneral.dc.html": {
       "x": 9120,
-      "y": 9900,
+      "y": 10550,
       "w": 1440,
       "h": 900,
       "title": "9 \u00b7 Settings, General",
@@ -1256,7 +1256,7 @@
     },
     "SettingsGeneralDark.dc.html": {
       "x": 9120,
-      "y": 9900,
+      "y": 10550,
       "w": 1440,
       "h": 900,
       "title": "9 \u00b7 Settings, General \u00b7 dark",
@@ -1266,7 +1266,7 @@
     },
     "SettingsNotes.dc.html": {
       "x": 13680,
-      "y": 9900,
+      "y": 10550,
       "w": 1440,
       "h": 900,
       "title": "9 \u00b7 Settings, Notes",
@@ -1276,7 +1276,7 @@
     },
     "SettingsNotesDark.dc.html": {
       "x": 13680,
-      "y": 9900,
+      "y": 10550,
       "w": 1440,
       "h": 900,
       "title": "9 \u00b7 Settings, Notes \u00b7 dark",
@@ -1286,7 +1286,7 @@
     },
     "SettingsNotesEmpty.dc.html": {
       "x": 15200,
-      "y": 9900,
+      "y": 10550,
       "w": 1440,
       "h": 900,
       "title": "9 \u00b7 Settings, Notes, empty",
@@ -1296,7 +1296,7 @@
     },
     "SettingsNotesEmptyDark.dc.html": {
       "x": 15200,
-      "y": 9900,
+      "y": 10550,
       "w": 1440,
       "h": 900,
       "title": "9 \u00b7 Settings, Notes, empty \u00b7 dark",
@@ -1306,7 +1306,7 @@
     },
     "SettingsProfile.dc.html": {
       "x": 0,
-      "y": 9900,
+      "y": 10550,
       "w": 1440,
       "h": 900,
       "title": "Settings, Profile",
@@ -1316,7 +1316,7 @@
     },
     "SettingsProfileDark.dc.html": {
       "x": 0,
-      "y": 9900,
+      "y": 10550,
       "w": 1440,
       "h": 900,
       "title": "Settings, Profile \u00b7 dark",
@@ -1334,7 +1334,7 @@
     },
     "SettingsReadOnly.dc.html": {
       "x": 18240,
-      "y": 9900,
+      "y": 10550,
       "w": 1440,
       "h": 900,
       "title": "9 \u00b7 Settings, read-only",
@@ -1344,7 +1344,7 @@
     },
     "SettingsReadOnlyDark.dc.html": {
       "x": 18240,
-      "y": 9900,
+      "y": 10550,
       "w": 1440,
       "h": 900,
       "title": "9 \u00b7 Settings, read-only \u00b7 dark",
@@ -1354,7 +1354,7 @@
     },
     "SettingsSso.dc.html": {
       "x": 12160,
-      "y": 9900,
+      "y": 10550,
       "w": 1440,
       "h": 900,
       "title": "9 \u00b7 Settings, Single sign-on",
@@ -1364,7 +1364,7 @@
     },
     "SettingsSsoDark.dc.html": {
       "x": 12160,
-      "y": 9900,
+      "y": 10550,
       "w": 1440,
       "h": 900,
       "title": "9 \u00b7 Settings, Single sign-on \u00b7 dark",
@@ -1374,7 +1374,7 @@
     },
     "SettingsTokens.dc.html": {
       "x": 3040,
-      "y": 9900,
+      "y": 10550,
       "w": 1440,
       "h": 900,
       "title": "9 \u00b7 Settings, Access tokens",
@@ -1384,7 +1384,7 @@
     },
     "SettingsTokensDark.dc.html": {
       "x": 3040,
-      "y": 9900,
+      "y": 10550,
       "w": 1440,
       "h": 900,
       "title": "9 \u00b7 Settings, Access tokens \u00b7 dark",
@@ -1394,7 +1394,7 @@
     },
     "SettingsTokensEmpty.dc.html": {
       "x": 4560,
-      "y": 9900,
+      "y": 10550,
       "w": 1440,
       "h": 900,
       "title": "9 \u00b7 Settings, Access tokens, empty",
@@ -1404,7 +1404,7 @@
     },
     "SettingsTokensEmptyDark.dc.html": {
       "x": 4560,
-      "y": 9900,
+      "y": 10550,
       "w": 1440,
       "h": 900,
       "title": "9 \u00b7 Settings, Access tokens, empty \u00b7 dark",
@@ -1414,7 +1414,7 @@
     },
     "SettingsUsers.dc.html": {
       "x": 10640,
-      "y": 9900,
+      "y": 10550,
       "w": 1440,
       "h": 900,
       "title": "9 \u00b7 Settings, Users and groups",
@@ -1424,7 +1424,7 @@
     },
     "SettingsUsersDark.dc.html": {
       "x": 10640,
-      "y": 9900,
+      "y": 10550,
       "w": 1440,
       "h": 900,
       "title": "9 \u00b7 Settings, Users and groups \u00b7 dark",
@@ -1539,7 +1539,7 @@
     },
     "SkillDetail.dc.html": {
       "x": 15200,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Skill detail",
@@ -1549,7 +1549,7 @@
     },
     "SkillDetailDark.dc.html": {
       "x": 15200,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Skill detail \u00b7 dark",
@@ -1559,7 +1559,7 @@
     },
     "Skills.dc.html": {
       "x": 4560,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Skills",
@@ -1569,7 +1569,7 @@
     },
     "SkillsDark.dc.html": {
       "x": 4560,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Skills \u00b7 dark",
@@ -1579,7 +1579,7 @@
     },
     "SkillsDiscover.dc.html": {
       "x": 19760,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Skills, discover",
@@ -1589,7 +1589,7 @@
     },
     "SkillsDiscoverDark.dc.html": {
       "x": 19760,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Skills, discover \u00b7 dark",
@@ -1599,7 +1599,7 @@
     },
     "SkillsEmpty.dc.html": {
       "x": 6080,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Skills, empty",
@@ -1609,7 +1609,7 @@
     },
     "SkillsEmptyDark.dc.html": {
       "x": 6080,
-      "y": 6600,
+      "y": 7250,
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Skills, empty \u00b7 dark",
@@ -1619,7 +1619,7 @@
     },
     "StartRunner.dc.html": {
       "x": 3040,
-      "y": 8800,
+      "y": 9450,
       "w": 1440,
       "h": 900,
       "title": "8 \u00b7 Settings, Start a runner",
@@ -1629,7 +1629,7 @@
     },
     "StartRunnerDark.dc.html": {
       "x": 3040,
-      "y": 8800,
+      "y": 9450,
       "w": 1440,
       "h": 900,
       "title": "8 \u00b7 Settings, Start a runner \u00b7 dark",
@@ -1639,9 +1639,9 @@
     },
     "ThreadBudgetHit.dc.html": {
       "x": 7600,
-      "y": 3300,
+      "y": 3370,
       "w": 1440,
-      "h": 900,
+      "h": 920,
       "title": "3 \u00b7 Thread, budget hit",
       "page": "web-light",
       "expand": "fill",
@@ -1649,9 +1649,9 @@
     },
     "ThreadBudgetHitDark.dc.html": {
       "x": 7600,
-      "y": 3300,
+      "y": 3370,
       "w": 1440,
-      "h": 900,
+      "h": 920,
       "title": "3 \u00b7 Thread, budget hit \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
@@ -1659,9 +1659,9 @@
     },
     "ThreadFailed.dc.html": {
       "x": 6080,
-      "y": 3300,
+      "y": 3370,
       "w": 1440,
-      "h": 900,
+      "h": 960,
       "title": "3 \u00b7 Thread, failed",
       "page": "web-light",
       "expand": "fill",
@@ -1669,9 +1669,9 @@
     },
     "ThreadFailedDark.dc.html": {
       "x": 6080,
-      "y": 3300,
+      "y": 3370,
       "w": 1440,
-      "h": 900,
+      "h": 960,
       "title": "3 \u00b7 Thread, failed \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
@@ -1679,9 +1679,9 @@
     },
     "ThreadNoWin.dc.html": {
       "x": 4560,
-      "y": 3300,
+      "y": 3370,
       "w": 1440,
-      "h": 900,
+      "h": 950,
       "title": "3 \u00b7 Thread, no win",
       "page": "web-light",
       "expand": "fill",
@@ -1689,9 +1689,9 @@
     },
     "ThreadNoWinDark.dc.html": {
       "x": 4560,
-      "y": 3300,
+      "y": 3370,
       "w": 1440,
-      "h": 900,
+      "h": 950,
       "title": "3 \u00b7 Thread, no win \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
@@ -1699,9 +1699,9 @@
     },
     "ThreadNotifyAsk.dc.html": {
       "x": 10640,
-      "y": 3300,
+      "y": 3370,
       "w": 1440,
-      "h": 900,
+      "h": 1180,
       "title": "3 \u00b7 Thread, notify ask",
       "page": "web-light",
       "expand": "fill",
@@ -1709,9 +1709,9 @@
     },
     "ThreadNotifyAskDark.dc.html": {
       "x": 10640,
-      "y": 3300,
+      "y": 3370,
       "w": 1440,
-      "h": 900,
+      "h": 1180,
       "title": "3 \u00b7 Thread, notify ask \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
@@ -1719,9 +1719,9 @@
     },
     "ThreadRunning.dc.html": {
       "x": 0,
-      "y": 3300,
+      "y": 3370,
       "w": 1440,
-      "h": 900,
+      "h": 1130,
       "title": "Thread running",
       "page": "web-light",
       "expand": "fill",
@@ -1729,9 +1729,9 @@
     },
     "ThreadRunningDark.dc.html": {
       "x": 0,
-      "y": 3300,
+      "y": 3370,
       "w": 1440,
-      "h": 900,
+      "h": 1130,
       "title": "Thread running \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
@@ -1739,9 +1739,9 @@
     },
     "ThreadStopped.dc.html": {
       "x": 9120,
-      "y": 3300,
+      "y": 3370,
       "w": 1440,
-      "h": 900,
+      "h": 1020,
       "title": "3 \u00b7 Thread, stopped",
       "page": "web-light",
       "expand": "fill",
@@ -1749,9 +1749,9 @@
     },
     "ThreadStoppedDark.dc.html": {
       "x": 9120,
-      "y": 3300,
+      "y": 3370,
       "w": 1440,
-      "h": 900,
+      "h": 1020,
       "title": "3 \u00b7 Thread, stopped \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
@@ -1759,9 +1759,9 @@
     },
     "ThreadTrials.dc.html": {
       "x": 1520,
-      "y": 3300,
+      "y": 3370,
       "w": 1440,
-      "h": 900,
+      "h": 1480,
       "title": "3 \u00b7 Thread, trials",
       "page": "web-light",
       "expand": "fill",
@@ -1769,9 +1769,9 @@
     },
     "ThreadTrialsDark.dc.html": {
       "x": 1520,
-      "y": 3300,
+      "y": 3370,
       "w": 1440,
-      "h": 900,
+      "h": 1480,
       "title": "3 \u00b7 Thread, trials \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
@@ -1779,9 +1779,9 @@
     },
     "ThreadWin.dc.html": {
       "x": 3040,
-      "y": 3300,
+      "y": 3370,
       "w": 1440,
-      "h": 900,
+      "h": 920,
       "title": "3 \u00b7 Thread, win",
       "page": "web-light",
       "expand": "fill",
@@ -1789,9 +1789,9 @@
     },
     "ThreadWinDark.dc.html": {
       "x": 3040,
-      "y": 3300,
+      "y": 3370,
       "w": 1440,
-      "h": 900,
+      "h": 920,
       "title": "3 \u00b7 Thread, win \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
@@ -1799,7 +1799,7 @@
     },
     "WebInstalled.dc.html": {
       "x": 0,
-      "y": 11000,
+      "y": 11650,
       "w": 1440,
       "h": 900,
       "title": "10 \u00b7 Desktop app, installed",
@@ -1809,7 +1809,7 @@
     },
     "WebInstalledDark.dc.html": {
       "x": 0,
-      "y": 11000,
+      "y": 11650,
       "w": 1440,
       "h": 900,
       "title": "10 \u00b7 Desktop app, installed \u00b7 dark",
@@ -1819,7 +1819,7 @@
     },
     "WebNotification.dc.html": {
       "x": 1520,
-      "y": 11000,
+      "y": 11650,
       "w": 1440,
       "h": 900,
       "title": "10 \u00b7 Desktop app, notifications",
@@ -1829,7 +1829,7 @@
     },
     "WebNotificationDark.dc.html": {
       "x": 1520,
-      "y": 11000,
+      "y": 11650,
       "w": 1440,
       "h": 900,
       "title": "10 \u00b7 Desktop app, notifications \u00b7 dark",
@@ -1839,7 +1839,7 @@
     },
     "WebOffline.dc.html": {
       "x": 3040,
-      "y": 11000,
+      "y": 11650,
       "w": 1440,
       "h": 900,
       "title": "10 \u00b7 Desktop app, offline",
@@ -1849,7 +1849,7 @@
     },
     "WebOfflineDark.dc.html": {
       "x": 3040,
-      "y": 11000,
+      "y": 11650,
       "w": 1440,
       "h": 900,
       "title": "10 \u00b7 Desktop app, offline \u00b7 dark",
@@ -1954,7 +1954,7 @@
       "page": "web-light",
       "text": "3 \u00b7 Thread",
       "x": 0,
-      "y": 3170,
+      "y": 3240,
       "w": 240,
       "maxW": 2960
     },
@@ -1963,7 +1963,7 @@
       "page": "web-dark",
       "text": "3 \u00b7 Thread",
       "x": 0,
-      "y": 3170,
+      "y": 3240,
       "w": 240,
       "maxW": 2960
     },
@@ -1990,7 +1990,7 @@
       "page": "web-light",
       "text": "4 \u00b7 Results",
       "x": 0,
-      "y": 4270,
+      "y": 4920,
       "w": 240,
       "maxW": 2960
     },
@@ -1999,7 +1999,7 @@
       "page": "web-dark",
       "text": "4 \u00b7 Results",
       "x": 0,
-      "y": 4270,
+      "y": 4920,
       "w": 240,
       "maxW": 2960
     },
@@ -2026,7 +2026,7 @@
       "page": "web-light",
       "text": "5 \u00b7 History",
       "x": 0,
-      "y": 5370,
+      "y": 6020,
       "w": 240,
       "maxW": 2960
     },
@@ -2035,7 +2035,7 @@
       "page": "web-dark",
       "text": "5 \u00b7 History",
       "x": 0,
-      "y": 5370,
+      "y": 6020,
       "w": 240,
       "maxW": 2960
     },
@@ -2062,7 +2062,7 @@
       "page": "web-light",
       "text": "6 \u00b7 Customize",
       "x": 0,
-      "y": 6470,
+      "y": 7120,
       "w": 240,
       "maxW": 2960
     },
@@ -2071,7 +2071,7 @@
       "page": "web-dark",
       "text": "6 \u00b7 Customize",
       "x": 0,
-      "y": 6470,
+      "y": 7120,
       "w": 240,
       "maxW": 2960
     },
@@ -2098,7 +2098,7 @@
       "page": "web-light",
       "text": "7 \u00b7 Connectors",
       "x": 0,
-      "y": 7570,
+      "y": 8220,
       "w": 240,
       "maxW": 2960
     },
@@ -2107,7 +2107,7 @@
       "page": "web-dark",
       "text": "7 \u00b7 Connectors",
       "x": 0,
-      "y": 7570,
+      "y": 8220,
       "w": 240,
       "maxW": 2960
     },
@@ -2134,7 +2134,7 @@
       "page": "web-light",
       "text": "8 \u00b7 Infrastructure",
       "x": 0,
-      "y": 8670,
+      "y": 9320,
       "w": 240,
       "maxW": 2960
     },
@@ -2143,7 +2143,7 @@
       "page": "web-dark",
       "text": "8 \u00b7 Infrastructure",
       "x": 0,
-      "y": 8670,
+      "y": 9320,
       "w": 240,
       "maxW": 2960
     },
@@ -2170,7 +2170,7 @@
       "page": "web-light",
       "text": "9 \u00b7 Organization",
       "x": 0,
-      "y": 9770,
+      "y": 10420,
       "w": 240,
       "maxW": 2960
     },
@@ -2179,7 +2179,7 @@
       "page": "web-dark",
       "text": "9 \u00b7 Organization",
       "x": 0,
-      "y": 9770,
+      "y": 10420,
       "w": 240,
       "maxW": 2960
     },
@@ -2206,7 +2206,7 @@
       "page": "web-light",
       "text": "10 \u00b7 Desktop app",
       "x": 0,
-      "y": 10870,
+      "y": 11520,
       "w": 240,
       "maxW": 2960
     },
@@ -2215,7 +2215,7 @@
       "page": "web-dark",
       "text": "10 \u00b7 Desktop app",
       "x": 0,
-      "y": 10870,
+      "y": 11520,
       "w": 240,
       "maxW": 2960
     }
