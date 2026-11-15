@@ -62,6 +62,8 @@ Code, the API and the skills use the names of the three basics; the screen borro
 | projects, value, history | Projects, Dashboard, More then Run history (tabs Trials, Sandboxes) |
 | members, sign-in, grants, audit log | Users and groups, Single sign-on, Permissions, Audit logs |
 | own items, catalogue | Yours, Discover |
+| featured pick, suggestions, recent additions, list all | Featured evaluation, Featured skill pack, Featured agent, Featured plugin, Featured connectors (banner labels), For you, New, Show all, Top connectors |
+| add from the catalogue, already added, browse the featured connectors | + (Add NAME), check (NAME is added), Explore |
 | running, draft, win, merged win, no win, stopped | Running, Draft, Win, Merged, No win, Stopped |
 | candidate beat noise, inside noise, regressed, lost on holdout, being measured | Beats noise, Within noise, Worse, Failed holdout, Measuring |
 | signed receipt, signature verified | Signed numbers, Verified (Verify again) |

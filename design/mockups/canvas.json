@@ -220,6 +220,26 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "AgentsDiscover.dc.html": {
+      "x": 22800,
+      "y": 6600,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Agents, discover",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AgentsDiscoverDark.dc.html": {
+      "x": 22800,
+      "y": 6600,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Agents, discover \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "AgentsEmpty.dc.html": {
       "x": 9120,
       "y": 6600,
@@ -296,6 +316,26 @@
       "w": 1440,
       "h": 900,
       "title": "Connectors \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "ConnectorsDiscover.dc.html": {
+      "x": 21280,
+      "y": 6600,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Connectors, discover",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "ConnectorsDiscoverDark.dc.html": {
+      "x": 21280,
+      "y": 6600,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Connectors, discover \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -432,6 +472,26 @@
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Evaluations \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "EvaluationsDiscover.dc.html": {
+      "x": 18240,
+      "y": 6600,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Evaluations, discover",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "EvaluationsDiscoverDark.dc.html": {
+      "x": 18240,
+      "y": 6600,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Evaluations, discover \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -840,6 +900,26 @@
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Plugins \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "PluginsDiscover.dc.html": {
+      "x": 24320,
+      "y": 6600,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Plugins, discover",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "PluginsDiscoverDark.dc.html": {
+      "x": 24320,
+      "y": 6600,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Plugins, discover \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -1493,6 +1573,26 @@
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Skills \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SkillsDiscover.dc.html": {
+      "x": 19760,
+      "y": 6600,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Skills, discover",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SkillsDiscoverDark.dc.html": {
+      "x": 19760,
+      "y": 6600,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Skills, discover \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -2183,6 +2283,8 @@
     "AgentDetailDark.dc.html",
     "Agents.dc.html",
     "AgentsDark.dc.html",
+    "AgentsDiscover.dc.html",
+    "AgentsDiscoverDark.dc.html",
     "AgentsEmpty.dc.html",
     "AgentsEmptyDark.dc.html",
     "ConnectorDetail.dc.html",
@@ -2191,6 +2293,8 @@
     "ConnectorErrorDark.dc.html",
     "Connectors.dc.html",
     "ConnectorsDark.dc.html",
+    "ConnectorsDiscover.dc.html",
+    "ConnectorsDiscoverDark.dc.html",
     "ConnectorsEmpty.dc.html",
     "ConnectorsEmptyDark.dc.html",
     "Dashboard.dc.html",
@@ -2205,6 +2309,8 @@
     "EvaluationDetailDark.dc.html",
     "Evaluations.dc.html",
     "EvaluationsDark.dc.html",
+    "EvaluationsDiscover.dc.html",
+    "EvaluationsDiscoverDark.dc.html",
     "EvaluationsEmpty.dc.html",
     "EvaluationsEmptyDark.dc.html",
     "Home.dc.html",
@@ -2246,6 +2352,8 @@
     "PluginDetailDark.dc.html",
     "Plugins.dc.html",
     "PluginsDark.dc.html",
+    "PluginsDiscover.dc.html",
+    "PluginsDiscoverDark.dc.html",
     "PluginsEmpty.dc.html",
     "PluginsEmptyDark.dc.html",
     "Project.dc.html",
@@ -2312,6 +2420,8 @@
     "SkillDetailDark.dc.html",
     "Skills.dc.html",
     "SkillsDark.dc.html",
+    "SkillsDiscover.dc.html",
+    "SkillsDiscoverDark.dc.html",
     "SkillsEmpty.dc.html",
     "SkillsEmptyDark.dc.html",
     "StartRunner.dc.html",
