@@ -8,6 +8,15 @@
 - Never commit a secret, a token or a `.env` file.
 - No model names in commits, code, docs or pull request text.
 
-## Commit subjects
+## Commit messages
 
-A short line, prefixed by the work item or area, then a colon, then lower case text with no full stop: `design: sign-in board for single sign-on`, `server: audit entry on token revoke`. A prefix, a colon, what changed and why in one line. Read `git log --oneline -20` for the current habit. Add trailers only when the session's instructions say to.
+[Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/): `type(scope): summary`.
+
+- **Type**, one of: `feat` (something a user can see or do), `fix`, `docs` (skills, glossary, READMEs), `refactor`, `perf`, `test`, `build` (dependencies, toolchain, images), `ci`, `chore`, `revert`.
+- **Scope**, the area touched, optional: `design`, `skills`, `glossary`, `server`, `runner`, `cli`, `web`, `mac`, `db`, `infra`. Leave it out when a change spans several.
+- **Summary**: imperative, lower case, no full stop, at most 72 characters for the whole line: `feat(design): draw the empty states`, `fix(server): audit a refused token revoke`.
+- **Breaking change**: `!` before the colon, and a `BREAKING CHANGE:` footer saying what to do: `feat(server)!: drop the v0 runs route`.
+- **Body**, when the why is not obvious: a blank line, then plain sentences, wrapped at 72.
+- A pull request title follows the same form.
+
+Add trailers only when the session's instructions say to.
