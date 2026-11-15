@@ -16,7 +16,7 @@ A waterfall is a chain of awaits or fetches where each starts only after the las
 
 ## 2. Bundle size (critical)
 
-- **Import from the module you use, not a barrel.** A barrel is an `index` that re-exports many modules; icon and component packages can have thousands of re-exports and cost hundreds of milliseconds to load in dev and slow builds. Import `@mui/material/Button`, not `{ Button } from '@mui/material'`. Check that deep paths ship types before relying on them. In this repo's own code, avoid creating barrel files for the same reason (the Radix package `radix-ui` and a modern bundler tree-shake well; measure before worrying).
+- **Import from the module you use, not a barrel.** A barrel is an `index` that re-exports many modules; icon and component packages can have thousands of re-exports and cost hundreds of milliseconds to load in dev and slow builds. Import `@mui/material/Button`, not `{ Button } from '@mui/material'`. Check that deep paths ship types before relying on them. In this repo's own code, avoid creating barrel files for the same reason (import each Base UI component from its subpath, such as `@base-ui/react/dialog`, as [../../web/base-ui.md](../../web/base-ui.md) says).
 - **Split heavy components.** Use `React.lazy(() => import('./heavy'))` inside `<Suspense>` for a large editor, chart or viewer that is not needed on first paint (the original's `next/dynamic` example, a code editor of about 300 KB, becomes `lazy`). Split by route first: the router should lazy-load route components.
 - **Load a feature's code and data only when it is turned on**, with a dynamic `import()` in the handler or effect that needs it, and handle failure.
 - **Defer non-critical third parties** (analytics, error reporting) until after first render.

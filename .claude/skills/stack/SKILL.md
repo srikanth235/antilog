@@ -14,7 +14,7 @@ Read the repo page for the file type first: it holds this repo's constraints, it
 | --- | --- | --- |
 | `.rs`, `Cargo.toml` | [rust/ratchet.md](rust/ratchet.md) | `cargo fmt --all --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo nextest run`, `cargo deny check` (target) |
 | `.ts`, `.tsx`, `.css` in the web client | [typescript/ratchet.md](typescript/ratchet.md) | `pnpm build && pnpm typecheck && pnpm test` (target) |
-| HTML, CSS and browser APIs, in the web client or a board | [web/ratchet.md](web/ratchet.md), then the guide for the job in [web/general/INDEX.md](web/general/INDEX.md) | the check of the file type; `python3 .claude/skills/stack/web/sync.py --check` after a sync |
+| HTML, CSS and browser APIs, in the web client or a board | [web/ratchet.md](web/ratchet.md), then the guide for the job in [web/general/INDEX.md](web/general/INDEX.md); for a Base UI component also [web/base-ui.md](web/base-ui.md) | the check of the file type; `python3 .claude/skills/stack/web/sync.py --check` after a sync |
 | `.swift`, the macOS app | [swift/ratchet.md](swift/ratchet.md) | `xcodebuild ... test` on macOS (target); report it unrun elsewhere |
 | SQL, migrations, `sqlx` queries, the job queue | [postgres/ratchet.md](postgres/ratchet.md) | `cargo sqlx prepare --check` and the database tests (target) |
 | `.tf`, `.tftest.hcl`, `.pkr.hcl`, Helm charts, Kubernetes manifests | [infra/ratchet.md](infra/ratchet.md) | `tofu fmt -check`, `tofu validate`, `tofu test`, `packer validate`, `helm lint` (target) |
@@ -28,7 +28,7 @@ Nothing here is built on this branch yet: every check is (target) until code lan
 | --- | --- |
 | `rust/` | `ratchet.md`; `general/` Rust style, API, patterns, Microsoft and Google guides, and async services (tokio, axum, tower, sqlx); `licenses/` |
 | `typescript/` | `ratchet.md`; `general/` TypeScript practices, type patterns, Vitest, React best practices; `licenses/` |
-| `web/` | `ratchet.md`; `general/` 111 Modern Web Guidance guides with an index, copied by `sync.py`; `licenses/` |
+| `web/` | `ratchet.md`; `base-ui.md`; `general/` 111 Modern Web Guidance guides with an index, copied by `sync.py`; `licenses/` |
 | `swift/` | `ratchet.md`; `general/` Swift, SwiftUI views, data, accessibility, diagnostics, performance, macOS; `licenses/` |
 | `postgres/` | `ratchet.md`; `general/` Postgres best practices; `licenses/` |
 | `infra/` | `ratchet.md`; `general/` Terraform (for OpenTofu) and Packer; `licenses/` |

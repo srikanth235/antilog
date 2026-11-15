@@ -113,7 +113,7 @@ Background jobs use a small queue in Postgres (`FOR UPDATE SKIP LOCKED`). No Red
 | `typescript` | 7.0.2 |
 | `vite` / `@vitejs/plugin-react` | 8.3.8 / 6.3.0 |
 | `@tanstack/react-query` / `@tanstack/react-router` | 5.107.1 / 1.170.46 |
-| `radix-ui` | 1.8.1 |
+| `@base-ui/react` (pinned exactly) | 1.9.0 |
 | `openapi-typescript` / `openapi-fetch` | 7.13.0 / 0.17.0 |
 | `vitest` / `@playwright/test` | 5.1.0 / 1.65.1 |
 | `@biomejs/biome` | 2.6.7 |
