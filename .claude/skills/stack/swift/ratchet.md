@@ -41,6 +41,8 @@ xcodebuild -project Ratchet.xcodeproj -scheme Ratchet -destination 'platform=mac
   - **One feed, ours.** `SUFeedURL` is Ratchet's appcast, for cloud and self-hosted customers alike. No per-server or mirrored feed: a rewritten feed would fail the signature check.
   - **Checks on by default.** Set `SUEnableAutomaticChecks` so the app checks daily without first asking. A person can turn checks off in the Settings window, as Sparkle's standard option; installing an update always shows the update window, so `SUAutomaticallyUpdate` stays off.
   - **Companies and air-gapped installs.** A company can turn update checks off for its Macs through device management and deploy each signed, notarized release itself. That is the path for a server that cannot reach the internet: nothing in the app needs to reach our feed.
+  - **How a company turns checks off (target).** Do not rely on a configuration profile setting Sparkle's own keys. The app reads one managed preference of ours from `UserDefaults`; when a profile sets it, the app sets Sparkle's `automaticallyChecksForUpdates` to false at launch and shows the Settings toggle as off and locked (`UserDefaults.objectIsForced(forKey:)`), with a line saying the organization manages updates. Test it on a Mac with a profile installed before the first release.
+  - **The helper is not sandboxed (target).** Neither the app nor the bundled helper carries the `com.apple.security.app-sandbox` entitlement, so the helper can start agents and their sandboxes. Release CI checks both with `codesign -d --entitlements` and fails if the entitlement appears.
 
 ## Working rules
 
