@@ -47,7 +47,8 @@ The CLI and MCP tools are read by people too. They print the screen words, and m
 | --- | --- |
 | Trial outcome tags, one per trial | Kept, Within noise, Worse, Guardrail failed, Failed holdout, Failed (did not run), Measuring |
 | Agent lane status | Iterating, Measuring trial 9, Paused, Stopped, no gain in 8 trials, Stopped, its budget share is spent |
-| Lane facts | "11 trials · 3 kept · best 344 ms · $15 of $16.67" |
+| Lane facts | "11 trials · 3 kept · best 344 ms · $15 of $20" |
+| A stopped agent's budget passed on | "Sandbox removed · its unspent $6.67 went to the others" |
 | Adopting | "Started from Claude Code's trial 11" |
 | Stepper | 1 Start run, 2 Create workspaces, 3 Mint scoped credentials, 4 Agents iterate: change, measure, keep or discard, 5 Pick the best kept trial, 6 Store history, open pull request, 7 Clean up |
 | Stepper status line | "Step 4 of 7 · 2 agents iterating · 28 trials, 4 kept." |

@@ -31,7 +31,7 @@ Where `docs/GLOSSARY.md` already defines a word, this file keeps its meaning and
 3. The accept rule, one pure function, decides each trial. A Kept trial is confirmed in a fresh evaluator sandbox and on the holdout.
 4. An agent stops by the stop rule. The run's result is the best kept trial across all agents.
 
-The agent decides what to try. Ratchet decides what counts. The run's budget is split evenly across its agents; infra meters it.
+The agent decides what to try. Ratchet decides what counts. The run's budget starts as even shares; when an agent stops early, its unspent share goes evenly to the agents still iterating. Infra meters it.
 
 ## How this area refers to the others
 

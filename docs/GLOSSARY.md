@@ -68,7 +68,8 @@ Code and the API use the names of the three basics for their areas; the screen b
 | trial outcome: beat the agent's best and confirmed, inside noise, regressed, a guardrail broke, lost on holdout, did not run, being measured | Kept, Within noise, Worse, Guardrail failed, Failed holdout, Failed, Measuring ("Beats noise" and "Holdout passed" stay as evidence badges on the result card) |
 | agent status in a run | Iterating, Measuring trial 9, Paused, Stopped, no gain in 8 trials, Stopped, its budget share is spent |
 | an agent building on another's trial | Started from Claude Code's trial 11 |
-| an agent's totals | "11 trials · 3 kept · best 344 ms · $15 of $16.67" |
+| an agent's totals | "11 trials · 3 kept · best 344 ms · $15 of $20" |
+| a stopped agent's unspent share passed on | "Sandbox removed · its unspent $6.67 went to the others" |
 | steering while running | "Steer the agents, or @ one, e.g. @Codex focus on database queries" |
 | signed receipt, signature verified | Signed numbers, Verified (Verify again) |
 | sandbox clean-up state | Cleaned up: Running, Removed, Not removed |

@@ -16,7 +16,7 @@
 | evaluator | Where measuring happens: separate machines (a separate node pool on Kubernetes), pinned hardware, the only place with the holdout credential. A measurement job starts an evaluator sandbox for one trial and removes it after (target) | the benchmark (that is optimization's procedure) |
 | agent | A worker that proposes changes: Claude Code, Codex or Grok (glossary) | harness (code only), connection |
 | model provider | Whoever serves an agent's model, by subscription or API key | the agent |
-| budget | A stated spend limit for a run, set by optimization. Split evenly across the run's agents; each agent's share is its own cap (target) | a bill |
+| budget | A stated spend limit for a run, set by optimization. Starts as even shares across the run's agents; each share is that agent's cap, and a stopped agent's unspent share goes evenly to the agents still iterating (target) | a bill |
 | spend record | One append-only row of money or tokens, tied to a run and an agent. An agent's spend is its model tokens, its sandbox and the evaluator time for its trials (target) | an invoice |
 | machine | One launched instance, tagged with its run | a server someone owns |
 | clean-up check | The verification that every tagged resource of a run is gone | a hope |
@@ -46,6 +46,6 @@ Each agent runs its own loop (see [../optimization/model.md](../optimization/mod
 2. It starts one workspace sandbox per agent, each with no route to the evaluator (on Kubernetes, a NetworkPolicy) and gives it the agent's credentials, a short-lived scoped git token, and an egress proxy that adds the model key on the way out.
 3. The agent's code runs the experiment and reads data through connectors itself. It checks its changes cheaply there; those numbers never count.
 4. When an agent asks for a measurement, a measurement job starts an evaluator sandbox on different machines for that one trial. The evaluation may bring up what it needs inside it (for example the service and its database, from the subject at that commit) and removes it after. A Kept trial is measured again in a fresh evaluator sandbox and on the holdout.
-5. The run's budget is split evenly across its agents, and spend is attributed to the agent that caused it. When an agent stops, its sandboxes are removed at once. When the run ends, every sandbox is removed and shown removed.
+5. The run's budget starts as even shares, and spend is attributed to the agent that caused it. When an agent stops, its sandboxes are removed at once and its unspent share is split evenly among the agents still iterating, recorded as a budget move. When the run ends, every sandbox is removed and shown removed.
 
 The server orchestrates and records: ids, versions, numbers, states and audit rows. It never connects to data, and Ratchet holds no access to the customer's cloud. There is no cross-account role and no serverless compute in Ratchet's account for now. Measuring on someone's laptop is not supported; a Mac may be the "This machine" backend where agents propose, with the same scoped credentials, budget and clean-up as any backend.
