@@ -1,6 +1,6 @@
 # Libraries
 
-Do not add a dependency for convenience. A new one is a product call: ask the owner. Prefer what is already here.
+Do not add a dependency for convenience. A new one is a product call: ask the owner. Prefer what is already here. Before proposing one, review it with the supply-chain skill ([security/ratchet.md](security/ratchet.md)) and run `cargo deny check`; the review goes in the proposal.
 
 ## In use today
 

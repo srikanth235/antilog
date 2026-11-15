@@ -4,5 +4,6 @@ The upstream repository https://github.com/vercel-labs/agent-skills (shallow-clo
 
 - `README.md`, section "License": `MIT`
 - `skills/react-best-practices/SKILL.md`, front matter: `license: MIT`
+- `skills/composition-patterns/SKILL.md`, front matter: `license: MIT`
 
-No copyright line or licence text is published upstream, so none is reproduced here. The digest [`../general/react-best-practices.md`](../general/react-best-practices.md) is condensed from that skill under the declared MIT licence with attribution to Vercel Engineering. If upstream adds a LICENSE file, replace this notice with it verbatim.
+No copyright line or licence text is published upstream, so none is reproduced here. The digests [`../general/react-best-practices.md`](../general/react-best-practices.md) and [`../general/composition-patterns.md`](../general/composition-patterns.md) are condensed from those skills under the declared MIT licence with attribution to Vercel Engineering. If upstream adds a LICENSE file, replace this notice with it verbatim.

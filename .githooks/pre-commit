@@ -18,7 +18,7 @@ fi
 fail=0
 bad() { echo "pre-commit: $1" >&2; fail=1; }
 # Upstream text copied verbatim keeps its own style: house rules skip it.
-VENDORED='^\.claude/skills/stack/(web|cloudflare)/general/'
+VENDORED='^\.claude/skills/stack/(web|cloudflare|security|mcp|playwright)/general/'
 search() { # search <message> <regex> [house]: grep the files, text only
   list=$files
   [ "$3" = house ] && list=$(printf '%s\n' "$files" | grep -v -E "$VENDORED")
@@ -69,6 +69,24 @@ fi
 if printf '%s\n' "$files" | grep -q '^.claude/skills/stack/cloudflare/'; then
   python3 .claude/skills/stack/cloudflare/sync.py --check >/dev/null 2>&1 \
     || bad "cloudflare skills out of step: run python3 .claude/skills/stack/cloudflare/sync.py --check"
+fi
+
+# Security review skills: the copy matches the lists in sync.py
+if printf '%s\n' "$files" | grep -q '^.claude/skills/stack/security/'; then
+  python3 .claude/skills/stack/security/sync.py --check >/dev/null 2>&1 \
+    || bad "security skills out of step: run python3 .claude/skills/stack/security/sync.py --check"
+fi
+
+# MCP skills: the copy matches the lists in sync.py
+if printf '%s\n' "$files" | grep -q '^.claude/skills/stack/mcp/'; then
+  python3 .claude/skills/stack/mcp/sync.py --check >/dev/null 2>&1 \
+    || bad "mcp skills out of step: run python3 .claude/skills/stack/mcp/sync.py --check"
+fi
+
+# Playwright skills: the copy matches the lists in sync.py
+if printf '%s\n' "$files" | grep -q '^.claude/skills/stack/playwright/'; then
+  python3 .claude/skills/stack/playwright/sync.py --check >/dev/null 2>&1 \
+    || bad "playwright skills out of step: run python3 .claude/skills/stack/playwright/sync.py --check"
 fi
 
 [ "$fail" = 0 ] || echo "pre-commit: fix the above, or explain in the commit why not" >&2

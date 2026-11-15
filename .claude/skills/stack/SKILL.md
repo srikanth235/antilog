@@ -1,7 +1,7 @@
 ---
 name: stack
 description: >-
-  How do I write this language here, and which library may I use? Use for Rust, TypeScript and React, modern HTML, CSS and browser APIs (dialogs, popovers, forms, tables, theming, accessibility, performance, web security), Swift and SwiftUI for the macOS app, Postgres and SQL, Cloudflare (Workers, Durable Objects, Wrangler, Sandboxes) for Ratchet cloud, OpenTofu, Packer, Helm and Kubernetes, or adding a dependency: the repo's own constraints, the check command, general style references, and the chosen target libraries.
+  How do I write this language here, and which library may I use? Use for Rust, TypeScript and React, modern HTML, CSS and browser APIs (dialogs, popovers, forms, tables, theming, accessibility, performance, web security), Swift and SwiftUI for the macOS app, Postgres and SQL, Cloudflare (Workers, Durable Objects, Wrangler, Sandboxes) for Ratchet cloud, OpenTofu, Packer, Helm and Kubernetes, security review (Rust, dependencies, API design, GitHub Actions), the MCP server, driving a browser with Playwright, or adding a dependency: the repo's own constraints, the check command, general style references, and the chosen target libraries.
 ---
 
 # Stack
@@ -18,6 +18,9 @@ Read the repo page for the file type first: it holds this repo's constraints, it
 | `.swift`, the macOS app | [swift/ratchet.md](swift/ratchet.md) | `xcodebuild ... test` on macOS (target); report it unrun elsewhere |
 | SQL, migrations (Postgres and SQLite), `sqlx` queries, the job queue | [postgres/ratchet.md](postgres/ratchet.md) | `cargo sqlx prepare --check` and the storage tests against both stores (target) |
 | The cloud shell `ratchet-cloud`, `wrangler.toml`, Durable Objects, D1, Ratchet-managed sandboxes | [cloudflare/ratchet.md](cloudflare/ratchet.md), then the skill for the job in [cloudflare/general/INDEX.md](cloudflare/general/INDEX.md) | the Rust check; `python3 .claude/skills/stack/cloudflare/sync.py --check` after a sync |
+| A security review: a Rust change at the trust boundary, a new dependency, an API or config design, `.github/workflows/`, a property test | [security/ratchet.md](security/ratchet.md), then the skill for the job in [security/general/INDEX.md](security/general/INDEX.md) | the check of the language; `python3 .claude/skills/stack/security/sync.py --check` after a sync |
+| The MCP server (`ratchet mcp`), its tools and their descriptions | [mcp/ratchet.md](mcp/ratchet.md), then [mcp/general/INDEX.md](mcp/general/INDEX.md) | the Rust check; `python3 .claude/skills/stack/mcp/sync.py --check` after a sync |
+| Driving the web app or a board in a browser while you work | [playwright/ratchet.md](playwright/ratchet.md), then [playwright/general/INDEX.md](playwright/general/INDEX.md) | `python3 .claude/skills/stack/playwright/sync.py --check` after a sync |
 | `.tf`, `.tftest.hcl`, `.pkr.hcl`, Helm charts, Kubernetes manifests | [infra/ratchet.md](infra/ratchet.md) | `tofu fmt -check`, `tofu validate`, `tofu test`, `packer validate`, `helm lint` (target) |
 | Adding or changing a dependency | [libraries.md](libraries.md) | the check of the language |
 
@@ -28,11 +31,14 @@ Nothing here is built on this branch yet: every check is (target) until code lan
 | Folder | Holds |
 | --- | --- |
 | `rust/` | `ratchet.md` (the core, the two shells and the portability rule); `general/` Rust style, API, patterns, Microsoft and Google guides, and async services (tokio, axum, tower, sqlx); `licenses/` |
-| `typescript/` | `ratchet.md`; `general/` TypeScript practices, type patterns, Vitest, React best practices; `licenses/` |
+| `typescript/` | `ratchet.md`; `general/` TypeScript practices, type patterns, Vitest, React best practices, composition patterns; `licenses/` |
 | `web/` | `ratchet.md`; `base-ui.md`; `general/` 111 Modern Web Guidance guides with an index, copied by `sync.py`; `licenses/` |
 | `swift/` | `ratchet.md`; `general/` Swift, SwiftUI views, data, accessibility, diagnostics, performance, macOS; `licenses/` |
 | `postgres/` | `ratchet.md` (Postgres self-hosted, the shared schema, SQLite in the cloud); `general/` Postgres best practices; `licenses/` |
 | `cloudflare/` | `ratchet.md` (what runs on Cloudflare and the rules that win); `general/` Cloudflare's own skills for Durable Objects, Workers, Wrangler and Sandboxes, with product references, copied by `sync.py`; `licenses/` |
+| `security/` | `ratchet.md` (when to use which review skill, and Ratchet's trust rules as the bar); `general/` Trail of Bits (Rust review, supply chain, sharp edges, property-based testing) and Sentry (GitHub Actions security), copied by `sync.py`; `licenses/` |
+| `mcp/` | `ratchet.md` (our Rust server and its rules); `general/` Anthropic's MCP builder skill, copied by `sync.py`; `licenses/` |
+| `playwright/` | `ratchet.md` (the CLI for working, `@playwright/test` for the suite); `general/` Microsoft's `playwright-cli` skill, copied by `sync.py`; `licenses/` |
 | `infra/` | `ratchet.md` (also the Ratchet cloud Worker and Ratchet-managed sandboxes); `general/` Terraform (for OpenTofu) and Packer; `licenses/` |
 
 The chosen target libraries and tool versions are in [libraries.md](libraries.md). Do not add a dependency for convenience: a new one is a product call.
