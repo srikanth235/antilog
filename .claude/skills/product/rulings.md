@@ -7,7 +7,7 @@
 - **Infrastructure records spend; the experiment sets the cap.** The limit belongs to the goal; the meter belongs to the place work runs.
 - **A benchmark belongs to the experiment.** It points at data (context) and machines (infrastructure). It is not a context or infrastructure object.
 - **The earlier native Mac app was removed.** The web app is the client (target). A new native macOS app is ruled in the next section (target).
-- **Sign-in is OpenID Connect, plus GitHub's OAuth.** Ratchet cloud offers GitHub (OAuth with its user API, since GitHub does not offer OpenID Connect for app sign-in) and Google (OpenID Connect). A self-hosted server uses the administrator's OpenID Connect provider. No passwords.
+- **Sign-in is OpenID Connect, plus GitHub's OAuth.** Ratchet cloud offers GitHub (OAuth with its user API, since GitHub does not offer OpenID Connect for app sign-in), Google (OpenID Connect), and an organization's own OpenID Connect provider (single sign-on), which only an owner sets up. A self-hosted server uses the administrator's OpenID Connect provider. No passwords.
 
 ## Architecture (target)
 
