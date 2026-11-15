@@ -91,6 +91,7 @@ The queue is a table in the store: Postgres self-hosted, the organization's Dura
 - Residency: an object can be pinned to the EU, the US or FedRAMP (Durable Object jurisdictions).
 - Foreign keys are on for each connection and every statement is parameterised, as in Postgres.
 - Moving between cloud and self-hosted is an export and import of one neutral file format, not a database copy.
+- Details (strict tables, foreign keys, transactions, limits, migrations, numbers across JavaScript): [general/sqlite.md](general/sqlite.md).
 
 ## Tests
 
@@ -107,6 +108,8 @@ The queue is a table in the store: Postgres self-hosted, the organization's Dura
 - **`timestamp` without time zone, `float` for money, `varchar(n)` for nothing** are the usual type mistakes: see the types above.
 - **Enum drift.** Adding a state in Rust without the migration (or the reverse) is caught by the test that compares the lists; keep that test.
 
-## General Postgres guidance
+## General guidance
+
+[`general/sqlite.md`](general/sqlite.md): our own notes on SQLite in a Durable Object, from SQLite's and Cloudflare's documentation.
 
 [`general/postgres-best-practices.md`](general/postgres-best-practices.md): query performance, indexes, connections and pooling, schema design, locking and concurrency, data access, diagnostics and migrations. It is a digest of [Supabase's postgres-best-practices](https://github.com/supabase/agent-skills) (MIT, [`licenses/supabase-agent-skills-LICENSE`](licenses/supabase-agent-skills-LICENSE)).

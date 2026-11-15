@@ -34,11 +34,11 @@ Nothing here is built on this branch yet: every check is (target) until code lan
 | `typescript/` | `ratchet.md`; `general/` TypeScript practices, type patterns, Vitest, React best practices, composition patterns; `licenses/` |
 | `web/` | `ratchet.md`; `base-ui.md`; `general/` 111 Modern Web Guidance guides with an index, copied by `sync.py`; `licenses/` |
 | `swift/` | `ratchet.md`; `general/` Swift, SwiftUI views, data, accessibility, diagnostics, performance, macOS; `licenses/` |
-| `postgres/` | `ratchet.md` (Postgres self-hosted, the shared schema, SQLite in the cloud); `general/` Postgres best practices; `licenses/` |
+| `postgres/` | `ratchet.md` (Postgres self-hosted, the shared schema, SQLite in the cloud); `general/` Postgres best practices, SQLite in a Durable Object; `licenses/` |
 | `cloudflare/` | `ratchet.md` (what runs on Cloudflare and the rules that win); `general/` Cloudflare's own skills for Durable Objects, Workers, Wrangler and Sandboxes, with product references, copied by `sync.py`; `licenses/` |
 | `security/` | `ratchet.md` (when to use which review skill, and Ratchet's trust rules as the bar); `general/` Trail of Bits (Rust review, supply chain, sharp edges, property-based testing) and Sentry (GitHub Actions security), copied by `sync.py`; `licenses/` |
 | `mcp/` | `ratchet.md` (our Rust server and its rules); `general/` Anthropic's MCP builder skill, copied by `sync.py`; `licenses/` |
 | `playwright/` | `ratchet.md` (the CLI for working, `@playwright/test` for the suite); `general/` Microsoft's `playwright-cli` skill, copied by `sync.py`; `licenses/` |
-| `infra/` | `ratchet.md` (also the Ratchet cloud Worker and Ratchet-managed sandboxes); `general/` Terraform (for OpenTofu) and Packer; `licenses/` |
+| `infra/` | `ratchet.md` (also the Ratchet cloud Worker and Ratchet-managed sandboxes); `general/` Terraform (for OpenTofu), Packer, Helm and Kubernetes; `licenses/` |
 
 The chosen target libraries and tool versions are in [libraries.md](libraries.md). Do not add a dependency for convenience: a new one is a product call.
