@@ -12,11 +12,9 @@ When code lands on this branch, update the pages that name its paths and command
 
 ## Checks
 
-There is no code on this branch, so there is no build or test to run yet. For a design change, edit the light board and run `python3 design/tools/tokens.py`, then `python3 design/tools/tokens.py --check`. Add the real checks here with the first code.
+There is no code on this branch, so there is no build or test to run yet. For a design change, edit the light board and run `python3 design/tools/tokens.py`, then `python3 design/tools/tokens.py --check`. Git hooks in `.githooks/` check each commit (Claude Code sessions turn them on at start; elsewhere run `git config core.hooksPath .githooks`), and `.github/workflows/checks.yml` runs the same checks on every push. Add the real checks here with the first code.
 
 - Fix the code, not the check. Do not loosen a lint, test or snapshot to get green.
-
-Once per clone, run `git config core.hooksPath .githooks`: the commit-msg hook enforces Conventional Commits.
 
 ## Skills
 

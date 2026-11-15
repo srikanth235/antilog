@@ -6,6 +6,7 @@
 - Never skip, disable or delete a test, hook or check to get green. Fix the code.
 - Do not commit generated files by hand. Regenerate them: `design/mockups/tokens.css` and the dark twins (from `python3 design/tools/tokens.py`), and (target) the OpenAPI document and the generated TypeScript client.
 - Never commit a secret, a token or a `.env` file.
+- **Hooks.** `.githooks/pre-commit` blocks secrets, build output, files over 1 MB, em dashes, model names and a failing design check; `.githooks/commit-msg` checks the subject. Every Claude Code session turns them on at start (`.claude/settings.json`); anywhere else run `git config core.hooksPath .githooks` once. CI runs both on every push ([ci.md](ci.md)). Keep hooks under a second.
 - No model names in commits, code, docs or pull request text.
 
 ## Commit messages
@@ -18,6 +19,6 @@
 - **Breaking change**: `!` before the colon, and a `BREAKING CHANGE:` footer saying what to do: `feat(server)!: drop the v0 runs route`.
 - **Body**, when the why is not obvious: a blank line, then plain sentences, wrapped at 72.
 - A pull request title follows the same form.
-- **Enforced** by `.githooks/commit-msg`, which rejects any other subject (merge, revert and fixup commits pass). Turn it on once per clone: `git config core.hooksPath .githooks`.
+- **Enforced** by `.githooks/commit-msg`, which rejects any other subject (merge, revert and fixup commits pass), and again in CI.
 
 Add trailers only when the session's instructions say to.

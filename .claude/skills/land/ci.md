@@ -1,6 +1,13 @@
 # CI
 
-There is no CI on this branch: `.github/workflows/` does not exist yet. Add the workflow with the first code, and rewrite this page in the same change. The earlier code's workflows are in [today.md](today.md).
+`.github/workflows/checks.yml` runs on every push to every branch and on every pull request. Agents push often, so CI, not a local hook, is the gate: hooks can be skipped and a fresh clone may not have them on. The earlier code's workflows are in [today.md](today.md).
+
+| Job | Runs |
+| --- | --- |
+| commits | `.githooks/commit-msg` on every commit since the default branch (the new commits only, on the default branch) |
+| files | `.githooks/pre-commit --all`: secrets, stray and oversized files, em dashes, model names, and `python3 design/tools/tokens.py --check` |
+
+Add each job below with the first code of its layer, and keep the local hooks fast: anything slower than a second belongs here, not in a hook.
 
 ## Target jobs
 
@@ -14,7 +21,6 @@ One job per layer, each running the commands in [checks.md](checks.md). A pull r
 | web | typecheck, lint, tests |
 | macos-app | build and test the Swift app, on a macOS runner only |
 | infra | `tofu fmt`, `validate`, `test`; `packer fmt` and `validate`; the backend contract suite against fakes |
-| design | `python3 design/tools/tokens.py --check` |
 | release | builds the three programs and the container images; signs them |
 
 Rules:
