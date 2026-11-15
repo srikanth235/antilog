@@ -11,8 +11,8 @@ OpenTofu, Packer, Helm and Kubernetes manifests. (target) None of this is on thi
 | Helm | Packaging the server and the runner for Kubernetes (the first sandbox backend), with `values.yaml` for the customer's choices. |
 | Kubernetes manifests | What the chart renders: workspace and evaluator pods in separate node pools, a `NetworkPolicy` for "no route", service accounts, resource limits. |
 | Docker Compose | The self-hosted server and Postgres. The only thing that needs no chart. |
-| Wrangler config | The Ratchet cloud Worker and its Durable Object classes, deployed by us (target). |
-| Cloudflare Containers | The Ratchet-managed sandboxes, run through a runner we operate (target). |
+| Wrangler config | The Ratchet cloud Worker and its Durable Object classes, deployed by us (target). See [../cloudflare/ratchet.md](../cloudflare/ratchet.md). |
+| Cloudflare Containers | The Ratchet-managed sandboxes, run through a runner we operate (target). See [../cloudflare/ratchet.md](../cloudflare/ratchet.md). |
 
 Ratchet runs in the customer's infrastructure by default. Nothing here creates resources in an account Ratchet operates, except two things we run ourselves: Ratchet cloud (a Cloudflare Worker, deployed by us) and the Ratchet-managed sandboxes on Cloudflare Containers, which an owner chooses per organization ("Where work runs"). The rules below for the customer's account hold for Your infrastructure.
 

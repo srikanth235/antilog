@@ -27,7 +27,7 @@ Guidance lives in [`.claude/skills/`](.claude/skills), each a short router. Star
 - `organization`: who may do what, and how is it recorded?
 - `design`: what does it look like and say? Boards, light and dark, the macOS app.
 - `change`: how does this kind of change travel through the layers?
-- `stack`: how do I write this language here (Rust, TypeScript and React, modern HTML, CSS and browser APIs, Swift for macOS, Postgres, OpenTofu, Packer, Helm), and which library may I use?
+- `stack`: how do I write this language here (Rust, TypeScript and React, modern HTML, CSS and browser APIs, Swift for macOS, Postgres, Cloudflare, OpenTofu, Packer, Helm), and which library may I use?
 - `land`: how do I prove it and ship it?
 - `orchestrate`: how is multi-session work run? Only for a session that directs other sessions.
 - `ratchet`: how to drive Ratchet from the shell.

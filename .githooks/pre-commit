@@ -18,10 +18,10 @@ fi
 fail=0
 bad() { echo "pre-commit: $1" >&2; fail=1; }
 # Upstream text copied verbatim keeps its own style: house rules skip it.
-VENDORED='.claude/skills/stack/web/general/'
+VENDORED='^\.claude/skills/stack/(web|cloudflare)/general/'
 search() { # search <message> <regex> [house]: grep the files, text only
   list=$files
-  [ "$3" = house ] && list=$(printf '%s\n' "$files" | grep -v "^$VENDORED")
+  [ "$3" = house ] && list=$(printf '%s\n' "$files" | grep -v -E "$VENDORED")
   [ -z "$list" ] && return
   hits=$(printf '%s\n' "$list" | tr '\n' '\0' | xargs -0 git grep $where -I -n -E -e "$2" -- 2>/dev/null)
   [ -n "$hits" ] && bad "$1" && printf '%s\n' "$hits" | head -n 20 | sed 's/^/  /' >&2
@@ -63,6 +63,12 @@ fi
 if printf '%s\n' "$files" | grep -q '^.claude/skills/stack/web/'; then
   python3 .claude/skills/stack/web/sync.py --check >/dev/null 2>&1 \
     || bad "web guides out of step: run python3 .claude/skills/stack/web/sync.py --check"
+fi
+
+# Cloudflare skills: the copy matches the lists in sync.py
+if printf '%s\n' "$files" | grep -q '^.claude/skills/stack/cloudflare/'; then
+  python3 .claude/skills/stack/cloudflare/sync.py --check >/dev/null 2>&1 \
+    || bad "cloudflare skills out of step: run python3 .claude/skills/stack/cloudflare/sync.py --check"
 fi
 
 [ "$fail" = 0 ] || echo "pre-commit: fix the above, or explain in the commit why not" >&2
