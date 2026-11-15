@@ -32,6 +32,9 @@ for f in $files; do
   case "$f" in
     target/*|*/target/*|node_modules/*|*/node_modules/*|.DS_Store|*/.DS_Store)
       bad "build output or junk: $f" ;;
+    design/icon/*) ;;
+    *.png|*.jpg|*.jpeg|*.gif|*.webp)
+      bad "image outside design/icon (a screenshot? boards are HTML): $f" ;;
     .env.example|*/.env.example) ;;
     .env|.env.*|*/.env|*/.env.*|*.pem|*.p12|*.key|id_rsa*|id_ed25519*)
       bad "secret file: $f" ;;
