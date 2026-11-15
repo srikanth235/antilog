@@ -17,8 +17,13 @@ fi
 
 fail=0
 bad() { echo "pre-commit: $1" >&2; fail=1; }
-search() { # search <message> <regex>: grep the files, text only
-  hits=$(printf '%s\n' "$files" | tr '\n' '\0' | xargs -0 git grep $where -I -n -E -e "$2" -- 2>/dev/null)
+# Upstream text copied verbatim keeps its own style: house rules skip it.
+VENDORED='.claude/skills/stack/web/general/'
+search() { # search <message> <regex> [house]: grep the files, text only
+  list=$files
+  [ "$3" = house ] && list=$(printf '%s\n' "$files" | grep -v "^$VENDORED")
+  [ -z "$list" ] && return
+  hits=$(printf '%s\n' "$list" | tr '\n' '\0' | xargs -0 git grep $where -I -n -E -e "$2" -- 2>/dev/null)
   [ -n "$hits" ] && bad "$1" && printf '%s\n' "$hits" | head -n 20 | sed 's/^/  /' >&2
 }
 
@@ -41,14 +46,20 @@ search "looks like a secret" \
   '-----BEGIN [A-Z ]*PRIVATE KEY-----|AKIA[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{40,}|sk-ant-[A-Za-z0-9_-]{20,}|sk-[A-Za-z0-9]{40,}|xox[abprs]-[A-Za-z0-9-]{10,}'
 
 # House rules: no em dashes, no model names
-search "em dash (use a comma, colon or full stop)" "$(printf '\342\200\224')"
+search "em dash (use a comma, colon or full stop)" "$(printf '\342\200\224')" house
 search "model name (keep model names out of the repo)" \
-  'claude-(opus|sonnet|haiku|fable)|(Opus|Sonnet|Haiku|Fable) [0-9]|gpt-[0-9]'
+  'claude-(opus|sonnet|haiku|fable)|(Opus|Sonnet|Haiku|Fable) [0-9]|gpt-[0-9]' house
 
 # Design boards: generated files current, tokens only
 if printf '%s\n' "$files" | grep -q '^design/'; then
   python3 design/tools/tokens.py --check >/dev/null 2>&1 \
     || bad "design check failed: run python3 design/tools/tokens.py, then --check"
+fi
+
+# Web guides: the copy matches the list in sync.py
+if printf '%s\n' "$files" | grep -q '^.claude/skills/stack/web/'; then
+  python3 .claude/skills/stack/web/sync.py --check >/dev/null 2>&1 \
+    || bad "web guides out of step: run python3 .claude/skills/stack/web/sync.py --check"
 fi
 
 [ "$fail" = 0 ] || echo "pre-commit: fix the above, or explain in the commit why not" >&2

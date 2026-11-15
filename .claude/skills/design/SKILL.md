@@ -16,5 +16,6 @@ Every visual or UX change starts in `design/mockups/`, as a board. The look is M
 | The look at a glance, and the owner's dated calls | `design/mockups/DesignRules.dc.html`, `design/mockups/Decisions.dc.html` |
 | A value (colour, size, radius, type) | `design/tokens.toml` |
 | What the user reads for a code name | the "On screen" column of [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md) |
+| How the platform does a pattern natively (dialog, popover, select, table, sticky header, scroll shadows, motion, focus) | [stack/web/ratchet.md](../stack/web/ratchet.md) and its guide index |
 | Building a screen in the web app or the macOS app (target) | [change/screen.md](../change/screen.md) |
 | Deciding what the product should do | [product](../product/SKILL.md) |
