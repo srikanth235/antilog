@@ -7,6 +7,11 @@ on:
 permissions:
   contents: read
 
+# Agents push often: a newer push to the same branch cancels the older run.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   commits:
     runs-on: ubuntu-latest
