@@ -131,7 +131,7 @@ A proposal, not yet built. The app is SwiftUI and macOS only; Windows and Linux 
 | Deployment target | macOS 26 (a proposal) |
 | Sparkle (updates) | 2.10.0 |
 
-- **OPEN:** Sparkle against the Mac App Store. Sparkle suits a direct download; the Mac App Store has its own updates and a sandbox that may limit the local runner. The owner decides, and Sparkle is not adopted until then.
+- Sparkle is the update mechanism for the Mac app (decided 15 Nov). The app is a direct download and is not on the Mac App Store.
 - The runner is the same Rust `ratchet-runner`, bundled as a helper inside the app. There is no second implementation in Swift.
 - Colours and words are generated from `design/tokens.toml` and the words catalogue, never written by hand.
 

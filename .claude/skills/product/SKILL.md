@@ -13,7 +13,7 @@ Use the governing principles and the non-goals below as settled. Apply them dire
 ## Governing principles
 
 1. **Three basics.** Every feature belongs to optimization, context or infrastructure, or to the organization floor. If it fits none, question it. A fourth home is how a product turns into a pile of pages.
-2. **Optimization depends on context and infrastructure; they never depend on it.** Set up once, reused by many optimizations. A reverse dependency makes the shared parts impossible to change.
+2. **Optimization depends on context and infrastructure; they never depend on it.** Set up once, reused by many experiments. A reverse dependency makes the shared parts impossible to change.
 3. **A benchmark decides, never a person or an agent.** The moment a hand or a proposer can mark a win, no win means anything.
 4. **Work and data stay in the customer's infrastructure.** The server orchestrates and records. It never connects to data and stores none: only ids, versions, numbers, states and audit rows. Data that passes through us is data we must secure, and customers will not allow it.
 5. **Everything is governed.** Who may define, grant, spend and approve is decided by role, and every write is recorded. A team cannot trust what it cannot audit.
@@ -68,5 +68,5 @@ If a question survives all of these, it is a product call. Write the options wit
 - Name the promises it touches and how each stays kept.
 - Say what is target and what is built. Mark target as "(target)" in docs.
 - No unbuilt thing is described as existing.
-- Wording follows [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md): "optimization", "Return", never "automation" or "ROI".
+- Wording follows [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md): "experiment", "Return", never "automation" or "ROI".
 - Open product calls are written down as options, not decided.

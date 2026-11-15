@@ -8,7 +8,7 @@ The vocabulary source is [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md), includ
 
 | Say | Never say |
 | --- | --- |
-| optimization | automation, job, task |
+| experiment | optimization (for the object), automation, job, task |
 | run (numbered `#14`) | attempt, session |
 | Delivered (yearly value of merged wins) | locked in, realised |
 | Pending (open pull request, not counted in Return) | unclaimed, waiting |
@@ -32,12 +32,11 @@ The vocabulary source is [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md), includ
 | Skill (a skill pack) | skill pack on screen; never the repo's guidance files |
 | launcher; runner when installed for Ratchet cloud | agent host, worker |
 | Ratchet cloud, Self-hosted | SaaS, on-prem |
-| a readable label ("Experiment created") | a raw action code (`optimization.create`) |
-| experiment (screen, target) | optimization on screen: OPEN, see below |
+| a readable label ("Experiment created") | a raw action code (`experiment.create`) |
 
 The glossary also defines Chat and Draft. Add each new term to the glossary in the same change that introduces it. Prefer the term Palantir Foundry or Databricks already uses; if a screen needs a word that is not in the glossary, find theirs first and add the row.
 
-**OPEN, the owner's call:** whether the screen says "experiment" or "optimization". The glossary's table says optimization; the web terms say experiment. Until the owner settles it, a board follows the web terms and the CLI, MCP and docs keep "optimization".
+"Experiment" is the noun for the object everywhere a user reads it (settled 15 Nov 2026). "Optimization" names the basic, never the object.
 
 The CLI and MCP tools are read by people too. They print the screen words, and may keep code names in flags and JSON keys.
 
@@ -76,7 +75,7 @@ A `·` never joins two thoughts in one string; it survives only between short me
 - Sentence case everywhere. No exclamation marks.
 - Say what happened and what to do, once, where the user first meets it.
 - No exception text, error codes or stack traces in the interface.
-- A control states exactly what it does: "Stop optimization", not "OK".
+- A control states exactly what it does: "Stop experiment", not "OK".
 - A word means one thing. Do not give one object two names across pages or clients.
 - Money and units are worded the same on every page.
 - Defensive reassurance (a fact followed by what was not lost, deleted or sent) belongs only where the risk decision is made, in full sentences. A status or an empty state repeating the promise is noise.

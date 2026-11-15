@@ -17,7 +17,7 @@
 | skill pack | A versioned pack of written know-how that agents read before proposing changes, for example "Postgres query tuning". Screen word: Skill. Audience: agents only | a dataset, an agent instruction file in `.claude/skills/`, a plugin |
 | note | Text left on a run to steer the next candidate (glossary) | comment, prompt |
 | history | Every past attempt and its result, failures included, stored as a dataset | a log |
-| write-back action | A separate, explicit, audited action that writes to an outside system, such as opening a pull request; requested by an optimization | a connector feature |
+| write-back action | A separate, explicit, audited action that writes to an outside system, such as opening a pull request; requested by an experiment | a connector feature |
 
 ## Skill pack
 
@@ -33,6 +33,6 @@ The coding agent writes code, and that code runs the experiment and reads data t
 
 ## How this area refers to the others
 
-- Optimization: by optimization id and run id only. A write-back action carries the optimization's id and the win's id. Context never reads the accept rule or a verdict.
+- Optimization: by experiment id and run id only. A write-back action carries the experiment's id and the win's id. Context never reads the accept rule or a verdict.
 - Infra: by environment id only. The launcher mints the credentials and runs the code on a named environment. Regions, accounts and instance ids stay in infra.
 - Organization: by project id and actor id. Grants belong to a project.

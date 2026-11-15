@@ -1,6 +1,6 @@
 ---
 name: ratchet
-description: Drive Ratchet from the shell with the `ratchet` command (target; not built on this branch). Use when the user asks about their experiments or optimizations (list, show, status, spend, wins, report), wants to sign in to a Ratchet server, start or stop one, open a pull request for a win, or wants Ratchet as an MCP server (`ratchet mcp`), or names Ratchet.
+description: Drive Ratchet from the shell with the `ratchet` command (target; not built on this branch). Use when the user asks about their experiments (list, show, status, spend, wins, report), wants to sign in to a Ratchet server, start or stop one, open a pull request for a win, or wants Ratchet as an MCP server (`ratchet mcp`), or names Ratchet.
 ---
 
 # Ratchet
@@ -21,7 +21,7 @@ There is no daemon, no LaunchAgent and no simulation mode. The server is Ratchet
 - Always add `--json` and read the JSON. Exit 0 is ok, 1 is a failure (read `error.message` and `error.hint`), 2 is a usage error or a command that needs `--yes`.
 - Ids are in `ratchet list --json`. A wrong id exits 1 with a hint.
 - `start`, `stop` and `pr` spend money or change things. Without `--yes` they only print what they would do and exit 2. Show that preview to the user and ask before you run it again with `--yes`. A start with no budget is refused.
-- Say "experiment" where the screen does and "optimization" in code and docs; see `docs/GLOSSARY.md`. Never "automation".
+- Say "experiment" for the object everywhere, flags, JSON keys and output included. "Optimization" names only the basic. See `docs/GLOSSARY.md`. Never "automation".
 
 ## Commands you will use most
 

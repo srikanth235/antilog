@@ -37,4 +37,4 @@ Guidance lives in [`.claude/skills/`](.claude/skills), each a short router. Star
 - **Docs describe current state.** When a change makes a doc wrong, fix the doc in the same change. Target design is marked "(target)".
 - **Product calls go to the owner.** When a choice is about what the product should be and the `product` skill does not settle it, ask rather than guess.
 - **Mockups first.** Every visual or UX change starts as a board in `design/mockups/`.
-- **Vocabulary** follows [`docs/GLOSSARY.md`](docs/GLOSSARY.md): "optimization", never "automation"; "Return", never "ROI". The web client (target) says "experiment"; its words are in the glossary's target section.
+- **Vocabulary** follows [`docs/GLOSSARY.md`](docs/GLOSSARY.md): "experiment" is the noun for the thing a user creates, in the apps, the CLI, the API, the words catalogue and user-facing docs; "optimization" only names the basic and its skill; never "automation"; "Return", never "ROI".

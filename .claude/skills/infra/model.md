@@ -24,7 +24,7 @@
 
 ## How this area refers to the others
 
-- Optimization: by optimization id and run id. Optimization chooses which agents and how many, and sets the cap. Infra never reads a verdict or the accept rule.
+- Optimization: by experiment id and run id. Optimization chooses which agents and how many, and sets the cap. Infra never reads a verdict or the accept rule.
 - Context: by dataset id and version, only to grant a read to a machine. Infra never names a connector or a table.
 - Organization: by project id. Every account and environment belongs to a project.
 

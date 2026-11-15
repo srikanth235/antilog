@@ -2,10 +2,10 @@
 
 ## Settled boundaries
 
-- **Context owns the code host.** The code host (GitHub, GitLab) is a context connector. A pull request is a write-back action that an optimization requests; context performs it, as an explicit, audited action.
-- **Agents are infrastructure workers.** An agent is something infrastructure runs. An optimization picks which agents and how many. The model provider is a field on the agent.
-- **Infrastructure records spend; the optimization sets the cap.** The limit belongs to the goal; the meter belongs to the place work runs.
-- **A benchmark belongs to the optimization.** It points at data (context) and machines (infrastructure). It is not a context or infrastructure object.
+- **Context owns the code host.** The code host (GitHub, GitLab) is a context connector. A pull request is a write-back action that an experiment requests; context performs it, as an explicit, audited action.
+- **Agents are infrastructure workers.** An agent is something infrastructure runs. An experiment picks which agents and how many. The model provider is a field on the agent.
+- **Infrastructure records spend; the experiment sets the cap.** The limit belongs to the goal; the meter belongs to the place work runs.
+- **A benchmark belongs to the experiment.** It points at data (context) and machines (infrastructure). It is not a context or infrastructure object.
 - **The earlier native Mac app was removed.** The web app is the client (target). A new native macOS app is ruled in the next section (target).
 - **Sign-in is OpenID Connect only.** Ratchet cloud offers GitHub and Google. A self-hosted server uses the administrator's provider.
 
@@ -32,7 +32,7 @@ Decided by the owner, 14 Nov.
 - **The Mac can be the "This machine" sandbox backend.** Agents propose there, with the same short-lived, read-only, scoped credentials as on any backend, governed, budgeted and cleaned up the same way.
 - **Measuring never runs on the laptop.** The evaluator stays in the customer's infrastructure, so a Mac can never hold the holdout credential or produce a number that counts.
 - **Clients share behaviour, words and element ids, never pixels.** The web app and the Mac app do not diverge on state or words; see [design behaviour](../design/behaviour.md).
-- **Open:** how the Mac app is distributed, direct with Sparkle or the Mac App Store; see [stack/libraries.md](../stack/libraries.md).
+- **The Mac app is a direct download, updated with Sparkle** (decided 15 Nov). It is signed with a Developer ID, notarized and not on the Mac App Store, so the App Store sandbox never limits the local runner. It checks one signed update feed, ours, daily by default; a person can turn checks off, and a company can turn them off for its Macs and deploy releases itself through device management, which is also how air-gapped installs update. See [stack/swift/ratchet.md](../stack/swift/ratchet.md).
 
 ## The web client (target)
 

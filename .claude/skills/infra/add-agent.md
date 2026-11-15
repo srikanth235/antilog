@@ -8,7 +8,7 @@ An agent is a worker that proposes changes, such as a new coding-agent CLI. Toda
 4. **Scoped credentials only.** The agent gets short-lived, read-only connector credentials minted per run, never the holdout, a long-lived or write credential, or a connector admin secret. Its code reads data through connectors itself. Model keys come through the egress proxy and git access is a short-lived scoped token. Today a runner refuses `connector_query` (`crates/ratchet-agents/src/runner_mcp.rs`).
 5. **Where it runs.** On the user's machine today (target: the Mac app's "This machine" backend, with scoped credentials like any other), or in a workspace sandbox in the customer's infrastructure (This machine or Cloud, in `docs/GLOSSARY.md`). The agent is never placed on an evaluator machine.
 6. **Spend.** Every turn records tokens and cost against the run. A cap set by optimization stops it.
-7. **Fallback.** Add the agent to the fallback order rules (`crates/ratchet-agents/src/fallback.rs`, `crates/ratchet-core/src/agents_policy.rs`). An optimization chooses which agents and how many; infra only runs them.
+7. **Fallback.** Add the agent to the fallback order rules (`crates/ratchet-agents/src/fallback.rs`, `crates/ratchet-core/src/agents_policy.rs`). An experiment chooses which agents and how many; infra only runs them.
 8. **Words.** Name it in `docs/GLOSSARY.md` and [model.md](model.md).
 9. **Tests.** Record fixtures with `scripts/record-fixtures.sh` and run the conformance suite in `crates/ratchet-agents/tests/conformance.rs`. The weekly canary is `.github/workflows/harness-canary.yml`. The harness notes are in `docs/harness-matrix.md`.
 

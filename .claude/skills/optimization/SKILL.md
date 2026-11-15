@@ -6,7 +6,7 @@ description: >-
 
 # Optimization
 
-An optimization is a goal with a trusted benchmark. Agents propose changes to a subject; code decides which changes win. This area depends on context and infra by id and version only; they do not depend on it.
+An experiment is a goal with a trusted benchmark. Agents propose changes to a subject; code decides which changes win. This area depends on context and infra by id and version only; they do not depend on it.
 
 | If you are doing | Read |
 | --- | --- |

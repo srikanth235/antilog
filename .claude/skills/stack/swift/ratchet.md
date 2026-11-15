@@ -1,6 +1,6 @@
 # Swift and SwiftUI in Ratchet (target)
 
-Nothing of this exists yet. The macOS app is SwiftUI and macOS only. Windows and Linux use the web app ([../typescript/ratchet.md](../typescript/ratchet.md)). Versions are in [libraries.md](../libraries.md), including the open question of Sparkle against the Mac App Store. This page says how the app is written and checked when code lands.
+Nothing of this exists yet. The macOS app is SwiftUI and macOS only. Windows and Linux use the web app ([../typescript/ratchet.md](../typescript/ratchet.md)). Versions are in [libraries.md](../libraries.md), including Sparkle, which updates the app outside the Mac App Store. This page says how the app is written and checked when code lands.
 
 ## Toolchain (a proposal until the owner confirms)
 
@@ -32,10 +32,15 @@ xcodebuild -project Ratchet.xcodeproj -scheme Ratchet -destination 'platform=mac
   - It connects out to the server and opens no inbound port; the app does not proxy for it.
   - Its work is cleaned up the same way as any backend: the app does not report it stopped until the runner confirms clean-up.
   - Log its output to the unified log with `OSLog`, without secrets. A login item or launch agent for it, if wanted, goes through `SMAppService`, an explicit user choice, and is removable in System Settings.
-  - If the app is sandboxed (Mac App Store), the helper inherits the sandbox and may be unable to do what a sandbox backend needs. That is why distribution is open ([libraries.md](../libraries.md)); do not design around the App Store before the owner decides.
+  - The app is not distributed through the Mac App Store, so it does not run in the App Store sandbox and the helper does not inherit one. The helper can start agents and their sandboxes as the "This machine" backend needs. It still runs under the hardened runtime and holds only the scoped token it is given.
 - **Swift 6 concurrency.** UI on the main actor, shared state behind actors, no data races, no force unwraps in app code. Structured `async`/`await`; no Grand Central Dispatch. Process and network I/O off the main actor.
 - **Local data.** The app stores settings and caches only. No customer data, no holdout, no connector secret.
-- **Distribution (open).** Direct download with Sparkle, or the Mac App Store, is the owner's call. Until then: sign with a Developer ID, enable the hardened runtime, notarise, and do not add Sparkle.
+- **Distribution (decided 15 Nov).** A direct download, not the Mac App Store. Sign with a Developer ID, enable the hardened runtime and notarize, including the bundled helper. Updates use Sparkle ([libraries.md](../libraries.md)): serve the appcast and the update archives over HTTPS, and sign each archive with Sparkle's EdDSA (ed25519) key, with the public key in the app. Keep the EdDSA private key out of the repo and out of CI logs. Build and release steps are (target).
+- **Updates (decided 15 Nov).**
+  - **Signed feed.** Set `SURequireSignedFeed` so Sparkle also checks the EdDSA signature of the appcast and release notes; sign the release notes with `sign_update`. A compromised update server then cannot point users at another download.
+  - **One feed, ours.** `SUFeedURL` is Ratchet's appcast, for cloud and self-hosted customers alike. No per-server or mirrored feed: a rewritten feed would fail the signature check.
+  - **Checks on by default.** Set `SUEnableAutomaticChecks` so the app checks daily without first asking. A person can turn checks off in the Settings window, as Sparkle's standard option; installing an update always shows the update window, so `SUAutomaticallyUpdate` stays off.
+  - **Companies and air-gapped installs.** A company can turn update checks off for its Macs through device management and deploy each signed, notarized release itself. That is the path for a server that cannot reach the internet: nothing in the app needs to reach our feed.
 
 ## Working rules
 
