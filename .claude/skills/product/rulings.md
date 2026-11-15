@@ -21,11 +21,13 @@ Decided by the owner. Everything here is target; nothing is built on this branch
 - **Sandboxes are cloud-agnostic.** Backends sit behind one trait. Kubernetes comes first, with separate node pools for workspace and evaluator and a NetworkPolicy for "no route". Then VMs on AWS, GCP and Azure. Measuring still runs on different machines from proposing, and a benchmark stays on one provider and one machine type. Provider words stay inside each adapter. On-prem Kubernetes counts as the customer's infrastructure.
 - **Connectors** an agent's code may use: Snowflake, Databricks, DynamoDB, BigQuery, Postgres, S3, GitHub, GitLab and any MCP server. Each knows how to mint a scoped, read-only, holdout-excluding credential for its system.
 
-## The macOS app and the "This machine" backend (target)
+## Desktop apps and the "This machine" backend (target)
 
 Decided by the owner, 14 Nov.
 
-- **A native macOS app, SwiftUI, macOS only at launch.** Windows and Linux use the web app. It is a client of the server's API and a local runner.
+- **A native macOS app, SwiftUI, macOS only at launch.** It is a client of the server's API and a local runner.
+- **On Windows and Linux the desktop app is the web app, installed as a progressive web app** (decided 15 Nov). The same web client, installable from Chrome or Edge: its own window and taskbar icon, a badge for what needs attention, push notifications and an offline screen. On macOS the web app does not offer to install; it points to the Mac app. This machine stays Mac only.
+- **The device stores no data either.** The service worker caches the app's own files only, never API responses, diffs or logs. A push message carries ids only; the app fetches the rest when opened. A self-hosted server that cannot reach the browsers' push services sends no push, and everything else works.
 - **The Mac can be the "This machine" sandbox backend.** Agents propose there, with the same short-lived, read-only, scoped credentials as on any backend, governed, budgeted and cleaned up the same way.
 - **Measuring never runs on the laptop.** The evaluator stays in the customer's infrastructure, so a Mac can never hold the holdout credential or produce a number that counts.
 - **Clients share behaviour, words and element ids, never pixels.** The web app and the Mac app do not diverge on state or words; see [design behaviour](../design/behaviour.md).

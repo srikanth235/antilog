@@ -18,7 +18,7 @@ UPSTREAM = "https://github.com/GoogleChrome/modern-web-guidance"
 BLOB = UPSTREAM + "/blob/{commit}/skills/modern-web-guidance/guides/{path}.md"
 
 # Discipline -> guides taken. Left out on purpose: built-in AI, WebAssembly,
-# WebMCP, installable web apps, web components (the client is React),
+# WebMCP, moving an installed app to a new origin, web components (the client is React),
 # passkeys and password forms (sign-in is OpenID Connect), payment, address
 # and SMS forms, analytics beacons, media loading, carousels, touch gestures,
 # 3D, canvas and decorative effects. Ratchet's client is a desktop web app.
@@ -40,6 +40,7 @@ GUIDES = {
                    "efficient-background-processing faster-spa-view-transitions "
                    "improve-next-page-load-performance conditional-async-dependencies",
     "privacy": "privacy",
+    "pwa": "install-web-app",
     "security": "security sanitize-untrusted-html trusted-types restrict-outbound-connections validate-origins "
                 "secure-external-subresources",
     "ui-atoms": "component-specific-light-dark-theme icons position-aware-tooltips responsive-table "

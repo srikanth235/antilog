@@ -28,7 +28,7 @@ Nothing here is built on this branch yet: every check is (target) until code lan
 | --- | --- |
 | `rust/` | `ratchet.md`; `general/` Rust style, API, patterns, Microsoft and Google guides, and async services (tokio, axum, tower, sqlx); `licenses/` |
 | `typescript/` | `ratchet.md`; `general/` TypeScript practices, type patterns, Vitest, React best practices; `licenses/` |
-| `web/` | `ratchet.md`; `general/` 110 Modern Web Guidance guides with an index, copied by `sync.py`; `licenses/` |
+| `web/` | `ratchet.md`; `general/` 111 Modern Web Guidance guides with an index, copied by `sync.py`; `licenses/` |
 | `swift/` | `ratchet.md`; `general/` Swift, SwiftUI views, data, accessibility, diagnostics, performance, macOS; `licenses/` |
 | `postgres/` | `ratchet.md`; `general/` Postgres best practices; `licenses/` |
 | `infra/` | `ratchet.md`; `general/` Terraform (for OpenTofu) and Packer; `licenses/` |

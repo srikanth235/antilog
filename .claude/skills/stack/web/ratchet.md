@@ -2,7 +2,7 @@
 
 Read this before writing HTML, CSS or browser-side TypeScript in the web client (target) or a design board. Then find the guide for the job in [general/INDEX.md](general/INDEX.md) and read it **before** writing the code: models default to older patterns, and these guides say what the platform does natively now.
 
-`general/` is a copy of 110 guides from [Modern Web Guidance](https://github.com/GoogleChrome/modern-web-guidance) (Chrome, Edge, Firefox and MDN teams; Apache-2.0, [licence](licenses/modern-web-guidance-LICENSE)). It is the subset a desktop web app for engineers needs; the list and the reasons for what is left out are in [sync.py](sync.py). Each guide ends with the browser support of the features it uses.
+`general/` is a copy of 111 guides from [Modern Web Guidance](https://github.com/GoogleChrome/modern-web-guidance) (Chrome, Edge, Firefox and MDN teams; Apache-2.0, [licence](licenses/modern-web-guidance-LICENSE)). It is the subset a desktop web app for engineers needs; the list and the reasons for what is left out are in [sync.py](sync.py). Each guide ends with the browser support of the features it uses.
 
 ## How to use it
 
@@ -22,6 +22,9 @@ A guide is advice from outside; these are decisions. When they disagree, follow 
 - **Components.** Radix primitives are the chosen base for dialog, menu, popover, tabs, tooltip and select ([../typescript/ratchet.md](../typescript/ratchet.md)). Where Radix covers the component, read the guide for its accessibility and styling rules and apply them to the Radix part; do not swap in the native element on your own. Where Radix does not (copy button, progress, spinner, toasts, tables, sticky headers, scroll shadows, accordions with `details`), build it natively as the guide says.
 - **Icons.** One mask sprite, coloured by `currentColor`, as the icons guide's CSS icon system describes. Add an icon to the sprite; do not add an icon font or a second set.
 - **Words.** Example labels and messages in a guide are placeholders. On-screen words come from the catalogue and follow `docs/GLOSSARY.md` and the design skill's wording rules.
+- **Installable (progressive web app).** On Windows and Linux the installed web app is the desktop app ([product rulings](../../product/rulings.md)). A web app manifest with the brand icons from `design/icon/`, `display: standalone`, and theme colours from the tokens. Install follows [pwa/install-web-app](general/pwa/install-web-app.md); on macOS, point to the Mac app instead of offering install.
+- **The service worker caches the app shell only.** Precache the built HTML, JS, CSS, fonts and icons; never cache an API response, a diff or a log, in the Cache API or IndexedDB. Offline shows the offline screen, not stale data dressed as current. A new build activates on the next launch, never mid-session.
+- **Push carries ids only.** Web Push with the server's VAPID key; the payload is an experiment id and an event kind, and the notification text is built from words the app already has. Ask permission only from a user action, never on load. The badge (Badging API) is the count that needs attention, cleared as it is seen.
 - **Not ours.** Sign-in is OpenID Connect in the browser, so password, passkey and autofill sign-in guides are not taken. The client is client-rendered, so skip server rendering and streaming advice. No analytics beacons: the server records runs, not visitors.
 
 ## Updating the guides

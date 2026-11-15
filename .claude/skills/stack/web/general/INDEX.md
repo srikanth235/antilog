@@ -89,6 +89,12 @@ Read [../ratchet.md](../ratchet.md) first: it says where Ratchet's own rules win
 | --- | --- |
 | [privacy](privacy/privacy.md) | Action-oriented guidelines for web developers to implement privacy by design, data minimization, third-party audits, and secure data handling. Use this skill when designing applications, integrating third-party services, handling user data, or configuring security headers. |
 
+## pwa
+
+| Guide | Use it to |
+| --- | --- |
+| [install-web-app](pwa/install-web-app.md) | Install web applications from a page using browser-controlled consent UI. |
+
 ## security
 
 | Guide | Use it to |

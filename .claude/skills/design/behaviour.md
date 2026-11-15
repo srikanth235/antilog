@@ -102,7 +102,7 @@ Midnight Brass. The values are in `design/tokens.toml`; these are the rules.
 
 ## Clients
 
-The web app and the macOS app (target) share behaviour, words and element ids, never pixels. The macOS app is SwiftUI, and macOS only; Windows and Linux use the web app. If the two disagree about state or words, one is wrong.
+The web app and the macOS app (target) share behaviour, words and element ids, never pixels. The macOS app is SwiftUI, and macOS only; on Windows and Linux the web app installed as a progressive web app is the desktop app. If the two disagree about state or words, one is wrong.
 
 What the Mac adds:
 
@@ -113,6 +113,14 @@ What the Mac adds:
 - Sign-in through the browser, never a password field in the app.
 - A quit confirmation while agents run on this Mac.
 - An offline banner: the local runner pauses new work until the server is reachable again.
+
+What the installed web app adds, on Windows and Linux:
+
+- Its own window and taskbar icon; the page is the same, with no browser toolbar.
+- Install is offered once, quietly: a row in Settings, General ("Install app"), and the browser's own prompt. Never a banner over work. On macOS the row says "Get the Mac app" instead.
+- A badge on the icon: the count of experiments that need attention.
+- Push notifications for what needs attention, asked for at the moment it helps (after starting a run: "Notify me when this run finishes"), never on first load. Turned off in the same Settings row.
+- An offline screen when the server cannot be reached: what was last known, marked as not current, and Try again. Nothing is cached beyond the app itself.
 
 The Mac is a client and a local runner. It may be the "This machine" backend where agents propose, with the same short-lived, read-only, scoped credentials. Measuring never runs on the laptop.
 
