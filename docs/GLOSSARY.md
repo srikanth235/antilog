@@ -34,7 +34,7 @@ Code, the API and the skills use the names of the three basics; the screen borro
 | Plugin | A bundle that adds evaluations, skills, connectors and agents for a domain | none |
 | Customize | One page with Evaluations, Skills, Connectors, Agents and Plugins | none |
 | Draft | An experiment created but not approved; nothing runs until Approve | Draft (a chat card) |
-| Settings | A dialog over the app, opened from the user menu or More. A rail of sections in two groups: You (Profile, Appearance, Access tokens) and Organization (General, Users and groups, Single sign-on, Infrastructure, Budgets, Notes, Audit logs) | none |
+| Settings | A dialog over the app, opened from the user menu or More. A rail of sections in two groups: You (Profile, Appearance, Access tokens, and in the web app This device) and Organization (General, Users and groups, Single sign-on, Infrastructure, Budgets, Notes, Audit logs) | none |
 | Launcher | The one component that starts and removes sandboxes and mints their scoped credentials. Built into the server when self-hosted | none |
 | Runner | The launcher installed in your infrastructure for Ratchet cloud. It connects out to the hosted server and opens no inbound port | none |
 | Sandbox | One isolated place where an agent's or the evaluator's code runs, started and removed by the launcher | none |
@@ -69,7 +69,7 @@ Code, the API and the skills use the names of the three basics; the screen borro
 | the Mac's local runner taking jobs | Accepting work (menu bar), Run agents on this Mac (Settings, This machine) |
 | quit after the Mac's agents finish | Quit when idle |
 | keep a stopped run stopped | Leave stopped |
-| install the web app as a progressive web app (Windows, Linux) | Install app (Settings, General); "Get the Mac app" on macOS |
+| install the web app as a progressive web app (Windows, Linux) | Install app (Settings, This device); "Get the Mac app" on macOS |
 | ask for push notifications after starting a run | Notify me when this run finishes |
 | the server cannot be reached | Can't reach acme.ratchet.cloud. (the server's address), Try again |
 | a trial's steps | Steps for this trial |

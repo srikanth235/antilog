@@ -18,7 +18,7 @@ Every screen is one of six page types. The type owns the header, back, search, t
 | ListPage | Title, a count, search, filter and sort where the list is long, one primary action (a New or Add menu). Rows or cards, never both. Back: none at a sidebar root. Empty: one sentence and at most one action. Loading: a skeleton of the rows. Error: what happened and what to do, with Try again | Projects, Run history (Trials and Sandboxes tabs), Customize (tabs Evaluations, Skills, Connectors, Agents, Plugins; a Yours and Discover toggle) |
 | DetailPage | Back to the named parent, a title with its status, one primary action, a menu for the rest, then sections of settings rows and quiet tables. One layout for every kind under Customize: a new kind gets no page style of its own. Empty: a section with nothing to show says so in a sentence. Read-only: controls disabled with a one-line reason | A project, an evaluation, a connector, an agent, a skill |
 | Dialog | Over the app, so you keep your place. A title bar with a close button, a dimmed backdrop, focus moves in and Tab stays inside. Esc, the close button or a click on the backdrop close it and return focus to what opened it. Destructive confirms are inline in the page or a small dialog with the verb as its button | Settings, Add connector, Approve a draft |
-| SettingsSection | One section of the Settings dialog: a rail on the left with a search field, the section on the right. Rows, not cards. See "A setting is a row". Read-only for non-owners | Profile, Appearance, Access tokens, General, Users and groups, Single sign-on, Infrastructure, Budgets, Notes, Audit logs |
+| SettingsSection | One section of the Settings dialog: a rail on the left with a search field, the section on the right. Rows, not cards. See "A setting is a row". Read-only for non-owners | Profile, Appearance, Access tokens, This device (web app only), General, Users and groups, Single sign-on, Infrastructure, Budgets, Notes, Audit logs |
 | SignIn | One centred panel on the page ground: the mark, one line of purpose, the provider buttons, nothing else. No sidebar, no search. Errors sit under the buttons in one sentence | Sign-in on Ratchet cloud and on a self-hosted server |
 
 ### Thread
@@ -46,7 +46,7 @@ A centred palette opened from the sidebar, the top bar, Cmd/Ctrl+K or "/". Scope
 
 ### Settings
 
-Settings is a dialog, not a page. It opens from the user menu, More, or a Settings result or action in search. It is a large centred dialog with a left rail and a search field. The first Esc clears the rail search. The rail is grouped by whose setting it is, with a hairline between groups: **You** (Profile, Appearance, Access tokens) and **Organization** (General, Users and groups, Single sign-on, Infrastructure, Budgets, Notes, Audit logs). It reopens on the section you used last. The rail search filters sections and rows by title, description and keywords, and opens the first section that matches.
+Settings is a dialog, not a page. It opens from the user menu, More, or a Settings result or action in search. It is a large centred dialog with a left rail and a search field. The first Esc clears the rail search. The rail is grouped by whose setting it is, with a hairline between groups: **You** (Profile, Appearance, Access tokens, and in the web app This device) and **Organization** (General, Users and groups, Single sign-on, Infrastructure, Budgets, Notes, Audit logs). It reopens on the section you used last. The rail search filters sections and rows by title, description and keywords, and opens the first section that matches.
 
 - General shows the deployment (Ratchet cloud or Self-hosted) and the server address.
 - Infrastructure has the launcher (built in when self-hosted; a runner with version, last seen and status Connected or Not connected on Ratchet cloud), a quiet table of sandbox backends (Kubernetes first, then AWS, GCP and Azure VMs, each with machine types and the evaluator image, and an Add backend menu) and the secret manager row. On the Mac app (target) it also lists This machine; see Clients.
@@ -117,9 +117,9 @@ What the Mac adds:
 What the installed web app adds, on Windows and Linux:
 
 - Its own window and taskbar icon; the page is the same, with no browser toolbar.
-- Install is offered once, quietly: a row in Settings, General ("Install app"), and the browser's own prompt. Never a banner over work. On macOS the row says "Get the Mac app" instead.
+- Install is offered once, quietly: a row in Settings, This device ("Install app"), and the browser's own prompt. Never a banner over work. On macOS the row says "Get the Mac app" instead.
 - A badge on the icon: the count of experiments that need attention.
-- Push notifications for what needs attention, asked for at the moment it helps (after starting a run: "Notify me when this run finishes"), never on first load. Turned off in the same Settings row.
+- Push notifications for what needs attention, asked for at the moment it helps (after starting a run: "Notify me when this run finishes"), never on first load. Turned off in Settings, This device.
 - An offline screen when the server cannot be reached: what was last known, marked as not current, and Try again. Nothing is cached beyond the app itself.
 
 The Mac is a client and a local runner. It may be the "This machine" backend where agents propose, with the same short-lived, read-only, scoped credentials. Measuring never runs on the laptop.

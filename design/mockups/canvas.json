@@ -1085,7 +1085,7 @@
       "is_interactive": true
     },
     "SettingsAudit.dc.html": {
-      "x": 13680,
+      "x": 16720,
       "y": 9900,
       "w": 1440,
       "h": 900,
@@ -1095,7 +1095,7 @@
       "is_interactive": true
     },
     "SettingsAuditDark.dc.html": {
-      "x": 13680,
+      "x": 16720,
       "y": 9900,
       "w": 1440,
       "h": 900,
@@ -1124,8 +1124,48 @@
       "expand": "fill",
       "is_interactive": true
     },
-    "SettingsGeneral.dc.html": {
+    "SettingsDevice.dc.html": {
       "x": 6080,
+      "y": 9900,
+      "w": 1440,
+      "h": 900,
+      "title": "9 \u00b7 Settings, This device",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SettingsDeviceDark.dc.html": {
+      "x": 6080,
+      "y": 9900,
+      "w": 1440,
+      "h": 900,
+      "title": "9 \u00b7 Settings, This device \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SettingsDeviceMac.dc.html": {
+      "x": 7600,
+      "y": 9900,
+      "w": 1440,
+      "h": 900,
+      "title": "9 \u00b7 Settings, This device, Mac browser",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SettingsDeviceMacDark.dc.html": {
+      "x": 7600,
+      "y": 9900,
+      "w": 1440,
+      "h": 900,
+      "title": "9 \u00b7 Settings, This device, Mac browser \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SettingsGeneral.dc.html": {
+      "x": 9120,
       "y": 9900,
       "w": 1440,
       "h": 900,
@@ -1135,7 +1175,7 @@
       "is_interactive": true
     },
     "SettingsGeneralDark.dc.html": {
-      "x": 6080,
+      "x": 9120,
       "y": 9900,
       "w": 1440,
       "h": 900,
@@ -1145,7 +1185,7 @@
       "is_interactive": true
     },
     "SettingsNotes.dc.html": {
-      "x": 10640,
+      "x": 13680,
       "y": 9900,
       "w": 1440,
       "h": 900,
@@ -1155,7 +1195,7 @@
       "is_interactive": true
     },
     "SettingsNotesDark.dc.html": {
-      "x": 10640,
+      "x": 13680,
       "y": 9900,
       "w": 1440,
       "h": 900,
@@ -1165,7 +1205,7 @@
       "is_interactive": true
     },
     "SettingsNotesEmpty.dc.html": {
-      "x": 12160,
+      "x": 15200,
       "y": 9900,
       "w": 1440,
       "h": 900,
@@ -1175,7 +1215,7 @@
       "is_interactive": true
     },
     "SettingsNotesEmptyDark.dc.html": {
-      "x": 12160,
+      "x": 15200,
       "y": 9900,
       "w": 1440,
       "h": 900,
@@ -1213,7 +1253,7 @@
       "page": "components"
     },
     "SettingsReadOnly.dc.html": {
-      "x": 15200,
+      "x": 18240,
       "y": 9900,
       "w": 1440,
       "h": 900,
@@ -1223,7 +1263,7 @@
       "is_interactive": true
     },
     "SettingsReadOnlyDark.dc.html": {
-      "x": 15200,
+      "x": 18240,
       "y": 9900,
       "w": 1440,
       "h": 900,
@@ -1233,7 +1273,7 @@
       "is_interactive": true
     },
     "SettingsSso.dc.html": {
-      "x": 9120,
+      "x": 12160,
       "y": 9900,
       "w": 1440,
       "h": 900,
@@ -1243,7 +1283,7 @@
       "is_interactive": true
     },
     "SettingsSsoDark.dc.html": {
-      "x": 9120,
+      "x": 12160,
       "y": 9900,
       "w": 1440,
       "h": 900,
@@ -1293,7 +1333,7 @@
       "is_interactive": true
     },
     "SettingsUsers.dc.html": {
-      "x": 7600,
+      "x": 10640,
       "y": 9900,
       "w": 1440,
       "h": 900,
@@ -1303,7 +1343,7 @@
       "is_interactive": true
     },
     "SettingsUsersDark.dc.html": {
-      "x": 7600,
+      "x": 10640,
       "y": 9900,
       "w": 1440,
       "h": 900,
@@ -1557,6 +1597,26 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "ThreadNotifyAsk.dc.html": {
+      "x": 10640,
+      "y": 3300,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Thread, notify ask",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "ThreadNotifyAskDark.dc.html": {
+      "x": 10640,
+      "y": 3300,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Thread, notify ask \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "ThreadRunning.dc.html": {
       "x": 0,
       "y": 3300,
@@ -1633,6 +1693,66 @@
       "w": 1440,
       "h": 900,
       "title": "3 \u00b7 Thread, win \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "WebInstalled.dc.html": {
+      "x": 0,
+      "y": 11000,
+      "w": 1440,
+      "h": 900,
+      "title": "10 \u00b7 Desktop app, installed",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "WebInstalledDark.dc.html": {
+      "x": 0,
+      "y": 11000,
+      "w": 1440,
+      "h": 900,
+      "title": "10 \u00b7 Desktop app, installed \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "WebNotification.dc.html": {
+      "x": 1520,
+      "y": 11000,
+      "w": 1440,
+      "h": 900,
+      "title": "10 \u00b7 Desktop app, notifications",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "WebNotificationDark.dc.html": {
+      "x": 1520,
+      "y": 11000,
+      "w": 1440,
+      "h": 900,
+      "title": "10 \u00b7 Desktop app, notifications \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "WebOffline.dc.html": {
+      "x": 3040,
+      "y": 11000,
+      "w": 1440,
+      "h": 900,
+      "title": "10 \u00b7 Desktop app, offline",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "WebOfflineDark.dc.html": {
+      "x": 3040,
+      "y": 11000,
+      "w": 1440,
+      "h": 900,
+      "title": "10 \u00b7 Desktop app, offline \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -1980,6 +2100,24 @@
       "y": 9770,
       "w": 240,
       "maxW": 2960
+    },
+    "web-light10": {
+      "kind": "title1",
+      "page": "web-light",
+      "text": "10 \u00b7 Desktop app",
+      "x": 0,
+      "y": 10870,
+      "w": 240,
+      "maxW": 2960
+    },
+    "web-dark10": {
+      "kind": "title1",
+      "page": "web-dark",
+      "text": "10 \u00b7 Desktop app",
+      "x": 0,
+      "y": 10870,
+      "w": 240,
+      "maxW": 2960
     }
   },
   "noteOrder": [
@@ -2020,7 +2158,9 @@
     "web-light9",
     "web-dark9",
     "mac-light9",
-    "mac-dark9"
+    "mac-dark9",
+    "web-light10",
+    "web-dark10"
   ],
   "attachments": {},
   "designSystems": [],
@@ -2134,6 +2274,10 @@
     "SettingsAuditDark.dc.html",
     "SettingsBudgets.dc.html",
     "SettingsBudgetsDark.dc.html",
+    "SettingsDevice.dc.html",
+    "SettingsDeviceDark.dc.html",
+    "SettingsDeviceMac.dc.html",
+    "SettingsDeviceMacDark.dc.html",
     "SettingsGeneral.dc.html",
     "SettingsGeneralDark.dc.html",
     "SettingsNotes.dc.html",
@@ -2178,6 +2322,8 @@
     "ThreadFailedDark.dc.html",
     "ThreadNoWin.dc.html",
     "ThreadNoWinDark.dc.html",
+    "ThreadNotifyAsk.dc.html",
+    "ThreadNotifyAskDark.dc.html",
     "ThreadRunning.dc.html",
     "ThreadRunningDark.dc.html",
     "ThreadStopped.dc.html",
@@ -2185,6 +2331,12 @@
     "ThreadTrials.dc.html",
     "ThreadTrialsDark.dc.html",
     "ThreadWin.dc.html",
-    "ThreadWinDark.dc.html"
+    "ThreadWinDark.dc.html",
+    "WebInstalled.dc.html",
+    "WebInstalledDark.dc.html",
+    "WebNotification.dc.html",
+    "WebNotificationDark.dc.html",
+    "WebOffline.dc.html",
+    "WebOfflineDark.dc.html"
   ]
 }
