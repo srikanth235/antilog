@@ -1,0 +1,22 @@
+#!/bin/sh
+# Rejects a commit whose subject is not a Conventional Commit.
+# The rule is in .claude/skills/land/git.md. Turn on once per clone:
+#   git config core.hooksPath .githooks
+subject=$(grep -v '^#' "$1" | head -n 1)
+
+case "$subject" in
+  "Merge "*|"Revert \""*|"fixup! "*|"squash! "*|"amend! "*) exit 0 ;;
+esac
+
+types='feat|fix|docs|refactor|perf|test|build|ci|chore|revert'
+if ! printf '%s\n' "$subject" | grep -Eq "^($types)(\([a-z0-9-]+\))?!?: [a-z0-9\`].*[^.]$"; then
+  echo "commit-msg: subject must be 'type(scope): summary'" >&2
+  echo "  type: $types; scope optional, lower case" >&2
+  echo "  summary: lower case, no full stop" >&2
+  echo "  got: $subject" >&2
+  exit 1
+fi
+if [ "${#subject}" -gt 72 ]; then
+  echo "commit-msg: subject is ${#subject} characters, at most 72" >&2
+  exit 1
+fi

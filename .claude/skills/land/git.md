@@ -18,5 +18,6 @@
 - **Breaking change**: `!` before the colon, and a `BREAKING CHANGE:` footer saying what to do: `feat(server)!: drop the v0 runs route`.
 - **Body**, when the why is not obvious: a blank line, then plain sentences, wrapped at 72.
 - A pull request title follows the same form.
+- **Enforced** by `.githooks/commit-msg`, which rejects any other subject (merge, revert and fixup commits pass). Turn it on once per clone: `git config core.hooksPath .githooks`.
 
 Add trailers only when the session's instructions say to.

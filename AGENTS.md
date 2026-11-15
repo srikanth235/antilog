@@ -16,6 +16,8 @@ There is no code on this branch, so there is no build or test to run yet. For a 
 
 - Fix the code, not the check. Do not loosen a lint, test or snapshot to get green.
 
+Once per clone, run `git config core.hooksPath .githooks`: the commit-msg hook enforces Conventional Commits.
+
 ## Skills
 
 Guidance lives in [`.claude/skills/`](.claude/skills), each a short router. Start from the question:
