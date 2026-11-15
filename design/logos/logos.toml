@@ -24,7 +24,11 @@ googlecloud = { title = "Google Cloud", hex = "4285F4" }
 kubernetes = { title = "Kubernetes", hex = "326CE5" }
 cloudflare = { title = "Cloudflare", hex = "F38020" }
 okta = { title = "Okta", hex = "007DC1" }
-google = { title = "Google", hex = "4285F4" }
+# The Google G is not Simple Icons' one-colour mark: Google's sign-in branding
+# asks for its standard multi-colour G. google.svg is the G's outline from Google's
+# Sign in with Google assets (developers.google.com/identity/branding-guidelines,
+# signin-assets.zip), and paint is the asset's own conic gradient, drawn through it.
+google = { title = "Google", hex = "4285F4", paint = "conic-gradient(from 45deg at 48.4% 49%, #FF4641 0deg 4.1deg, #3186FF 39.2deg 72deg, #00A5B7 96.7deg, #0EBC5F 120.9deg 154.7deg, #6CC400 179.1deg, #FFCC00 203.6deg, #FFD314 226.9deg, #FFCC00 251.7deg, #FF6A2B 273.1deg, #FD4641 289.3deg, #FF4641 360deg)" }
 googlegemini = { title = "Gemini", hex = "8E75B2" }
 
 [text]
