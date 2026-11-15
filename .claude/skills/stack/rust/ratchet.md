@@ -41,7 +41,7 @@ Shared types (the API's request and response types, ids, states) live in a libra
 
 ### Cloud shell trial (local, November 2026)
 
-The Rust cloud shell was tried locally with `wrangler dev`, no Cloudflare account, before committing to it. Result: **proceed with Rust**; the TypeScript fallback is not needed. Versions used: `worker` and `worker-build` 0.8.7, Wrangler 4.156.2, axum 0.8.9 with default features off in the core.
+The Rust cloud shell was tried locally with `wrangler dev`, no Cloudflare account, before committing to it. Result: **proceed with Rust**; the TypeScript fallback is not needed. Versions used: `worker` and `worker-build` 0.8.7, Wrangler 4.156.2, axum 0.8.9 with default features off in the core. It was repeated with `cf dev` (`cf` 1.0.0-beta.32 running Wrangler 4.161.0) with the same results.
 
 | Question | Result |
 | --- | --- |

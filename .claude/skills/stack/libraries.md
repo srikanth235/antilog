@@ -145,7 +145,8 @@ A proposal, not yet built. The app is SwiftUI and macOS only; Windows and Linux 
 | --- | --- |
 | `cargo-chef` (Docker builds) | 0.1.78 |
 | `worker-build` (builds the cloud shell; downloads esbuild and `wasm-opt`, so CI caches or pins them) | 0.8.7 |
-| Wrangler | 4.156.2 |
+| `cf` (the Cloudflare CLI, beta; agents use it) | 1.0.0-beta.32 |
+| Wrangler (run by `cf` to build the Rust Worker, and `wrangler tail`) | 4.161.0 |
 | Helm | 4.3.2 |
 | OpenTofu | 1.13.9 |
 | Packer | 1.16.2 |

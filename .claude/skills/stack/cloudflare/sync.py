@@ -18,14 +18,14 @@ OUT = os.path.join(HERE, "general")
 UPSTREAM = "https://github.com/cloudflare/skills"
 BLOB = UPSTREAM + "/blob/{commit}/skills/{path}"
 
-# Whole skills taken: the cloud shell (a Worker with one Durable Object per
+# Whole skills taken (cf-cli is the command agents use; wrangler stays
+# because cf hands Rust builds to it): the cloud shell (a Worker with one Durable Object per
 # organization), its tooling, and the sandboxes behind Ratchet-managed.
 # Left out on purpose: the Agents SDK, email, Cloudflare One, Turnstile,
-# frameworks and Next.js, web-perf (the web guides cover it), the cf CLI
-# (the cloud shell is built with Wrangler, which workers-rs uses), and the
+# frameworks and Next.js, web-perf (the web guides cover it), and the
 # stable and migration Sandbox skills (Ratchet-managed is new, so it starts
 # on the next API).
-SKILLS = "durable-objects workers-best-practices workers-development workers-profiling wrangler sandbox-next".split()
+SKILLS = "durable-objects workers-best-practices workers-development workers-profiling cf-cli wrangler sandbox-next".split()
 
 # Product references taken from the `cloudflare` skill (its chooser page is
 # not taken: the products are decided). Static assets serve the web app, D1

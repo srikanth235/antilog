@@ -2,7 +2,7 @@
 
 (target) Ratchet cloud runs on Cloudflare: the cloud shell `ratchet-cloud` is a Worker with one Durable Object per organization, and Ratchet-managed sandboxes run on Cloudflare Containers. Nothing of it is on this branch. Self-hosted never touches Cloudflare. The design is in [../rust/ratchet.md](../rust/ratchet.md), [../postgres/ratchet.md](../postgres/ratchet.md) and [../infra/ratchet.md](../infra/ratchet.md).
 
-`general/` is a copy of Cloudflare's own agent skills from [cloudflare/skills](https://github.com/cloudflare/skills) (Apache-2.0, [licence](licenses/cloudflare-skills-LICENSE)): Durable Objects, Workers practices, local development, profiling, Wrangler and Sandboxes, plus the product references for what we use. Start at [general/INDEX.md](general/INDEX.md). The list, and why the rest is left out, is in [sync.py](sync.py).
+`general/` is a copy of Cloudflare's own agent skills from [cloudflare/skills](https://github.com/cloudflare/skills) (Apache-2.0, [licence](licenses/cloudflare-skills-LICENSE)): Durable Objects, Workers practices, local development, profiling, the `cf` CLI, Wrangler and Sandboxes, plus the product references for what we use. Start at [general/INDEX.md](general/INDEX.md). The list, and why the rest is left out, is in [sync.py](sync.py).
 
 **This page wins over `general/`.** The upstream skills are written for TypeScript projects that pick their own products. Ratchet's products are decided and its shell is Rust.
 
@@ -24,19 +24,19 @@ Nothing else. KV, Queues, Workflows, Hyperdrive, Workers AI and the Agents SDK a
 
 - **Rust, not TypeScript.** `ratchet-cloud` is built with workers-rs (`worker` crate, `http` feature, axum routes from `ratchet-core`). Read the upstream skills for the platform's behaviour, not for code to paste. The local trial passed, so the TypeScript fallback is not needed ([../rust/ratchet.md](../rust/ratchet.md), "Cloud shell trial").
 - **The core never imports `worker`.** Cloudflare types stop at the shell. The Durable Object implements the `Store` trait and the timer interface; the core does not know it runs there.
-- **Wrangler, not `cf`.** The upstream skills prefer the `cf` CLI for new projects. Ratchet uses Wrangler, because workers-rs builds through it. A local test (November 2026, `cf` 1.0.0-beta.32) found `cf build` and `cf dev` delegate to Wrangler for a Rust Worker and fail without it, and `cf` has no live log tail yet; it adds a TypeScript config and a beta build format and removes nothing. `cf` may be used for account tasks Wrangler does not cover (tokens, spending limits, looking at D1 or R2), pinned like any tool. Look again when `cf` is stable and builds a Rust Worker on its own. The config is `wrangler.toml` next to `ratchet-cloud` (target).
+- **Agents use `cf`; Wrangler runs underneath.** `cf` is the one command for the cloud shell and the account: `cf dev`, `cf build`, `cf deploy` (from CI only), `cf d1 migrations apply --local`, and account tasks such as tokens and spending limits. For a Rust Worker, `cf build` and `cf dev` hand the build to Wrangler (a local test in November 2026 showed it), so Wrangler stays a pinned dev dependency, but nobody calls it directly except `npx wrangler tail` for live logs, which `cf` does not have yet. The config is `cloudflare.config.ts`, with the `worker-build` command in the `wrangler.config.ts` that `cf` generates, next to `ratchet-cloud` (target). Never keep a `wrangler.toml` beside them: `cf` ignores it. `cf` is in beta: pin it exactly (`npm install --save-exact`) and read its release notes on every upgrade. `cf d1 migrations apply` targets the real account unless given `--local`.
 - **One Durable Object per organization**, addressed by the organization's id from a namespace in its jurisdiction (EU, US or FedRAMP). SQLite storage only, never the key-value storage API. Writes that belong together run in one synchronous transaction. Timers are alarms, never `setTimeout`.
 - **Only ledger rows in a Durable Object or D1:** ids, versions, numbers, states and audit rows. Never customer data, a diff, a log or a secret.
 - **Secrets stay with the managed runner.** The Secrets Store binding is given to the managed runner Worker only, never to `ratchet-cloud`. The server must hold no connector secret or model key.
 - **Sandboxes keep the trust rules.** A workspace and an evaluator are separate containers with no route between them. The holdout credential goes only to the evaluator. Model keys are added at egress, never passed in. Every sandbox is removed when its run ends. Use the Sandbox API on its `next` line, pinned to an exact version.
-- **Only CI deploys.** No one runs `wrangler deploy` from a laptop against production. Local work uses `wrangler dev` (target).
+- **Only CI deploys.** No one runs `cf deploy` from a laptop against production. Local work uses `cf dev` (target).
 - **No feedback issues from here.** The upstream skills describe filing feedback on GitHub. Do not, unless the owner asks.
 
 ## Check
 
 ```bash
 cargo build -p ratchet-core --target wasm32-unknown-unknown   # (target) the core stays portable
-npx wrangler dev                                             # (target) the cloud shell locally
+npx cf dev                                                   # (target) the cloud shell locally
 python3 .claude/skills/stack/cloudflare/sync.py --check      # general/ matches the lists
 ```
 
