@@ -39,5 +39,5 @@ Today Ratchet has one user: the person on the machine that runs the daemon. Ther
 - Access tokens and service accounts, shown once and stored as a hash.
 - One action layer for permission, audit and events.
 - The audit log.
-- Notifications. The native Mac app that showed them was removed.
+- Notifications. The native Mac app that showed them was removed. The target is [notifications.md](notifications.md).
 - A test that a self-hosted server contacts only configured endpoints.

@@ -71,6 +71,7 @@ Code, the API and the skills use the names of the three basics; the screen borro
 | keep a stopped run stopped | Leave stopped |
 | install the web app as a progressive web app (Windows, Linux) | Install app (Settings, This device); "Get the Mac app" on macOS |
 | ask for push notifications after starting a run | Notify me when this run finishes |
+| notification titles | Win, Needs attention, No win, Failed, Stopped, Stopped at the budget, Runner not connected |
 | the server cannot be reached | Can't reach acme.ratchet.cloud. (the server's address), Try again |
 | a trial's steps | Steps for this trial |
 

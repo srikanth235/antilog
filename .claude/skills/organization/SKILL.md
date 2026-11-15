@@ -14,6 +14,7 @@ The shared floor under optimization, context and infra. It is not a fourth basic
 | Looking up a word (organization, project, role, action, audit entry) | [model.md](model.md) |
 | Checking a change against the rules that never bend | [rules.md](rules.md) |
 | Finding how the daemon authenticates now, and what is only target | [today.md](today.md) |
+| What notifies whom, where, and what a notification may carry | [notifications.md](notifications.md) |
 | Adding a role or changing what a role may do | [add-role.md](add-role.md) |
 | Adding a sign-in provider | [add-sign-in-provider.md](add-sign-in-provider.md) |
 | Adding a write, so it is permitted, audited and emitted | [add-audited-action.md](add-audited-action.md) |

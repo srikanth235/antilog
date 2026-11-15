@@ -27,6 +27,7 @@ Decided by the owner, 14 Nov.
 
 - **A native macOS app, SwiftUI, macOS only at launch.** It is a client of the server's API and a local runner.
 - **On Windows and Linux the desktop app is the web app, installed as a progressive web app** (decided 15 Nov). The same web client, installable from Chrome or Edge: its own window and taskbar icon, a badge for what needs attention, push notifications and an offline screen. On macOS the web app does not offer to install; it points to the Mac app. This machine stays Mac only.
+- **Notifications are in the product** (decided 15 Nov, replacing "Notifications cut"): for a win, something that needs a person, a budget hit or a runner gone, and for a run's end when asked. Native on the Mac, web push elsewhere, ids only. See [organization/notifications.md](../organization/notifications.md).
 - **The device stores no data either.** The service worker caches the app's own files only, never API responses, diffs or logs. A push message carries ids only; the app fetches the rest when opened. A self-hosted server that cannot reach the browsers' push services sends no push, and everything else works.
 - **The Mac can be the "This machine" sandbox backend.** Agents propose there, with the same short-lived, read-only, scoped credentials as on any backend, governed, budgeted and cleaned up the same way.
 - **Measuring never runs on the laptop.** The evaluator stays in the customer's infrastructure, so a Mac can never hold the holdout credential or produce a number that counts.
