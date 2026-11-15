@@ -33,6 +33,8 @@ The vocabulary source is [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md), includ
 | Skill (a skill pack) | skill pack on screen; never the repo's guidance files |
 | launcher; runner when installed for Ratchet cloud | agent host, worker |
 | Ratchet cloud, Self-hosted | SaaS, on-prem |
+| Where work runs (setting; values "Your infrastructure", "Ratchet-managed") | Deployment mode, hosting, BYOC, managed cloud |
+| Model key (source "Ratchet-supplied" or "Your own key") | API key source, BYOK |
 | a readable label ("Experiment created") | a raw action code (`experiment.create`) |
 
 The glossary also defines Chat and Draft. Add each new term to the glossary in the same change that introduces it. Prefer the term Palantir Foundry or Databricks already uses; if a screen needs a word that is not in the glossary, find theirs first and add the row.
@@ -40,6 +42,17 @@ The glossary also defines Chat and Draft. Add each new term to the glossary in t
 "Experiment" is the noun for the object everywhere a user reads it (settled 15 Nov 2026). "Optimization" names the basic, never the object.
 
 The CLI and MCP tools are read by people too. They print the screen words, and may keep code names in flags and JSON keys.
+
+## Where work runs and model keys (target)
+
+| Where | Words |
+| --- | --- |
+| Setting | "Where work runs", values "Your infrastructure", "Ratchet-managed" |
+| Backend row | "Ratchet-managed · Cloudflare · up to 4 vCPU, 12 GiB", note "Timing benchmarks are noisier on shared machines." |
+| Warning when switching to Ratchet-managed | "Agents will read your data in Ratchet's sandboxes. They are removed when each run ends." |
+| Model key field | "Ratchet-supplied, billed to the run's budget" or "Your own key" |
+| Key hint | "Only the egress proxy adds it." |
+| Secret store row, Ratchet-managed | "Connector secrets are held encrypted by Ratchet, never by the server." |
 
 ## The agent loop (target)
 

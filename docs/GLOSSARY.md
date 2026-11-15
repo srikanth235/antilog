@@ -38,8 +38,12 @@ Code and the API use the names of the three basics for their areas; the screen b
 | Launcher | The one component that starts and removes sandboxes and mints their scoped credentials. Built into the server when self-hosted | none |
 | Runner | The launcher installed in your infrastructure for Ratchet cloud. It connects out to the hosted server and opens no inbound port | none |
 | Sandbox | One isolated place where an agent's or the evaluator's code runs, started and removed by the launcher | none |
-| Sandbox backend | Where sandboxes run: Kubernetes, or VMs on AWS, GCP or Azure. Set up under Settings, Infrastructure | none |
+| Sandbox backend | Where sandboxes run: Kubernetes, or VMs on AWS, GCP or Azure, or Ratchet-managed (target). Set up under Settings, Infrastructure | none |
 | Scoped credential | A short-lived, read-only connector credential minted for one run. An agent's never reaches the holdout | none |
+| Where work runs | An owner-only setting of the organization: Your infrastructure or Ratchet-managed. Set under Settings, Infrastructure (target) | none |
+| Your infrastructure | A value of Where work runs: sandboxes run in your backends through your runner, and data never leaves them. The only value a self-hosted server offers (target) | none |
+| Ratchet-managed | A value of Where work runs: sandboxes run in Ratchet's account on Cloudflare, removed when each run ends. Ratchet cloud only, by the owner's choice (target) | none |
+| Ratchet-supplied key | A model key source: Ratchet provides the model key, billed at cost to the run's budget. Only with Ratchet-managed. The other source is "Your own key" (target) | none |
 
 ## On screen: more words
 

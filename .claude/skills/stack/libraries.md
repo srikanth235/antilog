@@ -34,10 +34,12 @@ TypeScript in use: `typescript`, `vitest`, `yaml` (see [typescript.md](typescrip
 
 (target) None of this is in the repository yet. Versions are the latest stable releases on 2026-11-14, read from crates.io, npm and each project's release feed. Pin these when the code lands; raise them on purpose, never by accident.
 
-**Shape.** One Cargo workspace builds three programs:
+**Shape.** One Cargo workspace builds one core and two shells, with the runner and the CLI:
 
-- `ratchet-server`: the control plane. The API, the embedded web app, Postgres. It never connects to data. The launcher is built in when self-hosted.
-- `ratchet-runner`: the launcher for Ratchet cloud, the same code, installed in the customer's infrastructure. It starts and removes sandboxes, mints scoped credentials and runs the egress proxy. It connects out over HTTPS: it pulls jobs and the server streams updates to it. No inbound port, no gRPC.
+- `ratchet-core`: all logic and the API routes as an axum `Router`, behind one `Store` trait. It never imports tokio's runtime, `sqlx` or a Cloudflare crate, and builds for `wasm32-unknown-unknown`. It never connects to data.
+- `ratchet-server`: the self-hosted shell around the core. The API, the embedded web app, Postgres. The launcher is built in.
+- `ratchet-cloud`: the Ratchet cloud shell around the core, a Cloudflare Worker with one Durable Object (SQLite) per organization.
+- `ratchet-runner`: the launcher for Ratchet cloud, the same code, installed in the customer's infrastructure, or run by us for Ratchet-managed organizations. It starts and removes sandboxes, mints scoped credentials and runs the egress proxy. It connects out over HTTPS: it pulls jobs and the server streams updates to it. No inbound port, no gRPC.
 - `ratchet`: the CLI and the MCP server, built on the API's types.
 
 Start fresh. Copy only proven pieces from the earlier code on `claude/peaceful-lamport-leak6p` (the AWS sandbox, the clean-up checks, the ledger tests); do not rebase on it.
@@ -48,6 +50,7 @@ Start fresh. Copy only proven pieces from the earlier code on `claude/peaceful-l
 | --- | --- |
 | Rust (stable) | 1.100.0 |
 | Postgres | 18.7 |
+| `wasm32-unknown-unknown` target (core build check, cloud shell) | the stable toolchain's |
 | Node.js (LTS, web app build only) | 26.13.1 |
 | pnpm | 12.18.0 |
 
@@ -62,7 +65,8 @@ Start fresh. Copy only proven pieces from the earlier code on `claude/peaceful-l
 | TLS | `rustls` | 0.23.46 |
 | HTTP client | `reqwest` | 0.13.5 |
 | Serialization | `serde` / `serde_json` | 1.0.229 / 1.0.154 |
-| Postgres, migrations | `sqlx` (+ `sqlx-cli`) | 0.9.0 |
+| Postgres, migrations (self-hosted store) | `sqlx` (+ `sqlx-cli`) | 0.9.0 |
+| Cloud shell (Cloudflare Worker, runs the axum router with the `http` feature) | `worker` (workers-rs) | pin at first use |
 | OpenAPI from Rust types | `utoipa` / `utoipa-axum` | 6.0.0 / 0.3.0 |
 | Sign-in | `openidconnect` | 4.1.0 |
 | Sessions | `tower-sessions` / `tower-sessions-sqlx-store` | 0.15.0 / 0.16.0 |
@@ -103,7 +107,7 @@ Snowflake, Databricks and BigQuery have no maintained Rust client we would ship;
 
 Azure compute goes through the ARM REST API with `azure_core`, because `azure_mgmt_compute` has not been updated since 2024. AWS uses the `aws-sdk-*` crates above.
 
-Background jobs use a small queue in Postgres (`FOR UPDATE SKIP LOCKED`). No Redis, no message bus.
+Background jobs use a small queue in the store: Postgres with `FOR UPDATE SKIP LOCKED` self-hosted, the organization's Durable Object in the cloud. No Redis, no message bus.
 
 **Web app (TypeScript)**: see [typescript.md](typescript/ratchet.md).
 

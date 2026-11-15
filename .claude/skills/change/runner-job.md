@@ -6,7 +6,7 @@ A job is work the server queues and the runner executes in the customer's infras
 
 | Part | Rule |
 | --- | --- |
-| Queue | A Postgres row, queued by an action in the same transaction as the change that caused it. |
+| Queue | A row in the store (Postgres self-hosted, the organization's Durable Object in the cloud), queued by an action in the same transaction as the change that caused it. |
 | Delivery | The runner long-polls or streams over HTTPS. Self-hosted, the launcher in the server takes the same jobs in process. |
 | Payload down | Ids, versions, the environment id, the budget cap, the scopes to mint. Never a secret, never a credential, never data. |
 | Result up | Ids, numbers, states and spend. A diff or a log is not a result: it is fetched through the runner when asked for, and not stored. |
@@ -14,16 +14,22 @@ A job is work the server queues and the runner executes in the customer's infras
 | Run tag | Every resource a job creates is tagged with its run, before anything else happens to it. |
 | Caps | The runner enforces the budget cap and the clean-up check on what it already runs, even if the server is away. |
 | Clean-up | A job that creates sandboxes ends with a verified-removed result, or reports what it could not remove. |
-| Credentials | The runner mints them from the customer's secret manager. An agent job gets the scoped, read-only, holdout-excluding one. Only an evaluator job gets the one with the holdout. A job type never mixes them. |
+| Credentials | The runner mints them from the customer's secret manager (for Ratchet-managed organizations, from our encrypted secret store, which only the managed runner holds). An agent job gets the scoped, read-only, holdout-excluding one. Only an evaluator job gets the one with the holdout. A job type never mixes them. |
 
 ## Adding a job (target)
 
-1. Name the job and write its payload and result types in `crates/ratchet-server/src/jobs/`, shared with `ratchet-runner`. Both sides use the same types.
+1. Name the job and write its payload and result types in `crates/ratchet-core/src/jobs/`, shared with `ratchet-runner`. Both sides use the same types.
 2. Add the table or state it needs by [ledger-table.md](ledger-table.md), and the action that queues it by [write-action.md](write-action.md).
 3. Implement the handler in `crates/ratchet-runner/src/`, behind the backend trait (see [infra/add-backend.md](../infra/add-backend.md)). Provider words stay in the backend.
 4. Report progress as writes to the server, so the action layer publishes events. See [live-event.md](live-event.md).
 5. Tests: with a fake runner against the real server (the job is queued, taken, finished, and a lost lease is retaken); with the real runner against fake backends (tags, caps, clean-up); a test that the payload and result carry no secret; a test that the server opens no connection to a connector.
 6. Version the contract. A runner may be older than the server, so a new job type is additive and an old runner refuses a job it does not know with a visible state.
+
+## Who runs the runner (target)
+
+- For Your infrastructure the customer installs the runner and connects a cloud account. For Ratchet-managed organizations (Ratchet cloud only) we operate the runner, and its sandboxes are Cloudflare Containers.
+- Ratchet-managed is one more sandbox backend behind the same runner protocol and job queue. A job type does not change for it, and the core does not know which kind of runner takes a job.
+- The server still never connects to data and never holds a connector admin secret. The limits of the managed backend (largest sandbox 4 vCPU, 12 GiB, 20 GB disk, no GPUs) are in the backend's description, not in the job.
 
 ## Decided
 

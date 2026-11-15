@@ -11,8 +11,10 @@ OpenTofu, Packer, Helm and Kubernetes manifests. (target) None of this is on thi
 | Helm | Packaging the server and the runner for Kubernetes (the first sandbox backend), with `values.yaml` for the customer's choices. |
 | Kubernetes manifests | What the chart renders: workspace and evaluator pods in separate node pools, a `NetworkPolicy` for "no route", service accounts, resource limits. |
 | Docker Compose | The self-hosted server and Postgres. The only thing that needs no chart. |
+| Wrangler config | The Ratchet cloud Worker and its Durable Object classes, deployed by us (target). |
+| Cloudflare Containers | The Ratchet-managed sandboxes, run through a runner we operate (target). |
 
-Ratchet runs in the customer's infrastructure. Nothing here creates resources in an account Ratchet operates.
+Ratchet runs in the customer's infrastructure by default. Nothing here creates resources in an account Ratchet operates, except two things we run ourselves: Ratchet cloud (a Cloudflare Worker, deployed by us) and the Ratchet-managed sandboxes on Cloudflare Containers, which an owner chooses per organization ("Where work runs"). The rules below for the customer's account hold for Your infrastructure.
 
 ## Workflow and done criteria
 
@@ -39,7 +41,7 @@ Fix the code, not the check. Do not widen a policy or loosen an assertion to get
 
 ## Rules for the code
 
-- **No cross-account role, no stored cloud keys.** Ratchet never holds access to the customer's cloud. The runner is installed in the customer's account or cluster and connects **out** to the server over HTTPS; it opens no inbound port. Do not write a module that creates a role the server can assume, an access key, or a trust policy naming an account Ratchet operates. No serverless compute in Ratchet's account either.
+- **No cross-account role, no stored cloud keys.** Ratchet never holds access to the customer's cloud. The runner is installed in the customer's account or cluster and connects **out** to the server over HTTPS; it opens no inbound port. Do not write a module that creates a role the server can assume, an access key, or a trust policy naming an account Ratchet operates. No serverless compute in Ratchet's account for Your infrastructure either; the Ratchet cloud Worker and Ratchet-managed sandboxes are ours and the rules in [infra/rules.md](../../infra/rules.md) apply to them.
 - **The module never sees model keys or tokens.** Model keys reach a sandbox only through the egress proxy, which adds them on the way out; they are never a variable, a tag, an output, an environment variable of a machine, or in state. Connector admin secrets stay in the customer's secret manager. **State holds no secrets**: use a secret-manager reference or an ephemeral value, mark any sensitive variable and output `sensitive`, and never print state ([general/terraform.md](general/terraform.md)).
 - **Credentials are scoped, short-lived and minted per run** by the launcher. A role or policy in code grants the least privilege and is written once in a policy template that tests render and check; do not duplicate it by hand. The sealed bucket (holdout) denies agent roles. **Do not widen a policy to get a test green.** The evaluator gets a separate credential that includes the holdout; an agent's does not.
 - **Tag every created resource with its run before anything else happens to it** (a resource without its tags cannot be found or removed). Tags are `ratchet:*` keys, and the run is always among them. The earlier code used `ratchet:opt`, `ratchet:agent`, `ratchet:role` (workspace or evaluator), `ratchet:sandbox`, `ratchet:purpose` and `ratchet:managed=opentofu`; keep names like these. Put them in the provider's `default_tags` or one merged `local`, so no resource can skip them. **Fail closed:** a machine that lacks its run tag is denied everything. A key never goes in a tag value.

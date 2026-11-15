@@ -12,11 +12,11 @@ Read the repo page for the file type first: it holds this repo's constraints, it
 
 | File type | Read | Check |
 | --- | --- | --- |
-| `.rs`, `Cargo.toml` | [rust/ratchet.md](rust/ratchet.md) | `cargo fmt --all --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo nextest run`, `cargo deny check` (target) |
+| `.rs`, `Cargo.toml` | [rust/ratchet.md](rust/ratchet.md) | `cargo fmt --all --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo nextest run`, `cargo deny check`, `cargo build -p ratchet-core --target wasm32-unknown-unknown` (target) |
 | `.ts`, `.tsx`, `.css` in the web client | [typescript/ratchet.md](typescript/ratchet.md) | `pnpm build && pnpm typecheck && pnpm test` (target) |
 | HTML, CSS and browser APIs, in the web client or a board | [web/ratchet.md](web/ratchet.md), then the guide for the job in [web/general/INDEX.md](web/general/INDEX.md); for a Base UI component also [web/base-ui.md](web/base-ui.md) | the check of the file type; `python3 .claude/skills/stack/web/sync.py --check` after a sync |
 | `.swift`, the macOS app | [swift/ratchet.md](swift/ratchet.md) | `xcodebuild ... test` on macOS (target); report it unrun elsewhere |
-| SQL, migrations, `sqlx` queries, the job queue | [postgres/ratchet.md](postgres/ratchet.md) | `cargo sqlx prepare --check` and the database tests (target) |
+| SQL, migrations (Postgres and SQLite), `sqlx` queries, the job queue | [postgres/ratchet.md](postgres/ratchet.md) | `cargo sqlx prepare --check` and the storage tests against both stores (target) |
 | `.tf`, `.tftest.hcl`, `.pkr.hcl`, Helm charts, Kubernetes manifests | [infra/ratchet.md](infra/ratchet.md) | `tofu fmt -check`, `tofu validate`, `tofu test`, `packer validate`, `helm lint` (target) |
 | Adding or changing a dependency | [libraries.md](libraries.md) | the check of the language |
 
@@ -26,11 +26,11 @@ Nothing here is built on this branch yet: every check is (target) until code lan
 
 | Folder | Holds |
 | --- | --- |
-| `rust/` | `ratchet.md`; `general/` Rust style, API, patterns, Microsoft and Google guides, and async services (tokio, axum, tower, sqlx); `licenses/` |
+| `rust/` | `ratchet.md` (the core, the two shells and the portability rule); `general/` Rust style, API, patterns, Microsoft and Google guides, and async services (tokio, axum, tower, sqlx); `licenses/` |
 | `typescript/` | `ratchet.md`; `general/` TypeScript practices, type patterns, Vitest, React best practices; `licenses/` |
 | `web/` | `ratchet.md`; `base-ui.md`; `general/` 111 Modern Web Guidance guides with an index, copied by `sync.py`; `licenses/` |
 | `swift/` | `ratchet.md`; `general/` Swift, SwiftUI views, data, accessibility, diagnostics, performance, macOS; `licenses/` |
-| `postgres/` | `ratchet.md`; `general/` Postgres best practices; `licenses/` |
-| `infra/` | `ratchet.md`; `general/` Terraform (for OpenTofu) and Packer; `licenses/` |
+| `postgres/` | `ratchet.md` (Postgres self-hosted, the shared schema, SQLite in the cloud); `general/` Postgres best practices; `licenses/` |
+| `infra/` | `ratchet.md` (also the Ratchet cloud Worker and Ratchet-managed sandboxes); `general/` Terraform (for OpenTofu) and Packer; `licenses/` |
 
 The chosen target libraries and tool versions are in [libraries.md](libraries.md). Do not add a dependency for convenience: a new one is a product call.

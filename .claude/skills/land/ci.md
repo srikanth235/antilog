@@ -16,8 +16,9 @@ One job per layer, each running the commands in [checks.md](checks.md). A pull r
 | Job | Runs |
 | --- | --- |
 | rust | fmt, clippy with warnings denied, tests, `cargo deny`, on Linux and on macOS (the runner and CLI build for both) |
+| wasm | `ratchet-core` builds for `wasm32-unknown-unknown` as well as natively, on every commit, so a tokio, `sqlx` or Cloudflare import in the core fails at once |
 | api | the OpenAPI document and generated client are current |
-| postgres | migrations and tests against a Postgres container |
+| storage | the one storage suite against Postgres (a container) and against SQLite; both dialects' migrations; the dialects agree on tables and columns |
 | web | typecheck, lint, tests |
 | macos-app | build and test the Swift app, on a macOS runner only |
 | infra | `tofu fmt`, `validate`, `test`; `packer fmt` and `validate`; the backend contract suite against fakes |

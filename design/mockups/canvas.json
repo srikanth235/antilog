@@ -424,7 +424,7 @@
       "x": 1520,
       "y": 0,
       "w": 1440,
-      "h": 1880,
+      "h": 2080,
       "title": "Decisions",
       "page": "rules"
     },
@@ -592,6 +592,26 @@
       "w": 1440,
       "h": 900,
       "title": "8 \u00b7 Settings, Infrastructure, no runner \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "InfrastructureManaged.dc.html": {
+      "x": 9120,
+      "y": 9450,
+      "w": 1440,
+      "h": 900,
+      "title": "8 \u00b7 Settings, Infrastructure, Ratchet-managed",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "InfrastructureManagedDark.dc.html": {
+      "x": 9120,
+      "y": 9450,
+      "w": 1440,
+      "h": 900,
+      "title": "8 \u00b7 Settings, Infrastructure, Ratchet-managed \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -2321,6 +2341,8 @@
     "InfrastructureDark.dc.html",
     "InfrastructureEmpty.dc.html",
     "InfrastructureEmptyDark.dc.html",
+    "InfrastructureManaged.dc.html",
+    "InfrastructureManagedDark.dc.html",
     "LauncherDisconnected.dc.html",
     "LauncherDisconnectedDark.dc.html",
     "MacMain.dc.html",

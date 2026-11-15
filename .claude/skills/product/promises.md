@@ -10,11 +10,11 @@ What every area owes the customer, and the one rule each follows. A promise kept
 | Optimization | **Keep** | A win is re-checked and never slips back. |
 | Context | **Tamper-proof** | A proposer never reads the holdout; its credentials cannot. |
 | Context | **Pinned** | Every run names its dataset versions. |
-| Context | **Stays put** | The server never connects to data, and data never passes through it. |
+| Context | **Stays put** | The server never connects to data. Data is read by the agent's code in your infrastructure, or, if an owner chooses Ratchet-managed, in Ratchet's sandboxes, which are removed when the run ends. |
 | Context | **Read-only** | Writing out needs an explicit, audited action. |
 | Infrastructure | **Spend** | No spend without a limit. |
 | Infrastructure | **Clean up** | Everything created is removed, and shown. |
-| Infrastructure | **Customer's account** | Work runs in the customer's infrastructure, and Ratchet holds no access to it. Measuring never leaves it; a Mac may propose as "This machine" (target). |
+| Infrastructure | **Customer's account** | Under Your infrastructure, work runs in the customer's infrastructure and Ratchet holds no access to it. Ratchet-managed runs in Ratchet's account, by the owner's choice. Measuring never leaves the chosen side; a Mac may propose as "This machine" (target). |
 | Infrastructure | **Any cloud** | The same promises hold on every provider. |
 | Organization | **Permission** | Every read and write is role-checked. |
 | Organization | **Audit** | Every write is a logged action. |

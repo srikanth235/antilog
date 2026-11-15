@@ -5,7 +5,7 @@ Every write goes through one action layer, and nowhere else. A write that skips 
 ## The three steps, in order (target)
 
 1. **Check.** The caller's role on the project is checked first, in one place. A denied call changes nothing and records the denial.
-2. **Write and audit.** The change and its audit entry happen in one Postgres transaction, or neither does. Every row carries its organization.
+2. **Write and audit.** The change and its audit entry happen in one transaction of the store (Postgres or the organization's SQLite), or neither does. Every row carries its organization.
 3. **Publish.** After the commit, the layer publishes one live event naming what changed (see [live-event.md](live-event.md)).
 
 An action that needs work in the customer's infrastructure queues a job in the same transaction. The runner executes it (see [runner-job.md](runner-job.md)). The action layer never calls a runner or a connector directly.

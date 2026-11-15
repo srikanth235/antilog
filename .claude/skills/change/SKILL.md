@@ -6,9 +6,9 @@ description: >-
 
 # Change
 
-A change crosses layers that must agree: Rust types, the generated OpenAPI document, the generated TypeScript client, the CLI and MCP tool, the action layer, the Postgres schema, the runner contract, the boards, the tests and the docs. Checks fail until they do. Find the row, follow it, then prove it with [land](../land/SKILL.md).
+A change crosses layers that must agree: Rust types, the generated OpenAPI document, the generated TypeScript client, the CLI and MCP tool, the action layer, the store (Postgres and SQLite), the runner contract, the boards, the tests and the docs. Checks fail until they do. Find the row, follow it, then prove it with [land](../land/SKILL.md).
 
-The pages describe the target: `ratchet-server`, `ratchet-runner` and `ratchet` (the CLI and MCP). Nothing of it is built on this branch, so each path and command that does not exist yet is marked (target). What the earlier daemon did, and what it taught, is in [today.md](today.md).
+The pages describe the target: `ratchet-core` with its two shells `ratchet-server` (self-hosted) and `ratchet-cloud` (Ratchet cloud), `ratchet-runner` and `ratchet` (the CLI and MCP). Nothing of it is built on this branch, so each path and command that does not exist yet is marked (target). What the earlier daemon did, and what it taught, is in [today.md](today.md).
 
 | If you are doing | Read |
 | --- | --- |

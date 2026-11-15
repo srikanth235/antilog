@@ -21,13 +21,22 @@ Fix the code, not the check. Never add `#[allow]` or loosen a lint to get green.
 
 ## What gets built (target)
 
-One Cargo workspace, three programs, versions in [libraries.md](../libraries.md):
+One Cargo workspace, one core with two shells, versions in [libraries.md](../libraries.md):
 
-- `ratchet-server`: the control plane. API, embedded web app, Postgres. It orchestrates and records and **never connects to customer data**.
+- `ratchet-core`: all logic. The accept rule, run states, budgets, permissions, the audit log and the API routes as an axum `Router`. It asks storage by name through one `Store` trait and never writes SQL. It orchestrates and records and **never connects to customer data**.
+- `ratchet-server`: the self-hosted shell. tokio and axum's server, the Postgres `Store`, tokio timers, `NOTIFY` for live events, the job queue, the launcher built in, the embedded web app.
+- `ratchet-cloud`: the Ratchet cloud shell. A Cloudflare Worker built with `worker` (workers-rs, `http` feature) that runs the core's `Router`, with one Durable Object per organization holding its SQLite `Store`, its live event streams, its job queue and its timers (alarms). It serves the static web app.
+- Two `Store` implementations: Postgres through `sqlx` (in the self-hosted shell) and Durable Object SQLite (in the cloud shell). Each sits in its own crate, so the core depends on neither.
 - `ratchet-runner`: the launcher installed in the customer's infrastructure (self-hosted, the same code is built into the server). It connects out over HTTPS, pulls jobs and opens no inbound port. It starts and removes sandboxes and mints scoped credentials. The macOS app bundles it as a helper ([../swift/ratchet.md](../swift/ratchet.md)).
 - `ratchet`: the CLI and the MCP server, built on the API's generated types.
 
-Shared types (the API's request and response types, ids, states) live in a library crate that all three use. No gRPC, no Redis: the queue is Postgres ([../postgres/ratchet.md](../postgres/ratchet.md)).
+Shared types (the API's request and response types, ids, states) live in a library crate that all of them use. No gRPC, no Redis: the queue lives in the store, which is Postgres self-hosted and the organization's Durable Object in the cloud ([../postgres/ratchet.md](../postgres/ratchet.md)). The Ratchet-managed sandbox backend is one more backend behind the runner protocol and the job queue; the core does not change for it.
+
+### The core stays portable
+
+- **`ratchet-core` never imports tokio's runtime, `sqlx` or a Cloudflare crate.** It opens no socket and starts no thread. Time, ids, timers and storage come in through traits that a shell implements. Async traits it uses must not require `Send` futures on the wasm target.
+- **It builds natively and for `wasm32-unknown-unknown`, and CI builds both on every commit** ([land/ci.md](../../land/ci.md)), so a slip fails at once. A dependency that does not build for wasm is a reason to put the code in a shell, not in the core.
+- **The shells hold no logic.** A rule found in a shell moves to the core, so the two clouds cannot disagree.
 
 ## Constraints
 
@@ -36,7 +45,7 @@ Shared types (the API's request and response types, ids, states) live in a libra
 - **Errors.** Libraries return typed errors with `thiserror` and keep the cause chain (`#[source]` or `#[from]`). Binaries (`ratchet-server`, `ratchet-runner`, `ratchet`) use `anyhow` at the edge, in `main` and CLI glue, to add context and print. Handlers map a typed error to one stable error code and status; the internal cause goes to the log with the trace id, never to the client.
 - **Async is `tokio`; no blocking work on async tasks.** Blocking or CPU-heavy work goes through `spawn_blocking` or a thread; locks are not held across an `.await`; every queue and every concurrency is bounded; every call that leaves the process has a timeout; shutdown is graceful. Details and the reasons: [general/async-services.md](general/async-services.md). Async methods in traits use native `async fn in trait` where the trait is not used as `dyn`, and `async-trait` where it must be (`Box<dyn Backend>`).
 - **Every outside system sits behind one trait** with a real implementation and a test double. Code depends on the trait, never on the real thing, and a new outside system is a new trait with both. This includes: sandbox backends (Kubernetes first, then VMs on AWS, GCP and Azure, behind **one** `Sandbox` backend trait; provider words and provider crates stay inside each adapter), connectors (each behind one `Connector` trait that knows how to mint a scoped, read-only, holdout-excluding credential), git hosts, agents and model providers, clocks and id generators.
-- **The server never connects to customer data.** `ratchet-server` has no connector client crates in its dependency tree: not `tokio-postgres`, not a warehouse or object-store client. Those belong to the runner and the agents' sandboxes. Check `cargo tree -p ratchet-server` when a dependency is added. The server stores ids, versions, numbers, states and audit rows only.
+- **The server never connects to customer data.** `ratchet-core`, `ratchet-server` and `ratchet-cloud` have no connector client crates in their dependency trees: not `tokio-postgres`, not a warehouse or object-store client. Those belong to the runner and the agents' sandboxes. Check `cargo tree -p ratchet-server` (and the other two) when a dependency is added. The server stores ids, versions, numbers, states and audit rows only.
 - **Secrets stay out of everything but their owner.** Never put a connector secret, token, model key or credential in a log, a tracing field, an error message, a response, a tag or state. Wrap secrets in a type whose `Debug` and `Display` print `[redacted]` (`secrecy` is not in [libraries.md](../libraries.md): write a small newtype, or ask before adding the crate). Do not derive `Debug` on a struct that holds one without checking.
 - **Time and ids come from one place.** Use `jiff` for time and `uuid` for ids as in [libraries.md](../libraries.md), through a clock and id source that tests can fix. Store instants in UTC; format at the edge.
 - **Dependencies.** Do not add one for convenience; a new one is a product call ([libraries.md](../libraries.md)). `cargo deny` (target) checks licences and advisories. Dependencies are declared once in `[workspace.dependencies]` and inherited (`dep.workspace = true`); features are additive.
@@ -48,7 +57,7 @@ Shared types (the API's request and response types, ids, states) live in a libra
 
 How tests are written: [land/tests.md](../../land/tests.md). In Rust:
 
-- Snapshots with `insta` (review with `cargo insta review`), properties with `proptest`, database tests against a real Postgres in a container with `testcontainers` ([../postgres/ratchet.md](../postgres/ratchet.md)), async time tests with `#[tokio::test(start_paused = true)]`.
+- Snapshots with `insta` (review with `cargo insta review`), properties with `proptest`, database tests against a real Postgres in a container with `testcontainers` ([../postgres/ratchet.md](../postgres/ratchet.md)), and one storage suite, written against the `Store` trait, that runs against both the Postgres store and the SQLite store, async time tests with `#[tokio::test(start_paused = true)]`.
 - Test the public behaviour of a crate from `tests/`; unit-test pure logic in the module. A test never talks to a real cloud, a real agent or the network: use the doubles. A test that does is a real-cloud run and follows [land/real-cloud.md](../../land/real-cloud.md).
 - Contract tests pin the API: the OpenAPI document generated from the Rust types (`utoipa`) is compared with a committed snapshot, and the web client and the CLI are generated from it. A change to a type changes the snapshot in the same change. How: [change/api-endpoint.md](../../change/api-endpoint.md).
 - Tests are deterministic: fixed clock, seeded randomness, no sleeps. See the pitfalls.

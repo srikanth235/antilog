@@ -7,7 +7,8 @@ None of this exists yet; it is how tests are written once code lands (target). E
 - **Contract tests on the OpenAPI document.** Every route in the document has a case; each answer parses into its Rust type; a meta-test fails when a route has no case. The committed document and the generated TypeScript client must be current.
 - **A fake runner and fake backends, not a simulation mode.** The server is tested against a fake runner that takes and finishes jobs. The real runner is tested against fake sandbox backends that record tags, caps and clean-up. There is no `--mode sim`, and no product feature exists only for demos. See [change/runner-job.md](../change/runner-job.md).
 - **One suite for every backend.** The sandbox backend contract suite runs against every backend, fake and real (see [infra/add-backend.md](../infra/add-backend.md)).
-- **Postgres in a container.** Database tests run against a real Postgres through testcontainers, never a stand-in. Migrations apply to an empty database and to the last release's schema.
+- **One storage suite for both stores.** The suite is written against the `Store` trait and runs against a real Postgres through testcontainers, never a stand-in, and against SQLite. Migrations apply to an empty database and to the last release's schema in each dialect, and both dialects end with the same tables and columns.
+- **The core builds for wasm.** `ratchet-core` also builds for `wasm32-unknown-unknown`; see [ci.md](ci.md).
 - **Snapshots with insta.** For the document, the event union, receipts and error bodies. A snapshot changes only when behaviour was meant to, and the diff is reviewed.
 - **Properties.** `proptest` for the accept rule, the noise floor and the budget arithmetic.
 - **The action layer.** Allowed role writes and audits once; denied role writes nothing and audits the denial; the event follows the commit. A route-walk test calls every route as each role and compares with the matrix.

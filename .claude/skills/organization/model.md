@@ -16,7 +16,7 @@
 | audit entry | An append-only record of an action: actor, name, target, time, outcome | a log line |
 | event | A live message that something changed, carrying no secret | an audit entry |
 
-Roles in one line each: viewer reads; editor reads and changes experiments and runs; owner also manages members, accounts and settings.
+Roles in one line each: viewer reads; editor reads and changes experiments and runs; owner also manages members, accounts and settings, including where work runs and each agent's model key source (target).
 
 ## How this area refers to the others
 

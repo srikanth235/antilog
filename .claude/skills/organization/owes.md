@@ -3,7 +3,7 @@
 | Promise | The rule |
 | --- | --- |
 | Permission | Every read and write is checked against the organization and project role, in one place. |
-| Audit | Every write is a named action with an actor, recorded in the audit log. |
+| Audit | Every write is a named action with an actor, recorded in the audit log. Changing where work runs and changing a key source are among them. |
 | Secrets | No response, event or log carries a secret. |
 | No surprise calls | A self-hosted server contacts only the endpoints its administrator configured. A runner contacts only the Ratchet server it was installed for. |
 

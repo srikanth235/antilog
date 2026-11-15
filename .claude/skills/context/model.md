@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | connector | A connection to an outside system that the agent's code reads through: Snowflake, Databricks, DynamoDB, BigQuery, Postgres, S3, GitHub, GitLab, any MCP server. It knows how to mint a scoped credential for its system | a dataset, a credential, a pipe that Ratchet reads through, "source" (the old word) |
 | scoped credential | A short-lived, read-only credential for one connector, minted per run by the launcher. The agent's has the holdout left out; the evaluator's is separate and includes it | a stored secret, the connector admin secret |
-| connector admin secret | The secret the launcher uses to mint scoped credentials. It stays in the customer's infrastructure, in their secret manager, and no agent or server ever holds it | a scoped credential |
+| connector admin secret | The secret the launcher uses to mint scoped credentials. It stays in the customer's secret manager, or, for Ratchet-managed, in our encrypted secret store held by the managed runner. No agent or server ever holds it | a scoped credential |
 | dataset | A named, governed table or file set that experiments read. Ratchet records its id and versions, never its rows | a connector, a query |
 | dataset version | One immutable state of a dataset, with an id | latest, a snapshot someone can edit |
 | virtual dataset | A dataset that points at data left in place, pinned by an as-of time | a copy |

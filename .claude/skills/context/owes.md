@@ -4,7 +4,7 @@
 | --- | --- |
 | Tamper-proof | A proposer never reads holdout data. Its credentials cannot reach it, and nothing a proposer reads, a skill pack, the history and a measurement result included, carries it. |
 | Pinned | Every run names the exact dataset versions and skill pack versions it read. |
-| Stays put | The server never connects to data. Data is read by the agent's code inside the customer's infrastructure and never passes through the Ratchet server. |
+| Stays put | The server never connects to data. Data is read by the agent's code in the customer's infrastructure, or, if an owner chooses Ratchet-managed (target), in Ratchet's sandboxes, which are removed when the run ends. It never passes through the Ratchet server. |
 | Read-only | Scoped credentials are read-only. Writing out, for example opening a pull request, is a separate, explicit, audited action. |
 
 ## How each is checked

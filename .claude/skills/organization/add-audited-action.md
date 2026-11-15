@@ -11,7 +11,8 @@ Every write is a named action, and every action goes through one action layer in
 7. **The organization.** Every row the action writes carries its organization.
 8. **Work in the customer's infrastructure.** An action that needs a sandbox queues a job in the same transaction; see [../change/runner-job.md](../change/runner-job.md).
 9. **Outside effects.** An action that writes to an outside system, such as opening a pull request, is a write-back action requested by optimization and performed through context (see [../context/SKILL.md](../context/SKILL.md)). It is audited like any other.
-10. **Tests.** Allowed role writes and audits once; denied role writes nothing and audits the denial; the event is emitted after the commit; the audit row and the change roll back together; no secret in the entry or the event.
+10. **Owner-only settings.** Changing where work runs and changing a model key source are owner-only, audited actions. (target)
+11. **Tests.** Allowed role writes and audits once; denied role writes nothing and audits the denial; the event is emitted after the commit; the audit row and the change roll back together; no secret in the entry or the event.
 
 Today: a handler in `crates/ratchetd/src/api/` called the service directly with no actor and no audit entry. Events needed a new variant in `ApiEvent` (`crates/ratchetd/src/api/events.rs`).
 

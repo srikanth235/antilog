@@ -4,7 +4,8 @@ A backend is an adapter behind the launcher's one trait. It makes sandboxes, lis
 
 1. Kubernetes first: separate node pools for workspace and evaluator, a NetworkPolicy for "no route". On-prem Kubernetes is the customer's infrastructure.
 2. VMs on AWS, then GCP, then Azure.
-3. This machine: the macOS app as a backend where agents propose (target). Agents only. It is never an evaluator, never holds the holdout credential and never produces a number that counts.
+3. Ratchet-managed: sandboxes on Cloudflare Containers, a backend we operate in Ratchet's account, behind the same trait, runner protocol and job queue, through a managed runner. Ratchet cloud only, and only for an organization whose owner chose it under where work runs. Largest sandbox 4 vCPU, 12 GiB, 20 GB disk, no GPUs; timing benchmarks are noisier on shared machines. It keeps every promise: separate workspace and evaluator sandboxes, scoped credentials, removal at the end of the run, nothing kept.
+4. This machine: the macOS app as a backend where agents propose (target). Agents only. It is never an evaluator, never holds the holdout credential and never produces a number that counts.
 
 Today only the earlier code's AWS and mock providers exist; see [today.md](today.md).
 
