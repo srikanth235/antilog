@@ -34,9 +34,30 @@ Shared types (the API's request and response types, ids, states) live in a libra
 
 ### The core stays portable
 
-- **`ratchet-core` never imports tokio's runtime, `sqlx` or a Cloudflare crate.** It opens no socket and starts no thread. Time, ids, timers and storage come in through traits that a shell implements. Async traits it uses must not require `Send` futures on the wasm target.
+- **`ratchet-core` never imports tokio's runtime, `sqlx` or a Cloudflare crate.** It opens no socket and starts no thread. Time, ids, timers and storage come in through traits that a shell implements. There is no `SystemTime` on wasm, so the shell passes the clock in and UUIDv7 ids are made from it.
+- **`Store` futures are `Send`.** axum's handlers need `Send` futures, so the trait's methods return `impl Future<Output = ...> + Send`. The cloud shell meets that with workers-rs's own `worker::send::SendWrapper` and `SendFuture`, never with an `unsafe impl` of ours (the no-`unsafe` rule below holds in every crate). The local trial confirmed the pattern; see "Cloud shell trial" below.
 - **It builds natively and for `wasm32-unknown-unknown`, and CI builds both on every commit** ([land/ci.md](../../land/ci.md)), so a slip fails at once. A dependency that does not build for wasm is a reason to put the code in a shell, not in the core.
 - **The shells hold no logic.** A rule found in a shell moves to the core, so the two clouds cannot disagree.
+
+### Cloud shell trial (local, November 2026)
+
+The Rust cloud shell was tried locally with `wrangler dev`, no Cloudflare account, before committing to it. Result: **proceed with Rust**; the TypeScript fallback is not needed. Versions used: `worker` and `worker-build` 0.8.7, Wrangler 4.156.2, axum 0.8.9 with default features off in the core.
+
+| Question | Result |
+| --- | --- |
+| Core builds native and wasm | Works. `uuid` needs its `js` feature on `wasm32` only; axum in the core takes `default-features = false` (tokio's I/O does not build for wasm). Do not name a crate `core`: it shadows the standard library |
+| Worker serves the core's `Router` | Works, through the `http` feature |
+| Durable Object SQLite store | Works: migrations on start, `STRICT`, `returning`, append-only triggers, one object per organization isolated |
+| Transactions | Works. workers-rs wraps the async `transaction`, which rolls back; `transactionSync` needs a small `wasm_bindgen` extern of our own |
+| Foreign keys | On by default, and enforced |
+| Integers above 2^53 | Need care: see [../postgres/general/sqlite.md](../postgres/general/sqlite.md) |
+| Alarms | Work from a Rust `alarm` handler, and chain |
+| Live events | WebSocket (with hibernation) and server-sent events both held for over two minutes and received pushes |
+| D1 directory | Works from Rust |
+| Size | 0.87 MB of wasm (0.30 MB gzipped) against a 64 MiB uncompressed limit; release build about 30 s |
+| Point-in-time recovery | Not wrapped by workers-rs and not supported locally; needs an extern and a deployed test |
+
+Still open, and only a deployed test can answer it: point-in-time restore, hibernation timing and cost, cold starts with migrations, real CPU limits, jurisdictions, throughput near 1,000 requests a second, `SQLITE_FULL` at 10 GB, and stream idle timeouts at Cloudflare's edge. That test needs a separate Cloudflare account or a scoped token, asked of the owner first.
 
 ## Constraints
 

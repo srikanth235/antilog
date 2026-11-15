@@ -14,13 +14,13 @@ The shared schema in [`../ratchet.md`](../ratchet.md) already avoids most of SQL
 
 ## Foreign keys
 
-SQLite turns foreign key enforcement off unless `PRAGMA foreign_keys = on` is set per connection. D1 documents that it enforces them by default; the Durable Object pages say nothing. (target) The first storage test inserts a row with a missing parent and expects an error. If it does not get one, stop and settle it before writing more schema.
+Plain SQLite turns foreign key enforcement off unless `PRAGMA foreign_keys = on` is set per connection. In a Durable Object it is on by default: the local trial read `pragma foreign_keys` as 1 and a row with a missing parent was refused. Keep a storage test that inserts an orphan row and expects the error, so a platform change is caught.
 
 ## Transactions
 
 - `sql.exec` cannot run `BEGIN`, `COMMIT` or `SAVEPOINT`. A transaction is the storage API's `transactionSync` (or `transaction`) around the writes. Each call without one is its own transaction.
 - Keep a transaction synchronous: no `await`, no fetch, no call to the runner or a model inside it. The object runs one request at a time between awaits, so a short synchronous block is also the concurrency control. There is no `SKIP LOCKED` and none is needed.
-- (target) Whether workers-rs exposes `transactionSync` with the same guarantee is one of the questions the two-day Rust trial answers ([`../../rust/ratchet.md`](../../rust/ratchet.md)).
+- workers-rs wraps only the async `transaction`, which rolls back on error. `transactionSync` is reached through a small `wasm_bindgen` extern in the cloud store crate; the local trial showed it rolling back too. The trial's version used `unsafe` to pass a borrowed closure; ours must make the closure own what it uses (`'static`) instead, and confirm that works when the crate is written ([`../../rust/ratchet.md`](../../rust/ratchet.md)).
 
 ## Limits to design for
 
@@ -43,7 +43,13 @@ Billing counts rows read and written, and every index on a written column adds a
 
 ## Numbers across the JavaScript boundary
 
-Values pass through JavaScript between the SQLite engine and Rust, where a plain number is a 64-bit float. Integers above 2^53 can lose precision. Milliseconds since the epoch and money in minor units are far below that. (target) Check in the Rust trial how workers-rs maps `INTEGER`, and keep a test that round-trips the largest value each integer column may hold.
+Values pass through JavaScript between the SQLite engine and Rust, where a plain number is a 64-bit float. The local trial showed what workers-rs 0.8.7 does:
+
+- Binding an `i64` as `SqlStorageValue::Integer` converts it to a float. 2^53 - 1 is exact; 2^53 + 1 is **silently stored as 2^53**.
+- Reading a value above 2^53 into an `i64` fails with an error rather than returning a wrong number.
+- `STRICT` rejects `i64::MAX` bound this way, because it arrives as a `REAL`.
+
+So: bind ordinary integers with `SqlStorageValue::try_from_i64`, which errors outside the safe range. A column that may hold more than 2^53 is bound as text with `cast(? as integer)` and read with `cast(col as text)`, which the trial showed exact for every `i64`. Milliseconds since the epoch and money in minor units stay far below 2^53. Keep a test that round-trips the largest value each integer column may hold.
 
 ## Queries
 
@@ -51,7 +57,12 @@ Values pass through JavaScript between the SQLite engine and Rust, where a plain
 - Page with a keyset cursor (`where (created_at, id) > (?, ?) order by created_at, id limit ?`), never `offset`.
 - JSON functions exist (`json_extract` and friends) but the shared schema stores JSON whole and never queries into it. Do not start.
 - `returning` works (SQLite 3.35 and later), so an insert or a claim can return its row as on Postgres.
+- `STRICT` still converts an integer bound to a `TEXT` column into text (`5` becomes `'5'`); only conversions that lose meaning are refused. Bind the type the column declares.
+
+## Memory and hibernation
+
+An object can be evicted and rebuilt between requests; in the trial it was rebuilt after about 10 idle seconds, re-running migrations as no-ops. Keep nothing in memory that SQLite does not also hold. A hibernating WebSocket survives that; a server-sent events stream keeps the object in memory, and costs that way. Use WebSocket hibernation for live events where the client allows it.
 
 ## Point-in-time recovery
 
-Each object keeps 30 days of history. A restore is per object, so per organization: get a bookmark for a time, ask for it on next start, restart the object. A restore is an operator action with an audit entry, never something the application does on its own, and it never crosses into another organization.
+Each object keeps 30 days of history. workers-rs does not wrap the bookmark calls, so they need a small extern, and the local runtime does not support them: test a restore on a deployed object before relying on it. A restore is per object, so per organization: get a bookmark for a time, ask for it on next start, restart the object. A restore is an operator action with an audit entry, never something the application does on its own, and it never crosses into another organization.

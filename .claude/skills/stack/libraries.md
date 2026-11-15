@@ -66,7 +66,7 @@ Start fresh. Copy only proven pieces from the earlier code on `claude/peaceful-l
 | HTTP client | `reqwest` | 0.13.5 |
 | Serialization | `serde` / `serde_json` | 1.0.229 / 1.0.154 |
 | Postgres, migrations (self-hosted store) | `sqlx` (+ `sqlx-cli`) | 0.9.0 |
-| Cloud shell (Cloudflare Worker, runs the axum router with the `http` feature) | `worker` (workers-rs) | pin at first use |
+| Cloud shell (Cloudflare Worker, runs the axum router with the `http` feature) | `worker` (workers-rs) | 0.8.7 |
 | OpenAPI from Rust types | `utoipa` / `utoipa-axum` | 6.0.0 / 0.3.0 |
 | Sign-in | `openidconnect` | 4.1.0 |
 | Sessions | `tower-sessions` / `tower-sessions-sqlx-store` | 0.15.0 / 0.16.0 |
@@ -144,6 +144,8 @@ A proposal, not yet built. The app is SwiftUI and macOS only; Windows and Linux 
 | Tool | Version |
 | --- | --- |
 | `cargo-chef` (Docker builds) | 0.1.78 |
+| `worker-build` (builds the cloud shell; downloads esbuild and `wasm-opt`, so CI caches or pins them) | 0.8.7 |
+| Wrangler | 4.156.2 |
 | Helm | 4.3.2 |
 | OpenTofu | 1.13.9 |
 | Packer | 1.16.2 |

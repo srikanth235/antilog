@@ -22,7 +22,7 @@ Nothing else. KV, Queues, Workflows, Hyperdrive, Workers AI and the Agents SDK a
 
 ## Rules
 
-- **Rust, not TypeScript.** `ratchet-cloud` is built with workers-rs (`worker` crate, `http` feature, axum routes from `ratchet-core`). Read the upstream skills for the platform's behaviour, not for code to paste. A TypeScript shell is only the fallback if the Rust trial fails.
+- **Rust, not TypeScript.** `ratchet-cloud` is built with workers-rs (`worker` crate, `http` feature, axum routes from `ratchet-core`). Read the upstream skills for the platform's behaviour, not for code to paste. The local trial passed, so the TypeScript fallback is not needed ([../rust/ratchet.md](../rust/ratchet.md), "Cloud shell trial").
 - **The core never imports `worker`.** Cloudflare types stop at the shell. The Durable Object implements the `Store` trait and the timer interface; the core does not know it runs there.
 - **Wrangler, not `cf`.** The upstream skills prefer the `cf` CLI for new projects. Ratchet uses Wrangler, because workers-rs builds through it. The config is `wrangler.toml` next to `ratchet-cloud` (target).
 - **One Durable Object per organization**, addressed by the organization's id from a namespace in its jurisdiction (EU, US or FedRAMP). SQLite storage only, never the key-value storage API. Writes that belong together run in one synchronous transaction. Timers are alarms, never `setTimeout`.
