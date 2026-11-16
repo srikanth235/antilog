@@ -31,7 +31,7 @@ The earlier daemon and CLI (branch `claude/peaceful-lamport-leak6p`) had one use
 - Handlers in `crates/ratchetd/src/api/` called the service directly. One action layer is cheaper than retrofitting one.
 - Spend events and ledger moves were append-only by trigger, but they were not an audit log.
 - Secrets reported as set or not, never as a value, held up under test. Keep that.
-- The earlier code set agents up through settings and wizards. The target replaces that with approval cards in the chat ([approvals.md](approvals.md)).
+- Agents were set up through settings and wizards. The target uses approval cards in the chat ([approvals.md](approvals.md)).
 
 ## Target, not built
 
@@ -41,5 +41,5 @@ The earlier daemon and CLI (branch `claude/peaceful-lamport-leak6p`) had one use
 - Approvals, policy, budgets and the monthly cap ([approvals.md](approvals.md)).
 - One action layer for permission, audit and events.
 - The audit log.
-- Notifications ([notifications.md](notifications.md)). The earlier native Mac app that showed them was removed.
+- Notifications ([notifications.md](notifications.md)).
 - A test that a self-hosted server contacts only configured endpoints.

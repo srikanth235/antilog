@@ -4,7 +4,7 @@ A kind is a new way to measure, such as a replay of recorded traffic, a scored s
 
 ## Kinds and templates
 
-An evaluation has a **kind**, which says what is being measured, and may start from a **template**, a starter command for a common job. The agent proposes an experiment from a kind and a template. Templates are reusable and are listed in Customize, Evaluations, under Yours and Discover (boards `Evaluations`, `EvaluationsEmpty`, `EvaluationsDiscover`, `EvaluationDetail`, `AddEvaluation`). A template holds the kind, command, direction, guardrails, the standard planted cheats and an environment. A plugin may bring templates. An experiment starts from a copy, so changing or removing a template never changes a sealed experiment. The Seal experiment card shows the kind and names the standard planted cheats for it, so a person sees what the judge will try to fool.
+An evaluation has a **kind** (what is measured) and may start from a **template** (a starter command for a common job). The agent proposes an experiment from a kind and a template. Templates are listed in Customize, Evaluations, Yours and Discover (boards `Evaluations`, `EvaluationsEmpty`, `EvaluationsDiscover`, `EvaluationDetail`, `AddEvaluation`). A template holds the kind, command, direction, guardrails, standard planted cheats and an environment; a plugin may bring templates. An experiment starts from a copy, so changing or removing a template never changes a sealed experiment. The Seal experiment card shows the kind and its planted cheats, so a person sees what the judge will try to fool.
 
 | Kind | What it measures | Templates |
 | --- | --- | --- |
@@ -13,7 +13,7 @@ An evaluation has a **kind**, which says what is being measured, and may start f
 | Size | How big something is, lower is better | Bundle size |
 | Cost | What something costs to run, lower is better | Your own (a command that prints a cost) |
 
-"Your own" is the template for any command that prints one JSON object with the metric. Each template names its own planted cheats beside the standard three (skip the work, hard-code the answer, return early): for example a load test that serves cached responses, a scorer fed the expected answers, or a size check that drops the files it measures. A new kind or template follows the steps below.
+"Your own" is the template for any command that prints one JSON object with the metric. Each template names its own planted cheats beside the standard three (skip the work, hard-code the answer, return early): a load test that serves cached responses, a scorer fed the expected answers, a size check that drops the files it measures.
 
 ## Steps
 
@@ -24,9 +24,9 @@ An evaluation has a **kind**, which says what is being measured, and may start f
 5. **Runnable with no agent.** The kind must run as a command in a judge sandbox on the judge platform (see [anti-cheat.md](anti-cheat.md)). It needs no network route except to the experiment's data.
 6. **A holdout.** The kind says what its holdout is and how it is marked "Restricted to the judge". A kind with no way to hold data back cannot confirm a win and is not accepted.
 7. **Noise and the quick check.** The kind defines repeats and how the noise is derived from the baseline and the same-commit measurement. It says what one repeat is, because the quick check runs exactly one, and what one measurement costs, because the estimate on the Seal experiment card comes from the seal checks. The acceptance criteria are not changed by a new kind.
-8. **Standard planted cheats.** At least: skip the work, hard-code the answer, return early. Add the ones that fit the kind, for example a replay that serves cached responses, or a scorer fed the expected answers. Each must be rejected by the evaluation, or the seal check fails.
+8. **Planted cheats.** The standard three plus those that fit the kind. Each must be rejected by the evaluation, or the seal check fails.
 9. **Where a win lands.** A win reaches the world as one pull request per repo changed, through `deliver`. Anything else that writes outside Ratchet is a card a person approves (see [../organization/approvals.md](../organization/approvals.md)).
-10. **A template.** A starter command for the kind that a proposing agent may copy, listed above, with the planted cheats the Seal experiment card will show.
+10. **A template.** A starter command for the kind that a proposing agent may copy, with the planted cheats the Seal experiment card shows.
 11. **Tests.** A golden test of the template, a parse test of the output, each planted cheat rejected, and one end-to-end measurement with a scripted agent.
 12. **Receipt and value.** Say which receipt fields the kind produces (see [owes.md](owes.md)) and which metric a project owner may attach a value model to, with its unit (for example ms). A kind never sets a value model.
 13. **Customize.** Add the template to the Evaluations list, with its detail page and an Add evaluation path for a person's own. Adding, changing and removing one are audited actions (see [../organization/add-audited-action.md](../organization/add-audited-action.md)).

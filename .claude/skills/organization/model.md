@@ -1,6 +1,6 @@
 # Organization: objects and words
 
-[`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md) does not define the access words below. "Default" and "Settings" there are unrelated to roles. None of the objects exist yet. Roles belong to the organization and, where a project sets one, to the project.
+The access words below are not in [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md). None of the objects exist yet. Roles belong to the organization and, where a project sets one, to the project.
 
 | Object | Means | Not |
 | --- | --- | --- |
@@ -14,9 +14,9 @@
 | access token | A secret a program uses to act as a member; shown once, stored as a hash | a sign-in session |
 | service account | A non-human member with its own tokens and a role | a shared login |
 | approval card | A tool call a person approves in the chat | a settings form |
-| value model | What one unit of a metric is worth in dollars a year, with a source and who set it. A project owner sets one per metric on the project's page (a Value section); it is sealed with an experiment and never set by an agent (see [../judge/model.md](../judge/model.md)) | a budget, a price |
-| report | A page per organization and per project: spent, Delivered, Pending, At risk, Return, where the spend went, the agent scoreboard for the month, the top wins with receipt links and experiments stopped with no win. Exported as PDF and CSV and emailed monthly to chosen members | a log, the audit log |
-| ideas | Possible experiments Ratchet suggests on a project page, each with the metric, expected value (from the project's value models), expected cost and their ratio. Ratchet proposes, a person starts | a backlog an agent starts by itself |
+| value model | A project owner's figure for a metric, sealed with an experiment and never set by an agent (see [../judge/model.md](../judge/model.md)) | a budget, a price |
+| report | A monthly page per organization and per project, exported as PDF and CSV and emailed to chosen members (contents in [notifications.md](notifications.md)) | a log, the audit log |
+| ideas | Experiments Ratchet suggests on a project page, ranked by expected value over cost. Ratchet proposes, a person starts | a backlog an agent starts by itself |
 | policy | Per card kind (eight): Always ask, Allow up to a limit, or Allow | a role |
 | budget | What one experiment may spend across all its sessions and their judge time. It sits inside its project's cap | a monthly cap |
 | project cap | An optional monthly limit on the spend of all of a project's experiments. It sits inside the organization's monthly cap | a budget |

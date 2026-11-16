@@ -1,20 +1,20 @@
 ---
 name: product
 description: >-
-  What is Ratchet, what do we owe the customer, and what do we refuse to build? Use for any product, scope or trade-off question; "should we", "is this in scope", "which area owns this"; adding a feature, page, card, tool or integration; naming or wording anything a user reads; deciding what to refuse; and whenever a change touches sessions, the judge (experiments, measurements, the holdout, acceptance), approvals, budgets, or members, roles and the audit log. It states the target product as settled rulings, the governing principles, the non-goals, the decided calls, the open questions and when to stop and ask the owner.
+  What is Ratchet, what do we owe the customer, and what do we refuse to build? Use for any product, scope or trade-off question; "should we", "is this in scope", "which area owns this"; adding a feature, page, card, tool or integration; naming or wording anything a user reads; deciding what to refuse; and whenever a change touches sessions, the judge (experiments, measurements, the holdout, acceptance), approvals, budgets, or members, roles and the audit log. It states the target product as settled rulings, the governing principles, the non-goals, the owner's decisions, the open questions and when to stop and ask the owner.
 ---
 
 # Product
 
 Ratchet is a chat and a judge. The chat works like Claude Code on the web: a person talks to a coding agent that works in a sandbox with repos attached. The judge is a set of tools every session gets. An agent asks the judge to measure a change, and only the judge's numbers count. Only a measured win becomes a pull request. There are no modes, no plan step and no orchestration loop on the server: the agent drives, and the server relays sessions, runs the judge and keeps a ledger.
 
-Four things hold it together. A **project** groups the experiments for one area of the code, with roles per project. An **experiment** (the sealed goal, a definition of better, and everything measured against it) belongs to one project. A **session** (one agent's work inside an experiment: a chat with one agent in one sandbox) belongs to an experiment, and the sidebar nests sessions under an open experiment. A **measurement** is the judge's signed result for one trial. Reusable setup (evaluations, skill packs, connectors, agents, plugins) lives in one Customize page. Everything else is a view over measurements. Settings are tools: setup happens in the chat as an approved tool call, and a settings page lists and revokes what was approved. The organization floor (members, roles, projects, sign-in, tokens, approvals, budgets, audit log, notifications) sits under all of it.
+Four things hold it together. A **project** groups the experiments for one area of the code, with roles per project. An **experiment** (the sealed goal and everything measured against it) belongs to one project. A **session** (one agent's work in one sandbox) belongs to an experiment. A **measurement** is the judge's signed result for one trial. Reusable setup (evaluations, skill packs, connectors, agents, plugins) lives in one Customize page. Everything else is a view over measurements. Settings are tools: setup happens in the chat as an approved tool call, and a settings page lists and revokes what was approved. The organization floor (members, roles, projects, sign-in, tokens, approvals, budgets, audit log, notifications) sits under all of it.
 
 The target is a server with a web app as the client of its API, run two ways: self-hosted (a Docker Compose service, server plus Postgres, using the agent platform accounts the customer already has) or Ratchet cloud (we host the server and run every session on Ratchet's platform accounts). Ratchet runs no sandboxes for agents: they run as sessions on agent platforms (Claude Managed Agents, AWS AgentCore, the OpenAI Agents API, Microsoft Foundry Agent Service, Google Agent Runtime) behind one trait. Nothing here is built (target).
 
 ## The three aims
 
-Beside trust (the judge's rules never bend), the product serves three aims, decided by the owner on 16 Nov 2026. Every feature is checked against them.
+Beside trust (the judge's rules never bend), the product serves three aims. Every feature is checked against them.
 
 1. **Cost control.** Every dollar and token of an experiment is spent well: cost per trial, an estimate before spending, a quick check before the full measurement, a pause when trials stop paying (patience), history read first, the right-sized agent, compaction, and a view of where the spend went.
 2. **No tie to one model provider.** Agents are measured against each other on the customer's own code (the agent scoreboard), Auto picks among the agents the organization turned on, a session can be handed off to another agent, and a failing platform fails over. No agent is chosen by brand.
@@ -41,7 +41,7 @@ Use the governing principles and the non-goals below as settled. Apply them dire
 | --- | --- |
 | What every area owes the customer | [promises.md](promises.md) |
 | What we decided not to build | [non-goals.md](non-goals.md) |
-| The design as dated rulings, what it replaces, the decided calls and the open questions | [rulings.md](rulings.md) |
+| The settled product, the owner's decisions and the open questions | [rulings.md](rulings.md) |
 | Sessions, agents, platforms, environments, credentials, connectors, skill packs, spawn, budgets | [session owes](../session/owes.md), [rules](../session/rules.md) |
 | Experiments, evaluation templates, seal, measure, acceptance, the holdout, anti-cheat, receipts, watch | [judge owes](../judge/owes.md), [rules](../judge/rules.md) |
 | Projects, members, roles, sign-in, tokens, approvals, policy, budgets, the audit log, notifications | [organization owes](../organization/owes.md), [rules](../organization/rules.md) |

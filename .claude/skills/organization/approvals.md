@@ -1,6 +1,6 @@
 # Approvals and budgets (target)
 
-Settings are tools. A person approves the tool calls that matter, in the chat, when they are needed. Settings pages list what was approved and revoke it. Nobody visits a settings page before the first message.
+A person approves the tool calls that matter, in the chat, when they are needed. Settings pages list what was approved and revoke it ([rulings](../product/rulings.md)).
 
 ## The cards
 
@@ -25,11 +25,11 @@ Settings, Approvals sets one value per card kind: **Always ask**, **Allow up to 
 
 ## Mode
 
-Each experiment has a Mode on its composer: **Ask** (every card asks a person) or **Auto** (cards that policy allows go through without asking, and each still writes its audit row and shows in the chat as approved by policy). Policy always caps Auto: a card kind set to Always ask still asks, and a limit still holds.
+Each experiment has a Mode on its composer: **Ask** (every card asks a person) or **Follow policy** (cards that policy allows go through without asking, and each still writes its audit row and shows in the chat as approved by policy). Policy always caps Follow policy: a card kind set to Always ask still asks, and a limit still holds.
 
 ## Who may approve
 
-Roles are checked at project scope ([model.md](model.md)). A member's role in a project is their organization role unless a project owner set another for that project. Owners and editors of the project approve every card for its experiments, except a changed value model, which needs a project owner. A viewer reads them and approves nothing. Visibility does not follow repo access ([../product/rulings.md](../product/rulings.md)). Changing an experiment's budget needs an editor or owner of its project. A project owner manages the project's members, its budget and its value models. Only an organization owner changes policy.
+Roles are checked at project scope ([model.md](model.md)). Owners and editors of the project approve every card for its experiments, except a changed value model, which needs a project owner. A viewer reads them and approves nothing. Changing an experiment's budget needs an editor or owner of its project. A project owner manages the project's members, its budget and its value models. Only an organization owner changes policy.
 
 ## Recorded
 
@@ -49,4 +49,3 @@ Settings, Approvals holds policy. Settings, Connections lists the repos, credent
 - An organization has a monthly cap. No budget, no project cap and no card passes it. Only an organization owner changes the cap.
 - When a budget is spent, the judge refuses `measure`, and the experiment's sessions are Waiting for you with a Raise budget card. A notification says so ([notifications.md](notifications.md)).
 - When patience is reached, the experiment is Waiting for you with a Keep going? card; policy may set it to Allow (never pause) or Always ask.
-- When an experiment is sealed and the budget allows, nothing asks anything.

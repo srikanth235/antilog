@@ -10,6 +10,4 @@ This branch starts fresh. It holds the agreed design and no product code yet.
 - [`design/icon/`](design/icon): the logo.
 - [`docs/GLOSSARY.md`](docs/GLOSSARY.md): the words.
 
-`docs/V0_ARCHITECTURE.md` is an early draft that predates this design. Read the skills first where they disagree.
-
 An earlier Rust daemon and CLI live on the branch `claude/peaceful-lamport-leak6p`, as reference.

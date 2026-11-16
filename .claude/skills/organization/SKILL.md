@@ -6,7 +6,7 @@ description: >-
 
 # Organization
 
-The shared floor under sessions and the judge. It holds members, roles, projects, sign-in, approvals, budgets and the audit log. Today Ratchet is one user on one machine with a bearer token; organizations, roles, approvals and audit are target. [today.md](today.md) says exactly what the earlier code did.
+The shared floor under sessions and the judge. It holds members, roles, projects, sign-in, approvals, budgets and the audit log. Organizations, roles, approvals and audit are target. [today.md](today.md) says what the earlier code did.
 
 | If you are doing | Read |
 | --- | --- |

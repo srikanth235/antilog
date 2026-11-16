@@ -8,7 +8,7 @@
 - Keep a report's reader list to members who may read the project, because a report carries spend and wins. A viewer reads only their project's report.
 - Record every approval and every tool call that changes something, because a change nobody can trace is not governed.
 - Let policy only pre-approve a card, never skip its audit row, because an automatic approval is still an approval.
-- Build no built-in passwords, because Ratchet never stores a password. Sign-in is OpenID Connect, plus GitHub's OAuth: GitHub, Google and an organization's own OpenID Connect provider (single sign-on, set up by an owner) on Ratchet cloud, the customer's own OpenID Connect provider when self-hosted.
+- Build no built-in passwords, because Ratchet never stores a password. Sign-in providers are in [add-sign-in-provider.md](add-sign-in-provider.md).
 - Make every external endpoint configuration, never a constant, because a self-hosted server must contact only what its administrator set.
 - Show a token once and store only its hash, because a stored token is a stolen token waiting.
 - Use one cryptography stack, because two stacks mean two sets of bugs to patch.

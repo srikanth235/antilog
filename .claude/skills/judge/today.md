@@ -32,5 +32,5 @@ The earlier Rust daemon and CLI are on the branch `claude/peaceful-lamport-leak6
 - The earlier code had no cheat checks and no signed receipt. Dataset versions, the machine type and the credential scopes were not recorded, and nothing signed the numbers.
 - Nothing measured a merged win again. That gap is the watch.
 - The only change it knew was a commit on one repo's branch, and the only data was what was in the repo or the sealed bucket.
-- Spend caps were set and enforced by the engine's own tick. Now the budget refuses `measure`.
-- The earlier rule that an agent never reads the evaluation's code is replaced: it may read it and never change it.
+- Spend caps were set and enforced by the engine's own tick. The target has the budget refuse `measure`.
+- The earlier rule that an agent never reads the evaluation's code is replaced by: it may read it and never change it.

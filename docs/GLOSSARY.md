@@ -1,6 +1,6 @@
 # Glossary
 
-Everything here is target; nothing is built. The design is directed by the owner, 16 Nov 2026 (see [rulings](../.claude/skills/product/rulings.md)). The first table is the shared vocabulary; the last column is what the screen reads.
+Everything here is target; nothing is built (see [rulings](../.claude/skills/product/rulings.md)). The first table is the shared vocabulary; the last column is what the screen reads.
 
 | Term | Means | Not | On screen (target) |
 |---|---|---|---|
@@ -11,7 +11,7 @@ Everything here is target; nothing is built. The design is directed by the owner
 | Customize | One sidebar page, a library of reusable things, with tabs Evaluations, Skills, Connectors, Agents and Plugins, each with a Yours and a Discover toggle. Every item opens the same detail page. Setting one up in a chat with a card still works, and what a card adds appears here | settings, marketplace | Customize |
 | Skill pack | A versioned pack of written know-how that agents read before they propose changes. An experiment selects the packs it uses and records the versions read. The judge never reads one, and it never holds holdout data. Not this repo's `.claude/skills/`, so docs say "skill pack" | note, instruction file, history | Skill |
 | Plugin | A bundle that adds evaluations, skill packs, suggested connectors and recommended agents under their own kinds. It has no powers of its own and can never mark, unmark or grant access to a dataset. Removing one asks whether to keep its items; an item in use is never removed | extension, integration | Plugin |
-| Seal, sealed | A person approves an experiment that passed the seal checks; its definition can no longer change | lock, freeze | Seal experiment, Sealed |
+| Seal, sealed | A person approves an experiment that passed the seal checks; its definition is fixed | lock, freeze | Seal experiment, Sealed |
 | Seal checks | The baseline, the noise check (the same commit measured twice) and the cheat checks (planted cheats the evaluation must reject: skip the work, hard-code the answer, return early) | validation | Seal checks, Noise check, Cheat checks |
 | Judge | The part of Ratchet that measures. A trait separate from the agent platform trait | evaluator | Judge |
 | Judge sandbox | A fresh sandbox, with no agent in it, where one measurement runs. The only place with the holdout credential. Removed afterwards | evaluator sandbox | Judge sandbox |
@@ -52,12 +52,13 @@ Everything here is target; nothing is built. The design is directed by the owner
 | Cost per trial | The agent's spend since the session's previous trial plus the judge time for the measurement. Derived from spend records. The scoreboard strip also shows cost per kept trial ("$14.00 per kept trial") | price | Cost per trial |
 | Where the spend went | The experiment's spend split by Kept, Within noise, Worse, Guardrail failed, Rejected, Failed and Not measured (agent work that never reached `measure`), each as dollars and a share. On the experiment detail page and in Settings, Budgets | bill, breakdown | Where the spend went |
 | Agent scoreboard | Customize, Agents: per agent, by evaluation kind and project, experiments, trials, kept, wins delivered, cost per win, median time to a win and Delivered value, all measured by the judge on your code. "Not a vendor benchmark." Never "leaderboard" | leaderboard, ranking | Agent scoreboard |
-| Auto | The agent choice that picks the agent with the best cost per win for this evaluation kind in this project, among the agents the organization turned on, and says why. Before there is data it uses the organization's default agent. A person can always pick a named agent | smart, default model | Auto |
+| Auto | Only the agent choice (never an approval mode): the choice that picks the agent with the best cost per win for this evaluation kind in this project, among the agents the organization turned on, and says why. Before there is data it uses the organization's default agent. A person can always pick a named agent | smart, default model | Auto |
+| Mode | How an experiment's cards are approved, set on its composer: Ask (every card asks a person) or Follow policy (cards that policy allows go through, each still audited). Policy is the ceiling | autonomy level | Composer, Settings, Approvals |
 | Hand off | Moving a session to another agent: a new session in the same experiment on the same branch with a summary and the history; the old one ends as Done, "Handed off to Codex" | transfer, fork | Hand off to... |
 | Ideas | Possible experiments Ratchet suggests on a project page, each with the metric, expected value (from the project's value models), expected cost and their ratio, sorted by it. Ratchet proposes, a person starts. Home shows the top three | suggestions, backlog | Ideas |
 | Report | A page per organization and per project: spent, Delivered, Pending, At risk, Return, where the spend went, the agent scoreboard for the month, the top wins and experiments stopped with no win. Exported as PDF and CSV and emailed monthly to chosen members | log, export | Report |
 
-"Experiment" is the noun for what a user creates, everywhere a user reads it: the web and Mac apps, the CLI, the API (`experiment_id`), the words catalogue and user-facing docs. A session is one agent's work inside an experiment and is never a top-level noun. "Contract" is retired (see [rulings](../.claude/skills/product/rulings.md)). Never "automation", "leaderboard", "ROI" or "run" as a noun.
+"Experiment" is the noun for what a user creates, everywhere a user reads it: the web and Mac apps, the CLI, the API (`experiment_id`), the words catalogue and user-facing docs. A session is one agent's work inside an experiment and is never a top-level noun. Retired words are listed at the end.
 
 In the chat an agent's message shows the Ratchet mark and the name "Ratchet", with the agent that did the work as a quiet second label ("Ratchet · Claude Code"). Agent logos stay where an agent is the subject: spawned session cards, the Agent chip, settings rows, receipts and lineage.
 
@@ -102,11 +103,9 @@ The boards are in [`design/mockups/`](../design/mockups/) and the rules in [`.cl
 
 Unchanged between code and screen: win, agent, pull request, Delivered, Pending, Return, project, plugin.
 
-Project, Customize, Skill (skill pack), Plugin and Evaluation (a template) were cut and brought back on 16 Nov 2026 (see [rulings](../.claude/skills/product/rulings.md)), so they are not retired.
-
 ## Retired words
 
-Do not use these except in a `today.md` page about the earlier code or in a dated ruling that says what was replaced.
+Do not use these except in a `today.md` page about the earlier code. This is the only list of retired words.
 
 | Retired | Now |
 |---|---|
@@ -114,12 +113,14 @@ Do not use these except in a `today.md` page about the earlier code or in a date
 | Run, as the object | Trial (one `measure` call), or an experiment |
 | Draft, drafting session, config branch | `seal` and a Seal experiment card |
 | Thread | Experiment, or its session |
-| Note, as a feature | Cut; talk to the agent |
-| Pause agent | Stop the session, or talk to it |
+| Note, as a feature | Talk to the agent |
 | Evaluator, evaluator sandbox | Judge, judge sandbox |
 | Measuring platform | Judge platform |
 | Optimization, context and infrastructure as "the three basics" | Experiment, session, judge, organization floor |
 | Stepper | Cards in the conversation |
-| Dashboard page | Cut; the Projects page holds Delivered, Pending and Return |
-| Agent order | Cut; a person or an agent chooses agents in the chat, or Auto does |
+| Dashboard page | The Projects page holds Delivered, Pending and Return |
+| Agent order | A person or an agent chooses agents in the chat, or Auto does |
 | Leaderboard | Agent scoreboard |
+| Automation | Nothing; say what it does |
+| ROI | Return |
+| Pause agent | Stop the session, or talk to it |

@@ -1,126 +1,113 @@
 # Session: objects and words
 
-All of this is target. [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md) defines the words for screens; here an agent is a worker: a model on an agent platform.
+All of this is target. [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md) defines the words for screens; here an agent is a worker: a model on an agent platform. What each screen shows is in [../design/behaviour.md](../design/behaviour.md), not here.
+
+## Where a session sits
 
 | Object | Means | Not |
 | --- | --- | --- |
-| project | A group of experiments for one area of the code, with members and roles per project (see [../organization/model.md](../organization/model.md)). Every experiment belongs to exactly one project. A project page lists its experiments, the connectors they use, its budget and its members | a repo, a folder |
-| experiment | The sealed goal and everything measured against it: the definition, its trials, scoreboard, wins and receipts. It belongs to one project, owns the budget and holds one or more sessions (see [../judge/model.md](../judge/model.md)). Its activity comes from its sessions: Working, Waiting for you, Done, Failed | a session, a thread |
-| session | One agent's work inside an experiment: a chat with one agent in one sandbox on one agent platform, with any number of repos attached. It always belongs to an experiment and is not a top-level noun in the app, though the sidebar nests it under an open or pinned experiment. Its only state is a status: Working, Waiting for you, Done, Failed. A session a person stops is Done, with the line "Stopped by NAME". On screen it is named by its agent, such as "Claude Code session" | a thread, a task, a step machine |
-| agent platform | A managed service that runs an agent's loop and its sandbox as one durable session: Claude Managed Agents, AWS AgentCore, the OpenAI Agents API, Microsoft Foundry Agent Service, Google Agent Runtime. On the last two Ratchet supplies one agent image per agent, with the agent's own harness inside it; the platform still runs the sandbox. Each sits behind the one agent trait, through its own adapter | a sandbox backend we run, a model provider |
-| agent trait | The one interface every platform adapter implements: start a session (repos, an agent, an environment, credentials, tools), send input, read events, answer a client tool call, stop it and delete it | a second way to start work |
-| platform account | The account Ratchet uses on a platform. Self-hosted: the customer's own, on whichever platforms they have, at least one. Ratchet cloud: Ratchet's, billed through to the customer at cost through the budget | a cloud account Ratchet can reach |
-| agent | A model on an agent platform, such as Claude on Claude Managed Agents, Codex on the OpenAI Agents API, Gemini or Grok on AWS AgentCore, GitHub Copilot on Microsoft Foundry Agent Service, or Gemini on Google Agent Runtime | the platform, a login or key |
-| cost tier | "$" to "$$$" on each agent, with the measured figure ("about $2.40 per trial here"), shown wherever an agent is chosen (the composer's agent menu, the spawn card, Customize, Agents). Priced from the platform's usage (see [add-agent.md](add-agent.md)) | a quality ranking, a vendor claim |
-| agent scoreboard | Customize, Agents, per agent, filtered by evaluation kind and project: experiments, trials, kept, wins delivered, cost per win, median time to a win and Delivered value. All from the judge's measurements in this organization, with the note "Measured by the judge on your code. Not a vendor benchmark." | a leaderboard, a vendor benchmark |
-| Auto | The composer's agent choice that picks the agent with the best cost per win for this evaluation kind in this project, among the agents the organization turned on, and says why in one line ("Auto chose Codex: lowest cost per win on Speed experiments here, $18"). A person can always pick a named agent. Before there is data it uses the organization's default agent, set by an owner in Customize, Agents. The default for a new organization once there is data | a favoured agent |
-| hand off | Moving a session to another agent: "Hand off to..." in the title menu and the composer's agent menu. The new session starts in the same experiment on the same branch with a summary of the conversation and the history; the old one ends as Done, "Handed off to Codex". Skill packs, evaluations and connectors work with every agent | a spawn, a new experiment |
-| failover | When a platform is unavailable or rate-limited, the session is Waiting for you with a Continue on another agent? card naming the agent Auto would choose. Policy may allow it without asking. A timeline line records it | a retry on the same platform |
-| compaction | Summarising a session's context and continuing. Ratchet does it on its own at 80 percent of the context and says so in a timeline line. The Details panel's Context section also offers Compact and "Fresh session with summary" | forgetting, a new experiment |
-| where the spend went | A view on the experiment detail page and in Settings, Budgets: the experiment's spend split by Kept, Within noise, Worse, Guardrail failed, Rejected, Failed and Not measured (agent work that never reached `measure`), each as dollars and a share. Derived from spend records and outcomes | a bill |
-| environment | Image or setup script, size and network policy, on one platform. The agent may propose a change with `set_environment` | a server, a config file |
-| attached repo | A repo on the code host that the session works in. A session attaches any number. It gets a short-lived git token per repo that may push only to the session's own branch | a clone Ratchet keeps |
-| connector | A data system or MCP server an agent's code may read: Snowflake, Databricks, DynamoDB, BigQuery, Postgres, Amazon S3, any MCP server. It holds two credentials, one for agents and one for the judge, and the datasets under it. It has one translator for its system. The code host (GitHub, GitLab) is how repos attach and pull requests open, and is not a connector. Listed in Customize, Connectors. Status: Connected, Reconnect, Not checked | a dataset, a credential, a pipe Ratchet reads through, a cloud account |
-| skill pack | A versioned pack of written know-how that agents read before they propose changes, for example "Postgres query tuning". Screen word: Skill, under Customize, Skills. An experiment selects the packs it uses and records the versions read. Audience: agents only; the judge never reads one, and a pack never holds holdout data. Not this repo's `.claude/skills/` | a dataset, an agent instruction file in `.claude/skills/`, a plugin, a note, `history` |
-| plugin | A bundle that adds evaluations, skill packs, suggested connectors and recommended agents under their own kinds. It has no powers of its own and can never mark, unmark or grant access to a dataset (see [add-skill-pack.md](add-skill-pack.md)) | a connector, an agent |
-| dataset | A named table or file set under one connector that an experiment reads. Ratchet records its id, its versions, its size and its marking, never its rows | a connector, a query |
-| dataset version | One state of a dataset, with an id and a date. It never changes after it is created. An experiment and a receipt name the versions they read | latest, a snapshot someone can edit |
-| marking | A label on a dataset that limits who may read it. Holdout is the only one. Shown in the Datasets table | a tag for search |
-| holdout | A marking on a dataset: only the judge's credential reaches it. Enforced by the credentials, not by a setting: the agent credential leaves it out. No control grants it to an agent. Shown as "Restricted to the judge" | a validation split an agent can see |
-| agent credential | A read-only credential for one connector, on the views the person lists, holdout excluded. Registered once, kept in the platform's credential store, and handed to a session as a short-lived credential minted for that session | a stored secret in Ratchet's database, a write credential |
-| judge credential | A separate read-only credential for the same connector that also covers the holdout. Registered once, kept on the judge platform, minted per judge sandbox. No agent ever holds it | the agent credential |
-| credential reference | Ratchet's record that a credential exists in a platform's credential store: its id, its connector, its holder (agent or judge) and who approved it. Never the value | the secret, a field in Ratchet's database that holds one |
-| credential store | The platform's own place for secrets a session may use: the Claude Managed Agents vault, AgentCore Identity, the agent's Microsoft Entra agent identity on Foundry Agent Service (secrets reached through a Foundry connection to Azure Key Vault), the agent's Agent Identity or service account on Google Agent Runtime (secrets read from Secret Manager). The exact stores on the last two are confirmed in the spike, as Agent Identity is partly in preview. The only way a credential reaches a session | Ratchet's database, a prompt, a repo file |
-| spawned session | A session another session started with `spawn`, in the same experiment and on the same budget, on any agent and platform. A spawned session cannot spawn. A person can open it, as its own chat inside the experiment, and talk to it | a sub-task, a thread |
-| session event | One item in a session's stream: a message, a tool call, a card, a measurement arriving, or a status change | a log line |
-| budget | One per experiment, covering all its sessions and their judge time. It sits inside its project's optional monthly cap, inside the organization's. Spend is model tokens, sandbox time and judge time. A person sets it when starting (a budget, defaulting to the project's default budget per experiment, which falls back to the organization's default from Settings, Budgets) and an editor or owner can change it at any time; the agent can ask with `request_budget`, which shows a Raise budget card. Lowering it below what is spent stops new measurements | a bill, a per-session allowance |
-| spend record | One append-only row of money or tokens, tied to a session and its agent, read from the platform's events and usage. Shown per session on the experiment detail page and in Settings, Budgets | an invoice |
-| clean-up check | The verification that every session and sandbox Ratchet started is ended and deleted on its platform. Each session shows its clean-up state: Removed, or Not removed while Ratchet retries | a hope |
-| clean-up state | Removed (the platform confirms the session and its sandbox are gone) or Not removed (Ratchet retries, and the cost counts until it is gone). Shown in the sessions table | a status of the work |
+| project | A group of experiments for one area of the code, with members and roles per project (see [../organization/model.md](../organization/model.md)) | a repo, a folder |
+| experiment | The sealed goal and everything measured against it; it owns the budget and holds one or more sessions (see [../judge/model.md](../judge/model.md)). Its activity comes from its sessions: Working, Waiting for you, Done, Failed | a session |
+| session | One agent's work inside an experiment: a chat with one agent in one sandbox on one agent platform, with any number of repos attached. Status: Working, Waiting for you, Done, Failed. A session a person stops is Done, "Stopped by NAME". Named on screen by its agent ("Claude Code session"); never a top-level noun | a thread, a task, a step machine |
+| spawned session | A session another session started with `spawn`: same experiment, same budget, any agent and platform. It cannot spawn. A person can open it and talk to it | a sub-task |
+| session event | One item in a session's stream: a message, tool call, card, measurement arriving or status change | a log line |
 
-## Connectors and datasets
+## Platforms and agents
 
-A connector is registered once, in Customize, Connectors, or from an Add credential card in a chat. It has two credentials and the datasets under it.
+| Object | Means | Not |
+| --- | --- | --- |
+| agent platform | A managed service that runs an agent's loop and its sandbox as one durable session: Claude Managed Agents, AWS AgentCore, the OpenAI Agents API, Microsoft Foundry Agent Service, Google Agent Runtime. On the last two Ratchet supplies one agent image per agent, with the agent's harness inside; the platform still runs the sandbox | a sandbox we run, a model provider |
+| agent trait | The one interface every platform adapter implements: start a session (repos, agent, environment, credentials, tools), send input, read events, answer a client tool call, stop, delete. The trait is designed against all five platforms ([add-platform.md](add-platform.md)) | a second way to start work |
+| judge platform | An agent platform that also hosts judge sandboxes: a separate trait, in [../judge/model.md](../judge/model.md) | an agent platform for sessions |
+| platform account | The account Ratchet uses on a platform: the customer's own when self-hosted (at least one), Ratchet's on Ratchet cloud, billed at cost through the budget | a cloud account Ratchet can reach |
+| agent | A model on an agent platform, such as Claude on Claude Managed Agents, Codex on the OpenAI Agents API, Gemini on AWS AgentCore or Google Agent Runtime. It holds a short-lived git token for its own branch per repo and read-only connector credentials that leave out the holdout, never a model key | the platform, a login or key |
+| cost tier | "$" to "$$$" on each agent, with the measured figure ("about $2.40 per trial here"), priced from the platform's usage ([add-agent.md](add-agent.md)) | a quality ranking |
+| agent scoreboard | Per agent, filtered by evaluation kind and project: experiments, trials, kept, wins delivered, cost per win, median time to a win, Delivered value. Only from the judge's measurements here: "Measured by the judge on your code. Not a vendor benchmark." | a vendor benchmark |
+| Auto | The agent choice that picks the best cost per win for this evaluation kind in this project among the agents the organization turned on, and says why in one line. A person can always pick a named agent. With no data it uses the default agent an owner sets in Customize, Agents. No agent is preselected by brand | a favoured agent |
+| hand off | Moving a session to another agent: the new session starts in the same experiment on the same branch with a summary and the history; the old one ends Done, "Handed off to Codex" | a spawn, a new experiment |
+| failover | A platform that is unavailable or rate-limited leaves the session Waiting for you with a Continue on another agent? card naming the agent Auto would choose. Policy may allow it without asking; a timeline line and an audit row record it | a retry on the same platform |
+| environment | Image or setup script, size and network policy, on one platform. An agent proposes a change with `set_environment` | a server, a config file |
+| attached repo | A repo on the code host the session works in, any number. Short-lived git token per repo, push only to the session's own branch | a clone Ratchet keeps |
+
+## Spend
+
+| Object | Means | Not |
+| --- | --- | --- |
+| budget | One per experiment, covering all its sessions and their judge time. It sits inside the project's optional monthly cap, inside the organization's (see [../organization/approvals.md](../organization/approvals.md)). Set when starting (default: the project's, else the organization's); an editor or owner can change it at any time; lowering it below the spend stops new measurements. The agent asks with `request_budget` | a bill, a per-session allowance |
+| spend record | One append-only row of money or tokens, tied to a session and its agent, read from the platform's events and usage | an invoice |
+| cost per trial | Defined in [../judge/model.md](../judge/model.md); derived from spend records | |
+| where the spend went | The experiment's spend split by Kept, Within noise, Worse, Guardrail failed, Rejected, Failed and Not measured (agent work that never reached `measure`), as dollars and a share. Derived | a bill |
+| compaction | Summarising a session's context and continuing. Ratchet does it on its own at 80 percent and says so in a timeline line; a person can also compact, or start a fresh session with a summary | forgetting |
+| clean-up state | Removed (the platform confirms the session and its sandbox are gone) or Not removed (Ratchet retries and the cost counts until it is gone) | a status of the work |
+
+Spending well is the sum of these, each owned once: the estimate on the Seal card and patience are the judge's ([../judge/tools.md](../judge/tools.md)); `history` first and the lower-cost default for `spawn` are in [tools.md](tools.md) and [prompts.md](prompts.md).
+
+## Connectors and data
+
+| Object | Means | Not |
+| --- | --- | --- |
+| connector | A data system or MCP server an agent's code may read: Snowflake, Databricks, DynamoDB, BigQuery, Postgres, Amazon S3, any MCP server. It holds two credentials and the datasets under it, with one translator for its system. Status: Connected, Reconnect, Not checked. The code host is not a connector. Steps in [add-connector.md](add-connector.md) | a dataset, a cloud account |
+| dataset | A named table or file set under one connector. Ratchet records its id, versions, size and marking, never rows | a connector, a query |
+| dataset version | One state of a dataset, with an id and a date; it never changes. A virtual dataset points at data left in place, pinned by an as-of time in the version id | latest, an editable snapshot |
+| marking | A label that limits who may read a dataset. Holdout is the only one | a search tag |
+| holdout | A marking: only the judge's credential reaches it. Enforced by the credentials; no control grants it to an agent (the control is absent, not disabled). Shown as "Restricted to the judge" | a split an agent can see |
+| agent credential | Read-only on the views the person lists, holdout excluded | a write credential |
+| judge credential | A separate read-only credential that also covers the holdout. No agent ever holds it | the agent credential |
+| credential reference | Ratchet's record that a credential exists in a platform's store: id, connector, holder (agent or judge), who approved it. Never the value | the secret |
+| credential store | The platform's own place for secrets: the Claude Managed Agents vault, AgentCore Identity, the agent's Microsoft Entra identity on Foundry (secrets via a Foundry connection to Azure Key Vault), the agent's Agent Identity or service account on Google Agent Runtime (secrets from Secret Manager; exact stores confirmed in the spike). The only way a credential reaches a session | Ratchet's database, a prompt |
 
 | | Agent credential | Judge credential |
 | --- | --- | --- |
-| Reads | The views the person lists, read-only, holdout tables not granted | The same views and the holdout, read-only |
-| Kept | The platform's credential store | The judge platform's credential store |
+| Kept in | The platform's credential store | The judge platform's credential store |
 | Reaches a session as | A short-lived credential minted for that session | A short-lived credential minted for that judge sandbox |
-| Held by | Agents, in their sessions | The judge sandbox only |
+| Held by | Agents | The judge sandbox only |
 
-Ratchet keeps neither value. It keeps a credential reference. The customer makes both credentials in their own system with the recipe the connector gives (see [add-connector.md](add-connector.md)), and Ratchet never holds a connector admin secret.
+- Ratchet keeps neither value. The customer makes both with the connector's recipe; Ratchet holds no connector admin secret.
+- The server never reads data. It stores ids, versions, sizes, markings, status and who added what. Checks run in a sandbox on a platform.
+- A connector that is not Connected shows its datasets as "Not checked", never empty, and names the experiments that cannot measure until it is fixed.
 
-- **Datasets live under a connector.** A dataset has a name, a size, a marking and versions. A dataset version never changes after it is created; a new state is a new version with its own id and date (for example v4 today, v3 three weeks ago). A virtual dataset points at data left in place and is pinned by an as-of time that is part of the version id.
-- **A holdout is a marking on a dataset.** Only the judge's credential reaches it. In the Datasets table its row reads "Restricted to the judge" and has no grant control: the control is absent, not disabled. The dataset's page lists its versions and the experiments that use it.
-- **Status.** Connected (the last check read the datasets), Reconnect (a credential was refused or expired), Not checked (nothing has checked it yet, or the check could not run). Datasets of a connector that is not Connected show "Not checked", never empty, and the page names the experiments that cannot measure until it is fixed.
-- **The server never reads data.** It stores ids, versions, sizes, markings, status and who added what, never rows. Checks run in a sandbox on a platform, not on the Ratchet server.
+## Skill packs and plugins
 
-## Agents in Customize
+| Object | Means | Not |
+| --- | --- | --- |
+| skill pack | Versioned written know-how agents read before they propose changes ("Postgres query tuning"). Screen word: Skill, in Customize, Skills. An experiment selects packs and records the versions read. Agents only: the judge never reads one and a pack never holds holdout data. Steps in [add-skill-pack.md](add-skill-pack.md) | a dataset, a file in `.claude/skills/`, a plugin |
+| plugin | A bundle that adds evaluations, skill packs, suggested connectors and recommended agents under their own kinds. No powers of its own: it can never mark, unmark or grant a dataset | a connector, an agent |
 
-Customize, Agents holds the agents table. Settings, Agent platforms keeps the platform accounts only and links here. The table shows the agent (with its logo), its platform, its model, its parallel limit (how many sessions of it may work at once), the number of experiments it is used in and when it was last used. "Add agent" adds one. An agent's page shows its platform and account, model, parallel limit, "What the agent holds" (a short-lived git token for its own branch per repo, and read-only connector credentials that leave out the holdout; no model key, which belongs to the platform account) and its recent trials. The table also shows each agent's cost tier, and the agent scoreboard sits beside it. An owner sets the organization's default agent here, which Auto uses before there is data; no agent is preselected by brand. There is no agent order and no per-agent budget share: the experiment's budget covers all its sessions, and the agent a person starts is chosen in the chat (Auto or a named agent), and `spawn` defaults to the organization's chosen lower-cost agent.
+## What the server stores
 
-## Sessions in an experiment
+The server relays a session and keeps a ledger. It runs no loop. A person can talk or interrupt at any time.
 
-The experiment detail page lists the experiment's sessions in a table: the session (named by its agent), platform, started, ended, spend, state (Working, Done, Failed) and clean-up (Removed, Not removed). A session that is not removed raises a banner on the page: "The Gemini session was not removed. Ratchet retries, and its cost counts until it is gone." A spawned session's card shows its spend of the experiment's budget ("$14 of $100"). Settings, Budgets shows spend by experiment and by session.
-
-## Spending well
-
-- **Cost per trial** is the agent's spend since the session's previous trial plus the judge time for the measurement. Trial cards show it; the scoreboard strip shows cost per kept trial. Derived, never stored.
-- **Estimate first.** The Seal experiment card says what one measurement costs and how many trials the budget buys.
-- **Read history first.** Agents are told to call `history` before proposing a trial, and `spawn` hands the new session a summary of what was tried.
-- **Right-size.** Spawned sessions default to the organization's chosen lower-cost agent unless the lead asks otherwise with a reason.
-- **Patience.** When the sealed number of trials in a row are not Kept, the experiment is Waiting for you with a Keep going? card ([../organization/approvals.md](../organization/approvals.md)).
-- **Where the spend went** is on the experiment detail page and in Settings, Budgets.
-
-## Talking to a session
-
-The composer takes an @-mention of a session in the experiment ("@Codex focus on database queries"). The text goes to that session; without a mention it goes to the session being viewed. The first time a measurement arrives, the chat offers once, inline, "Notify me when this experiment needs me". It is a prompt, never a banner, and it asks the browser's notification permission only after a person says yes.
-
-## The agent trait
-
-One adapter per platform. The trait is designed against all five from the start (see [add-platform.md](add-platform.md)). A platform may also be the **judge platform**, which hosts judge sandboxes; that is a separate trait, described in [../judge/model.md](../judge/model.md).
-
-## Session events and what the server stores
-
-A session's stream carries messages (what people and agents said), tool calls and their results, cards (approval cards and result cards), and measurements arriving from the judge. A person can talk at any time and can interrupt.
-
-| The server stores | The server never stores |
+| Stores | Never stores |
 | --- | --- |
-| The conversation: what people and agents said (decided by the owner; see [../product/rulings.md](../product/rulings.md)) | Tool output |
-| Tool call names and card states | File contents |
-| Commit ids, dataset ids and versions, connector status | Diffs |
-| Measurements | Data |
-| Spend and audit rows | Raw logs |
+| The conversation: what people and agents said ([../product/rulings.md](../product/rulings.md)) | Tool output |
+| Tool call names and card states | File contents, diffs |
+| Commit ids, dataset ids and versions, connector status | Data |
+| Measurements | Raw logs |
+| Spend and audit rows | |
 
-Tool output and raw logs stay on the platform and are fetched when someone opens them. They may expire, and the session says so. Failing to fetch them is shown as failed, never as empty.
+Tool output and raw logs stay on the platform and are fetched when opened. They may expire, and the session says so; a failed fetch shows as failed, never as empty.
 
-## The terminal
-
-A person with edit access can open a terminal in a session from the header (the Terminal toggle). It is a shell in that session's own sandbox on its agent platform, the same sandbox the agent works in, never a Ratchet host and never the judge sandbox. A viewer sees it read-only. Opening one is an audit row ("Opened a terminal in Claude Code session"). The conversation store rule holds: terminal input and output go between the browser and the platform and the server stores none of it. The same goes for the Changes, Preview and Files panels: they read from the sandbox when opened and the server keeps no copy.
+The terminal, Changes, Preview and Files panels read from the agent's own sandbox when opened and the server keeps no copy. A person with edit access can type in the terminal, a viewer sees it read-only, and opening one is an audit row ("Opened a terminal in Claude Code session"). It is never a Ratchet host or the judge sandbox. How the panels look is in [../design/behaviour.md](../design/behaviour.md).
 
 ## Lifecycle
 
-1. **Start.** A person types one message in the composer with five chips (Project, Repos, Agent, Environment, Budget). The Project chip defaults to the project the person is in. Nothing else is asked first. Ratchet starts a new experiment in that project and its lead session on the agent's platform with the repos, the environment, credentials and tools.
-2. **Work.** The agent drives. It reads, edits, calls tools and talks to the person. Setup happens as cards, when it is needed. Until a person seals the experiment it is Not sealed: the agent explores, measures the baseline and proposes a definition with `seal`. An experiment may stay Not sealed and end there.
-3. **Idle or stopped.** The sandbox ends when the session is idle or stopped. The conversation does not. A person stopping a session makes it Done.
+1. **Start.** One message in the composer with the chips (Project, Repos, Agent, Environment, Budget), each defaulted. Ratchet starts a new experiment in the project and its lead session on the agent's platform.
+2. **Work.** The agent drives and sets up through cards when needed. Until a person seals it the experiment is Not sealed: the agent explores, measures the baseline and proposes a definition with `seal`. It may stay Not sealed and end there.
+3. **Idle or stopped.** The sandbox ends; the conversation does not. A person stopping a session makes it Done.
 4. **Resume.** A new sandbox starts from the session's branches. Whatever was not pushed is gone.
-5. **Clean-up.** Every session and sandbox is ended and deleted on its platform, and shown as Removed. One that is not deleted shows Not removed and is retried.
+5. **Clean-up.** Every session and sandbox is deleted on its platform and shown as Removed; one that is not shows Not removed and is retried.
 
-## Git is the hand-off
-
-Each repo gets a short-lived git token that may push only to the session's own branch. A trial is a set of commits, one per repo changed. Ratchet stores commit ids, never diffs. Another session or the judge reads the code from git.
+Git is the hand-off: a trial is a set of commits, one per repo changed. Ratchet stores commit ids, never diffs; another session or the judge reads the code from git.
 
 ## Two offerings
 
-- **Self-hosted:** a Docker Compose service (server and Postgres) using the customer's own platform accounts, at least one.
+- **Self-hosted:** a Docker Compose service (server and Postgres) on the customer's own platform accounts.
 - **Ratchet cloud:** we host the server and run every session on Ratchet's platform accounts, billed at cost through the budget.
 
 One core, two shells. A promise that holds in one and not the other is a defect.
 
 ## How this area refers to the others
 
-- Judge: by experiment id and trial id. A value model is the project's and the judge's, never a session's. An evaluation template under Customize is where an experiment's definition starts; the sealed definition is the judge's (see [../judge/model.md](../judge/model.md)). The judge decides outcomes and the budget meter refuses `measure` when the experiment's spend reaches its budget. Sessions never read the accept rule.
-- Organization: by actor id, project id and role. Every platform account, environment, attached repo and credential reference belongs to the organization, and every experiment to a project. Approvals and policy are in [../organization/approvals.md](../organization/approvals.md).
-
-Platform words (agent ids, vault ids, ARNs, regions) stay inside each platform's adapter.
+- Judge: by experiment id and trial id. Value models, evaluation templates and the accept rule are the judge's; the budget meter makes the judge refuse `measure` when spend reaches the budget.
+- Organization: by actor id, project id and role. Platform accounts, environments, attached repos and credential references belong to the organization, experiments to a project. Approvals and policy: [../organization/approvals.md](../organization/approvals.md).
+- Platform words (agent ids, vault ids, ARNs, regions) stay inside each platform's adapter.

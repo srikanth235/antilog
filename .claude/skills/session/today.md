@@ -1,6 +1,6 @@
 # Session: what the earlier code did, and what it taught
 
-The earlier Rust daemon and CLI live on the branch `claude/peaceful-lamport-leak6p`. They are reference, not a base. Nothing below exists on this branch. Every path named is on that branch, and the words (experiment, run, drafting session, evaluator, optimization, note) are the earlier design's, not the target's. The earlier design also had skill packs, plugins, Customize and projects. They are back in the target in a new form (see [../product/rulings.md](../product/rulings.md)), and nothing below is their code.
+The earlier Rust daemon and CLI live on the branch `claude/peaceful-lamport-leak6p`. They are reference, not a base. Nothing below exists on this branch. Every path named is on that branch, and the words (experiment, run, drafting session, evaluator, optimization, note) are the earlier design's, not the target's. The earlier design also had skill packs, plugins, Customize and projects; the target's are in [model.md](model.md), and nothing below is their code.
 
 ## What it built
 
@@ -34,4 +34,4 @@ The earlier Rust daemon and CLI live on the branch `claude/peaceful-lamport-leak
 - **Steering text and the `history` tool** worked: agents read what was tried and did not repeat it. The target keeps `history` and drops the separate steering feature; a person talks to the agent in the chat.
 - **Opening a pull request** was a chat tool with no audit entry. The target makes it `deliver`, an approved and audited call.
 - **Connectors were accounts, not data systems.** The earlier code had no datasets and no read path to a warehouse. The target's connectors are the systems an agent's code reads, with read-only credentials that leave out the holdout.
-- **Agent instructions lived in repo files and prompts**, with no one place and no test. The target keeps them in one versioned place, tested on repos with known wins (see [prompts.md](prompts.md)).
+- **Agent instructions lived in repo files and prompts**, with no one place and no test. The target keeps them in one versioned, tested place ([prompts.md](prompts.md)).

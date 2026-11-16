@@ -25,7 +25,7 @@ A trial that breaks a guardrail is only recorded and notifies no one. The words 
 
 ## The monthly report email
 
-One email a month with the organization's or a project's report, to the members an owner chose ("Email this monthly"): spent, Delivered, Pending, At risk, Return, where the spend went, the agent scoreboard for the month, the top wins with receipt links and experiments stopped with no win. It carries numbers, titles and links, never diffs, tool output or data, and only to members who may read that report. It is the one email Ratchet sends; a person can leave the list. Choosing the recipients and exporting the report are audited actions. A self-hosted server that has no mail endpoint configured sends none, and the report is still on its page.
+One email a month with the organization's or a project's report, to the members an owner chose ("Email this monthly"). The report holds spent, Delivered, Pending, At risk, Return, where the spend went, the agent scoreboard for the month, the top wins with receipt links and experiments stopped with no win. It carries numbers, titles and links, never diffs, tool output or data, and only to members who may read that report. It is the one email Ratchet sends; a person can leave the list. Choosing the recipients and exporting the report are audited actions. A self-hosted server that has no mail endpoint configured sends none, and the report is still on its page.
 
 No other email, chat or webhook notifications for now. Adding one is a product call.
 

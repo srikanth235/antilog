@@ -26,5 +26,5 @@ Others: `candidates`, `history`, `spend`, `activity`, `agent pause|resume|messag
 
 ## Chat and MCP
 
-- `ratchet chat new|send|show|stop|end` talked to Ratchet's assistant: the user's own Claude Code, Codex or Grok acting on Ratchet through its tools. `chat end` needed `--yes`. Where chat and drafting run in the target is an open question for the owner (see [product rulings](../product/rulings.md)).
+- `ratchet chat new|send|show|stop|end` talked to Ratchet's assistant: the user's own Claude Code, Codex or Grok acting on Ratchet through its tools. `chat end` needed `--yes`.
 - `ratchet mcp` served every command as an MCP tool on stdio; tools that needed `--yes` took `confirm: true`. Registered with `claude mcp add ratchet -- ratchet mcp`.

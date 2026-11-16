@@ -5,13 +5,32 @@ One board per screen state, for the web app (macOS app boards are owed). There i
 ## What is here
 
 - `*.dc.html`: boards, each one fixed-size root element. Web boards are 1440 by 900; the rules boards are taller.
-- Parts, the shared chrome, on the Components page: `Sidebar`, `SidebarEmpty` (no rows, for an organization with no experiments), `SettingsRail`, and the nested pieces `SidebarRows`, `SidebarTop` and `SidebarFoot`. A part is a plain static board; the generator inserts its content into every board that marks a place for it (see Parts below). The session header varies per screen, so they are board content, not parts.
-- `canvas.json`: the pages and where each board sits. Pages: Design rules, Components, Web light, Web dark, Archive. Rows each have a title note: 0 Rules, 1 Sign in, 2 Home, 3 Session, 4 Experiment and receipts, 5 Search, 6 Projects, 7 Customize, 8 Agent platforms, 9 Organization, 10 Desktop app. Boards in a row are 1440 wide with 80px gaps.
-- Session boards: the header is one slim bar with panel toggles (`.hbar`). `SessionWorking` draws the Details panel open; `SessionTrials`, `SessionChanges`, `SessionTerminal`, `SessionPreview` and `SessionFiles` each draw one panel; `SessionShare` draws the Share popover and `SessionTitleMenu` the title menu (with "Hand off to..."); `SessionReadOnly` draws Terminal read-only. On every session board the composer floats over the conversation as one line, with a fade above it and its options collapsed to icons; `SessionComposerExpanded` draws it grown, `SessionAgentMenu` the agent menu, `SessionKeepGoing` the Keep going? card, `SessionHandOff` a hand off (the ended session and the new one's start) and `SessionFailover` the Continue on another agent? card. They are copies of one frame, so change the frame in all of them.
-- Cost and Return boards: `Report` (the monthly report, from the Projects page) and `AddValueModel` (a dialog over `Project`), both in row 6; `Agents` is the agent scoreboard; `ExperimentDetail` and `SettingsBudgets` show where the spend went. Their CSS is the `aims: pages` block in `components.css` (class names `ap-`).
+- Parts, the shared chrome, on the Components page: `Sidebar`, `SidebarEmpty` (no rows, for an organization with no experiments), `SettingsRail`, and the nested pieces `SidebarRows`, `SidebarTop` and `SidebarFoot`. A part is a plain static board; the generator inserts its content into every board that marks a place for it (see Parts below). The session header varies per screen, so it is board content, not a part.
+- `canvas.json`: the pages and where each board sits. Pages: Design rules, Components, Web light, Web dark, Archive. Rows each have a title note (see the index below). Boards in a row are 1440 wide with 80px gaps.
+- Session boards are copies of one frame: the slim header bar (`.hbar`), panels and the floating one-line composer. See [mockups.md](../../.claude/skills/design/mockups.md) for which board draws which panel and card.
+- Cost and Return boards: `Report` and `AddValueModel` (a dialog over `Project`) in row 6; `Agents` is the agent scoreboard; `ExperimentDetail` and `SettingsBudgets` show where the spend went. Their CSS is the `aims: pages` block in `components.css` (class names `ap-`).
 - `tokens.css` (generated), `icons.css` and `components.css` (authored, values only through `var()`). Boards are plain files with no runtime: open one from disk.
 - `DesignRules.dc.html` shows every token in light and dark with its contrast ratio, the type scale, radii and button kinds. `Decisions.dc.html` lists the owner's calls, DECIDED with a date or OPEN.
 - Values live in `design/tokens.toml` and nowhere else.
+
+## Board index
+
+Every light board, by canvas row (each has a generated `XDark` twin except the rules boards and the parts). `ls design/mockups/*.dc.html | grep -v Dark` lists the same set.
+
+| Row | Boards |
+| --- | --- |
+| Rules | `DesignRules`, `Decisions` |
+| Components (parts) | `Sidebar`, `SettingsRail`, `SidebarRows`, `SidebarTop`, `SidebarFoot`, `SidebarEmpty` |
+| 1 Sign in | `SignIn`, `SignInError`, `SignInNoAccess` |
+| 2 Home | `Home`, `HomeEmpty` |
+| 3 Session | `SessionStart`, `SessionSeal`, `SessionWorking`, `SessionTrials`, `SessionChanges`, `SessionTerminal`, `SessionPreview`, `SessionFiles`, `SessionShare`, `SessionTitleMenu`, `SessionSpawned`, `SessionWin`, `SessionDelivered`, `SessionNoWin`, `SessionBudget`, `SessionCredential`, `SessionRepo`, `SessionRegression`, `SessionFailed`, `SessionReadOnly`, `SessionComposerExpanded`, `SessionAgentMenu`, `SessionKeepGoing`, `SessionHandOff`, `SessionFailover` |
+| 4 Experiment and receipts | `ExperimentDetail`, `Receipt` |
+| 5 Search | `SearchStart`, `Search`, `SearchEmpty` |
+| 6 Projects and Report | `Projects`, `Project`, `ProjectEmpty`, `Report`, `AddValueModel` |
+| 6 Customize | `Evaluations`, `EvaluationsEmpty`, `EvaluationsDiscover`, `EvaluationDetail`, `AddEvaluation`, `Skills`, `SkillsEmpty`, `SkillsDiscover`, `SkillDetail`, `AddSkill`, `Connectors`, `ConnectorsEmpty`, `ConnectorsDiscover`, `ConnectorDetail`, `AddConnector`, `AddConnectorMcp`, `ConnectorError`, `DatasetHoldout`, `Agents`, `AgentsEmpty`, `AgentsDiscover`, `AgentDetail`, `AddAgent`, `Plugins`, `PluginsEmpty`, `PluginsDiscover`, `PluginDetail`, `AddPlugin` |
+| 8 Agent platforms, approvals, budgets, connections | `SettingsPlatforms`, `SettingsPlatformsEmpty`, `SettingsPlatformsManaged`, `PlatformError`, `AddPlatform`, `SettingsBudgets`, `SettingsApprovals`, `SettingsConnections` |
+| 9 Organization | `SettingsProfile`, `SettingsAppearance`, `SettingsTokens`, `SettingsTokensEmpty`, `SettingsDevice`, `SettingsGeneral`, `SettingsMembers`, `SettingsSso`, `SettingsAudit`, `SettingsReadOnly` |
+| 10 Installed web app | `WebInstalled`, `WebNotification`, `WebOffline` |
 
 ## Naming
 
