@@ -11,7 +11,7 @@ The ledger is the store, and the only state: Postgres 18 self-hosted, SQLite in 
 - Each of the three modules (optimization, context, infrastructure) owns its own tables. The floor owns members, roles, tokens and the audit log.
 - No joins across modules. A module reads another through its API, by id and version.
 - Spend rows, the audit log and the receipts are append-only, enforced by triggers in both dialects and not by the code that writes them.
-- Jobs for the runner are rows in the store; see [runner-job.md](runner-job.md).
+- Platform jobs are rows in the store; see [platform-job.md](platform-job.md).
 
 ## Steps (target)
 

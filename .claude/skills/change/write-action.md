@@ -8,7 +8,7 @@ Every write goes through one action layer, and nowhere else. A write that skips 
 2. **Write and audit.** The change and its audit entry happen in one transaction of the store (Postgres or the organization's SQLite), or neither does. Every row carries its organization.
 3. **Publish.** After the commit, the layer publishes one live event naming what changed (see [live-event.md](live-event.md)).
 
-An action that needs work in the customer's infrastructure queues a job in the same transaction. The runner executes it (see [runner-job.md](runner-job.md)). The action layer never calls a runner or a connector directly.
+An action that needs work on an agent platform queues a job in the same transaction. The server takes it (see [platform-job.md](platform-job.md)). The action layer never calls a platform or a connector directly.
 
 ## Adding a write (target)
 

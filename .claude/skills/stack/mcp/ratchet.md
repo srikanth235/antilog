@@ -15,7 +15,7 @@ Read the skill for **design**, not code: how to name tools, write descriptions a
 - **A tool can do nothing its caller's token cannot.** Each tool calls the API with the caller's access token and role. It never has a back door and never widens a scope. A denied call returns the API's error.
 - **Holdout data is never reachable.** No tool reads, lists or summarizes the holdout, and no tool output may carry it. The holdout marking is in [../../context/rules.md](../../context/rules.md).
 - **Tools mirror the CLI and the API.** One tool per command, named as the command and the glossary name them ("experiment", never "automation"). Do not add a tool the API lacks. A tool whose command needs `--yes` takes `confirm: true` and shows its preview first, as [../../ratchet/SKILL.md](../../ratchet/SKILL.md) says.
-- **Secrets never appear in a tool result.** Not a token, a connector secret or a model key.
+- **Secrets never appear in a tool result.** Not a token, a connector secret or a platform credential.
 - **Evaluate it.** Write the skill's evaluation questions against a test server and keep them with the CLI's contract tests ([../../land/tests.md](../../land/tests.md)).
 
 ## Connecting to other MCP servers

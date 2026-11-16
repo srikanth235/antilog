@@ -15,17 +15,18 @@ One job per layer, each running the commands in [checks.md](checks.md). A pull r
 
 | Job | Runs |
 | --- | --- |
-| rust | fmt, clippy with warnings denied, tests, `cargo deny`, on Linux and on macOS (the runner and CLI build for both) |
+| rust | fmt, clippy with warnings denied, tests, `cargo deny`, on Linux and on macOS (the CLI builds for both) |
 | wasm | `ratchet-core` builds for `wasm32-unknown-unknown` as well as natively, on every commit, so a tokio, `sqlx` or Cloudflare import in the core fails at once |
 | api | the OpenAPI document and generated client are current |
 | storage | the one storage suite against Postgres (a container) and against SQLite; both dialects' migrations; the dialects agree on tables and columns |
 | web | typecheck, lint, tests |
 | macos-app | build and test the Swift app, on a macOS runner only |
-| infra | `tofu fmt`, `validate`, `test`; `packer fmt` and `validate`; the backend contract suite against fakes |
-| release | builds the three programs and the container images; signs them |
+| platform | the platform contract suite against the fake platform |
+| infra | only if the repo keeps OpenTofu or Packer for something the target still needs (see [stack/infra/ratchet.md](../stack/infra/ratchet.md)): `tofu fmt`, `validate`, `test`; `packer fmt` and `validate` |
+| release | builds the programs (`ratchet-server`, `ratchet-cloud`, `ratchet`) and the container image; signs them |
 
 Rules:
 
-- Only CI can run the macOS jobs and image builds. Say in the report when you could not run them.
+- Only CI can run the macOS jobs and the image build. Say in the report when you could not run them.
 - A job that spends money (a real-cloud run, an agent canary) is never scheduled or started without the owner's go-ahead; see [real-cloud.md](real-cloud.md).
 - A step that is skipped for a missing tool is a loud skip locally and a failure in CI.

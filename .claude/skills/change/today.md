@@ -1,6 +1,6 @@
 # Change: the earlier daemon
 
-This page keeps what the earlier code taught. It is on the branch `claude/peaceful-lamport-leak6p`, not on this branch, and it is reference only: the daemon `ratchetd`, a unix socket, one per-boot bearer token, SQLite. Paths below are from that branch. The target pages are [api-endpoint.md](api-endpoint.md), [write-action.md](write-action.md), [live-event.md](live-event.md), [ledger-table.md](ledger-table.md) and [runner-job.md](runner-job.md).
+This page keeps what the earlier code taught. It is on the branch `claude/peaceful-lamport-leak6p`, not on this branch, and it is reference only: the daemon `ratchetd`, a unix socket, one per-boot bearer token, SQLite. Paths below are from that branch. The target pages are [api-endpoint.md](api-endpoint.md), [write-action.md](write-action.md), [live-event.md](live-event.md), [ledger-table.md](ledger-table.md) and [platform-job.md](platform-job.md).
 
 ## An API endpoint
 

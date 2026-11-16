@@ -6,8 +6,8 @@
 
 - The server never connects to data.
 - The holdout credential goes only to the evaluator.
-- Keys are added only at egress, never passed into a sandbox.
-- Every sandbox is removed when its run ends.
+- Credentials reach a session only through the platform's credential store. No model key enters a sandbox.
+- Every session and sandbox is ended and deleted when its run ends.
 
 A review checks a change against those first, then against the skill's checklist. A finding that breaks one of them is blocking.
 
@@ -15,7 +15,7 @@ A review checks a change against those first, then against the skill's checklist
 
 | Skill | Use it | Notes |
 | --- | --- | --- |
-| [rust-review](general/trailofbits/rust-review/SKILL.md) | Before landing a large Rust change, and on a schedule, for the server (`ratchet-core`, `ratchet-server`, `ratchet-cloud`), the shells, the runner and the egress proxy | Most useful where input is untrusted: the API, the proxy, the runner's job intake. `unsafe` is rare here; see [../rust/ratchet.md](../rust/ratchet.md) |
+| [rust-review](general/trailofbits/rust-review/SKILL.md) | Before landing a large Rust change, and on a schedule, for the server (`ratchet-core`, `ratchet-server`, `ratchet-cloud`), the shells and the platform adapters | Most useful where input is untrusted: the API, the platform adapters' parsing of session events, the `measure` tool intake. `unsafe` is rare here; see [../rust/ratchet.md](../rust/ratchet.md) |
 | [supply-chain-risk-auditor](general/trailofbits/supply-chain-risk-auditor/SKILL.md) | When a dependency is added or raised, with [../libraries.md](../libraries.md) | Alongside `cargo deny check`, not instead of it. A new dependency is still a product call |
 | [sharp-edges](general/trailofbits/sharp-edges/SKILL.md) | When designing an API or a config: access tokens and their scopes, roles, the holdout marking, connector settings, defaults | Ask whether the safe use is the easy use and whether a wrong value fails loudly |
 | [property-based-testing](general/trailofbits/property-based-testing/SKILL.md) | When writing tests for the accept rule, the noise floor, budget arithmetic, run state transitions, and the export and import file round trip | Use `proptest` (Rust). The web app has no property-test library in [../libraries.md](../libraries.md), so none for TypeScript. Test layout is in [../../land/tests.md](../../land/tests.md) |

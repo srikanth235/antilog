@@ -1,8 +1,8 @@
 # Cloudflare in Ratchet
 
-(target) Ratchet cloud runs on Cloudflare: the cloud shell `ratchet-cloud` is a Worker with one Durable Object per organization, and Ratchet-managed sandboxes run on Cloudflare Containers. Nothing of it is on this branch. Self-hosted never touches Cloudflare. The design is in [../rust/ratchet.md](../rust/ratchet.md), [../postgres/ratchet.md](../postgres/ratchet.md) and [../infra/ratchet.md](../infra/ratchet.md).
+(target) Ratchet cloud runs on Cloudflare: the cloud shell `ratchet-cloud` is a Worker with one Durable Object per organization, and every session runs on Ratchet's own agent platform accounts. Cloudflare runs no sandboxes: Cloudflare Containers and the managed runner are no longer part of the design. Nothing of it is on this branch. Self-hosted never touches Cloudflare. The design is in [../rust/ratchet.md](../rust/ratchet.md), [../postgres/ratchet.md](../postgres/ratchet.md) and [../infra/ratchet.md](../infra/ratchet.md).
 
-`general/` is a copy of Cloudflare's own agent skills from [cloudflare/skills](https://github.com/cloudflare/skills) (Apache-2.0, [licence](licenses/cloudflare-skills-LICENSE)): Durable Objects, Workers practices, local development, profiling, the `cf` CLI, Wrangler and Sandboxes, plus the product references for what we use. Start at [general/INDEX.md](general/INDEX.md). The list, and why the rest is left out, is in [sync.py](sync.py).
+`general/` is a copy of Cloudflare's own agent skills from [cloudflare/skills](https://github.com/cloudflare/skills) (Apache-2.0, [licence](licenses/cloudflare-skills-LICENSE)): Durable Objects, Workers practices, local development, profiling, the `cf` CLI, Wrangler and Sandboxes (kept for reference; the target uses neither Containers nor Sandboxes), plus the product references for what we use. Start at [general/INDEX.md](general/INDEX.md). The list, and why the rest is left out, is in [sync.py](sync.py).
 
 **This page wins over `general/`.** The upstream skills are written for TypeScript projects that pick their own products. Ratchet's products are decided and its shell is Rust.
 
@@ -14,8 +14,7 @@
 | Durable Objects (SQLite storage) | One per organization: its database, live event streams, job queue and timers (alarms) |
 | D1 | The directory: sign-in email or domain to organization and region, and billing. No tenant data |
 | Static assets | The built web app |
-| Secrets Store | Ratchet-managed organizations' connector secrets and own model keys, read only by the managed runner |
-| Containers (Sandboxes) | Ratchet-managed workspace and evaluator sandboxes |
+| Secrets Store | Ratchet's own agent platform credentials, bound to the Worker |
 | R2 | Organization exports for moving between cloud and self-hosted |
 
 Nothing else. KV, Queues, Workflows, Hyperdrive, Workers AI and the Agents SDK are not used. Adding a Cloudflare product is a product call: ask the owner.
@@ -27,8 +26,8 @@ Nothing else. KV, Queues, Workflows, Hyperdrive, Workers AI and the Agents SDK a
 - **Agents use `cf`; Wrangler runs underneath.** `cf` is the one command for the cloud shell and the account: `cf dev`, `cf build`, `cf deploy` (from CI only), `cf d1 migrations apply --local`, and account tasks such as tokens and spending limits. For a Rust Worker, `cf build` and `cf dev` hand the build to Wrangler (a local test in November 2026 showed it), so Wrangler stays a pinned dev dependency, but nobody calls it directly except `npx wrangler tail` for live logs, which `cf` does not have yet. The config is `cloudflare.config.ts`, with the `worker-build` command in the `wrangler.config.ts` that `cf` generates, next to `ratchet-cloud` (target). Never keep a `wrangler.toml` beside them: `cf` ignores it. `cf` is in beta: pin it exactly (`npm install --save-exact`) and read its release notes on every upgrade. `cf d1 migrations apply` targets the real account unless given `--local`.
 - **One Durable Object per organization**, addressed by the organization's id from a namespace in its jurisdiction (EU, US or FedRAMP). SQLite storage only, never the key-value storage API. Writes that belong together run in one synchronous transaction. Timers are alarms, never `setTimeout`.
 - **Only ledger rows in a Durable Object or D1:** ids, versions, numbers, states and audit rows. Never customer data, a diff, a log or a secret.
-- **Secrets stay with the managed runner.** The Secrets Store binding is given to the managed runner Worker only, never to `ratchet-cloud`. The server must hold no connector secret or model key.
-- **Sandboxes keep the trust rules.** A workspace and an evaluator are separate containers with no route between them. The holdout credential goes only to the evaluator. Model keys are added at egress, never passed in. Every sandbox is removed when its run ends. Use the Sandbox API on its `next` line, pinned to an exact version.
+- **Platform credentials sit in the Secrets Store.** Ratchet's platform credentials are bound to the Worker through Cloudflare's Secrets Store, never in an organization's database, a response or a log. The server holds no connector admin secret and no model key. Whether an enterprise may use its own platform accounts on Ratchet cloud is open.
+- **The Worker talks out to platforms over HTTPS.** It reads each session's events and answers the `measure` tool over them; no platform calls the Worker. It stores ids, numbers, states, commit ids, spend and audit rows only, never a diff, a transcript or a log. The trust rules for sessions and evaluator sandboxes are in [../../infra/rules.md](../../infra/rules.md).
 - **Only CI deploys.** No one runs `cf deploy` from a laptop against production. Local work uses `cf dev` (target).
 - **No feedback issues from here.** The upstream skills describe filing feedback on GitHub. Do not, unless the owner asks.
 

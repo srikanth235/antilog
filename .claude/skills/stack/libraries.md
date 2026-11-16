@@ -34,15 +34,15 @@ TypeScript in use: `typescript`, `vitest`, `yaml` (see [typescript.md](typescrip
 
 (target) None of this is in the repository yet. Versions are the latest stable releases on 2026-11-14, read from crates.io, npm and each project's release feed. Pin these when the code lands; raise them on purpose, never by accident.
 
-**Shape.** One Cargo workspace builds one core and two shells, with the runner and the CLI:
+**Shape.** One Cargo workspace builds one core and two shells, with the CLI:
 
 - `ratchet-core`: all logic and the API routes as an axum `Router`, behind one `Store` trait. It never imports tokio's runtime, `sqlx` or a Cloudflare crate, and builds for `wasm32-unknown-unknown`. It never connects to data.
-- `ratchet-server`: the self-hosted shell around the core. The API, the embedded web app, Postgres. The launcher is built in.
+- `ratchet-server`: the self-hosted shell around the core. The API, the embedded web app, Postgres. It talks out to the agent platforms over HTTPS.
 - `ratchet-cloud`: the Ratchet cloud shell around the core, a Cloudflare Worker with one Durable Object (SQLite) per organization.
-- `ratchet-runner`: the launcher for Ratchet cloud, the same code, installed in the customer's infrastructure, or run by us for Ratchet-managed organizations. It starts and removes sandboxes, mints scoped credentials and runs the egress proxy. It connects out over HTTPS: it pulls jobs and the server streams updates to it. No inbound port, no gRPC.
+- The agent platform adapters (Claude Managed Agents, then AWS AgentCore, then the OpenAI Agents API), one adapter each behind one platform trait, in their own crate or crates. They call the platforms over HTTPS from either shell. Ratchet runs no sandboxes and no runner. Which client crates the adapters use is not decided; a new dependency is a product call.
 - `ratchet`: the CLI and the MCP server, built on the API's types.
 
-Start fresh. Copy only proven pieces from the earlier code on `claude/peaceful-lamport-leak6p` (the AWS sandbox, the clean-up checks, the ledger tests); do not rebase on it.
+Start fresh. Copy only proven pieces from the earlier code on `claude/peaceful-lamport-leak6p` (the clean-up checks, the ledger tests); do not rebase on it. The earlier AWS sandbox, runner and launcher are not part of the target.
 
 **Toolchain**
 
@@ -62,7 +62,7 @@ Start fresh. Copy only proven pieces from the earlier code on `claude/peaceful-l
 | HTTP server, live events | `axum` | 0.8.9 |
 | Middleware | `tower` / `tower-http` | 0.5.3 / 0.7.1 |
 | HTTP | `hyper` | 1.12.0 |
-| TLS (self-hosted server and runner only; its `aws-lc-rs` provider never enters the core) | `rustls` | 0.23.46 |
+| TLS (self-hosted server only; its `aws-lc-rs` provider never enters the core) | `rustls` | 0.23.46 |
 | HTTP client | `reqwest` | 0.13.5 |
 | Serialization | `serde` / `serde_json` | 1.0.229 / 1.0.154 |
 | Postgres, migrations (self-hosted store) | `sqlx` (+ `sqlx-cli`) | 0.9.0 |
@@ -71,12 +71,12 @@ Start fresh. Copy only proven pieces from the earlier code on `claude/peaceful-l
 | Sign-in: OpenID Connect, and GitHub's OAuth (default features off; each shell supplies the HTTP client) | `openidconnect` / `oauth2` | 4.1.0 / 5.0.0 |
 | Receipt signing (ed25519), token and session hashes, constant-time compare (pure Rust, builds for wasm) | `ed25519-dalek` / `sha2` / `subtle` | 3.0.0 / 0.11.1 / 2.6.1 |
 | Embedded web app | `rust-embed` | 8.14.0 |
-| AWS | `aws-config` | 1.13.2 |
-| | `aws-sdk-ec2` / `aws-sdk-s3` / `aws-sdk-sts` | 1.280.0 / 1.159.0 / 1.126.0 |
-| | `aws-sdk-dynamodb` / `aws-sdk-secretsmanager` | 1.139.0 / 1.128.0 |
+| AWS (see the note under the table) | `aws-config` | 1.13.2 |
+| | `aws-sdk-ec2` / `aws-sdk-s3` / `aws-sdk-sts` | 1.280.0 / 1.159.0 / 1.126.0 (not needed by the target) |
+| | `aws-sdk-dynamodb` / `aws-sdk-secretsmanager` | 1.139.0 / 1.128.0 (not needed by the target) |
 | GitHub | `octocrab` | 0.54.9 |
-| Postgres connector | `tokio-postgres` | 0.7.18 |
-| Egress proxy (TLS interception) | `hudsucker` / `rcgen` | 0.25.0 / 0.14.10 |
+| Postgres connector (not needed by the target unless per-run credential minting is ruled; the server never connects to data) | `tokio-postgres` | 0.7.18 |
+| Egress proxy, TLS interception (not needed by the target: no egress proxy) | `hudsucker` / `rcgen` | 0.25.0 / 0.14.10 |
 | MCP server | `rmcp` | 3.10.0 |
 | Command line | `clap` | 4.6.7 |
 | Ids, time | `uuid` / `jiff` | 1.29.2 / 0.2.43 |
@@ -89,9 +89,11 @@ Start fresh. Copy only proven pieces from the earlier code on `claude/peaceful-l
 
 Sessions and access tokens need no library: each is 32 random bytes shown once, stored as a SHA-256 hash through the `Store` and compared in constant time, so both stores behave the same. `tower-sessions` and `aws-lc-rs` were dropped (November 2026): the first ties sessions to a `sqlx` store the cloud cannot use, the second is C code that does not build for wasm. Better Auth was considered and refused: it is TypeScript and keeps its own user, session and organization tables beside ours.
 
-Snowflake, Databricks and BigQuery have no maintained Rust client we would ship; their connectors call each vendor's REST API through `reqwest`. Every connector sits behind one `Connector` trait, so its vocabulary stops there, and each knows how to mint a scoped, read-only, holdout-excluding credential. Sandbox backends sit behind one trait: Kubernetes first, then VMs on AWS, GCP and Azure. Provider crates stay inside each adapter.
+Snowflake, Databricks and BigQuery have no maintained Rust client we would ship; their connectors call each vendor's REST API through `reqwest`. Every connector sits behind one `Connector` trait, so its vocabulary stops there, and each says how to make a read-only, holdout-excluding credential for its system (whether Ratchet mints them per run is open). Agent platforms sit behind one platform trait, one adapter each. Platform crates stay inside each adapter.
 
-**Cloud adapters**
+**Cloud adapters (earlier design)**
+
+These served the sandbox backends (Kubernetes, VMs on AWS, GCP and Azure), which are gone. **Every row below is not needed by the target.** The pins stay until the owner says to drop them; do not add any of them to a manifest.
 
 | Need | Crate | Version |
 | --- | --- | --- |
@@ -106,9 +108,9 @@ Snowflake, Databricks and BigQuery have no maintained Rust client we would ship;
 | Azure secrets | `azure_security_keyvault_secrets` | 1.0.1 |
 | Secrets in Vault | `vaultrs` | 0.8.0 |
 
-Azure compute goes through the ARM REST API with `azure_core`, because `azure_mgmt_compute` has not been updated since 2024. AWS uses the `aws-sdk-*` crates above.
+In the earlier design, Azure compute went through the ARM REST API with `azure_core`, because `azure_mgmt_compute` has not been updated since 2024. The AWS note: `aws-config` may still serve the AgentCore adapter (request signing), and the AWS SDK crate for AgentCore is not chosen; that is a product call.
 
-Background jobs use a small queue in the store: Postgres with `FOR UPDATE SKIP LOCKED` self-hosted, the organization's Durable Object in the cloud. No Redis, no message bus.
+Background jobs (platform jobs, see [change/platform-job.md](../change/platform-job.md)) use a small queue in the store: Postgres with `FOR UPDATE SKIP LOCKED` self-hosted, the organization's Durable Object in the cloud. No Redis, no message bus.
 
 **Web app (TypeScript)**: see [typescript.md](typescript/ratchet.md).
 
@@ -137,7 +139,7 @@ A proposal, not yet built. The app is SwiftUI and macOS only; Windows and Linux 
 | Sparkle (updates) | 2.10.0 |
 
 - Sparkle is the update mechanism for the Mac app (decided 15 Nov). The app is a direct download and is not on the Mac App Store.
-- The runner is the same Rust `ratchet-runner`, bundled as a helper inside the app. There is no second implementation in Swift.
+- The app is an API client only. It bundles no helper and runs no agent. Whether the Mac can be "This machine" is open.
 - Colours and words are generated from `design/tokens.toml` and the words catalogue, never written by hand.
 
 **Delivery**
@@ -148,10 +150,10 @@ A proposal, not yet built. The app is SwiftUI and macOS only; Windows and Linux 
 | `worker-build` (builds the cloud shell; downloads esbuild and `wasm-opt`, so CI caches or pins them) | 0.8.7 |
 | `cf` (the Cloudflare CLI, beta; agents use it) | 1.0.0-beta.32 |
 | Wrangler (run by `cf` to build the Rust Worker, and `wrangler tail`) | 4.161.0 |
-| Helm | 4.3.2 |
-| OpenTofu | 1.13.9 |
-| Packer | 1.16.2 |
+| Helm (not needed by the target) | 4.3.2 |
+| OpenTofu (not needed by the target) | 1.13.9 |
+| Packer (not needed by the target) | 1.16.2 |
 | cosign | 3.1.4 |
 | syft | 1.57.1 |
 
-Rules for any addition: self-hosting must keep working (no call to a service the administrator did not configure), the licence must suit a product we ship, and the crate must be maintained. A new outside system also needs a port with a real and a mock implementation; see [rust.md](rust/ratchet.md).
+Rules for any addition: self-hosting must keep working (no call to a service the administrator did not configure), the licence must suit a product we ship, and the crate must be maintained. A new outside system also needs a trait with a real and a mock implementation (an agent platform has the fake platform); see [rust.md](rust/ratchet.md).

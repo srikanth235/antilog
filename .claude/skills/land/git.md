@@ -14,7 +14,7 @@
 [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/): `type(scope): summary`.
 
 - **Type**, one of: `feat` (something a user can see or do), `fix`, `docs` (skills, glossary, READMEs), `refactor`, `perf`, `test`, `build` (dependencies, toolchain, images), `ci`, `chore`, `revert`.
-- **Scope**, the area touched, optional: `design`, `skills`, `glossary`, `server`, `runner`, `cli`, `web`, `mac`, `db`, `infra`. Leave it out when a change spans several.
+- **Scope**, the area touched, optional: `design`, `skills`, `glossary`, `server`, `platform`, `cli`, `web`, `mac`, `db`, `infra`. Leave it out when a change spans several.
 - **Summary**: imperative, lower case, no full stop, at most 72 characters for the whole line: `feat(design): draw the empty states`, `fix(server): audit a refused token revoke`.
 - **Breaking change**: `!` before the colon, and a `BREAKING CHANGE:` footer saying what to do: `feat(server)!: drop the v0 runs route`.
 - **Body**, when the why is not obvious: a blank line, then plain sentences, wrapped at 72.
