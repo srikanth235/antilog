@@ -20,4 +20,4 @@ Five promises. Each has one line on how it is checked. Nothing is built, so ever
 
 **Honest numbers.** Check: tests that value comes only from Kept wins and a sealed value model (never one an agent set), that Return divides by all spend in scope including experiments with no win, that a regression moves its amount from Delivered to At risk until a fix is merged, that a win is Delivered only once its pull request is merged, that pending is kept apart from delivered and out of Return, and that a failed trial reads as failed and never as zero. To add.
 
-**Keep.** Check: a watch measures the delivered experiment, a result worse than delivered by more than the noise is a regression, and a session is woken and a notification is sent. To add.
+**Keep.** Check: a watch pairs the delivered commit with the current head, a paired loss above the bar is a regression, and a session is woken and a notification is sent. To add.

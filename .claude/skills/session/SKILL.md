@@ -13,6 +13,7 @@ A session is one agent's work inside an experiment: a chat with one agent in one
 | Deciding what this area promises | [owes.md](owes.md) |
 | Looking up a word (session, agent, agent platform, cost tier, Auto, hand off, failover, agent scoreboard, platform account, environment, attached repo, connector, skill pack, dataset, dataset version, marking, holdout, agent credential, judge credential, credential reference, spawned session, session event, clean-up state) | [model.md](model.md) |
 | Checking a change against the rules that never bend | [rules.md](rules.md) |
+| What a prompt-injected agent could do, and what stops it | [threat-model.md](threat-model.md) |
 | Changing `spawn`, `attach_repo`, `request_credential`, `set_environment` or `request_budget`, or how tools reach a session | [tools.md](tools.md) |
 | Changing what agents are told | [prompts.md](prompts.md) |
 | Supporting a new agent platform | [add-platform.md](add-platform.md) |

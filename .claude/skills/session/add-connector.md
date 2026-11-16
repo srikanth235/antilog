@@ -37,3 +37,5 @@ Connectors live in Customize, Connectors (Yours and Discover; boards `Connectors
 ## Proving it
 
 Follow [../land/SKILL.md](../land/SKILL.md).
+
+An agent that reads a dataset can put what it read in its branch, its messages or an allowed endpoint. The Add connector card says so: grant an agent only data the customer would accept in a pull request ([threat-model.md](threat-model.md)).

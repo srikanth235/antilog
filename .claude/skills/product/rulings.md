@@ -27,12 +27,13 @@ The settled product, directed by the owner. Everything here is target; nothing i
 - **The trust rules never bend.** Only the judge's numbers count. An agent never holds the holdout credential. A sealed experiment never changes. A person or an agent can never mark a win: only the acceptance criteria can, as one pure function in code. Chat changes what an agent tries, never what counts.
 - **Anti-cheat is built in:** a seal over the definition and protected files (a trial that changes a protected path is Rejected), a fresh judge sandbox for every measurement, seal checks, confirmation before Kept, a second opinion from a different model provider that flags and never decides, and a signed receipt. See [judge anti-cheat](../judge/anti-cheat.md).
 - **Acceptance.** A trial is Kept when it beats the trial it started from by more than the bar, every guardrail holds, and it is confirmed in a fresh judge sandbox and on the holdout. An experiment's best is its best Kept trial. Outcomes: Measuring, Kept, Within noise, Worse, Guardrail failed, Failed holdout, Rejected, Failed.
+- **The holdout as an oracle.** Failed holdout is one bit per trial, so it can be probed. The judge credential is read-only. Holdout checks are capped per experiment version (sealed, default 20); at the cap the experiment needs a new version with a new holdout. The trial's code sees the holdout at the same path and shape as the evaluation data, and a standard planted cheat that behaves differently on the holdout must be caught by the seal checks.
 - **What an agent sees.** The measured value and guardrail values on the evaluation data, and the outcome. It may read the evaluation's code and may never change it. It never reads the holdout or learns a holdout value.
 - **Paired measurement and the bar.** In each fresh judge sandbox the trial and the trial it started from run interleaved, for the sealed number of repeats, and the gain is the mean of the paired differences. The bar: the one-sided lower confidence bound of that gain must be above zero at confidence 1 − 0.05/k, where k is the number of trials measured in this experiment version, this one included, so many attempts cannot win by luck. Confirmation repeats the paired measurement in another fresh sandbox.
-- **Quick check and patience.** A measurement starts with a quick check (one pair: the trial and the experiment's best, run once each in the same sandbox); the full measurement follows only if it beats the best by more than the noise. The quick check never decides Kept. When patience (default 6) trials in a row are not Kept, the experiment waits on a Keep going? card. Both are sealed.
-- **Delivery and watch.** `deliver` opens one linked pull request per repo changed, each carrying the receipt, and refuses any trial that is not Kept. The session stays attached for review comments and CI failures, and a rebase is measured again. A delivered experiment can be watched; a regression wakes or starts a session and notifies.
+- **Quick check and patience.** A measurement starts with a quick check (one pair: the trial and the experiment's best, run once each in the same sandbox); the full measurement follows only if it beats the best by more than the noise. The quick check never decides Kept. When patience (default 6) trials in a row are not Kept, the judge first measures each session's branch head that differs from every measured trial as one cumulative trial, started from the best, so gains each below the bar can add up; it counts in k and meets the same bar. If none is Kept, the experiment waits on a Keep going? card. Both are sealed.
+- **Delivery and watch.** `deliver` opens one linked pull request per repo changed, each carrying the receipt, and refuses any trial that is not Kept. The session stays attached for review comments and CI failures, and a rebase is measured again. A delivered experiment can be watched: the judge pairs the delivered commit with the current head of the default branch, and a regression is a paired loss whose lower confidence bound is above zero at 95%. It wakes or starts a session and notifies.
 - **Receipt.** Every win carries a signed receipt with Experiment, Data and Compute groups, and a Verify action. See [judge model](../judge/model.md).
-- **Value.** A win is Delivered once its pull request is merged. Pending is not in Return. See the three aims below.
+- **Value.** A win is Delivered once its pull request is merged. Pending is not in Return. Delivered is measured offline by the judge and says so wherever it is shown ("measured offline") until production scoring is decided. See the three aims below.
 
 ## Sessions, budget and storage
 
@@ -41,6 +42,7 @@ The settled product, directed by the owner. Everything here is target; nothing i
 - **Budget.** One per experiment, covering all its sessions and judge time. It is set on the composer (default: the project's, then the organization's) and an editor or owner can change it at any time; lowering it below spend stops new measurements. When it is spent the judge refuses `measure` and the experiment is Waiting for you with a Raise budget card. It sits inside its project's optional monthly cap, inside the organization's.
 - **The sandbox is temporary, the conversation is not.** A sandbox ends when the session is idle or stopped, and resuming starts a new one from the session's branches.
 - **What the server stores:** the conversation, tool call names and card states, commit ids, measurements, spend and audit rows. Never tool output, file contents, diffs or data. Tool output and raw logs stay on the platform, are fetched when opened and may expire; the session says so.
+- **Prompt injection is assumed.** Every agent reads untrusted text; what a hijacked agent holds and what still gets through is in [session threat model](../session/threat-model.md).
 - **A person's terminal** in the agent's sandbox is audited, and its output is not stored.
 - **What agents are told is part of the product** and is versioned and tested. See [session prompts](../session/prompts.md).
 - **Rules kept:** one translator per outside system; Ratchet never reshapes or pipes data; a session contacts only the endpoints its environment allows; a stopped session is ended and deleted at once.
@@ -127,6 +129,11 @@ OpenID Connect plus GitHub's OAuth, no passwords. Ratchet cloud offers GitHub (O
 | 16 Nov 2026 | AgentCore is the first adapter, for agents and the judge. |
 | 16 Nov 2026 | A thin first release: self-hosted, AgentCore, the web app, Speed, and `ratchet mcp`. |
 | 16 Nov 2026 | The licence is the Functional Source License (FSL-1.1-ALv2). |
+| 16 Nov 2026 | Cumulative trials at patience, so small gains add up. |
+| 16 Nov 2026 | Watch is paired: the delivered commit against the current head. |
+| 16 Nov 2026 | Holdout as an oracle: read-only judge credential, a sealed cap on holdout checks, a holdout look-alike cheat. |
+| 16 Nov 2026 | Prompt injection is assumed; the session threat model is written. |
+| 16 Nov 2026 | Delivered is labelled "measured offline" until production scoring is decided. |
 
 Decided calls also appear on the Decisions board.
 
@@ -149,16 +156,6 @@ The spike also answers:
 Self-hosted with AgentCore, the web app and `ratchet mcp`, one evaluation kind (Speed) with no connectors: seal, measure, Kept, receipt, deliver, budget, approvals and the audit log. Then, in this order unless the owner says otherwise: Ratchet cloud, the other adapters, connectors and the other evaluation kinds, plugins, value models with Return, Ideas and Report, and the Mac app. Their fields stay in the sealed definition and the store from the start, so nothing is redesigned.
 
 A `ratchet mcp` connection works inside a session in the experiment, named by its agent, with no platform sandbox. Its trial commits are pushed to that session's branch with a short-lived git token minted for the session, and are measured only in a judge sandbox.
-
-## Calls for the owner
-
-Raised 16 Nov 2026, not decided. Each touches a judge trust rule.
-
-- **Small gains that add up.** A trial is judged only against its parent, so real gains each below the bar never become a win. Options: (a, recommended) from time to time, measure the experiment's working branch against the baseline as one trial; (b) let a trial combine several earlier un-Kept trials; (c) leave it.
-- **Watch is not paired.** A regression compares against the stored delivered value, so drift in judge hardware reads as a regression. Recommended: pair the delivered commit with the current head, like a trial.
-- **Leaks from the judge sandbox.** The trial's code runs beside the holdout credential. Holdout Passed or Failed is a one-bit answer per trial that can be probed, and code can detect that it runs on the holdout. Recommended: make the judge credential read-only, count holdout checks against a sealed limit per experiment version, and add a planted cheat that behaves differently on the holdout.
-- **Prompt injection.** Agents read repo files, connector data and review comments, all untrusted. Nothing yet says what an injected agent could do with its git token, its tools and the stored conversation. Recommended: a threat model page in the session skill before the first release.
-- **Offline value.** Delivered counts the gain measured offline, not the effect in production, so Return can overstate. This is the first open question below; recommended: label Delivered as measured offline until production scoring is decided.
 
 ## Open questions
 

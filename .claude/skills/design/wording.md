@@ -28,7 +28,7 @@ The vocabulary source is [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md), includ
 | Scoreboard, Agent scoreboard | (see the glossary's retired words) |
 | Second opinion | AI review, audit |
 | Open pull request | Create PR, Ship |
-| Delivered (yearly value of merged wins) | locked in, realised |
+| Delivered (yearly value of merged wins, measured offline; its line reads "measured offline") | locked in, realised |
 | Pending (open pull request, not counted in Return) | unclaimed, waiting |
 | Return (Delivered divided by spent, as `68×`) | (see the glossary's retired words) |
 | Agent | connection |

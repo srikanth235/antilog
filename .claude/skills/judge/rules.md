@@ -9,6 +9,7 @@
 - Let an agent read the evaluation's code and never change it, because reading helps it iterate and changing it changes the score.
 - Never change an outcome once written, because an outcome that can move is not evidence. A new finding is a new measurement.
 - Never change a dataset version after it is created, because a measurement that names a version must be reproducible. New data is a new version.
+- Keep the judge credential read-only, cap holdout checks per experiment version (sealed, default 20), and show the holdout to the trial's code at the same path and shape as the evaluation data, because Failed holdout is one bit per trial and an agent that can probe it, or tell the holdout apart, can fit it.
 - Never put a holdout value in history, a message, a trial result or a receipt an agent reads. The holdout appears only as Passed or Failed.
 - Never let the judge read a skill pack or a plugin, because advice to agents must not reach what counts. A plugin never marks, unmarks or grants a dataset, and a skill pack never holds holdout data.
 - Start a sealed experiment from an evaluation template by copying it, never by reference, because a template that can be edited must not move a sealed definition.

@@ -23,7 +23,7 @@ Five tools every session gets (target). `ratchet mcp` serves the same tools to a
 - **Two steps, inside the judge:** a quick check (one pair on the evaluation data: the trial and the best, once each in the same sandbox), then, only if it beats the best by more than the noise, the full paired measurement against the trial it started from (all repeats, then confirmation in another fresh sandbox and on the holdout). A trial that stops at the quick check is Within noise or Worse, marked "Quick check", at a lower cost.
 - **Back:** a ticket at once. The measurement arrives later as an event in the session: the outcome, the measured value and guardrail values on the evaluation data, the noise band. Never a holdout value.
 - **Asks:** no, inside the budget.
-- **Refuses:** when the experiment's budget is spent (its sessions become Waiting for you with a Raise budget card). Patience reached: the experiment becomes Waiting for you with a Keep going? card, and `measure` waits for a person. A trial that starts from a trial that is not on this experiment version. An unsealed experiment. No platform tool timeout applies, because the call returns a ticket.
+- **Refuses:** when the experiment's budget is spent (its sessions become Waiting for you with a Raise budget card). Patience reached: the judge first measures cumulative trials (see [anti-cheat.md](anti-cheat.md)); if none is Kept, the experiment becomes Waiting for you with a Keep going? card, and `measure` waits for a person. A trial that starts from a trial that is not on this experiment version. An unsealed experiment. No platform tool timeout applies, because the call returns a ticket.
 
 ## history
 
@@ -42,7 +42,7 @@ Five tools every session gets (target). `ratchet mcp` serves the same tools to a
 
 - **In:** a delivered experiment, and a schedule or "when the default branch moves".
 - **Back:** a watch id. Each result is a measurement.
-- **Asks:** no. A regression (worse than the delivered value by more than the noise) wakes a session, or starts a new one in the experiment, and sends a notification.
+- **Asks:** no. Each watch pairs the delivered commit with the current head. A regression (a paired loss whose lower confidence bound is above zero at 95%) wakes a session, or starts a new one in the experiment, and sends a notification.
 - **Refuses:** an experiment that was never delivered.
 
 ## Rules for every judge tool

@@ -31,4 +31,5 @@ All target.
 - End and delete a stopped or idle session's sandbox at once, and call it finished only when deletion is verified on its platform, because an idle sandbox is spend with no work. One not removed shows Not removed, is retried, and its cost counts until it is gone.
 - Treat agents as workers: choosing which and how many is not part of what better means, because the choice of worker does not change the experiment's definition. A person or an agent chooses them in the chat.
 - Keep platform words (agent ids, vault ids, ARNs, regions) inside each adapter, because they leak a vendor into every other skill.
+- Assume every agent can be prompt-injected, and check every tool argument it sends as untrusted input ([threat-model.md](threat-model.md)), because it reads text that people outside the organization write.
 - Fail closed: a session Ratchet cannot tie to an organization and a budget is stopped and deleted.
