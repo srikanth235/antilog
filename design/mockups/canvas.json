@@ -32,6 +32,46 @@
     }
   ],
   "boards": {
+    "AddConnector.dc.html": {
+      "x": 19760,
+      "y": 9450,
+      "w": 1440,
+      "h": 900,
+      "title": "8 \u00b7 Settings, Connectors, add Snowflake",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AddConnectorDark.dc.html": {
+      "x": 19760,
+      "y": 9450,
+      "w": 1440,
+      "h": 900,
+      "title": "8 \u00b7 Settings, Connectors, add Snowflake \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AddConnectorMcp.dc.html": {
+      "x": 21280,
+      "y": 9450,
+      "w": 1440,
+      "h": 900,
+      "title": "8 \u00b7 Settings, Connectors, add MCP server",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AddConnectorMcpDark.dc.html": {
+      "x": 21280,
+      "y": 9450,
+      "w": 1440,
+      "h": 900,
+      "title": "8 \u00b7 Settings, Connectors, add MCP server \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "AddPlatform.dc.html": {
       "x": 6080,
       "y": 9450,
@@ -48,6 +88,106 @@
       "w": 1440,
       "h": 900,
       "title": "8 \u00b7 Settings, Agent platforms, add platform \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AgentDetail.dc.html": {
+      "x": 13680,
+      "y": 9450,
+      "w": 1440,
+      "h": 900,
+      "title": "8 \u00b7 Settings, Agent platforms, agent detail",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AgentDetailDark.dc.html": {
+      "x": 13680,
+      "y": 9450,
+      "w": 1440,
+      "h": 900,
+      "title": "8 \u00b7 Settings, Agent platforms, agent detail \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "ConnectorCatalogue.dc.html": {
+      "x": 24320,
+      "y": 9450,
+      "w": 1440,
+      "h": 900,
+      "title": "8 \u00b7 Settings, Connectors, catalogue",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "ConnectorCatalogueDark.dc.html": {
+      "x": 24320,
+      "y": 9450,
+      "w": 1440,
+      "h": 900,
+      "title": "8 \u00b7 Settings, Connectors, catalogue \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "ConnectorDetail.dc.html": {
+      "x": 18240,
+      "y": 9450,
+      "w": 1440,
+      "h": 900,
+      "title": "8 \u00b7 Settings, Connector, Snowflake ANALYTICS",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "ConnectorDetailDark.dc.html": {
+      "x": 18240,
+      "y": 9450,
+      "w": 1440,
+      "h": 900,
+      "title": "8 \u00b7 Settings, Connector, Snowflake ANALYTICS \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "ConnectorError.dc.html": {
+      "x": 22800,
+      "y": 9450,
+      "w": 1440,
+      "h": 900,
+      "title": "8 \u00b7 Settings, Connector, credential unreadable",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "ConnectorErrorDark.dc.html": {
+      "x": 22800,
+      "y": 9450,
+      "w": 1440,
+      "h": 900,
+      "title": "8 \u00b7 Settings, Connector, credential unreadable \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "DatasetHoldout.dc.html": {
+      "x": 25840,
+      "y": 9450,
+      "w": 1440,
+      "h": 900,
+      "title": "8 \u00b7 Settings, Connector, holdout dataset",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "DatasetHoldoutDark.dc.html": {
+      "x": 25840,
+      "y": 9450,
+      "w": 1440,
+      "h": 900,
+      "title": "8 \u00b7 Settings, Connector, holdout dataset \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -508,6 +648,26 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "SettingsAgents.dc.html": {
+      "x": 12160,
+      "y": 9450,
+      "w": 1440,
+      "h": 900,
+      "title": "8 \u00b7 Settings, Agent platforms, agents",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SettingsAgentsDark.dc.html": {
+      "x": 12160,
+      "y": 9450,
+      "w": 1440,
+      "h": 900,
+      "title": "8 \u00b7 Settings, Agent platforms, agents \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "SettingsAppearance.dc.html": {
       "x": 1520,
       "y": 10550,
@@ -607,6 +767,46 @@
       "x": 10640,
       "y": 9450,
       "title": "8 \u00b7 Settings, Connections \u00b7 dark"
+    },
+    "SettingsConnectors.dc.html": {
+      "x": 15200,
+      "y": 9450,
+      "w": 1440,
+      "h": 900,
+      "title": "8 \u00b7 Settings, Connectors",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SettingsConnectorsDark.dc.html": {
+      "x": 15200,
+      "y": 9450,
+      "w": 1440,
+      "h": 900,
+      "title": "8 \u00b7 Settings, Connectors \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SettingsConnectorsEmpty.dc.html": {
+      "x": 16720,
+      "y": 9450,
+      "w": 1440,
+      "h": 900,
+      "title": "8 \u00b7 Settings, Connectors, none added",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SettingsConnectorsEmptyDark.dc.html": {
+      "x": 16720,
+      "y": 9450,
+      "w": 1440,
+      "h": 900,
+      "title": "8 \u00b7 Settings, Connectors, none added \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
     },
     "SettingsDevice.dc.html": {
       "x": 6080,
@@ -1189,8 +1389,22 @@
   "attachments": {},
   "designSystems": [],
   "order": [
+    "AddConnector.dc.html",
+    "AddConnectorDark.dc.html",
+    "AddConnectorMcp.dc.html",
+    "AddConnectorMcpDark.dc.html",
     "AddPlatform.dc.html",
     "AddPlatformDark.dc.html",
+    "AgentDetail.dc.html",
+    "AgentDetailDark.dc.html",
+    "ConnectorCatalogue.dc.html",
+    "ConnectorCatalogueDark.dc.html",
+    "ConnectorDetail.dc.html",
+    "ConnectorDetailDark.dc.html",
+    "ConnectorError.dc.html",
+    "ConnectorErrorDark.dc.html",
+    "DatasetHoldout.dc.html",
+    "DatasetHoldoutDark.dc.html",
     "Decisions.dc.html",
     "DesignRules.dc.html",
     "ExperimentDetail.dc.html",
@@ -1237,6 +1451,8 @@
     "SessionWinDark.dc.html",
     "SessionWorking.dc.html",
     "SessionWorkingDark.dc.html",
+    "SettingsAgents.dc.html",
+    "SettingsAgentsDark.dc.html",
     "SettingsAppearance.dc.html",
     "SettingsAppearanceDark.dc.html",
     "SettingsApprovals.dc.html",
@@ -1247,6 +1463,10 @@
     "SettingsBudgetsDark.dc.html",
     "SettingsConnections.dc.html",
     "SettingsConnectionsDark.dc.html",
+    "SettingsConnectors.dc.html",
+    "SettingsConnectorsDark.dc.html",
+    "SettingsConnectorsEmpty.dc.html",
+    "SettingsConnectorsEmptyDark.dc.html",
     "SettingsDevice.dc.html",
     "SettingsDeviceDark.dc.html",
     "SettingsGeneral.dc.html",

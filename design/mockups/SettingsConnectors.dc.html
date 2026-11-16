@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Settings, Connectors</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="./tokens.css">
+<link rel="stylesheet" href="./icons.css">
+<link rel="stylesheet" href="./components.css">
+<link rel="stylesheet" href="./logos.css">
+</helmet>
+<div class="board app" style="width: 1440px; height: 900px;">
+  <!-- part:Sidebar -->
+  <nav class="side" aria-label="Main">
+        <div class="side-top">
+          <a class="brand" href="Home.dc.html"><svg aria-hidden="true" width="36" height="22" viewBox="218 338 600 369" data-keep><defs><linearGradient id="brass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F8E4B8"/><stop offset=".6" stop-color="#E2BE7C"/><stop offset="1" stop-color="#BE8F49"/></linearGradient></defs><path d="M397.8 434.8L397.8 466.2A31.5 31.5 0 0 1 366.4 434.8Z" style="fill:var(--mark)" fill-opacity="0.12"/><path d="M407.7 434.8L407.7 466.2A31.5 31.5 0 0 0 439.2 434.8Z" style="fill:var(--mark)" fill-opacity="0.18"/><path d="M361.6 424.9L439.2 424.9A77.6 77.6 0 0 0 361.6 347.3Z" style="fill:var(--mark)" fill-opacity="0.28"/><path d="M351.7 471.0L227.9 471.0A123.8 123.8 0 0 1 351.7 347.3Z" style="fill:var(--mark)" fill-opacity="0.42"/><path d="M444.0 480.9L444.0 697.0A216.1 216.1 0 0 1 227.9 480.9Z" style="fill:var(--mark)" fill-opacity="0.6"/><path d="M453.9 342.5L453.9 697.0A354.5 354.5 0 0 0 808.4 342.5Z" fill="url(#brass)"/></svg>Ratchet</a>
+          <a class="btn primary full" data-item="new" href="Home.dc.html"><i class="ic s i-plus"></i>New experiment</a>
+          <button class="nav"><i class="ic i-search"></i>Search<span class="kc" aria-hidden="true" style="margin-left: auto;">⌘K</span></button>
+        </div>
+      <div class="side-scroll">
+        <div class="col" style="gap: 2px;">
+          <span class="t-label sl">Pinned</span>
+          <div class="srow"><a class="rec ses" data-item="cut-checkout-p95" href="SessionWorking.dc.html"><span role="img" aria-label="Working" title="Working" class="st gi st-work run" style="color: var(--accent);"></span><span class="t">Cut checkout p95 latency</span></a><button class="pinb" aria-label="Unpin Cut checkout p95 latency"><i class="ic s i-pin"></i></button></div>
+        </div>
+        <div class="col" style="gap: 2px;">
+          <span class="t-label sl">Experiments</span>
+          <div class="srow"><a class="rec ses" data-item="reduce-forecast-error" href="SessionSeal.dc.html"><span role="img" aria-label="Waiting for you" title="Waiting for you" class="st gi st-wait" style="color: var(--warn);"></span><span class="t">Reduce forecast error</span></a><button class="pinb" aria-label="Pin Reduce forecast error"><i class="ic s i-pin"></i></button></div>
+          <div class="srow"><a class="rec ses" data-item="shrink-production-bundle" href="SessionNoWin.dc.html"><span role="img" aria-label="Done" title="Done" class="st gi st-done" style="color: var(--good);"></span><span class="t">Shrink the production bundle</span></a><button class="pinb" aria-label="Pin Shrink the production bundle"><i class="ic s i-pin"></i></button></div>
+          <div class="srow"><a class="rec ses" data-item="speed-up-smoke-suite" href="SessionNoWin.dc.html"><span role="img" aria-label="Done" title="Done" class="st gi st-done" style="color: var(--good);"></span><span class="t">Speed up the smoke suite</span></a><button class="pinb" aria-label="Pin Speed up the smoke suite"><i class="ic s i-pin"></i></button></div>
+          <div class="srow"><a class="rec ses" data-item="autocomplete-latency" href="SessionFailed.dc.html"><span role="img" aria-label="Failed" title="Failed" class="st gi st-fail" style="color: var(--bad);"></span><span class="t">Autocomplete latency</span></a><button class="pinb" aria-label="Pin Autocomplete latency"><i class="ic s i-pin"></i></button></div>
+          <div class="srow"><a class="rec ses" data-item="feature-pipeline-cost" href="SessionDelivered.dc.html"><span role="img" aria-label="Done" title="Done" class="st gi st-done" style="color: var(--good);"></span><span class="t">Feature pipeline cost</span></a><button class="pinb" aria-label="Pin Feature pipeline cost"><i class="ic s i-pin"></i></button></div>
+        </div>
+      </div>
+      <div class="side-links"><a class="nav" data-item="experiments" href="Experiments.dc.html"><i class="ic i-verify"></i>All experiments</a></div>
+      <div class="side-foot">
+        <a class="nav" href="SettingsProfile.dc.html" aria-label="Priya Raman, user menu" style="height: 48px; gap: 12px;"><span aria-hidden="true" class="avatar round" style="width: 30px; height: 30px; font-size: 14px;">P</span><span class="col grow" style="line-height: 1.25;"><span style="color: var(--ink);">Priya Raman</span><span class="xs mut">via Okta</span></span><i class="ic s mut i-more"></i></a>
+      </div>
+  </nav>
+  <!-- /part -->
+  <main class="main">
+    <div class="scroll">
+      <div class="hw hw-c">
+        <h1 class="t-title hw-t">What do you want to improve?</h1>
+        <div class="cmp big">
+          <textarea class="cmp-in" rows="3" aria-label="New experiment" placeholder="What should it improve?"></textarea>
+          <div class="cmp-bar">
+            <button class="pill"><i class="ic g-git"></i><span class="k">Repos</span><span class="v">acme/checkout +1</span></button>
+            <button class="pill"><span class="lg lg-claude" role="img" aria-label="Claude Code"></span><span class="k">Agent</span><span class="v">Claude Code</span></button>
+            <button class="pill"><i class="ic g-box"></i><span class="k">Environment</span><span class="v">bench-std</span></button>
+            <button class="pill"><i class="ic g-gauge"></i><span class="k">Budget</span><span class="v">$10</span></button>
+            <span class="go"><button class="btn primary off">Start</button></span>
+          </div>
+        </div>
+        <div class="sugs">
+          <button class="sug"><i class="ic s i-verify"></i>Cut checkout p95 latency</button>
+          <button class="sug"><i class="ic s i-verify"></i>Reduce forecast error</button>
+          <button class="sug"><i class="ic s i-verify"></i>Shrink the production bundle</button>
+        </div>
+        <section class="wl" aria-labelledby="wait-h">
+          <div class="wl-h"><h2 class="t-label" id="wait-h">Waiting for you</h2><span class="xs mut">1</span></div>
+          <a class="wr" href="SessionSeal.dc.html"><span role="img" aria-label="Waiting for you" title="Waiting for you" class="st gi st-wait" style="color: var(--warn);"></span><span class="t">Reduce forecast error</span><span class="w">Seal experiment</span><span class="a">4 min ago</span><i class="ic s mut i-chev"></i></a>
+        </section>
+      </div>
+    </div>
+  </main>
+  <div class="sd-back"></div>
+  <div class="sd" role="dialog" aria-modal="true" aria-labelledby="sd-t">
+    <div class="sd-top"><h2 id="sd-t" class="t-section">Settings</h2><a class="icon-btn" href="Home.dc.html" aria-label="Close settings"><i class="ic i-close"></i></a></div>
+    <div class="sd-body">
+      <!-- part:SettingsRail active="connectors" -->
+      <div class="sd-rail">
+        <label class="sfield"><i class="ic i-search" aria-hidden="true"></i><input placeholder="Search settings" aria-label="Search settings" autocomplete="off" spellcheck="false"></label>
+        <nav class="sd-groups" aria-label="Settings sections">
+          <div class="sd-grp" role="group" aria-label="You"><span class="t-label">You</span>
+            <a class="sd-nav" data-item="profile" href="SettingsProfile.dc.html"><i class="ic g-user" aria-hidden="true"></i><span class="grow ell">Profile</span></a>
+            <a class="sd-nav" data-item="appearance" href="SettingsAppearance.dc.html"><i class="ic i-sun" aria-hidden="true"></i><span class="grow ell">Appearance</span></a>
+            <a class="sd-nav" data-item="access-tokens" href="SettingsTokens.dc.html"><i class="ic i-key" aria-hidden="true"></i><span class="grow ell">Access tokens</span></a>
+            <a class="sd-nav" data-item="device" href="SettingsDevice.dc.html"><i class="ic i-device" aria-hidden="true"></i><span class="grow ell">This device</span></a>
+          </div>
+          <div class="sd-grp" role="group" aria-label="Organization"><span class="t-label">Organization</span>
+            <a class="sd-nav" data-item="general" href="SettingsGeneral.dc.html"><i class="ic i-org" aria-hidden="true"></i><span class="grow ell">General</span></a>
+            <a class="sd-nav" data-item="members" href="SettingsMembers.dc.html"><i class="ic i-users" aria-hidden="true"></i><span class="grow ell">Members</span></a>
+            <a class="sd-nav" data-item="single-sign-on" href="SettingsSso.dc.html"><i class="ic i-lock" aria-hidden="true"></i><span class="grow ell">Single sign-on</span></a>
+            <a class="sd-nav" data-item="agent-platforms" href="SettingsPlatforms.dc.html"><i class="ic g-cloud" aria-hidden="true"></i><span class="grow ell">Agent platforms</span></a>
+            <a class="sd-nav" data-item="connectors" href="SettingsConnectors.dc.html" aria-current="page"><i class="ic g-db" aria-hidden="true"></i><span class="grow ell">Connectors</span></a>
+            <a class="sd-nav" data-item="approvals" href="SettingsApprovals.dc.html"><i class="ic i-verify" aria-hidden="true"></i><span class="grow ell">Approvals</span></a>
+            <a class="sd-nav" data-item="budgets" href="SettingsBudgets.dc.html"><i class="ic g-gauge" aria-hidden="true"></i><span class="grow ell">Budgets</span></a>
+            <a class="sd-nav" data-item="connections" href="SettingsConnections.dc.html"><i class="ic g-blocks" aria-hidden="true"></i><span class="grow ell">Connections</span></a>
+            <a class="sd-nav" data-item="audit-log" href="SettingsAudit.dc.html"><i class="ic g-hist" aria-hidden="true"></i><span class="grow ell">Audit log</span></a>
+          </div>
+        </nav>
+      </div>
+      <!-- /part -->
+      <div class="sd-main"><div class="sd-sec">
+<h3 class="t-section">Connectors</h3><p class="sd-lead" style="max-width: none;">Data systems and MCP servers agents may read. The code host is under <a class="textbtn" href="SettingsConnections.dc.html" style="color: var(--accent);">Connections</a>.</p>
+<div class="rw between wrap g8" style="align-items: flex-end;"><h4 class="sd-gh">Connectors</h4><a class="btn sm" href="ConnectorCatalogue.dc.html"><i class="ic s i-plus"></i>Add connector</a></div>
+<div class="table qt"><div style="min-width: 640px;"><div class="grid th" style="grid-template-columns: minmax(0, 2.5fr) minmax(0, 1.3fr) minmax(0, 1fr) 40px;"><span>Connector</span><span>Status</span><span>Used by</span><span></span></div><div class="grid" style="grid-template-columns: minmax(0, 2.5fr) minmax(0, 1.3fr) minmax(0, 1fr) 40px;"><span class="rw g12" style="min-width: 0;"><span class="lg lg-snowflake" role="img" aria-label="Snowflake"></span><span class="col" style="gap: 1px; min-width: 0;"><span class="t-item ell">Snowflake <span class="mut" style="font-weight: 400;">· ANALYTICS</span></span><span class="xs mut ell">Warehouse tables and the holdout datasets</span></span></span><span class="col" style="gap: 1px;"><span class="rw g8 sm wrap"><i class="dot" style="background: var(--good);"></i>Connected</span><span class="xs mut">Checked 2 min ago</span></span><span class="sm ink2">3 experiments</span><a class="icon-btn" href="ConnectorDetail.dc.html" aria-label="Open Snowflake ANALYTICS"><i class="ic s i-chev"></i></a></div><div class="grid" style="grid-template-columns: minmax(0, 2.5fr) minmax(0, 1.3fr) minmax(0, 1fr) 40px;"><span class="rw g12" style="min-width: 0;"><span class="lg lg-databricks" role="img" aria-label="Databricks"></span><span class="col" style="gap: 1px; min-width: 0;"><span class="t-item ell">Databricks <span class="mut" style="font-weight: 400;">· ml-prod</span></span><span class="xs mut ell">Tables and volumes read through Unity Catalog</span></span></span><span class="col" style="gap: 1px;"><span class="rw g8 sm wrap"><i class="dot" style="background: var(--good);"></i>Connected</span><span class="xs mut">Checked 14 min ago</span></span><span class="sm ink2">1 experiment</span><a class="icon-btn" href="ConnectorDetail.dc.html" aria-label="Open Databricks ml-prod"><i class="ic s i-chev"></i></a></div><div class="grid" style="grid-template-columns: minmax(0, 2.5fr) minmax(0, 1.3fr) minmax(0, 1fr) 40px;"><span class="rw g12" style="min-width: 0;"><span class="lg lg-googlebigquery" role="img" aria-label="Google BigQuery"></span><span class="col" style="gap: 1px; min-width: 0;"><span class="t-item ell">BigQuery <span class="mut" style="font-weight: 400;">· events</span></span><span class="xs mut ell">Tables and views read where they live</span></span></span><span class="col" style="gap: 1px;"><span class="rw g8 sm wrap"><i class="dot" style="background: var(--good);"></i>Connected</span><span class="xs mut">Checked 1 h ago</span></span><span class="sm ink2">2 experiments</span><a class="icon-btn" href="ConnectorDetail.dc.html" aria-label="Open BigQuery events"><i class="ic s i-chev"></i></a></div><div class="grid" style="grid-template-columns: minmax(0, 2.5fr) minmax(0, 1.3fr) minmax(0, 1fr) 40px;"><span class="rw g12" style="min-width: 0;"><span class="lg lg-postgresql" role="img" aria-label="PostgreSQL"></span><span class="col" style="gap: 1px; min-width: 0;"><span class="t-item ell">Postgres <span class="mut" style="font-weight: 400;">· orders-db</span></span><span class="xs mut ell">Read-only queries against a replica</span></span></span><span class="col" style="gap: 1px;"><span class="rw g8 sm wrap" style="color: var(--warn);"><i class="dot" style="background: var(--warn);"></i>Reconnect</span><span class="xs mut">Checked 3 h ago</span></span><span class="sm ink2">2 experiments</span><a class="icon-btn" href="ConnectorError.dc.html" aria-label="Open Postgres orders-db"><i class="ic s i-chev"></i></a></div><div class="grid" style="grid-template-columns: minmax(0, 2.5fr) minmax(0, 1.3fr) minmax(0, 1fr) 40px;"><span class="rw g12" style="min-width: 0;"><span class="lg lg-amazons3" role="img" aria-label="Amazon S3"></span><span class="col" style="gap: 1px; min-width: 0;"><span class="t-item ell">Amazon S3 <span class="mut" style="font-weight: 400;">· acme-exports</span></span><span class="xs mut ell">Files and exports in a bucket, versioned by prefix</span></span></span><span class="col" style="gap: 1px;"><span class="rw g8 sm wrap"><i class="dot" style="background: var(--ink3);"></i>Not checked</span><span class="xs mut">Never checked</span></span><span class="sm ink2">Not used yet</span><a class="icon-btn" href="ConnectorDetail.dc.html" aria-label="Open Amazon S3 acme-exports"><i class="ic s i-chev"></i></a></div><div class="grid" style="grid-template-columns: minmax(0, 2.5fr) minmax(0, 1.3fr) minmax(0, 1fr) 40px; border-bottom: 0;"><span class="rw g12" style="min-width: 0;"><span class="lg lg-modelcontextprotocol" role="img" aria-label="MCP server"></span><span class="col" style="gap: 1px; min-width: 0;"><span class="t-item ell">MCP server <span class="mut" style="font-weight: 400;">· docs-search</span></span><span class="xs mut ell">Search tools over your internal documentation</span></span></span><span class="col" style="gap: 1px;"><span class="rw g8 sm wrap"><i class="dot" style="background: var(--good);"></i>Connected</span><span class="xs mut">Checked 20 min ago</span></span><span class="sm ink2">1 experiment</span><a class="icon-btn" href="AddConnectorMcp.dc.html" aria-label="Open MCP server docs-search"><i class="ic s i-chev"></i></a></div></div></div>
+<p class="xs mut" style="margin: 12px 0 0;">Ratchet keeps no connector secret. Each credential lives in an agent platform&rsquo;s credential store.</p>
+      </div></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

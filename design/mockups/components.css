@@ -702,3 +702,13 @@ a.lin-n:hover .lin-t{color:var(--accent)}
 .am .by .via{margin-left:6px;color:var(--ink3)}.am .by .via::before{content:"\00b7";margin-right:6px}
 .vs .s .textbtn{min-height:0;font-size:inherit;color:var(--ink2);text-decoration:underline}.vs .s .textbtn:hover{color:var(--accent)}
 .grid .textbtn{white-space:nowrap;justify-content:flex-end}
+
+/* Connector picker: a second dialog over the settings dialog */
+.cat-back{position:absolute;inset:0;z-index:100;background:var(--scrim)}
+.cat{position:absolute;z-index:101;inset:0;margin:auto;width:min(680px,calc(100% - 48px));height:fit-content;max-height:calc(100% - 48px);display:flex;flex-direction:column;gap:16px;padding:24px;background:var(--raised);border:1px solid var(--line2);border-radius:20px;box-shadow:var(--shadow);overflow:auto}
+.cat-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.cat-t{display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-height:116px;padding:14px;border:1px solid var(--line);border-radius:var(--r3);background:var(--raised);color:var(--ink);text-decoration:none}
+.cat-t:hover{border-color:var(--line2);background:var(--sunk)}
+.cat-t .lg{margin-bottom:4px}
+@media (max-width:640px){.cat-grid{grid-template-columns:1fr}}
+.tb-ss{--cols:minmax(0,1.5fr) minmax(0,1.3fr) 96px 96px 56px 108px 112px}
