@@ -21,6 +21,10 @@ The tools are in [../session/tools.md](../session/tools.md) and [../judge/tools.
 
 Settings, Approvals sets one value per card kind: **Always ask**, **Allow up to a limit** or **Allow**. A card that policy approves still writes its audit row and shows in the chat as approved by policy. Add credential has no pre-approval, because a person must type the value. A card nobody may approve in time stays open and the session is Waiting for you.
 
+## Mode
+
+Each experiment has a Mode on its composer: **Ask** (every card asks a person) or **Auto** (cards that policy allows go through without asking, and each still writes its audit row and shows in the chat as approved by policy). Policy always caps Auto: a card kind set to Always ask still asks, and a limit still holds.
+
 ## Who may approve
 
 Roles are checked at project scope ([model.md](model.md)). A member's role in a project is their organization role unless a project owner set another for that project. Owners and editors of the project approve every card for its experiments. A viewer reads them and approves nothing. Visibility does not follow repo access ([../product/rulings.md](../product/rulings.md)). Changing an experiment's budget needs an editor or owner of its project. A project owner manages the project's members and its budget. Only an organization owner changes policy.
@@ -36,7 +40,7 @@ Settings, Approvals holds policy. Settings, Connections lists the repos, credent
 ## Budgets
 
 - One budget per experiment, covering all its sessions and their judge time. Spend is model tokens, sandbox time and judge time. The meter is in [../session/model.md](../session/model.md).
-- A person sets it when starting, from a Budget chip on the composer. It defaults to the project's default budget per experiment, which falls back to the organization's default in Settings, Budgets (boards show $10 as the example).
+- A person sets it when starting, from the budget on the composer's row. It defaults to the project's default budget per experiment, which falls back to the organization's default in Settings, Budgets (boards show $10 as the example).
 - An editor or owner can change it at any time: from the scoreboard strip ("Change budget"), from the experiment detail page, or in a row on the Seal experiment card. Lowering it below what is spent stops new measurements. Each change is an audit row. An experiment's budget sits inside its project's cap, and a raise that would pass the cap is refused.
 - `request_budget` lets the agent ask for more through a Raise budget card; policy for it stays in Settings, Approvals.
 - A project may have a monthly cap on all its experiments. A project owner changes it, and it cannot pass the organization's. The project page shows spent this month against it.

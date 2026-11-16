@@ -71,8 +71,8 @@ The CLI and MCP tools are read by people too. They print the screen words, and m
 | An agent's message | the Ratchet mark and "Ratchet", then the agent as a quiet second label: "Ratchet · Claude Code", "Ratchet · Codex" |
 | A session a person stopped | Done, with the line "Stopped by NAME" |
 | Header actions | "Stop session" (inline confirm: "Stop session", "Keep working"), "Pin", "Unpin", menu: "Rename", "Copy link", "Delete experiment" |
-| Composer, new experiment | placeholder "What do you want to improve?"; chips "Project" (shows the project, for example "Checkout platform"), "Repos", "Agent", "Environment", "Budget" (shows the default, for example "$10"); button "Start" |
-| Composer, Working | placeholder "Steer it, or @-mention a session: @Codex focus on database queries"; buttons "Send", "Interrupt", "Stop session" |
+| Composer, new experiment | placeholder "What do you want to improve? Type / for commands"; send button "Send" (a return arrow; it starts the experiment); "+" "Attach files, images, repos or connectors"; mic "Dictate"; the row under the box: "Project" (for example "Checkout platform"), "Repos", "Agent" ("Claude Code · Default"), "Environment" ("bench-std"), "Mode" ("Ask" or "Auto") and the budget ring ("$0 of $10") |
+| Composer, Working | placeholder "Steer, @ a session, or / for commands"; the send button becomes a stop button with the label "Interrupt" (the "Stop session" action stays in the header); the row under the box keeps "Agent", "Environment", "Mode" and the budget ring ("$42 of $100"); an attachment shows as a thumbnail with its file name as its label |
 | Notify prompt, once after the first measurement | "Notify me when this experiment needs me"; buttons "Notify me", "Not now" |
 | Composer, Waiting for you | placeholder "Answer, or approve the card above" |
 | Composer, Done | placeholder "Continue this session" |

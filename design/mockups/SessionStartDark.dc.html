@@ -74,17 +74,24 @@
         <div class="am"><span class="av"><svg class="mk" aria-hidden="true" width="20" height="12" viewBox="218 338 600 369"><path d="M397.8 434.8L397.8 466.2A31.5 31.5 0 0 1 366.4 434.8Z" style="fill:var(--mark)" fill-opacity="0.12"/><path d="M407.7 434.8L407.7 466.2A31.5 31.5 0 0 0 439.2 434.8Z" style="fill:var(--mark)" fill-opacity="0.18"/><path d="M361.6 424.9L439.2 424.9A77.6 77.6 0 0 0 361.6 347.3Z" style="fill:var(--mark)" fill-opacity="0.28"/><path d="M351.7 471.0L227.9 471.0A123.8 123.8 0 0 1 351.7 347.3Z" style="fill:var(--mark)" fill-opacity="0.42"/><path d="M444.0 480.9L444.0 697.0A216.1 216.1 0 0 1 227.9 480.9Z" style="fill:var(--mark)" fill-opacity="0.6"/><path d="M453.9 342.5L453.9 697.0A354.5 354.5 0 0 0 808.4 342.5Z" fill="url(#brass)"/></svg></span><div class="bd"><span class="by"><b>Ratchet</b><span class="via">Claude Code</span></span><p class="tx">Checkout asks pricing for each line item and opens a new client every time. That looks like the slow path. I can propose an experiment that measures checkout p95 latency, with a guardrail on errors, and you can seal it before I try anything<span class="cur" aria-hidden="true"></span></p></div></div>
       </div>
     </div>
-    <div class="dock"><div class="c760"><div class="cmp">
-      <textarea class="cmp-in" rows="1" aria-label="Message" placeholder="Steer it, or press Stop"></textarea>
-      <div class="cmp-bar">
-        <button class="pill"><i class="ic i-folder"></i><span class="k">Project</span><span class="v">Checkout platform</span></button>
-        <button class="pill"><i class="ic g-git"></i><span class="k">Repos</span><span class="v">acme/checkout +1</span></button>
-        <button class="pill"><span class="lg lg-claude" role="img" aria-label="Claude Code"></span><span class="k">Agent</span><span class="v">Claude Code</span></button>
-        <button class="pill"><i class="ic g-box"></i><span class="k">Environment</span><span class="v">bench-std</span></button>
-            <button class="pill"><i class="ic g-gauge"></i><span class="k">Budget</span><span class="v">$10</span></button>
-        <span class="go"><button class="btn sm">Interrupt</button><button class="btn sm primary off">Send</button></span>
+    <div class="dock"><div class="c760"><div class="cmpw">
+    <div class="cmp">
+      <div class="cmp-att">
+        <span class="att" role="img" aria-label="Attachment: checkout-trace.png"><svg viewBox="0 0 56 56" aria-hidden="true"><path class="gd" d="M0 18h56M0 36h56"/><path class="ln" d="M6 40l9-8 8 4 10-14 8 6 9-12"/></svg><button class="x" aria-label="Remove checkout-trace.png"><i class="ic i-close"></i></button></span>
       </div>
-    </div></div></div>
+      <textarea class="cmp-in" rows="2" aria-label="Message" placeholder="Steer, @ a session, or / for commands"></textarea>
+      <div class="cmp-bar">
+        <button class="ib" aria-label="Attach files, images, repos or connectors"><i class="ic i-plus"></i></button>
+        <span class="go"><button class="ib" aria-label="Dictate"><i class="ic i-mic"></i></button><button class="ib stop" aria-label="Interrupt"><i class="ic st-stop"></i></button></span>
+      </div>
+    </div>
+    <div class="cmp-opt">
+      <button class="opt" aria-label="Agent"><span class="lg lg-claude" role="img" aria-label="Claude Code"></span><span>Claude Code · Default</span></button>
+      <button class="opt" aria-label="Environment"><i class="ic g-box"></i><span>bench-std</span></button>
+      <button class="opt" aria-label="Mode"><i class="ic i-sliders"></i><span>Auto</span></button>
+      <button class="opt" aria-label="Budget"><span class="ring" style="--p: 42;" role="img" aria-label="Budget used"></span><span>$42 of $100</span></button>
+    </div>
+  </div></div></div>
   </main>
 </div>
 </x-dc>

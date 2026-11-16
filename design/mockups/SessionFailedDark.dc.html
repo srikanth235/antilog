@@ -75,10 +75,21 @@
         <div class="fl"><span role="img" aria-label="Failed" class="st gi st-fail" style="color: var(--bad);"></span><span>The session failed on AWS AgentCore. Open the platform's log, or start again.</span><button class="textbtn">Start again</button></div>
       </div>
     </div>
-    <div class="dock"><div class="c760"><div class="cmp one">
-      <textarea class="cmp-in" rows="1" aria-label="Message" placeholder="Continue this session"></textarea>
-      <div class="cmp-bar"><span class="go"><button class="btn sm primary off">Send</button></span></div>
-    </div></div></div>
+    <div class="dock"><div class="c760"><div class="cmpw">
+    <div class="cmp">
+      <textarea class="cmp-in" rows="2" aria-label="Message" placeholder="Continue this session"></textarea>
+      <div class="cmp-bar">
+        <button class="ib" aria-label="Attach files, images, repos or connectors"><i class="ic i-plus"></i></button>
+        <span class="go"><button class="ib" aria-label="Dictate"><i class="ic i-mic"></i></button><button class="ib send" aria-label="Send"><i class="ic i-return"></i></button></span>
+      </div>
+    </div>
+    <div class="cmp-opt">
+      <button class="opt" aria-label="Agent"><span class="lg lg-claude" role="img" aria-label="Claude Code"></span><span>Claude Code · Default</span></button>
+      <button class="opt" aria-label="Environment"><i class="ic g-box"></i><span>bench-std</span></button>
+      <button class="opt" aria-label="Mode"><i class="ic i-sliders"></i><span>Auto</span></button>
+      <button class="opt" aria-label="Budget"><span class="ring" style="--p: 42;" role="img" aria-label="Budget used"></span><span>$42 of $100</span></button>
+    </div>
+  </div></div></div>
   </main>
 </div>
 </x-dc>
