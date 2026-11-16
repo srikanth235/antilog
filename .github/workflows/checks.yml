@@ -1,0 +1,48 @@
+name: checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+# Agents push often: a newer push to the same branch cancels the older run.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  commits:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Conventional Commits
+        env:
+          BEFORE: ${{ github.event.before }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          DEFAULT: ${{ github.event.repository.default_branch }}
+        run: |
+          if [ -n "$BASE" ]; then
+            range="$BASE..HEAD"
+          elif [ "$GITHUB_REF_NAME" = "$DEFAULT" ] && git cat-file -e "$BEFORE" 2>/dev/null; then
+            range="$BEFORE..HEAD"
+          else
+            range="$(git merge-base "origin/$DEFAULT" HEAD)..HEAD"
+          fi
+          echo "checking $range"
+          fail=0
+          for c in $(git rev-list --no-merges "$range"); do
+            git log -1 --format=%B "$c" > "$RUNNER_TEMP/msg"
+            .githooks/commit-msg "$RUNNER_TEMP/msg" || { echo "  in $(git log -1 --format='%h' "$c")"; fail=1; }
+          done
+          exit $fail
+
+  files:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Secrets, stray files, house rules, design boards
+        run: .githooks/pre-commit --all

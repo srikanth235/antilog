@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Search · dark</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="./tokens.css">
+<link rel="stylesheet" href="./icons.css">
+<link rel="stylesheet" href="./components.css">
+<link rel="stylesheet" href="./logos.css">
+</helmet>
+<div data-theme="dark" class="board app" style="width: 1440px; height: 900px;">
+  <!-- part:Sidebar -->
+  <nav class="side" aria-label="Main">
+        <div class="side-top">
+          <a class="brand" href="HomeDark.dc.html"><svg aria-hidden="true" width="36" height="22" viewBox="218 338 600 369" data-keep><defs><linearGradient id="brass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F8E4B8"/><stop offset=".6" stop-color="#E2BE7C"/><stop offset="1" stop-color="#BE8F49"/></linearGradient></defs><path d="M397.8 434.8L397.8 466.2A31.5 31.5 0 0 1 366.4 434.8Z" style="fill:var(--mark)" fill-opacity="0.12"/><path d="M407.7 434.8L407.7 466.2A31.5 31.5 0 0 0 439.2 434.8Z" style="fill:var(--mark)" fill-opacity="0.18"/><path d="M361.6 424.9L439.2 424.9A77.6 77.6 0 0 0 361.6 347.3Z" style="fill:var(--mark)" fill-opacity="0.28"/><path d="M351.7 471.0L227.9 471.0A123.8 123.8 0 0 1 351.7 347.3Z" style="fill:var(--mark)" fill-opacity="0.42"/><path d="M444.0 480.9L444.0 697.0A216.1 216.1 0 0 1 227.9 480.9Z" style="fill:var(--mark)" fill-opacity="0.6"/><path d="M453.9 342.5L453.9 697.0A354.5 354.5 0 0 0 808.4 342.5Z" fill="url(#brass)"/></svg>Ratchet</a>
+          <a class="btn primary full" data-item="new" href="HomeDark.dc.html"><i class="ic s i-plus"></i>New experiment</a>
+          <div class="col" style="gap: 2px;">
+            <a class="nav" data-item="search" href="SearchStartDark.dc.html"><i class="ic i-search"></i>Search<span class="kc" aria-hidden="true" style="margin-left: auto;">⌘K</span></a>
+            <a class="nav" data-item="projects" href="ProjectsDark.dc.html"><i class="ic i-folder"></i>Projects</a>
+            <a class="nav" data-item="customize" href="EvaluationsDark.dc.html"><i class="ic i-sliders"></i>Customize</a>
+          </div>
+        </div>
+      <div class="side-scroll">
+        <div class="col" style="gap: 2px;">
+          <span class="t-label sl">Pinned</span>
+          <div class="srow"><a class="rec ses" href="SessionWorkingDark.dc.html"><span role="img" aria-label="Working" title="Working" class="st gi st-work run" style="color: var(--accent);"></span><span class="t">Cut checkout p95 latency</span></a><button class="pinb" aria-label="Unpin Cut checkout p95 latency"><i class="ic s i-pin"></i></button></div>
+        </div>
+        <div class="col" style="gap: 8px;">
+          <div class="pg">
+            <button class="ph" aria-expanded="true"><i class="ic s i-chev chev"></i><span class="t">Checkout platform</span></button>
+            <div class="srow"><a class="rec ses" data-item="cut-checkout-p95" href="SessionWorkingDark.dc.html"><span role="img" aria-label="Working" title="Working" class="st gi st-work run" style="color: var(--accent);"></span><span class="t">Cut checkout p95 latency</span></a><button class="pinb" aria-label="Pin Cut checkout p95 latency"><i class="ic s i-pin"></i></button></div>
+            <div class="sx-l">
+              <a class="rec ses sx" data-item="claude-session" href="SessionWorkingDark.dc.html"><span role="img" aria-label="Working" title="Working" class="st gi st-work run" style="color: var(--accent);"></span><span class="t">Claude Code session</span></a>
+              <a class="rec ses sx" data-item="codex-session" href="SessionSpawnedDark.dc.html"><span role="img" aria-label="Working" title="Working" class="st gi st-work run" style="color: var(--accent);"></span><span class="t">Codex session</span></a>
+              <a class="rec ses sx" data-item="gemini-session" href="SessionWorkingDark.dc.html"><span role="img" aria-label="Done" title="Done" class="st gi st-done" style="color: var(--good);"></span><span class="t">Gemini session</span></a>
+            </div>
+            <div class="srow"><a class="rec ses" data-item="speed-up-smoke-suite" href="SessionNoWinDark.dc.html"><span role="img" aria-label="Done" title="Done" class="st gi st-done" style="color: var(--good);"></span><span class="t">Speed up the smoke suite</span></a><button class="pinb" aria-label="Pin Speed up the smoke suite"><i class="ic s i-pin"></i></button></div>
+            <div class="srow"><a class="rec ses" data-item="shrink-production-bundle" href="SessionNoWinDark.dc.html"><span role="img" aria-label="Done" title="Done" class="st gi st-done" style="color: var(--good);"></span><span class="t">Shrink the production bundle</span></a><button class="pinb" aria-label="Pin Shrink the production bundle"><i class="ic s i-pin"></i></button></div>
+          </div>
+          <div class="pg">
+            <button class="ph" aria-expanded="true"><i class="ic s i-chev chev"></i><span class="t">Search</span></button>
+            <div class="srow"><a class="rec ses" data-item="autocomplete-latency" href="SessionFailedDark.dc.html"><span role="img" aria-label="Failed" title="Failed" class="st gi st-fail" style="color: var(--bad);"></span><span class="t">Autocomplete latency</span></a><button class="pinb" aria-label="Pin Autocomplete latency"><i class="ic s i-pin"></i></button></div>
+          </div>
+          <div class="pg">
+            <button class="ph" aria-expanded="true"><i class="ic s i-chev chev"></i><span class="t">Data science forecasts</span></button>
+            <div class="srow"><a class="rec ses" data-item="reduce-forecast-error" href="SessionSealDark.dc.html"><span role="img" aria-label="Waiting for you" title="Waiting for you" class="st gi st-wait" style="color: var(--warn);"></span><span class="t">Reduce forecast error</span></a><button class="pinb" aria-label="Pin Reduce forecast error"><i class="ic s i-pin"></i></button></div>
+            <div class="srow"><a class="rec ses" data-item="feature-pipeline-cost" href="SessionDeliveredDark.dc.html"><span role="img" aria-label="Done" title="Done" class="st gi st-done" style="color: var(--good);"></span><span class="t">Feature pipeline cost</span></a><button class="pinb" aria-label="Pin Feature pipeline cost"><i class="ic s i-pin"></i></button></div>
+          </div>
+        </div>
+      </div>
+      <div class="side-foot">
+        <a class="nav" href="SettingsProfileDark.dc.html" aria-label="Priya Raman, user menu" style="height: 48px; gap: 12px;"><span aria-hidden="true" class="avatar round" style="width: 30px; height: 30px; font-size: 14px;">P</span><span class="col grow" style="line-height: 1.25;"><span style="color: var(--ink);">Priya Raman</span><span class="xs mut">via Okta</span></span><i class="ic s mut i-more"></i></a>
+      </div>
+  </nav>
+  <!-- /part -->
+  <main class="main">
+    <div class="scroll">
+      <section class="page ct ls">
+        <div class="ct-head"><div class="ct-ttl"><div class="rw"><h1 class="t-title">Projects</h1><span class="tag">3</span></div><span class="ink2">Each project groups the experiments for one area of your code.</span></div><div class="ct-ctl"><label class="sfield"><i class="ic i-search" aria-hidden="true"></i><input placeholder="Search projects" aria-label="Search projects" autocomplete="off"></label><button class="btn primary"><i class="ic s i-plus"></i>New project</button></div></div>
+        <div class="vs c3"><div><span class="k">Delivered</span><span class="v">$7,472</span><span class="s">a year, from merged wins</span></div><div><span class="k">Pending</span><span class="v">$1,140</span><span class="s">a year, 1 pull request open</span></div><div><span class="k">Return</span><span class="v">75×</span><span class="s">Delivered over $100 spent</span></div></div>
+        <div style="margin-top: 24px;"></div>
+        <div class="tb tb-pj"><div class="tb-r th"><span>Project</span><span>Your role</span><span>Experiments</span><span>Wins</span><span>Spend this month</span><span></span></div><a class="tb-r" href="ProjectDark.dc.html"><span class="n"><span>Checkout platform</span><span class="m">Latency, build health and bundle size of the checkout service</span></span><span><span class="tag">Owner</span></span><span class="mono">3</span><span class="mono">2</span><span class="mono">$142</span><i class="ic s go i-chev"></i></a><a class="tb-r" href="ProjectDark.dc.html"><span class="n"><span>Search</span><span class="m">Relevance and speed of search and autocomplete</span></span><span><span class="tag">Editor</span></span><span class="mono">1</span><span class="mono">1</span><span class="mono">$61</span><i class="ic s go i-chev"></i></a><a class="tb-r" href="ProjectDark.dc.html"><span class="n"><span>Data science forecasts</span><span class="m">Feature pipelines and cost of the forecasting models</span></span><span><span class="tag">Viewer</span></span><span class="mono">2</span><span class="mono">1</span><span class="mono">$19</span><i class="ic s go i-chev"></i></a></div>
+      </section>
+    </div>
+  </main>
+  <div class="pback"></div>
+  <div class="pal" role="dialog" aria-modal="true" aria-labelledby="pal-l">
+    <label id="pal-l" for="pal-in" class="sr">Search Ratchet</label>
+    <div class="pal-in"><i class="ic l i-search" style="color: var(--ink3);"></i><input id="pal-in" value="checkout" role="combobox" aria-expanded="true" aria-controls="pal-list" aria-autocomplete="list" autocomplete="off" spellcheck="false" placeholder="Search projects, experiments, sessions, trials and more"><a class="icon-btn" href="ProjectsDark.dc.html" aria-label="Close search"><i class="ic i-close"></i></a></div>
+    <div class="pal-tabs" role="tablist" aria-label="Search in"><button class="ptab on" role="tab" tabindex="-1" aria-selected="true">All</button><button class="ptab" role="tab" tabindex="-1" aria-selected="false">Projects</button><button class="ptab" role="tab" tabindex="-1" aria-selected="false">Experiments</button><button class="ptab" role="tab" tabindex="-1" aria-selected="false">Sessions</button><button class="ptab" role="tab" tabindex="-1" aria-selected="false">Trials</button><button class="ptab" role="tab" tabindex="-1" aria-selected="false">Datasets</button><button class="ptab" role="tab" tabindex="-1" aria-selected="false">Customize</button><button class="ptab" role="tab" tabindex="-1" aria-selected="false">People</button></div>
+    <div class="pal-list" id="pal-list" role="listbox" aria-label="Results"><div role="group" aria-label="Projects"><div class="pgh"><span>Projects</span></div><div class="pr on" role="option" aria-selected="true"><span class="pi" style="color: var(--ink2);"><i class="ic i-folder"></i></span><a class="pt" href="ProjectDark.dc.html"><span class="pn ell"><span class="hm">Checkout</span> platform</span><span class="pc ell">3 experiments · 2 wins</span></a><span class="ph">Project</span><button class="icon-btn" tabindex="-1" aria-label="Actions for Checkout platform"><i class="ic s i-more"></i></button><span class="kc" aria-hidden="true">↵</span></div></div><div role="group" aria-label="Experiments"><div class="pgh"><span>Experiments</span></div><div class="pr" role="option" aria-selected="false"><span class="pi" style="color: var(--ink2);"><i class="ic i-verify"></i></span><a class="pt" href="SessionWorkingDark.dc.html"><span class="pn ell">Cut <span class="hm">checkout</span> p95 latency</span><span class="pc ell">Watching · 1,310 ms to 1,102 ms</span></a><span class="ph">Experiment</span><button class="icon-btn" tabindex="-1" aria-label="Actions for Cut checkout p95 latency"><i class="ic s i-more"></i></button></div></div><div role="group" aria-label="Sessions"><div class="pgh"><span>Sessions</span></div><div class="pr" role="option" aria-selected="false"><span class="pi" style="color: var(--accent);"><span role="img" aria-label="Working" class="st gi st-work run"></span></span><a class="pt" href="SessionSpawnedDark.dc.html"><span class="pn ell">Codex session in Cut <span class="hm">checkout</span> p95 latency</span><span class="pc ell">Working · Codex · acme/checkout</span></a><span class="ph">Session</span><button class="icon-btn" tabindex="-1" aria-label="Actions for Codex session"><i class="ic s i-more"></i></button></div></div><div role="group" aria-label="Trials"><div class="pgh"><span>Trials</span></div><div class="pr" role="option" aria-selected="false"><span class="pi" style="color: var(--ink3);"><i class="ic g-hist"></i></span><a class="pt" href="ReceiptDark.dc.html"><span class="pn ell">Raise the connection pool to 48 and reuse pricing clients</span><span class="pc ell">Trial 12 · Kept · Cut <span class="hm">checkout</span> p95 latency · Claude Code</span></a><span class="ph">Trial</span><button class="icon-btn" tabindex="-1" aria-label="Actions for Trial 12"><i class="ic s i-more"></i></button></div></div><div role="group" aria-label="Datasets"><div class="pgh"><span>Datasets</span></div><div class="pr" role="option" aria-selected="false"><span class="pi" style="color: var(--ink3);"><i class="ic g-file"></i></span><a class="pt" href="DatasetHoldoutDark.dc.html"><span class="pn ell"><span class="hm">Checkout</span> replay holdout v4</span><span class="pc ell">Snowflake ANALYTICS</span></a><span class="rj"><i class="ic s i-lock"></i>Restricted to the judge</span></div></div><div role="group" aria-label="Customize"><div class="pgh"><span>Customize</span><a class="textbtn sm" href="EvaluationsDark.dc.html" tabindex="-1">Show all 3<i class="ic s i-arrow"></i></a></div><div class="pr" role="option" aria-selected="false"><span class="pi" style="color: var(--accent);"><i class="ic g-gauge"></i></span><a class="pt" href="EvaluationDetailDark.dc.html"><span class="pn ell"><span class="hm">Checkout</span> load test</span><span class="pc ell">Evaluation · seal checks passed today</span></a><span class="ph">Evaluation</span></div><div class="pr" role="option" aria-selected="false"><span class="pi" style="color: var(--good);"><i class="ic g-book"></i></span><a class="pt" href="SkillDetailDark.dc.html"><span class="pn ell"><span class="hm">Checkout</span> service notes</span><span class="pc ell">Skill pack · v2</span></a><span class="ph">Skill pack</span></div></div></div>
+    <div class="pal-foot" aria-hidden="true"><span>Close <b class="kc">Esc</b></span><span>Move <b class="kc">↑</b><b class="kc">↓</b></span><span>Change scope <b class="kc">←</b><b class="kc">→</b></span><span>Actions <b class="kc">⌥↵</b></span><span>Open <b class="kc">↵</b></span></div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

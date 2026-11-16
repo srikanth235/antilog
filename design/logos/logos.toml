@@ -1,0 +1,58 @@
+# Third-party logos on the boards. design/tools/tokens.py turns this file into
+# design/mockups/logos.css: <span class="lg lg-NAME" role="img" aria-label="Name"></span>.
+#
+# Every brand a board names shows its real logo, from a credible source, one SVG
+# per brand in this folder, and each entry says where its file came from. Credible
+# means, in this order: the brand's own published assets (a brand page, an official
+# icon package, the brand's own site), then Simple Icons 16.36.0 (CC0,
+# simple-icons-LICENSE.md), then a Wikimedia Commons file whose author is the brand.
+# Never draw, trace or redraw a logo, and never use a text tile in its place.
+#
+# A one-colour mark gives its colour as hex. A brand whose colour is near black gets
+# mono = true: it is drawn in the ink token, so it shows in light and dark. A
+# full-colour official icon (gradients, several colours, its own tile) gets
+# full = true and is drawn exactly as the file is.
+
+[mark]
+snowflake = { title = "Snowflake", hex = "29B5E8" }
+databricks = { title = "Databricks", hex = "FF3621" }
+googlebigquery = { title = "BigQuery", hex = "669DF6" }
+postgresql = { title = "PostgreSQL", hex = "4169E1" }
+github = { title = "GitHub", hex = "181717", mono = true }
+gitlab = { title = "GitLab", hex = "FC6D26" }
+modelcontextprotocol = { title = "MCP server", hex = "000000", mono = true }
+claude = { title = "Claude Code", hex = "D97757" }
+anthropic = { title = "Anthropic", hex = "191919", mono = true }
+googlecloud = { title = "Google Cloud", hex = "4285F4" }
+kubernetes = { title = "Kubernetes", hex = "326CE5" }
+cloudflare = { title = "Cloudflare", hex = "F38020" }
+okta = { title = "Okta", hex = "007DC1" }
+# The Google G is not Simple Icons' one-colour mark: Google's sign-in branding
+# asks for its standard multi-colour G. google.svg is the G's outline from Google's
+# Sign in with Google assets (developers.google.com/identity/branding-guidelines,
+# signin-assets.zip), and paint is the asset's own conic gradient, drawn through it.
+google = { title = "Google", hex = "4285F4", paint = "conic-gradient(from 45deg at 48.4% 49%, #FF4641 0deg 4.1deg, #3186FF 39.2deg 72deg, #00A5B7 96.7deg, #0EBC5F 120.9deg 154.7deg, #6CC400 179.1deg, #FFCC00 203.6deg, #FFD314 226.9deg, #FFCC00 251.7deg, #FF6A2B 273.1deg, #FD4641 289.3deg, #FF4641 360deg)" }
+googlegemini = { title = "Gemini", hex = "8E75B2" }
+
+# Official AWS Architecture Icons, package of 31 Jul 2026
+# (aws.amazon.com/architecture/icons). aws.svg is the "AWS Cloud logo" group icon.
+aws = { title = "Amazon Web Services", full = true }
+awsagentcore = { title = "AWS AgentCore", full = true }
+amazons3 = { title = "Amazon S3", full = true }
+amazondynamodb = { title = "Amazon DynamoDB", full = true }
+# Official Azure public service icons, V25 (learn.microsoft.com/azure/architecture/icons).
+azure = { title = "Azure", full = true }
+# OpenAI's Blossom, from OpenAI's own logo kit (OAI_OpenAI-Blossom_Black.svg, given by
+# the owner), cropped to the mark. Codex and the OpenAI Agents API use it.
+openai = { title = "OpenAI", hex = "000000", mono = true }
+# xAI's mark, from the header of docs.x.ai.
+xai = { title = "xAI", hex = "000000", mono = true }
+# Grok's mark, the two "mark" paths of the Grok logo on grok.com, cropped to the mark.
+grok = { title = "Grok", hex = "000000", mono = true }
+# Microsoft's own "Foundry Agent Service" icon, from the official Azure public service
+# icons, V25 (learn.microsoft.com/azure/architecture/icons).
+foundryagentservice = { title = "Microsoft Foundry Agent Service", full = true }
+# Google Cloud's official Vertex AI product icon (cloud.google.com/icons,
+# core-products-icons.zip). Agent Runtime was Vertex AI Agent Engine until April 2026,
+# and Google publishes no separate Agent Runtime icon.
+googleagentruntime = { title = "Google Agent Runtime", full = true }

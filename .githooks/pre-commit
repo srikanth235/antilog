@@ -1,0 +1,93 @@
+#!/bin/sh
+# Fast checks on the files a commit adds or changes. CI runs the same
+# script with --all over every tracked file. Rules: .claude/skills/land/git.md
+# Turn on once per clone: git config core.hooksPath .githooks
+cd "$(git rev-parse --show-toplevel)" || exit 1
+
+if [ "$1" = "--all" ]; then
+  files=$(git ls-files)
+  where=""
+  size() { wc -c < "$1"; }
+else
+  files=$(git diff --cached --name-only --diff-filter=ACMR)
+  where="--cached"
+  size() { git cat-file -s ":$1"; }
+fi
+[ -z "$files" ] && exit 0
+
+fail=0
+bad() { echo "pre-commit: $1" >&2; fail=1; }
+# Upstream text copied verbatim keeps its own style: house rules skip it.
+VENDORED='^\.claude/skills/stack/(web|cloudflare|security|mcp|playwright)/general/'
+search() { # search <message> <regex> [house]: grep the files, text only
+  list=$files
+  [ "$3" = house ] && list=$(printf '%s\n' "$files" | grep -v -E "$VENDORED")
+  [ -z "$list" ] && return
+  hits=$(printf '%s\n' "$list" | tr '\n' '\0' | xargs -0 git grep $where -I -n -E -e "$2" -- 2>/dev/null)
+  [ -n "$hits" ] && bad "$1" && printf '%s\n' "$hits" | head -n 20 | sed 's/^/  /' >&2
+}
+
+# Stray and oversized files
+for f in $files; do
+  case "$f" in
+    target/*|*/target/*|node_modules/*|*/node_modules/*|.DS_Store|*/.DS_Store)
+      bad "build output or junk: $f" ;;
+    design/icon/*) ;;
+    *.png|*.jpg|*.jpeg|*.gif|*.webp)
+      bad "image outside design/icon (a screenshot? boards are HTML): $f" ;;
+    .env.example|*/.env.example) ;;
+    .env|.env.*|*/.env|*/.env.*|*.pem|*.p12|*.key|id_rsa*|id_ed25519*)
+      bad "secret file: $f" ;;
+  esac
+  [ -f "$f" ] || [ -n "$where" ] || continue
+  s=$(size "$f" 2>/dev/null || echo 0)
+  [ "$s" -gt 1048576 ] && bad "over 1 MB ($s bytes): $f"
+done
+
+# Secrets in content
+search "looks like a secret" \
+  '-----BEGIN [A-Z ]*PRIVATE KEY-----|AKIA[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{40,}|sk-ant-[A-Za-z0-9_-]{20,}|sk-[A-Za-z0-9]{40,}|xox[abprs]-[A-Za-z0-9-]{10,}'
+
+# House rules: no em dashes, no model names
+search "em dash (use a comma, colon or full stop)" "$(printf '\342\200\224')" house
+search "model name (keep model names out of the repo)" \
+  'claude-(opus|sonnet|haiku|fable)|(Opus|Sonnet|Haiku|Fable) [0-9]|gpt-[0-9]' house
+
+# Design boards: generated files current, tokens only
+if printf '%s\n' "$files" | grep -q '^design/'; then
+  python3 design/tools/tokens.py --check >/dev/null 2>&1 \
+    || bad "design check failed: run python3 design/tools/tokens.py, then --check"
+fi
+
+# Web guides: the copy matches the list in sync.py
+if printf '%s\n' "$files" | grep -q '^.claude/skills/stack/web/'; then
+  python3 .claude/skills/stack/web/sync.py --check >/dev/null 2>&1 \
+    || bad "web guides out of step: run python3 .claude/skills/stack/web/sync.py --check"
+fi
+
+# Cloudflare skills: the copy matches the lists in sync.py
+if printf '%s\n' "$files" | grep -q '^.claude/skills/stack/cloudflare/'; then
+  python3 .claude/skills/stack/cloudflare/sync.py --check >/dev/null 2>&1 \
+    || bad "cloudflare skills out of step: run python3 .claude/skills/stack/cloudflare/sync.py --check"
+fi
+
+# Security review skills: the copy matches the lists in sync.py
+if printf '%s\n' "$files" | grep -q '^.claude/skills/stack/security/'; then
+  python3 .claude/skills/stack/security/sync.py --check >/dev/null 2>&1 \
+    || bad "security skills out of step: run python3 .claude/skills/stack/security/sync.py --check"
+fi
+
+# MCP skills: the copy matches the lists in sync.py
+if printf '%s\n' "$files" | grep -q '^.claude/skills/stack/mcp/'; then
+  python3 .claude/skills/stack/mcp/sync.py --check >/dev/null 2>&1 \
+    || bad "mcp skills out of step: run python3 .claude/skills/stack/mcp/sync.py --check"
+fi
+
+# Playwright skills: the copy matches the lists in sync.py
+if printf '%s\n' "$files" | grep -q '^.claude/skills/stack/playwright/'; then
+  python3 .claude/skills/stack/playwright/sync.py --check >/dev/null 2>&1 \
+    || bad "playwright skills out of step: run python3 .claude/skills/stack/playwright/sync.py --check"
+fi
+
+[ "$fail" = 0 ] || echo "pre-commit: fix the above, or explain in the commit why not" >&2
+exit $fail

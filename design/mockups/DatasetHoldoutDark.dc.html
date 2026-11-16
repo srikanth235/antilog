@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Customize, Connector, holdout dataset · dark</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="./tokens.css">
+<link rel="stylesheet" href="./icons.css">
+<link rel="stylesheet" href="./components.css">
+<link rel="stylesheet" href="./logos.css">
+</helmet>
+<div data-theme="dark" class="board app" style="width: 1440px; height: 900px;">
+  <!-- part:Sidebar active="customize" -->
+  <nav class="side" aria-label="Main">
+        <div class="side-top">
+          <a class="brand" href="HomeDark.dc.html"><svg aria-hidden="true" width="36" height="22" viewBox="218 338 600 369" data-keep><defs><linearGradient id="brass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F8E4B8"/><stop offset=".6" stop-color="#E2BE7C"/><stop offset="1" stop-color="#BE8F49"/></linearGradient></defs><path d="M397.8 434.8L397.8 466.2A31.5 31.5 0 0 1 366.4 434.8Z" style="fill:var(--mark)" fill-opacity="0.12"/><path d="M407.7 434.8L407.7 466.2A31.5 31.5 0 0 0 439.2 434.8Z" style="fill:var(--mark)" fill-opacity="0.18"/><path d="M361.6 424.9L439.2 424.9A77.6 77.6 0 0 0 361.6 347.3Z" style="fill:var(--mark)" fill-opacity="0.28"/><path d="M351.7 471.0L227.9 471.0A123.8 123.8 0 0 1 351.7 347.3Z" style="fill:var(--mark)" fill-opacity="0.42"/><path d="M444.0 480.9L444.0 697.0A216.1 216.1 0 0 1 227.9 480.9Z" style="fill:var(--mark)" fill-opacity="0.6"/><path d="M453.9 342.5L453.9 697.0A354.5 354.5 0 0 0 808.4 342.5Z" fill="url(#brass)"/></svg>Ratchet</a>
+          <a class="btn primary full" data-item="new" href="HomeDark.dc.html"><i class="ic s i-plus"></i>New experiment</a>
+          <div class="col" style="gap: 2px;">
+            <a class="nav" data-item="search" href="SearchStartDark.dc.html"><i class="ic i-search"></i>Search<span class="kc" aria-hidden="true" style="margin-left: auto;">⌘K</span></a>
+            <a class="nav" data-item="projects" href="ProjectsDark.dc.html"><i class="ic i-folder"></i>Projects</a>
+            <a class="nav" data-item="customize" href="EvaluationsDark.dc.html" aria-current="page"><i class="ic i-sliders"></i>Customize</a>
+          </div>
+        </div>
+      <div class="side-scroll">
+        <div class="col" style="gap: 2px;">
+          <span class="t-label sl">Pinned</span>
+          <div class="srow"><a class="rec ses" href="SessionWorkingDark.dc.html"><span role="img" aria-label="Working" title="Working" class="st gi st-work run" style="color: var(--accent);"></span><span class="t">Cut checkout p95 latency</span></a><button class="pinb" aria-label="Unpin Cut checkout p95 latency"><i class="ic s i-pin"></i></button></div>
+        </div>
+        <div class="col" style="gap: 8px;">
+          <div class="pg">
+            <button class="ph" aria-expanded="true"><i class="ic s i-chev chev"></i><span class="t">Checkout platform</span></button>
+            <div class="srow"><a class="rec ses" data-item="cut-checkout-p95" href="SessionWorkingDark.dc.html"><span role="img" aria-label="Working" title="Working" class="st gi st-work run" style="color: var(--accent);"></span><span class="t">Cut checkout p95 latency</span></a><button class="pinb" aria-label="Pin Cut checkout p95 latency"><i class="ic s i-pin"></i></button></div>
+            <div class="sx-l">
+              <a class="rec ses sx" data-item="claude-session" href="SessionWorkingDark.dc.html"><span role="img" aria-label="Working" title="Working" class="st gi st-work run" style="color: var(--accent);"></span><span class="t">Claude Code session</span></a>
+              <a class="rec ses sx" data-item="codex-session" href="SessionSpawnedDark.dc.html"><span role="img" aria-label="Working" title="Working" class="st gi st-work run" style="color: var(--accent);"></span><span class="t">Codex session</span></a>
+              <a class="rec ses sx" data-item="gemini-session" href="SessionWorkingDark.dc.html"><span role="img" aria-label="Done" title="Done" class="st gi st-done" style="color: var(--good);"></span><span class="t">Gemini session</span></a>
+            </div>
+            <div class="srow"><a class="rec ses" data-item="speed-up-smoke-suite" href="SessionNoWinDark.dc.html"><span role="img" aria-label="Done" title="Done" class="st gi st-done" style="color: var(--good);"></span><span class="t">Speed up the smoke suite</span></a><button class="pinb" aria-label="Pin Speed up the smoke suite"><i class="ic s i-pin"></i></button></div>
+            <div class="srow"><a class="rec ses" data-item="shrink-production-bundle" href="SessionNoWinDark.dc.html"><span role="img" aria-label="Done" title="Done" class="st gi st-done" style="color: var(--good);"></span><span class="t">Shrink the production bundle</span></a><button class="pinb" aria-label="Pin Shrink the production bundle"><i class="ic s i-pin"></i></button></div>
+          </div>
+          <div class="pg">
+            <button class="ph" aria-expanded="true"><i class="ic s i-chev chev"></i><span class="t">Search</span></button>
+            <div class="srow"><a class="rec ses" data-item="autocomplete-latency" href="SessionFailedDark.dc.html"><span role="img" aria-label="Failed" title="Failed" class="st gi st-fail" style="color: var(--bad);"></span><span class="t">Autocomplete latency</span></a><button class="pinb" aria-label="Pin Autocomplete latency"><i class="ic s i-pin"></i></button></div>
+          </div>
+          <div class="pg">
+            <button class="ph" aria-expanded="true"><i class="ic s i-chev chev"></i><span class="t">Data science forecasts</span></button>
+            <div class="srow"><a class="rec ses" data-item="reduce-forecast-error" href="SessionSealDark.dc.html"><span role="img" aria-label="Waiting for you" title="Waiting for you" class="st gi st-wait" style="color: var(--warn);"></span><span class="t">Reduce forecast error</span></a><button class="pinb" aria-label="Pin Reduce forecast error"><i class="ic s i-pin"></i></button></div>
+            <div class="srow"><a class="rec ses" data-item="feature-pipeline-cost" href="SessionDeliveredDark.dc.html"><span role="img" aria-label="Done" title="Done" class="st gi st-done" style="color: var(--good);"></span><span class="t">Feature pipeline cost</span></a><button class="pinb" aria-label="Pin Feature pipeline cost"><i class="ic s i-pin"></i></button></div>
+          </div>
+        </div>
+      </div>
+      <div class="side-foot">
+        <a class="nav" href="SettingsProfileDark.dc.html" aria-label="Priya Raman, user menu" style="height: 48px; gap: 12px;"><span aria-hidden="true" class="avatar round" style="width: 30px; height: 30px; font-size: 14px;">P</span><span class="col grow" style="line-height: 1.25;"><span style="color: var(--ink);">Priya Raman</span><span class="xs mut">via Okta</span></span><i class="ic s mut i-more"></i></a>
+      </div>
+  </nav>
+  <!-- /part -->
+  <main class="main">
+    <div class="top">
+      <div class="crumbs"><a class="textbtn" href="ConnectorsDark.dc.html">Customize</a><span class="mut">/</span><span class="ell" style="font-weight: 500;">Forecast holdout</span></div>
+      <div class="rw g8"><a class="tsearch" href="SearchDark.dc.html" aria-label="Search"><i class="ic s i-search"></i>Search<span class="kc" aria-hidden="true">⌘K</span></a></div>
+    </div>
+    <div class="scroll">
+      <section class="page">
+<a class="textbtn" href="ConnectorDetailDark.dc.html" style="align-self: flex-start;"><i class="ic s i-back"></i>Snowflake ANALYTICS</a><div class="rw g16"><span class="tile lg"><span class="lg lg-snowflake" role="img" aria-label="Snowflake"></span></span><div class="col g4" style="min-width: 0;"><div class="rw g12 wrap"><h1 class="t-title">Forecast holdout</h1><span class="tag" style="background: var(--verdict); color: var(--ink);">Holdout</span></div><span class="ink2">Snowflake ANALYTICS · v4 is the latest version</span></div></div><div class="sd-ro" role="note" style="margin-top: 0;"><i class="ic i-lock" aria-hidden="true"></i><span>Marked Holdout. Enforced by the credentials: only the judge&rsquo;s includes it.</span></div><div style="display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 24px; align-items: start;"><div class="col g24"><div class="col g8"><h2 class="sech">Versions</h2><div class="table qt"><div style="min-width: 520px;"><div class="grid th" style="grid-template-columns: 72px minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.4fr);"><span>Version</span><span>Created</span><span>Size</span><span>Used by</span></div><div class="grid" style="grid-template-columns: 72px minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.4fr);"><span class="mono xs">v4</span><span class="sm ink2">Today</span><span class="sm ink2">8 periods</span><span class="sm ink2">Reduce forecast error v2</span></div><div class="grid" style="grid-template-columns: 72px minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.4fr);"><span class="mono xs">v3</span><span class="sm ink2">3 weeks ago, 26 Oct</span><span class="sm ink2">6 periods</span><span class="sm ink2">Reduce forecast error v1</span></div><div class="grid" style="grid-template-columns: 72px minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.4fr);"><span class="mono xs">v2</span><span class="sm ink2">Last month, 14 Oct</span><span class="sm ink2">6 periods</span><span class="sm ink2">No experiment</span></div></div></div><span class="xs mut">A dataset version never changes after it is created. A new version is a new row.</span></div></div><div class="col g24"><div class="col g8"><h2 class="sech">Who can read it</h2><div class="card" style="padding: 4px 20px;"><div class="kv"><span>Agents</span><span><span class="rw g8"><i class="ic s i-lock" aria-hidden="true"></i>Restricted to the judge. Their credential leaves it out, so no setting grants it.</span></span></div><div class="kv"><span>The judge</span><span>Its credential includes it. It reads the holdout to confirm each win.</span></div></div></div><div class="col g8"><h2 class="sech">Experiments that use it</h2><div class="rw g12 wrap"><a class="btn sm" href="SessionSealDark.dc.html">Reduce forecast error v2</a><a class="btn sm" href="SessionSealDark.dc.html">Reduce forecast error v1</a></div></div></div></div>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+</body>
+</html>

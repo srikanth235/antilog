@@ -1,0 +1,149 @@
+# design/tokens.toml: the only source of design values for Ratchet.
+#
+# `python3 design/tools/tokens.py` reads this file and writes
+# `design/mockups/tokens.css` (colours as CSS variables, light on :root and
+# dark on [data-theme="dark"], plus the type classes) and the dark twin of every
+# light board. Boards use var(--token) and the type classes, never a value.
+#
+# (target) The Mac app's Swift colours and the web app's CSS are further outputs
+# of the same generator. Until then the values here are the contract.
+#
+# Colour names are camelCase because they are the names the boards already use.
+
+[color.light]
+mark         = "#5C6676"   # the quiet part of the logo mark (the wedges behind the brass one)
+canvas       = "#FBFAF6"   # page background, the main area of every screen
+side         = "#F4F2EB"   # sidebar and other chrome that frames the page
+raised       = "#FFFFFF"   # cards, popovers, menus and dialogs that sit above the page
+sunk         = "#F7F5EF"   # inset areas: inputs, code blocks, segmented controls, user bubbles
+line         = "#ECE8DD"   # hairline dividers between rows, sections and panels
+line2        = "#D6D0C1"   # outlines of controls (buttons, inputs, chips); never a divider
+ink          = "#15181F"   # body text and anything that must read first
+ink2         = "#4A5363"   # secondary text: descriptions, inactive nav, labels of values
+ink3         = "#5C6676"   # meta text: counts, captions, placeholders, the "none" status
+accent       = "#8A5E0B"   # brass as text and marks: links, the running status, the selected tab line
+fill         = "#15181F"   # primary button fill (ink on light, brass on dark)
+fillHover    = "#2B303B"   # primary button fill on hover
+onFill       = "#FBFAF6"   # text and icons on the primary button fill
+good         = "#187250"   # success (win, merged, connected) and the context basic; a state, never decoration
+infra        = "#2A5F8F"   # the infrastructure basic (compute, sandboxes, runners)
+warn         = "#8A5A00"   # waiting and caution (needs you, partial, budget close)
+bad          = "#B4414A"   # failure and destructive actions (failed holdout, Stop run, delete)
+verdict      = "#FBF5E6"   # fill of the verdict banner that announces a decided result
+verdictLine  = "#E3D3AC"   # outline of the verdict banner
+hover        = "rgba(21,24,31,.045)"  # background of a row or button under the pointer
+sel          = "rgba(21,24,31,.07)"   # background of the selected row or nav item
+shadow       = "0 12px 32px rgba(60,50,32,.16)"  # shadow of popovers, dialogs and the composer
+scrim        = "rgba(21,24,31,.36)"   # dimmed backdrop behind a dialog or the search palette
+
+[color.dark]
+mark         = "#8E9BB2"   # the quiet part of the logo mark
+canvas       = "#0B1019"   # page background, the main area of every screen
+side         = "#080C14"   # sidebar and other chrome that frames the page
+raised       = "#101724"   # cards, popovers, menus and dialogs that sit above the page
+sunk         = "#0E1420"   # inset areas: inputs, code blocks, segmented controls, user bubbles
+line         = "#182031"   # hairline dividers between rows, sections and panels
+line2        = "#2A3447"   # outlines of controls; never a divider
+ink          = "#ECEFF4"   # body text and anything that must read first
+ink2         = "#A7B1C2"   # secondary text
+ink3         = "#8291A9"   # meta text
+accent       = "#D9B26F"   # brass as text and marks
+fill         = "#D9B26F"   # primary button fill (brass on dark)
+fillHover    = "#EBCB8E"   # primary button fill on hover
+onFill       = "#16110A"   # text and icons on the primary button fill
+good         = "#7FD1AE"   # success and the context basic
+infra        = "#8DB8E8"   # the infrastructure basic
+warn         = "#E9B85C"   # waiting and caution
+bad          = "#E58C8C"   # failure and destructive actions
+verdict      = "#14130E"   # fill of the verdict banner
+verdictLine  = "#4A3F25"   # outline of the verdict banner
+hover        = "rgba(236,239,244,.05)"  # background under the pointer
+sel          = "rgba(236,239,244,.09)"  # background of the selected row or nav item
+shadow       = "0 12px 32px rgba(0,0,0,.5)"  # shadow of popovers, dialogs and the composer
+scrim        = "rgba(3,6,11,.64)"   # dimmed backdrop behind a dialog or the search palette
+
+# The three basics and the shared floor, each mapped to a colour token.
+# Organization is slate (the quiet ink3) and is a target: it has no screen colour yet.
+[basics]
+optimization   = "accent"
+context        = "good"
+infrastructure = "infra"
+organization   = "ink3"
+
+[font]
+sans = "'Instrument Sans', system-ui, sans-serif"
+mono = "'JetBrains Mono', ui-monospace, monospace"
+
+# Type scale. size in px, line is unitless, tracking in em. Sans only for headings and
+# big numbers (decided 13 Nov); mono is for labels and code.
+[type.hero]      # sign-in hero
+family = "sans"
+size = 56
+weight = 600
+line = 1.05
+tracking = "-0.03em"
+[type.display]   # page title of the largest screens
+family = "sans"
+size = 40
+weight = 600
+line = 1.1
+tracking = "-0.025em"
+[type.title]     # screen and dialog titles
+family = "sans"
+size = 28
+weight = 600
+line = 1.15
+tracking = "-0.02em"
+[type.section]   # section headings
+family = "sans"
+size = 18
+weight = 600
+line = 1.3
+tracking = "-0.01em"
+[type.item]      # names of rows, cards and trials
+family = "sans"
+size = 15
+weight = 500
+line = 1.35
+tracking = "0"
+[type.body]
+family = "sans"
+size = 14
+weight = 400
+line = 1.45
+tracking = "0"
+[type.meta]      # captions and counts (colour: ink3)
+family = "sans"
+size = 12
+weight = 400
+line = 1.4
+tracking = "0"
+[type.label]     # small uppercase labels (colour: ink3)
+family = "mono"
+size = 11
+weight = 500
+line = 1.3
+tracking = "0.06em"
+transform = "uppercase"
+[type.big]       # big numbers: sans 600, tabular
+family = "sans"
+size = 40
+weight = 600
+line = 1
+tracking = "-0.02em"
+tabular = true
+
+[radius]
+r1 = 6      # small controls inside rows, menu items
+r2 = 10     # inputs, popovers, tiles
+r3 = 14     # cards and dialogs
+pill = 999  # buttons, chips, tags, segmented controls
+
+# Gaps the prototype uses (px). Pick from these; do not invent new ones.
+[space]
+s1 = 4
+s2 = 8
+s3 = 12
+s4 = 16
+s5 = 24
+s6 = 32
