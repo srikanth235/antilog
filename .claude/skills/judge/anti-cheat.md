@@ -47,7 +47,7 @@ Before a win is delivered, an agent from a different model provider than the pro
 
 ## 6. Signed receipt
 
-The experiment version and seal, the commits, the values, repeats, noise, the number of trials tried, the holdout result (passed or failed, never the value to an agent), the second opinion and what was spent.
+The experiment version and seal, the commits, the dataset versions read, the values, repeats, noise, the number of trials tried, the holdout result (passed or failed, never the value to an agent), the credential scopes used, the judge platform, environment, image and digest, the agents and sessions, the second opinion and what was spent. It is signed by the judge, and Verify again checks the signature, the signer and the image digest.
 
 - Stops: a win nobody can check later, and numbers edited after the fact.
 - Does not stop: a cheat the other five mechanisms missed. It makes one findable.

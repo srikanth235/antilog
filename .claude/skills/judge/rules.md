@@ -8,9 +8,11 @@
 - Take protected files from the seal for every trial, never from the trial, because a trial that carries its own evaluation grades itself.
 - Let an agent read the evaluation's code and never change it, because reading helps it iterate and changing it changes the score.
 - Never change an outcome once written, because an outcome that can move is not evidence. A new finding is a new measurement.
-- Pin the experiment version, the seal and the dataset versions on every measurement, because a result nobody can reproduce is not a result.
+- Never change a dataset version after it is created, because a measurement that names a version must be reproducible. New data is a new version.
+- Never put a holdout value in history, a message, a trial result or a receipt an agent reads, because history is what agents read. The holdout appears only as Passed or Failed.
+- Pin the experiment version, the seal and the dataset versions on every measurement, and name them on the receipt, because a result nobody can reproduce is not a result.
 - Refuse `measure` when the budget is spent, and let the session layer meter it, because the experiment's owner knows what a win is worth and the budget knows what was spent.
-- Count only Kept wins as value, and keep pending apart from delivered, because a number that mixes them overstates Return.
+- Count a win as Delivered only once its pull request is merged, and keep Pending apart from Delivered. Pending is never in Return, because a number that mixes them overstates Return.
 - Show a failed trial as failed, never as zero or empty, and never show an unchecked experiment as healthy, because zero reads as a real measurement.
 - Never let the second opinion decide, because it flags and a person reads it.
 - Say "experiment", "trial" and "Return" in every word a person reads. Never "contract", "run" as a noun or "ROI".

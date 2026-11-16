@@ -4,7 +4,7 @@ These are decided. Do not build them, propose them in passing, or leave a hook "
 
 - **No modes or plan step.** An experiment and its sessions have no mode switch and no approve-a-plan stage. The agent drives, and a person talks to it at any time.
 - **No orchestration loop on the server.** The server runs no step machine and no agent loop. The only server-side state machines are the judge's queue and the budget meter.
-- **No settings-first setup.** Nobody visits a settings page before the first message. Setup is an approved tool call in the chat. Two things stay in Settings because no experiment can run without them: agent platform accounts (self-hosted) and members and sign-in.
+- **No settings-first setup.** Nobody visits a settings page before the first message. Setup is an approved tool call in the chat. Two things stay in Settings because no experiment can run without them: agent platform accounts (self-hosted) and members and sign-in. A connector can also be registered once in Settings, Connectors, but nothing requires it before the first message; a chat asks with an Add credential card.
 - **No second way to mark a win.** Only the acceptance criteria mark a win, as one pure function in code. A hand-marked or agent-marked win is a number nobody can trust.
 - **No generic coding-agent chat without the judge.** Every session always has the Ratchet tools. A chat that cannot measure is a product we do not need to build.
 - **A judge on a laptop.** Measuring never runs on a user's machine. A judge sandbox runs only on a judge platform, with no agent in it. Agents do not run on a Mac either: "This machine" is deferred (see [rulings](rulings.md)).

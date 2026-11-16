@@ -11,14 +11,14 @@ A session is one agent's work inside an experiment: a chat with one agent in one
 | If you are doing | Read |
 | --- | --- |
 | Deciding what this area promises | [owes.md](owes.md) |
-| Looking up a word (session, agent, agent platform, platform account, environment, attached repo, connector, credential reference, spawned session, session event) | [model.md](model.md) |
+| Looking up a word (session, agent, agent platform, platform account, environment, attached repo, connector, dataset, dataset version, marking, holdout, agent credential, judge credential, credential reference, spawned session, session event, clean-up state) | [model.md](model.md) |
 | Checking a change against the rules that never bend | [rules.md](rules.md) |
 | Changing `spawn`, `attach_repo`, `request_credential`, `set_environment` or `request_budget`, or how tools reach a session | [tools.md](tools.md) |
 | Changing what agents are told | [prompts.md](prompts.md) |
 | Supporting a new agent platform | [add-platform.md](add-platform.md) |
 | Supporting a new agent (a model on a platform) | [add-agent.md](add-agent.md) |
 | Adding an environment (image, setup script, size, network) | [add-environment.md](add-environment.md) |
-| Adding a connector (a data system or MCP server a session may read) | [add-connector.md](add-connector.md) |
+| Adding a connector (a data system or MCP server a session may read), its two credentials, its datasets and the holdout | [add-connector.md](add-connector.md) |
 | Finding what the earlier code built | [today.md](today.md) |
 | `seal`, `measure`, `history`, `deliver`, `watch`, the experiment and the holdout | [../judge/SKILL.md](../judge/SKILL.md) |
 | Cards, policy, roles, budgets, who may approve | [../organization/SKILL.md](../organization/SKILL.md) |

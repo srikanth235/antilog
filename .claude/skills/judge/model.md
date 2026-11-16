@@ -10,7 +10,7 @@ Where [the glossary](../../../docs/GLOSSARY.md) already defines a word, this fil
 | evaluation | The command and its protected files, held in one or more repos at pinned commits. Agents may read it and never change it | evaluator, test suite |
 | protected path | A file or glob in the evaluation. It names its repo | a file path alone |
 | guardrail | A measured quantity that must not get worse while the metric improves | budget |
-| data | The evaluation data an agent sees values for, and the holdout it never sees. Named by dataset id and version | a connector, a credential |
+| data | The evaluation data an agent sees values for, and the holdout it never sees. Named by dataset id and version. A dataset lives under a connector and a dataset version never changes (see [../session/model.md](../session/model.md)) | a connector, a credential |
 | holdout | Data only the judge sandbox may read. Enforced by credentials: the agent's credential excludes it. Shown as "Restricted to the judge" | a validation split an agent can see |
 | seal | A hash over the definition and its protected files at pinned commits, made when a person approves an experiment that passed the seal checks | a signature on a win |
 | seal checks | The baseline measurement, the noise check and the cheat checks | review |
@@ -21,13 +21,14 @@ Where [the glossary](../../../docs/GLOSSARY.md) already defines a word, this fil
 | bar | The gain a trial must show. Tied to the noise and raised with the number of trials tried. The exact rule is settled with the first code | a fixed threshold |
 | best | The experiment's best Kept trial | any trial that looked good |
 | win | An experiment's best Kept trial, ready to deliver or delivered | a Kept trial that is not the best |
-| receipt | The signed record of a win | a log, report text |
+| receipt | The signed record of a win. Three groups: Experiment (version and seal, values, repeats, noise, trials tried, holdout result, second opinion, spend), Data (dataset versions read, commits per repo, the credential scopes used: agents read-only with the holdout excluded, the judge its own) and Compute (judge platform and environment, judge image and digest, agents and sessions with their platforms). "Signed by the judge", with Verify again | a log, report text |
+| evaluation kind | The shape of an evaluation: Speed, Quality, Size or Cost. The agent drafts an experiment from a kind and its template, and the Seal experiment card shows the kind with the planted cheats the judge runs for it | a catalogue page |
 | second opinion | The read of a winning diff by an agent from a different model provider than the proposer. It flags and never decides | a review that blocks |
 | watch | The judge measuring a delivered experiment again, on a schedule or when the default branch moves | a loop |
 | regression | A watch result worse than the delivered value by more than the noise | a failed trial |
 | scoreboard | Trials for an experiment, by session | a ranking of agents |
-| delivered | Yearly value of merged wins (glossary) | locked in, realised |
-| pending | Yearly value of wins in an open pull request; not counted in Return (glossary) | unclaimed |
+| delivered | Yearly value of wins whose pull request is merged (glossary). A win counts as Delivered only once merged | locked in, realised |
+| pending | Yearly value of wins in an open pull request; not counted in Return, and it stays Pending while the pull request is open (glossary) | unclaimed |
 | Return | Delivered divided by spent, shown as `68x` (glossary). Never "ROI" | a percentage or payback figure |
 
 ## How the objects relate

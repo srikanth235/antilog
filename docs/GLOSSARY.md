@@ -16,7 +16,7 @@ Everything here is target; nothing is built. The design is directed by the owner
 | Measurement | The judge's signed result for a trial under one experiment version | score | Measurement |
 | Kept | A trial's outcome: it beat the trial it started from by more than the bar, held every guardrail and was confirmed in a fresh judge sandbox and on the holdout | Accepted | Kept |
 | Win | An experiment's best Kept trial, ready to deliver or delivered | | Win |
-| Receipt | The signed record of a win: experiment version and seal, commits, values, repeats, noise, trials tried, the holdout result, the second opinion, what was spent | | Receipt |
+| Receipt | The signed record of a win. Experiment: version and seal, values, repeats, noise, trials tried, the holdout result, the second opinion, what was spent. Data: dataset versions, commits, credential scopes used. Compute: judge platform and environment, judge image and digest, agents and sessions | | Receipt |
 | Scoreboard | Trials for an experiment, by session; pinned under the experiment page's header once it is sealed | leaderboard | Scoreboard |
 | Second opinion | An agent from a different model provider than the proposer reads a winning diff and says whether it special-cases the evaluation. It flags and never decides | review | Second opinion |
 | Approval, card | A tool call a person approves in the chat. Card kinds: Seal experiment, Raise budget, Add credential, Attach repo, Change environment, Open pull request | confirmation, dialog | card |
@@ -27,13 +27,18 @@ Everything here is target; nothing is built. The design is directed by the owner
 | Agent platform | A managed service that runs an agent and its sandbox as one session: Claude Managed Agents, AWS AgentCore, the OpenAI Agents API, Microsoft Foundry Agent Service or Google Agent Runtime | | Agent platform |
 | Platform account | The account Ratchet uses on an agent platform: yours when self-hosted, Ratchet's on Ratchet cloud, billed to you at cost | | Platform account |
 | Environment | The image or setup script, size and network policy a session's sandbox starts from | | Environment |
-| Connector | A data system or MCP server an agent's code may read: Snowflake, Databricks, DynamoDB, BigQuery, Postgres, Amazon S3, any MCP server. The code host (GitHub, GitLab) is how repos attach and pull requests open. A cloud account is not a connector | source | Connector |
-| Connector credential | A read-only credential an agent's code uses to read a connector, from the platform's credential store. It never reaches the holdout | | Credential |
-| Holdout | Evaluation data only the judge can read. An agent never reads it or learns a value from it | test set | Restricted to the judge |
+| Clean-up state | Whether a session and its sandbox are gone from the platform. Removed: the platform confirms it. Not removed: Ratchet retries and the cost counts until it is gone | Deleted, Orphaned | Removed, Not removed |
+| Connector | A data system or MCP server an agent's code may read: Snowflake, Databricks, DynamoDB, BigQuery, Postgres, Amazon S3, any MCP server. Registered once in Settings, Connectors, with two credentials and the datasets under it. Status: Connected, Reconnect, Not checked. The code host (GitHub, GitLab) is how repos attach and pull requests open. A cloud account is not a connector | source, integration | Connector |
+| Dataset | A named table or file set under one connector that an experiment reads. Ratchet records its name, versions, size and marking, never its rows | table, query | Dataset |
+| Dataset version | One state of a dataset, with an id and a date. It never changes after it is created; a receipt names the versions read | snapshot, latest | Dataset version ("orders v4") |
+| Marking | A label on a dataset that limits who may read it. Holdout is the only one | tag | Marking |
+| Agent credential | A read-only credential for one connector, on the views listed, holdout excluded. Registered once, kept in the platform's credential store, handed to a session short-lived and minted per session. Ratchet keeps none | token, key | Agent credential |
+| Judge credential | A separate read-only credential for the same connector that also covers the holdout. Kept on the judge platform, minted per judge sandbox. No agent holds it | | Judge credential |
+| Holdout | A marking on a dataset: evaluation data only the judge can read. Enforced by the credentials: the agent credential leaves it out and only the judge credential includes it. No control grants it to an agent. An agent never reads it or learns a value from it | test set, hidden | Restricted to the judge |
 | Guardrail | A metric that must not get worse | limit | Guardrail |
 | Protected path | A file in a repo that an experiment names and a trial may not change. A trial that changes one is Rejected | | Protected path |
 | Budget, spend | One per experiment, covering all its sessions and their judge time: model tokens, sandbox time and judge time. A person sets it when starting and an editor or owner can change it at any time. Settings, Budgets holds the organization's default and its monthly cap, which no budget passes | cap | Budget, Spend |
-| Delivered | Yearly value of merged wins, derived per experiment when it states a value per unit | locked in, realised | Delivered |
+| Delivered | Yearly value of wins whose pull request is merged, derived per experiment when it states a value per unit | locked in, realised | Delivered |
 | Pending | Yearly value of wins in an open pull request; not counted in Return | unclaimed, waiting | Pending |
 | Return | Delivered divided by spent, as `68×` | ROI | Return |
 
@@ -64,10 +69,10 @@ The boards are in [`design/mockups/`](../design/mockups/) and the rules in [`.cl
 | New experiment | A composer, not a dialog or a form: one text box ("What do you want to improve?") with four chips, Repos, Agent, Environment and Budget. It starts an experiment with its lead session |
 | Experiment page | The chat of its lead session: a header (title, state and activity, Details, Stop, Pin, menu), the scoreboard strip once sealed (with Change budget), the conversation of messages and cards, and a composer docked at the foot. Spawned sessions appear as cards and open as their own chat inside the experiment |
 | Card | The only place structured output appears. Approval cards (the six kinds above). Result cards: Trial, Spawned session, Win, Pull request, Regression, and a calm one-line failure |
-| Experiments | A list page (metric, baseline to best, state, last activity), reached from All experiments, and a detail page, reached from Details (the sealed definition, the seal checks, the holdout shown as "Restricted to the judge", the scoreboard, the history of trials across sessions, wins and their pull requests, watch settings, versions) |
+| Experiments | A list page (metric, baseline to best, state, last activity), reached from All experiments, and a detail page, reached from Details (the sealed definition, the seal checks, the data with dataset versions, the holdout shown as "Restricted to the judge", the sessions with their spend and clean-up state, the scoreboard, the history of trials across sessions, wins and their pull requests, watch settings, versions) |
 | Experiment state | Not sealed, Sealed, Watching, Regressed |
 | Receipt page | One win: everything on the signed receipt, and the lineage (what each trial started from) |
-| Settings | A dialog with a rail. You: Profile, Appearance, Access tokens, This device. Organization: General, Members, Single sign-on, Agent platforms, Approvals, Budgets, Connections (repos, credentials and environments that were approved, with Revoke), Audit log. Read-only for non-owners, not hidden |
+| Settings | A dialog with a rail. You: Profile, Appearance, Access tokens, This device. Organization: General, Members, Single sign-on, Agent platforms, Connectors, Approvals, Budgets, Connections (repos, credentials and environments that were approved, with Revoke), Audit log. Read-only for non-owners, not hidden |
 | Activity | Working, Waiting for you, Done, Failed, from an experiment's sessions; each has a word and an icon shape, never colour alone |
 | Page types | Session (the experiment page), ListPage, DetailPage, Dialog, SettingsSection, SignIn |
 | Page states | Loading, empty, failed, refused, partial, not checked |
