@@ -8,7 +8,7 @@ Almost all of this area is target. There is no dataset, source, grant or marking
 | --- | --- | --- |
 | source | Connectors: signed-in accounts of three kinds (GitHub, AWS, agent logins), one default per kind, with secrets in the macOS Keychain or a 0600 file | `crates/ratchet-connectors/src/model.rs`, `crates/ratchet-connectors/src/secrets.rs`, `crates/ratchet-connectors/src/store/` |
 | source, GitHub | Device-flow sign-in, repos, branches, files, a git host with pull requests | `crates/ratchet-github/src/api.rs`, `crates/ratchet-github/src/github_host.rs`, `crates/ratchet-github/src/signin.rs` |
-| read through a connector | `connector_query`, a read-only question to a connector the user signed in; refused on a cloud runner, so credentials never reach an agent | `crates/ratchetd/src/real/service.rs`, `crates/ratchet-agents/src/runner_mcp.rs` |
+| read through a connector | `connector_query`, a read-only question to a connector the user signed in; refused on a cloud runner, so credentials never reached an agent | `crates/ratchetd/src/real/service.rs`, `crates/ratchet-agents/src/runner_mcp.rs` |
 | holdout | `evaluator.holdout` (alias `confirm_trace`) names hidden data in `ratchet.yaml`; the sealed bucket is readable only by the confirm identity | `crates/ratchet-core/src/config/schema.rs`, `crates/ratchet-bench/src/pipeline.rs`, `infra/contract.md`, `infra/aws/s3.tf` |
 | protected data and files | Protected globs; the evaluator's files are overlaid from a protected ref so a candidate cannot change them | `crates/ratchet-core/src/protected_set.rs`, `crates/ratchet-bench/src/overlay.rs` |
 | note | Steering notes agents read at the start of a turn | `crates/ratchet-mcp/src/sets.rs`, `docs/ratchet-mcp.md` |

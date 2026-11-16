@@ -30,7 +30,7 @@ Code and the API use the names of the three basics for their areas; the screen b
 | Kept | A trial's outcome: it beat its agent's best by more than the acceptance criteria require, held the guardrails and was confirmed on the holdout. The agent learns only "Kept" or "Failed holdout", never the holdout value (target) | Accepted, Beats noise (as an outcome) |
 | Agent's best | The best kept value in one agent's lineage; what its next trial must beat. The run's result is the best kept trial across all agents (target) | none |
 | Evaluation | The trusted measurement, added under Customize | Benchmark |
-| Connector | A connection to a data system or the code host, with a reference to its admin secret in your secret manager. A cloud account is not a connector. Do not say "source" | Connector (a signed-in account) |
+| Connector | A connection to a data system or the code host. A cloud account is not a connector. Do not say "source" | Connector (a signed-in account) |
 | Skill | A versioned pack of know-how agents read. Not the agent guidance in `.claude/skills/` | none |
 | Plugin | A bundle that adds evaluations, skills, connectors and agents for a domain | none |
 | Customize | One page with Evaluations, Skills, Connectors, Agents and Plugins | none |
@@ -80,7 +80,7 @@ Code and the API use the names of the three basics for their areas; the screen b
 | keep a stopped run stopped | Leave stopped |
 | install the web app as a progressive web app (Windows, Linux) | Install app (Settings, This device); "Get the Mac app" on macOS |
 | ask for push notifications after starting a run | Notify me when this run finishes |
-| notification titles | Win, Needs attention, No win, Failed, Stopped, Stopped at the budget, Runner not connected |
+| notification titles | Win, Needs attention, No win, Failed, Stopped, Stopped at the budget |
 | the server cannot be reached | Can't reach acme.ratchet.cloud. (the server's address), Try again |
 | a trial's steps | Steps for this trial (hypothesis, wrote the change, checked it in its sandbox (does not count), asked for a measurement, evaluator measured, beat the agent's best, confirmed in a fresh evaluator sandbox, Kept) |
 | the settings that apply to this browser only | This device, with the lead "These apply to this browser only." |

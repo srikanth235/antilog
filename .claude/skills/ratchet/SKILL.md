@@ -7,7 +7,7 @@ description: Drive Ratchet from the shell with the `ratchet` command (target; no
 
 `ratchet` is a command-line client of a Ratchet server, and `ratchet mcp` is the same client as an MCP server. It is (target): it does not exist on this branch, so the commands below are the design and may change as the program is built. The earlier daemon-based CLI is in [today.md](today.md).
 
-There is no daemon, no LaunchAgent and no simulation mode. The server is Ratchet cloud or a self-hosted server at a URL. The client holds no data and runs no sandbox: it asks the server, and the server's runner does the work in the customer's infrastructure.
+There is no daemon, no LaunchAgent and no simulation mode. The server is Ratchet cloud or a self-hosted server at a URL. The client holds no data and runs no sandbox: it asks the server, and the server starts sessions on agent platforms, which do the work.
 
 ## Sign in
 
@@ -36,14 +36,13 @@ There is no daemon, no LaunchAgent and no simulation mode. The server is Ratchet
 | `ratchet start <id> --budget 50 --yes` | Start an approved experiment (preview without `--yes`) |
 | `ratchet stop <id> --yes` | Stop one. Wins found so far are kept |
 | `ratchet note <id> "@Codex focus on database queries" --json` | Steer all agents, or one with @ (target) |
-| `ratchet measure --json` | Inside an agent sandbox only: ask for a measurement of the current change (target) |
 | `ratchet pr <id> --yes` | Open the pull request with the verified wins |
 
 Anything not listed is whatever `ratchet --help` shows; it is the source once the program exists.
 
-## Measuring from an agent sandbox (target)
+## The `measure` tool (target)
 
-An agent inside its sandbox asks for a measurement with `ratchet measure --json` or the `measure` MCP tool. It uses the sandbox's own scoped credential, not a member's token. It starts one trial: the evaluator measures the agent's current change on separate machines. The result has the trial id, the measured value on the evaluation data, the guardrail values, the noise band and the outcome (Kept, Within noise, Worse, Guardrail failed, Failed holdout, Failed). It never has the holdout value: a Kept trial reads "Kept", a trial that fails the holdout reads "Failed holdout". Numbers an agent makes in its own sandbox never count. It spends from the agent's budget share and takes no `--yes`. It works only inside an agent sandbox, because that is where its credential is; a person signed in with an access token gets an error that says so.
+An agent in its session asks for a measurement with the `measure` tool. It is not a command a person runs and takes no access token: Ratchet provides it to the session as a client tool and answers it over the session's own event stream. It starts one trial: Ratchet measures the agent's current commit in an evaluator sandbox on the experiment's measuring platform, with no agent in it. The result has the trial id, the measured value on the evaluation data, the guardrail values, the noise band and the outcome (Kept, Within noise, Worse, Guardrail failed, Failed holdout, Failed). It never has the holdout value: a Kept trial reads "Kept", a trial that fails the holdout reads "Failed holdout". Numbers an agent makes in its own session never count. It spends from the agent's budget share and takes no `--yes`. Only an agent's session can call it.
 
 ## MCP
 

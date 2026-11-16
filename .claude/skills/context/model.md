@@ -4,9 +4,9 @@
 
 | Object | Means | Not |
 | --- | --- | --- |
-| connector | A connection to an outside system that the agent's code reads through: Snowflake, Databricks, DynamoDB, BigQuery, Postgres, S3, GitHub, GitLab, any MCP server. It knows how to mint a scoped credential for its system | a dataset, a credential, a pipe that Ratchet reads through, "source" (the old word) |
-| scoped credential | A short-lived, read-only credential for one connector, minted per run by the launcher. The agent's has the holdout left out; the evaluator's is separate and includes it | a stored secret, the connector admin secret |
-| connector admin secret | The secret the launcher uses to mint scoped credentials. It stays in the customer's secret manager, or, for Ratchet-managed, in our encrypted secret store held by the managed runner. No agent or server ever holds it | a scoped credential |
+| connector | A connection to an outside system that the agent's code reads through: Snowflake, Databricks, DynamoDB, BigQuery, Postgres, S3, GitHub, GitLab, any MCP server. It knows how to make a scoped credential for its system | a dataset, a credential, a pipe that Ratchet reads through, "source" (the old word) |
+| scoped credential | A read-only credential for one connector, handed to a session through the platform's credential store. The agent's has the holdout left out; the evaluator's is separate and includes it. Whether it is minted per run or registered once is open (see [rulings](../product/rulings.md)) | a stored secret in Ratchet's database, the connector admin secret |
+| connector admin secret | A secret that could mint scoped credentials. Whether any exists in the design depends on the open question in [rulings](../product/rulings.md). No agent holds it, and on Ratchet cloud the server does not | a scoped credential |
 | dataset | A named, governed table or file set that experiments read. Ratchet records its id and versions, never its rows | a connector, a query |
 | dataset version | One immutable state of a dataset, with an id | latest, a snapshot someone can edit |
 | virtual dataset | A dataset that points at data left in place, pinned by an as-of time | a copy |
@@ -29,14 +29,14 @@ A skill pack is not the agent guidance in this repo's `.claude/skills/`; that is
 
 ## Connector kinds
 
-Snowflake, Databricks, DynamoDB, BigQuery, Postgres, S3, GitHub, GitLab, any MCP server. Each has one translator and one way to mint a scoped, read-only, holdout-excluding credential. None is built as a connector today.
+Snowflake, Databricks, DynamoDB, BigQuery, Postgres, S3, GitHub, GitLab, any MCP server. Each has one translator and one way to make a scoped, read-only, holdout-excluding credential. None is built as a connector today.
 
 ## How data is read
 
-The coding agent writes code, and that code runs the experiment and reads data through the connectors, using the scoped credential the launcher minted for the run. The Ratchet server never connects to data and stores none. There is no context plane that pulls or brokers reads. Model keys are not connector credentials: they go through the egress proxy (see [../infra/model.md](../infra/model.md)). Git access is a short-lived scoped token.
+The coding agent writes code, and that code runs the experiment and reads data through the connectors, using the scoped credential its session got through the platform's credential store. The Ratchet server never connects to data and stores none. There is no context plane that pulls or brokers reads. Model access belongs to the platform account, so no model key is a connector credential (see [../infra/model.md](../infra/model.md)). Git access is a short-lived token that may push only to the session's own branch.
 
 ## How this area refers to the others
 
 - Optimization: by experiment id and run id only. A write-back action carries the experiment's id and the win's id. Context never reads the accept rule or a verdict.
-- Infra: by environment id only. The launcher mints the credentials and runs the code on a named environment. Regions, accounts and instance ids stay in infra.
+- Infra: by environment id only. A session runs the code on a named environment of its platform, and infra hands it the credentials through the platform's credential store. Regions, accounts and instance ids stay in infra.
 - Organization: by project id and actor id. Grants belong to a project.

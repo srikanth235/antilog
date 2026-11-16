@@ -6,7 +6,7 @@ description: >-
 
 # Context
 
-Context decides what a proposer may read. The coding agent writes code, and that code runs the experiment and reads data through connectors itself. Ratchet does not pull or broker data. Context names the datasets and their versions, and decides which credentials the launcher mints: short-lived, read-only, scoped, and without the holdout for agents. Most of this is target; [today.md](today.md) says what exists.
+Context decides what a proposer may read. The coding agent writes code, and that code runs the experiment and reads data through connectors itself. Ratchet does not pull or broker data. Context names the datasets and their versions, and decides which credentials a session gets through its platform's credential store: read-only, scoped, and without the holdout for agents. Whether they are minted per run or registered once is open (see [rulings](../product/rulings.md)). Most of this is target; [today.md](today.md) says what exists.
 
 | If you are doing | Read |
 | --- | --- |
@@ -14,11 +14,11 @@ Context decides what a proposer may read. The coding agent writes code, and that
 | Looking up a word (connector, scoped credential, skill pack, dataset, grant, marking, holdout) | [model.md](model.md) |
 | Checking a change against the rules that never bend | [rules.md](rules.md) |
 | Finding what exists in the repo today, and what is only target | [today.md](today.md) |
-| Connecting a new outside system, and how it mints a scoped credential | [add-connector.md](add-connector.md) |
+| Connecting a new outside system, and how it gets a scoped credential | [add-connector.md](add-connector.md) |
 | Adding a new kind of dataset | [add-dataset-kind.md](add-dataset-kind.md) |
 | Adding a skill pack, or a plugin's skills | [add-skill-pack.md](add-skill-pack.md) |
 | Adding a new marking, or changing who a marking hides data from | [add-marking.md](add-marking.md) |
 | What a benchmark does with a dataset | [../optimization/SKILL.md](../optimization/SKILL.md) |
-| Where the code that reads runs, and who mints credentials | [../infra/SKILL.md](../infra/SKILL.md) |
+| Where the code that reads runs, and how credentials reach a session | [../infra/SKILL.md](../infra/SKILL.md) |
 | Who may grant, and how grants are audited | [../organization/SKILL.md](../organization/SKILL.md) |
 | Deciding whether a data feature belongs in the product | [../product/SKILL.md](../product/SKILL.md) |

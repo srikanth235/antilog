@@ -8,7 +8,7 @@ Where `docs/GLOSSARY.md` already defines a word, this file keeps its meaning and
 | goal | The measured quantity and its direction, minimize or maximize | wish, target date |
 | limit | A measured quantity that must not get worse while the goal improves (today a guardrail in `ratchet.yaml`) | budget (that is infra spend) |
 | subject | Anything with a version and a diff that agents may change | a file path, a repo |
-| benchmark | The trusted procedure that measures a candidate; points at data (context) and machines (infra) | test suite, agent script |
+| benchmark | The trusted procedure that measures a candidate; points at data (context) and an evaluator environment on a measuring platform (infra) | test suite, agent script |
 | accept rule | The pure function that turns the agent's best so far, noise, the trial's measured value, the guardrails and the confirmation into a verdict | a review, a vote |
 | stop rule | The conditions that end an agent (its budget share is spent, or no kept trial in its last 8 trials) and a run (budget, deadline, or no kept trial by any agent in the last 12 trials) (target) | pause |
 | run | One execution of an experiment, numbered `#14` (glossary) | attempt, session |
@@ -26,8 +26,8 @@ Where `docs/GLOSSARY.md` already defines a word, this file keeps its meaning and
 
 ## How a run works (target)
 
-1. Each agent runs its own loop in its own sandbox: write a change, check it cheaply there (numbers made there never count), ask for a measurement, read the result, then build on it if Kept or go back to its best, read the history, and go again.
-2. A measurement runs on the evaluator's separate machines with the evaluation's repeats and reports the noise band. The agent sees the measured value and guardrail values on the evaluation data, never the holdout.
+1. Each agent runs its own loop in its own session on its agent platform: write a change, check it cheaply there (numbers made in an agent's session never count), ask for a measurement, read the result, then build on it if Kept or go back to its best, read the history, and go again.
+2. A measurement runs in an evaluator sandbox on the experiment's measuring platform, with no agent in it, with the evaluation's repeats and reports the noise band. The agent sees the measured value and guardrail values on the evaluation data, never the holdout.
 3. The accept rule, one pure function, decides each trial. A Kept trial is confirmed in a fresh evaluator sandbox and on the holdout.
 4. An agent stops by the stop rule. The run's result is the best kept trial across all agents.
 
@@ -36,5 +36,5 @@ The agent decides what to try. Ratchet decides what counts. The run's budget sta
 ## How this area refers to the others
 
 - Context: by dataset id and dataset version only. A benchmark names the exact versions it reads. It never names a connector or a credential.
-- Infra: by environment id and machine type only. A benchmark names the environment it is measured in. It never names a provider, region or instance id.
+- Infra: by environment id and measuring platform only. A benchmark names the environment it is measured in. It never names a platform's agent ids, regions or instance ids.
 - Organization: by project id. Every experiment belongs to one project.

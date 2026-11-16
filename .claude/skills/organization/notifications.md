@@ -10,7 +10,6 @@ Decided by the owner, 15 Nov; replaces "Notifications cut" (13 Nov). A notificat
 | Needs attention: measuring is blocked (the evaluation failed 3 times in a row), or a decision is waiting. A trial that breaks a guardrail is only discarded and notifies no one | whoever started the run, and editors and owners of the project | Needs attention · the experiment name, then what to decide |
 | The run ended with no win, failed or stopped | whoever started the run, only if they asked ("Notify me when this run finishes") | No win, Failed or Stopped · the experiment name |
 | A budget was hit | whoever started the run, and owners | Stopped at the budget · the experiment name |
-| A runner is not connected | owners | Runner not connected · its name |
 
 The words come from the one catalogue and the glossary; a notification never says something the app would not.
 

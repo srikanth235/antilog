@@ -9,9 +9,9 @@ Every write is a named action, and every action goes through one action layer in
 5. **Then the event.** The layer publishes the live event after the commit ([../change/live-event.md](../change/live-event.md)). Events and audit entries carry no secret.
 6. **The route.** Add the handler and the operation in the OpenAPI document by [../change/api-endpoint.md](../change/api-endpoint.md). The handler calls the layer and tests no role. Every route needs a signed-in member or an access token.
 7. **The organization.** Every row the action writes carries its organization.
-8. **Work in the customer's infrastructure.** An action that needs a sandbox queues a job in the same transaction; see [../change/runner-job.md](../change/runner-job.md).
+8. **Work on an agent platform.** An action that starts or stops a session or an evaluator sandbox queues a job in the same transaction; see [../change/platform-job.md](../change/platform-job.md).
 9. **Outside effects.** An action that writes to an outside system, such as opening a pull request, is a write-back action requested by optimization and performed through context (see [../context/SKILL.md](../context/SKILL.md)). It is audited like any other.
-10. **Owner-only settings.** Changing where work runs and changing a model key source are owner-only, audited actions. (target)
+10. **Owner-only settings.** Changing an organization's agent platform accounts is an owner-only, audited action. (target)
 11. **Tests.** Allowed role writes and audits once; denied role writes nothing and audits the denial; the event is emitted after the commit; the audit row and the change roll back together; no secret in the entry or the event.
 
 Today: a handler in `crates/ratchetd/src/api/` called the service directly with no actor and no audit entry. Events needed a new variant in `ApiEvent` (`crates/ratchetd/src/api/events.rs`).
