@@ -79,7 +79,7 @@ How tests are written: [land/tests.md](../../land/tests.md). In Rust:
 
 - Snapshots with `insta` (review with `cargo insta review`), properties with `proptest`, database tests against a real Postgres in a container with `testcontainers` ([../postgres/ratchet.md](../postgres/ratchet.md)), and one storage suite, written against the `Store` trait, that runs against both the Postgres store and the SQLite store, async time tests with `#[tokio::test(start_paused = true)]`.
 - Test the public behaviour of a crate from `tests/`; unit-test pure logic in the module. A test never talks to a real cloud, a real agent or the network: use the doubles. A test that does is a real-cloud run and follows [land/real-cloud.md](../../land/real-cloud.md).
-- Contract tests pin the API: the OpenAPI document generated from the Rust types (`utoipa`) is compared with a committed snapshot, and the web client and the CLI are generated from it. A change to a type changes the snapshot in the same change. How: [change/api-endpoint.md](../../change/api-endpoint.md).
+- Schema tests pin the API: the OpenAPI document generated from the Rust types (`utoipa`) is compared with a committed snapshot, and the web client and the CLI are generated from it. A change to a type changes the snapshot in the same change. How: [change/api-endpoint.md](../../change/api-endpoint.md).
 - Tests are deterministic: fixed clock, seeded randomness, no sleeps. See the pitfalls.
 
 ## Compiler and clippy errors

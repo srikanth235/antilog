@@ -27,7 +27,7 @@ The earlier Rust daemon and CLI are on the branch `claude/peaceful-lamport-leak6
 
 - The acceptance rule as one pure function worked. Keep it, and keep its tests on each side of every boundary.
 - The ledger tables for ratchet moves and spend were append-only by trigger, but the candidate verdict was an `UPDATE`. The judge's outcomes need the same database guard.
-- The holdout was optional in the config, and the confirm step ran only when one was named. A holdout that may be skipped is not a guarantee. In the contract it is required.
+- The holdout was optional in the config, and the confirm step ran only when one was named. A holdout that may be skipped is not a guarantee. In an experiment it is required.
 - Protected files came back from the evaluator ref by overlay. The seal replaces that ref with a hash over pinned commits.
 - The earlier code had no cheat checks and no signed receipt. Dataset versions, the machine type and the credential scopes were not recorded, and nothing signed the numbers.
 - Nothing measured a merged win again. That gap is the watch.

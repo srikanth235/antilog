@@ -14,9 +14,9 @@ Read the skill for **design**, not code: how to name tools, write descriptions a
 
 - **A tool can do nothing its caller's token cannot.** Each tool calls the API with the caller's access token and role. It never has a back door and never widens a scope. A denied call returns the API's error.
 - **Holdout data is never reachable.** No tool reads, lists or summarizes the holdout, and no tool output may carry it. An agent never holds the holdout credential and never learns a holdout value; see [../../judge/rules.md](../../judge/rules.md).
-- **One definition, served twice.** A tool has one definition, served to a session and by `ratchet mcp`. Name tools and describe them as the glossary does ("session" and "contract", never "experiment" or "automation"). Do not add a tool the API lacks. A tool that matters shows an approval card to a person; a tool whose command needs `--yes` takes `confirm: true` and shows its preview first, as [../../ratchet/SKILL.md](../../ratchet/SKILL.md) says. `measure` returns a ticket at once and its result arrives later as an event, so no tool timeout applies.
+- **One definition, served twice.** A tool has one definition, served to a session and by `ratchet mcp`. Name tools and describe them as the glossary does ("experiment" and "session", never "contract" or "automation"). Do not add a tool the API lacks. A tool that matters shows an approval card to a person; a tool whose command needs `--yes` takes `confirm: true` and shows its preview first, as [../../ratchet/SKILL.md](../../ratchet/SKILL.md) says. `measure` returns a ticket at once and its result arrives later as an event, so no tool timeout applies.
 - **Secrets never appear in a tool result.** Not a token, a connector secret or a platform credential.
-- **Evaluate it.** Write the skill's evaluation questions against a test server and keep them with the CLI's contract tests ([../../land/tests.md](../../land/tests.md)).
+- **Evaluate it.** Write the skill's evaluation questions against a test server and keep them with the CLI's tests ([../../land/tests.md](../../land/tests.md)).
 
 ## Connecting to other MCP servers
 

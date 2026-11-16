@@ -6,7 +6,7 @@ description: >-
 
 # Design
 
-Every visual or UX change starts in `design/mockups/`, as a board. The look is Midnight Brass: a calm, exact dark instrument panel with one brass accent, and the same palette on warm paper, both designed from day zero. Values live in `design/tokens.toml` and nowhere else. Behaviour and words live here. The web app and the macOS app (target; its boards are removed for now and owed) share behaviour, words and element ids, never pixels. Ratchet is a chat and a judge: the screen is a session page, a contract page and a settings dialog over one sidebar.
+Every visual or UX change starts in `design/mockups/`, as a board. The look is Midnight Brass: a calm, exact dark instrument panel with one brass accent, and the same palette on warm paper, both designed from day zero. Values live in `design/tokens.toml` and nowhere else. Behaviour and words live here. The web app and the macOS app (target; its boards are removed for now and owed) share behaviour, words and element ids, never pixels. Ratchet is a chat and a judge: the screen is an experiment page (the chat of its lead session), an experiment detail page and a settings dialog over one sidebar that lists experiments.
 
 | If you are doing | Read |
 | --- | --- |

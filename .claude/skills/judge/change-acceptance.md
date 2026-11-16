@@ -8,7 +8,7 @@ The acceptance criteria decide every win, so a change to them changes what the p
 4. **Keep confirmation.** A trial that passes the first measurement and fails the confirmation or the holdout is never Kept. A change never lets a win skip either.
 5. **Keep reasons.** Every outcome carries reasons a person can read.
 6. **Never apply by hand.** No setting, tool or route may set an outcome. The judge writes it after calling the function.
-7. **Version it.** Record which version of the criteria decided each outcome. Old outcomes are never rewritten when the criteria change, and a contract version names the criteria it was sealed with.
+7. **Version it.** Record which version of the criteria decided each outcome. Old outcomes are never rewritten when the criteria change, and an experiment version names the criteria it was sealed with.
 8. **Tests.** Unit and property tests, with a case on each side of every boundary you moved, and a test that `deliver` still refuses a trial that is not Kept.
 9. **Words.** Update [model.md](model.md) and [the glossary](../../../docs/GLOSSARY.md) if a word changed.
 

@@ -4,7 +4,8 @@ All of this is target. [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md) defines t
 
 | Object | Means | Not |
 | --- | --- | --- |
-| session | A chat with one agent in one sandbox on one agent platform, with any number of repos attached. Its only state is a status: Working, Waiting for you, Done, Failed. A session a person stops is Done, with the line "Stopped by NAME" | a thread, a task, a step machine |
+| experiment | The sealed goal and everything measured against it: the definition, its trials, scoreboard, wins and receipts. It owns the budget and holds one or more sessions (see [../judge/model.md](../judge/model.md)). Its activity comes from its sessions: Working, Waiting for you, Done, Failed | a session, a thread |
+| session | One agent's work inside an experiment: a chat with one agent in one sandbox on one agent platform, with any number of repos attached. It always belongs to an experiment and is not a top-level noun in the app. Its only state is a status: Working, Waiting for you, Done, Failed. A session a person stops is Done, with the line "Stopped by NAME". On screen it is named by its agent, such as "Claude Code session" | a thread, a task, a step machine |
 | agent platform | A managed service that runs an agent's loop and its sandbox as one durable session: Claude Managed Agents, AWS AgentCore, the OpenAI Agents API, Microsoft Foundry Agent Service, Google Agent Runtime. On the last two Ratchet supplies one agent image per agent, with the agent's own harness inside it; the platform still runs the sandbox. Each sits behind the one agent trait, through its own adapter | a sandbox backend we run, a model provider |
 | agent trait | The one interface every platform adapter implements: start a session (repos, an agent, an environment, credentials, tools), send input, read events, answer a client tool call, stop it and delete it | a second way to start work |
 | platform account | The account Ratchet uses on a platform. Self-hosted: the customer's own, on whichever platforms they have, at least one. Ratchet cloud: Ratchet's, billed through to the customer at cost through the budget | a cloud account Ratchet can reach |
@@ -14,9 +15,9 @@ All of this is target. [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md) defines t
 | connector | A data system or MCP server an agent's code may read: Snowflake, Databricks, DynamoDB, BigQuery, Postgres, Amazon S3, any MCP server. The code host (GitHub, GitLab) is how repos attach and pull requests open | a dataset, a credential, a pipe Ratchet reads through |
 | credential reference | Ratchet's record that a credential exists in a platform's credential store: its id, its connector, its holder and who approved it. Never the value | the secret, a field in Ratchet's database that holds one |
 | credential store | The platform's own place for secrets a session may use: the Claude Managed Agents vault, AgentCore Identity, the agent's Microsoft Entra agent identity on Foundry Agent Service (secrets reached through a Foundry connection to Azure Key Vault), the agent's Agent Identity or service account on Google Agent Runtime (secrets read from Secret Manager). The exact stores on the last two are confirmed in the spike, as Agent Identity is partly in preview. The only way a credential reaches a session | Ratchet's database, a prompt, a repo file |
-| spawned session | A session another session started with `spawn`, on the same contract and budget, on any agent and platform. A spawned session cannot spawn. A person can open it and talk to it | a sub-task, a thread |
+| spawned session | A session another session started with `spawn`, in the same experiment and on the same budget, on any agent and platform. A spawned session cannot spawn. A person can open it, as its own chat inside the experiment, and talk to it | a sub-task, a thread |
 | session event | One item in a session's stream: a message, a tool call, a card, a measurement arriving, or a status change | a log line |
-| budget | One budget per session and the sessions it spawns. Spend is model tokens, sandbox time and judge time. Policy gives a standing allowance; `request_budget` raises it by a card | a bill |
+| budget | One per experiment, covering all its sessions and their judge time. Spend is model tokens, sandbox time and judge time. A person sets it when starting (a Budget chip, defaulting to the organization's default from Settings, Budgets) and an editor or owner can change it at any time; the agent can ask with `request_budget`, which shows a Raise budget card. Lowering it below what is spent stops new measurements | a bill, a per-session allowance |
 | spend record | One append-only row of money or tokens, tied to a session and its agent, read from the platform's events and usage | an invoice |
 | clean-up check | The verification that every session and sandbox Ratchet started is ended and deleted on its platform | a hope |
 
@@ -30,7 +31,7 @@ A session's stream carries messages (what people and agents said), tool calls an
 
 | The server stores | The server never stores |
 | --- | --- |
-| The conversation: what people and agents said (the owner's open call; see [../product/rulings.md](../product/rulings.md)) | Tool output |
+| The conversation: what people and agents said (decided by the owner; see [../product/rulings.md](../product/rulings.md)) | Tool output |
 | Tool call names and card states | File contents |
 | Commit ids | Diffs |
 | Measurements | Data |
@@ -40,8 +41,8 @@ Tool output and raw logs stay on the platform and are fetched when someone opens
 
 ## Lifecycle
 
-1. **Start.** A person types one message in the composer with three chips (Repos, Agent, Environment). Nothing else is asked first. Ratchet starts the session on the agent's platform with the repos, the environment, credentials and tools.
-2. **Work.** The agent drives. It reads, edits, calls tools and talks to the person. Setup happens as cards, when it is needed.
+1. **Start.** A person types one message in the composer with four chips (Repos, Agent, Environment, Budget). Nothing else is asked first. Ratchet starts a new experiment and its lead session on the agent's platform with the repos, the environment, credentials and tools.
+2. **Work.** The agent drives. It reads, edits, calls tools and talks to the person. Setup happens as cards, when it is needed. Until a person seals the experiment it is Not sealed: the agent explores, measures the baseline and proposes a definition with `seal`. An experiment may stay Not sealed and end there.
 3. **Idle or stopped.** The sandbox ends when the session is idle or stopped. The conversation does not. A person stopping a session makes it Done.
 4. **Resume.** A new sandbox starts from the session's branches. Whatever was not pushed is gone.
 5. **Clean-up.** Every session and sandbox is ended and deleted on its platform, and shown as removed.
@@ -59,7 +60,7 @@ One core, two shells. A promise that holds in one and not the other is a defect.
 
 ## How this area refers to the others
 
-- Judge: by contract id and trial id. The judge decides outcomes and the budget meter refuses `measure` when spend is gone. Sessions never read the accept rule.
+- Judge: by experiment id and trial id. The judge decides outcomes and the budget meter refuses `measure` when the experiment's spend reaches its budget. Sessions never read the accept rule.
 - Organization: by actor id and role. Every platform account, environment, attached repo and credential reference belongs to the organization. Approvals and policy are in [../organization/approvals.md](../organization/approvals.md).
 
 Platform words (agent ids, vault ids, ARNs, regions) stay inside each platform's adapter.

@@ -2,7 +2,7 @@
 
 A platform job is work the server does on an agent platform. There are two traits. The agent trait starts a session with repos, an agent, an environment, credentials and tools, sends input, reads its events, and stops and deletes it. The judge trait runs a command at commits with secrets in a judge sandbox and returns numbers. The server runs no loop of its own: the agent drives, and the only server-side state machines are the judge's queue and the budget meter. The server never does the work itself, never runs a sandbox and never connects to data. (target: nothing here is built yet.)
 
-## The contract (target)
+## The interface (target)
 
 | Part | Rule |
 | --- | --- |
@@ -18,12 +18,12 @@ A platform job is work the server does on an agent platform. There are two trait
 
 ## Job kinds (target)
 
-- **Start a session.** Repos, agent, environment, credentials, tools and the session brief (see [session/prompts.md](../session/prompts.md)). A person starts it from the composer; `spawn` starts others on the same contract and budget.
+- **Start a session.** Repos, agent, environment, credentials, tools and the session brief (see [session/prompts.md](../session/prompts.md)). A person starts it from the composer; `spawn` starts others in the same experiment, on its budget.
 - **Send input.** A message from a person, or an answer to a card, goes to the session.
 - **Measure.** On a `measure` call, return a ticket, queue a judge job: start a judge sandbox on the judge platform with the trial's commits and the judge's credential, run the evaluation with no agent in it, read the numbers, remove the sandbox, and send the measurement to the session as an event. A trial that beats the bar is measured again in a fresh judge sandbox and on the holdout. No platform tool timeout applies, because the call has already returned.
 - **Seal checks.** Measure the baseline, measure one commit twice for the noise, and run the planted cheats (see [judge/anti-cheat.md](../judge/anti-cheat.md)).
 - **Second opinion.** Before delivery, an agent from a different model provider reads the diff.
-- **Watch.** Measure a delivered contract again on a schedule or when the default branch moves.
+- **Watch.** Measure a delivered experiment again on a schedule or when the default branch moves.
 - **Stop.** End and delete a session when a person stops it, it is idle, or the budget is spent.
 - **Clean up.** List what carries the session's tag on each platform and delete it.
 - **Fetch.** Read tool output or a log from the platform for a person who asked, without storing it.
@@ -34,7 +34,7 @@ A platform job is work the server does on an agent platform. There are two trait
 2. Add the table or state it needs by [ledger-table.md](ledger-table.md), and the action that queues it by [write-action.md](write-action.md).
 3. Implement the handler behind the platform trait (see [session/add-platform.md](../session/add-platform.md)). Platform words stay in the adapter.
 4. Report progress as writes to the store, so the action layer publishes events. See [live-event.md](live-event.md).
-5. Tests: against the fake platform (the job is queued, taken, finished, and a lost lease is retaken without a second session); the shared platform contract suite for every adapter, and the judge trait's own suite; a test that the payload and result carry no secret; a test that the server opens no connection to a connector; a test that no agent session is given the judge's credential.
+5. Tests: against the fake platform (the job is queued, taken, finished, and a lost lease is retaken without a second session); the shared platform test suite for every adapter, and the judge trait's own suite; a test that the payload and result carry no secret; a test that the server opens no connection to a connector; a test that no agent session is given the judge's credential.
 
 ## How the server follows a session (target)
 

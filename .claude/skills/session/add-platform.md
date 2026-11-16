@@ -10,7 +10,7 @@ An agent platform runs an agent's loop and its sandbox as one durable session. R
 
 The trait is designed against all five from the start. On the last two, the platform runs a container image Ratchet supplies, so Ratchet supplies one agent image per agent (the agent's own harness inside it). The platform still runs the sandbox; Ratchet still runs none.
 
-Before the first adapter, one tiny contract is measured end to end on all five to prove the agent trait, the Ratchet tools served over the event stream and a judge sandbox that holds a credential no agent sees.
+Before the first adapter, one tiny experiment is measured end to end on all five to prove the agent trait, the Ratchet tools served over the event stream and a judge sandbox that holds a credential no agent sees.
 
 ## Steps
 
@@ -25,7 +25,7 @@ Before the first adapter, one tiny contract is measured end to end on all five t
 9. **Data and retention.** Write down where the platform keeps transcripts and files, for how long, in which regions, and whether it offers zero data retention. Ratchet cloud lists it as a subprocessor. The vendors promise only where data is stored at rest. Foundry Agent Service keeps it in the geography of the chosen Azure resource; where the model processes it depends on the model deployment type (Standard and Regional stay in the geography, Data Zone in the US or EU zone, Global anywhere). Google Agent Runtime keeps it in the location chosen (the US or EU multi-region, or a supported country); where it is processed is checked in the spike.
 10. **Platform words stay here.** Agent ids, vault ids, ARNs and regions appear in no other skill and in no public type outside the adapter.
 11. **Same promises.** Run the checks in [owes.md](owes.md) against the new platform. A promise that holds on one platform and not another is a defect in the new adapter.
-12. **Tests.** Pass the shared platform contract suite against a recorded fake of the platform, and add a CI job for it. A session on a real platform account needs the owner's go-ahead; see [../land/real-cloud.md](../land/real-cloud.md).
+12. **Tests.** Pass the shared platform test suite against a recorded fake of the platform, and add a CI job for it. A session on a real platform account needs the owner's go-ahead; see [../land/real-cloud.md](../land/real-cloud.md).
 
 ## Proving it
 

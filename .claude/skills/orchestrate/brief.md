@@ -11,7 +11,7 @@ A brief states:
 Rules:
 
 - Never ask a session to do something that was denied to you or to another session.
-- One area skill per session where possible. A change across areas is split, with the shared contract written first.
+- One area skill per session where possible. A change across areas is split, with the shared interface written first.
 - Mockups first for anything a user sees.
 - Say what is target and what is built, so a session does not build or document the wrong one.
 - Real-cloud runs, spend and new dependencies are not delegated without the owner's go-ahead. See [land/real-cloud.md](../land/real-cloud.md).

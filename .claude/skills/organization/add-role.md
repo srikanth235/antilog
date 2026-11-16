@@ -1,6 +1,6 @@
 # Add a role
 
-Roles are owner, editor and viewer, and are organization-wide. Per-repo visibility is an open owner call ([../product/rulings.md](../product/rulings.md)). All of it is target. The earlier code had one owner bearer token; see [today.md](today.md).
+Roles are owner, editor and viewer, and are organization-wide. Per-repo visibility is not offered; the owner decided that roles are organization-wide ([../product/rulings.md](../product/rulings.md)). All of it is target. The earlier code had one owner bearer token; see [today.md](today.md).
 
 1. **Name and one sentence.** State what the role may do in the words of [model.md](model.md). A role that needs more than one sentence is two roles.
 2. **A matrix row.** Add the role to the one permission table: for each action and each approval card kind (see [approvals.md](approvals.md)), allow or deny. The table is the only place permission is decided.

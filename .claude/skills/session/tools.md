@@ -17,9 +17,9 @@ Ratchet declares them as tools the client provides and answers them over the ses
 
 | | |
 | --- | --- |
-| Inputs | An agent (a model on a platform), an environment, the contract (the parent's by default), a first message |
-| Card | Spawned session: agent, status, its best; opens that session |
-| Who approves | Nobody, inside the budget. The spawned session spends the parent's budget |
+| Inputs | An agent (a model on a platform), an environment, a first message. The new session is in the same experiment |
+| Card | Spawned session: agent, status, its best; opens that session as its own chat inside the experiment |
+| Who approves | Nobody, inside the budget. The spawned session spends the experiment's budget |
 | Refuses | A call from a spawned session; a budget that is spent; an agent whose platform account is not configured |
 
 The parent is told when a spawned session finishes. A person can open any spawned session and talk to it, and can start sibling sessions from the composer.
@@ -33,9 +33,9 @@ Each shows a card in the chat. The agent never sees a credential value.
 | `attach_repo` | A repo on the code host | Attach repo | An owner or editor; policy may pre-approve | A repo the code host account cannot reach; a viewer's approval |
 | `request_credential` | A connector, a reason, a scope | Add credential: a secure form where a person types the value; it goes straight to the platform's credential store | An owner or editor, always; policy can never pre-approve it | A scope that includes the holdout or write rights; a value in chat |
 | `set_environment` | Image or setup script, size, network | Change environment | An owner or editor; policy may pre-approve | A change that would exceed the budget's rate; hosts the platform cannot allow |
-| `request_budget` | An amount and a reason | Raise budget, with what it may cost | An owner or editor; policy may allow up to a limit | An amount over the organization's monthly cap |
+| `request_budget` | An amount and a reason | Raise budget, with what it may cost | An owner or editor; policy may allow up to a limit | An amount that takes the experiment's budget over the organization's monthly cap |
 
-Each refusal comes back to the agent as a plain reason, and the session shows a calm one-line card, never a blank.
+A person (editor or owner) can also change the experiment's budget at any time without a card, from the scoreboard strip, the experiment detail page or the Seal experiment card. Each refusal comes back to the agent as a plain reason, and the session shows a calm one-line card, never a blank.
 
 ## Rules for a new tool
 

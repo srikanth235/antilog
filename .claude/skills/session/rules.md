@@ -8,7 +8,7 @@ All target.
 - Run no loop on the server and keep no step machine. The agent drives. The only server-side state machines are the judge's queue and the budget meter, because a loop on the server decides things a person and an agent should.
 - Store no tool output, file contents, diffs or data. Store the conversation's words, tool call names, card states, commit ids, measurements, spend and audit rows, because the rest can carry customer data.
 - Never let a spawned session spawn, because an unbounded tree is unbounded spend.
-- Privilege no agent's vendor. Only the judge decides, so every agent races on the same contract and budget, and none is favoured in the product.
+- Privilege no agent's vendor. Only the judge decides, so every agent works in the same experiment on the same budget, and none is favoured in the product.
 - Run every session on an agent platform, through the one agent trait, because a second way to start work is a second way to leak it. Ratchet runs no sandboxes of its own.
 - Serve the Ratchet tools to a session over its own event stream, and never require a platform to reach the server, because a self-hosted server may sit behind a firewall.
 - Never give Ratchet access to the customer's cloud: no cross-account role, no stored cloud keys. Ratchet holds only platform credentials, because access we hold is access that can be stolen. On Ratchet cloud they sit in Cloudflare's Secrets Store, bound to the Worker.

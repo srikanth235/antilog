@@ -1,6 +1,6 @@
 # A table, column or migration
 
-The ledger is the store, and the only state: Postgres 18 self-hosted, SQLite in the organization's Durable Object in the cloud. The core sees one `Store` trait and both are supported from day 0. It holds ids, versions, numbers, states, the conversation's words (an open owner call, see [product rulings](../product/rulings.md)), commit ids, spend and audit rows. It never holds a customer's data, a secret, tool output, a diff or a log. (target: nothing here is built yet.)
+The ledger is the store, and the only state: Postgres 18 self-hosted, SQLite in the organization's Durable Object in the cloud. The core sees one `Store` trait and both are supported from day 0. It holds ids, versions, numbers, states, the conversation's words (decided by the owner, see [product rulings](../product/rulings.md)), commit ids, spend and audit rows. It never holds a customer's data, a secret, tool output, a diff or a log. (target: nothing here is built yet.)
 
 ## Rules (target)
 
@@ -8,7 +8,7 @@ The ledger is the store, and the only state: Postgres 18 self-hosted, SQLite in 
 - The shared schema uses text ids, integer millisecond timestamps and JSON as text, with no Postgres-only type.
 - Migrations are forward only, numbered files, one directory per dialect (Postgres and SQLite), written twice with the same numbers. Add a table or column as a new file in each. Never edit one that has shipped. There are no down migrations: a mistake is fixed by the next migration.
 - Every row carries its organization. A query without it can cross customers. In the cloud each organization has its own database, so a cross-customer read is not possible there; the column stays so a file moves between cloud and self-hosted.
-- Each area owns its own tables: the session (sessions, messages, cards, environments, platform accounts), the judge (contracts, seals, trials, measurements, receipts, the judge's queue) and the organization floor (members, roles, tokens, approvals, policy, budgets, the audit log).
+- Each area owns its own tables: the session (experiments' sessions, messages, cards, environments, platform accounts), the judge (experiments and their versions, seals, trials, measurements, receipts, the judge's queue) and the organization floor (members, roles, tokens, approvals, policy, budgets (one per experiment), the audit log).
 - No joins across areas. An area reads another through its API, by id and version.
 - Spend rows, measurements, the audit log and the receipts are append-only, enforced by triggers in both dialects and not by the code that writes them.
 - Platform jobs are rows in the store; see [platform-job.md](platform-job.md).

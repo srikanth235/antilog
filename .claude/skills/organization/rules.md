@@ -13,4 +13,4 @@
 - Check permission in one place, never in a handler, because a check in a handler is missing from the next handler.
 - Never put a secret in a response, an event, a log or an audit entry, because those are read by more people than the secret is meant for.
 - Keep the audit log append-only, because a log that can be edited is not a record.
-- Keep organization a floor. It owns no session, contract or sandbox.
+- Keep organization a floor. It owns no experiment, session or sandbox.

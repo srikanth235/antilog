@@ -5,14 +5,14 @@ What every area owes the customer, and the one rule each follows. A promise kept
 | Area | Promise | The rule |
 | --- | --- | --- |
 | Judge | **Decide** | Only a trial that beats what it started from, holds every guardrail and is confirmed in a fresh judge sandbox and on the holdout is Kept. Only the judge's numbers count. |
-| Judge | **Sealed** | A sealed contract never changes. A new version starts a new record, and numbers never carry across versions. |
+| Judge | **Sealed** | A sealed experiment never changes. A new version starts a new record, and numbers never carry across versions. |
 | Judge | **Tamper-proof** | An agent never holds the holdout credential or learns a holdout value. A trial that changes a protected path is Rejected. |
-| Judge | **Receipt** | Every win carries a signed receipt: the contract version and seal, commits, values, repeats, noise, trials tried, the holdout result, the second opinion and what was spent. |
+| Judge | **Receipt** | Every win carries a signed receipt: the experiment version and seal, commits, values, repeats, noise, trials tried, the holdout result, the second opinion and what was spent. |
 | Judge | **Honest numbers** | Pending is never counted as delivered. |
-| Judge | **Keep** | A delivered win is watched, and a regression wakes the session. |
-| Session | **Stays put** | The server never connects to data. Data is read only by code inside a platform's sandbox. The server keeps ids, versions, numbers, states, the conversation's words (open call) and audit rows, never tool output, file contents, diffs or data. |
+| Judge | **Keep** | A delivered win is watched, and a regression wakes a session in the experiment. |
+| Session | **Stays put** | The server never connects to data. Data is read only by code inside a platform's sandbox. The server keeps ids, versions, numbers, states, the conversation's words and audit rows, never tool output, file contents, diffs or data. |
 | Session | **Least access** | Credentials reach a session only through the platform's credential store, never a prompt, a repo file or Ratchet's database. An agent gets read-only connector credentials that leave out the holdout, and a short-lived git token that pushes only to its own branch. |
-| Session | **Spend** | No spend without a budget. When it is spent the judge refuses `measure` and the session waits for a person. |
+| Session | **Spend** | No spend without a budget, one per experiment across all its sessions. A person can change it at any time. When it is spent the judge refuses `measure` and the sessions wait for a person. |
 | Session | **Clean up** | A sandbox ends when its session is idle or stopped, and the conversation outlives it. |
 | Session | **Any platform** | The same promises hold on every agent platform. |
 | Organization | **Permission** | Every read and write is role-checked, and roles decide who may approve which card. |

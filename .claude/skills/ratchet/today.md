@@ -1,6 +1,6 @@
 # Ratchet CLI: the earlier daemon
 
-This is reference from the earlier code on the branch `claude/peaceful-lamport-leak6p`. None of it exists on this branch. The words here (optimization, run, chat) are the earlier code's; the target words are session and contract. The target skill is [SKILL.md](SKILL.md).
+This is reference from the earlier code on the branch `claude/peaceful-lamport-leak6p`. None of it exists on this branch. The words here (optimization, run, chat) are the earlier code's; the target words are experiment and session. The target skill is [SKILL.md](SKILL.md).
 
 `ratchet` was a client of the Ratchet daemon (`ratchetd`), the same one every client talked to, over a unix socket with a per-boot bearer token. If the daemon was down, on a Mac with the LaunchAgent installed the command asked launchd to start it; if that failed it printed what to do (`ratchetd serve`, or `ratchetd launchagent install`).
 

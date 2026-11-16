@@ -2,9 +2,9 @@
 
 Six mechanisms built into the judge (target). An agent that is rewarded for a number will find the cheapest way to move it, so each mechanism says what it stops and what it does not.
 
-## 1. Sealed contract
+## 1. Sealed experiment
 
-The seal is a hash over the contract and its protected files at pinned commits. For every trial the judge takes the protected files from the seal, never from the trial. A trial that changes a protected path, in any repo, gets the outcome Rejected.
+The seal is a hash over the experiment's definition and its protected files at pinned commits. For every trial the judge takes the protected files from the seal, never from the trial. A trial that changes a protected path, in any repo, gets the outcome Rejected.
 
 - Stops: changing the evaluation, the scoring or the data it reads.
 - Does not stop: a change to unprotected code that fools the evaluation. A protected path list that is too short.
@@ -15,18 +15,18 @@ Each measurement runs in a fresh judge sandbox. The rules:
 
 - No agent is in it.
 - It holds the judge's credential, which alone reaches the holdout. The judge sandbox is the only holder.
-- It has no network route except to the contract's data.
-- It returns only the numbers the contract names.
+- It has no network route except to the experiment's data.
+- It returns only the numbers the experiment names.
 - It is removed afterwards.
 
-Where it can run: on an agent platform that can run a command in a sandbox with no agent. That platform is the judge platform. AWS AgentCore can. Google Agent Runtime sandboxes run without an agent; whether one can hold a credential the agent never sees is checked in the spike. Claude Managed Agents, the OpenAI Agents API and Microsoft Foundry Agent Service cannot. The customer's own CI runner is not included (an open call in [../product/rulings.md](../product/rulings.md)).
+Where it can run: on an agent platform that can run a command in a sandbox with no agent. That platform is the judge platform. AWS AgentCore can. Google Agent Runtime sandboxes run without an agent; whether one can hold a credential the agent never sees is checked in the spike. Claude Managed Agents, the OpenAI Agents API and Microsoft Foundry Agent Service cannot. The customer's own CI runner is not included (decided by the owner; see [../product/rulings.md](../product/rulings.md)).
 
 - Stops: an agent reading the holdout, tampering with the measurement, or leaking data out.
 - Does not stop: a leak through the numbers themselves. Returning only named numbers narrows it and does not remove it.
 
 ## 3. Seal checks
 
-Before a contract can be sealed the judge measures the baseline, measures the same commit twice to get the noise (the noise check), and runs planted cheats the evaluation must reject (the cheat checks): skip the work, hard-code the answer, return early. There is a standard set per kind of evaluation (see [add-evaluation-kind.md](add-evaluation-kind.md)) plus any the proposing agent adds. The seal card shows the results. A contract that fails a check cannot be sealed.
+Before an experiment can be sealed the judge measures the baseline, measures the same commit twice to get the noise (the noise check), and runs planted cheats the evaluation must reject (the cheat checks): skip the work, hard-code the answer, return early. There is a standard set per kind of evaluation (see [add-evaluation-kind.md](add-evaluation-kind.md)) plus any the proposing agent adds. The seal card shows the results. An experiment that fails a check cannot be sealed.
 
 - Stops: an evaluation that is trivially broken, or so noisy a win means nothing.
 - Does not stop: a bad evaluation that passes the planted cheats. Seal checks catch a trivially broken evaluation and cannot prove a good one. A person still reads the card.
@@ -47,7 +47,7 @@ Before a win is delivered, an agent from a different model provider than the pro
 
 ## 6. Signed receipt
 
-The contract version and seal, the commits, the values, repeats, noise, the number of trials tried, the holdout result (passed or failed, never the value to an agent), the second opinion and what was spent.
+The experiment version and seal, the commits, the values, repeats, noise, the number of trials tried, the holdout result (passed or failed, never the value to an agent), the second opinion and what was spent.
 
 - Stops: a win nobody can check later, and numbers edited after the fact.
 - Does not stop: a cheat the other five mechanisms missed. It makes one findable.
