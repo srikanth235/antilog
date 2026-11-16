@@ -696,3 +696,9 @@ a.lin-n:hover .lin-t{color:var(--accent)}
 .ap-sec{align-items:flex-start}.ap-sec .ic{margin-top:2px}
 .vv{display:flex;flex-direction:column;gap:3px;min-width:0}.vv .mono{font-size:13px}
 .vv .m{font-size:12px;color:var(--ink3);display:flex;gap:8px;align-items:baseline}
+.sb-s .textbtn{min-height:0;font-size:12.5px;color:var(--ink3)}.sb-s .textbtn:hover{color:var(--accent)}
+.am>.av .mk{width:18px;height:11px}
+.am .by b{font-weight:500;color:var(--ink)}
+.am .by .via{margin-left:6px;color:var(--ink3)}.am .by .via::before{content:"\00b7";margin-right:6px}
+.vs .s .textbtn{min-height:0;font-size:inherit;color:var(--ink2);text-decoration:underline}.vs .s .textbtn:hover{color:var(--accent)}
+.grid .textbtn{white-space:nowrap;justify-content:flex-end}

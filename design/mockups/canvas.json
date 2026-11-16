@@ -52,66 +52,6 @@
       "expand": "fill",
       "is_interactive": true
     },
-    "ContractDetail.dc.html": {
-      "x": 3040,
-      "y": 5050,
-      "w": 1440,
-      "h": 900,
-      "title": "4 \u00b7 Contract, Checkout p95 latency",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "ContractDetailDark.dc.html": {
-      "x": 3040,
-      "y": 5050,
-      "w": 1440,
-      "h": 900,
-      "title": "4 \u00b7 Contract, Checkout p95 latency \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "Contracts.dc.html": {
-      "x": 0,
-      "y": 5050,
-      "w": 1440,
-      "h": 900,
-      "title": "4 \u00b7 Contracts",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "ContractsDark.dc.html": {
-      "x": 0,
-      "y": 5050,
-      "w": 1440,
-      "h": 900,
-      "title": "4 \u00b7 Contracts \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "ContractsEmpty.dc.html": {
-      "x": 1520,
-      "y": 5050,
-      "w": 1440,
-      "h": 900,
-      "title": "4 \u00b7 Contracts, empty",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "ContractsEmptyDark.dc.html": {
-      "x": 1520,
-      "y": 5050,
-      "w": 1440,
-      "h": 900,
-      "title": "4 \u00b7 Contracts, empty \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
     "Decisions.dc.html": {
       "x": 1520,
       "y": 0,
@@ -127,6 +67,66 @@
       "h": 6090,
       "title": "Design rules",
       "page": "rules"
+    },
+    "ExperimentDetail.dc.html": {
+      "x": 3040,
+      "y": 5050,
+      "w": 1440,
+      "h": 900,
+      "title": "4 \u00b7 Experiment, Checkout p95 latency",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "ExperimentDetailDark.dc.html": {
+      "x": 3040,
+      "y": 5050,
+      "w": 1440,
+      "h": 900,
+      "title": "4 \u00b7 Experiment, Checkout p95 latency \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Experiments.dc.html": {
+      "x": 0,
+      "y": 5050,
+      "w": 1440,
+      "h": 900,
+      "title": "4 \u00b7 Experiments",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "ExperimentsDark.dc.html": {
+      "x": 0,
+      "y": 5050,
+      "w": 1440,
+      "h": 900,
+      "title": "4 \u00b7 Experiments \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "ExperimentsEmpty.dc.html": {
+      "x": 1520,
+      "y": 5050,
+      "w": 1440,
+      "h": 900,
+      "title": "4 \u00b7 Experiments, empty",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "ExperimentsEmptyDark.dc.html": {
+      "x": 1520,
+      "y": 5050,
+      "w": 1440,
+      "h": 900,
+      "title": "4 \u00b7 Experiments, empty \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
     },
     "Home.dc.html": {
       "x": 0,
@@ -413,7 +413,7 @@
       "y": 3370,
       "w": 1440,
       "h": 900,
-      "title": "3 \u00b7 Session, seal contract",
+      "title": "3 \u00b7 Session, seal experiment",
       "page": "web-light",
       "expand": "fill",
       "is_interactive": true
@@ -423,7 +423,7 @@
       "y": 3370,
       "w": 1440,
       "h": 900,
-      "title": "3 \u00b7 Session, seal contract \u00b7 dark",
+      "title": "3 \u00b7 Session, seal experiment \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -1078,7 +1078,7 @@
     "web-light4": {
       "kind": "title1",
       "page": "web-light",
-      "text": "4 \u00b7 Contracts and receipts",
+      "text": "4 \u00b7 Experiments and receipts",
       "x": 0,
       "y": 4920,
       "w": 240,
@@ -1087,7 +1087,7 @@
     "web-dark4": {
       "kind": "title1",
       "page": "web-dark",
-      "text": "4 \u00b7 Contracts and receipts",
+      "text": "4 \u00b7 Experiments and receipts",
       "x": 0,
       "y": 4920,
       "w": 240,
@@ -1191,14 +1191,14 @@
   "order": [
     "AddPlatform.dc.html",
     "AddPlatformDark.dc.html",
-    "ContractDetail.dc.html",
-    "ContractDetailDark.dc.html",
-    "Contracts.dc.html",
-    "ContractsDark.dc.html",
-    "ContractsEmpty.dc.html",
-    "ContractsEmptyDark.dc.html",
     "Decisions.dc.html",
     "DesignRules.dc.html",
+    "ExperimentDetail.dc.html",
+    "ExperimentDetailDark.dc.html",
+    "Experiments.dc.html",
+    "ExperimentsDark.dc.html",
+    "ExperimentsEmpty.dc.html",
+    "ExperimentsEmptyDark.dc.html",
     "Home.dc.html",
     "HomeDark.dc.html",
     "HomeEmpty.dc.html",
