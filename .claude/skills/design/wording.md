@@ -177,6 +177,18 @@ Trial numbers are per experiment, across its sessions ("trial 11"). The holdout 
 | Remove a plugin | "Keep the items it added?"; buttons "Keep items", "Remove items"; "Items in use by an experiment stay." |
 | Empty | "No evaluations yet.", "No skills yet.", "No connectors yet.", "No agent is added yet.", "No plugins installed." |
 
+## Global search
+
+| Where | Words |
+| --- | --- |
+| Sidebar row | "Search" with the hint ⌘K; it opens `SearchStart` |
+| Field placeholder | "Search projects, experiments, sessions, trials and more" |
+| Scopes | "All", "Projects", "Experiments", "Sessions", "Trials", "Datasets", "Customize", "People" |
+| No query | groups "Needs attention", "Recents", "Actions"; actions "New experiment", "New project", "Add connector", "Open Settings" |
+| Results | groups are the scope names; each row's right-hand label is its kind ("Project", "Experiment", "Session", "Trial", "Evaluation", "Skill pack") or, for a holdout, "Restricted to the judge"; the Customize group has "Show all N" |
+| Footer | "Close", "Move", "Change scope", "Actions", "Open" with their keys |
+| No match | "No results for “QUERY”." |
+
 ## Agent platforms (target)
 
 | Where | Words |

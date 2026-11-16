@@ -195,7 +195,7 @@ button.grid{cursor:pointer}button.grid:hover,.grid.sel{background:var(--sunk)}
 .tsearch{display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 6px 0 11px;border:1px solid var(--line2);border-radius:999px;background:transparent;color:var(--ink2);font-size:12.5px;cursor:pointer}
 .tsearch:hover{color:var(--ink);border-color:var(--ink3)}
 .pback{position:absolute;inset:0;z-index:100;background:var(--scrim);animation:fade .14s ease}
-.pal{position:absolute;z-index:101;top:max(40px,80px);left:0;right:0;margin:0 auto;width:min(880px,calc(100% - 32px));height:min(640px,calc(100% - 72px));display:flex;flex-direction:column;background:var(--raised);border:1px solid var(--line2);border-radius:20px;box-shadow:var(--shadow);overflow:hidden;animation:pop .16s ease}
+.pal{position:absolute;z-index:101;top:max(40px,80px);left:0;right:0;margin:0 auto;width:min(880px,calc(100% - 32px));max-height:min(780px,calc(100% - 72px));display:flex;flex-direction:column;background:var(--raised);border:1px solid var(--line2);border-radius:20px;box-shadow:var(--shadow);overflow:hidden;animation:pop .16s ease}
 .pal-in{display:flex;align-items:center;gap:12px;padding:16px 16px 8px 22px;flex:none}
 .pal-in input{flex:1;min-width:0;height:44px;border:0;background:transparent;outline:none!important;font-size:20px;color:var(--ink)}
 .pal-in input::placeholder{color:var(--ink3)}
@@ -750,3 +750,5 @@ a.lin-n:hover .lin-t{color:var(--accent)}
 .tb-px{--cols:minmax(0,2fr) minmax(0,1.5fr) 112px 108px 108px 16px}
 .tb-pc{--cols:minmax(0,1fr) 120px 170px}
 .tb-pm{--cols:minmax(0,1fr) 96px}
+.pal-caret{width:2px;height:26px;border-radius:1px;background:var(--accent);flex:none;margin:0 -10px 0 -4px}
+.pr .ph{display:block;width:auto;height:auto;padding:0;border-radius:0;font-weight:400;color:var(--ink3);cursor:inherit}.pr .ph:hover{color:var(--ink3)}

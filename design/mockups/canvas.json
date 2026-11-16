@@ -748,6 +748,26 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "SearchStart.dc.html": {
+      "x": 6080,
+      "y": 6150,
+      "w": 1440,
+      "h": 900,
+      "title": "5 \u00b7 Search, no query",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SearchStartDark.dc.html": {
+      "x": 6080,
+      "y": 6150,
+      "w": 1440,
+      "h": 900,
+      "title": "5 \u00b7 Search, no query \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "SessionBudget.dc.html": {
       "x": 10640,
       "y": 3370,
@@ -1881,6 +1901,8 @@
     "SearchDark.dc.html",
     "SearchEmpty.dc.html",
     "SearchEmptyDark.dc.html",
+    "SearchStart.dc.html",
+    "SearchStartDark.dc.html",
     "SessionBudget.dc.html",
     "SessionBudgetDark.dc.html",
     "SessionCredential.dc.html",
