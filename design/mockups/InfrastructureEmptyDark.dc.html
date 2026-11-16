@@ -15,20 +15,15 @@
 
 </helmet>
 <div data-theme="dark" class="board app" style="width: 1440px; height: 900px;">
-  <!-- part:SidebarEmpty active="projects" -->
+  <!-- part:SidebarEmpty -->
   <nav class="side" aria-label="Main">
       <div class="side-top">
         <a class="brand" href="HomeDark.dc.html"><svg aria-hidden="true" width="36" height="22" viewBox="218 338 600 369" data-keep><defs><linearGradient id="brass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F8E4B8"/><stop offset=".6" stop-color="#E2BE7C"/><stop offset="1" stop-color="#BE8F49"/></linearGradient></defs><path d="M397.8 434.8L397.8 466.2A31.5 31.5 0 0 1 366.4 434.8Z" style="fill:var(--mark)" fill-opacity="0.12"/><path d="M407.7 434.8L407.7 466.2A31.5 31.5 0 0 0 439.2 434.8Z" style="fill:var(--mark)" fill-opacity="0.18"/><path d="M361.6 424.9L439.2 424.9A77.6 77.6 0 0 0 361.6 347.3Z" style="fill:var(--mark)" fill-opacity="0.28"/><path d="M351.7 471.0L227.9 471.0A123.8 123.8 0 0 1 351.7 347.3Z" style="fill:var(--mark)" fill-opacity="0.42"/><path d="M444.0 480.9L444.0 697.0A216.1 216.1 0 0 1 227.9 480.9Z" style="fill:var(--mark)" fill-opacity="0.6"/><path d="M453.9 342.5L453.9 697.0A354.5 354.5 0 0 0 808.4 342.5Z" fill="url(#brass)"/></svg>Ratchet</a>
-        <div class="col" style="gap: 2px;">
-          <button class="nav"><i class="ic i-search"></i>Search<span class="kc" aria-hidden="true" style="margin-left: auto;">⌘K</span></button>
-          <a class="nav" data-item="projects" href="HomeDark.dc.html" aria-current="page"><i class="ic i-folder"></i>Projects</a>
-          <a class="nav" data-item="dashboard" href="DashboardDark.dc.html"><i class="ic i-chart"></i>Dashboard</a>
-          <a class="nav" data-item="customize" href="ConnectorsDark.dc.html"><i class="ic i-sliders"></i>Customize</a>
-          <button class="nav"><i class="ic i-more"></i>More</button>
-        </div>
-        <a class="btn primary full" href="NewExperimentDark.dc.html"><i class="ic s i-plus"></i>New experiment</a>
+        <a class="btn primary full" data-item="new" href="HomeDark.dc.html"><i class="ic s i-plus"></i>New session</a>
+        <button class="nav"><i class="ic i-search"></i>Search<span class="kc" aria-hidden="true" style="margin-left: auto;">⌘K</span></button>
       </div>
-    <div class="side-scroll"></div>
+    <div class="side-scroll"><p class="sd-none">Sessions you start appear here.</p></div>
+    <div class="side-links"><a class="nav" data-item="contracts" href="Contracts.dc.html"><i class="ic i-verify"></i>Contracts</a></div>
       <div class="side-foot">
         <a class="nav" href="SettingsProfileDark.dc.html" aria-label="Priya Raman, user menu" style="height: 48px; gap: 12px;"><span aria-hidden="true" class="avatar round" style="width: 30px; height: 30px; font-size: 14px;">P</span><span class="col grow" style="line-height: 1.25;"><span style="color: var(--ink);">Priya Raman</span><span class="xs mut">via Okta</span></span><i class="ic s mut i-more"></i></a>
       </div>
@@ -44,14 +39,14 @@
         <div class="hd"><h1 class="t-display">Projects</h1></div>
         <div class="empty" style="padding-top: 96px; padding-bottom: 96px; gap: 16px;">
           <p class="t-section">No experiments yet.</p>
-          <a class="btn primary" href="NewExperimentDark.dc.html"><i class="ic s i-plus"></i>New experiment</a>
+          <a class="btn primary" href="HomeDark.dc.html"><i class="ic s i-plus"></i>New experiment</a>
         </div>
       </section>
     </div>
   </main>
   <div class="sd-back"></div>
   <div class="sd" role="dialog" aria-modal="true" aria-labelledby="sd-t">
-    <div class="sd-top"><h2 id="sd-t" class="t-section">Settings</h2><a class="icon-btn" href="ThreadRunningDark.dc.html" aria-label="Close settings"><i class="ic i-close"></i></a></div>
+    <div class="sd-top"><h2 id="sd-t" class="t-section">Settings</h2><a class="icon-btn" href="SessionWorkingDark.dc.html" aria-label="Close settings"><i class="ic i-close"></i></a></div>
     <div class="sd-body">
       <!-- part:SettingsRail active="infrastructure" -->
       <div class="sd-rail">
@@ -69,7 +64,7 @@
             <a class="sd-nav" data-item="single-sign-on" href="SettingsSsoDark.dc.html"><i class="ic i-lock" aria-hidden="true"></i><span class="grow ell">Single sign-on</span></a>
             <a class="sd-nav" data-item="infrastructure" href="InfrastructureDark.dc.html" aria-current="page"><i class="ic g-cloud" aria-hidden="true"></i><span class="grow ell">Infrastructure</span></a>
             <a class="sd-nav" data-item="budgets" href="SettingsBudgetsDark.dc.html"><i class="ic g-gauge" aria-hidden="true"></i><span class="grow ell">Budgets</span></a>
-            <a class="sd-nav" data-item="notes" href="SettingsNotesDark.dc.html"><i class="ic g-note" aria-hidden="true"></i><span class="grow ell">Notes</span></a>
+            <a class="sd-nav" data-item="notes" href="SettingsNotes.dc.html"><i class="ic g-note" aria-hidden="true"></i><span class="grow ell">Notes</span></a>
             <a class="sd-nav" data-item="audit-logs" href="SettingsAuditDark.dc.html"><i class="ic g-hist" aria-hidden="true"></i><span class="grow ell">Audit logs</span></a>
           </div>
         </nav>

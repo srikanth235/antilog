@@ -441,3 +441,169 @@ button.grid{cursor:pointer}button.grid:hover,.grid.sel{background:var(--sunk)}
 .nudge{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;border:1px dashed var(--line2);border-radius:var(--r3);color:var(--ink2);font-size:13.5px}
 .nudge .ic{color:var(--ink3)}
 .nostart a[href^="NewExperiment"]{opacity:.4;pointer-events:none}
+
+/* ===== Chat: the session page (target). One 760px column, the agent's side indented 38px. =====
+   Sidebar rows: .rec.ses is a session row (status icon, then the title), .sl a group label.
+   Status icons: <span role="img" aria-label="Working" class="st gi st-work run" style="color: var(--accent)"></span>
+   (Working accent, Waiting for you warn, Done good, Failed bad). */
+.rec.ses{padding-left:10px;gap:10px}
+.side .sl{padding:4px 10px 6px}
+.side-links{flex:none;padding:4px 12px 8px}
+
+/* Session header and the pinned scoreboard strip */
+.sh{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:60px}
+.sh .ttl{display:flex;align-items:center;gap:12px;min-width:0}
+.sh .ttl h1{margin:0;min-width:0}
+.sh .acts{display:flex;align-items:center;gap:8px;flex:none}
+.sb{flex:none;border-bottom:1px solid var(--line);background:var(--canvas)}
+.sb-in{display:grid;grid-template-columns:minmax(0,1fr) 352px;gap:24px;align-items:center;padding:12px 0 14px}
+.sb-l{display:flex;flex-direction:column;gap:6px;min-width:0}
+.sb-k{font-size:12px;color:var(--ink3)}
+.sb-big{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px;font:500 18px/1.2 var(--font-mono);letter-spacing:-.01em}
+.sb-big .to{font:400 13px/1 var(--font-sans);color:var(--ink3)}
+.dlt{font:500 13px/1 var(--font-mono);color:var(--good)}.dlt.bad{color:var(--bad)}
+.sb-s{display:flex;flex-wrap:wrap;gap:4px 18px;font-size:12.5px;color:var(--ink3)}
+.sb-s b{font-weight:500;color:var(--ink)}
+.sb-s .bar{width:100%;margin-top:2px}
+.sb-c{display:flex;flex-direction:column;gap:4px;min-width:0}
+.sb-t{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--ink3)}
+.sc{display:block;width:100%;height:56px;overflow:visible}
+.sc-n{fill:var(--accent);opacity:.13}
+.sc-b{fill:none;stroke:var(--ink3);stroke-width:1;stroke-dasharray:3 3}
+.sc-l{fill:none;stroke:var(--c);stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
+.sc-p{fill:var(--c);stroke:var(--canvas);stroke-width:1}
+.sc-p.k{r:3.5}.sc-p.w{r:2.5}
+.sc-p.h{fill:var(--canvas);stroke:var(--c);stroke-width:1.5;r:3}
+.sc .s1,.sc-sw.s1{--c:var(--accent)}.sc .s2,.sc-sw.s2{--c:var(--infra)}.sc .s3,.sc-sw.s3{--c:var(--ink3)}
+.sc-lg{display:flex;flex-wrap:wrap;gap:2px 12px;font-size:11px;color:var(--ink3)}
+.sc-lg span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.sc-sw{display:inline-block;width:12px;height:0;border-top:2px solid var(--c)}
+.sc-sw.b{border-top:1px dashed var(--ink3)}
+.sc-sw.n{height:6px;border:0;background:color-mix(in srgb,var(--accent) 13%,transparent)}
+
+/* Messages and quiet tool lines */
+.pm{align-self:flex-end;max-width:84%;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.pm .who{font-size:12px;color:var(--ink3)}
+.pm .tx{margin:0;padding:10px 16px;background:var(--sunk);border:1px solid var(--line);border-radius:16px 16px 4px 16px;font-size:14.5px;line-height:1.55}
+.am{display:flex;align-items:flex-start;gap:12px}
+.am>.av{display:grid;place-items:center;width:26px;height:26px;flex:none;border-radius:8px;background:var(--sunk);border:1px solid var(--line)}
+.am>.av .lg{width:16px;height:16px}
+.am>.bd{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.am .by{font-size:12px;color:var(--ink3);line-height:26px;margin-bottom:-2px}
+.am .tx{margin:0;font-size:14.5px;line-height:1.55}
+.cur{display:inline-block;width:7px;height:1.05em;margin-left:3px;border-radius:1px;background:var(--accent);vertical-align:text-bottom;animation:pulse 1s ease-in-out infinite}
+.tl{display:flex;align-items:center;gap:8px;min-height:28px;margin-left:38px;padding:0;border:0;background:none;color:var(--ink3);font-size:13px;text-align:left;cursor:pointer}
+.tl:hover{color:var(--ink2)}
+.tl .ic{flex:none}
+.tl .chev{transition:transform .14s}.tl[aria-expanded="true"] .chev{transform:rotate(90deg)}
+.tl .r{margin-left:6px;font-size:12px}
+.tlx{margin:-2px 0 0 38px;padding:10px 12px;background:var(--sunk);border:1px solid var(--line);border-radius:var(--r2);font:400 12px/1.6 var(--font-mono);color:var(--ink2)}
+.tlx .k{display:block;font:500 11px/1.6 var(--font-sans);letter-spacing:.04em;text-transform:uppercase;color:var(--ink3)}
+.tlx .k:not(:first-child){margin-top:6px}
+
+/* Cards in the conversation. .cd is the frame: title, what would happen, what it may cost, two buttons. */
+.cd{display:flex;flex-direction:column;margin-left:38px;min-width:0;background:var(--raised);border:1px solid var(--line);border-radius:var(--r3);color:var(--ink);text-align:left;font:inherit}
+a.cd,button.cd{cursor:pointer}a.cd:hover,button.cd:hover{border-color:var(--line2)}
+.ap{overflow:hidden}
+.ap.wait{border-color:var(--line2);box-shadow:var(--shadow)}
+.ap-h{display:flex;align-items:center;gap:10px;padding:14px 20px 0}
+.ap-h h3{margin:0;font:600 15px/1.35 var(--font-sans);letter-spacing:-.005em}
+.ap-h .spill{margin-left:auto}
+.ap-lead{margin:2px 20px 0;color:var(--ink2);font-size:13.5px}
+.ap-b{display:flex;flex-direction:column;padding:6px 20px 8px}
+.ap-r{display:grid;grid-template-columns:148px minmax(0,1fr);gap:4px 16px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13.5px;line-height:1.45;align-items:baseline}
+.ap-r:last-child{border-bottom:0}
+.ap-r>.k{color:var(--ink3)}
+.ap-r>.v{min-width:0;display:flex;flex-direction:column;gap:4px}
+.ap-r .mono{font-size:12.5px}
+.ap-rp{display:flex;align-items:baseline;gap:10px}
+.ap-rp .rn{flex:none;min-width:104px;color:var(--ink2);font:500 12.5px/1.45 var(--font-mono)}
+.ap-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;padding:8px 0}
+.ap-3>div{display:flex;flex-direction:column;gap:2px;font-size:13.5px}
+.ap-3 .k{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink3)}
+.ap-3 .k .ic{color:var(--good)}
+.ap-f{display:flex;align-items:center;flex-wrap:wrap;gap:8px 16px;padding:12px 20px;border-top:1px solid var(--line);background:var(--sunk)}
+.ap-f .nt{display:flex;flex-direction:column;gap:1px;margin-right:auto;min-width:0;font-size:13px;color:var(--ink)}
+.ap-f .nt .xs{color:var(--ink3)}
+.ap-f .bt{display:flex;gap:8px}
+.rj{display:inline-flex;align-items:center;gap:6px;min-height:24px;padding:0 10px;border-radius:999px;background:var(--hover);color:var(--ink2);font-weight:500;font-size:12px;white-space:nowrap;width:fit-content}
+.rj .ic{color:var(--ink3)}
+.apc{display:flex;align-items:center;gap:10px;margin-left:38px;min-height:38px;padding:0 14px;border:1px solid var(--line);border-radius:var(--r2);background:transparent;color:var(--ink2);font-size:13.5px;text-align:left;cursor:pointer}
+.apc:hover{border-color:var(--line2);color:var(--ink)}
+.apc .ok{color:var(--good)}.apc .no{color:var(--ink3)}
+.apc .chev{margin-left:auto;transition:transform .14s}.apc[aria-expanded="true"] .chev{transform:rotate(90deg)}
+
+/* Add credential: the secure form. The value is typed here, never in the chat. */
+.ap-r .in{min-height:34px;font-size:13.5px;max-width:320px}
+.insec{position:relative;display:block;max-width:320px}
+.insec .ic{position:absolute;left:12px;top:10px;color:var(--ink3);pointer-events:none}
+.insec .in{padding-left:34px;max-width:none}
+.ap-sec{margin:0;display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink2)}
+.ap-sec .ic{color:var(--ink3);flex:none}
+
+/* Result cards: Trial, Spawned session, Win, Pull request, Regression, the calm failure line */
+.tc{padding:12px 16px;gap:6px}
+.tc-h{display:flex;align-items:center;gap:12px}
+.tc-n{flex:none;font-size:12px;color:var(--ink3);white-space:nowrap}
+.tc-t{flex:1;min-width:0;font-weight:500;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tc-h .chev{flex:none;color:var(--ink3)}
+.tc-v{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px;font:400 13px/1.4 var(--font-mono)}
+.tc-v .fr{font:400 12.5px/1 var(--font-sans);color:var(--ink3)}
+.tc-m{display:flex;flex-wrap:wrap;gap:2px 14px;font-size:12px;color:var(--ink3)}
+.tc-m .ok{display:inline-flex;align-items:center;gap:4px}.tc-m .ok .ic{color:var(--good);width:12px;height:12px}
+.tc.meas{border-style:dashed;border-color:var(--line2)}
+.spc{flex-direction:row;align-items:center;gap:12px;padding:12px 14px}
+.spc .av{display:grid;place-items:center;width:32px;height:32px;flex:none;border-radius:var(--r2);background:var(--sunk);border:1px solid var(--line)}
+.spc .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.spc .nm{font-weight:500;font-size:14px}
+.spc .sub3{font-size:12px;color:var(--ink3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.spc .go{flex:none;display:flex;align-items:center;gap:8px;color:var(--ink3)}
+.cd2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-left:38px}
+.cd2>.cd{margin-left:0}
+.wn{padding:16px 20px;gap:12px;background:var(--verdict);border-color:var(--verdictLine)}
+.wn-h{display:flex;align-items:center;gap:10px}
+.wn-h h3{margin:0;font:600 16px/1.35 var(--font-sans);letter-spacing:-.01em}
+.wn-r{margin:0;font-size:13.5px;color:var(--ink2)}
+.wn-o{display:flex;align-items:flex-start;gap:8px;font-size:13.5px}.wn-o .ic{margin-top:2px;color:var(--ink3);flex:none}
+.wn-f{display:flex;align-items:center;flex-wrap:wrap;gap:8px 16px}
+.prc{padding:14px 16px;gap:6px}
+.prc-h{display:flex;align-items:center;gap:10px;padding-bottom:4px}
+.prc-h h3{margin:0;font:600 14.5px/1.35 var(--font-sans)}
+.prc-r{display:flex;align-items:center;gap:12px;min-height:36px;border-top:1px solid var(--line);font-size:13.5px}
+.prc-r .rn{flex:1;min-width:0;font:500 12.5px/1.4 var(--font-mono)}
+.prc-l{margin:0;padding:2px 0 0 0;font-size:12.5px;color:var(--ink3)}
+.rg{padding:14px 16px;gap:10px;border-color:color-mix(in srgb,var(--bad) 40%,var(--line))}
+.rg-h{display:flex;align-items:center;gap:10px}
+.rg-h h3{margin:0;font:600 14.5px/1.35 var(--font-sans)}
+.fl{display:flex;align-items:center;gap:10px;margin-left:38px;min-height:40px;padding:8px 14px;border:1px solid var(--line);border-radius:var(--r2);background:var(--sunk);font-size:13.5px;color:var(--ink2)}
+.fl .ic,.fl .st{flex:none}.fl .textbtn{margin-left:auto}
+
+/* The composer: a text box and, for a new session, the chips. It follows the session's status. */
+.cmp{display:flex;flex-direction:column;gap:6px;margin:12px 0 16px;padding:12px 12px 10px 16px;border:1px solid var(--line2);border-radius:var(--r3);background:var(--raised)}
+.cmp:focus-within{border-color:var(--ink3)}
+.cmp-in{display:block;width:100%;min-height:26px;padding:2px 0;border:0;background:transparent;resize:none;outline:none;font-size:14.5px;line-height:1.5;color:var(--ink)}
+.cmp-in::placeholder{color:var(--ink3)}
+.cmp-bar{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.cmp-bar .pill{min-height:30px}
+.cmp-bar .pill .lg{width:16px;height:16px}
+.cmp-bar .go{margin-left:auto;display:flex;align-items:center;gap:8px}
+.cmp.big{gap:10px;padding:20px 16px 14px 22px;border-radius:20px;box-shadow:var(--shadow)}
+.cmp.big .cmp-in{min-height:72px;font-size:16px}
+.cmp.one{flex-direction:row;align-items:center;gap:12px;padding:8px 10px 8px 16px}.cmp.one .cmp-in{flex:1;min-width:0}
+.cmp.dis{background:var(--sunk);border-color:var(--line)}
+
+/* Home: the composer, suggestions from contracts, and Waiting for you */
+.hw{width:100%;max-width:720px;margin:0 auto;padding:0 24px}
+.hw-c{display:flex;flex-direction:column;gap:32px;padding-top:128px;padding-bottom:40px}
+.hw-t{margin:0;text-align:center}
+.sugs{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.sug{display:inline-flex;align-items:center;gap:8px;min-height:34px;padding:0 14px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--ink2);font-size:13px;cursor:pointer}
+.sug:hover{border-color:var(--line2);color:var(--ink)}.sug .ic{color:var(--ink3)}
+.wl{display:flex;flex-direction:column}
+.wl-h{display:flex;align-items:baseline;gap:8px;padding:0 14px 8px}
+.wr{display:flex;align-items:center;gap:12px;min-height:52px;padding:0 14px;border-top:1px solid var(--line);color:var(--ink);border-radius:0}
+.wr:last-child{border-bottom:1px solid var(--line)}
+.wr:hover{background:var(--hover)}
+.wr .t{flex:1;min-width:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wr .w{flex:none;font-size:12.5px;color:var(--ink2)}
+.wr .a{flex:none;width:72px;text-align:right;font-size:12.5px;color:var(--ink3)}
