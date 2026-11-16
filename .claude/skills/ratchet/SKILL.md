@@ -14,7 +14,7 @@ There is no daemon, no LaunchAgent and no simulation mode. The server is Ratchet
 - `ratchet sign-in <server-url>` opens browser sign-in (OpenID Connect or GitHub) and stores a session for that server. With no URL it uses Ratchet cloud.
 - For CI, scripts and `ratchet mcp`, use an access token: `RATCHET_TOKEN` with `RATCHET_SERVER`, or `ratchet sign-in --token`. A token is shown once when a member creates it under Settings, Access tokens, and acts with that member's role.
 - Never print or log a token. Never write one into a file in the repo.
-- A viewer can read experiments and approves nothing; an editor can start experiments, approve cards and change an experiment's budget; an owner can also manage members and settings. A refused command says which role it needs.
+- A viewer can read experiments and approves nothing; an editor can start experiments, approve cards and change an experiment's budget; an owner can also manage members and settings. These are the person's roles in the project the command touches: the organization role unless the project set another. A refused command says which role it needs.
 
 ## Rules
 
@@ -27,8 +27,9 @@ There is no daemon, no LaunchAgent and no simulation mode. The server is Ratchet
 
 | Command | Does |
 | --- | --- |
-| `ratchet "cut checkout p95"` | Start an experiment in the terminal. Add `--repo owner/name`, `--agent`, `--environment` and `--budget` for the chips the web composer has |
-| `ratchet experiments --json` | Experiments with id, state (Not sealed, Sealed, Watching, Regressed), activity (Working, Waiting for you, Done, Failed), metric, baseline to best, spend of budget |
+| `ratchet "cut checkout p95"` | Start an experiment in the terminal. Add `--project`, `--repo owner/name`, `--agent`, `--environment` and `--budget` for the chips the web composer has. With no `--project` it uses the person's default project |
+| `ratchet projects --json` | Projects with id, the person's role, experiments, wins and spend this month |
+| `ratchet experiments --json` | Experiments (add `--project` to narrow) with id, project, state (Not sealed, Sealed, Watching, Regressed), activity (Working, Waiting for you, Done, Failed), metric, baseline to best, spend of budget |
 | `ratchet show <experiment> --json` | One experiment: state, activity, its sessions, trials, kept, spend of budget |
 | `ratchet history <experiment> --json` | Every trial for an experiment across its sessions: hypothesis, outcome, values, commit ids, what it started from |
 | `ratchet receipt <win> --json` | The signed receipt for a win and its lineage |

@@ -30,12 +30,12 @@ Each shows a card in the chat. The agent never sees a credential value.
 
 | Tool | Inputs | Card | Who approves | Refuses |
 | --- | --- | --- | --- | --- |
-| `attach_repo` | A repo on the code host | Attach repo | An owner or editor; policy may pre-approve | A repo the code host account cannot reach; a viewer's approval |
-| `request_credential` | A connector, a reason, a scope | Add credential: connector-aware, with the connector's logo, the recipe for the read-only, holdout-excluding credential, "What each one gets: agents / the judge" and "Browse connectors"; a secure form where a person types the value, which goes straight to the platform's credential store | An owner or editor, always; policy can never pre-approve it | A scope that includes the holdout or write rights; a value in chat |
+| `attach_repo` | A repo on the code host | Attach repo | An owner or editor of the experiment's project; policy may pre-approve | A repo the code host account cannot reach; a viewer's approval |
+| `request_credential` | A connector, a reason, a scope | Add credential: connector-aware, with the connector's logo, the recipe for the read-only, holdout-excluding credential, "What each one gets: agents / the judge" and "Browse connectors", which opens Customize, Connectors, Discover; a secure form where a person types the value, which goes straight to the platform's credential store | An owner or editor, always; policy can never pre-approve it | A scope that includes the holdout or write rights; a value in chat |
 | `set_environment` | Image or setup script, size, network | Change environment | An owner or editor; policy may pre-approve | A change that would exceed the budget's rate; hosts the platform cannot allow |
-| `request_budget` | An amount and a reason | Raise budget, with what it may cost | An owner or editor; policy may allow up to a limit | An amount that takes the experiment's budget over the organization's monthly cap |
+| `request_budget` | An amount and a reason | Raise budget, with what it may cost | An owner or editor; policy may allow up to a limit | An amount that takes the experiment's budget over its project's cap or the organization's monthly cap |
 
-A person (editor or owner) can also change the experiment's budget at any time without a card, from the scoreboard strip, the experiment detail page or the Seal experiment card. Each refusal comes back to the agent as a plain reason, and the session shows a calm one-line card, never a blank.
+A person (editor or owner of the project) can also change the experiment's budget at any time without a card, from the scoreboard strip, the experiment detail page or the Seal experiment card. Each refusal comes back to the agent as a plain reason, and the session shows a calm one-line card, never a blank.
 
 ## Rules for a new tool
 

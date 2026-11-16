@@ -1,7 +1,7 @@
 ---
 name: judge
 description: >-
-  What does "better" mean, and how is a win decided? Use for experiments (the metric and its direction, the evaluation and its protected paths, guardrails, the data and the holdout, repeats, the acceptance criteria), sealing and seal checks, trials and their outcomes (Kept), measurements, the judge sandbox and the judge platform, the seal, measure, history, deliver and watch tools, receipts, wins, the second opinion, regressions, delivered and pending value, and Return.
+  What does "better" mean, and how is a win decided? Use for experiments (the metric and its direction, the evaluation and its protected paths, evaluation templates, guardrails, the data and the holdout, repeats, the acceptance criteria), sealing and seal checks, trials and their outcomes (Kept), measurements, the judge sandbox and the judge platform, the seal, measure, history, deliver and watch tools, receipts, wins, the second opinion, regressions, delivered and pending value, and Return.
 ---
 
 # Judge
@@ -16,7 +16,8 @@ Ratchet is a chat and a judge. The judge is the part of the server that measures
 | Adding or changing a judge tool (seal, measure, history, deliver, watch) | [tools.md](tools.md) |
 | Working on the sealed experiment, the judge sandbox, seal checks, confirmation, the second opinion or the receipt | [anti-cheat.md](anti-cheat.md) |
 | Changing the acceptance criteria | [change-acceptance.md](change-acceptance.md) |
-| Adding a kind of evaluation | [add-evaluation-kind.md](add-evaluation-kind.md) |
+| Adding a kind of evaluation or an evaluation template (listed in Customize, Evaluations) | [add-evaluation-kind.md](add-evaluation-kind.md) |
+| Skill packs and plugins (the judge never reads a pack, and a plugin never changes what counts) | [../session/add-skill-pack.md](../session/add-skill-pack.md) |
 | Finding what the earlier code did, and what it taught | [today.md](today.md) |
 | `spawn`, the setup tools, platforms, agents, environments, connectors, credentials | [../session/SKILL.md](../session/SKILL.md), [../session/tools.md](../session/tools.md) |
 | Cards, policy, who may approve, the audit log | [../organization/approvals.md](../organization/approvals.md), [../organization/SKILL.md](../organization/SKILL.md) |

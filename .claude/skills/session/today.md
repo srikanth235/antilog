@@ -1,6 +1,6 @@
 # Session: what the earlier code did, and what it taught
 
-The earlier Rust daemon and CLI live on the branch `claude/peaceful-lamport-leak6p`. They are reference, not a base. Nothing below exists on this branch. Every path named is on that branch, and the words (experiment, run, drafting session, evaluator, optimization, note, skill pack, plugin) are the earlier design's, not the target's.
+The earlier Rust daemon and CLI live on the branch `claude/peaceful-lamport-leak6p`. They are reference, not a base. Nothing below exists on this branch. Every path named is on that branch, and the words (experiment, run, drafting session, evaluator, optimization, note) are the earlier design's, not the target's. The earlier design also had skill packs, plugins, Customize and projects. They are back in the target in a new form (see [../product/rulings.md](../product/rulings.md)), and nothing below is their code.
 
 ## What it built
 

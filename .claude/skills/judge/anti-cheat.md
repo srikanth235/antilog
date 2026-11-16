@@ -17,6 +17,7 @@ Each measurement runs in a fresh judge sandbox. The rules:
 - It holds the judge's credential, which alone reaches the holdout. The judge sandbox is the only holder.
 - It has no network route except to the experiment's data.
 - It returns only the numbers the experiment names.
+- It reads no skill pack: a pack is advice to agents and never an input to the judge.
 - It is removed afterwards.
 
 Where it can run: on an agent platform that can run a command in a sandbox with no agent. That platform is the judge platform. AWS AgentCore can. Google Agent Runtime sandboxes run without an agent; whether one can hold a credential the agent never sees is checked in the spike. Claude Managed Agents, the OpenAI Agents API and Microsoft Foundry Agent Service cannot. The customer's own CI runner is not included (decided by the owner; see [../product/rulings.md](../product/rulings.md)).
@@ -47,7 +48,7 @@ Before a win is delivered, an agent from a different model provider than the pro
 
 ## 6. Signed receipt
 
-The experiment version and seal, the commits, the dataset versions read, the values, repeats, noise, the number of trials tried, the holdout result (passed or failed, never the value to an agent), the credential scopes used, the judge platform, environment, image and digest, the agents and sessions, the second opinion and what was spent. It is signed by the judge, and Verify again checks the signature, the signer and the image digest.
+The experiment version and seal, the commits, the dataset versions read, the skill pack versions the agents read, the values, repeats, noise, the number of trials tried, the holdout result (passed or failed, never the value to an agent), the credential scopes used, the judge platform, environment, image and digest, the agents and sessions, the second opinion and what was spent. It is signed by the judge, and Verify again checks the signature, the signer and the image digest.
 
 - Stops: a win nobody can check later, and numbers edited after the fact.
 - Does not stop: a cheat the other five mechanisms missed. It makes one findable.

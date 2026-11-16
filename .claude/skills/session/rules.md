@@ -10,6 +10,8 @@ All target.
 - Never change a dataset version after it is created, and never let a holdout be granted to an agent: the control is absent, because a version that moves cannot be reproduced and an agent that reads the holdout fits it.
 - Register each connector's two credentials once, with the customer's own system, and keep neither value in Ratchet, because the server must hold no access to customer data. The agent credential is read-only and leaves out the holdout. The judge credential is separate. Both are short-lived and minted per session.
 - Let a session contact only the endpoints its experiment and environment allow, because a sandbox with open egress can send customer data anywhere.
+- Keep a skill pack to written text, never hold holdout data in one, and never let the judge read one, because a pack is advice to agents and an advice channel into the judge is a way to move what counts. Record the versions an experiment read.
+- Never let a plugin mark, unmark or grant a dataset, because a bundle has no powers of its own.
 - Never connect the Ratchet server to data and never route dataset rows through it, because data is read only inside platform sandboxes.
 - Make a git token push only to the session's own branch, short-lived and one per repo, because a token that reaches another branch can rewrite what the judge measured.
 - Run no loop on the server and keep no step machine. The agent drives. The only server-side state machines are the judge's queue and the budget meter, because a loop on the server decides things a person and an agent should.

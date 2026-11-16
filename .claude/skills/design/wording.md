@@ -8,7 +8,12 @@ The vocabulary source is [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md), includ
 
 | Say | Never say |
 | --- | --- |
-| experiment (the sealed goal and everything measured against it) | contract, benchmark, evaluation (for the whole thing; the evaluation is the command and files inside it), project |
+| experiment (the sealed goal and everything measured against it) | contract, benchmark, evaluation (for the whole thing; the evaluation is the command and files inside it, or a reusable template) |
+| project (a group of experiments for one area of the code) | repo, folder, workspace, team |
+| Customize (the library of Evaluations, Skills, Connectors, Agents and Plugins) | marketplace, store, settings |
+| Skill (on screen), skill pack (in docs and code) | note, prompt, playbook |
+| Plugin (a bundle of evaluations, skills, connectors and agents) | extension, add-on, integration |
+| evaluation template (Evaluations, in Customize) | benchmark, preset |
 | session (one agent's work inside an experiment, named by its agent: "Claude Code session") | thread, task, workspace, container, VM |
 | Seal experiment, sealed experiment, experiment version | Lock, freeze, publish, contract |
 | Seal checks (the noise check and the cheat checks) | Validation, sanity checks |
@@ -34,7 +39,7 @@ The vocabulary source is [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md), includ
 | Waiting for you | Blocked, Needs input, Paused |
 | Stop session, "Stopped by NAME" | Pause agent, Cancel, Kill |
 | Try again | Retry |
-| connector (a data system or MCP server) | source, integration, plugin |
+| connector (a data system or MCP server) | source, integration |
 | dataset, dataset version | table (alone), snapshot, latest |
 | Agent credential, Judge credential | token, key, secret |
 | Removed, Not removed (clean-up state) | Deleted, Orphaned, Leaked |
@@ -48,9 +53,9 @@ The vocabulary source is [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md), includ
 | Add platform, Add agent, Add connector, Test connection, Check connection, Update credential, Remove | Add backend, Connect runner, Link, Integrate |
 | a readable label ("Experiment sealed") | a raw action code (`experiment.seal`) |
 
-Retired on 16 Nov 2026, so never on screen: contract, run (as the noun for a piece of work), draft, drafting session, config branch, project, thread, Customize, plugin, skill pack, note (as a feature), Pause agent, evaluator, measuring platform, stepper, and "optimization", "context" and "infrastructure" as areas of the product. "Evaluation" survives only as the command and files inside an experiment. Add each new term to the glossary in the same change that introduces it. Prefer the term Palantir Foundry or Databricks already uses; if a screen needs a word that is not in the glossary, find theirs first and add the row.
+Retired on 16 Nov 2026, so never on screen: contract, run (as the noun for a piece of work), draft, drafting session, config branch, thread, note (as a feature), the dashboard page, Pause agent, agent order, evaluator, measuring platform, stepper, and "optimization", "context" and "infrastructure" as areas of the product. Project, Customize, Skill ("skill pack" in docs), Plugin and Evaluation (a reusable template, and the command inside a sealed experiment) were cut and brought back the same day, so they are words again. Add each new term to the glossary in the same change that introduces it. Prefer the term Palantir Foundry or Databricks already uses; if a screen needs a word that is not in the glossary, find theirs first and add the row.
 
-"Experiment" is the noun for what a user creates, in the apps, the CLI, the API, the words catalogue and user-facing docs. A session is one agent's work inside it and is never a top-level noun: the sidebar lists experiments. Never "contract".
+"Experiment" is the noun for what a user creates, in the apps, the CLI, the API, the words catalogue and user-facing docs. An experiment belongs to a project. A session is one agent's work inside an experiment and is never a top-level noun: the sidebar lists experiments under their project and nests an open experiment's sessions. Never "contract".
 
 The CLI and MCP tools are read by people too. They print the screen words, and may keep code names in flags and JSON keys.
 
@@ -58,15 +63,15 @@ The CLI and MCP tools are read by people too. They print the screen words, and m
 
 | Where | Words |
 | --- | --- |
-| Sidebar | "New experiment", "Search", "Pinned", "Experiments", "All experiments" |
+| Sidebar | "New experiment", "Search", "Projects", "Customize", "Pinned"; each project is a heading that folds; a session row is "Claude Code session", "Codex session" with its status |
 | Experiment states | Not sealed, Sealed, Watching, Regressed |
 | Activity (from the sessions) | Working, Waiting for you, Done, Failed |
 | Experiment page header | title, state and activity, "Details", "Stop session", "Pin", menu |
-| Breadcrumb in a spawned session | "Experiment title / Codex session" |
+| Breadcrumb in a spawned session | "Project / Experiment title / Codex session" |
 | An agent's message | the Ratchet mark and "Ratchet", then the agent as a quiet second label: "Ratchet · Claude Code", "Ratchet · Codex" |
 | A session a person stopped | Done, with the line "Stopped by NAME" |
 | Header actions | "Stop session" (inline confirm: "Stop session", "Keep working"), "Pin", "Unpin", menu: "Rename", "Copy link", "Delete experiment" |
-| Composer, new experiment | placeholder "What do you want to improve?"; chips "Repos", "Agent", "Environment", "Budget" (shows the default, for example "$10"); button "Start" |
+| Composer, new experiment | placeholder "What do you want to improve?"; chips "Project" (shows the project, for example "Checkout platform"), "Repos", "Agent", "Environment", "Budget" (shows the default, for example "$10"); button "Start" |
 | Composer, Working | placeholder "Steer it, or @-mention a session: @Codex focus on database queries"; buttons "Send", "Interrupt", "Stop session" |
 | Notify prompt, once after the first measurement | "Notify me when this experiment needs me"; buttons "Notify me", "Not now" |
 | Composer, Waiting for you | placeholder "Answer, or approve the card above" |
@@ -108,7 +113,7 @@ Trial numbers are per experiment, across its sessions ("trial 11"). The holdout 
 
 | Card | Title | Fields, in order | Buttons | Collapsed line |
 | --- | --- | --- | --- | --- |
-| Seal experiment | "Seal experiment" | Metric and direction, Evaluation command, Protected paths (per repo), Data and holdout, Guardrails, Baseline, Noise check, Cheat checks, Judge platform and environment, Budget (with "Change budget") | "Seal experiment", "Decline" | "Experiment sealed by NAME · 14:02"; "Declined by NAME · 14:02" |
+| Seal experiment | "Seal experiment" | Metric and direction, Evaluation command (with "Started from Load test" when it came from a template), Protected paths (per repo), Data and holdout, Skill packs, Guardrails, Baseline, Noise check, Cheat checks, Judge platform and environment, Budget (with "Change budget") | "Seal experiment", "Decline" | "Experiment sealed by NAME · 14:02"; "Declined by NAME · 14:02" |
 | Raise budget | "Raise budget" | Now, Requested, What it may cost, Why | "Raise budget", "Decline" | "Budget raised to $200 by NAME · 14:02" |
 | Add credential | "Add credential" | Connector (logo and name), recipe, "What each one gets", Name, Platform, Value (secure field), Scope | "Add credential", "Decline" | "Credential added by NAME · 14:02" |
 | Attach repo | "Attach repo" | Repo, Branch, Access ("Pushes only to the session's branch") | "Attach repo", "Decline" | "Repo attached by NAME · 14:02" |
@@ -118,7 +123,7 @@ Trial numbers are per experiment, across its sessions ("trial 11"). The holdout 
 | Where | Words |
 | --- | --- |
 | Add credential recipe | "Create it in Snowflake first: a read-only role on the views you list, holdout tables not granted." |
-| What each one gets | "Agents: read-only on the views you list, holdout excluded. The judge: its own read-only credential that also covers the holdout." Link "Browse connectors" |
+| What each one gets | "Agents: read-only on the views you list, holdout excluded. The judge: its own read-only credential that also covers the holdout." Link "Browse connectors" (opens Customize, Connectors, Discover) |
 | Add credential note | "Typed here, never in the chat. Goes straight to PLATFORM's credential store." |
 | Before Approve | "Nothing happens until you approve." |
 | What it may cost | "May cost up to $12" or "Costs nothing" |
@@ -131,7 +136,7 @@ Trial numbers are per experiment, across its sessions ("trial 11"). The holdout 
 
 | Where | Words |
 | --- | --- |
-| Experiments list | page title "Experiments"; link "All experiments"; columns metric, baseline to best, state, last activity |
+| Experiments | no list page and no "All experiments" link; a project lists its experiments, and search has an "Experiments" scope |
 | Experiment detail page | reached from "Details"; sections "Definition", "Seal checks", "Data", "Scoreboard", "Budget", "Sessions", "Trials", "Wins", "Watch", "Versions" |
 | Sessions table | columns "Session", "Platform", "Started", "Ended", "Spend", "State", "Clean-up"; state Working, Done, Failed; clean-up Removed, Not removed; Ended "Not ended" while working |
 | Session not removed | "The Gemini session was not removed. Ratchet retries, and its cost counts until it is gone." |
@@ -141,12 +146,36 @@ Trial numbers are per experiment, across its sessions ("trial 11"). The holdout 
 | Immutable | "Sealed experiments never change. A change makes a new version, and numbers do not carry across versions." |
 | New version | "New version" (an experiment version) |
 | Watch settings | "Watch this experiment", "On a schedule", "When the default branch moves" |
-| Delivered, Pending, Return strip on Experiments | "Delivered" (merged), "Pending" (pull request open, not in Return), "Return"; shown only when the experiment states a value per unit; otherwise absent, not zero |
+| Delivered, Pending, Return strip on Projects | "Delivered" (merged), "Pending" (pull request open, not in Return), "Return"; shown only when the experiment states a value per unit; otherwise absent, not zero |
 | Receipt page | title "Receipt for TRIAL"; sections "Experiment", "Data", "Compute", "Commits", "Values", "Repeats and noise", "Trials tried", "Holdout", "Second opinion", "Spend", "Lineage"; "Signed by the judge" with "Verify again"; checks "The signature matches", "The signer is the judge", "The image digest matches" |
-| Receipt, Data | "Dataset versions" ("orders v4"), "Commits", "Credentials used": "Agents: read-only, holdout excluded", "Judge: its own" |
+| Receipt, Data | "Dataset versions" ("orders v4"), "Skill pack versions" ("Postgres query tuning v3"), "Commits", "Credentials used": "Agents: read-only, holdout excluded", "Judge: its own" |
 | Receipt, Compute | "Judge platform and environment", "Judge image" and its digest, "Agents and sessions" with their platforms |
 | Holdout on a receipt | "Passed" or "Failed", never a value |
 | Lineage | "Baseline, then trial 3, trial 7, trial 11" |
+
+## Projects (target)
+
+| Where | Words |
+| --- | --- |
+| Sidebar row and page title | "Projects" |
+| Projects page | columns "Project", "Your role", "Experiments", "Wins", "Spent this month"; action "New project"; strip "Delivered", "Pending", "Return" |
+| Project page | counts "4 experiments", "2 wins"; "New experiment"; sections "Experiments", "Connectors used", "Budget", "Members"; "Your role: Editor" |
+| Experiments table | columns "Experiment", "Baseline to best", "State", "Activity", "Budget and spend" |
+| Budget | "Spent this month", "Monthly cap", "Default budget per experiment"; "Inside the organization cap" |
+| Members | column "Role in this project"; a role set for the project reads "Set for this project", otherwise "Organization role"; "A project always keeps one owner." |
+| Read-only | "Only project owners can change this. You can read it." |
+
+## Customize (target)
+
+| Where | Words |
+| --- | --- |
+| Page and tabs | "Customize"; tabs "Evaluations", "Skills", "Connectors", "Agents", "Plugins"; toggle "Yours", "Discover" |
+| Actions | "Add evaluation", "Add skill", "Add connector", "Add agent", "Add plugin" |
+| Evaluations row | name, kind "Speed", "Quality", "Size", "Cost", direction, "Used in 3 experiments" |
+| Skills row | name, "v3", "Used in 2 experiments"; on the page "Agents read it. The judge never reads a skill pack. It never holds holdout data." |
+| Plugin page | "Adds" with groups "Evaluations", "Skills", "Connectors", "Agents"; "A plugin has no powers of its own. It can never mark, unmark or grant access to a dataset." |
+| Remove a plugin | "Keep the items it added?"; buttons "Keep items", "Remove items"; "Items in use by an experiment stay." |
+| Empty | "No evaluations yet.", "No skills yet.", "No connectors yet.", "No agent is added yet.", "No plugins installed." |
 
 ## Agent platforms (target)
 
@@ -163,19 +192,19 @@ Trial numbers are per experiment, across its sessions ("trial 11"). The holdout 
 | Ratchet cloud section | Read-only; a line that Ratchet manages the platforms and bills at cost through each experiment's budget, and per platform the data and retention, e.g. "United States only, no zero data retention" |
 | Self-hosted, none added | "No agent platform is added yet." Action "Add platform" |
 | Connector credentials | "Read-only. Registered once, kept in the platform's credential store. Ratchet keeps no connector secret." |
-| Agents table | heading "Agents"; columns "Agent", "Platform", "Model", "Parallel limit", "Used in", "Last used"; "Used in 3 experiments"; action "Add agent"; none "No agent is added yet." |
+| Agents table | tab "Agents" in Customize; columns "Agent", "Platform", "Model", "Parallel limit", "Used in", "Last used"; "Used in 3 experiments"; action "Add agent"; none "No agent is added yet." |
 | Agent page | sections "Platform", "Account", "Model", "Parallel limit", "What the agent holds", "Recent trials"; "What the agent holds": "A short-lived git token for its own branch in each repo", "Read-only connector credentials that leave out the holdout", "No model key" |
 
 ## Connectors (target)
 
 | Where | Words |
 | --- | --- |
-| Section | "Connectors" in Settings, Organization, after Agent platforms |
+| Tab | "Connectors" in Customize, with "Yours" and "Discover" |
 | Connectors | "Snowflake", "Databricks", "BigQuery", "Postgres", "DynamoDB", "Amazon S3", "MCP server" |
 | Row | "Snowflake · ANALYTICS", a one-line meaning, status, "Checked 2 hours ago", "Used by 3 experiments" |
 | Status | Connected, Reconnect, Not checked |
 | Buttons | "Add connector", "Check connection", "Check again", "Update credential", "Remove", "Browse connectors" |
-| Catalogue | title "Add connector"; one card per connector with its logo and name; no "Featured", no "For you" |
+| Discover | one card per connector with its logo and name; no "Featured", no "For you" |
 | How access is scoped | title "How access is scoped"; "Credentials are registered once and kept in the platform's credential store. Ratchet keeps none."; "Agents get a read-only credential on the views listed, holdout excluded."; "The judge gets its own read-only credential that also covers the holdout, kept on the judge platform."; "Short-lived, minted per session." |
 | Datasets table | columns "Dataset", "Version", "Size", "Marking", "Agents", "Judge"; "Can read", "No access"; the holdout row "Restricted to the judge" with no control |
 | Add connector | "Agent credential", "Judge credential", "What each one gets"; recipes "Create it in Snowflake first: a read-only role on the views you list, holdout tables not granted." and "Judge credential: a separate read-only role that also covers the holdout."; field note "Typed here. Goes straight to the platform's credential store." |
@@ -187,15 +216,15 @@ Trial numbers are per experiment, across its sessions ("trial 11"). The holdout 
 
 | Where | Words |
 | --- | --- |
-| Rail groups | "You": Profile, Appearance, Access tokens, This device. "Organization": General, Members, Single sign-on, Agent platforms, Connectors, Approvals, Budgets, Connections, Audit log |
+| Rail groups | "You": Profile, Appearance, Access tokens, This device. "Organization": General, Members, Single sign-on, Agent platforms, Approvals, Budgets, Connections, Audit log |
 | Approvals | rows per card kind with the policy "Always ask", "Allow up to $10", "Allow". Add credential shows "Always asks. A person must type the value." |
-| Budgets | "Default budget per experiment", "Monthly cap", "Spent this month"; a table of experiments with budget and spend; "Spend by session" |
+| Budgets | "Default budget per experiment", "Monthly cap", "Spent this month"; a table of projects and experiments with budget and spend; "Spend by session" |
 | Budget changes | "Change budget" on the scoreboard strip, the experiment detail page and the Seal experiment card; editors and owners only |
-| Connections | groups "Repos", "Credentials", "Environments"; link "Data systems are under Connectors"; action "Revoke"; line "Added by NAME · date · used by 3 experiments" |
+| Connections | groups "Repos", "Credentials", "Environments"; link "Data systems are under Customize, Connectors"; action "Revoke"; line "Added by NAME · date · used by 3 experiments" |
 | Audit log | columns "Who", "What", "When", "Outcome"; filter "Approvals only" |
 | Read-only for non-owners | "Only owners can change this. You can read it." |
 | Access tokens | "Create access token"; "Shown once. Copy it now." |
-| Members | roles "Owner", "Editor", "Viewer"; "Only owners can change roles. You can read them." |
+| Members | roles "Owner", "Editor", "Viewer"; column "Projects"; "Only owners can change roles. You can read them." |
 | This device | "Install app", "Get the Mac app" (target), "Notify me when an experiment needs me" |
 
 ## Budget by surface
@@ -218,7 +247,11 @@ Trial numbers are per experiment, across its sessions ("trial 11"). The holdout 
 | --- | --- | --- |
 | Home, no experiments | "No experiments yet." | none; the composer is the action |
 | Sidebar, no experiments | "Experiments you start appear here." | none |
-| Experiments | "No experiments yet." | "New experiment" |
+| Projects | "No projects yet." | "New project" |
+| Project | "No experiments in this project yet." | "New experiment" |
+| Evaluations | "No evaluations yet." | "Add evaluation" |
+| Skills | "No skills yet." | "Add skill" |
+| Plugins | "No plugins installed." | "Add plugin" |
 | Search, no match | "No results for “QUERY”." | none |
 | Access tokens | "No access tokens yet." | "Create access token" |
 | Agent platforms, self-hosted, none | "No agent platform is added yet." | "Add platform" |
@@ -257,7 +290,7 @@ A `·` never joins two thoughts in one string; it survives only between short me
 - A word means one thing. Do not give one object two names across pages or clients.
 - Money and units are worded the same on every page.
 - Defensive reassurance (a fact followed by what was not lost, deleted or sent) belongs only where the risk decision is made, in full sentences. A status or an empty state repeating the promise is noise.
-- A cloud account is not a connector, and neither is the code host. Platform names appear under Agent platforms, beside an agent, and on the Seal experiment card as the judge platform. Never Kubernetes.
+- A cloud account is not a connector, and neither is the code host. Platform names appear under Agent platforms in Settings, beside an agent, and on the Seal experiment card as the judge platform. Never Kubernetes.
 - A session is one agent's work inside an experiment, named by its agent. A spawned session is a session another session started in the same experiment.
 - An agent's message is signed "Ratchet", with the agent as a quiet second label. An agent's logo appears only where the agent is the subject.
 - Model providers are a field on an agent, not a connector category.

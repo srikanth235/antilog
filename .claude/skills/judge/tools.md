@@ -12,7 +12,7 @@ Five tools every session gets (target). `ratchet mcp` serves the same tools to a
 
 ## seal
 
-- **In:** a proposed definition for the experiment: the metric and direction, the evaluation (command, protected paths with their repos, pinned commits), guardrails, dataset ids and versions including the holdout, repeats, and any planted cheats the proposer adds.
+- **In:** a proposed definition for the experiment, which may start from an evaluation template (id and version): the metric and direction, the evaluation (command, protected paths with their repos, pinned commits), guardrails, dataset ids and versions including the holdout, repeats, and any planted cheats the proposer adds.
 - **Back:** the seal check results (baseline, noise, each cheat), shown on a Seal experiment card, which also carries a Budget row. After approval, the experiment version and its seal. Until then the experiment is Not sealed.
 - **Asks:** yes. A person seals it from the card.
 - **Refuses:** a definition that fails a seal check. An unpinned commit or dataset version. A holdout the agent's own credential can reach.

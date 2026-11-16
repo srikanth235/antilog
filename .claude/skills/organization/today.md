@@ -35,7 +35,7 @@ The earlier daemon and CLI (branch `claude/peaceful-lamport-leak6p`) had one use
 
 ## Target, not built
 
-- Organizations with an organization on every row, and organization-wide roles owner, editor and viewer. No projects.
+- Organizations with an organization on every row, roles owner, editor and viewer that are the default in every project, and projects that can set a member's role for themselves.
 - OpenID Connect and GitHub sign-in: GitHub and Google on Ratchet cloud, the customer's identity provider when self-hosted. No passwords.
 - Access tokens and service accounts, shown once and stored as a hash.
 - Approvals, policy, budgets and the monthly cap ([approvals.md](approvals.md)).

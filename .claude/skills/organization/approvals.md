@@ -23,7 +23,7 @@ Settings, Approvals sets one value per card kind: **Always ask**, **Allow up to 
 
 ## Who may approve
 
-Roles are organization-wide. Owners and editors approve every card. A viewer reads experiments and approves nothing. Roles are organization-wide, decided by the owner ([../product/rulings.md](../product/rulings.md)): a role covers the whole organization, and visibility does not follow repo access. Changing an experiment's budget needs an editor or an owner. Only an owner changes policy.
+Roles are checked at project scope ([model.md](model.md)). A member's role in a project is their organization role unless a project owner set another for that project. Owners and editors of the project approve every card for its experiments. A viewer reads them and approves nothing. Visibility does not follow repo access ([../product/rulings.md](../product/rulings.md)). Changing an experiment's budget needs an editor or owner of its project. A project owner manages the project's members and its budget. Only an organization owner changes policy.
 
 ## Recorded
 
@@ -31,14 +31,15 @@ Every approval is an audit row: who, which card, what it would do, when, the out
 
 ## Settings pages
 
-Settings, Approvals holds policy. Settings, Connections lists the repos, credentials and environments that were approved, each with Revoke. Budgets holds the default budget per experiment, the monthly cap, and the list of experiments with their budgets and spend. These pages are read-only for non-owners, not hidden. Two things are still set up in Settings because no experiment can run without them: agent platform accounts (self-hosted), and members and sign-in.
+Settings, Approvals holds policy. Settings, Connections lists the repos, credentials and environments that were approved, each with Revoke. Budgets holds the organization's default budget per experiment, the monthly cap, and the list of projects and experiments with their budgets and spend. These pages are read-only for non-owners, not hidden. Two things are still set up in Settings because no experiment can run without them: agent platform accounts (self-hosted), and members and sign-in.
 
 ## Budgets
 
 - One budget per experiment, covering all its sessions and their judge time. Spend is model tokens, sandbox time and judge time. The meter is in [../session/model.md](../session/model.md).
-- A person sets it when starting, from a Budget chip on the composer that defaults to the organization's default in Settings, Budgets (boards show $10 as the example).
-- An editor or owner can change it at any time: from the scoreboard strip ("Change budget"), from the experiment detail page, or in a row on the Seal experiment card. Lowering it below what is spent stops new measurements. Each change is an audit row.
+- A person sets it when starting, from a Budget chip on the composer. It defaults to the project's default budget per experiment, which falls back to the organization's default in Settings, Budgets (boards show $10 as the example).
+- An editor or owner can change it at any time: from the scoreboard strip ("Change budget"), from the experiment detail page, or in a row on the Seal experiment card. Lowering it below what is spent stops new measurements. Each change is an audit row. An experiment's budget sits inside its project's cap, and a raise that would pass the cap is refused.
 - `request_budget` lets the agent ask for more through a Raise budget card; policy for it stays in Settings, Approvals.
-- An organization has a monthly cap. No budget, and no card, passes it. Only an owner changes the cap.
+- A project may have a monthly cap on all its experiments. A project owner changes it, and it cannot pass the organization's. The project page shows spent this month against it.
+- An organization has a monthly cap. No budget, no project cap and no card passes it. Only an organization owner changes the cap.
 - When a budget is spent, the judge refuses `measure`, and the experiment's sessions are Waiting for you with a Raise budget card. A notification says so ([notifications.md](notifications.md)).
 - When an experiment is sealed and the budget allows, nothing asks anything.

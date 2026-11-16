@@ -1,7 +1,7 @@
 ---
 name: change
 description: >-
-  How does this kind of change travel through the layers? Use to add or change an API endpoint, a tool, a write, a live event, a ledger table or migration, a platform job, or a screen; or to add an evaluation kind, a connector, an agent platform, an agent, an environment, a role, a sign-in provider, an audited action, a tool or a card kind.
+  How does this kind of change travel through the layers? Use to add or change an API endpoint, a tool, a write, a live event, a ledger table or migration, a platform job, or a screen; or to add an evaluation kind or template, a connector, a skill pack, a plugin kind, a Customize tab, an agent platform, an agent, an environment, a project, a role (organization or project), a sign-in provider, an audited action, a tool or a card kind.
 ---
 
 # Change
@@ -20,9 +20,12 @@ The pages describe the target: `ratchet-core` with its two shells `ratchet-serve
 | A job the server queues and runs on an agent platform (the judge's queue, the agent trait calls) | [platform-job.md](platform-job.md) |
 | A screen or a page | [screen.md](screen.md) |
 | A card kind (an approval card or a result card) | [tool.md](tool.md), then [organization/approvals.md](../organization/approvals.md) |
-| An evaluation kind | [judge/add-evaluation-kind.md](../judge/add-evaluation-kind.md) |
+| An evaluation kind or an evaluation template (Customize, Evaluations) | [judge/add-evaluation-kind.md](../judge/add-evaluation-kind.md) |
 | The acceptance criteria | [judge/change-acceptance.md](../judge/change-acceptance.md) |
 | A connector | [session/add-connector.md](../session/add-connector.md) |
+| A skill pack | [session/add-skill-pack.md](../session/add-skill-pack.md) |
+| A plugin, or a new kind of thing a plugin may bring | [session/add-skill-pack.md](../session/add-skill-pack.md) (a plugin has no powers of its own), then [screen.md](screen.md) for its Customize tab and detail page |
+| A project, or a role in a project | [organization/add-role.md](../organization/add-role.md), then [organization/add-audited-action.md](../organization/add-audited-action.md) |
 | An agent platform | [session/add-platform.md](../session/add-platform.md) |
 | An agent | [session/add-agent.md](../session/add-agent.md) |
 | An environment | [session/add-environment.md](../session/add-environment.md) |

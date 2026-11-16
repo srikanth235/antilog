@@ -8,7 +8,7 @@ description: >-
 
 Ratchet is a chat and a judge. The chat works like Claude Code on the web: a person talks to a coding agent that works in a sandbox with repos attached. The judge is a set of tools every session gets. An agent asks the judge to measure a change, and only the judge's numbers count. Only a measured win becomes a pull request. There are no modes, no plan step and no orchestration loop on the server: the agent drives, and the server relays sessions, runs the judge and keeps a ledger.
 
-Three objects hold it together: an **experiment** (the sealed goal, a definition of better, and everything measured against it), a **session** (one agent's work inside an experiment: a chat with one agent in one sandbox) and a **measurement** (the judge's signed result for one trial). A session always belongs to an experiment, and the app lists experiments, never sessions. Everything else is a view over measurements. Settings are tools: setup happens in the chat as an approved tool call, and a settings page lists and revokes what was approved. The organization floor (members, roles, sign-in, tokens, approvals, budgets, audit log, notifications) sits under all of it.
+Four things hold it together. A **project** groups the experiments for one area of the code, with roles per project. An **experiment** (the sealed goal, a definition of better, and everything measured against it) belongs to one project. A **session** (one agent's work inside an experiment: a chat with one agent in one sandbox) belongs to an experiment, and the sidebar nests sessions under an open experiment. A **measurement** is the judge's signed result for one trial. Reusable setup (evaluations, skill packs, connectors, agents, plugins) lives in one Customize page. Everything else is a view over measurements. Settings are tools: setup happens in the chat as an approved tool call, and a settings page lists and revokes what was approved. The organization floor (members, roles, projects, sign-in, tokens, approvals, budgets, audit log, notifications) sits under all of it.
 
 The target is a server with a web app as the client of its API, run two ways: self-hosted (a Docker Compose service, server plus Postgres, using the agent platform accounts the customer already has) or Ratchet cloud (we host the server and run every session on Ratchet's platform accounts). Ratchet runs no sandboxes for agents: they run as sessions on agent platforms (Claude Managed Agents, AWS AgentCore, the OpenAI Agents API, Microsoft Foundry Agent Service, Google Agent Runtime) behind one trait. Nothing here is built (target).
 
@@ -16,7 +16,7 @@ Use the governing principles and the non-goals below as settled. Apply them dire
 
 ## Governing principles
 
-1. **A chat and a judge.** Every feature belongs to the session, the judge or the organization floor, and is shown inside an experiment. If it fits none, question it.
+1. **A chat and a judge.** Every feature belongs to the session, the judge or the organization floor, and is shown inside an experiment, a project or Customize. If it fits none, question it.
 2. **The judge decides, never a person or an agent.** The moment a hand or a proposer can mark a win, no win means anything.
 3. **Settings are tools.** Setup happens in the chat as an approved tool call. A settings page lists and revokes.
 4. **The agent drives.** The server relays, measures and records. It runs no loop.
@@ -34,9 +34,9 @@ Use the governing principles and the non-goals below as settled. Apply them dire
 | What every area owes the customer | [promises.md](promises.md) |
 | What we decided not to build | [non-goals.md](non-goals.md) |
 | The design as dated rulings, what it replaces, the decided calls and the open questions | [rulings.md](rulings.md) |
-| Sessions, agents, platforms, environments, credentials, connectors, spawn, budgets | [session owes](../session/owes.md), [rules](../session/rules.md) |
-| Experiments, seal, measure, acceptance, the holdout, anti-cheat, receipts, watch | [judge owes](../judge/owes.md), [rules](../judge/rules.md) |
-| Members, roles, sign-in, tokens, approvals, policy, the audit log, notifications | [organization owes](../organization/owes.md), [rules](../organization/rules.md) |
+| Sessions, agents, platforms, environments, credentials, connectors, skill packs, spawn, budgets | [session owes](../session/owes.md), [rules](../session/rules.md) |
+| Experiments, evaluation templates, seal, measure, acceptance, the holdout, anti-cheat, receipts, watch | [judge owes](../judge/owes.md), [rules](../judge/rules.md) |
+| Projects, members, roles, sign-in, tokens, approvals, policy, budgets, the audit log, notifications | [organization owes](../organization/owes.md), [rules](../organization/rules.md) |
 | How a screen looks, behaves and reads | the [design](../design/SKILL.md) skill |
 | How a change crosses the layers | the [change](../change/SKILL.md) skill |
 
@@ -72,5 +72,5 @@ If a question survives all of these, it is a product call. Write the options wit
 - Name the promises it touches and how each stays kept.
 - Say what is target and what is built. Mark target as "(target)" in docs.
 - No unbuilt thing is described as existing.
-- Wording follows [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md): "experiment" is the noun for what a user creates and a session is one agent's work inside it; "Return", never "contract", "automation" or "ROI".
+- Wording follows [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md): "experiment" is the noun for what a user creates, it belongs to a project, and a session is one agent's work inside it; "Return", never "contract", "automation" or "ROI".
 - Open product questions are written down as options, not decided.

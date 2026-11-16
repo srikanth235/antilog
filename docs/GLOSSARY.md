@@ -4,9 +4,13 @@ Everything here is target; nothing is built. The design is directed by the owner
 
 | Term | Means | Not | On screen (target) |
 |---|---|---|---|
-| Experiment | The sealed goal and everything measured against it. Its definition of better is the metric and its direction, the evaluation, guardrails, the data (evaluation data and a holdout), repeats and the acceptance criteria; around it are its trials, scoreboard, wins, receipts, watch and budget. It holds one or more sessions. Not sealed until a person seals it, immutable once sealed; a change makes a new version of the same experiment and numbers never carry across versions. State: Not sealed, Sealed, Watching, Regressed. Activity, from its sessions: Working, Waiting for you, Done, Failed | contract, benchmark, project, run | Experiment |
+| Project | A group of experiments for one area of the code. Every experiment belongs to exactly one project. It has members with a role each (owner, editor or viewer; the organization role is the default and a project can set another for that project), a description, an optional monthly cap and an optional default budget per experiment | repo, folder, team | Project |
+| Experiment | The sealed goal and everything measured against it. Its definition of better is the metric and its direction, the evaluation, guardrails, the data (evaluation data and a holdout), repeats and the acceptance criteria; around it are its trials, scoreboard, wins, receipts, watch and budget. It belongs to one project and holds one or more sessions. Not sealed until a person seals it, immutable once sealed; a change makes a new version of the same experiment and numbers never carry across versions. State: Not sealed, Sealed, Watching, Regressed. Activity, from its sessions: Working, Waiting for you, Done, Failed | contract, benchmark, run | Experiment |
 | Session | One agent's work inside an experiment: a chat with one agent in one sandbox on one agent platform, with any number of repos attached. It always belongs to an experiment and is not a top-level noun; the sidebar lists experiments. Status is Working, Waiting for you, Done or Failed. A session a person stops is Done, "Stopped by NAME" | run, thread, task | Named by its agent: "Claude Code session" |
-| Evaluation | The command and its protected files inside an experiment | benchmark, contract | Evaluation |
+| Evaluation | Two things. The command and its protected files inside a sealed experiment. And a reusable template in Customize: a kind (Speed, Quality, Size or Cost), command, direction, guardrails, the standard planted cheats and an environment, which a sealed experiment starts from a copy of | benchmark, contract, evaluator | Evaluation |
+| Customize | One sidebar page, a library of reusable things, with tabs Evaluations, Skills, Connectors, Agents and Plugins, each with a Yours and a Discover toggle. Every item opens the same detail page. Setting one up in a chat with a card still works, and what a card adds appears here | settings, marketplace | Customize |
+| Skill pack | A versioned pack of written know-how that agents read before they propose changes. An experiment selects the packs it uses and records the versions read. The judge never reads one, and it never holds holdout data. Not this repo's `.claude/skills/`, so docs say "skill pack" | note, instruction file, history | Skill |
+| Plugin | A bundle that adds evaluations, skill packs, suggested connectors and recommended agents under their own kinds. It has no powers of its own and can never mark, unmark or grant access to a dataset. Removing one asks whether to keep its items; an item in use is never removed | extension, integration | Plugin |
 | Seal, sealed | A person approves an experiment that passed the seal checks; its definition can no longer change | lock, freeze | Seal experiment, Sealed |
 | Seal checks | The baseline, the noise check (the same commit measured twice) and the cheat checks (planted cheats the evaluation must reject: skip the work, hard-code the answer, return early) | validation | Seal checks, Noise check, Cheat checks |
 | Judge | The part of Ratchet that measures. A trait separate from the agent platform trait | evaluator | Judge |
@@ -28,7 +32,7 @@ Everything here is target; nothing is built. The design is directed by the owner
 | Platform account | The account Ratchet uses on an agent platform: yours when self-hosted, Ratchet's on Ratchet cloud, billed to you at cost | | Platform account |
 | Environment | The image or setup script, size and network policy a session's sandbox starts from | | Environment |
 | Clean-up state | Whether a session and its sandbox are gone from the platform. Removed: the platform confirms it. Not removed: Ratchet retries and the cost counts until it is gone | Deleted, Orphaned | Removed, Not removed |
-| Connector | A data system or MCP server an agent's code may read: Snowflake, Databricks, DynamoDB, BigQuery, Postgres, Amazon S3, any MCP server. Registered once in Settings, Connectors, with two credentials and the datasets under it. Status: Connected, Reconnect, Not checked. The code host (GitHub, GitLab) is how repos attach and pull requests open. A cloud account is not a connector | source, integration | Connector |
+| Connector | A data system or MCP server an agent's code may read: Snowflake, Databricks, DynamoDB, BigQuery, Postgres, Amazon S3, any MCP server. Registered once in Customize, Connectors, with two credentials and the datasets under it. Status: Connected, Reconnect, Not checked. The code host (GitHub, GitLab) is how repos attach and pull requests open. A cloud account is not a connector | source, integration | Connector |
 | Dataset | A named table or file set under one connector that an experiment reads. Ratchet records its name, versions, size and marking, never its rows | table, query | Dataset |
 | Dataset version | One state of a dataset, with an id and a date. It never changes after it is created; a receipt names the versions read | snapshot, latest | Dataset version ("orders v4") |
 | Marking | A label on a dataset that limits who may read it. Holdout is the only one | tag | Marking |
@@ -37,7 +41,7 @@ Everything here is target; nothing is built. The design is directed by the owner
 | Holdout | A marking on a dataset: evaluation data only the judge can read. Enforced by the credentials: the agent credential leaves it out and only the judge credential includes it. No control grants it to an agent. An agent never reads it or learns a value from it | test set, hidden | Restricted to the judge |
 | Guardrail | A metric that must not get worse | limit | Guardrail |
 | Protected path | A file in a repo that an experiment names and a trial may not change. A trial that changes one is Rejected | | Protected path |
-| Budget, spend | One per experiment, covering all its sessions and their judge time: model tokens, sandbox time and judge time. A person sets it when starting and an editor or owner can change it at any time. Settings, Budgets holds the organization's default and its monthly cap, which no budget passes | cap | Budget, Spend |
+| Budget, spend | One per experiment, covering all its sessions and their judge time: model tokens, sandbox time and judge time. A person sets it when starting and an editor or owner can change it at any time. It sits inside its project's optional monthly cap, inside the organization's monthly cap, and no budget passes either. The default per experiment can be set per project and falls back to the organization's, in Settings, Budgets | cap | Budget, Spend |
 | Delivered | Yearly value of wins whose pull request is merged, derived per experiment when it states a value per unit | locked in, realised | Delivered |
 | Pending | Yearly value of wins in an open pull request; not counted in Return | unclaimed, waiting | Pending |
 | Return | Delivered divided by spent, as `68×` | ROI | Return |
@@ -65,24 +69,29 @@ The boards are in [`design/mockups/`](../design/mockups/) and the rules in [`.cl
 
 | Term | Means |
 |---|---|
-| Frame | A fixed 256px sidebar and a main area. Sidebar: the brand, New experiment, Search, Pinned, then Experiments (one line each with an activity icon), and an All experiments link. The user menu at the foot has Settings, the light and dark switch, the host name and Sign out |
-| New experiment | A composer, not a dialog or a form: one text box ("What do you want to improve?") with four chips, Repos, Agent, Environment and Budget. It starts an experiment with its lead session |
+| Frame | A fixed 256px sidebar and a main area. Sidebar: the brand, New experiment, Search, the rows Projects and Customize, Pinned, then experiments grouped under collapsible project headings (one line each with an activity icon; under an experiment that is open or pinned, its sessions nested one level deeper, each with its status icon). The user menu at the foot has Settings, the light and dark switch, the host name and Sign out |
+| New experiment | A composer, not a dialog or a form: one text box ("What do you want to improve?") with five chips, Project, Repos, Agent, Environment and Budget. The Project chip defaults to the project you are in. It starts an experiment in that project with its lead session |
+| Projects | A list page of all projects, each with the person's role, experiments, wins and spend this month, and New project. Delivered, Pending and Return across experiments sit at the top |
+| Project page | A detail page: title, the person's role, counts (experiments, wins), description, New experiment, an Experiments table (experiment, baseline to best, state, activity, budget and spend), Connectors used, Budget (spent this month of the project's cap, default budget per experiment) and Members. A project with no experiment has its own empty page |
+| Customize page | Tabs Evaluations, Skills, Connectors, Agents, Plugins, each with Yours and Discover. One DetailPage layout for every kind of item |
 | Experiment page | The chat of its lead session: a header (title, state and activity, Details, Stop, Pin, menu), the scoreboard strip once sealed (with Change budget), the conversation of messages and cards, and a composer docked at the foot. Spawned sessions appear as cards and open as their own chat inside the experiment |
 | Card | The only place structured output appears. Approval cards (the six kinds above). Result cards: Trial, Spawned session, Win, Pull request, Regression, and a calm one-line failure |
-| Experiments | A list page (metric, baseline to best, state, last activity), reached from All experiments, and a detail page, reached from Details (the sealed definition, the seal checks, the data with dataset versions, the holdout shown as "Restricted to the judge", the sessions with their spend and clean-up state, the scoreboard, the history of trials across sessions, wins and their pull requests, watch settings, versions) |
+| Experiments | Listed on their project's page (there is no list of all experiments; Projects shows Delivered, Pending and Return across them), and a detail page, reached from Details, whose back link goes to its project (the sealed definition, the seal checks, the data with dataset versions, the holdout shown as "Restricted to the judge", the sessions with their spend and clean-up state, the scoreboard, the history of trials across sessions, wins and their pull requests, watch settings, versions) |
 | Experiment state | Not sealed, Sealed, Watching, Regressed |
 | Receipt page | One win: everything on the signed receipt, and the lineage (what each trial started from) |
-| Settings | A dialog with a rail. You: Profile, Appearance, Access tokens, This device. Organization: General, Members, Single sign-on, Agent platforms, Connectors, Approvals, Budgets, Connections (repos, credentials and environments that were approved, with Revoke), Audit log. Read-only for non-owners, not hidden |
+| Settings | A dialog with a rail. You: Profile, Appearance, Access tokens, This device. Organization: General, Members, Single sign-on, Agent platforms (platform accounts only; a link to Customize, Agents), Approvals, Budgets, Connections (repos, credential references and environments approved in chats, with Revoke; a link to Customize, Connectors), Audit log. Read-only for non-owners, not hidden |
 | Activity | Working, Waiting for you, Done, Failed, from an experiment's sessions; each has a word and an icon shape, never colour alone |
-| Page types | Session (the experiment page), ListPage, DetailPage, Dialog, SettingsSection, SignIn |
+| Page types | Session (the experiment page), ListPage (Projects, each Customize tab), DetailPage (a project, an experiment, a receipt, and one layout for every Customize item), Dialog, SettingsSection, SignIn |
 | Page states | Loading, empty, failed, refused, partial, not checked |
-| Role | Owner, Editor, Viewer. A viewer reads experiments and approves nothing |
+| Role | Owner, Editor, Viewer. The organization role is the default in every project, and a project can set another for a member. A viewer reads experiments and approves nothing. Project owners manage the project's members and budget; organization owners manage organization settings |
 | Member, service account | User, service principal |
 | Install the web app (Windows, Linux) | Install app (Settings, This device); "Get the Mac app" on macOS |
 | The server cannot be reached | Can't reach acme.ratchet.cloud. (the server's address), Try again |
 | Notification titles | Win, Waiting for you, Regression, Budget spent |
 
-Unchanged between code and screen: win, agent, pull request, Delivered, Pending, Return.
+Unchanged between code and screen: win, agent, pull request, Delivered, Pending, Return, project, plugin.
+
+Project, Customize, Skill (skill pack), Plugin and Evaluation (a template) were cut and brought back on 16 Nov 2026 (see [rulings](../.claude/skills/product/rulings.md)), so they are not retired.
 
 ## Retired words
 
@@ -93,14 +102,12 @@ Do not use these except in a `today.md` page about the earlier code or in a date
 | Contract | Experiment |
 | Run, as the object | Trial (one `measure` call), or an experiment |
 | Draft, drafting session, config branch | `seal` and a Seal experiment card |
-| Project | Cut; roles are organization-wide |
 | Thread | Experiment, or its session |
-| Customize | Cut; setup is cards, Settings lists and revokes |
-| Plugin | Cut |
-| Skill pack, Skill (a pack of know-how) | Cut; `history` is the memory |
 | Note, as a feature | Cut; talk to the agent |
 | Pause agent | Stop the session, or talk to it |
 | Evaluator, evaluator sandbox | Judge, judge sandbox |
 | Measuring platform | Judge platform |
 | Optimization, context and infrastructure as "the three basics" | Experiment, session, judge, organization floor |
 | Stepper | Cards in the conversation |
+| Dashboard page | Cut; the Projects page holds Delivered, Pending and Return |
+| Agent order | Cut; a person or an agent chooses agents in the chat |

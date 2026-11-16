@@ -2,7 +2,7 @@
 
 - Send every write through one action layer that checks permission, writes the audit entry and emits the event, because three separate steps get skipped one at a time.
 - Put the organization on every table row, because a query without it can cross customers.
-- Make roles organization-wide until the owner decides per-repo visibility, because a second scope doubles every check.
+- Resolve a role in one place: the project's role for the member if the project set one, else the organization role, because a second lookup is a second truth. Offer no per-repo visibility, because a third scope doubles every check.
 - Never pre-approve Add credential, because a person must type the value into the secure form.
 - Record every approval and every tool call that changes something, because a change nobody can trace is not governed.
 - Let policy only pre-approve a card, never skip its audit row, because an automatic approval is still an approval.
@@ -13,4 +13,6 @@
 - Check permission in one place, never in a handler, because a check in a handler is missing from the next handler.
 - Never put a secret in a response, an event, a log or an audit entry, because those are read by more people than the secret is meant for.
 - Keep the audit log append-only, because a log that can be edited is not a record.
-- Keep organization a floor. It owns no experiment, session or sandbox.
+- Keep every project with at least one owner, because a project nobody can manage cannot change its members or budget.
+- Keep a project's budget inside the organization's cap and an experiment's inside its project's, because a nested limit that can be passed is not a limit.
+- Keep organization a floor. It owns no experiment, session or sandbox. A project owns experiments only as a group and a permission scope.

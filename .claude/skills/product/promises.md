@@ -6,16 +6,16 @@ What every area owes the customer, and the one rule each follows. A promise kept
 | --- | --- | --- |
 | Judge | **Decide** | Only a trial that beats what it started from, holds every guardrail and is confirmed in a fresh judge sandbox and on the holdout is Kept. Only the judge's numbers count. |
 | Judge | **Sealed** | A sealed experiment never changes. A new version starts a new record, and numbers never carry across versions. |
-| Judge | **Tamper-proof** | An agent never holds the holdout credential or learns a holdout value. A trial that changes a protected path is Rejected. |
+| Judge | **Tamper-proof** | An agent never holds the holdout credential or learns a holdout value. A trial that changes a protected path is Rejected. A skill pack or a plugin never changes what counts. |
 | Judge | **Receipt** | Every win carries a signed receipt: the experiment version and seal, commits, values, repeats, noise, trials tried, the holdout result, the second opinion and what was spent. |
 | Judge | **Honest numbers** | Pending is never counted as delivered. |
 | Judge | **Keep** | A delivered win is watched, and a regression wakes a session in the experiment. |
 | Session | **Stays put** | The server never connects to data. Data is read only by code inside a platform's sandbox. The server keeps ids, versions, numbers, states, the conversation's words and audit rows, never tool output, file contents, diffs or data. |
 | Session | **Least access** | Credentials reach a session only through the platform's credential store, never a prompt, a repo file or Ratchet's database. An agent gets read-only connector credentials that leave out the holdout, and a short-lived git token that pushes only to its own branch. |
-| Session | **Spend** | No spend without a budget, one per experiment across all its sessions. A person can change it at any time. When it is spent the judge refuses `measure` and the sessions wait for a person. |
+| Session | **Spend** | No spend without a budget, one per experiment across all its sessions, inside its project's cap and the organization's. A person can change it at any time. When it is spent the judge refuses `measure` and the sessions wait for a person. |
 | Session | **Clean up** | A sandbox ends when its session is idle or stopped, and the conversation outlives it. |
 | Session | **Any platform** | The same promises hold on every agent platform. |
-| Organization | **Permission** | Every read and write is role-checked, and roles decide who may approve which card. |
+| Organization | **Permission** | Every read and write is role-checked at project scope, with the organization role as the default, and roles decide who may approve which card. |
 | Organization | **Approval** | A tool call that matters asks a person unless policy pre-approved it. Add credential can never be pre-approved. |
 | Organization | **Audit** | Every tool call that changed something, and every approval, is logged: who, what, when, the outcome. |
 | Organization | **Secrets** | No response, event or log carries one. |

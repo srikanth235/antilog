@@ -4,7 +4,7 @@ A kind is a new way to measure, such as a replay of recorded traffic, a scored s
 
 ## Kinds and templates
 
-An evaluation has a **kind**, which says what is being measured, and may start from a **template**, a starter command for a common job. The agent proposes an experiment from a kind and a template. There is no catalogue page: the Seal experiment card shows the kind and names the standard planted cheats for it, so a person sees what the judge will try to fool.
+An evaluation has a **kind**, which says what is being measured, and may start from a **template**, a starter command for a common job. The agent proposes an experiment from a kind and a template. Templates are reusable and are listed in Customize, Evaluations, under Yours and Discover (boards `Evaluations`, `EvaluationsEmpty`, `EvaluationsDiscover`, `EvaluationDetail`, `AddEvaluation`). A template holds the kind, command, direction, guardrails, the standard planted cheats and an environment. A plugin may bring templates. An experiment starts from a copy, so changing or removing a template never changes a sealed experiment. The Seal experiment card shows the kind and names the standard planted cheats for it, so a person sees what the judge will try to fool.
 
 | Kind | What it measures | Templates |
 | --- | --- | --- |
@@ -29,6 +29,7 @@ An evaluation has a **kind**, which says what is being measured, and may start f
 10. **A template.** A starter command for the kind that a proposing agent may copy, listed above, with the planted cheats the Seal experiment card will show.
 11. **Tests.** A golden test of the template, a parse test of the output, each planted cheat rejected, and one end-to-end measurement with a scripted agent.
 12. **Receipt.** Say which receipt fields the kind produces (see [owes.md](owes.md)).
+13. **Customize.** Add the template to the Evaluations list, with its detail page and an Add evaluation path for a person's own. Adding, changing and removing one are audited actions (see [../organization/add-audited-action.md](../organization/add-audited-action.md)).
 
 ## Proving it
 

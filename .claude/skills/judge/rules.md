@@ -10,7 +10,9 @@
 - Never change an outcome once written, because an outcome that can move is not evidence. A new finding is a new measurement.
 - Never change a dataset version after it is created, because a measurement that names a version must be reproducible. New data is a new version.
 - Never put a holdout value in history, a message, a trial result or a receipt an agent reads, because history is what agents read. The holdout appears only as Passed or Failed.
-- Pin the experiment version, the seal and the dataset versions on every measurement, and name them on the receipt, because a result nobody can reproduce is not a result.
+- Never let the judge read a skill pack or a plugin, because advice to agents must not reach what counts. A plugin never marks, unmarks or grants a dataset, and a skill pack never holds holdout data.
+- Start a sealed experiment from an evaluation template by copying it, never by reference, because a template that can be edited must not move a sealed definition.
+- Pin the experiment version, the seal and the dataset versions on every measurement, and name them on the receipt, with the skill pack versions the agents read, because a result nobody can reproduce is not a result.
 - Refuse `measure` when the budget is spent, and let the session layer meter it, because the experiment's owner knows what a win is worth and the budget knows what was spent.
 - Count a win as Delivered only once its pull request is merged, and keep Pending apart from Delivered. Pending is never in Return, because a number that mixes them overstates Return.
 - Show a failed trial as failed, never as zero or empty, and never show an unchecked experiment as healthy, because zero reads as a real measurement.

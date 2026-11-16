@@ -27,7 +27,7 @@ From the boards in `design/mockups/`. "Not" is the near miss to avoid.
 | Confirm something that cannot be undone: Stop run, Revoke token | Alert dialog | Dialog |
 | Add ▾, More, a row's ⋯ actions | Menu. A choice that goes to another page is a `Menu.LinkItem` | a Popover with buttons |
 | Filter | Menu with checkbox items (or radio items for one of several) | a Popover with a form |
-| Customize tabs, Run history tabs | Tabs, each `Tabs.Tab` rendered as our router link with `nativeButton={false}`, because each tab is a URL | Tabs that only swap panels in state |
+| Customize tabs (Evaluations, Skills, Connectors, Agents, Plugins), Project tabs | Tabs, each `Tabs.Tab` rendered as our router link with `nativeButton={false}`, because each tab is a URL | Tabs that only swap panels in state |
 | Yours and Discover | two router links styled as a segmented control, with `aria-current` on the current one | Toggle group: it holds state, not a location |
 | The settings switches | Switch inside a Field (label and description) | Checkbox styled as a switch |
 | Budget amounts | Number field inside a Field, formatted with its `format` prop (`Intl.NumberFormatOptions`, currency) | a text input and hand formatting |
@@ -35,7 +35,7 @@ From the boards in `design/mockups/`. "Not" is the near miss to avoid.
 | A long task under way, such as a runner starting | Progress | Meter, or a spinner when the amount is known |
 | A short confirmation after an action, such as a copy or a saved setting | Toast, from one `Toast.Provider` at the app root | `window.alert`, or a banner that pushes the layout |
 | An icon-only button's hint | Tooltip, under one `Tooltip.Provider` at the root so tooltips share a delay. The button still has its own `aria-label` | a `title` attribute |
-| Sidebar project groups that fold | Collapsible | Accordion: for sets where one panel opening matters to the others |
+| Sidebar project groups that fold, and an open experiment's nested sessions | Collapsible | Accordion: for sets where one panel opening matters to the others |
 | A popover with details anchored to a control | Popover | Dialog: it interrupts on purpose |
 
 ## Where the demos lead you wrong

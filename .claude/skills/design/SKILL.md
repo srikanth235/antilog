@@ -6,12 +6,12 @@ description: >-
 
 # Design
 
-Every visual or UX change starts in `design/mockups/`, as a board. The look is Midnight Brass: a calm, exact dark instrument panel with one brass accent, and the same palette on warm paper, both designed from day zero. Values live in `design/tokens.toml` and nowhere else. Behaviour and words live here. The web app and the macOS app (target; its boards are removed for now and owed) share behaviour, words and element ids, never pixels. Ratchet is a chat and a judge: the screen is an experiment page (the chat of its lead session), an experiment detail page and a settings dialog over one sidebar that lists experiments.
+Every visual or UX change starts in `design/mockups/`, as a board. The look is Midnight Brass: a calm, exact dark instrument panel with one brass accent, and the same palette on warm paper, both designed from day zero. Values live in `design/tokens.toml` and nowhere else. Behaviour and words live here. The web app and the macOS app (target; its boards are removed for now and owed) share behaviour, words and element ids, never pixels. Ratchet is a chat and a judge: the screen is an experiment page (the chat of its lead session), an experiment detail page, the Projects and Project pages, one Customize page (Evaluations, Skills, Connectors, Agents, Plugins) and a settings dialog, over one sidebar that groups experiments under their project and nests an open experiment's sessions.
 
 | If you are doing | Read |
 | --- | --- |
 | Changing a board, a token or an icon; running the generator | [mockups.md](mockups.md) |
-| Deciding how a screen behaves: page types, navigation, states, the holdout, colour and type, clients, accessibility | [behaviour.md](behaviour.md) |
+| Deciding how a screen behaves: page types, the sidebar, Projects, Customize, navigation, states, the holdout, colour and type, clients, accessibility | [behaviour.md](behaviour.md) |
 | Writing or changing a word a user reads | [wording.md](wording.md) |
 | The look at a glance, and the owner's dated calls | `design/mockups/DesignRules.dc.html`, `design/mockups/Decisions.dc.html` |
 | A value (colour, size, radius, type) | `design/tokens.toml` |

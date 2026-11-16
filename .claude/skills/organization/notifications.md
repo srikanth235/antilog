@@ -7,7 +7,7 @@ A notification tells a person that something needs them or that work they asked 
 | Event | Who gets it | Words (title · line) |
 | --- | --- | --- |
 | A win: a trial was Kept and a win is ready | whoever started the experiment, and anyone who asked to be notified | Win · the experiment title, then the measured change |
-| Waiting for you: a card needs approval, or the agent asked a question | whoever started the experiment, and editors and owners | Waiting for you · the experiment title, then what to decide |
+| Waiting for you: a card needs approval, or the agent asked a question | whoever started the experiment, and the editors and owners of its project | Waiting for you · the experiment title, then what to decide |
 | A regression: a watched experiment measured worse than delivered by more than the noise | whoever started the experiment, and owners | Regression · the experiment title, then the change |
 | A budget was spent | whoever started the experiment, and owners | Budget spent · the experiment title |
 | An experiment's work finished (Done or Failed) | whoever started the experiment, only if they asked ("Notify me when this finishes") | Done or Failed · the experiment title |

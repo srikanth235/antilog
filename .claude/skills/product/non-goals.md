@@ -4,7 +4,7 @@ These are decided. Do not build them, propose them in passing, or leave a hook "
 
 - **No modes or plan step.** An experiment and its sessions have no mode switch and no approve-a-plan stage. The agent drives, and a person talks to it at any time.
 - **No orchestration loop on the server.** The server runs no step machine and no agent loop. The only server-side state machines are the judge's queue and the budget meter.
-- **No settings-first setup.** Nobody visits a settings page before the first message. Setup is an approved tool call in the chat. Two things stay in Settings because no experiment can run without them: agent platform accounts (self-hosted) and members and sign-in. A connector can also be registered once in Settings, Connectors, but nothing requires it before the first message; a chat asks with an Add credential card.
+- **No settings-first setup.** Nobody visits a settings page before the first message. Setup is an approved tool call in the chat. Two things stay in Settings because no experiment can run without them: agent platform accounts (self-hosted) and members and sign-in. Connectors, agents, evaluations, skill packs and plugins can be set up once in Customize, but nothing requires it before the first message; a chat asks with a card.
 - **No second way to mark a win.** Only the acceptance criteria mark a win, as one pure function in code. A hand-marked or agent-marked win is a number nobody can trust.
 - **No generic coding-agent chat without the judge.** Every session always has the Ratchet tools. A chat that cannot measure is a product we do not need to build.
 - **A judge on a laptop.** Measuring never runs on a user's machine. A judge sandbox runs only on a judge platform, with no agent in it. Agents do not run on a Mac either: "This machine" is deferred (see [rulings](rulings.md)).
@@ -22,3 +22,6 @@ These are decided. Do not build them, propose them in passing, or leave a hook "
 - **Ratchet holding access to the customer's cloud.** No cross-account role and no stored cloud keys. Ratchet holds only agent platform credentials: the customer's when self-hosted, its own on Ratchet cloud.
 - **Ratchet storing or brokering customer data.** The server never connects to data and stores none. It never stores tool output, file contents or diffs. There is no plane that pulls or proxies data.
 - **Letting chat change what counts.** Chat can change what an agent tries. It can never change a sealed experiment, the protected files, the holdout or the acceptance criteria.
+- **A plugin, skill pack or evaluation template that changes what counts.** A plugin has no powers of its own and can never mark, unmark or grant a dataset. The judge never reads a skill pack, and a pack never holds holdout data. A template is where an experiment starts, not something that edits a sealed one.
+- **A project that is a second permission system.** A project sets a member's role for that project and nothing else. Permission is still decided in the one action layer.
+- **Per-repo visibility.** Roles follow the organization and the project, never a repo.
