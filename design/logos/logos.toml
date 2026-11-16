@@ -42,10 +42,17 @@ amazons3 = { title = "Amazon S3", full = true }
 amazondynamodb = { title = "Amazon DynamoDB", full = true }
 # Official Azure public service icons, V25 (learn.microsoft.com/azure/architecture/icons).
 azure = { title = "Azure", full = true }
-# OpenAI's symbol, from Wikimedia Commons "OpenAI logo 2025 (symbol).svg", author OpenAI
-# (openai.com/brand blocks automated downloads). Codex and the OpenAI Agents API use it.
+# OpenAI's Blossom, from OpenAI's own logo kit (OAI_OpenAI-Blossom_Black.svg, given by
+# the owner), cropped to the mark. Codex and the OpenAI Agents API use it.
 openai = { title = "OpenAI", hex = "000000", mono = true }
 # xAI's mark, from the header of docs.x.ai.
 xai = { title = "xAI", hex = "000000", mono = true }
 # Grok's mark, the two "mark" paths of the Grok logo on grok.com, cropped to the mark.
 grok = { title = "Grok", hex = "000000", mono = true }
+# Microsoft's own "Foundry Agent Service" icon, from the official Azure public service
+# icons, V25 (learn.microsoft.com/azure/architecture/icons).
+foundryagentservice = { title = "Microsoft Foundry Agent Service", full = true }
+# Google Cloud's official Vertex AI product icon (cloud.google.com/icons,
+# core-products-icons.zip). Agent Runtime was Vertex AI Agent Engine until April 2026,
+# and Google publishes no separate Agent Runtime icon.
+googleagentruntime = { title = "Google Agent Runtime", full = true }
