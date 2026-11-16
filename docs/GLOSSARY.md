@@ -7,14 +7,14 @@
 | Delivered | Yearly value of merged wins | locked in, realised | Delivered |
 | Pending | Yearly value of wins in an open PR; not counted in Return | unclaimed, waiting | Pending |
 | Return | Delivered ÷ spent, as `68×` | ROI | Return |
-| Agent | A Claude Code, Codex or Grok login or key that proposes changes | harness (code only), connection | agent |
+| Agent | A model on an agent platform that proposes changes: Claude on Claude Managed Agents, Codex on the OpenAI Agents API, Gemini or Grok on AWS AgentCore (target) | harness (code only), connection | agent |
 | Agent order | The fallback sequence, "Claude Code → Codex → Grok · on this machine" | priority | agent order |
-| Where | This machine or Cloud: where agents run. This machine is a Mac running the macOS app (target); measuring never runs there | location | Where |
+| Where | The agent platform an agent runs on (target). Whether a Mac may still be "This machine" is open; measuring never runs there | location | Where |
 | Note | Text that steers the agents of a run: all of them, or one with @ ("@Codex focus on database queries") | comment, prompt | note |
 | Pause Agent | Stop one agent inside a run; its loop waits until resumed | | Pause agent |
 | Chat | A conversation with your own agent (Claude Code, Codex or Grok) that acts on Ratchet through its tools | assistant session, thread | Chat |
 | Draft | An experiment the chat proposed as a card, or created but not approved; nothing runs until Approve | proposal | Draft |
-| Config branch | `ratchet/config`, where a new experiment's files go before any PR | draft PR | config branch |
+| Config branch | `ratchet/config`, where a new experiment's files go before any PR. A drafting session ends by pushing to it, and every run session starts from it | draft PR | config branch |
 
 **"Experiment" is the noun for the thing a user creates and Ratchet works on, everywhere a user reads it:** the web and Mac apps, the CLI, the API, the words catalogue and user-facing docs (settled 15 Nov 2026). "Optimization" names one of the three basics (what "better" means: goal, limits, benchmark, accept rule) and the `optimization` skill. It is never the noun for the object. Still never "automation".
 
@@ -35,15 +35,13 @@ Code and the API use the names of the three basics for their areas; the screen b
 | Plugin | A bundle that adds evaluations, skills, connectors and agents for a domain | none |
 | Customize | One page with Evaluations, Skills, Connectors, Agents and Plugins | none |
 | Settings | A dialog over the app, opened from the user menu or More. A rail of sections in two groups: You (Profile, Appearance, Access tokens, and in the web app This device) and Organization (General, Users and groups, Single sign-on, Infrastructure, Budgets, Notes, Audit logs) | none |
-| Launcher | The one component that starts and removes sandboxes and mints their scoped credentials. Built into the server when self-hosted | none |
-| Runner | The launcher installed in your infrastructure for Ratchet cloud. It connects out to the hosted server and opens no inbound port | none |
-| Sandbox | One isolated place where an agent's or the evaluator's code runs, started and removed by the launcher | none |
-| Sandbox backend | Where sandboxes run: Kubernetes, or VMs on AWS, GCP or Azure, or Ratchet-managed (target). Set up under Settings, Infrastructure | none |
-| Scoped credential | A short-lived, read-only connector credential minted for one run. An agent's never reaches the holdout | none |
-| Where work runs | An owner-only setting of the organization: Your infrastructure or Ratchet-managed. Set under Settings, Infrastructure (target) | none |
-| Your infrastructure | A value of Where work runs: sandboxes run in your backends through your runner, and data never leaves them. The only value a self-hosted server offers (target) | none |
-| Ratchet-managed | A value of Where work runs: sandboxes run in Ratchet's account on Cloudflare, removed when each run ends. Ratchet cloud only, by the owner's choice (target) | none |
-| Ratchet-supplied key | A model key source: Ratchet provides the model key, billed at cost to the run's budget. Only with Ratchet-managed. The other source is "Your own key" (target) | none |
+| Agent platform | A managed service that runs an agent and its sandbox as one session: Claude Managed Agents, the OpenAI Agents API or AWS AgentCore. Set up under Settings, Infrastructure on a self-hosted server; Ratchet cloud manages its own (target) | none |
+| Platform account | The account Ratchet uses on an agent platform: yours when self-hosted, Ratchet's on Ratchet cloud, billed to you at cost (target) | none |
+| Session | One agent working on a platform, with its own sandbox and transcript. A drafting session works out an experiment with you; a run has one session per agent (target) | none |
+| Drafting session | An interactive session where you and one agent work out an experiment. It ends by pushing the experiment's files to its config branch (target) | none |
+| Sandbox | One isolated place where an agent's or the evaluator's code runs, on an agent platform, removed when its session or trial ends (target) | none |
+| Evaluator sandbox | The sandbox that measures one trial, with no agent in it, on the experiment's measuring platform. The only place with the holdout credential (target) | none |
+| Connector credential | A read-only credential an agent's code uses to read a connector, handed over through the platform's credential store. An agent's never reaches the holdout (target) | none |
 
 ## On screen: more words
 

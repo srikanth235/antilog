@@ -35,16 +35,17 @@ Every path below was checked to exist.
 
 ## Target, not built
 
-- GCP and Azure modules and a provider-neutral contract test that every module passes.
-- A run tag on every resource and every spend row.
-- A verified clean-up state per run, shown as removed.
+The target replaces most of the above (decided 16 Nov): Ratchet runs no sandboxes, OpenTofu modules, images or runner. Agents run as sessions on agent platforms behind one trait; see [model.md](model.md). What carries over is the shape of spend (append-only rows, a budget stop), tagging everything with its run, and a verified clean-up.
+
+- The platform trait and adapters: Claude Managed Agents, then AWS AgentCore, then the OpenAI Agents API.
+- The `measure` tool, answered over the session's event stream, and the evaluator sandbox on the measuring platform.
+- A run tag on every session, sandbox and spend row, and a verified clean-up state per run.
 - A refusal to start a run with no stated budget.
-- Model providers as a stored object, separate from the agent.
-- Environments as named, versioned objects referenced by id from a benchmark.
+- Environments as named objects on a platform, referenced by id from a benchmark.
 
 ## Adding a backend, as the earlier code did it
 
-Reference for the earlier code on the other branch. The target steps are in [add-backend.md](add-backend.md).
+Reference for the earlier code on the other branch. The target has no sandbox backends; adding an agent platform is in [add-platform.md](add-platform.md).
 
 - The module lived under `infra/<cloud>/` and satisfied `infra/contract.md`. The AWS module in `infra/aws/` is the model.
 - Sealed isolation was a holdout bucket: the evaluator identity sat outside any agent identity's reach, and the bucket denied agents twice, on the store and in the agent boundary (`infra/aws/policies/sealed_bucket_policy.json.tftpl`, `infra/aws/policies/agent_boundary.json.tftpl`). The target replaces this with the credential model: the evaluator's own credential includes the holdout, and agents never get it.

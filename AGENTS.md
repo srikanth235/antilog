@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Ratchet points coding agents at one measurable goal and lets only the changes that beat a trusted benchmark move forward. It is organised around three basics: **optimization** (what "better" means), **context** (what a proposer may know) and **infrastructure** (where work happens), over a shared floor, the **organization** (members, roles, sign-in, tokens, audit log). The target is a server with a web app as the client of its API, self-hosted (Docker Compose) or run by us as Ratchet cloud (on Cloudflare), with work and data staying in the customer's infrastructure unless an owner chooses Ratchet-managed sandboxes. Target design is marked "(target)".
+Ratchet points coding agents at one measurable goal and lets only the changes that beat a trusted benchmark move forward. It is organised around three basics: **optimization** (what "better" means), **context** (what a proposer may know) and **infrastructure** (where work happens), over a shared floor, the **organization** (members, roles, sign-in, tokens, audit log). The target is a server with a web app as the client of its API, self-hosted (Docker Compose) or run by us as Ratchet cloud (on Cloudflare). Agents run as sessions on agent platforms (Claude Managed Agents, the OpenAI Agents API, AWS AgentCore): the customer's own when self-hosted, ours on Ratchet cloud. Target design is marked "(target)".
 
 ## This branch starts fresh
 

@@ -10,12 +10,12 @@ What every area owes the customer, and the one rule each follows. A promise kept
 | Optimization | **Keep** | A win is re-checked and never slips back. |
 | Context | **Tamper-proof** | A proposer never reads the holdout; its credentials cannot. |
 | Context | **Pinned** | Every run names its dataset versions. |
-| Context | **Stays put** | The server never connects to data. Data is read by the agent's code in your infrastructure, or, if an owner chooses Ratchet-managed, in Ratchet's sandboxes, which are removed when the run ends. |
+| Context | **Stays put** | The server never connects to data. Data is read only by agent and evaluator code inside an agent platform's sandbox: the customer's own platforms when self-hosted, Ratchet's on Ratchet cloud. Sandboxes are removed when their session ends, and Ratchet keeps nothing. |
 | Context | **Read-only** | Writing out needs an explicit, audited action. |
 | Infrastructure | **Spend** | No spend without a limit. |
 | Infrastructure | **Clean up** | Everything created is removed, and shown. |
-| Infrastructure | **Customer's account** | Under Your infrastructure, work runs in the customer's infrastructure and Ratchet holds no access to it. Ratchet-managed runs in Ratchet's account, by the owner's choice. Measuring never leaves the chosen side; a Mac may propose as "This machine" (target). |
-| Infrastructure | **Any cloud** | The same promises hold on every provider. |
+| Infrastructure | **Least access** | Ratchet holds only agent platform credentials: the customer's when self-hosted, its own on Ratchet cloud. No cross-account role, no cloud keys, no connector admin secrets (target). |
+| Infrastructure | **Any platform** | The same promises hold on every agent platform. |
 | Organization | **Permission** | Every read and write is role-checked. |
 | Organization | **Audit** | Every write is a logged action. |
 | Organization | **Secrets** | No response, event or log carries one. |
@@ -34,4 +34,4 @@ A machine-checked register of which promise is kept, with the file that proves i
 | **Secrets** (in part) | `crates/ratchetd/tests/api/real_service.rs`, test `secrets_never_leave`: no response, event or error carries a stored key or token. `crates/ratchetd/tests/api/sim.rs` checks that settings never return a stored key. `api/CONTRACT.md` lists "no response can carry a secret" among the contract checks. It covers the daemon's own secret names, not a general scan. |
 | **Preview first** (in part) | The CLI takes a global `--yes` (`crates/ratchet-cli/src/cli.rs`); without it, `run`, `stop`, `env end` and `pr` print what they would do and exit 2. `ratchet mcp` (`crates/ratchet-cli/src/mcp.rs`) mirrors it: those tools preview until the call carries `confirm: true`. `crates/ratchet-cli/tests/contract.sh` checks that a changing command needs `--yes`. |
 
-Owed, with nothing checking it today: Decide, Receipt, Honest numbers, Keep, Tamper-proof, Pinned, Stays put, Read-only, Spend, Clean up, Customer's account, Any cloud, Permission, Audit, No surprise calls, Same everywhere. Some are partly true in the current daemon (the evaluator sandbox and teardown are built for AWS), but no check ties the code to the promise. Do not call one kept until a check does.
+Owed, with nothing checking it today: Decide, Receipt, Honest numbers, Keep, Tamper-proof, Pinned, Stays put, Read-only, Spend, Clean up, Least access, Any platform, Permission, Audit, No surprise calls, Same everywhere. Some are partly true in the current daemon (the evaluator sandbox and teardown are built for AWS), but no check ties the code to the promise. Do not call one kept until a check does.
