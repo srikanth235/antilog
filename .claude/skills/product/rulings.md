@@ -93,7 +93,7 @@ Beside trust: cost control, no tie to one model provider, and Return for the org
 
 ## Licence
 
-Ratchet is licensed under the Functional Source License, FSL-1.1-ALv2: the source is public and anyone may run, change and self-host it, but not offer it as a competing product or service, and each release becomes Apache-2.0 two years after it is published. The `LICENSE` file is added with the first code, naming the licensor. Every dependency's licence must allow this ([stack/libraries.md](../stack/libraries.md)).
+Ratchet is licensed under the Functional Source License, FSL-1.1-ALv2: the source is public and anyone may run, change and self-host it, but not offer it as a competing product or service, and each release becomes Apache-2.0 two years after it is published. The licensor is Duaility, LLC; the text is in [`LICENSE.md`](../../../LICENSE.md). Every dependency's licence must allow this ([stack/libraries.md](../stack/libraries.md)).
 
 ## Ratchet cloud
 

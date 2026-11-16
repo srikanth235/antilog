@@ -10,3 +10,7 @@ This branch starts fresh. It holds the agreed design and no product code yet.
 - [`design/icon/`](design/icon): the logo.
 - [`docs/GLOSSARY.md`](docs/GLOSSARY.md): the words.
 
+
+## Licence
+
+[FSL-1.1-ALv2](LICENSE.md), Copyright 2026 Duaility, LLC. Each release becomes Apache-2.0 two years after it is published.
