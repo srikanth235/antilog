@@ -134,14 +134,42 @@ Decided calls also appear on the Decisions board.
 
 The spike comes before any product code. One tiny experiment is measured end to end on all five platforms. It proves the agent trait, the Ratchet tools served to a session over its event stream and a judge sandbox that holds a credential no agent sees. It also runs one fixed benchmark many times in fresh judge sandboxes on each judge platform and records the spread of paired differences, which says whether Speed experiments can be Kept there.
 
+The spike also answers:
+
+- **Repeats.** How many paired repeats make the bar reachable. With 3 repeats and k = 10 the critical value is about 10, so almost nothing is Kept. The Seal experiment card should show the smallest gain the setup can detect.
+- **The Speed holdout.** What a holdout is for a timing evaluation: other inputs, another load profile, or something else.
+- **A first example that fits.** "Cut checkout p95" needs real services and load that a sandbox with no connectors does not have. Find a Speed experiment that can be measured honestly there, such as test suite or build time, or a library benchmark.
+- **The agent image.** AgentCore runs a container Ratchet supplies, so Ratchet packages the coding agent itself. What goes in it and who maintains it.
+- **Usage timing.** Whether each platform reports usage fast enough for the budget meter to stop spend on time.
+- **Quotas.** Platform and model limits on concurrent sessions, and what happens when one is hit.
+- **Pair interference.** Whether warm caches, shared state or migrations leak between the two sides of a pair, and whether an ABBA order is enough.
+
 ## First release
 
 Self-hosted with AgentCore, the web app and `ratchet mcp`, one evaluation kind (Speed) with no connectors: seal, measure, Kept, receipt, deliver, budget, approvals and the audit log. Then, in this order unless the owner says otherwise: Ratchet cloud, the other adapters, connectors and the other evaluation kinds, plugins, value models with Return, Ideas and Report, and the Mac app. Their fields stay in the sealed definition and the store from the start, so nothing is redesigned.
 
 A `ratchet mcp` connection works inside a session in the experiment, named by its agent, with no platform sandbox. Its trial commits are pushed to that session's branch with a short-lived git token minted for the session, and are measured only in a judge sandbox.
 
+## Calls for the owner
+
+Raised 16 Nov 2026, not decided. Each touches a judge trust rule.
+
+- **Small gains that add up.** A trial is judged only against its parent, so real gains each below the bar never become a win. Options: (a, recommended) from time to time, measure the experiment's working branch against the baseline as one trial; (b) let a trial combine several earlier un-Kept trials; (c) leave it.
+- **Watch is not paired.** A regression compares against the stored delivered value, so drift in judge hardware reads as a regression. Recommended: pair the delivered commit with the current head, like a trial.
+- **Leaks from the judge sandbox.** The trial's code runs beside the holdout credential. Holdout Passed or Failed is a one-bit answer per trial that can be probed, and code can detect that it runs on the holdout. Recommended: make the judge credential read-only, count holdout checks against a sealed limit per experiment version, and add a planted cheat that behaves differently on the holdout.
+- **Prompt injection.** Agents read repo files, connector data and review comments, all untrusted. Nothing yet says what an injected agent could do with its git token, its tools and the stored conversation. Recommended: a threat model page in the session skill before the first release.
+- **Offline value.** Delivered counts the gain measured offline, not the effect in production, so Return can overstate. This is the first open question below; recommended: label Delivered as measured offline until production scoring is decided.
+
 ## Open questions
 
 - Whether scoring is offline only or production results are used too.
 - Whether Ratchet ever reshapes data (today no, see [non-goals](non-goals.md)).
 - Whether "Try a demo" stays in the web app.
+- Whether every trial in the version, from every session and including quick-check stops, should count in k. Spawned sessions raise the bar for all.
+- How experiments on the same code interact: overlapping changes, a default branch that moves mid-experiment, one win making another's baseline stale. Today only delivery rebases.
+- How a secret pasted into the chat is caught before the conversation is stored.
+- Who holds the judge's signing key when self-hosted, how it rotates, and what "Signed by the judge" proves to someone outside the organization.
+- The seal is the hardest step and seal checks catch only a trivially broken evaluation. How the product helps a team that has no benchmark.
+- How time to merge is shown and eased, since value counts only after a merge.
+- What the second opinion costs per win, and its data path: the diff goes to a second provider.
+- The FSL's "competing use" wording and whether contributors sign an agreement.
