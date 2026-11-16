@@ -1,91 +1,99 @@
 # Glossary
 
+Everything here is target; nothing is built. The design is directed by the owner, 16 Nov 2026 (see [rulings](../.claude/skills/product/rulings.md)). The first table is the shared vocabulary; the last column is what the screen reads.
+
 | Term | Means | Not | On screen (target) |
 |---|---|---|---|
-| Experiment | A goal Ratchet works on, with its schedule, limits and agents; opened as one thread. The word in the apps, the CLI, the API, the words catalogue and user-facing docs | optimization (for the object), automation, job, task | Experiment |
-| Run | One execution of an experiment, numbered `#14` | attempt, session | run |
-| Delivered | Yearly value of merged wins | locked in, realised | Delivered |
-| Pending | Yearly value of wins in an open PR; not counted in Return | unclaimed, waiting | Pending |
-| Return | Delivered ÷ spent, as `68×` | ROI | Return |
-| Agent | A model on an agent platform that proposes changes: Claude on Claude Managed Agents, Codex on the OpenAI Agents API, Gemini or Grok on AWS AgentCore, GitHub Copilot on Microsoft Foundry Agent Service, Gemini on Google Agent Runtime (target) | harness (code only), connection | agent |
-| Agent order | The fallback sequence, "Claude Code → Codex → Grok" | priority | agent order |
-| Where | The agent platform an agent runs on (target). "This machine" is deferred; measuring never runs on a Mac | location | Where |
-| Note | Text that steers the agents of a run: all of them, or one with @ ("@Codex focus on database queries") | comment, prompt | note |
-| Pause Agent | Stop one agent inside a run; its loop waits until resumed | | Pause agent |
-| Chat | A conversation with your own agent (Claude Code, Codex or Grok) that acts on Ratchet through its tools | assistant session, thread | Chat |
-| Draft | An experiment the chat proposed as a card, or created but not approved; nothing runs until Approve | proposal | Draft |
-| Config branch | `ratchet/config`, where a new experiment's files go before any PR. A drafting session ends by pushing to it, and every run session starts from it | draft PR | config branch |
+| Session | A chat with one agent in one sandbox on one agent platform, with any number of repos attached. Status is Working, Waiting for you, Done or Failed. A session a person stops is Done, "Stopped by NAME" | experiment, run, thread, task | Session |
+| Contract | A sealed definition of better: the metric and its direction, the evaluation, guardrails, the data (evaluation data and a holdout), repeats and the acceptance criteria. Reusable by any session. Immutable once sealed; a change makes a new version and numbers never carry across versions | benchmark, experiment | Contract |
+| Evaluation | The command and its protected files inside a contract | benchmark, contract | Evaluation |
+| Seal, sealed | A person approves a contract that passed the seal checks; it can no longer change | lock, freeze | Seal contract, Sealed |
+| Seal checks | The baseline, the noise check (the same commit measured twice) and the cheat checks (planted cheats the evaluation must reject: skip the work, hard-code the answer, return early) | validation | Seal checks, Noise check, Cheat checks |
+| Judge | The part of Ratchet that measures. A trait separate from the agent platform trait | evaluator | Judge |
+| Judge sandbox | A fresh sandbox, with no agent in it, where one measurement runs. The only place with the holdout credential. Removed afterwards | evaluator sandbox | Judge sandbox |
+| Judge platform | The agent platform that hosts judge sandboxes | measuring platform | Judge platform |
+| Trial | One `measure` call: a set of commits (one per repo changed), the trial it started from and a one-line hypothesis | candidate, attempt | Trial |
+| Measurement | The judge's signed result for a trial under one contract version | score | Measurement |
+| Kept | A trial's outcome: it beat the trial it started from by more than the bar, held every guardrail and was confirmed in a fresh judge sandbox and on the holdout | Accepted | Kept |
+| Win | A contract's best Kept trial, ready to deliver or delivered | | Win |
+| Receipt | The signed record of a win: contract version and seal, commits, values, repeats, noise, trials tried, the holdout result, the second opinion, what was spent | | Receipt |
+| Scoreboard | Trials for a contract, by session; pinned under a session's header while it works on a contract | leaderboard | Scoreboard |
+| Second opinion | An agent from a different model provider than the proposer reads a winning diff and says whether it special-cases the evaluation. It flags and never decides | review | Second opinion |
+| Approval, card | A tool call a person approves in the chat. Card kinds: Seal contract, Raise budget, Add credential, Attach repo, Change environment, Open pull request | confirmation, dialog | card |
+| Policy | Which card kinds are pre-approved: Always ask, Allow up to a limit, Allow. Add credential can never be pre-approved | permission | Approvals |
+| Spawned session | A session another session started on the same contract and budget. It cannot spawn | child, sub-agent | Spawned session |
+| Watch, regression | Measuring a delivered contract again, on a schedule or when the default branch moves; a regression is a result worse than delivered by more than the noise | monitor | Watching, Regressed |
+| Agent | A model on an agent platform: Claude on Claude Managed Agents, Codex on the OpenAI Agents API, Gemini or Grok on AWS AgentCore, GitHub Copilot on Microsoft Foundry Agent Service, Gemini on Google Agent Runtime (target) | harness (code only), connection | Agent |
+| Agent platform | A managed service that runs an agent and its sandbox as one session: Claude Managed Agents, AWS AgentCore, the OpenAI Agents API, Microsoft Foundry Agent Service or Google Agent Runtime | | Agent platform |
+| Platform account | The account Ratchet uses on an agent platform: yours when self-hosted, Ratchet's on Ratchet cloud, billed to you at cost | | Platform account |
+| Environment | The image or setup script, size and network policy a session's sandbox starts from | | Environment |
+| Connector | A data system or MCP server an agent's code may read: Snowflake, Databricks, DynamoDB, BigQuery, Postgres, Amazon S3, any MCP server. The code host (GitHub, GitLab) is how repos attach and pull requests open. A cloud account is not a connector | source | Connector |
+| Connector credential | A read-only credential an agent's code uses to read a connector, from the platform's credential store. It never reaches the holdout | | Credential |
+| Holdout | Evaluation data only the judge can read. An agent never reads it or learns a value from it | test set | Restricted to the judge |
+| Guardrail | A metric that must not get worse | limit | Guardrail |
+| Protected path | A file in a repo that a contract names and a trial may not change. A trial that changes one is Rejected | | Protected path |
+| Budget, spend | One budget per session and the sessions it spawns: model tokens, sandbox time and judge time. An organization has a monthly cap | cap | Budget, Spend |
+| Delivered | Yearly value of merged wins, derived per contract when it states a value per unit | locked in, realised | Delivered |
+| Pending | Yearly value of wins in an open pull request; not counted in Return | unclaimed, waiting | Pending |
+| Return | Delivered divided by spent, as `68×` | ROI | Return |
 
-**"Experiment" is the noun for the thing a user creates and Ratchet works on, everywhere a user reads it:** the web and Mac apps, the CLI, the API, the words catalogue and user-facing docs (settled 15 Nov 2026). "Optimization" names one of the three basics (what "better" means: goal, limits, benchmark, accept rule) and the `optimization` skill. It is never the noun for the object. Still never "automation".
+"Session" and "contract" are the nouns for what a user works with, everywhere a user reads them: the web and Mac apps, the CLI, the API, the words catalogue and user-facing docs. "Experiment" is retired as a word; whether it comes back is an open call for the owner (see [rulings](../.claude/skills/product/rulings.md)). Still never "automation".
 
-## Web client (target)
+## Trial outcomes
 
-The web app and the macOS app are not built; their words are shown in the boards in [`design/mockups/`](../design/mockups/) and the rules for them are in [`.claude/skills/design/wording.md`](../.claude/skills/design/wording.md). The first table is the shared vocabulary; the last column is what the screen reads. The earlier daemon and CLI said "optimization" for the object; that is the old word, kept only in their `today.md` pages.
-
-Code and the API use the names of the three basics for their areas; the screen borrows the words people know from Palantir Foundry, Databricks and MLflow.
-
-| Term | Means | Earlier code and docs said |
-|---|---|---|
-| Trial | One measurement of one agent's change by the evaluator. A run has many per agent, numbered per agent ("Claude Code trial 11") (target) | Candidate |
-| Kept | A trial's outcome: it beat its agent's best by more than the acceptance criteria require, held the guardrails and was confirmed on the holdout. The agent learns only "Kept" or "Failed holdout", never the holdout value (target) | Accepted, Beats noise (as an outcome) |
-| Agent's best | The best kept value in one agent's lineage; what its next trial must beat. The run's result is the best kept trial across all agents (target) | none |
-| Evaluation | The trusted measurement, added under Customize | Benchmark |
-| Connector | A connection to a data system or the code host. A cloud account is not a connector. Do not say "source" | Connector (a signed-in account) |
-| Skill | A versioned pack of know-how agents read. Not the agent guidance in `.claude/skills/` | none |
-| Plugin | A bundle that adds evaluations, skills, connectors and agents for a domain | none |
-| Customize | One page with Evaluations, Skills, Connectors, Agents and Plugins | none |
-| Settings | A dialog over the app, opened from the user menu or More. A rail of sections in two groups: You (Profile, Appearance, Access tokens, and in the web app This device) and Organization (General, Users and groups, Single sign-on, Infrastructure, Budgets, Notes, Audit logs) | none |
-| Agent platform | A managed service that runs an agent and its sandbox as one session: Claude Managed Agents, AWS AgentCore, the OpenAI Agents API, Microsoft Foundry Agent Service or Google Agent Runtime. Set up under Settings, Infrastructure on a self-hosted server; Ratchet cloud manages its own (target) | none |
-| Platform account | The account Ratchet uses on an agent platform: yours when self-hosted, Ratchet's on Ratchet cloud, billed to you at cost (target) | none |
-| Session | One agent working on a platform, with its own sandbox and transcript. A drafting session works out an experiment with you; a run has one session per agent (target) | none |
-| Drafting session | An interactive session where you and one agent work out an experiment. It ends by pushing the experiment's files to its config branch (target) | none |
-| Sandbox | One isolated place where an agent's or the evaluator's code runs, on an agent platform, removed when its session or trial ends (target) | none |
-| Evaluator sandbox | The sandbox that measures one trial, with no agent in it, on the experiment's measuring platform. The only place with the holdout credential (target) | none |
-| Connector credential | A read-only credential an agent's code uses to read a connector, handed over through the platform's credential store. An agent's never reaches the holdout (target) | none |
-
-## On screen: more words
-
-| Code says | Screen says |
+| Outcome | Means |
 |---|---|
-| goal metric, limits | primary metric, guardrail metrics |
-| subject, what may change | editable paths |
-| accept rule, verdict, receipt | acceptance criteria, result, lineage |
-| benchmark template | Evaluation, added under Customize and picked in New experiment |
-| open question for a person | Needs attention |
-| dataset, dataset version | dataset, version |
-| grant | permission ("Can read", "No access") |
-| marking, holdout | marking, Holdout |
-| evaluator only | Restricted to evaluator |
-| workspace | agent session (the stepper step is "Start sessions"; elsewhere say session) |
-| deployment | Ratchet cloud or Self-hosted |
-| spend cap | budget |
-| role | Owner, Editor, Viewer |
-| member, service account | user, service principal |
-| projects, value, history | Projects, Dashboard, More then Run history (tabs Trials, Sessions) |
-| members, sign-in, grants, audit log | Users and groups, Single sign-on, Permissions, Audit logs |
-| own items, catalogue | Yours, Discover |
-| featured pick, suggestions, recent additions, list all | Featured evaluation, Featured skill pack, Featured agent, Featured plugin, Featured connectors (banner labels), For you, New, Show all, Top connectors |
-| add from the catalogue, already added, browse the featured connectors | + (Add NAME), check (NAME is added), Explore |
-| running, draft, win, merged win, no win, stopped | Running, Draft, Win, Merged, No win, Stopped |
-| trial outcome: beat the agent's best and confirmed, inside noise, regressed, a guardrail broke, lost on holdout, did not run, being measured | Kept, Within noise, Worse, Guardrail failed, Failed holdout, Failed, Measuring ("Beats noise" and "Holdout passed" stay as evidence badges on the result card) |
-| agent status in a run | Iterating, Measuring trial 9, Paused, Stopped, no gain in 8 trials, Stopped, its budget share is spent |
-| an agent building on another's trial | Started from Claude Code's trial 11 |
-| an agent's totals | "11 trials · 3 kept · best 344 ms · $15 of $20" |
-| a stopped agent's unspent share passed on | "Session ended · its unspent $6.67 went to the others" |
-| steering while running | "Steer the agents, or @ one, e.g. @Codex focus on database queries" |
-| signed receipt, signature verified | Signed numbers, Verified (Verify again) |
-| clean-up state of a session or evaluator sandbox | Cleaned up: Running, Removed, Not removed |
-| what the Mac menu bar shows | Runs, Needs attention (the Mac runs no agents) |
-| where agents run | Agent platforms (Settings, Infrastructure): Claude Managed Agents, AWS AgentCore, OpenAI Agents API, Microsoft Foundry Agent Service, Google Agent Runtime; one is the Measuring platform |
-| keep a stopped run stopped | Leave stopped |
-| install the web app as a progressive web app (Windows, Linux) | Install app (Settings, This device); "Get the Mac app" on macOS |
-| ask for push notifications after starting a run | Notify me when this run finishes |
-| notification titles | Win, Needs attention, No win, Failed, Stopped, Stopped at the budget |
-| the server cannot be reached | Can't reach acme.ratchet.cloud. (the server's address), Try again |
-| a trial's steps | Steps for this trial (hypothesis, wrote the change, checked it in its session (does not count), asked for a measurement, evaluator measured, beat the agent's best, confirmed in a fresh evaluator sandbox, Kept) |
-| the settings that apply to this browser only | This device, with the lead "These apply to this browser only." |
-| the server cannot be reached, what that blocks | "New experiments can't start until it is back." |
-| when the offline view was last fresh | Last updated 10:42 (the time of the last good load) |
-| row descriptions on This device | Install app: "Opens in its own window, with a badge for what needs attention." Notifications: "A notice here when an experiment needs you or a run finishes." |
+| Measuring | The judge is running it |
+| Kept | Met the acceptance criteria |
+| Within noise | Not better than the noise |
+| Worse | Worse than what it started from |
+| Guardrail failed | A guardrail got worse |
+| Failed holdout | Beat the bar but failed on the holdout. The agent learns only this, never the value |
+| Rejected | Changed a protected path |
+| Failed | Did not run |
 
-Unchanged between code and screen: win, agent, note, pull request, Delivered, Pending, Return. "Skill" on screen means a skill pack; in code and docs say "skill pack" where it could be confused with this repo's guidance files. Experiment, Data and Compute name the owning area only on the seven-step stepper of a thread and as the three lineage columns of a result; they are not navigation groups.
+## Screen design (target)
+
+The boards are in [`design/mockups/`](../design/mockups/) and the rules in [`.claude/skills/design/wording.md`](../.claude/skills/design/wording.md).
+
+| Term | Means |
+|---|---|
+| Frame | A fixed 256px sidebar and a main area. Sidebar: the brand, New session, Search, Sessions (Pinned, then recent, one line each with a status icon), Contracts. The user menu at the foot has Settings, the light and dark switch, the host name and Sign out |
+| New session | A composer, not a dialog or a form: one text box with three chips, Repos, Agent and Environment |
+| Session page | Header (title, status, Stop, Pin, menu), the scoreboard strip when the session works on a contract, the conversation of messages and cards, and a composer docked at the foot |
+| Card | The only place structured output appears. Approval cards (the six kinds above). Result cards: Trial, Spawned session, Win, Pull request, Regression, and a calm one-line failure |
+| Contracts | A list page (metric, baseline to best, state, last activity) and a detail page (the sealed definition, the seal checks, the holdout shown as "Restricted to the judge", the scoreboard, the history of trials across sessions, wins and their pull requests, watch settings, versions) |
+| Contract state | Sealed, Watching, Regressed |
+| Receipt page | One win: everything on the signed receipt, and the lineage (what each trial started from) |
+| Settings | A dialog with a rail. You: Profile, Appearance, Access tokens, This device. Organization: General, Members, Single sign-on, Agent platforms, Approvals, Budgets, Connections (repos, credentials and environments that were approved, with Revoke), Audit log. Read-only for non-owners, not hidden |
+| Session status | Working, Waiting for you, Done, Failed; each has a word and an icon shape, never colour alone |
+| Page types | Session, ListPage, DetailPage, Dialog, SettingsSection, SignIn |
+| Page states | Loading, empty, failed, refused, partial, not checked |
+| Role | Owner, Editor, Viewer. A viewer reads sessions and contracts and approves nothing |
+| Member, service account | User, service principal |
+| Install the web app (Windows, Linux) | Install app (Settings, This device); "Get the Mac app" on macOS |
+| The server cannot be reached | Can't reach acme.ratchet.cloud. (the server's address), Try again |
+| Notification titles | Win, Waiting for you, Regression, Budget spent |
+
+Unchanged between code and screen: win, agent, pull request, Delivered, Pending, Return.
+
+## Retired words
+
+Do not use these except in a `today.md` page about the earlier code or in a dated ruling that says what was replaced.
+
+| Retired | Now |
+|---|---|
+| Experiment | Session, contract (open call) |
+| Run, as the object | Session |
+| Draft, drafting session, config branch | `seal` and a Seal contract card |
+| Project | Cut; roles are organization-wide |
+| Thread | Session |
+| Customize | Cut; setup is cards, Settings lists and revokes |
+| Plugin | Cut |
+| Skill pack, Skill (a pack of know-how) | Cut; `history` is the memory |
+| Note, as a feature | Cut; talk to the agent |
+| Pause agent | Stop the session, or talk to it |
+| Evaluator, evaluator sandbox | Judge, judge sandbox |
+| Measuring platform | Judge platform |
+| Optimization, context and infrastructure as "the three basics" | Session, judge, organization floor |
+| Stepper | Cards in the conversation |

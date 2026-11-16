@@ -1,12 +1,12 @@
 # AGENTS.md
 
-Ratchet points coding agents at one measurable goal and lets only the changes that beat a trusted benchmark move forward. It is organised around three basics: **optimization** (what "better" means), **context** (what a proposer may know) and **infrastructure** (where work happens), over a shared floor, the **organization** (members, roles, sign-in, tokens, audit log). The target is a server with a web app as the client of its API, self-hosted (Docker Compose) or run by us as Ratchet cloud (on Cloudflare). Agents run as sessions on agent platforms (Claude Managed Agents, AWS AgentCore, the OpenAI Agents API, Microsoft Foundry Agent Service, Google Agent Runtime): the customer's own when self-hosted, ours on Ratchet cloud. Target design is marked "(target)".
+Ratchet is a chat and a judge. A person talks to a coding agent in a sandbox with repos attached, and every session gets the judge's tools: an agent asks the judge to measure a change, only the judge's numbers count, and only a measured win becomes a pull request. It is organised around three objects (a **session**, a **contract** and a **measurement**) and three areas: the **session** (the chat and where an agent runs), the **judge** (what "better" means and how a win is decided) and the **organization** floor (members, roles, sign-in, tokens, approvals, budgets, audit log). Settings are tools: setup happens in the chat as an approved tool call. The target is a server with a web app as the client of its API, self-hosted (Docker Compose) or run by us as Ratchet cloud (on Cloudflare). Agents run as sessions on agent platforms (Claude Managed Agents, AWS AgentCore, the OpenAI Agents API, Microsoft Foundry Agent Service, Google Agent Runtime): the customer's own when self-hosted, ours on Ratchet cloud. Target design is marked "(target)".
 
 ## This branch starts fresh
 
 `main` holds the agreed design and no product code: these skills, the design boards and tokens in `design/` (`mockups/`, `tokens.toml`, `tools/`), the logo in `design/icon/` and the glossary. Nothing is built here yet.
 
-An earlier Rust daemon and CLI live on the branch `claude/peaceful-lamport-leak6p`. They are reference, not a base to build on. Every skill describes the target. A path or command that does not exist on this branch yet is marked "(target)". What the earlier code did, and what it taught, is in the `today.md` of `optimization`, `context`, `infra`, `organization`, `change`, `land` and `ratchet`.
+An earlier Rust daemon and CLI live on the branch `claude/peaceful-lamport-leak6p`. They are reference, not a base to build on. Every skill describes the target. A path or command that does not exist on this branch yet is marked "(target)". What the earlier code did, and what it taught, is in the `today.md` of `judge`, `session`, `organization`, `change`, `land` and `ratchet`.
 
 When code lands on this branch, update the pages that name its paths and commands and drop their "(target)" marks, in the same change.
 
@@ -21,10 +21,9 @@ There is no code on this branch, so there is no build or test to run yet. For a 
 Guidance lives in [`.claude/skills/`](.claude/skills), each a short router. Start from the question:
 
 - `product`: what do we owe the customer, and what do we refuse to build?
-- `optimization`: what does better mean, and how is a win decided?
-- `context`: what may a proposer know?
-- `infra`: where does work happen, and what may it cost?
-- `organization`: who may do what, and how is it recorded?
+- `session`: how does the chat work, and where does an agent run?
+- `judge`: what does better mean, and how is a win decided?
+- `organization`: who may approve what, and how is it recorded?
 - `design`: what does it look like and say? Boards, light and dark, the macOS app.
 - `change`: how does this kind of change travel through the layers?
 - `stack`: how do I write this language here (Rust, TypeScript and React, modern HTML, CSS and browser APIs, Swift for macOS, Postgres, Cloudflare, OpenTofu, Packer, Helm, security review, MCP, Playwright), and which library may I use?
@@ -37,4 +36,4 @@ Guidance lives in [`.claude/skills/`](.claude/skills), each a short router. Star
 - **Docs describe current state.** When a change makes a doc wrong, fix the doc in the same change. Target design is marked "(target)".
 - **Product calls go to the owner.** When a choice is about what the product should be and the `product` skill does not settle it, ask rather than guess.
 - **Mockups first.** Every visual or UX change starts as a board in `design/mockups/`.
-- **Vocabulary** follows [`docs/GLOSSARY.md`](docs/GLOSSARY.md): "experiment" is the noun for the thing a user creates, in the apps, the CLI, the API, the words catalogue and user-facing docs; "optimization" only names the basic and its skill; never "automation"; "Return", never "ROI".
+- **Vocabulary** follows [`docs/GLOSSARY.md`](docs/GLOSSARY.md): "session" and "contract" are the nouns for what a user works with, in the apps, the CLI, the API, the words catalogue and user-facing docs; "experiment" is retired pending the owner's confirmation; never "automation"; "Return", never "ROI".
