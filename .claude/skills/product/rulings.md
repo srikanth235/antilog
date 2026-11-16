@@ -89,6 +89,10 @@ Beside trust: cost control, no tie to one model provider, and Return for the org
 - **No Helm chart and no OpenTofu at launch.** Self-hosted ships as Docker Compose only; Ratchet cloud ships with the Cloudflare config and `cf`. Ratchet's own platform accounts are set up by hand and owned by the owner.
 - **"This machine" is deferred.** Ratchet never starts an agent on a Mac until a later ruling. `ratchet mcp` is separate: it serves the tools to an agent a person runs themselves, and that agent's trials are still measured only in a judge sandbox. Measuring never runs on a laptop.
 
+## Licence
+
+Ratchet is licensed under the Functional Source License, FSL-1.1-ALv2: the source is public and anyone may run, change and self-host it, but not offer it as a competing product or service, and each release becomes Apache-2.0 two years after it is published. The `LICENSE` file is added with the first code, naming the licensor. Every dependency's licence must allow this ([stack/libraries.md](../stack/libraries.md)).
+
 ## Ratchet cloud
 
 - **Storage.** Self-hosted uses Postgres 18. Ratchet cloud uses one SQLite database per organization inside one Cloudflare Durable Object, pinnable to the EU, the US or FedRAMP. Moving between them is an export and import of one neutral file format.
@@ -122,6 +126,7 @@ OpenID Connect plus GitHub's OAuth, no passwords. Ratchet cloud offers GitHub (O
 | 16 Nov 2026 | Paired measurement; the bar is a lower confidence bound above zero at 1 − 0.05/k. |
 | 16 Nov 2026 | AgentCore is the first adapter, for agents and the judge. |
 | 16 Nov 2026 | A thin first release: self-hosted, AgentCore, the web app, Speed, and `ratchet mcp`. |
+| 16 Nov 2026 | The licence is the Functional Source License (FSL-1.1-ALv2). |
 
 Decided calls also appear on the Decisions board.
 
@@ -140,4 +145,3 @@ A `ratchet mcp` connection works inside a session in the experiment, named by it
 - Whether scoring is offline only or production results are used too.
 - Whether Ratchet ever reshapes data (today no, see [non-goals](non-goals.md)).
 - Whether "Try a demo" stays in the web app.
-- The licence: not decided.
