@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="./tokens.css">
 <link rel="stylesheet" href="./icons.css">
 <link rel="stylesheet" href="./components.css">
+<link rel="stylesheet" href="./logos.css">
 </helmet>
 <div data-theme="dark" class="board wdesk" style="width: 1440px; height: 900px; position: relative; overflow: hidden;">
   <div class="wwin">
@@ -32,60 +33,41 @@
           <div class="col" style="gap: 2px;">
             <span class="t-label sl">Sessions</span>
             <div class="srow"><a class="rec ses" data-item="reduce-forecast-error" href="SessionSealDark.dc.html"><span role="img" aria-label="Waiting for you" title="Waiting for you" class="st gi st-wait" style="color: var(--warn);"></span><span class="t">Reduce forecast error</span></a><button class="pinb" aria-label="Pin Reduce forecast error"><i class="ic s i-pin"></i></button></div>
-            <div class="srow"><a class="rec ses" data-item="shrink-production-bundle" href="SessionDelivered.dc.html"><span role="img" aria-label="Done" title="Done" class="st gi st-done" style="color: var(--good);"></span><span class="t">Shrink the production bundle</span></a><button class="pinb" aria-label="Pin Shrink the production bundle"><i class="ic s i-pin"></i></button></div>
-            <div class="srow"><a class="rec ses" data-item="speed-up-smoke-suite" href="SessionNoWin.dc.html"><span role="img" aria-label="Done" title="Done" class="st gi st-done" style="color: var(--good);"></span><span class="t">Speed up the smoke suite</span></a><button class="pinb" aria-label="Pin Speed up the smoke suite"><i class="ic s i-pin"></i></button></div>
-            <div class="srow"><a class="rec ses" data-item="autocomplete-latency" href="SessionFailed.dc.html"><span role="img" aria-label="Failed" title="Failed" class="st gi st-fail" style="color: var(--bad);"></span><span class="t">Autocomplete latency</span></a><button class="pinb" aria-label="Pin Autocomplete latency"><i class="ic s i-pin"></i></button></div>
-            <div class="srow"><a class="rec ses" data-item="feature-pipeline-cost" href="SessionDelivered.dc.html"><span role="img" aria-label="Done" title="Done" class="st gi st-done" style="color: var(--good);"></span><span class="t">Feature pipeline cost</span></a><button class="pinb" aria-label="Pin Feature pipeline cost"><i class="ic s i-pin"></i></button></div>
+            <div class="srow"><a class="rec ses" data-item="shrink-production-bundle" href="SessionNoWinDark.dc.html"><span role="img" aria-label="Done" title="Done" class="st gi st-done" style="color: var(--good);"></span><span class="t">Shrink the production bundle</span></a><button class="pinb" aria-label="Pin Shrink the production bundle"><i class="ic s i-pin"></i></button></div>
+            <div class="srow"><a class="rec ses" data-item="speed-up-smoke-suite" href="SessionNoWinDark.dc.html"><span role="img" aria-label="Done" title="Done" class="st gi st-done" style="color: var(--good);"></span><span class="t">Speed up the smoke suite</span></a><button class="pinb" aria-label="Pin Speed up the smoke suite"><i class="ic s i-pin"></i></button></div>
+            <div class="srow"><a class="rec ses" data-item="autocomplete-latency" href="SessionFailedDark.dc.html"><span role="img" aria-label="Failed" title="Failed" class="st gi st-fail" style="color: var(--bad);"></span><span class="t">Autocomplete latency</span></a><button class="pinb" aria-label="Pin Autocomplete latency"><i class="ic s i-pin"></i></button></div>
+            <div class="srow"><a class="rec ses" data-item="feature-pipeline-cost" href="SessionDeliveredDark.dc.html"><span role="img" aria-label="Done" title="Done" class="st gi st-done" style="color: var(--good);"></span><span class="t">Feature pipeline cost</span></a><button class="pinb" aria-label="Pin Feature pipeline cost"><i class="ic s i-pin"></i></button></div>
           </div>
         </div>
-        <div class="side-links"><a class="nav" data-item="contracts" href="Contracts.dc.html"><i class="ic i-verify"></i>Contracts</a></div>
+        <div class="side-links"><a class="nav" data-item="contracts" href="ContractsDark.dc.html"><i class="ic i-verify"></i>Contracts</a></div>
         <div class="side-foot">
           <a class="nav" href="SettingsProfileDark.dc.html" aria-label="Priya Raman, user menu" style="height: 48px; gap: 12px;"><span aria-hidden="true" class="avatar round" style="width: 30px; height: 30px; font-size: 14px;">P</span><span class="col grow" style="line-height: 1.25;"><span style="color: var(--ink);">Priya Raman</span><span class="xs mut">via Okta</span></span><i class="ic s mut i-more"></i></a>
         </div>
     </nav>
     <!-- /part -->
     <main class="main">
-      <div class="top">
-        <div class="crumbs"><span class="ell" style="font-weight: 500;">Projects</span></div>
-        <div class="rw g8"><button class="tsearch" aria-label="Search"><i class="ic s i-search"></i>Search<span class="kc" aria-hidden="true">⌘K</span></button></div>
-      </div>
       <div class="scroll">
-        <section class="page">
-          <div class="hd">
-            <div class="rw g12"><h1 class="t-display">Projects</h1><span class="tag">3 projects · 9 experiments</span></div>
-            <p class="sub">Each project groups the experiments for one area of your code.</p>
-          </div>
-          <div class="col g12">
-            <span class="t-label">Pinned</span>
-            <a class="card" href="SessionWorkingDark.dc.html" style="padding: 16px 20px; display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1.6fr) repeat(3, minmax(0, 1fr)); gap: 16px; align-items: center; color: var(--ink);">
-              <span class="col" style="gap: 4px;"><span class="rw g8"><span class="t-item ell">Checkout p95</span><span class="spill" style="--c: var(--accent);"><span class="st run gi st-run"></span>Running</span></span><span class="xs mut">Checkout platform</span></span>
-              <span class="col" style="gap: 2px;"><span class="xs mut">Checkout p95 latency</span><span class="mono" style="font-size: 13px;">412 ms → 344 ms <span style="color: var(--good); margin-left: 6px;">−16.5%</span></span></span>
-              <span class="col" style="gap: 2px;"><span class="xs mut">Run</span><span class="mono" style="font-size: 14px;">3</span></span>
-              <span class="col" style="gap: 2px;"><span class="xs mut">Trials</span><span class="mono" style="font-size: 14px;">9</span></span>
-              <span class="col" style="gap: 2px;"><span class="xs mut">Spend</span><span style="font-size: 14px; font-weight: 500;">$38 <span class="xs mut" style="font-weight: 400;">of $50</span></span><span class="bar" style="margin-top: 4px;"><span style="width: 76%;"></span></span></span>
-            </a>
-          </div>
-          <div class="col g12">
-            <span class="t-label">All projects</span>
-            <div class="cgrid">
-            <a class="card" href="HomeDark.dc.html" style="color: var(--ink); display: flex; flex-direction: column; gap: 16px; padding: 20px; text-align: left;">
-              <span class="rw between g8"><span class="t-section">Checkout platform</span><span class="tag">Owner</span></span>
-              <span class="sm ink2">Latency, forecasting and build health of the checkout service</span>
-              <span class="rw g24"><span class="col"><span class="xs mut">Experiments</span><span class="mono" style="font-size: 14px;">6</span></span><span class="col"><span class="xs mut">Wins</span><span class="mono" style="font-size: 14px;">2</span></span><span class="col"><span class="xs mut">Spend this month</span><span class="mono" style="font-size: 14px;">$142</span></span></span>
-            </a>
-            <a class="card" href="HomeDark.dc.html" style="color: var(--ink); display: flex; flex-direction: column; gap: 16px; padding: 20px; text-align: left;">
-              <span class="rw between g8"><span class="t-section">Search</span><span class="tag">Editor</span></span>
-              <span class="sm ink2">Relevance and speed of search and autocomplete</span>
-              <span class="rw g24"><span class="col"><span class="xs mut">Experiments</span><span class="mono" style="font-size: 14px;">2</span></span><span class="col"><span class="xs mut">Wins</span><span class="mono" style="font-size: 14px;">1</span></span><span class="col"><span class="xs mut">Spend this month</span><span class="mono" style="font-size: 14px;">$61</span></span></span>
-            </a>
-            <a class="card" href="HomeDark.dc.html" style="color: var(--ink); display: flex; flex-direction: column; gap: 16px; padding: 20px; text-align: left;">
-              <span class="rw between g8"><span class="t-section">Data science forecasts</span><span class="tag">Viewer</span></span>
-              <span class="sm ink2">Feature pipelines and cost of the forecasting models</span>
-              <span class="rw g24"><span class="col"><span class="xs mut">Experiments</span><span class="mono" style="font-size: 14px;">1</span></span><span class="col"><span class="xs mut">Wins</span><span class="mono" style="font-size: 14px;">1</span></span><span class="col"><span class="xs mut">Spend this month</span><span class="mono" style="font-size: 14px;">$19</span></span></span>
-            </a>
+        <div class="hw hw-c">
+          <h1 class="t-title hw-t">What do you want to improve?</h1>
+          <div class="cmp big">
+            <textarea class="cmp-in" rows="3" aria-label="New session" placeholder="What should it improve?"></textarea>
+            <div class="cmp-bar">
+              <button class="pill"><i class="ic g-git"></i><span class="k">Repos</span><span class="v">acme/checkout +1</span></button>
+              <button class="pill"><span class="lg lg-claude" role="img" aria-label="Claude Code"></span><span class="k">Agent</span><span class="v">Claude Code</span></button>
+              <button class="pill"><i class="ic g-box"></i><span class="k">Environment</span><span class="v">bench-std</span></button>
+              <span class="go"><button class="btn primary off">Start</button></span>
             </div>
           </div>
-        </section>
+          <div class="sugs">
+            <button class="sug"><i class="ic s i-verify"></i>Cut checkout p95 latency</button>
+            <button class="sug"><i class="ic s i-verify"></i>Reduce forecast error</button>
+            <button class="sug"><i class="ic s i-verify"></i>Shrink the production bundle</button>
+          </div>
+          <section class="wl" aria-labelledby="wait-h">
+            <div class="wl-h"><h2 class="t-label" id="wait-h">Waiting for you</h2><span class="xs mut">1</span></div>
+            <a class="wr" href="SessionSealDark.dc.html"><span role="img" aria-label="Waiting for you" title="Waiting for you" class="st gi st-wait" style="color: var(--warn);"></span><span class="t">Reduce forecast error</span><span class="w">Seal contract</span><span class="a">4 min ago</span><i class="ic s mut i-chev"></i></a>
+          </section>
+        </div>
       </div>
     </main>
     </div>

@@ -1,20 +1,20 @@
 # Mockups
 
-One board per screen state, for the web app and the macOS app (target). There is no prototype to maintain: the clickable view is the boards themselves, linked to each other.
+One board per screen state, for the web app (macOS app boards are owed). There is no prototype to maintain: the clickable view is the boards themselves, linked to each other.
 
 ## What is here
 
 - `*.dc.html`: boards, each one fixed-size root element. Web boards are 1440 by 900; the rules boards are taller.
-- Parts, the shared chrome, on the Components page: `Sidebar`, `SidebarEmpty` (no rows, for an empty organization), `MacSidebar` (the macOS variant, its own part), `SettingsRail`, and the nested pieces `SidebarRows`, `SidebarTop` and `SidebarFoot`. A part is a plain static board; the generator inserts its content into every board that marks a place for it (see Parts below). The top bar and the macOS toolbar vary per screen, so they are board content, not parts.
-- `canvas.json`: the pages and where each board sits. Pages: Design rules, Components, Web light, Web dark, macOS light, macOS dark, Archive. Rows are 1100px apart and each has a title note: 0 Rules, 1 Sign in, 2 Start, 3 Thread, 4 Results, 5 History, 6 Customize, 7 Connectors, 8 Infrastructure, 9 Organization. Boards in a row are 1440 wide with 80px gaps.
+- Parts, the shared chrome, on the Components page: `Sidebar`, `SidebarEmpty` (no rows, for an organization with no sessions), `SettingsRail`, and the nested pieces `SidebarRows`, `SidebarTop` and `SidebarFoot`. A part is a plain static board; the generator inserts its content into every board that marks a place for it (see Parts below). The session header varies per screen, so they are board content, not parts.
+- `canvas.json`: the pages and where each board sits. Pages: Design rules, Components, Web light, Web dark, Archive. Rows each have a title note: 0 Rules, 1 Sign in, 2 Home, 3 Session, 4 Contracts and receipts, 5 Search, 8 Agent platforms, 9 Organization, 10 Desktop app. Boards in a row are 1440 wide with 80px gaps.
 - `tokens.css` (generated), `icons.css` and `components.css` (authored, values only through `var()`). Boards are plain files with no runtime: open one from disk.
 - `DesignRules.dc.html` shows every token in light and dark with its contrast ratio, the type scale, radii and button kinds. `Decisions.dc.html` lists the owner's calls, DECIDED with a date or OPEN.
 - Values live in `design/tokens.toml` and nowhere else.
 
 ## Naming
 
-- `X.dc.html`: a web board. `MacX.dc.html`: a macOS board, drawn only where the Mac differs from the web.
-- `XDark.dc.html` and `MacXDark.dc.html`: generated dark twins. Never edit one.
+- `X.dc.html`: a web board. Mac boards (`MacX.dc.html`) are owed until the web direction is approved.
+- `XDark.dc.html`: generated dark twins. Never edit one.
 - A control that leads to another board is `<a href="Y.dc.html">`, styled as the button (never a `<button>` inside it). In the Design canvas the link moves Play to that board; in a browser it navigates. A board with links or parts has `"is_interactive": true` in `canvas.json`. A control for a board not drawn yet is a `<button data-next="Y">`; `--check` lists those as planned and fails once `Y.dc.html` exists, so it gets turned into a link.
 
 ## How a board is written
