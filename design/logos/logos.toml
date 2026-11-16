@@ -1,14 +1,17 @@
 # Third-party logos on the boards. design/tools/tokens.py turns this file into
 # design/mockups/logos.css: <span class="lg lg-NAME" role="img" aria-label="Name"></span>.
 #
-# Marks come from Simple Icons 16.36.0 (CC0, simple-icons-LICENSE.md), one SVG per
-# brand in this folder. They identify the product a row names and nothing else.
-# A brand whose colour is near black gets mono = true: it is drawn in the ink
-# token, so it shows in light and dark. Every other mark keeps its brand colour.
+# Every brand a board names shows its real logo, from a credible source, one SVG
+# per brand in this folder, and each entry says where its file came from. Credible
+# means, in this order: the brand's own published assets (a brand page, an official
+# icon package, the brand's own site), then Simple Icons 16.36.0 (CC0,
+# simple-icons-LICENSE.md), then a Wikimedia Commons file whose author is the brand.
+# Never draw, trace or redraw a logo, and never use a text tile in its place.
 #
-# Brands that asked Simple Icons to remove their marks (Amazon, Microsoft,
-# OpenAI, xAI) get a text tile instead: <span class="lg lgt" aria-label="Name">S3</span>,
-# with the letters listed under [text]. Do not draw or trace their logos.
+# A one-colour mark gives its colour as hex. A brand whose colour is near black gets
+# mono = true: it is drawn in the ink token, so it shows in light and dark. A
+# full-colour official icon (gradients, several colours, its own tile) gets
+# full = true and is drawn exactly as the file is.
 
 [mark]
 snowflake = { title = "Snowflake", hex = "29B5E8" }
@@ -31,12 +34,18 @@ okta = { title = "Okta", hex = "007DC1" }
 google = { title = "Google", hex = "4285F4", paint = "conic-gradient(from 45deg at 48.4% 49%, #FF4641 0deg 4.1deg, #3186FF 39.2deg 72deg, #00A5B7 96.7deg, #0EBC5F 120.9deg 154.7deg, #6CC400 179.1deg, #FFCC00 203.6deg, #FFD314 226.9deg, #FFCC00 251.7deg, #FF6A2B 273.1deg, #FD4641 289.3deg, #FF4641 360deg)" }
 googlegemini = { title = "Gemini", hex = "8E75B2" }
 
-[text]
-"Amazon Web Services" = "AWS"
-"Amazon S3" = "S3"
-"Amazon DynamoDB" = "DDB"
-"Azure" = "Az"
-"Codex" = "Cx"
-"OpenAI" = "OAI"
-"Grok" = "Gk"
-"xAI" = "xAI"
+# Official AWS Architecture Icons, package of 31 Jul 2026
+# (aws.amazon.com/architecture/icons). aws.svg is the "AWS Cloud logo" group icon.
+aws = { title = "Amazon Web Services", full = true }
+awsagentcore = { title = "AWS AgentCore", full = true }
+amazons3 = { title = "Amazon S3", full = true }
+amazondynamodb = { title = "Amazon DynamoDB", full = true }
+# Official Azure public service icons, V25 (learn.microsoft.com/azure/architecture/icons).
+azure = { title = "Azure", full = true }
+# OpenAI's symbol, from Wikimedia Commons "OpenAI logo 2025 (symbol).svg", author OpenAI
+# (openai.com/brand blocks automated downloads). Codex and the OpenAI Agents API use it.
+openai = { title = "OpenAI", hex = "000000", mono = true }
+# xAI's mark, from the header of docs.x.ai.
+xai = { title = "xAI", hex = "000000", mono = true }
+# Grok's mark, the two "mark" paths of the Grok logo on grok.com, cropped to the mark.
+grok = { title = "Grok", hex = "000000", mono = true }
