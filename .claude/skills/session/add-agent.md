@@ -1,6 +1,6 @@
 # Add an agent
 
-An agent is a model on an agent platform (target): Claude on Claude Managed Agents, Codex on the OpenAI Agents API, Gemini or Grok on AWS AgentCore, GitHub Copilot (the Copilot SDK) on Microsoft Foundry Agent Service, Gemini (ADK) on Google Agent Runtime. The earlier code ran agent CLIs on the user's machine (`AgentKind` in `crates/ratchet-core/src/enums.rs`, adapters in `crates/ratchet-agents/src/`); see [today.md](today.md).
+An agent is a model on an agent platform (target): Claude on Claude Managed Agents, Codex on the OpenAI Agents API, Gemini or Grok on AWS AgentCore, GitHub Copilot (the Copilot SDK) on Microsoft Foundry Agent Service, Gemini (ADK) on Google Agent Runtime.
 
 1. **Its platform.** Name the platform it runs on. If the platform is new, add it first ([add-platform.md](add-platform.md)).
 2. **Its model.** Name the model and how the platform reaches it. On AgentCore, a model outside Bedrock needs a key in AgentCore Identity under the platform account. No model key ever enters a sandbox. On Microsoft Foundry Agent Service and Google Agent Runtime the platform runs a container image Ratchet supplies, so the agent comes with one agent image holding its own harness.

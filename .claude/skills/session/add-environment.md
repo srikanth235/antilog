@@ -1,6 +1,6 @@
 # Add an environment
 
-An environment is an image or setup script, a size and a network policy on an agent platform (target). A session runs on one. A judge sandbox runs on one too, on the judge platform. The earlier code's environments were AWS machine types and Packer images; see [today.md](today.md).
+An environment is an image or setup script, a size and a network policy on an agent platform (target). A session runs on one. A judge sandbox runs on one too, on the judge platform.
 
 1. **A name and an id.** Give the environment a stable id. Experiments refer to it by id, never by a platform's own environment id.
 2. **Its platform.** Name the platform. An environment belongs to one platform.

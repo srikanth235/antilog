@@ -5,7 +5,7 @@ description: Drive Ratchet from the shell with the `ratchet` command (target; no
 
 # Ratchet
 
-`ratchet` is a command-line client of a Ratchet server, for the same experiments as the web app: `ratchet "cut checkout p95"` starts an experiment, with its lead session, in the terminal. `ratchet mcp` serves the Ratchet tools to an agent the person already uses on their own machine. It is (target): the commands below are the design and may change as the program is built. The earlier CLI is in [today.md](today.md).
+`ratchet` is a command-line client of a Ratchet server, for the same experiments as the web app: `ratchet "cut checkout p95"` starts an experiment, with its lead session, in the terminal. `ratchet mcp` serves the Ratchet tools to an agent the person already uses on their own machine. It is (target): the commands below are the design and may change as the program is built.
 
 The server is Ratchet cloud or a self-hosted server at a URL. The client holds no data and runs no sandbox: it asks the server, which starts sessions on agent platforms. Only the judge's numbers count, whichever client proposed the change.
 

@@ -14,7 +14,7 @@
 
 ## How each is checked
 
-Nothing on this branch checks them yet. What the earlier code had is in [today.md](today.md).
+Nothing on this branch checks them yet.
 
 **Nothing asked first.** Check: an experiment starts from a composer with one message and the chips (Project, Repos, Agent, Environment, Budget), and no step blocks it. A missing repo, credential, environment or budget becomes a card at the moment it is needed.
 

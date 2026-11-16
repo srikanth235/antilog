@@ -1,7 +1,7 @@
 ---
 name: stack
 description: >-
-  How do I write this language here, and which library may I use? Use for Rust, TypeScript and React, modern HTML, CSS and browser APIs (dialogs, popovers, forms, tables, theming, accessibility, performance, web security), Swift and SwiftUI for the macOS app, Postgres and SQL, Cloudflare (Workers, Durable Objects, the cf CLI) for Ratchet cloud, OpenTofu, Packer, Helm and Kubernetes (earlier code only), security review (Rust, dependencies, API design, GitHub Actions), the MCP server (`ratchet mcp` and the Ratchet tools), driving a browser with Playwright, or adding a dependency: the repo's own constraints, the check command, general style references, and the chosen target libraries.
+  How do I write this language here, and which library may I use? Use for Rust, TypeScript and React, modern HTML, CSS and browser APIs (dialogs, popovers, forms, tables, theming, accessibility, performance, web security), Swift and SwiftUI for the macOS app, Postgres and SQL, Cloudflare (Workers, Durable Objects, the cf CLI) for Ratchet cloud, security review (Rust, dependencies, API design, GitHub Actions), the MCP server (`ratchet mcp` and the Ratchet tools), driving a browser with Playwright, or adding a dependency: the repo's own constraints, the check command, general style references, and the chosen target libraries.
 ---
 
 # Stack
@@ -21,10 +21,9 @@ Read the repo page for the file type first: it holds this repo's constraints, it
 | A security review: a Rust change at the trust boundary, a new dependency, an API or config design, `.github/workflows/`, a property test | [security/ratchet.md](security/ratchet.md), then the skill for the job in [security/general/INDEX.md](security/general/INDEX.md) | the check of the language; `python3 .claude/skills/stack/security/sync.py --check` after a sync |
 | The MCP server (`ratchet mcp`), the Ratchet tools it serves and their descriptions | [mcp/ratchet.md](mcp/ratchet.md), then [mcp/general/INDEX.md](mcp/general/INDEX.md) | the Rust check; `python3 .claude/skills/stack/mcp/sync.py --check` after a sync |
 | Driving the web app or a board in a browser while you work | [playwright/ratchet.md](playwright/ratchet.md), then [playwright/general/INDEX.md](playwright/general/INDEX.md) | `python3 .claude/skills/stack/playwright/sync.py --check` after a sync |
-| `.tf`, `.tftest.hcl`, `.pkr.hcl`, Helm charts, Kubernetes manifests (earlier code only; none serves a sandbox in the target) | [infra/ratchet.md](infra/ratchet.md) | `tofu fmt -check`, `tofu validate`, `tofu test`, `packer validate`, `helm lint` (target) |
 | Adding or changing a dependency | [libraries.md](libraries.md) | the check of the language |
 
-Nothing here is built on this branch yet: every check is (target) until code lands, and each page then gets its exact commands. Pages describe how the code is written; the earlier daemon on `claude/peaceful-lamport-leak6p` is reference only.
+Nothing here is built on this branch yet: every check is (target) until code lands, and each page then gets its exact commands. Pages describe how the code is written.
 
 ## Folders
 
@@ -39,6 +38,5 @@ Nothing here is built on this branch yet: every check is (target) until code lan
 | `security/` | `ratchet.md` (when to use which review skill, and Ratchet's trust rules as the bar); `general/` Trail of Bits (Rust review, supply chain, sharp edges, property-based testing) and Sentry (GitHub Actions security), copied by `sync.py`; `licenses/` |
 | `mcp/` | `ratchet.md` (our Rust server, the Ratchet tools it serves and its rules); `general/` Anthropic's MCP builder skill, copied by `sync.py`; `licenses/` |
 | `playwright/` | `ratchet.md` (the CLI for working, `@playwright/test` for the suite); `general/` Microsoft's `playwright-cli` skill, copied by `sync.py`; `licenses/` |
-| `infra/` | `ratchet.md` (what ships the target, and the earlier OpenTofu, Packer and Helm notes); `general/` Terraform (for OpenTofu), Packer, Helm and Kubernetes; `licenses/` |
 
 The chosen target libraries and tool versions are in [libraries.md](libraries.md). Do not add a dependency for convenience: a new one is a product call.

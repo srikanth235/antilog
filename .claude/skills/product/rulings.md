@@ -55,7 +55,6 @@ The settled product, directed by the owner. Everything here is target; nothing i
   - **Plugins** bundle the other kinds. A plugin has no powers of its own and can never mark, unmark or grant a dataset. An item in use is never removed.
 - **Two credentials per connector,** registered once and kept in the platform's credential store, never by Ratchet. The agent credential is read-only and leaves out the holdout; the judge credential is separate and also covers it. Both are short-lived and minted per session.
 - **Datasets and the holdout.** Datasets live under a connector, and a dataset version never changes. A holdout is a marking enforced by the credentials; the grant control is absent, not disabled, and the row reads "Restricted to the judge". A holdout value never appears in history, a message or a receipt shown to an agent. A connector error shows datasets as Not checked, never empty.
-- **Datasets and the holdout.** A dataset version never changes. A holdout is a marking enforced by the credentials; the grant control is absent, not disabled, and the row reads "Restricted to the judge". A holdout value never appears in history, a message or a receipt shown to an agent.
 - **Small things.** @-mention of a session in the composer, and a one-time prompt after the first measurement, "Notify me when this experiment needs me".
 
 ## The three aims
@@ -69,7 +68,7 @@ Beside trust: cost control, no tie to one model provider, and Return for the org
 
 ## The screen and the clients
 
-- **Frame and pages.** A fixed 256px sidebar and a main area; a New experiment composer with five chips (Project, Repos, Agent, Environment, Budget), not a dialog; an experiment page that is the chat of its lead session; Projects, a project page, Customize, an experiment detail page, a receipt page and Settings as a dialog. A new experiment starts Not sealed: the agent explores, measures the baseline and proposes a definition with `seal`, and it may stay Not sealed and end there. The composer follows Claude Code's, with a Mode per experiment (Ask or Auto, within policy). A card is the only place structured output appears. See [design behaviour](../design/behaviour.md).
+- **Frame and pages.** A fixed 256px sidebar and a main area; a New experiment composer with five chips (Project, Repos, Agent, Environment, Budget), not a dialog; an experiment page that is the chat of its lead session; Projects, a project page, Customize, an experiment detail page, a receipt page and Settings as a dialog. A new experiment starts Not sealed: the agent explores, measures the baseline and proposes a definition with `seal`, and it may stay Not sealed and end there. The composer follows Claude Code's, with a Mode per experiment (Ask or Follow policy; "Auto" names only the agent choice). A card is the only place structured output appears. See [design behaviour](../design/behaviour.md).
 - **The chat's voice is Ratchet.** An agent's message shows the Ratchet mark and the name "Ratchet", with the agent that did the work as a quiet second label. Agent logos stay where an agent is the subject.
 - **Clients.** The web app, the `ratchet` CLI (`ratchet "cut checkout p95"` opens the same session in the terminal) and `ratchet mcp` (all target), and the native macOS app, which stays ruled in with its boards removed until the web direction is approved. Clients share behaviour, words and element ids, never pixels.
 - **Windows and Linux** use the web app installed as a progressive web app. On macOS it points to the Mac app. Notifications (a win, Waiting for you, a regression, a budget spent) carry ids only ([organization notifications](../organization/notifications.md)). The device stores no data: the service worker caches the app's own files only.
@@ -87,7 +86,7 @@ Beside trust: cost control, no tie to one model provider, and Return for the org
 - **Ratchet cloud uses only Ratchet's platform accounts at launch.** The adapters support customer accounts because self-hosted needs them. An enterprise that needs data read in its own network self-hosts, for example with AgentCore in its own AWS account.
 - **Timing is noisier on shared sandboxes,** so the noise band is wider and fewer trials are Kept; the experiment detail page says so.
 - **No Helm chart and no OpenTofu at launch.** Self-hosted ships as Docker Compose only; Ratchet cloud ships with the Cloudflare config and `cf`. Ratchet's own platform accounts are set up by hand and owned by the owner.
-- **"This machine" is deferred.** Agents never run on a Mac until a later ruling. Measuring never runs on a laptop.
+- **"This machine" is deferred.** Ratchet never starts an agent on a Mac until a later ruling. `ratchet mcp` is separate: it serves the tools to an agent a person runs themselves, and that agent's trials are still measured only in a judge sandbox. Measuring never runs on a laptop.
 
 ## Ratchet cloud
 
@@ -131,4 +130,31 @@ The spike comes before any product code. One tiny experiment is measured end to 
 - Whether scoring is offline only or production results are used too.
 - Whether Ratchet ever reshapes data (today no, see [non-goals](non-goals.md)).
 - Whether "Try a demo" stays in the web app.
-- The licence: the workspace manifest says `UNLICENSED` today, and what it becomes is not decided.
+- The licence: not decided.
+
+## Calls for the owner
+
+Proposed 16 Nov 2026, not decided. Each is options with a recommendation and its cost. When one is decided, move it to "Decided by the owner" and to the Decisions board.
+
+**1. The spike measures noise, not only plumbing.**
+- (a) Recommended: the spike also runs one fixed benchmark many times in fresh judge sandboxes on each judge platform and records the spread. Cost: a few more hours of judge time. It says whether Speed experiments can ever be Kept on shared sandboxes.
+- (b) As written: the spike proves the traits and the credential only. Cost: the noise is first seen by a customer.
+
+**2. How a trial is compared with what it started from.** This changes a judge rule.
+- (a) Recommended: paired measurement. Each fresh judge sandbox runs the parent and the trial interleaved, and the bar applies to the paired difference. Cost: about twice the judge time per measurement. Gain: drift between sandboxes cancels, the noise band narrows and more real wins are Kept.
+- (b) As written: compare with the parent's stored numbers. Cost: drift between sandboxes reads as a win or a loss.
+- With either, settle how the bar rises with the trials tried now rather than with the first code, because the receipt shows it.
+
+**3. The first platform.** Claude Managed Agents is first in the build order but cannot run a judge sandbox; only AgentCore is known to.
+- (a) Recommended: AgentCore first, for agents and the judge. Cost: Claude reaches users through AgentCore or second.
+- (b) Claude Managed Agents for agents and AgentCore for the judge. Cost: two platform accounts and two adapters before the first win.
+
+**4. The first release.**
+- (a) Recommended: self-hosted, AgentCore, the web app, one evaluation kind (Speed) with no connectors: seal, measure, Kept, receipt, deliver, budget, approvals and audit. Ratchet cloud, the other adapters, plugins, value models, Return, Ideas, Report and the Mac app follow. Their fields stay in the seal so nothing is redesigned. Cost: Return and Ratchet cloud come later; Return cannot be shown honestly before merged wins exist anyway.
+- (b) As written: both offerings and all five platforms from day 0. Cost: two storage backends, a core that also builds to WebAssembly, and five adapters before the first customer.
+
+**5. `ratchet mcp` as the way in.**
+- (a) Recommended: ship `ratchet mcp` early, so an agent a person already uses gets `seal`, `measure` and `deliver`, measured in a judge sandbox. Open: how its commits reach the judge (pushed to a session branch with a token minted for that person's session).
+- (b) Keep it after the web app. Cost: the first users must move their work into Ratchet's chat to try it.
+
+**6. The licence.** Already open above; it blocks the first self-hosted install by anyone outside.

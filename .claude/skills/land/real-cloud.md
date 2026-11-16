@@ -2,7 +2,7 @@
 
 A run that spends money needs the owner's go-ahead. That covers a real agent platform account, a judge sandbox on one, an agent session, and the agent canary. Do not start one on your own judgment.
 
-Nothing here exists yet. The earlier code's notes (on the other branch) are in [today.md](today.md); their lessons still apply.
+Nothing here exists yet.
 
 ## Rules
 

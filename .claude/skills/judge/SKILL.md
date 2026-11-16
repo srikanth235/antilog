@@ -18,7 +18,6 @@ Ratchet is a chat and a judge. The judge is the part of the server that measures
 | Changing the acceptance criteria | [change-acceptance.md](change-acceptance.md) |
 | Adding a kind of evaluation or an evaluation template (listed in Customize, Evaluations) | [add-evaluation-kind.md](add-evaluation-kind.md) |
 | Skill packs and plugins (the judge never reads a pack, and a plugin never changes what counts) | [../session/add-skill-pack.md](../session/add-skill-pack.md) |
-| Finding what the earlier code did, and what it taught | [today.md](today.md) |
 | `spawn`, the setup tools, platforms, agents, environments, connectors, credentials | [../session/SKILL.md](../session/SKILL.md), [../session/tools.md](../session/tools.md) |
 | Cards, policy, who may approve, the audit log | [../organization/approvals.md](../organization/approvals.md), [../organization/SKILL.md](../organization/SKILL.md) |
 | How the experiment, scoreboard, receipt and holdout marking look | [../design/behaviour.md](../design/behaviour.md) |

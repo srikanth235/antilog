@@ -25,4 +25,3 @@ The ledger is the store, and the only state: Postgres 18 self-hosted, SQLite in 
 
 - Every table with an organization column has a row-level security policy on it, as a second guard behind the query filter. The server sets the organization for each transaction; a query that forgets the filter returns nothing instead of another organization's rows. The policy is a Postgres-only migration. SQLite has none: in the cloud the organization's own database is the boundary.
 
-The earlier SQLite ledger is in [today.md](today.md).

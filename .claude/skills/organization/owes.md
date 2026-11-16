@@ -11,7 +11,7 @@
 
 ## How each is checked
 
-Each check is (target). Earlier-code facts are in [today.md](today.md).
+Each check is (target).
 
 **Permission.** A test per route that the role matrix is applied, driven from the route table in the OpenAPI document, so a new route without a check fails. A test that a project's role overrides the organization role for that project only, and that an experiment is never reachable through a project its caller has no role in.
 

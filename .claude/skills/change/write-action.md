@@ -22,4 +22,3 @@ An action that needs work on an agent platform queues a job in the same transact
 - A refused write is audited, with the actor, the action and the reason.
 - A refused read is not audited. It is logged with the actor for operators, and repeated refusals can raise an alert.
 
-Today's path, one `AppService` method per write with no actor, is in [today.md](today.md).

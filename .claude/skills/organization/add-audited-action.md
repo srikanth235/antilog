@@ -1,6 +1,6 @@
 # Add an audited action
 
-Every write is a named action, and every action goes through one action layer in `ratchet-server`. The audited actions are the tool calls that change something and the approvals ([approvals.md](approvals.md)). All of it is target. The earlier code had no action layer; see [today.md](today.md).
+Every write is a named action, and every action goes through one action layer in `ratchet-server`. The audited actions are the tool calls that change something and the approvals ([approvals.md](approvals.md)). All of it is target.
 
 1. **A name.** Give the action one verb-object name, such as `session.stop` or `card.approve`. The name is what the audit log shows and what the permission matrix lists.
 2. **Declare it once.** Register the action in the action layer with its input, the roles that may run it, the audit fields it records, and the event it emits.
@@ -14,7 +14,6 @@ Every write is a named action, and every action goes through one action layer in
 10. **Owner-only settings.** Changing an organization's agent platform accounts, policy or the monthly cap is an organization-owner-only, audited action. Project actions are audited with the project id: creating or deleting a project, adding or removing a project member, changing a member's role in a project, and changing a project's cap or default budget (project owners). Setting or changing a value model (project owners; a changed one is approved on the Seal experiment card), handing a session off, a failover, choosing the monthly report's recipients and exporting a report are audited actions too, the first with the project id. Adding, changing and removing a Customize item (an evaluation, a skill pack, a connector, an agent, a plugin) are named actions too. (target)
 11. **Tests.** Allowed role writes and audits once; denied role writes nothing and audits the denial; the event is emitted after the commit; the audit row and the change roll back together; no secret in the entry or the event.
 
-In the earlier code a handler in `crates/ratchetd/src/api/` called the service directly with no actor and no audit entry. Events needed a new variant in `ApiEvent` (`crates/ratchetd/src/api/events.rs`).
 
 ## Proving it
 

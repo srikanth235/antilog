@@ -17,7 +17,7 @@ The OpenAPI document is generated from the Rust types in `ratchet-server` and is
 
 ## Wire conventions (target)
 
-These are the conventions the earlier code settled on; keep them unless the owner rules otherwise.
+Keep these unless the owner rules otherwise.
 
 - Property names are camelCase. Ids are strings. Times are epoch milliseconds unless a field says otherwise.
 - Nullable response fields are required and carry `null`. Inputs and query structs stay optional.
@@ -26,4 +26,3 @@ These are the conventions the earlier code settled on; keep them unless the owne
 - Every route needs a signed-in member or an access token, and every route is permission-checked.
 - No response, event or error carries a secret or customer data (see [product promises](../product/promises.md)).
 
-Facts from the earlier daemon's API are in [today.md](today.md).

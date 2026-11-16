@@ -1,6 +1,6 @@
 # Tests
 
-None of this exists yet; it is how tests are written once code lands (target). Earlier practice is in [today.md](today.md).
+None of this exists yet; it is how tests are written once code lands (target).
 
 ## Approach (target)
 

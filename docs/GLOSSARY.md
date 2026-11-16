@@ -105,7 +105,7 @@ Unchanged between code and screen: win, agent, pull request, Delivered, Pending,
 
 ## Retired words
 
-Do not use these except in a `today.md` page about the earlier code. This is the only list of retired words.
+Do not use these. This is the only list of retired words.
 
 | Retired | Now |
 |---|---|

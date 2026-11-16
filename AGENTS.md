@@ -6,7 +6,7 @@ Ratchet is a chat and a judge. A person states a goal and talks to a coding agen
 
 `main` holds the agreed design and no product code: these skills, the design boards and tokens in `design/` (`mockups/`, `tokens.toml`, `tools/`), the logo in `design/icon/` and the glossary. Nothing is built here yet.
 
-An earlier Rust daemon and CLI live on the branch `claude/peaceful-lamport-leak6p`. They are reference, not a base to build on. Every skill describes the target. A path or command that does not exist on this branch yet is marked "(target)". What the earlier code did, and what it taught, is in the `today.md` of `judge`, `session`, `organization`, `change`, `land` and `ratchet`.
+Every skill describes the target. A path or command that does not exist on this branch yet is marked "(target)".
 
 When code lands on this branch, update the pages that name its paths and commands and drop their "(target)" marks, in the same change.
 
@@ -26,7 +26,7 @@ Guidance lives in [`.claude/skills/`](.claude/skills), each a short router. Star
 - `organization`: who may approve what, and how is it recorded? Projects and roles per project.
 - `design`: what does it look like and say? Boards, light and dark, the macOS app.
 - `change`: how does this kind of change travel through the layers?
-- `stack`: how do I write this language here (Rust, TypeScript and React, modern HTML, CSS and browser APIs, Swift for macOS, Postgres, Cloudflare, OpenTofu, Packer, Helm, security review, MCP, Playwright), and which library may I use?
+- `stack`: how do I write this language here (Rust, TypeScript and React, modern HTML, CSS and browser APIs, Swift for macOS, Postgres, Cloudflare, security review, MCP, Playwright), and which library may I use?
 - `land`: how do I prove it and ship it?
 - `orchestrate`: how is multi-session work run? Only for a session that directs other sessions.
 - `ratchet`: how to drive Ratchet from the shell.

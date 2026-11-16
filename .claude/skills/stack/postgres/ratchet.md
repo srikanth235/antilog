@@ -1,6 +1,6 @@
 # Postgres and SQL in Ratchet
 
-(target) Postgres is the self-hosted store, reached through `sqlx` with the `postgres` feature. The cloud store is SQLite in a Durable Object (see "SQLite in the cloud" below). Queries live behind the `Store` trait in the Postgres store crate; the core never writes SQL. Nothing of it is on this branch. The earlier daemon used SQLite through `sqlx` with runtime-checked queries; that is not the rule here, and its migrations are reference only. Versions are in [libraries.md](../libraries.md): Postgres 18, `sqlx` 0.9 (and `sqlx-cli`), `testcontainers` for tests.
+(target) Postgres is the self-hosted store, reached through `sqlx` with the `postgres` feature. The cloud store is SQLite in a Durable Object (see "SQLite in the cloud" below). Queries live behind the `Store` trait in the Postgres store crate; the core never writes SQL. Nothing of it is on this branch. Versions are in [libraries.md](../libraries.md): Postgres 18, `sqlx` 0.9 (and `sqlx-cli`), `testcontainers` for tests.
 
 ## Workflow and done criteria
 
@@ -95,7 +95,7 @@ The queue is a table in the store: Postgres self-hosted, the organization's Dura
 
 ## Tests
 
-- Run database tests against a real Postgres 18 in a container (`testcontainers`), one database per test or per module with a clean schema, not a mock. The earlier daemon's tests used an in-memory SQLite ledger; there is no in-memory stand-in for Postgres. The same storage suite also runs against the SQLite store, and a store test that passes on one and fails on the other is a schema or query bug.
+- Run database tests against a real Postgres 18 in a container (`testcontainers`), one database per test or per module with a clean schema, not a mock. There is no in-memory stand-in for Postgres. The same storage suite also runs against the SQLite store, and a store test that passes on one and fails on the other is a schema or query bug.
 - Test the claim query with concurrent workers (no job taken twice, none skipped forever), lease expiry, and idempotent re-delivery.
 - Test that every organization-scoped query cannot see another organization's rows.
 

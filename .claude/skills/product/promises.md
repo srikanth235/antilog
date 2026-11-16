@@ -30,5 +30,3 @@ Owners: [session](../session/owes.md) ([rules](../session/rules.md)), [judge](..
 ## Kept or owed
 
 Nothing is built on this branch, so no promise is kept yet. A machine-checked register of which promise is kept, with the file that proves it, is to be added with the first code. Until a check ties code to a promise, it is owed. Do not call one kept before then.
-
-What the earlier daemon checked, and what it taught, is in the `today.md` of [judge](../judge/today.md), [session](../session/today.md) and [organization](../organization/today.md).

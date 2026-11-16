@@ -2,34 +2,6 @@
 
 Do not add a dependency for convenience. A new one is a product call: ask the owner. Prefer what is already here. Before proposing one, review it with the supply-chain skill ([security/ratchet.md](security/ratchet.md)) and run `cargo deny check`; the review goes in the proposal.
 
-## In use today
-
-Read from the crate manifests under `crates/*/Cargo.toml`. The workspace manifest declares no shared dependency table, so check the crate you change.
-
-| Library | What it is for |
-| --- | --- |
-| `tokio`, `tokio-util`, `tokio-stream`, `futures` | Async runtime, cancellation, streams |
-| `async-trait` | Async methods on the port traits |
-| `serde`, `serde_json`, `serde_norway` | JSON and YAML (the YAML crate reads `ratchet.yaml`) |
-| `schemars` | JSON schema for config and tool arguments |
-| `utoipa`, `utoipa-axum` | OpenAPI generated from Rust types |
-| `axum` | The daemon's HTTP and server-sent events (feature `server`) |
-| `hyper`, `hyper-util`, `http-body-util`, `tower` | HTTP client over the unix socket, and test calls |
-| `reqwest` (rustls) | HTTPS to GitHub and the engine's outside calls |
-| `clap` | Command line of `ratchet` and `ratchetd` |
-| `sqlx` (SQLite) | The ledger and its migrations |
-| `aws-config` and the `aws-sdk-*` crates (costexplorer, ec2, iam, pricing, s3, ssm, sts) | The AWS sandbox, prices, cost and artifacts |
-| `thiserror`, `anyhow` | Errors in libraries and in binaries |
-| `tracing`, `tracing-subscriber` | Logging |
-| `uuid`, `rand`, `sha1`, `sha2`, `base64` | Ids, randomness, hashes, encoding |
-| `regex`, `url`, `percent-encoding`, `indexmap`, `include_dir` | Parsing, ordered maps, embedded templates |
-| `nix`, `libc` | Unix users, processes and signals (bench launcher, daemon) |
-| `tempfile` | Temporary working trees and files |
-| `security-framework` (macOS only) | The Keychain for secrets |
-| `insta`, `proptest`, `aws-smithy-mocks` | Snapshot, property and AWS mock tests |
-
-TypeScript in use: `typescript`, `vitest`, `yaml` (see [typescript.md](typescript/ratchet.md)).
-
 ## Chosen for the target
 
 (target) None of this is in the repository yet. Versions are the latest stable releases on 2026-11-14, read from crates.io, npm and each project's release feed. Pin these when the code lands; raise them on purpose, never by accident.
@@ -42,7 +14,6 @@ TypeScript in use: `typescript`, `vitest`, `yaml` (see [typescript.md](typescrip
 - The agent platform adapters (Claude Managed Agents, then AWS AgentCore, then the OpenAI Agents API, then Microsoft Foundry Agent Service, then Google Agent Runtime), one adapter each behind one platform trait, in their own crate or crates. They call the platforms over HTTPS from either shell. Ratchet runs no sandboxes and no runner. Which client crates the adapters use is not decided; a new dependency is a product call.
 - `ratchet`: the CLI and the MCP server, built on the API's types.
 
-Start fresh. Copy only proven pieces from the earlier code on `claude/peaceful-lamport-leak6p` (the clean-up checks, the ledger tests); do not rebase on it. The earlier AWS sandbox, runner and launcher are not part of the target.
 
 **Toolchain**
 
@@ -91,24 +62,7 @@ Sessions and access tokens need no library: each is 32 random bytes shown once, 
 
 Snowflake, Databricks and BigQuery have no maintained Rust client we would ship; their connectors call each vendor's REST API through `reqwest`. Every connector sits behind one `Connector` trait, so its vocabulary stops there, and each says how to make a read-only, holdout-excluding credential for its system (whether Ratchet mints them per session is open). Agent platforms sit behind one agent trait, one adapter each; the judge is a separate trait. Platform crates stay inside each adapter.
 
-**Cloud adapters (earlier design)**
-
-These served the sandbox backends (Kubernetes, VMs on AWS, GCP and Azure), which are gone. **Every row below is not needed by the target.** The pins stay until the owner says to drop them; do not add any of them to a manifest.
-
-| Need | Crate | Version |
-| --- | --- | --- |
-| Kubernetes sandboxes | `kube` | 5.1.0 |
-| Kubernetes types | `k8s-openapi` | 0.29.0 |
-| Object storage (S3, GCS, Azure Blob) | `object_store` | 0.14.2 |
-| GCP compute | `google-cloud-compute-v1` | 4.2.0 |
-| GCP secrets | `google-cloud-secretmanager-v1` | 2.0.0 |
-| GCP auth | `google-cloud-auth` | 1.19.0 |
-| Azure core | `azure_core` | 1.1.0 |
-| Azure sign-in | `azure_identity` | 1.0.0 |
-| Azure secrets | `azure_security_keyvault_secrets` | 1.0.1 |
-| Secrets in Vault | `vaultrs` | 0.8.0 |
-
-In the earlier design, Azure compute went through the ARM REST API with `azure_core`, because `azure_mgmt_compute` has not been updated since 2024. The AWS note: `aws-config` may still serve the AgentCore adapter (request signing), and the AWS SDK crate for AgentCore is not chosen; that is a product call.
+AWS note: `aws-config` may serve the AgentCore adapter (request signing); the AWS SDK crate for AgentCore is not chosen, and that is a product call.
 
 Background jobs (platform jobs, see [change/platform-job.md](../change/platform-job.md)) use a small queue in the store: Postgres with `FOR UPDATE SKIP LOCKED` self-hosted, the organization's Durable Object in the cloud. No Redis, no message bus.
 
@@ -150,9 +104,6 @@ A proposal, not yet built. The app is SwiftUI and macOS only; Windows and Linux 
 | `worker-build` (builds the cloud shell; downloads esbuild and `wasm-opt`, so CI caches or pins them) | 0.8.7 |
 | `cf` (the Cloudflare CLI, beta; agents use it) | 1.0.0-beta.32 |
 | Wrangler (run by `cf` to build the Rust Worker, and `wrangler tail`) | 4.161.0 |
-| Helm (not needed by the target) | 4.3.2 |
-| OpenTofu (not needed by the target) | 1.13.9 |
-| Packer (not needed by the target) | 1.16.2 |
 | cosign | 3.1.4 |
 | syft | 1.57.1 |
 

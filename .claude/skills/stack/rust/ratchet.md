@@ -1,6 +1,6 @@
 # Rust in Ratchet
 
-(target) No product Rust is on this branch yet. This page says how the code is written when it lands. Rules from the earlier daemon on `claude/peaceful-lamport-leak6p` that still hold are kept; its commands are marked as the earlier code's.
+(target) No product Rust is on this branch yet. This page says how the code is written when it lands.
 
 ## Workflow and done criteria
 
@@ -13,7 +13,7 @@ cargo nextest run --workspace          # (target); `cargo test --doc` for doctes
 cargo deny check                       # (target) licences, advisories, duplicate and banned crates
 ```
 
-Set `export CARGO_INCREMENTAL=0 CARGO_PROFILE_DEV_DEBUG=0` for local builds when a cloud SDK makes full debug info huge (a lesson from the earlier code, which used the AWS SDK).
+Set `export CARGO_INCREMENTAL=0 CARGO_PROFILE_DEV_DEBUG=0` for local builds when a cloud SDK makes full debug info huge.
 
 **Done** when all four are green and the tests for the kind of change are written ([land/tests.md](../../land/tests.md)). `cargo test --workspace` is the fallback while nextest is not set up. For a performance change, reproduce it, measure an optimized build, profile, fix, and measure again with the same inputs; put before and after in the commit message. Routine changes do not need this loop.
 
@@ -60,7 +60,7 @@ Still open, and only a deployed test can answer it: point-in-time restore, hiber
 
 ## Constraints
 
-- **No `unsafe`.** Every crate carries `#![forbid(unsafe_code)]` (or `[lints.rust] unsafe_code = "forbid"` at the workspace). Do not weaken it. A need for `unsafe` is a stop-and-ask, not a local decision. This was already so for the sandbox, bench and engine crates of the earlier code.
+- **No `unsafe`.** Every crate carries `#![forbid(unsafe_code)]` (or `[lints.rust] unsafe_code = "forbid"` at the workspace). Do not weaken it. A need for `unsafe` is a stop-and-ask, not a local decision.
 - **No `unwrap()` in product code.** `expect("...")` names the invariant that makes the failure impossible ("the regex is a literal"), not the symptom. Tests and `main` start-up may unwrap. Enable `clippy::unwrap_used` for non-test code so review does not have to.
 - **Errors.** Libraries return typed errors with `thiserror` and keep the cause chain (`#[source]` or `#[from]`). Binaries (`ratchet-server`, `ratchet`) use `anyhow` at the edge, in `main` and CLI glue, to add context and print. Handlers map a typed error to one stable error code and status; the internal cause goes to the log with the trace id, never to the client.
 - **Async is `tokio`; no blocking work on async tasks.** Blocking or CPU-heavy work goes through `spawn_blocking` or a thread; locks are not held across an `.await`; every queue and every concurrency is bounded; every call that leaves the process has a timeout; shutdown is graceful. Details and the reasons: [general/async-services.md](general/async-services.md). Async methods in traits use native `async fn in trait` where the trait is not used as `dyn`, and `async-trait` where it must be (`Box<dyn Backend>`).
@@ -70,7 +70,7 @@ Still open, and only a deployed test can answer it: point-in-time restore, hiber
 - **Time and ids come from one place.** Use `jiff` for time and `uuid` for ids as in [libraries.md](../libraries.md), through a clock and id source that tests can fix. Store instants in UTC; format at the edge.
 - **Dependencies.** Do not add one for convenience; a new one is a product call ([libraries.md](../libraries.md)). `cargo deny` (target) checks licences and advisories. Dependencies are declared once in `[workspace.dependencies]` and inherited (`dep.workspace = true`); features are additive.
 - **Keep work whose cost grows with the data off request paths:** page by keyset cursor with `LIMIT`; do not load a whole table.
-- **`Cargo.lock`:** (target) commit it. These are binaries, and `cargo deny` and reproducible builds need it. The earlier code did not commit it; that is not the rule here.
+- **`Cargo.lock`:** (target) commit it. These are binaries, and `cargo deny` and reproducible builds need it.
 - **Edition and toolchain.** Edition 2024 and the stable toolchain pinned in `rust-toolchain.toml` to the version in [libraries.md](../libraries.md). `rustfmt` and `clippy` components installed. Do not use nightly features.
 
 ## Tests

@@ -19,4 +19,3 @@ Events tell a client that something changed so it can refetch. An event is not t
 3. Tell the web app and the Mac app which screens refetch on it; the boards say which state changes (see [screen.md](screen.md)).
 4. Tests: the stream replays after a gap, sends `resync` when it cannot, publishes after commit only (on both shells), and a viewer receives no event for anything their role cannot read.
 
-The earlier daemon's event kinds and hub are in [today.md](today.md).

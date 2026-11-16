@@ -6,7 +6,7 @@ description: >-
 
 # Organization
 
-The shared floor under sessions and the judge. It holds members, roles, projects, sign-in, approvals, budgets and the audit log. Organizations, roles, approvals and audit are target. [today.md](today.md) says what the earlier code did.
+The shared floor under sessions and the judge. It holds members, roles, projects, sign-in, approvals, budgets and the audit log. Organizations, roles, approvals and audit are target.
 
 | If you are doing | Read |
 | --- | --- |
@@ -18,7 +18,6 @@ The shared floor under sessions and the judge. It holds members, roles, projects
 | Adding a role, or changing what a role may do in the organization or in a project | [add-role.md](add-role.md) |
 | Adding a sign-in provider | [add-sign-in-provider.md](add-sign-in-provider.md) |
 | Adding a write, so it is permitted, audited and emitted | [add-audited-action.md](add-audited-action.md) |
-| Finding how the earlier code authenticated, and what is only target | [today.md](today.md) |
 | What a session is, the setup tools, the spend meter | [../session/SKILL.md](../session/SKILL.md), [../session/model.md](../session/model.md) |
 | What a win is, the judge | [../judge/SKILL.md](../judge/SKILL.md) |
 | Deciding whether a change belongs in the product | [../product/SKILL.md](../product/SKILL.md) |

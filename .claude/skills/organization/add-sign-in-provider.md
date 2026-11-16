@@ -1,12 +1,12 @@
 # Add a sign-in provider
 
-Sign-in is OpenID Connect, plus GitHub's OAuth on Ratchet cloud. Ratchet never stores a password. None of it exists yet; the earlier code's only credential was a per-boot bearer token. Its GitHub device flow in `crates/ratchet-github/src/signin.rs` granted access to repos and was not a Ratchet sign-in. Sign-in providers are set up in Settings, Single sign-on, one of the two things set up in Settings ([approvals.md](approvals.md)).
+Sign-in is OpenID Connect, plus GitHub's OAuth on Ratchet cloud. Ratchet never stores a password. None of it exists yet. Sign-in providers are set up in Settings, Single sign-on, one of the two things set up in Settings ([approvals.md](approvals.md)).
 
 1. **OpenID Connect.** The provider speaks OpenID Connect with discovery (`openidconnect`). The one exception is GitHub on Ratchet cloud, which offers only OAuth: it signs in with `oauth2` and GitHub's user API, and its numeric user id is the subject. Any other provider that needs a password or a custom protocol is refused. (target)
 2. **Endpoints are configuration.** Issuer, client id and redirect are settings. No provider URL is a constant, so a self-hosted server contacts only what its administrator set. (target)
 3. **Ratchet cloud and self-hosted.** Ratchet cloud offers GitHub and Google to everyone, and an organization's own OpenID Connect provider (single sign-on) to that organization's members. Only an owner sets it up, in Settings, Single sign-on; its settings live in the organization's own database, and the client secret is a reference, never the value. A self-hosted server offers the customer's own identity provider and no other. (target)
 4. **Identity becomes a member.** The provider's stable subject id maps to a member. An email is not an identity. (target)
-5. **Secrets.** The client secret is stored like any secret (the earlier code's pattern is in `crates/ratchet-connectors/src/secrets.rs`) and never appears in a response, event or log.
+5. **Secrets.** The client secret is stored like any secret and never appears in a response, event or log.
 6. **Group claims.** If the provider sends groups, map them to roles (see [add-role.md](add-role.md)). (target)
 7. **Session.** A successful sign-in starts a short-lived sign-in session: a random token in a secure, HTTP-only cookie, stored only as a hash through the `Store`. Sign-out and expiry end it. (target)
 8. **Audit.** Sign-in, sign-out and a failed sign-in are audited actions (see [add-audited-action.md](add-audited-action.md)). (target)
