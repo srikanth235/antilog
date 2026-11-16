@@ -769,7 +769,7 @@
       "is_interactive": true
     },
     "SessionBudget.dc.html": {
-      "x": 10640,
+      "x": 21280,
       "y": 3370,
       "w": 1440,
       "h": 900,
@@ -779,7 +779,7 @@
       "is_interactive": true
     },
     "SessionBudgetDark.dc.html": {
-      "x": 10640,
+      "x": 21280,
       "y": 3370,
       "w": 1440,
       "h": 900,
@@ -788,8 +788,28 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "SessionChanges.dc.html": {
+      "x": 6080,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, changes",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionChangesDark.dc.html": {
+      "x": 6080,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, changes \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "SessionCredential.dc.html": {
-      "x": 12160,
+      "x": 22800,
       "y": 3370,
       "w": 1440,
       "h": 900,
@@ -799,7 +819,7 @@
       "is_interactive": true
     },
     "SessionCredentialDark.dc.html": {
-      "x": 12160,
+      "x": 22800,
       "y": 3370,
       "w": 1440,
       "h": 900,
@@ -809,7 +829,7 @@
       "is_interactive": true
     },
     "SessionDelivered.dc.html": {
-      "x": 7600,
+      "x": 18240,
       "y": 3370,
       "w": 1440,
       "h": 900,
@@ -819,7 +839,7 @@
       "is_interactive": true
     },
     "SessionDeliveredDark.dc.html": {
-      "x": 7600,
+      "x": 18240,
       "y": 3370,
       "w": 1440,
       "h": 900,
@@ -829,7 +849,7 @@
       "is_interactive": true
     },
     "SessionFailed.dc.html": {
-      "x": 16720,
+      "x": 27360,
       "y": 3370,
       "w": 1440,
       "h": 900,
@@ -839,7 +859,7 @@
       "is_interactive": true
     },
     "SessionFailedDark.dc.html": {
-      "x": 16720,
+      "x": 27360,
       "y": 3370,
       "w": 1440,
       "h": 900,
@@ -848,8 +868,28 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "SessionFiles.dc.html": {
+      "x": 10640,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, files",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionFilesDark.dc.html": {
+      "x": 10640,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, files \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "SessionNoWin.dc.html": {
-      "x": 9120,
+      "x": 19760,
       "y": 3370,
       "w": 1440,
       "h": 900,
@@ -859,7 +899,7 @@
       "is_interactive": true
     },
     "SessionNoWinDark.dc.html": {
-      "x": 9120,
+      "x": 19760,
       "y": 3370,
       "w": 1440,
       "h": 900,
@@ -868,8 +908,28 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "SessionPreview.dc.html": {
+      "x": 9120,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, preview",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionPreviewDark.dc.html": {
+      "x": 9120,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, preview \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "SessionReadOnly.dc.html": {
-      "x": 18240,
+      "x": 28880,
       "y": 3370,
       "w": 1440,
       "h": 900,
@@ -879,7 +939,7 @@
       "is_interactive": true
     },
     "SessionReadOnlyDark.dc.html": {
-      "x": 18240,
+      "x": 28880,
       "y": 3370,
       "w": 1440,
       "h": 900,
@@ -889,7 +949,7 @@
       "is_interactive": true
     },
     "SessionRegression.dc.html": {
-      "x": 15200,
+      "x": 25840,
       "y": 3370,
       "w": 1440,
       "h": 900,
@@ -899,7 +959,7 @@
       "is_interactive": true
     },
     "SessionRegressionDark.dc.html": {
-      "x": 15200,
+      "x": 25840,
       "y": 3370,
       "w": 1440,
       "h": 900,
@@ -909,7 +969,7 @@
       "is_interactive": true
     },
     "SessionRepo.dc.html": {
-      "x": 13680,
+      "x": 24320,
       "y": 3370,
       "w": 1440,
       "h": 900,
@@ -919,7 +979,7 @@
       "is_interactive": true
     },
     "SessionRepoDark.dc.html": {
-      "x": 13680,
+      "x": 24320,
       "y": 3370,
       "w": 1440,
       "h": 900,
@@ -948,8 +1008,28 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "SessionShare.dc.html": {
+      "x": 12160,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, share",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionShareDark.dc.html": {
+      "x": 12160,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, share \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "SessionSpawned.dc.html": {
-      "x": 4560,
+      "x": 15200,
       "y": 3370,
       "w": 1440,
       "h": 900,
@@ -959,7 +1039,7 @@
       "is_interactive": true
     },
     "SessionSpawnedDark.dc.html": {
-      "x": 4560,
+      "x": 15200,
       "y": 3370,
       "w": 1440,
       "h": 900,
@@ -988,8 +1068,68 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "SessionTerminal.dc.html": {
+      "x": 7600,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, terminal",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionTerminalDark.dc.html": {
+      "x": 7600,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, terminal \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionTitleMenu.dc.html": {
+      "x": 13680,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, title menu",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionTitleMenuDark.dc.html": {
+      "x": 13680,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, title menu \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionTrials.dc.html": {
+      "x": 4560,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, trials",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionTrialsDark.dc.html": {
+      "x": 4560,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, trials \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "SessionWin.dc.html": {
-      "x": 6080,
+      "x": 16720,
       "y": 3370,
       "w": 1440,
       "h": 900,
@@ -999,7 +1139,7 @@
       "is_interactive": true
     },
     "SessionWinDark.dc.html": {
-      "x": 6080,
+      "x": 16720,
       "y": 3370,
       "w": 1440,
       "h": 900,
@@ -1905,14 +2045,20 @@
     "SearchStartDark.dc.html",
     "SessionBudget.dc.html",
     "SessionBudgetDark.dc.html",
+    "SessionChanges.dc.html",
+    "SessionChangesDark.dc.html",
     "SessionCredential.dc.html",
     "SessionCredentialDark.dc.html",
     "SessionDelivered.dc.html",
     "SessionDeliveredDark.dc.html",
     "SessionFailed.dc.html",
     "SessionFailedDark.dc.html",
+    "SessionFiles.dc.html",
+    "SessionFilesDark.dc.html",
     "SessionNoWin.dc.html",
     "SessionNoWinDark.dc.html",
+    "SessionPreview.dc.html",
+    "SessionPreviewDark.dc.html",
     "SessionReadOnly.dc.html",
     "SessionReadOnlyDark.dc.html",
     "SessionRegression.dc.html",
@@ -1921,10 +2067,18 @@
     "SessionRepoDark.dc.html",
     "SessionSeal.dc.html",
     "SessionSealDark.dc.html",
+    "SessionShare.dc.html",
+    "SessionShareDark.dc.html",
     "SessionSpawned.dc.html",
     "SessionSpawnedDark.dc.html",
     "SessionStart.dc.html",
     "SessionStartDark.dc.html",
+    "SessionTerminal.dc.html",
+    "SessionTerminalDark.dc.html",
+    "SessionTitleMenu.dc.html",
+    "SessionTitleMenuDark.dc.html",
+    "SessionTrials.dc.html",
+    "SessionTrialsDark.dc.html",
     "SessionWin.dc.html",
     "SessionWinDark.dc.html",
     "SessionWorking.dc.html",

@@ -66,13 +66,22 @@ The CLI and MCP tools are read by people too. They print the screen words, and m
 | Sidebar | "New experiment", "Search", "Projects", "Customize", "Pinned"; each project is a heading that folds; a session row is "Claude Code session", "Codex session" with its status |
 | Experiment states | Not sealed, Sealed, Watching, Regressed |
 | Activity (from the sessions) | Working, Waiting for you, Done, Failed |
-| Experiment page header | title, state and activity, "Details", "Stop session", "Pin", menu |
+| Experiment page header | breadcrumb "Project / Experiment title", title menu, state and activity, panel toggles, "More", "Share" |
 | Breadcrumb in a spawned session | "Project / Experiment title / Codex session" |
 | An agent's message | the Ratchet mark and "Ratchet", then the agent as a quiet second label: "Ratchet · Claude Code", "Ratchet · Codex" |
 | A session a person stopped | Done, with the line "Stopped by NAME" |
-| Header actions | "Stop session" (inline confirm: "Stop session", "Keep working"), "Pin", "Unpin", menu: "Rename", "Copy link", "Delete experiment" |
+| Title menu (button "Session menu") | "Rename", "Pin" or "Unpin", "Experiment details", "Copy link", "Stop session" (inline confirm in the chat: "Stop session", "Keep working"), "Archive" |
+| Panel toggles (label, then tooltip with the shortcut) | "Details" ("Details (⌘⇧D)"), "Trials" (⌘⇧R), "Changes" (⌘⇧G), "Terminal" (⌘⇧T), "Preview" (⌘⇧P), "Files" (⌘⇧F); a panel's close button "Close Details panel"; its drag handle "Resize panel" |
+| More menu (button "More") | "Export conversation", "Keyboard shortcuts", "Report a problem" |
+| Details panel | sections "Experiment" ("Sealed", "v1", "Experiment details"), "Environment" ("Change environment"), "Repos" ("Attach a repo"), "Agent", "Budget" ("$42 of $100", "Change budget"), "Sessions", "Context" ("44% used", "88k of 200k") |
+| Trials panel | filter "All sessions", then the agents by name; "Show 6 earlier trials"; a row reads "Trial 12", the title, the outcome tag, the agent, "1,102 ms", "from 1,170 ms", "-5.8%" |
+| Changes panel | picker "Trial 12, Kept" or "Working copy"; "2 repos, 6 files"; "Protected: a change here is Rejected" |
+| Terminal panel | "Agent sandbox · Claude Managed Agents"; "The judge never runs here. Measurements happen in a fresh judge sandbox."; "Type a command and press Return"; a viewer sees "Read-only. Only editors and owners can type here." |
+| Preview panel | "Reload", "Open in a new tab", "Port 3000"; "Port 3000 in the agent sandbox. Only people in this experiment can open it." |
+| Files panel | "In the agent sandbox", "Read-only" |
+| Share popover (button "Share") | "Share", each person with "Owner", "Editor" or "Viewer" and "From Checkout platform"; "Anyone in the organization with the link can view"; "Sharing never gives more than a person's role in the project."; "Copy link" |
 | Composer, new experiment | placeholder "What do you want to improve? Type / for commands"; send button "Send" (a return arrow; it starts the experiment); "+" "Attach files, images, repos or connectors"; mic "Dictate"; the row under the box: "Project" (for example "Checkout platform"), "Repos", "Agent" ("Claude Code · Default"), "Environment" ("bench-std"), "Mode" ("Ask" or "Auto") and the budget ring ("$0 of $10") |
-| Composer, Working | placeholder "Steer, @ a session, or / for commands"; the send button becomes a stop button with the label "Interrupt" (the "Stop session" action stays in the header); the row under the box keeps "Agent", "Environment", "Mode" and the budget ring ("$42 of $100"); an attachment shows as a thumbnail with its file name as its label |
+| Composer, Working | placeholder "Steer, @ a session, or / for commands"; the send button becomes a stop button with the label "Interrupt" (the "Stop session" action stays in the title menu); the row under the box keeps "Agent", "Environment", "Mode" and the budget ring ("$42 of $100"); an attachment shows as a thumbnail with its file name as its label |
 | Notify prompt, once after the first measurement | "Notify me when this experiment needs me"; buttons "Notify me", "Not now" |
 | Composer, Waiting for you | placeholder "Answer, or approve the card above" |
 | Composer, Done | placeholder "Continue this session" |

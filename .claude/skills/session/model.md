@@ -79,6 +79,10 @@ A session's stream carries messages (what people and agents said), tool calls an
 
 Tool output and raw logs stay on the platform and are fetched when someone opens them. They may expire, and the session says so. Failing to fetch them is shown as failed, never as empty.
 
+## The terminal
+
+A person with edit access can open a terminal in a session from the header (the Terminal toggle). It is a shell in that session's own sandbox on its agent platform, the same sandbox the agent works in, never a Ratchet host and never the judge sandbox. A viewer sees it read-only. Opening one is an audit row ("Opened a terminal in Claude Code session"). The conversation store rule holds: terminal input and output go between the browser and the platform and the server stores none of it. The same goes for the Changes, Preview and Files panels: they read from the sandbox when opened and the server keeps no copy.
+
 ## Lifecycle
 
 1. **Start.** A person types one message in the composer with five chips (Project, Repos, Agent, Environment, Budget). The Project chip defaults to the project the person is in. Nothing else is asked first. Ratchet starts a new experiment in that project and its lead session on the agent's platform with the repos, the environment, credentials and tools.

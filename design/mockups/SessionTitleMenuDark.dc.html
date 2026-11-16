@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Session, title menu · dark</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="./tokens.css">
+<link rel="stylesheet" href="./icons.css">
+<link rel="stylesheet" href="./components.css">
+<link rel="stylesheet" href="./logos.css">
+</helmet>
+<div data-theme="dark" class="board app" style="width: 1440px; height: 900px;">
+  <!-- part:Sidebar active="cut-checkout-p95" -->
+  <nav class="side" aria-label="Main">
+        <div class="side-top">
+          <a class="brand" href="HomeDark.dc.html"><svg aria-hidden="true" width="36" height="22" viewBox="218 338 600 369" data-keep><defs><linearGradient id="brass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F8E4B8"/><stop offset=".6" stop-color="#E2BE7C"/><stop offset="1" stop-color="#BE8F49"/></linearGradient></defs><path d="M397.8 434.8L397.8 466.2A31.5 31.5 0 0 1 366.4 434.8Z" style="fill:var(--mark)" fill-opacity="0.12"/><path d="M407.7 434.8L407.7 466.2A31.5 31.5 0 0 0 439.2 434.8Z" style="fill:var(--mark)" fill-opacity="0.18"/><path d="M361.6 424.9L439.2 424.9A77.6 77.6 0 0 0 361.6 347.3Z" style="fill:var(--mark)" fill-opacity="0.28"/><path d="M351.7 471.0L227.9 471.0A123.8 123.8 0 0 1 351.7 347.3Z" style="fill:var(--mark)" fill-opacity="0.42"/><path d="M444.0 480.9L444.0 697.0A216.1 216.1 0 0 1 227.9 480.9Z" style="fill:var(--mark)" fill-opacity="0.6"/><path d="M453.9 342.5L453.9 697.0A354.5 354.5 0 0 0 808.4 342.5Z" fill="url(#brass)"/></svg>Ratchet</a>
+          <a class="btn primary full" data-item="new" href="HomeDark.dc.html"><i class="ic s i-plus"></i>New experiment</a>
+          <div class="col" style="gap: 2px;">
+            <a class="nav" data-item="search" href="SearchStartDark.dc.html"><i class="ic i-search"></i>Search<span class="kc" aria-hidden="true" style="margin-left: auto;">⌘K</span></a>
+            <a class="nav" data-item="projects" href="ProjectsDark.dc.html"><i class="ic i-folder"></i>Projects</a>
+            <a class="nav" data-item="customize" href="EvaluationsDark.dc.html"><i class="ic i-sliders"></i>Customize</a>
+          </div>
+        </div>
+      <div class="side-scroll">
+        <div class="col" style="gap: 2px;">
+          <span class="t-label sl">Pinned</span>
+          <div class="srow"><a class="rec ses" href="SessionWorkingDark.dc.html"><span role="img" aria-label="Working" title="Working" class="st gi st-work run" style="color: var(--accent);"></span><span class="t">Cut checkout p95 latency</span></a><button class="pinb" aria-label="Unpin Cut checkout p95 latency"><i class="ic s i-pin"></i></button></div>
+        </div>
+        <div class="col" style="gap: 8px;">
+          <div class="pg">
+            <button class="ph" aria-expanded="true"><i class="ic s i-chev chev"></i><span class="t">Checkout platform</span></button>
+            <div class="srow"><a class="rec ses" data-item="cut-checkout-p95" href="SessionWorkingDark.dc.html" aria-current="page"><span role="img" aria-label="Working" title="Working" class="st gi st-work run" style="color: var(--accent);"></span><span class="t">Cut checkout p95 latency</span></a><button class="pinb" aria-label="Pin Cut checkout p95 latency"><i class="ic s i-pin"></i></button></div>
+            <div class="sx-l">
+              <a class="rec ses sx" data-item="claude-session" href="SessionWorkingDark.dc.html"><span role="img" aria-label="Working" title="Working" class="st gi st-work run" style="color: var(--accent);"></span><span class="t">Claude Code session</span></a>
+              <a class="rec ses sx" data-item="codex-session" href="SessionSpawnedDark.dc.html"><span role="img" aria-label="Working" title="Working" class="st gi st-work run" style="color: var(--accent);"></span><span class="t">Codex session</span></a>
+              <a class="rec ses sx" data-item="gemini-session" href="SessionWorkingDark.dc.html"><span role="img" aria-label="Done" title="Done" class="st gi st-done" style="color: var(--good);"></span><span class="t">Gemini session</span></a>
+            </div>
+            <div class="srow"><a class="rec ses" data-item="speed-up-smoke-suite" href="SessionNoWinDark.dc.html"><span role="img" aria-label="Done" title="Done" class="st gi st-done" style="color: var(--good);"></span><span class="t">Speed up the smoke suite</span></a><button class="pinb" aria-label="Pin Speed up the smoke suite"><i class="ic s i-pin"></i></button></div>
+            <div class="srow"><a class="rec ses" data-item="shrink-production-bundle" href="SessionNoWinDark.dc.html"><span role="img" aria-label="Done" title="Done" class="st gi st-done" style="color: var(--good);"></span><span class="t">Shrink the production bundle</span></a><button class="pinb" aria-label="Pin Shrink the production bundle"><i class="ic s i-pin"></i></button></div>
+          </div>
+          <div class="pg">
+            <button class="ph" aria-expanded="true"><i class="ic s i-chev chev"></i><span class="t">Search</span></button>
+            <div class="srow"><a class="rec ses" data-item="autocomplete-latency" href="SessionFailedDark.dc.html"><span role="img" aria-label="Failed" title="Failed" class="st gi st-fail" style="color: var(--bad);"></span><span class="t">Autocomplete latency</span></a><button class="pinb" aria-label="Pin Autocomplete latency"><i class="ic s i-pin"></i></button></div>
+          </div>
+          <div class="pg">
+            <button class="ph" aria-expanded="true"><i class="ic s i-chev chev"></i><span class="t">Data science forecasts</span></button>
+            <div class="srow"><a class="rec ses" data-item="reduce-forecast-error" href="SessionSealDark.dc.html"><span role="img" aria-label="Waiting for you" title="Waiting for you" class="st gi st-wait" style="color: var(--warn);"></span><span class="t">Reduce forecast error</span></a><button class="pinb" aria-label="Pin Reduce forecast error"><i class="ic s i-pin"></i></button></div>
+            <div class="srow"><a class="rec ses" data-item="feature-pipeline-cost" href="SessionDeliveredDark.dc.html"><span role="img" aria-label="Done" title="Done" class="st gi st-done" style="color: var(--good);"></span><span class="t">Feature pipeline cost</span></a><button class="pinb" aria-label="Pin Feature pipeline cost"><i class="ic s i-pin"></i></button></div>
+          </div>
+        </div>
+      </div>
+      <div class="side-foot">
+        <a class="nav" href="SettingsProfileDark.dc.html" aria-label="Priya Raman, user menu" style="height: 48px; gap: 12px;"><span aria-hidden="true" class="avatar round" style="width: 30px; height: 30px; font-size: 14px;">P</span><span class="col grow" style="line-height: 1.25;"><span style="color: var(--ink);">Priya Raman</span><span class="xs mut">via Okta</span></span><i class="ic s mut i-more"></i></a>
+      </div>
+  </nav>
+  <!-- /part -->
+  <main class="main">
+    <header class="hdr"><div class="hbar">
+      <div class="hb-l">
+        <h1><span class="hbc"><a href="ProjectDark.dc.html">Checkout platform</a><span class="sep" aria-hidden="true">/</span><b class="ell">Cut checkout p95 latency</b></span></h1>
+        <div class="pop"><button class="icon-btn sm" aria-haspopup="menu" aria-expanded="true" aria-label="Session menu" title="Session menu"><i class="ic s i-chev" style="transform: rotate(90deg);"></i></button>
+        <div class="menu dn" role="menu" aria-label="Session menu">
+          <button class="mi" role="menuitem"><i class="ic s i-edit"></i>Rename</button>
+          <button class="mi" role="menuitem"><i class="ic s i-pin"></i>Unpin</button>
+          <a class="mi" role="menuitem" href="ExperimentDetailDark.dc.html"><i class="ic s g-gauge"></i>Experiment details</a>
+          <button class="mi" role="menuitem"><i class="ic s i-copy"></i>Copy link</button>
+          <div class="msep" role="separator"></div>
+          <button class="mi danger" role="menuitem"><i class="ic s st-stop"></i>Stop session</button>
+          <button class="mi" role="menuitem"><i class="ic s i-archive"></i>Archive</button>
+        </div>
+        </div>
+        <span class="spill" style="--c: var(--accent);"><span class="st run gi st-work"></span>Working</span>
+      </div>
+      <div class="hb-r">
+        <button class="icon-btn" aria-pressed="false" aria-controls="panel-details" aria-label="Details" title="Details (⌘⇧D)" aria-keyshortcuts="Meta+Shift+D"><i class="ic i-list"></i></button>
+        <button class="icon-btn" aria-pressed="false" aria-controls="panel-trials" aria-label="Trials" title="Trials (⌘⇧R)" aria-keyshortcuts="Meta+Shift+R"><i class="ic i-chart"></i></button>
+        <button class="icon-btn" aria-pressed="false" aria-controls="panel-changes" aria-label="Changes" title="Changes (⌘⇧G)" aria-keyshortcuts="Meta+Shift+G"><i class="ic i-diff"></i></button>
+        <button class="icon-btn" aria-pressed="false" aria-controls="panel-terminal" aria-label="Terminal" title="Terminal (⌘⇧T)" aria-keyshortcuts="Meta+Shift+T"><i class="ic i-shell"></i></button>
+        <button class="icon-btn" aria-pressed="false" aria-controls="panel-preview" aria-label="Preview" title="Preview (⌘⇧P)" aria-keyshortcuts="Meta+Shift+P"><i class="ic i-globe"></i></button>
+        <button class="icon-btn" aria-pressed="false" aria-controls="panel-files" aria-label="Files" title="Files (⌘⇧F)" aria-keyshortcuts="Meta+Shift+F"><i class="ic i-folder"></i></button>
+        <span class="hsep" aria-hidden="true"></span>
+        <div class="pop"><button class="icon-btn" aria-haspopup="menu" aria-expanded="false" aria-label="More" title="More"><i class="ic i-more"></i></button></div>
+        <div class="pop"><button class="btn sm ghost" aria-haspopup="dialog" aria-expanded="false" title="Share"><i class="ic s i-share"></i>Share</button>
+        </div>
+      </div>
+    </div></header>
+    <div class="wsp">
+    <div class="chat">
+    <div class="sb"><div class="c760"><div class="sb-in">
+      <div class="sb-l">
+        <span class="sb-k">Checkout p95 latency, lower is better</span>
+        <span class="sb-big"><span>1,310 ms</span><span class="to">to</span><span>1,102 ms</span><span class="dlt">-15.9%</span></span>
+        <span class="sb-s"><span><b>14</b> trials</span><span><b>3</b> kept</span><span><b>$42</b> of $100</span><button class="textbtn">Change budget</button><span class="bar" aria-hidden="true"><span style="width: 42%;"></span></span></span>
+      </div>
+      <div class="sb-c">
+        <div class="sb-t"><span>p95 latency per trial</span><span>Trial</span></div>
+        <svg class="sc" viewBox="0 0 288 56" role="img" aria-label="p95 latency per trial. Claude Code best 1,102 ms, Codex best 1,106 ms, Gemini best 1,266 ms. Baseline 1,310 ms.">
+          <rect class="sc-n" x="0" y="39.9" width="288" height="6.4"/>
+          <line class="sc-b" x1="0" x2="288" y1="43.1" y2="43.1"/>
+          <g class="s3"><polyline class="sc-l" points="90.9,50.2 175.8,35.3"/><circle class="sc-p w" cx="90.9" cy="50.2"/><circle class="sc-p w" cx="175.8" cy="35.3"/></g>
+          <g class="s2"><polyline class="sc-l" points="27.2,44.5 69.7,28.2 112.2,29.3 154.6,17.9 218.3,16.1 260.8,6.8"/><circle class="sc-p w" cx="27.2" cy="44.5"/><circle class="sc-p w" cx="69.7" cy="28.2"/><circle class="sc-p w" cx="112.2" cy="29.3"/><circle class="sc-p w" cx="154.6" cy="17.9"/><circle class="sc-p w" cx="218.3" cy="16.1"/><circle class="sc-p w" cx="260.8" cy="6.8"/></g>
+          <g class="s1"><polyline class="sc-l" points="6,42.2 48.5,30.6 133.4,18.2 197.1,20.2 239.5,6.1"/><circle class="sc-p w" cx="6" cy="42.2"/><circle class="sc-p k" cx="48.5" cy="30.6"/><circle class="sc-p k" cx="133.4" cy="18.2"/><circle class="sc-p w" cx="197.1" cy="20.2"/><circle class="sc-p k" cx="239.5" cy="6.1"/><circle class="sc-p h" cx="282" cy="6.1"/></g>
+        </svg>
+        <div class="sc-lg"><span><i class="sc-sw b"></i>Baseline</span><span><i class="sc-sw n"></i>Noise band</span><span><i class="sc-sw s1"></i>Claude Code</span><span><i class="sc-sw s2"></i>Codex</span><span><i class="sc-sw s3"></i>Gemini</span></div>
+      </div>
+    </div></div></div>
+    <div class="scroll" style="display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden;">
+      <div class="c760 thread" style="gap: 12px; padding-top: 16px; padding-bottom: 8px;">
+        <button class="apc" aria-expanded="false"><i class="ic s i-check ok"></i>Experiment sealed by Priya Raman · 14:02<i class="ic s chev i-chev"></i></button>
+        <div class="am"><span class="av"><svg class="mk" aria-hidden="true" width="20" height="12" viewBox="218 338 600 369"><path d="M397.8 434.8L397.8 466.2A31.5 31.5 0 0 1 366.4 434.8Z" style="fill:var(--mark)" fill-opacity="0.12"/><path d="M407.7 434.8L407.7 466.2A31.5 31.5 0 0 0 439.2 434.8Z" style="fill:var(--mark)" fill-opacity="0.18"/><path d="M361.6 424.9L439.2 424.9A77.6 77.6 0 0 0 361.6 347.3Z" style="fill:var(--mark)" fill-opacity="0.28"/><path d="M351.7 471.0L227.9 471.0A123.8 123.8 0 0 1 351.7 347.3Z" style="fill:var(--mark)" fill-opacity="0.42"/><path d="M444.0 480.9L444.0 697.0A216.1 216.1 0 0 1 227.9 480.9Z" style="fill:var(--mark)" fill-opacity="0.6"/><path d="M453.9 342.5L453.9 697.0A354.5 354.5 0 0 0 808.4 342.5Z" fill="url(#brass)"/></svg></span><div class="bd"><span class="by"><b>Ratchet</b><span class="via">Claude Code</span></span><p class="tx">The experiment is sealed. I started Codex and Gemini on it, and I will work on the pricing lookups myself.</p></div></div>
+        <div class="tl">Started a session on OpenAI Agents API with Codex</div>
+        <div class="tl" style="margin-top: -8px;">Started a session on AWS AgentCore with Gemini</div>
+        <div class="cd2">
+          <a class="cd spc" href="SessionSpawnedDark.dc.html"><span class="av"><span class="lg lg-openai" role="img" aria-label="Codex"></span></span><span class="tx"><span class="nm">Codex session</span><span class="sub3">6 trials, best 1,106 ms</span><span class="sub3">$14 of $100</span></span><span class="go"><span class="spill" style="--c: var(--accent);"><span class="st run gi st-work"></span>Working</span></span></a>
+          <a class="cd spc" href="SessionSpawnedDark.dc.html"><span class="av"><span class="lg lg-googlegemini" role="img" aria-label="Gemini"></span></span><span class="tx"><span class="nm">Gemini session</span><span class="sub3">2 trials, best 1,266 ms</span><span class="sub3">$6 of $100</span></span><span class="go"><span class="spill" style="--c: var(--accent);"><span class="st run gi st-work"></span>Working</span></span></a>
+        </div>
+        <article class="cd tc">
+          <div class="tc-h"><span class="tc-n">Trial 10</span><span class="tc-t">Cache price lookups for the length of a request</span><span class="tg" style="--c: var(--ink3);">Within noise</span><i class="ic s chev i-chev"></i></div>
+          <div class="tc-v"><span>1,181 ms</span><span class="fr">from</span><span>1,170 ms</span><span class="dlt bad">+0.9%</span></div>
+          <div class="tc-m"><span>Started from trial 7</span><span>1 repo, 2 files</span><span class="ok"><i class="ic i-check"></i>p99 held</span><span class="ok"><i class="ic i-check"></i>Error rate held</span></div>
+        </article>
+        <article class="cd tc">
+          <div class="tc-h"><span class="tc-n">Trial 12</span><span class="tc-t">Raise the connection pool to 48 and reuse pricing clients</span><span class="tg" style="--c: var(--good);">Kept</span><i class="ic s chev i-chev"></i></div>
+          <div class="tc-v"><span>1,102 ms</span><span class="fr">from</span><span>1,170 ms</span><span class="dlt">-5.8%</span></div>
+          <div class="tc-m"><span>Started from trial 7</span><span>2 repos, 6 files</span><span class="ok"><i class="ic i-check"></i>p99 held</span><span class="ok"><i class="ic i-check"></i>Error rate held</span></div>
+        </article>
+        <article class="cd tc meas">
+          <div class="tc-h"><span class="tc-n">Trial 14</span><span class="tc-t">Batch the three pricing calls into one</span><span class="tg hollow" style="--c: var(--ink3);">Measuring</span><i class="ic s chev i-chev"></i></div>
+          <div class="tc-m"><span>Measuring. The result arrives here.</span><span>Started from trial 12</span><span>1 repo, 3 files</span></div>
+        </article>
+      </div>
+    </div>
+    <div class="dock"><div class="c760"><div class="cmpw">
+    <div class="cmp">
+      <textarea class="cmp-in" rows="2" aria-label="Message" placeholder="Steer, @ a session, or / for commands"></textarea>
+      <div class="cmp-bar">
+        <button class="ib" aria-label="Attach files, images, repos or connectors"><i class="ic i-plus"></i></button>
+        <span class="go"><button class="ib" aria-label="Dictate"><i class="ic i-mic"></i></button><button class="ib stop" aria-label="Interrupt"><i class="ic st-stop"></i></button></span>
+      </div>
+    </div>
+    <div class="cmp-opt">
+      <button class="opt" aria-label="Agent"><span class="lg lg-claude" role="img" aria-label="Claude Code"></span><span>Claude Code · Default</span></button>
+      <button class="opt" aria-label="Environment"><i class="ic g-box"></i><span>Checkout staging</span></button>
+      <button class="opt" aria-label="Mode"><i class="ic i-sliders"></i><span>Auto</span></button>
+      <button class="opt" aria-label="Budget"><span class="ring" style="--p: 42;" role="img" aria-label="Budget used"></span><span>$42 of $100</span></button>
+    </div>
+  </div></div></div>
+    </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+</body>
+</html>

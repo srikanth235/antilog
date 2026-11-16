@@ -60,10 +60,28 @@
   </nav>
   <!-- /part -->
   <main class="main">
-    <header class="thead"><div class="c760 sh">
-      <div class="ttl"><h1 class="t-section ell"><span class="crm"><a class="crl" href="Project.dc.html">Checkout platform</a><span class="sep" aria-hidden="true">/</span><span class="ell">Cut checkout p95 latency</span></span></h1><span class="spill" style="--c: var(--accent);"><span class="st run gi st-work"></span>Working</span></div>
-      <div class="acts"><a class="btn sm ghost" href="ExperimentDetail.dc.html">Details</a><button class="btn sm danger">Stop session</button><button class="btn sm ghost" aria-pressed="true"><i class="ic s i-pin"></i>Unpin</button><button class="icon-btn" aria-label="More actions"><i class="ic i-more"></i></button></div>
+    <header class="hdr"><div class="hbar">
+      <div class="hb-l">
+        <h1><span class="hbc"><a href="Project.dc.html">Checkout platform</a><span class="sep" aria-hidden="true">/</span><b class="ell">Cut checkout p95 latency</b></span></h1>
+        <div class="pop"><button class="icon-btn sm" aria-haspopup="menu" aria-expanded="false" aria-label="Session menu" title="Session menu"><i class="ic s i-chev" style="transform: rotate(90deg);"></i></button>
+        </div>
+        <span class="spill" style="--c: var(--accent);"><span class="st run gi st-work"></span>Working</span>
+      </div>
+      <div class="hb-r">
+        <button class="icon-btn" aria-pressed="true" aria-controls="panel-details" aria-label="Details" title="Details (⌘⇧D)" aria-keyshortcuts="Meta+Shift+D"><i class="ic i-list"></i></button>
+        <button class="icon-btn" aria-pressed="false" aria-controls="panel-trials" aria-label="Trials" title="Trials (⌘⇧R)" aria-keyshortcuts="Meta+Shift+R"><i class="ic i-chart"></i></button>
+        <button class="icon-btn" aria-pressed="false" aria-controls="panel-changes" aria-label="Changes" title="Changes (⌘⇧G)" aria-keyshortcuts="Meta+Shift+G"><i class="ic i-diff"></i></button>
+        <button class="icon-btn" aria-pressed="false" aria-controls="panel-terminal" aria-label="Terminal" title="Terminal (⌘⇧T)" aria-keyshortcuts="Meta+Shift+T"><i class="ic i-shell"></i></button>
+        <button class="icon-btn" aria-pressed="false" aria-controls="panel-preview" aria-label="Preview" title="Preview (⌘⇧P)" aria-keyshortcuts="Meta+Shift+P"><i class="ic i-globe"></i></button>
+        <button class="icon-btn" aria-pressed="false" aria-controls="panel-files" aria-label="Files" title="Files (⌘⇧F)" aria-keyshortcuts="Meta+Shift+F"><i class="ic i-folder"></i></button>
+        <span class="hsep" aria-hidden="true"></span>
+        <div class="pop"><button class="icon-btn" aria-haspopup="menu" aria-expanded="false" aria-label="More" title="More"><i class="ic i-more"></i></button></div>
+        <div class="pop"><button class="btn sm ghost" aria-haspopup="dialog" aria-expanded="false" title="Share"><i class="ic s i-share"></i>Share</button>
+        </div>
+      </div>
     </div></header>
+    <div class="wsp">
+    <div class="chat">
     <div class="sb"><div class="c760"><div class="sb-in">
       <div class="sb-l">
         <span class="sb-k">Checkout p95 latency, lower is better</span>
@@ -118,11 +136,45 @@
     </div>
     <div class="cmp-opt">
       <button class="opt" aria-label="Agent"><span class="lg lg-claude" role="img" aria-label="Claude Code"></span><span>Claude Code · Default</span></button>
-      <button class="opt" aria-label="Environment"><i class="ic g-box"></i><span>bench-std</span></button>
+      <button class="opt" aria-label="Environment"><i class="ic g-box"></i><span>Checkout staging</span></button>
       <button class="opt" aria-label="Mode"><i class="ic i-sliders"></i><span>Auto</span></button>
       <button class="opt" aria-label="Budget"><span class="ring" style="--p: 42;" role="img" aria-label="Budget used"></span><span>$42 of $100</span></button>
     </div>
   </div></div></div>
+    </div>
+    <aside class="pane" id="panel-details" aria-label="Details">
+      <div class="pane-grip" role="separator" aria-orientation="vertical" aria-label="Resize panel" tabindex="0"></div>
+      <div class="pane-h"><h2>Details</h2><span class="grow"></span><button class="icon-btn sm" aria-label="Close Details panel" title="Close Details panel"><i class="ic s i-close"></i></button></div>
+      <div class="pane-b scr">
+        <div class="dp-sec"><div class="dp-lh"><span class="t-label">Experiment</span></div>
+          <div class="dp-row"><i class="ic i-verify"></i><span class="v">Sealed</span><span class="r">v1</span></div>
+          <a class="dp-row" href="ExperimentDetail.dc.html"><i class="ic g-gauge"></i><span class="v">Experiment details</span><i class="ic s i-chev"></i></a>
+        </div>
+        <div class="dp-sec"><div class="dp-lh"><span class="t-label">Environment</span></div>
+          <div class="dp-row"><i class="ic g-cloud"></i><span class="v">Checkout staging</span><button class="icon-btn sm" aria-label="Change environment" title="Change environment"><i class="ic s i-sliders"></i></button></div>
+        </div>
+        <div class="dp-sec"><div class="dp-lh"><span class="t-label">Repos</span><button class="icon-btn sm" aria-label="Attach a repo" title="Attach a repo"><i class="ic s i-plus"></i></button></div>
+          <div class="dp-row two"><i class="ic g-code"></i><span class="v">acme/checkout<span class="s">ratchet/p95-claude</span></span></div>
+          <div class="dp-row two"><i class="ic g-code"></i><span class="v">acme/pricing<span class="s">ratchet/p95-claude</span></span></div>
+        </div>
+        <div class="dp-sec"><div class="dp-lh"><span class="t-label">Agent</span></div>
+          <div class="dp-row two"><span class="lg lg-claude" role="img" aria-label="Claude Code"></span><span class="v">Claude Code · Default<span class="s pl">Claude Managed Agents</span></span></div>
+        </div>
+        <div class="dp-sec"><div class="dp-lh"><span class="t-label">Budget</span><button class="textbtn" style="min-height: 28px; font-size: 12.5px;">Change budget</button></div>
+          <div class="dp-row"><i class="ic g-gauge"></i><span class="v">$42 of $100</span><span class="r">42%</span></div>
+          <div class="dp-bar"><span class="bar" aria-hidden="true"><span style="width: 42%;"></span></span></div>
+        </div>
+        <div class="dp-sec"><div class="dp-lh"><span class="t-label">Sessions</span></div>
+          <a class="dp-row" href="SessionWorking.dc.html"><span role="img" aria-label="Working" title="Working" class="st gi st-work run" style="color: var(--accent);"></span><span class="v">Claude Code session</span><span class="r">$22</span></a>
+          <a class="dp-row" href="SessionSpawned.dc.html"><span role="img" aria-label="Working" title="Working" class="st gi st-work run" style="color: var(--accent);"></span><span class="v">Codex session</span><span class="r">$14</span></a>
+          <a class="dp-row" href="SessionWorking.dc.html"><span role="img" aria-label="Done" title="Done" class="st gi st-done" style="color: var(--good);"></span><span class="v">Gemini session</span><span class="r">$6</span></a>
+        </div>
+        <div class="dp-sec"><div class="dp-lh"><span class="t-label">Context</span></div>
+          <div class="dp-bar" style="padding-left: 0;"><div class="m"><span>44% used</span><span>88k of 200k</span></div><span class="bar" aria-hidden="true"><span style="width: 44%;"></span></span></div>
+        </div>
+      </div>
+    </aside>
+    </div>
   </main>
 </div>
 </x-dc>

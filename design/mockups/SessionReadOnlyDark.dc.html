@@ -60,11 +60,29 @@
   </nav>
   <!-- /part -->
   <main class="main">
-    <header class="thead"><div class="c760 sh">
-      <div class="ttl"><h1 class="t-section ell"><span class="crm"><a class="crl" href="ProjectDark.dc.html">Checkout platform</a><span class="sep" aria-hidden="true">/</span><span class="ell">Cut checkout p95 latency</span></span></h1><span class="spill" style="--c: var(--accent);"><span class="st run gi st-work"></span>Working</span></div>
-      <div class="acts"><a class="btn sm ghost" href="ExperimentDetailDark.dc.html">Details</a><button class="btn sm danger" disabled>Stop session</button><button class="btn sm ghost" aria-pressed="true" disabled><i class="ic s i-pin"></i>Unpin</button><button class="icon-btn" aria-label="More actions"><i class="ic i-more"></i></button></div>
+    <header class="hdr"><div class="hbar">
+      <div class="hb-l">
+        <h1><span class="hbc"><a href="ProjectDark.dc.html">Checkout platform</a><span class="sep" aria-hidden="true">/</span><b class="ell">Cut checkout p95 latency</b></span></h1>
+        <div class="pop"><button class="icon-btn sm" aria-haspopup="menu" aria-expanded="false" aria-label="Session menu" title="Session menu"><i class="ic s i-chev" style="transform: rotate(90deg);"></i></button>
+        </div>
+        <span class="spill" style="--c: var(--accent);"><span class="st run gi st-work"></span>Working</span>
+      </div>
+      <div class="hb-r">
+        <button class="icon-btn" aria-pressed="false" aria-controls="panel-details" aria-label="Details" title="Details (⌘⇧D)" aria-keyshortcuts="Meta+Shift+D"><i class="ic i-list"></i></button>
+        <button class="icon-btn" aria-pressed="false" aria-controls="panel-trials" aria-label="Trials" title="Trials (⌘⇧R)" aria-keyshortcuts="Meta+Shift+R"><i class="ic i-chart"></i></button>
+        <button class="icon-btn" aria-pressed="false" aria-controls="panel-changes" aria-label="Changes" title="Changes (⌘⇧G)" aria-keyshortcuts="Meta+Shift+G"><i class="ic i-diff"></i></button>
+        <button class="icon-btn" aria-pressed="true" aria-controls="panel-terminal" aria-label="Terminal" title="Terminal (⌘⇧T)" aria-keyshortcuts="Meta+Shift+T"><i class="ic i-shell"></i></button>
+        <button class="icon-btn" aria-pressed="false" aria-controls="panel-preview" aria-label="Preview" title="Preview (⌘⇧P)" aria-keyshortcuts="Meta+Shift+P"><i class="ic i-globe"></i></button>
+        <button class="icon-btn" aria-pressed="false" aria-controls="panel-files" aria-label="Files" title="Files (⌘⇧F)" aria-keyshortcuts="Meta+Shift+F"><i class="ic i-folder"></i></button>
+        <span class="hsep" aria-hidden="true"></span>
+        <div class="pop"><button class="icon-btn" aria-haspopup="menu" aria-expanded="false" aria-label="More" title="More"><i class="ic i-more"></i></button></div>
+        <div class="pop"><button class="btn sm ghost" aria-haspopup="dialog" aria-expanded="false" title="Share"><i class="ic s i-share"></i>Share</button>
+        </div>
+      </div>
     </div>
-      <div class="c760 pbar"><i class="ic s i-lock"></i><span>Tomas Lind is a viewer. Only editors and owners can stop or pin.</span></div></header>
+      <div class="pbar"><i class="ic s i-lock"></i><span>Tomas Lind is a viewer. Only editors and owners can type in the terminal, stop or rename.</span></div></header>
+    <div class="wsp">
+    <div class="chat">
     <div class="sb"><div class="c760"><div class="sb-in">
       <div class="sb-l">
         <span class="sb-k">Checkout p95 latency, lower is better</span>
@@ -113,11 +131,37 @@
     </div>
     <div class="cmp-opt">
       <button class="opt" disabled aria-label="Agent"><span class="lg lg-claude" role="img" aria-label="Claude Code"></span><span>Claude Code · Default</span></button>
-      <button class="opt" disabled aria-label="Environment"><i class="ic g-box"></i><span>bench-std</span></button>
+      <button class="opt" disabled aria-label="Environment"><i class="ic g-box"></i><span>Checkout staging</span></button>
       <button class="opt" disabled aria-label="Mode"><i class="ic i-sliders"></i><span>Auto</span></button>
       <button class="opt" disabled aria-label="Budget"><span class="ring" style="--p: 42;" role="img" aria-label="Budget used"></span><span>$42 of $100</span></button>
     </div>
   </div></div></div>
+    </div>
+    <aside class="pane" id="panel-terminal" aria-label="Terminal">
+      <div class="pane-grip" role="separator" aria-orientation="vertical" aria-label="Resize panel" tabindex="0"></div>
+      <div class="pane-h"><h2>Terminal</h2><span class="sub">Read-only</span><span class="grow"></span><button class="icon-btn sm" aria-label="Close Terminal panel" title="Close Terminal panel"><i class="ic s i-close"></i></button></div>
+      <div class="term-h"><div class="l1"><span class="dot" aria-hidden="true"></span><span>Agent sandbox · Claude Managed Agents</span></div><span class="nt">The judge never runs here. Measurements happen in a fresh judge sandbox.</span></div>
+      <div class="term" role="log" aria-label="Terminal output"><span class="ps">agent@sandbox:~/acme/checkout$</span> git status -sb
+## ratchet/p95-claude...origin/ratchet/p95-claude
+ M src/db/pool.ts
+ M src/handlers/checkout.ts
+ M src/config/defaults.ts
+?? test/db/pool.test.ts
+<span class="ps">agent@sandbox:~/acme/checkout$</span> npm test -- pool
+
+&gt; checkout@4.12.0 test
+&gt; vitest pool
+
+ <span class="ok">✓</span> test/db/pool.test.ts <span class="dim">(4 tests)</span> 212ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+<span class="ps">agent@sandbox:~/acme/checkout$</span> curl -s -o /dev/null -w "%{time_total}\n" localhost:3000/checkout
+0.071
+</div>
+<div class="term-in ro"><i class="ic s i-lock"></i><span>Read-only. Only editors and owners can type here.</span></div>
+    </aside>
+    </div>
   </main>
 </div>
 </x-dc>

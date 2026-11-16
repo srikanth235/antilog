@@ -15,6 +15,7 @@ All target.
 - Never connect the Ratchet server to data and never route dataset rows through it, because data is read only inside platform sandboxes.
 - Make a git token push only to the session's own branch, short-lived and one per repo, because a token that reaches another branch can rewrite what the judge measured.
 - Run no loop on the server and keep no step machine. The agent drives. The only server-side state machines are the judge's queue and the budget meter, because a loop on the server decides things a person and an agent should.
+- Open a terminal, a file or a preview only in the agent's own sandbox, for a person with edit access (read-only for a viewer), and record that it was opened in the audit log, because a shell in a sandbox is a way into it. Store none of what passes through it.
 - Store no tool output, file contents, diffs or data. Store the conversation's words, tool call names, card states, commit ids, measurements, spend and audit rows, because the rest can carry customer data.
 - Give each agent its own session and branch, because a shared session leaks one agent's state into another's.
 - Never let a spawned session spawn, because an unbounded tree is unbounded spend.
