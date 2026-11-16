@@ -23,7 +23,7 @@ Decided by the owner, 16 Nov. It replaces the launcher, the runner, the managed 
 - **Git is the hand-off.** Each session gets a short-lived git token, scoped to the repo, that may push only to its own branch. A trial is a commit on it, and the evaluator checks out that commit. Ratchet stores the commit id, never the diff.
 - **The server never connects to data.** It orchestrates sessions and records: ids, versions, numbers, states, spend and audit rows. Agent and evaluator code read data through connectors inside a platform's sandbox. Transcripts and logs stay on the platform and are fetched when someone asks to see them, never stored by Ratchet.
 - **The coding agent's code runs the experiment.** The agent writes code, that code runs the experiment, and it reads data through connectors itself. Only the evaluator's measurement counts (see the agent loop). There is no separate context plane that pulls or brokers data.
-- **Credentials reach a session only through the platform's credential store** (the Claude Managed Agents vault, AgentCore Identity, or the platform's equivalent), never in a prompt, a file in the repo or Ratchet's database. An agent gets read-only connector credentials that exclude the holdout, and a short-lived git token. The evaluator gets a separate credential that includes the holdout. The holdout is enforced by those credentials: a read-only role, view or policy that leaves holdout data out. Model access belongs to the platform account, so no model key enters a sandbox. Whether connector credentials are minted per run or registered once is open (see below).
+- **Credentials reach a session only through the platform's credential store** (the Claude Managed Agents vault, AgentCore Identity, or the platform's equivalent), never in a prompt, a file in the repo or Ratchet's database. An agent gets read-only connector credentials that exclude the holdout, and a short-lived git token. The evaluator gets a separate credential that includes the holdout. The holdout is enforced by those credentials: a read-only role, view or policy that leaves holdout data out. Model access belongs to the platform account, so no model key enters a sandbox. Connector credentials are registered once (see Settled 16 Nov).
 - **Connectors** an agent's code may use: Snowflake, Databricks, DynamoDB, BigQuery, Postgres, S3, GitHub, GitLab and any MCP server. Each says how to make a read-only, holdout-excluding credential for its system.
 - **Build order.** The trait is designed against all three platforms from the start. Adapters ship in this order: Claude Managed Agents, then AWS AgentCore (which brings Gemini and Grok), then the OpenAI Agents API. Before any product code, one tiny experiment runs end to end on all three to prove the trait, the `measure` tool and the evaluator sandbox.
 
@@ -58,10 +58,10 @@ Decided by the owner, 14 Nov.
 - **On Windows and Linux the desktop app is the web app, installed as a progressive web app** (decided 15 Nov). The same web client, installable from Chrome or Edge: its own window and taskbar icon, a badge for what needs attention, push notifications and an offline screen. On macOS the web app does not offer to install; it points to the Mac app. This machine stays Mac only.
 - **Notifications are in the product** (decided 15 Nov, replacing "Notifications cut"): for a win, something that needs a person, or a budget hit, and for a run's end when asked. Native on the Mac, web push elsewhere, ids only. See [organization/notifications.md](../organization/notifications.md).
 - **The device stores no data either.** The service worker caches the app's own files only, never API responses, diffs or logs. A push message carries ids only; the app fetches the rest when opened. A self-hosted server that cannot reach the browsers' push services sends no push, and everything else works.
-- **Whether the Mac can still be "This machine" is open.** With no sandbox backends, a Mac could propose only as a self-hosted environment of an agent platform (see the open questions).
+- **"This machine" is deferred** (see Settled 16 Nov). With no sandbox backends, a Mac could propose only as a self-hosted environment of an agent platform.
 - **Measuring never runs on the laptop.** The evaluator runs only on the measuring platform, so a Mac can never hold the holdout credential or produce a number that counts.
 - **Clients share behaviour, words and element ids, never pixels.** The web app and the Mac app do not diverge on state or words; see [design behaviour](../design/behaviour.md).
-- **The Mac app is a direct download, updated with Sparkle** (decided 15 Nov). It is signed with a Developer ID, notarized and not on the Mac App Store, so the App Store sandbox would never limit a local runner, should "This machine" stay (see the open questions). It checks one signed update feed, ours, daily by default; a person can turn checks off, and a company can turn them off for its Macs and deploy releases itself through device management, which is also how air-gapped installs update. See [stack/swift/ratchet.md](../stack/swift/ratchet.md).
+- **The Mac app is a direct download, updated with Sparkle** (decided 15 Nov). It is signed with a Developer ID, notarized and not on the Mac App Store, so the App Store sandbox would never limit a local runner, should "This machine" come back (see Settled 16 Nov). It checks one signed update feed, ours, daily by default; a person can turn checks off, and a company can turn them off for its Macs and deploy releases itself through device management, which is also how air-gapped installs update. See [stack/swift/ratchet.md](../stack/swift/ratchet.md).
 
 ## The web client (target)
 
@@ -75,6 +75,15 @@ The owner approved a web-client direction, shown as boards in `design/mockups/`.
 - **The model provider is a field on an agent.** It is not a connector category. Agents belong to infrastructure.
 - **Evaluation templates are added under Customize** and picked when an experiment is started.
 
+## Settled 16 Nov (target)
+
+Decided by the owner, 16 Nov, on the recommendations.
+
+- **Connector credentials are registered once, not minted per run.** The customer registers a read-only credential per connector that leaves the holdout out, and a separate one for the evaluator that includes it. Both are kept in the agent platform's credential store, never in Ratchet. No connector admin secret is anywhere in Ratchet. Short-lived credentials minted per run may come later, connector by connector, self-hosted first, and need a new ruling.
+- **Ratchet cloud uses only Ratchet's platform accounts at launch.** An enterprise cannot bring its own platform accounts to Ratchet cloud yet. The adapters support customer accounts anyway, because self-hosted needs them. An enterprise that needs data read in its own network self-hosts, for example with AgentCore in its own AWS account.
+- **"This machine" is deferred.** The Mac app is a client of the server's API only. Agents never run on a Mac until a later ruling, which comes after the first platform ships. Measuring never runs on a laptop either way.
+- **No Helm chart and no OpenTofu at launch.** The self-hosted server ships as Docker Compose only. Ratchet cloud ships with the Cloudflare config and `cf`. Ratchet's own platform accounts are set up by hand, written down, and owned by the owner. Either tool comes back only with a new ruling.
+
 ## Open, ask the owner
 
 Write these as options with a recommendation when they come up. Do not pick one by building it.
@@ -82,8 +91,5 @@ Write these as options with a recommendation when they come up. Do not pick one 
 - **Who brings the benchmark?** Does Ratchet draft the benchmark, or do engineers bring it?
 - **Offline or production results.** Is scoring offline only, or are production results used too?
 - **Reshaping data.** Does Ratchet ever reshape data? Today the answer is no (see [non-goals](non-goals.md)).
-- **Connector credentials: minted per run, or registered once?** (a) The customer registers a read-only, holdout-excluding credential per connector, and a separate one for the evaluator, kept in the platform's credential store. Simplest, and no connector admin secret is anywhere in Ratchet, but the credential outlives the run. (b) Ratchet mints short-lived ones per run from admin secrets. A self-hosted server can, since it sits in the customer's infrastructure; on Ratchet cloud the server would hold admin secrets, which these rulings forbid. Recommendation: (a) at launch, then (b) per connector, self-hosted first.
-- **Own platform accounts on Ratchet cloud.** May an enterprise on Ratchet cloud use its own platform accounts, for example AgentCore in its own AWS network so data is read there? Recommendation: not at launch. The adapters support it anyway, because self-hosted needs it.
-- **The Mac as "This machine".** Claude Managed Agents and the OpenAI Agents API offer a self-hosted environment, which a Mac could provide for proposing. Keep, defer or drop? Recommendation: defer until the first platform ships.
 - **"Try a demo".** Does it stay in the web app? It runs on the simulation, which is a developer and demo tool.
 - **The licence.** The workspace manifest says `UNLICENSED` today. What it becomes is not decided.

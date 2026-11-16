@@ -9,7 +9,7 @@
 | Return | Delivered ÷ spent, as `68×` | ROI | Return |
 | Agent | A model on an agent platform that proposes changes: Claude on Claude Managed Agents, Codex on the OpenAI Agents API, Gemini or Grok on AWS AgentCore (target) | harness (code only), connection | agent |
 | Agent order | The fallback sequence, "Claude Code → Codex → Grok · on this machine" | priority | agent order |
-| Where | The agent platform an agent runs on (target). Whether a Mac may still be "This machine" is open; measuring never runs there | location | Where |
+| Where | The agent platform an agent runs on (target). "This machine" is deferred; measuring never runs on a Mac | location | Where |
 | Note | Text that steers the agents of a run: all of them, or one with @ ("@Codex focus on database queries") | comment, prompt | note |
 | Pause Agent | Stop one agent inside a run; its loop waits until resumed | | Pause agent |
 | Chat | A conversation with your own agent (Claude Code, Codex or Grok) that acts on Ratchet through its tools | assistant session, thread | Chat |

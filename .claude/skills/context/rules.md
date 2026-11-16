@@ -1,9 +1,9 @@
 # Context: rules that never bend
 
 - Let a holdout-marked dataset be granted to the evaluator only, and enforce it in the credential each connector makes plus the one place that checks grants, because a proposer that reads the holdout fits it.
-- Never give an agent a long-lived, write or holdout credential, and never a connector admin secret. Give it a read-only, scoped credential that excludes the holdout, through the platform's credential store only, because a credential that can write or can see the holdout is one a proposer can leak or fit. Whether credentials are minted per run or registered once is open (see [rulings](../product/rulings.md)).
+- Never give an agent a long-lived, write or holdout credential, and never a connector admin secret. Give it a read-only, scoped credential that excludes the holdout, through the platform's credential store only, because a credential that can write or can see the holdout is one a proposer can leak or fit. The customer registers it once (see [rulings](../product/rulings.md)).
 - Give the evaluator its own credential that includes the holdout, because the holdout is enforced by credentials and the agent's must never be able to reach it.
-- Keep any connector admin secret out of the Ratchet server on Ratchet cloud and out of every response, event and log, because the server must hold no access to customer data. Whether one exists at all is open (see [rulings](../product/rulings.md)).
+- Never hold a connector admin secret anywhere in Ratchet, because the server must hold no access to customer data. The customer makes the read-only credentials and registers them (see [rulings](../product/rulings.md)).
 - Never change a dataset version after it is created, because a run that names a version must be reproducible.
 - Treat the code host as a connector here, and a pull request as a write-back action requested by optimization, because writing out must be explicit and audited.
 - Give each outside system exactly one translator and stop its vocabulary there, because a second translator forks the meaning of a column.

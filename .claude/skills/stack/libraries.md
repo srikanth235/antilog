@@ -139,7 +139,7 @@ A proposal, not yet built. The app is SwiftUI and macOS only; Windows and Linux 
 | Sparkle (updates) | 2.10.0 |
 
 - Sparkle is the update mechanism for the Mac app (decided 15 Nov). The app is a direct download and is not on the Mac App Store.
-- The app is an API client only. It bundles no helper and runs no agent. Whether the Mac can be "This machine" is open.
+- The app is an API client only. It bundles no helper and runs no agent. "This machine" is deferred.
 - Colours and words are generated from `design/tokens.toml` and the words catalogue, never written by hand.
 
 **Delivery**

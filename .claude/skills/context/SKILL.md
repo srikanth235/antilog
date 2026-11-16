@@ -6,7 +6,7 @@ description: >-
 
 # Context
 
-Context decides what a proposer may read. The coding agent writes code, and that code runs the experiment and reads data through connectors itself. Ratchet does not pull or broker data. Context names the datasets and their versions, and decides which credentials a session gets through its platform's credential store: read-only, scoped, and without the holdout for agents. Whether they are minted per run or registered once is open (see [rulings](../product/rulings.md)). Most of this is target; [today.md](today.md) says what exists.
+Context decides what a proposer may read. The coding agent writes code, and that code runs the experiment and reads data through connectors itself. Ratchet does not pull or broker data. Context names the datasets and their versions, and decides which credentials a session gets through its platform's credential store: read-only, scoped, and without the holdout for agents. The customer registers them once (see [rulings](../product/rulings.md)). Most of this is target; [today.md](today.md) says what exists.
 
 | If you are doing | Read |
 | --- | --- |

@@ -5,8 +5,8 @@
 | Object | Means | Not |
 | --- | --- | --- |
 | connector | A connection to an outside system that the agent's code reads through: Snowflake, Databricks, DynamoDB, BigQuery, Postgres, S3, GitHub, GitLab, any MCP server. It knows how to make a scoped credential for its system | a dataset, a credential, a pipe that Ratchet reads through, "source" (the old word) |
-| scoped credential | A read-only credential for one connector, handed to a session through the platform's credential store. The agent's has the holdout left out; the evaluator's is separate and includes it. Whether it is minted per run or registered once is open (see [rulings](../product/rulings.md)) | a stored secret in Ratchet's database, the connector admin secret |
-| connector admin secret | A secret that could mint scoped credentials. Whether any exists in the design depends on the open question in [rulings](../product/rulings.md). No agent holds it, and on Ratchet cloud the server does not | a scoped credential |
+| scoped credential | A read-only credential for one connector, handed to a session through the platform's credential store. The agent's has the holdout left out; the evaluator's is separate and includes it. The customer makes it and registers it once (see [rulings](../product/rulings.md)) | a stored secret in Ratchet's database, the connector admin secret |
+| connector admin secret | The customer's own secret that can make scoped credentials. It stays with the customer: Ratchet never holds one, and no agent does (see [rulings](../product/rulings.md)) | a scoped credential |
 | dataset | A named, governed table or file set that experiments read. Ratchet records its id and versions, never its rows | a connector, a query |
 | dataset version | One immutable state of a dataset, with an id | latest, a snapshot someone can edit |
 | virtual dataset | A dataset that points at data left in place, pinned by an as-of time | a copy |
