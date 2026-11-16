@@ -44,6 +44,8 @@ xcodebuild -project Ratchet.xcodeproj -scheme Ratchet -destination 'platform=mac
 - Keep UI and framework state on `@MainActor`; protect shared mutable state with actors. Check cancellation in long work.
 - One source of truth. Views own state with `@State` (private), edit borrowed state through `@Binding` or `@Bindable`, and receive plain values when they only read. Shared models are `@Observable` and `@MainActor`.
 - Stable identity in dynamic collections (use the server's id). Keep every control keyboard reachable and accessible, support Dynamic Type, Increase Contrast and Reduce Motion, and take every visible string from the catalogue (localisable).
+- A view's `body` runs often and on the main thread: no formatting of large data, sorting, parsing or I/O in it. Compute in the model and pass the result in.
+- Async work started by a view uses `.task` (or `.task(id:)`), which cancels when the view leaves; check `Task.isCancelled` or use cancellable APIs in long loops, and do not write results to a model after cancellation.
 - A user-triggered failure is shown (an alert or inline state), not logged and swallowed.
 
 For API and review guidance read the matching reference: [Swift](general/swift.md), [data flow](general/data.md), [views](general/views.md), [macOS specifics](general/macos.md), [accessibility](general/accessibility.md), [diagnostics](general/diagnostics.md); [performance](general/performance.md) for performance work.

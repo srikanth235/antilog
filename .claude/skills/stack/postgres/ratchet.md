@@ -89,6 +89,7 @@ The queue is a table in the store: Postgres self-hosted, the organization's Dura
 - One writer means no row-level security, no `SKIP LOCKED` and no `NOTIFY`. The object holds live streams and timers (alarms) itself.
 - Limits to design for: 10 GB per organization, about 1,000 requests a second per object, 30-day point-in-time recovery built in. Keep transactions short and page by keyset cursor.
 - Residency: an object can be pinned to the EU, the US or FedRAMP (Durable Object jurisdictions).
+- Every table is `STRICT`, so a text value cannot land in an integer column; SQLite's default typing accepts anything, and the bug shows up only on export or in Postgres.
 - Foreign keys are on for each connection and every statement is parameterised, as in Postgres.
 - Moving between cloud and self-hosted is an export and import of one neutral file format, not a database copy.
 - Details (strict tables, foreign keys, transactions, limits, migrations, numbers across JavaScript): [general/sqlite.md](general/sqlite.md).
@@ -102,7 +103,7 @@ The queue is a table in the store: Postgres self-hosted, the organization's Dura
 ## Pitfalls
 
 - **A migration that locks a hot table** blocks the whole server. Check what lock a statement takes before shipping it, and set `lock_timeout`.
-- **`OFFSET` pagination** gets slower with depth; use keyset cursors ([general/postgres-best-practices.md](general/postgres-best-practices.md)).
+- **`OFFSET` pagination** gets slower with depth and skips or repeats rows while new ones arrive; the timeline, the audit log and trial lists page by a keyset cursor on `(time, id)`, in both stores ([general/postgres-best-practices.md](general/postgres-best-practices.md)).
 - **A long-lived transaction** holds locks and stops vacuum. Set `idle_in_transaction_session_timeout`.
 - **Unindexed foreign keys** make deletes and joins scan. Run the missing-index query in review.
 - **`timestamp` without time zone, `float` for money, `varchar(n)` for nothing** are the usual type mistakes: see the types above.
