@@ -5,8 +5,8 @@ One board per screen state, for the web app (macOS app boards are owed). There i
 ## What is here
 
 - `*.dc.html`: boards, each one fixed-size root element. Web boards are 1440 by 900; the rules boards are taller.
-- Parts, the shared chrome, on the Components page: `Sidebar`, `SidebarEmpty` (no rows, for an organization with no sessions), `SettingsRail`, and the nested pieces `SidebarRows`, `SidebarTop` and `SidebarFoot`. A part is a plain static board; the generator inserts its content into every board that marks a place for it (see Parts below). The session header varies per screen, so they are board content, not parts.
-- `canvas.json`: the pages and where each board sits. Pages: Design rules, Components, Web light, Web dark, Archive. Rows each have a title note: 0 Rules, 1 Sign in, 2 Home, 3 Session, 4 Contracts and receipts, 5 Search, 8 Agent platforms, 9 Organization, 10 Desktop app. Boards in a row are 1440 wide with 80px gaps.
+- Parts, the shared chrome, on the Components page: `Sidebar`, `SidebarEmpty` (no rows, for an organization with no experiments), `SettingsRail`, and the nested pieces `SidebarRows`, `SidebarTop` and `SidebarFoot`. A part is a plain static board; the generator inserts its content into every board that marks a place for it (see Parts below). The session header varies per screen, so they are board content, not parts.
+- `canvas.json`: the pages and where each board sits. Pages: Design rules, Components, Web light, Web dark, Archive. Rows each have a title note: 0 Rules, 1 Sign in, 2 Home, 3 Session, 4 Experiment and receipts, 5 Search, 6 Projects, 7 Customize, 8 Agent platforms, 9 Organization, 10 Desktop app. Boards in a row are 1440 wide with 80px gaps.
 - `tokens.css` (generated), `icons.css` and `components.css` (authored, values only through `var()`). Boards are plain files with no runtime: open one from disk.
 - `DesignRules.dc.html` shows every token in light and dark with its contrast ratio, the type scale, radii and button kinds. `Decisions.dc.html` lists the owner's calls, DECIDED with a date or OPEN.
 - Values live in `design/tokens.toml` and nowhere else.
@@ -39,7 +39,7 @@ One board per screen state, for the web app (macOS app boards are owed). There i
 A part's source is its board on the Components page (`Sidebar.dc.html`): no `{{ }}`, no `<sc-for>`, no logic. Its content is the inside of the `<div class="board" style="display: contents;">` root in `<x-dc>`. A board marks where it goes:
 
 ```html
-<!-- part:Sidebar active="connectors" -->
+<!-- part:Sidebar active="customize" -->
 <!-- /part -->
 ```
 

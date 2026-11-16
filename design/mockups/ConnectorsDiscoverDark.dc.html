@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Customize, Connectors, discover · dark</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="./tokens.css">
+<link rel="stylesheet" href="./icons.css">
+<link rel="stylesheet" href="./components.css">
+<link rel="stylesheet" href="./logos.css">
+</helmet>
+<div data-theme="dark" class="board app" style="width: 1440px; height: 900px;">
+  <!-- part:Sidebar active="customize" -->
+  <nav class="side" aria-label="Main">
+        <div class="side-top">
+          <a class="brand" href="HomeDark.dc.html"><svg aria-hidden="true" width="36" height="22" viewBox="218 338 600 369" data-keep><defs><linearGradient id="brass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F8E4B8"/><stop offset=".6" stop-color="#E2BE7C"/><stop offset="1" stop-color="#BE8F49"/></linearGradient></defs><path d="M397.8 434.8L397.8 466.2A31.5 31.5 0 0 1 366.4 434.8Z" style="fill:var(--mark)" fill-opacity="0.12"/><path d="M407.7 434.8L407.7 466.2A31.5 31.5 0 0 0 439.2 434.8Z" style="fill:var(--mark)" fill-opacity="0.18"/><path d="M361.6 424.9L439.2 424.9A77.6 77.6 0 0 0 361.6 347.3Z" style="fill:var(--mark)" fill-opacity="0.28"/><path d="M351.7 471.0L227.9 471.0A123.8 123.8 0 0 1 351.7 347.3Z" style="fill:var(--mark)" fill-opacity="0.42"/><path d="M444.0 480.9L444.0 697.0A216.1 216.1 0 0 1 227.9 480.9Z" style="fill:var(--mark)" fill-opacity="0.6"/><path d="M453.9 342.5L453.9 697.0A354.5 354.5 0 0 0 808.4 342.5Z" fill="url(#brass)"/></svg>Ratchet</a>
+          <a class="btn primary full" data-item="new" href="HomeDark.dc.html"><i class="ic s i-plus"></i>New experiment</a>
+          <div class="col" style="gap: 2px;">
+            <button class="nav"><i class="ic i-search"></i>Search<span class="kc" aria-hidden="true" style="margin-left: auto;">⌘K</span></button>
+            <a class="nav" data-item="projects" href="ProjectsDark.dc.html"><i class="ic i-folder"></i>Projects</a>
+            <a class="nav" data-item="customize" href="EvaluationsDark.dc.html" aria-current="page"><i class="ic i-sliders"></i>Customize</a>
+          </div>
+        </div>
+      <div class="side-scroll">
+        <div class="col" style="gap: 2px;">
+          <span class="t-label sl">Pinned</span>
+          <div class="srow"><a class="rec ses" href="SessionWorkingDark.dc.html"><span role="img" aria-label="Working" title="Working" class="st gi st-work run" style="color: var(--accent);"></span><span class="t">Cut checkout p95 latency</span></a><button class="pinb" aria-label="Unpin Cut checkout p95 latency"><i class="ic s i-pin"></i></button></div>
+        </div>
+        <div class="col" style="gap: 8px;">
+          <div class="pg">
+            <button class="ph" aria-expanded="true"><i class="ic s i-chev chev"></i><span class="t">Checkout platform</span></button>
+            <div class="srow"><a class="rec ses" data-item="cut-checkout-p95" href="SessionWorkingDark.dc.html"><span role="img" aria-label="Working" title="Working" class="st gi st-work run" style="color: var(--accent);"></span><span class="t">Cut checkout p95 latency</span></a><button class="pinb" aria-label="Pin Cut checkout p95 latency"><i class="ic s i-pin"></i></button></div>
+            <div class="sx-l">
+              <a class="rec ses sx" data-item="claude-session" href="SessionWorkingDark.dc.html"><span role="img" aria-label="Working" title="Working" class="st gi st-work run" style="color: var(--accent);"></span><span class="t">Claude Code session</span></a>
+              <a class="rec ses sx" data-item="codex-session" href="SessionSpawnedDark.dc.html"><span role="img" aria-label="Working" title="Working" class="st gi st-work run" style="color: var(--accent);"></span><span class="t">Codex session</span></a>
+              <a class="rec ses sx" data-item="gemini-session" href="SessionWorkingDark.dc.html"><span role="img" aria-label="Done" title="Done" class="st gi st-done" style="color: var(--good);"></span><span class="t">Gemini session</span></a>
+            </div>
+            <div class="srow"><a class="rec ses" data-item="speed-up-smoke-suite" href="SessionNoWinDark.dc.html"><span role="img" aria-label="Done" title="Done" class="st gi st-done" style="color: var(--good);"></span><span class="t">Speed up the smoke suite</span></a><button class="pinb" aria-label="Pin Speed up the smoke suite"><i class="ic s i-pin"></i></button></div>
+            <div class="srow"><a class="rec ses" data-item="shrink-production-bundle" href="SessionNoWinDark.dc.html"><span role="img" aria-label="Done" title="Done" class="st gi st-done" style="color: var(--good);"></span><span class="t">Shrink the production bundle</span></a><button class="pinb" aria-label="Pin Shrink the production bundle"><i class="ic s i-pin"></i></button></div>
+          </div>
+          <div class="pg">
+            <button class="ph" aria-expanded="true"><i class="ic s i-chev chev"></i><span class="t">Search</span></button>
+            <div class="srow"><a class="rec ses" data-item="autocomplete-latency" href="SessionFailedDark.dc.html"><span role="img" aria-label="Failed" title="Failed" class="st gi st-fail" style="color: var(--bad);"></span><span class="t">Autocomplete latency</span></a><button class="pinb" aria-label="Pin Autocomplete latency"><i class="ic s i-pin"></i></button></div>
+          </div>
+          <div class="pg">
+            <button class="ph" aria-expanded="true"><i class="ic s i-chev chev"></i><span class="t">Data science forecasts</span></button>
+            <div class="srow"><a class="rec ses" data-item="reduce-forecast-error" href="SessionSealDark.dc.html"><span role="img" aria-label="Waiting for you" title="Waiting for you" class="st gi st-wait" style="color: var(--warn);"></span><span class="t">Reduce forecast error</span></a><button class="pinb" aria-label="Pin Reduce forecast error"><i class="ic s i-pin"></i></button></div>
+            <div class="srow"><a class="rec ses" data-item="feature-pipeline-cost" href="SessionDeliveredDark.dc.html"><span role="img" aria-label="Done" title="Done" class="st gi st-done" style="color: var(--good);"></span><span class="t">Feature pipeline cost</span></a><button class="pinb" aria-label="Pin Feature pipeline cost"><i class="ic s i-pin"></i></button></div>
+          </div>
+        </div>
+      </div>
+      <div class="side-foot">
+        <a class="nav" href="SettingsProfileDark.dc.html" aria-label="Priya Raman, user menu" style="height: 48px; gap: 12px;"><span aria-hidden="true" class="avatar round" style="width: 30px; height: 30px; font-size: 14px;">P</span><span class="col grow" style="line-height: 1.25;"><span style="color: var(--ink);">Priya Raman</span><span class="xs mut">via Okta</span></span><i class="ic s mut i-more"></i></a>
+      </div>
+  </nav>
+  <!-- /part -->
+  <main class="main">
+    <div class="top">
+      <div class="crumbs"><span class="ell" style="font-weight: 500;">Customize</span></div>
+      <div class="rw g8"><a class="tsearch" href="SearchDark.dc.html" aria-label="Search"><i class="ic s i-search"></i>Search<span class="kc" aria-hidden="true">⌘K</span></a></div>
+    </div>
+    <div class="scroll">
+      <section class="page cust">
+        <div class="hd"><h1 class="t-display">Customize</h1></div>
+        <div class="ctl"><div class="ctabs" role="tablist" aria-label="Customize"><a class="ptab" role="tab" aria-selected="false" href="EvaluationsDiscoverDark.dc.html" style="display: inline-flex; align-items: center;">Evaluations</a><a class="ptab" role="tab" aria-selected="false" href="SkillsDiscoverDark.dc.html" style="display: inline-flex; align-items: center;">Skills</a><a class="ptab on" role="tab" aria-selected="true" href="ConnectorsDiscoverDark.dc.html" style="display: inline-flex; align-items: center;">Connectors</a><a class="ptab" role="tab" aria-selected="false" href="AgentsDiscoverDark.dc.html" style="display: inline-flex; align-items: center;">Agents</a><a class="ptab" role="tab" aria-selected="false" href="PluginsDiscoverDark.dc.html" style="display: inline-flex; align-items: center;">Plugins</a></div><span class="vdiv" aria-hidden="true"></span><div class="segs" role="group" aria-label="View"><a class="seg" href="ConnectorsDark.dc.html">Yours</a><button class="seg on" aria-pressed="true">Discover</button></div><div class="ctools"><label class="sfield"><i class="ic i-search" aria-hidden="true"></i><input placeholder="Search connectors" aria-label="Search connectors"></label><button class="icon-btn" aria-label="Filter"><i class="ic i-filter"></i></button></div></div>
+        <div class="col" style="gap: 28px;"><div class="car" aria-roledescription="carousel" aria-label="Featured connectors"><button class="carb l" aria-label="Previous"><i class="ic i-chev" style="transform: rotate(180deg);"></i></button><span class="eyebrow">Featured connectors</span><div class="cartiles" aria-hidden="true"><span class="cgl" title="Snowflake"><span class="tile" style="width: 32px; height: 32px; border: 0; background: transparent;"><span class="lg lg-snowflake" role="img" aria-label="Snowflake" style="width: 28px; height: 28px;"></span></span></span><span class="cgl" title="Databricks"><span class="tile" style="width: 32px; height: 32px; border: 0; background: transparent;"><span class="lg lg-databricks" role="img" aria-label="Databricks" style="width: 28px; height: 28px;"></span></span></span><span class="cgl" title="BigQuery"><span class="tile" style="width: 32px; height: 32px; border: 0; background: transparent;"><span class="lg lg-googlebigquery" role="img" aria-label="BigQuery" style="width: 28px; height: 28px;"></span></span></span><span class="cgl" title="Amazon S3"><span class="tile" style="width: 32px; height: 32px; border: 0; background: transparent;"><span class="lg lg-amazons3" role="img" aria-label="Amazon S3" style="width: 28px; height: 28px;"></span></span></span><span class="cgl" title="Postgres"><span class="tile" style="width: 32px; height: 32px; border: 0; background: transparent;"><span class="lg lg-postgresql" role="img" aria-label="Postgres" style="width: 28px; height: 28px;"></span></span></span></div><h2>Connect your warehouse</h2><span class="sm ink2">Read tables in place. Each connector takes two credentials, one for agents and one for the judge. Ratchet keeps neither.</span><button class="btn sm">Explore</button><button class="carb r" aria-label="Next"><i class="ic i-chev"></i></button></div><div class="dots" role="group" aria-label="Featured connector slides"><button class="dotp on" aria-label="Slide 1" aria-current="true"></button><button class="dotp" aria-label="Slide 2"></button><button class="dotp" aria-label="Slide 3"></button><button class="dotp" aria-label="Slide 4"></button></div><div class="col g12"><div class="rw g8"><h2 class="t-section">Top connectors</h2><span class="cnb">7</span><button class="btn ghost sm" style="margin-left: auto;">Show all</button></div><div class="cg2"><div class="cc2"><span class="tile"><span class="lg lg-snowflake" role="img" aria-label="Snowflake"></span></span><div class="bd"><span class="t-item ell">Snowflake</span><span class="xs ink2 ell">Warehouse tables and the holdout datasets, read in place</span><span class="xs mut ell">by Ratchet</span></div><a class="addsq" href="AddConnectorDark.dc.html" aria-label="Add Snowflake" title="Add Snowflake"><i class="ic i-plus"></i></a></div><div class="cc2"><span class="tile"><span class="lg lg-databricks" role="img" aria-label="Databricks"></span></span><div class="bd"><span class="t-item ell">Databricks</span><span class="xs ink2 ell">Tables and volumes in your lakehouse</span><span class="xs mut ell">by Ratchet</span></div><button class="addsq done" aria-label="Databricks is added" title="Databricks is added" disabled><i class="ic i-check"></i></button></div><div class="cc2"><span class="tile"><span class="lg lg-amazondynamodb" role="img" aria-label="Amazon DynamoDB"></span></span><div class="bd"><span class="t-item ell">DynamoDB</span><span class="xs ink2 ell">Items in your tables, read by key and query</span><span class="xs mut ell">by Ratchet</span></div><a class="addsq" href="AddConnectorDark.dc.html" aria-label="Add DynamoDB" title="Add DynamoDB"><i class="ic i-plus"></i></a></div><div class="cc2"><span class="tile"><span class="lg lg-googlebigquery" role="img" aria-label="BigQuery"></span></span><div class="bd"><span class="t-item ell">BigQuery</span><span class="xs ink2 ell">Tables and views from your warehouse</span><span class="xs mut ell">by Ratchet</span></div><button class="addsq done" aria-label="BigQuery is added" title="BigQuery is added" disabled><i class="ic i-check"></i></button></div><div class="cc2"><span class="tile"><span class="lg lg-postgresql" role="img" aria-label="PostgreSQL"></span></span><div class="bd"><span class="t-item ell">Postgres</span><span class="xs ink2 ell">Read-only queries against a database replica</span><span class="xs mut ell">by Ratchet</span></div><button class="addsq done" aria-label="Postgres is added" title="Postgres is added" disabled><i class="ic i-check"></i></button></div><div class="cc2"><span class="tile"><span class="lg lg-amazons3" role="img" aria-label="Amazon S3"></span></span><div class="bd"><span class="t-item ell">Amazon S3</span><span class="xs ink2 ell">Files and exports in a bucket, versioned by prefix</span><span class="xs mut ell">by Ratchet</span></div><button class="addsq done" aria-label="Amazon S3 is added" title="Amazon S3 is added" disabled><i class="ic i-check"></i></button></div><div class="cc2"><span class="tile"><span class="lg lg-modelcontextprotocol" role="img" aria-label="MCP server"></span></span><div class="bd"><span class="t-item ell">MCP server</span><span class="xs ink2 ell">Any server that speaks the Model Context Protocol</span><span class="xs mut ell">by Ratchet</span></div><button class="addsq done" aria-label="MCP server is added" title="MCP server is added" disabled><i class="ic i-check"></i></button></div></div><a class="textbtn" href="SettingsConnectionsDark.dc.html" style="color: var(--accent); align-self: flex-start;">The code host (GitHub, GitLab) is under Connections</a></div></div>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+</body>
+</html>
