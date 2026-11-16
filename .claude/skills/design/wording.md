@@ -15,13 +15,12 @@ The vocabulary source is [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md), includ
 | Return (Delivered divided by spent, as `68×`) | ROI |
 | Agent | connection (and "harness" outside code) |
 | Agent order | priority |
-| Where (This machine or Cloud) | location |
 | Note (text that steers all agents, or one with @) | comment, prompt |
 | Pause Agent | Pause alone |
 | Config branch (`ratchet/config`) | draft PR |
 | Try again | Retry |
 | connector | source |
-| sandbox (and "Create workspace" only as the stepper step) | workspace, anywhere else |
+| session (an agent's loop on an agent platform; drafting session, run session), evaluator sandbox (where Ratchet measures, no agent in it) | workspace, container, VM; "Create workspace" only as the stepper step |
 | trial (one measurement of one agent's change) | candidate (on screen) |
 | Kept (a trial's outcome) | Accepted, Beats noise (as an outcome; "Beats noise" stays an evidence badge on the result card) |
 | evaluation | benchmark (on screen) |
@@ -31,10 +30,10 @@ The vocabulary source is [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md), includ
 | user, service principal | member, service account (on screen) |
 | Restricted to evaluator | evaluator only, hidden |
 | Skill (a skill pack) | skill pack on screen; never the repo's guidance files |
-| launcher; runner when installed for Ratchet cloud | agent host, worker |
+| agent platform (Claude Managed Agents, AWS AgentCore, OpenAI Agents API); measuring platform | runner, launcher, backend, agent host, worker |
 | Ratchet cloud, Self-hosted | SaaS, on-prem |
-| Where work runs (setting; values "Your infrastructure", "Ratchet-managed") | Deployment mode, hosting, BYOC, managed cloud |
-| Model key (source "Ratchet-supplied" or "Your own key") | API key source, BYOK |
+| Infrastructure (Settings page: Agent platforms, Environments, Credentials) | Where work runs, Your infrastructure, Ratchet-managed, deployment mode, BYOC, managed cloud |
+| Add platform, Test connection, Update credential, Remove | Add backend, Connect runner |
 | a readable label ("Experiment created") | a raw action code (`experiment.create`) |
 
 The glossary also defines Chat and Draft. Add each new term to the glossary in the same change that introduces it. Prefer the term Palantir Foundry or Databricks already uses; if a screen needs a word that is not in the glossary, find theirs first and add the row.
@@ -43,16 +42,22 @@ The glossary also defines Chat and Draft. Add each new term to the glossary in t
 
 The CLI and MCP tools are read by people too. They print the screen words, and may keep code names in flags and JSON keys.
 
-## Where work runs and model keys (target)
+## Infrastructure (target)
 
 | Where | Words |
 | --- | --- |
-| Setting | "Where work runs", values "Your infrastructure", "Ratchet-managed" |
-| Backend row | "Ratchet-managed · Cloudflare · up to 4 vCPU, 12 GiB", note "Timing benchmarks are noisier on shared machines." |
-| Warning when switching to Ratchet-managed | "Agents will read your data in Ratchet's sandboxes. They are removed when each run ends." |
-| Model key field | "Ratchet-supplied, billed to the run's budget" or "Your own key" |
-| Key hint | "Only the egress proxy adds it." |
-| Secret store row, Ratchet-managed | "Connector secrets are held encrypted by Ratchet, never by the server." |
+| Page and sections | "Infrastructure"; "Agent platforms", "Environments", "Credentials" |
+| Platforms | "Claude Managed Agents", "AWS AgentCore", "OpenAI Agents API" |
+| Buttons | "Add platform", "Test connection", "Update credential", "Remove" |
+| Measuring platform | Badge "Measuring platform" on one platform row; field "Measuring platform" on an experiment's environment step |
+| Environment | "bench-std · AWS AgentCore · 4 vCPU, 16 GiB" |
+| Agent with its platform | "Claude Code · Claude Managed Agents" |
+| Run history tabs | "Trials", "Sessions" |
+| Clean-up state | Running, Removed, Not removed |
+| Platform credential rejected | Notification title "Needs attention"; row status "Needs attention" |
+| Ratchet cloud page | Read-only; a note that Ratchet manages the platforms and bills at cost through each run's budget, and per platform the data and retention, e.g. "United States only, no zero data retention" |
+| Connector credentials | "Read-only. Registered once, kept in the platform's credential store. Ratchet keeps no connector secret." |
+| Notification titles | Win, Needs attention, No win, Failed, Stopped, Stopped at the budget |
 
 ## The agent loop (target)
 
@@ -61,11 +66,11 @@ The CLI and MCP tools are read by people too. They print the screen words, and m
 | Trial outcome tags, one per trial | Kept, Within noise, Worse, Guardrail failed, Failed holdout, Failed (did not run), Measuring |
 | Agent lane status | Iterating, Measuring trial 9, Paused, Stopped, no gain in 8 trials, Stopped, its budget share is spent |
 | Lane facts | "11 trials · 3 kept · best 344 ms · $15 of $20" |
-| A stopped agent's budget passed on | "Sandbox removed · its unspent $6.67 went to the others" |
+| A stopped agent's budget passed on | "Session ended · its unspent $6.67 went to the others" |
 | Adopting | "Started from Claude Code's trial 11" |
-| Stepper | 1 Start run, 2 Create workspaces, 3 Mint scoped credentials, 4 Agents iterate: change, measure, keep or discard, 5 Pick the best kept trial, 6 Store history, open pull request, 7 Clean up |
+| Stepper | 1 Start run, 2 Start sessions, 3 Hand over credentials, 4 Agents iterate: change, measure, keep or discard, 5 Pick the best kept trial, 6 Store history, open pull request, 7 Clean up |
 | Stepper status line | "Step 4 of 7 · 2 agents iterating · 28 trials, 4 kept." |
-| Steps for this trial | Hypothesis, Wrote the change, Checked it in its sandbox (does not count), Asked for a measurement, Evaluator measured, Beat Claude Code's best by 4.7%, Confirmed in a fresh evaluator sandbox, holdout passed, Kept |
+| Steps for this trial | Hypothesis, Wrote the change, Checked it in its session (does not count), Asked for a measurement, Evaluator measured, Beat Claude Code's best by 4.7%, Confirmed in a fresh evaluator sandbox, holdout passed, Kept |
 | Composer while running | "Steer the agents, or @ one, e.g. @Codex focus on database queries" |
 | Pause one agent | Pause agent |
 
@@ -110,8 +115,8 @@ A `·` never joins two thoughts in one string; it survives only between short me
 - A word means one thing. Do not give one object two names across pages or clients.
 - Money and units are worded the same on every page.
 - Defensive reassurance (a fact followed by what was not lost, deleted or sent) belongs only where the risk decision is made, in full sentences. A status or an empty state repeating the promise is noise.
-- A cloud account is not a connector. Cloud and cluster words (AWS, GCP, Azure, Kubernetes) appear only as sandbox backends under Infrastructure and where a run names its backend.
-- "Session" describes an experiment thread in code and in these skills; the screen never says it.
+- A cloud account is not a connector. Platform names (Claude Managed Agents, AWS AgentCore, OpenAI Agents API) appear under Infrastructure, beside an agent, and where an experiment names its measuring platform. Never Kubernetes.
+- "Session" is an agent's loop on an agent platform, or a drafting session. It is not the experiment thread, which is the experiment.
 - Model providers are a field on an agent, not a connector category.
 
 ## The words catalogue (target)

@@ -115,16 +115,23 @@
           <button class="pill" aria-label="Skills: 2 skills" title="Skills"><i class="ic g-book"></i><span class="v">2 skills</span></button>
         </div>
         <div class="crow">
-          <div class="pop"><button class="pill on" aria-label="Environment: Kubernetes" title="Environment"><span class="lg lg-kubernetes" role="img" aria-label="Kubernetes" style="width: 14px; height: 14px;"></span><span class="v">Kubernetes</span></button><div class="menu wide dn" role="menu" style="width: 380px;">
-              <span class="t-label">Sandbox backend</span>
+          <div class="pop"><button class="pill on" aria-label="Environment: bench-std" title="Environment"><span class="lg lgt" role="img" aria-label="AWS AgentCore" style="width: 14px; height: 14px;">AWS</span><span class="v">bench-std</span></button><div class="menu wide dn" role="menu" style="width: 400px;">
+              <span class="t-label">Measuring platform</span>
               <div class="col" style="gap: 2px;">
-                <button class="mi on" role="menuitemradio" aria-checked="true" style="height: auto; padding: 8px 10px;"><span class="col grow" style="gap: 1px;"><span>Kubernetes</span><span class="xs mut">EKS acme-prod · us-east-1</span></span><i class="ic s i-check"></i></button>
-                <button class="mi" role="menuitemradio" aria-checked="false" style="height: auto; padding: 8px 10px;"><span class="col grow" style="gap: 1px;"><span>AWS VMs</span><span class="xs mut">acme-prod · us-east-1</span></span></button>
-                <button class="mi" role="menuitemradio" aria-checked="false" style="height: auto; padding: 8px 10px;"><span class="col grow" style="gap: 1px;"><span>This machine (Mac)</span><span class="xs mut">Priya’s MacBook Pro · agents only</span></span></button>
+                <button class="mi on" role="menuitemradio" aria-checked="true" style="height: auto; padding: 8px 10px;"><span class="col grow" style="gap: 1px;"><span>AWS AgentCore</span><span class="xs mut">acme-prod · us-east-1</span></span><i class="ic s i-check"></i></button>
+                <button class="mi" role="menuitemradio" aria-checked="false" style="height: auto; padding: 8px 10px;"><span class="col grow" style="gap: 1px;"><span>Claude Managed Agents</span><span class="xs mut">Acme workspace</span></span></button>
+                <button class="mi" role="menuitemradio" aria-checked="false" style="height: auto; padding: 8px 10px;"><span class="col grow" style="gap: 1px;"><span>OpenAI Agents API</span><span class="xs mut">Acme org</span></span></button>
               </div>
-              <span class="t-label">Machine type</span>
-              <div class="segs" role="group" aria-label="Machine type"><button class="seg on">m7i.2xlarge</button><button class="seg">m7i.4xlarge</button></div>
-              <span class="xs mut">Agents and the evaluator run in separate sandboxes on separate machines. The evaluator never runs on a Mac.</span>
+              <span class="t-label">Environment</span>
+              <div class="col" style="gap: 2px;">
+                <button class="mi on" role="menuitemradio" aria-checked="true" style="height: auto; padding: 8px 10px;"><span class="col grow" style="gap: 1px;"><span>bench-std</span><span class="xs mut">ratchet-bench:2026.11 · 4 vCPU, 16 GiB</span></span><i class="ic s i-check"></i></button>
+              </div>
+              <span class="t-label">Agents run on</span>
+              <div class="col" style="gap: 4px;">
+                <span class="rw g8 sm"><span class="lg lg-claude" role="img" aria-label="Claude Managed Agents" style="width: 14px; height: 14px;"></span>Claude Code · Claude Managed Agents · work-claude</span>
+                <span class="rw g8 sm"><span class="lg lgt" role="img" aria-label="OpenAI Agents API" style="width: 14px; height: 14px;">AI</span>Codex · OpenAI Agents API · work-openai</span>
+              </div>
+              <span class="xs mut">Each trial is measured in an evaluator sandbox on the measuring platform, then removed. No agent runs in it.</span>
               <a class="textbtn" href="Infrastructure.dc.html" style="align-self: flex-start;">Manage infrastructure</a>
             </div></div>
           <button class="pill" aria-label="Agents: 2 agents" title="Agents"><i class="ic g-term"></i><span class="v">2 agents</span></button>

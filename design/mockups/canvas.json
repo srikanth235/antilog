@@ -60,26 +60,6 @@
       "expand": "fill",
       "is_interactive": true
     },
-    "AddBackend.dc.html": {
-      "x": 6080,
-      "y": 9450,
-      "w": 1440,
-      "h": 900,
-      "title": "8 \u00b7 Infrastructure, add backend",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "AddBackendDark.dc.html": {
-      "x": 6080,
-      "y": 9450,
-      "w": 1440,
-      "h": 900,
-      "title": "8 \u00b7 Infrastructure, add backend \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
     "AddConnector.dc.html": {
       "x": 4560,
       "y": 8350,
@@ -136,6 +116,26 @@
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Add evaluation \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AddPlatform.dc.html": {
+      "x": 6080,
+      "y": 9450,
+      "w": 1440,
+      "h": 900,
+      "title": "8 \u00b7 Settings, Agent platforms, add platform",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AddPlatformDark.dc.html": {
+      "x": 6080,
+      "y": 9450,
+      "w": 1440,
+      "h": 900,
+      "title": "8 \u00b7 Settings, Agent platforms, add platform \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -561,7 +561,7 @@
       "y": 9450,
       "w": 1440,
       "h": 900,
-      "title": "8 \u00b7 Settings, Infrastructure",
+      "title": "8 \u00b7 Settings, Agent platforms",
       "page": "web-light",
       "expand": "fill",
       "is_interactive": true
@@ -571,7 +571,7 @@
       "y": 9450,
       "w": 1440,
       "h": 900,
-      "title": "8 \u00b7 Settings, Infrastructure \u00b7 dark",
+      "title": "8 \u00b7 Settings, Agent platforms \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -581,7 +581,7 @@
       "y": 9450,
       "w": 1440,
       "h": 900,
-      "title": "8 \u00b7 Settings, Infrastructure, no runner",
+      "title": "8 \u00b7 Settings, Agent platforms, none yet",
       "page": "web-light",
       "expand": "fill",
       "is_interactive": true
@@ -591,7 +591,7 @@
       "y": 9450,
       "w": 1440,
       "h": 900,
-      "title": "8 \u00b7 Settings, Infrastructure, no runner \u00b7 dark",
+      "title": "8 \u00b7 Settings, Agent platforms, none yet \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -601,7 +601,7 @@
       "y": 9450,
       "w": 1440,
       "h": 900,
-      "title": "8 \u00b7 Settings, Infrastructure, Ratchet-managed",
+      "title": "8 \u00b7 Settings, Agent platforms, Ratchet cloud",
       "page": "web-light",
       "expand": "fill",
       "is_interactive": true
@@ -611,27 +611,7 @@
       "y": 9450,
       "w": 1440,
       "h": 900,
-      "title": "8 \u00b7 Settings, Infrastructure, Ratchet-managed \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "LauncherDisconnected.dc.html": {
-      "x": 4560,
-      "y": 9450,
-      "w": 1440,
-      "h": 900,
-      "title": "8 \u00b7 Infrastructure, runner away",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "LauncherDisconnectedDark.dc.html": {
-      "x": 4560,
-      "y": 9450,
-      "w": 1440,
-      "h": 900,
-      "title": "8 \u00b7 Infrastructure, runner away \u00b7 dark",
+      "title": "8 \u00b7 Settings, Agent platforms, Ratchet cloud \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -716,26 +696,6 @@
       "expand": "fill",
       "is_interactive": true
     },
-    "MacRunnerBusy.dc.html": {
-      "x": 4560,
-      "y": 8800,
-      "w": 1440,
-      "h": 900,
-      "title": "8 \u00b7 Infrastructure, macOS, quit while agents run",
-      "page": "mac-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "MacRunnerBusyDark.dc.html": {
-      "x": 4560,
-      "y": 8800,
-      "w": 1440,
-      "h": 900,
-      "title": "8 \u00b7 Infrastructure, macOS, quit while agents run \u00b7 dark",
-      "page": "mac-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
     "MacSettingsWindow.dc.html": {
       "x": 0,
       "y": 9900,
@@ -780,46 +740,6 @@
       "w": 1440,
       "h": 900,
       "title": "1 \u00b7 Sign in, macOS, sign in \u00b7 dark",
-      "page": "mac-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "MacThisMachine.dc.html": {
-      "x": 0,
-      "y": 8800,
-      "w": 1440,
-      "h": 900,
-      "title": "8 \u00b7 Infrastructure, macOS, this machine",
-      "page": "mac-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "MacThisMachineDark.dc.html": {
-      "x": 0,
-      "y": 8800,
-      "w": 1440,
-      "h": 900,
-      "title": "8 \u00b7 Infrastructure, macOS, this machine \u00b7 dark",
-      "page": "mac-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "MacThisMachineOff.dc.html": {
-      "x": 1520,
-      "y": 8800,
-      "w": 1440,
-      "h": 900,
-      "title": "8 \u00b7 Infrastructure, macOS, this machine off",
-      "page": "mac-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "MacThisMachineOffDark.dc.html": {
-      "x": 1520,
-      "y": 8800,
-      "w": 1440,
-      "h": 900,
-      "title": "8 \u00b7 Infrastructure, macOS, this machine off \u00b7 dark",
       "page": "mac-dark",
       "expand": "fill",
       "is_interactive": true
@@ -880,6 +800,26 @@
       "w": 1440,
       "h": 900,
       "title": "2 \u00b7 Start, environment \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "PlatformError.dc.html": {
+      "x": 4560,
+      "y": 9450,
+      "w": 1440,
+      "h": 900,
+      "title": "8 \u00b7 Settings, Agent platforms, credential rejected",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "PlatformErrorDark.dc.html": {
+      "x": 4560,
+      "y": 9450,
+      "w": 1440,
+      "h": 900,
+      "title": "8 \u00b7 Settings, Agent platforms, credential rejected \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -1104,22 +1044,22 @@
       "expand": "fill",
       "is_interactive": true
     },
-    "RunHistorySandboxes.dc.html": {
+    "RunHistorySessions.dc.html": {
       "x": 6080,
       "y": 6150,
       "w": 1440,
       "h": 900,
-      "title": "5 \u00b7 Run history, Sandboxes",
+      "title": "5 \u00b7 Run history, Sessions",
       "page": "web-light",
       "expand": "fill",
       "is_interactive": true
     },
-    "RunHistorySandboxesDark.dc.html": {
+    "RunHistorySessionsDark.dc.html": {
       "x": 6080,
       "y": 6150,
       "w": 1440,
       "h": 900,
-      "title": "5 \u00b7 Run history, Sandboxes \u00b7 dark",
+      "title": "5 \u00b7 Run history, Sessions \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -1633,26 +1573,6 @@
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Skills, empty \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "StartRunner.dc.html": {
-      "x": 3040,
-      "y": 9450,
-      "w": 1440,
-      "h": 900,
-      "title": "8 \u00b7 Settings, Start a runner",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "StartRunnerDark.dc.html": {
-      "x": 3040,
-      "y": 9450,
-      "w": 1440,
-      "h": 900,
-      "title": "8 \u00b7 Settings, Start a runner \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -2287,14 +2207,14 @@
   "order": [
     "AddAgent.dc.html",
     "AddAgentDark.dc.html",
-    "AddBackend.dc.html",
-    "AddBackendDark.dc.html",
     "AddConnector.dc.html",
     "AddConnectorDark.dc.html",
     "AddConnectorMcp.dc.html",
     "AddConnectorMcpDark.dc.html",
     "AddEvaluation.dc.html",
     "AddEvaluationDark.dc.html",
+    "AddPlatform.dc.html",
+    "AddPlatformDark.dc.html",
     "AddPlugin.dc.html",
     "AddPluginDark.dc.html",
     "AddSkill.dc.html",
@@ -2343,8 +2263,6 @@
     "InfrastructureEmptyDark.dc.html",
     "InfrastructureManaged.dc.html",
     "InfrastructureManagedDark.dc.html",
-    "LauncherDisconnected.dc.html",
-    "LauncherDisconnectedDark.dc.html",
     "MacMain.dc.html",
     "MacMainDark.dc.html",
     "MacMenuBarExtra.dc.html",
@@ -2353,23 +2271,19 @@
     "MacNotificationDark.dc.html",
     "MacOffline.dc.html",
     "MacOfflineDark.dc.html",
-    "MacRunnerBusy.dc.html",
-    "MacRunnerBusyDark.dc.html",
     "MacSettingsWindow.dc.html",
     "MacSettingsWindowDark.dc.html",
     "MacSidebar.dc.html",
     "MacSignIn.dc.html",
     "MacSignInDark.dc.html",
-    "MacThisMachine.dc.html",
-    "MacThisMachineDark.dc.html",
-    "MacThisMachineOff.dc.html",
-    "MacThisMachineOffDark.dc.html",
     "NewExperiment.dc.html",
     "NewExperimentDark.dc.html",
     "NewExperimentDraft.dc.html",
     "NewExperimentDraftDark.dc.html",
     "NewExperimentEnvironment.dc.html",
     "NewExperimentEnvironmentDark.dc.html",
+    "PlatformError.dc.html",
+    "PlatformErrorDark.dc.html",
     "PluginDetail.dc.html",
     "PluginDetailDark.dc.html",
     "Plugins.dc.html",
@@ -2392,8 +2306,8 @@
     "RunHistoryDark.dc.html",
     "RunHistoryEmpty.dc.html",
     "RunHistoryEmptyDark.dc.html",
-    "RunHistorySandboxes.dc.html",
-    "RunHistorySandboxesDark.dc.html",
+    "RunHistorySessions.dc.html",
+    "RunHistorySessionsDark.dc.html",
     "Search.dc.html",
     "SearchDark.dc.html",
     "SearchEmpty.dc.html",
@@ -2446,8 +2360,6 @@
     "SkillsDiscoverDark.dc.html",
     "SkillsEmpty.dc.html",
     "SkillsEmptyDark.dc.html",
-    "StartRunner.dc.html",
-    "StartRunnerDark.dc.html",
     "ThreadBudgetHit.dc.html",
     "ThreadBudgetHitDark.dc.html",
     "ThreadFailed.dc.html",

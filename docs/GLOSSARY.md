@@ -8,7 +8,7 @@
 | Pending | Yearly value of wins in an open PR; not counted in Return | unclaimed, waiting | Pending |
 | Return | Delivered ÷ spent, as `68×` | ROI | Return |
 | Agent | A model on an agent platform that proposes changes: Claude on Claude Managed Agents, Codex on the OpenAI Agents API, Gemini or Grok on AWS AgentCore (target) | harness (code only), connection | agent |
-| Agent order | The fallback sequence, "Claude Code → Codex → Grok · on this machine" | priority | agent order |
+| Agent order | The fallback sequence, "Claude Code → Codex → Grok" | priority | agent order |
 | Where | The agent platform an agent runs on (target). "This machine" is deferred; measuring never runs on a Mac | location | Where |
 | Note | Text that steers the agents of a run: all of them, or one with @ ("@Codex focus on database queries") | comment, prompt | note |
 | Pause Agent | Stop one agent inside a run; its loop waits until resumed | | Pause agent |
@@ -56,12 +56,12 @@ Code and the API use the names of the three basics for their areas; the screen b
 | grant | permission ("Can read", "No access") |
 | marking, holdout | marking, Holdout |
 | evaluator only | Restricted to evaluator |
-| workspace | agent sandbox (the stepper step is "Create workspaces"; elsewhere say sandbox) |
+| workspace | agent session (the stepper step is "Start sessions"; elsewhere say session) |
 | deployment | Ratchet cloud or Self-hosted |
 | spend cap | budget |
 | role | Owner, Editor, Viewer |
 | member, service account | user, service principal |
-| projects, value, history | Projects, Dashboard, More then Run history (tabs Trials, Sandboxes) |
+| projects, value, history | Projects, Dashboard, More then Run history (tabs Trials, Sessions) |
 | members, sign-in, grants, audit log | Users and groups, Single sign-on, Permissions, Audit logs |
 | own items, catalogue | Yours, Discover |
 | featured pick, suggestions, recent additions, list all | Featured evaluation, Featured skill pack, Featured agent, Featured plugin, Featured connectors (banner labels), For you, New, Show all, Top connectors |
@@ -71,18 +71,18 @@ Code and the API use the names of the three basics for their areas; the screen b
 | agent status in a run | Iterating, Measuring trial 9, Paused, Stopped, no gain in 8 trials, Stopped, its budget share is spent |
 | an agent building on another's trial | Started from Claude Code's trial 11 |
 | an agent's totals | "11 trials · 3 kept · best 344 ms · $15 of $20" |
-| a stopped agent's unspent share passed on | "Sandbox removed · its unspent $6.67 went to the others" |
+| a stopped agent's unspent share passed on | "Session ended · its unspent $6.67 went to the others" |
 | steering while running | "Steer the agents, or @ one, e.g. @Codex focus on database queries" |
 | signed receipt, signature verified | Signed numbers, Verified (Verify again) |
-| sandbox clean-up state | Cleaned up: Running, Removed, Not removed |
-| the Mac's local runner taking jobs | Accepting work (menu bar), Run agents on this Mac (Settings, This machine) |
-| quit after the Mac's agents finish | Quit when idle |
+| clean-up state of a session or evaluator sandbox | Cleaned up: Running, Removed, Not removed |
+| what the Mac menu bar shows | Runs, Needs attention (the Mac runs no agents) |
+| where agents run | Agent platforms (Settings, Infrastructure): Claude Managed Agents, AWS AgentCore, OpenAI Agents API; one is the Measuring platform |
 | keep a stopped run stopped | Leave stopped |
 | install the web app as a progressive web app (Windows, Linux) | Install app (Settings, This device); "Get the Mac app" on macOS |
 | ask for push notifications after starting a run | Notify me when this run finishes |
 | notification titles | Win, Needs attention, No win, Failed, Stopped, Stopped at the budget |
 | the server cannot be reached | Can't reach acme.ratchet.cloud. (the server's address), Try again |
-| a trial's steps | Steps for this trial (hypothesis, wrote the change, checked it in its sandbox (does not count), asked for a measurement, evaluator measured, beat the agent's best, confirmed in a fresh evaluator sandbox, Kept) |
+| a trial's steps | Steps for this trial (hypothesis, wrote the change, checked it in its session (does not count), asked for a measurement, evaluator measured, beat the agent's best, confirmed in a fresh evaluator sandbox, Kept) |
 | the settings that apply to this browser only | This device, with the lead "These apply to this browser only." |
 | the server cannot be reached, what that blocks | "New experiments can't start until it is back." |
 | when the offline view was last fresh | Last updated 10:42 (the time of the last good load) |

@@ -15,7 +15,7 @@ Every screen is one of six page types. The type owns the header, back, search, t
 | Page type | Anatomy | Examples |
 | --- | --- | --- |
 | Thread | Header: title, status, primary metric (baseline to best so far), run, trials, spend of budget, elapsed, Stop run with an inline confirm, Pin, menu. Then a chart of the primary metric per trial with the baseline, the noise band and one lane (line) per agent, then the conversation. A composer docks at the foot and follows the state: change the draft, steer the agents or one with @ while running, or start another run with a note. Back: none, the sidebar is the way out. Search: global only. States: a Draft card until Approve; a failed trial is one calm line, never an empty diff | An experiment, in any status |
-| ListPage | Title, a count, search, filter and sort where the list is long, one primary action (a New or Add menu). Rows or cards, never both. Back: none at a sidebar root. Empty: one sentence and at most one action. Loading: a skeleton of the rows. Error: what happened and what to do, with Try again | Projects, Run history (Trials and Sandboxes tabs), Customize (tabs Evaluations, Skills, Connectors, Agents, Plugins; a Yours and Discover toggle) |
+| ListPage | Title, a count, search, filter and sort where the list is long, one primary action (a New or Add menu). Rows or cards, never both. Back: none at a sidebar root. Empty: one sentence and at most one action. Loading: a skeleton of the rows. Error: what happened and what to do, with Try again | Projects, Run history (Trials and Sessions tabs), Customize (tabs Evaluations, Skills, Connectors, Agents, Plugins; a Yours and Discover toggle) |
 | DetailPage | Back to the named parent, a title with its status, one primary action, a menu for the rest, then sections of settings rows and quiet tables. One layout for every kind under Customize: a new kind gets no page style of its own. Empty: a section with nothing to show says so in a sentence. Read-only: controls disabled with a one-line reason | A project, an evaluation, a connector, an agent, a skill |
 | Dialog | Over the app, so you keep your place. A title bar with a close button, a dimmed backdrop, focus moves in and Tab stays inside. Esc, the close button or a click on the backdrop close it and return focus to what opened it. Destructive confirms are inline in the page or a small dialog with the verb as its button | Settings, Add connector, Approve a draft |
 | SettingsSection | One section of the Settings dialog: a rail on the left with a search field, the section on the right. Rows, not cards. See "A setting is a row". Read-only for non-owners | Profile, Appearance, Access tokens, This device (web app only), General, Users and groups, Single sign-on, Infrastructure, Budgets, Notes, Audit logs |
@@ -23,26 +23,26 @@ Every screen is one of six page types. The type owns the header, back, search, t
 
 ### Thread
 
-An experiment is one thread. The conversation holds, in order: the request, Ratchet in short sentences, the draft card (expanded until approved, then one summary line), a seven-step stepper coloured by owning area (1 Start run, Experiment; 2 Create workspaces, Compute, one sandbox per agent; 3 Mint scoped credentials, Data; 4 Agents iterate: change, measure, keep or discard, Experiment, a step that repeats and shows counts; 5 Pick the best kept trial, Experiment; 6 Store history, open pull request, Data; 7 Clean up, Compute), an Agents section, expandable trial cards, notes from people, and the result card with lineage in three columns (Experiment, Data, Compute), Open pull request and Run again.
+An experiment is one thread. The conversation holds, in order: the request, Ratchet in short sentences, the draft card (expanded until approved, then one summary line), a seven-step stepper coloured by owning area (1 Start run, Experiment; 2 Create workspaces, Compute, one session per agent; 3 Mint scoped credentials, Data; 4 Agents iterate: change, measure, keep or discard, Experiment, a step that repeats and shows counts; 5 Pick the best kept trial, Experiment; 6 Store history, open pull request, Data; 7 Clean up, Compute), an Agents section, expandable trial cards, notes from people, and the result card with lineage in three columns (Experiment, Data, Compute), Open pull request and Run again.
 
-- **Agents section.** One lane card per agent: name, status (Iterating, Measuring trial 9, Paused, Stopped with its reason), facts (trials, kept, best, spend of its share), what it started from if it adopted another agent's trial, its latest kept trial, and Pause agent. A stopped agent shows that its sandbox was removed. The chart draws one lane per agent, so who is improving is visible at a glance.
-- **Trial card.** Agent, hypothesis in the agent's own words, change, files, measured value against that agent's best and the baseline, delta, one outcome tag, diff, guardrail metrics. Holdout shows only as an outcome ("Kept", "Failed holdout"), never a value to the agent. "Steps for this trial" lists: the hypothesis, wrote the change, checked it in its sandbox (does not count), asked for a measurement, evaluator measured (repeats, noise), beat the agent's best by X, confirmed in a fresh evaluator sandbox with the holdout passed, Kept. A trial being measured shows Measuring.
+- **Agents section.** One lane card per agent: name, status (Iterating, Measuring trial 9, Paused, Stopped with its reason), facts (trials, kept, best, spend of its share), what it started from if it adopted another agent's trial, its latest kept trial, and Pause agent. A stopped agent shows that its session ended. The chart draws one lane per agent, so who is improving is visible at a glance.
+- **Trial card.** Agent, hypothesis in the agent's own words, change, files, measured value against that agent's best and the baseline, delta, one outcome tag, diff, guardrail metrics. Holdout shows only as an outcome ("Kept", "Failed holdout"), never a value to the agent. "Steps for this trial" lists: the hypothesis, wrote the change, checked it in its session (does not count), asked for a measurement, evaluator measured (repeats, noise), beat the agent's best by X, confirmed in a fresh evaluator sandbox with the holdout passed, Kept. A trial being measured shows Measuring.
 - **Composer while running** steers the agents: a note goes to all, or to one with @ (for example "@Codex focus on database queries"). Each agent reads it before its next trial.
-- **The stepper's status line** counts: "Step 4 of 7 · 2 agents iterating · 28 trials, 4 kept." On the Mac: "Step 4 of 7 · agents iterate on This machine; the evaluator measures with the holdout elsewhere."
-- The draft card says where it would run (backend and machine type), that agents get read-only credentials that leave out the holdout, and that the evaluator gets its own. Nothing is created until Approve.
-- A trial's diff and logs are read from the customer's infrastructure through the launcher, and the card says so. When the launcher cannot be reached the trial shows one calm line in the failed state: "Can't reach the launcher. Diffs and logs stay in your infrastructure; try again when it is back." It is never drawn as an empty diff.
-- The result card's Data column names dataset versions, skill versions and the credential scope (read-only, holdout to the evaluator only). Its Compute column names the backend, machine type, evaluator image, agent versions and that the evaluator signed the numbers.
+- **The stepper's status line** counts: "Step 4 of 7 · 2 agents iterating · 28 trials, 4 kept." On the Mac: "Step 4 of 7 · agents iterate in their sessions; the evaluator sandbox measures with the holdout."
+- The draft card says where it would run (the agent platforms, and the measuring platform with its environment), that agents get read-only credentials that leave out the holdout, and that the evaluator gets its own. Nothing is created until Approve.
+- A trial's diff is the commit on the agent's branch, and its transcript and logs stay on the agent platform; they are fetched when someone opens them, and the card says so. When the platform cannot be reached the trial shows one calm line in the failed state: "Can't reach Claude Managed Agents. Transcripts and logs stay there; try again when it is back." It is never drawn as an empty diff.
+- The result card's Data column names dataset versions, skill versions and the credential scope (read-only, holdout to the evaluator only). Its Compute column names the agent platforms, the measuring platform, the environment (image and size), agent versions and that the evaluator signed the numbers.
 
 ### New experiment
 
-A dialog that asks one question, "What do you want to improve?", with a text box and pills that open popovers: Project, Evaluation, Skills, Data, Environment, Agents, Budget, Guardrails and paths. Environment picks a sandbox backend and a machine type from those set up under Settings, Infrastructure; a backend not set up yet shows "Set up" and leads there. "Draft experiment" creates the session at once as a Draft. Nothing is created in the customer's cloud until Approve.
+A dialog that asks one question, "What do you want to improve?", with a text box and pills that open popovers: Project, Evaluation, Skills, Data, Environment, Agents, Budget, Guardrails and paths. Environment picks the measuring platform and an environment (image and size) from those set up under Settings, Infrastructure; a platform not added yet shows "Add platform" and leads there. "Draft experiment" starts a drafting session at once and the experiment is a Draft. No run session starts until Approve.
 
 ### Customize
 
 A connector is a data system or the code host (Snowflake, Databricks, DynamoDB, BigQuery, Postgres, Amazon S3, GitHub, GitLab, an MCP server). A cloud account is not a connector; it is set up under Infrastructure. Discover shows a featured banner (a carousel for connectors), a "For you" grid whose "+" becomes a check, and a "New" section with Show all. Configure opens the detail page.
 
-- A connector's page says how access is scoped: a reference to the admin secret in the customer's secret manager (never the secret), what agents get (read-only, holdout excluded), what the evaluator gets, and that credentials are minted per run. Adding a connector says Ratchet keeps a reference, never the secret.
-- An agent's page shows the model provider as a field, that the model key is added by an egress proxy, and that the agent keeps no other credentials. The model provider also has a key source, "Your own key" or "Ratchet-supplied, billed to the run's budget" (target; only when work runs on Ratchet-managed), with the hint that only the egress proxy adds it.
+- A connector's page says how access is scoped: that the credential is read-only, registered once by the customer and kept in the platform's credential store, what agents get (read-only, holdout excluded) and what the evaluator sandbox gets. Adding a connector says Ratchet keeps no connector secret.
+- An agent's page shows the model provider as a field and the platform it runs on (Claude Code · Claude Managed Agents). The platform holds the model access; there is no key source setting.
 
 ### Global search
 
@@ -53,7 +53,7 @@ A centred palette opened from the sidebar, the top bar, Cmd/Ctrl+K or "/". Scope
 Settings is a dialog, not a page. It opens from the user menu, More, or a Settings result or action in search. It is a large centred dialog with a left rail and a search field. The first Esc clears the rail search. The rail is grouped by whose setting it is, with a hairline between groups: **You** (Profile, Appearance, Access tokens, and in the web app This device) and **Organization** (General, Users and groups, Single sign-on, Infrastructure, Budgets, Notes, Audit logs). It reopens on the section you used last. The rail search filters sections and rows by title, description and keywords, and opens the first section that matches.
 
 - General shows the deployment (Ratchet cloud or Self-hosted) and the server address.
-- Infrastructure has the launcher (built in when self-hosted; a runner with version, last seen and status Connected or Not connected on Ratchet cloud), a quiet table of sandbox backends (Kubernetes first, then AWS, GCP and Azure VMs, each with machine types and the evaluator image, and an Add backend menu) and the secret manager row. At the top, owners see "Where work runs" (target), "Your infrastructure" or "Ratchet-managed"; switching to Ratchet-managed warns that agents will read data in Ratchet's sandboxes. For Ratchet-managed there is no launcher section, one backend row ("Ratchet-managed · Cloudflare · up to 4 vCPU, 12 GiB" with a one-line note that timing benchmarks are noisier on shared machines) and a secret row saying Ratchet holds connector secrets encrypted. On the Mac app (target) it also lists This machine; see Clients.
+- Infrastructure (heading "Infrastructure") has three sections: Agent platforms, Environments and Credentials. Agent platforms is a quiet table of Claude Managed Agents, AWS AgentCore and the OpenAI Agents API: the account, the agents on it, a status (Connected, Needs attention when its credential is rejected), and one platform badged Measuring platform. Row actions are Test connection, Update credential and Remove; an "Add platform" button adds one. Environments lists each one with its platform, image, size and use (Evaluator or Agents). Credentials lists the connector credentials registered once, with where each is kept. Self-hosted, owners manage all of it and others see it read-only. On Ratchet cloud the page is read-only for everyone: Ratchet manages the platform accounts and bills at cost through each run's budget, and the page shows data and retention per platform (for example "United States only, no zero data retention"). The Mac app has no machine section.
 - **A setting is a row.** The title with a one-line muted description under it on the left, the control on the right (switch, select, segmented control, field, button), and a hairline between rows. A sub-setting is indented under its parent and is disabled while the parent is off. A section can have several headed groups. A list inside Settings (users, groups, access tokens, per-experiment budgets, audit logs) is a quiet table: column headers, an icon or avatar and name with a muted second line, a tag for a kind, an icon and word for a status. No cards inside cards.
 - **Organization settings are read-only for non-owners, not hidden.** Owners change them. Editors and viewers see the same section with its controls disabled, a one-line explanation ("Only owners can change roles. You can read them.") and a lock beside the section in the rail. Notes can be added by editors and owners. An organization always keeps at least one owner. The theme is one setting with two places to change it: Appearance, and the quick switch in the user menu.
 - **Narrow screens.** Below 720px the dialog is full-screen and the rail becomes a search field with a select of sections.
@@ -81,15 +81,14 @@ One sentence and at most one action, no feature explanation. A list gets its own
 | Projects | no project or experiment in the organization | No experiments yet. | New experiment | `HomeEmpty` |
 | Project | the project has no experiment | No experiments in this project yet. | New experiment (header) | `ProjectEmpty` |
 | Dashboard | no win yet; tiles show zeros and spend | No wins yet. | New experiment | `DashboardEmpty` |
-| Run history, Trials (Sandboxes the same) | nothing has run | No trials yet. | New experiment | `RunHistoryEmpty` |
+| Run history, Trials (Sessions the same) | nothing has run | No trials yet. | New experiment | `RunHistoryEmpty` |
 | Evaluations, Skills, Agents | none added | No evaluations / skills / agents yet. | Add evaluation / skill / agent | `EvaluationsEmpty`, `SkillsEmpty`, `AgentsEmpty` |
 | Plugins, Yours | none installed | No plugins installed. | Add plugin | `PluginsEmpty` |
 | Connectors | none added | No connectors yet. | Add connector | `ConnectorsEmpty` |
 | Search | no match | No results for “query”. | none | `SearchEmpty` |
 | Settings, Access tokens | you made none | No access tokens yet. | Create access token (row above) | `SettingsTokensEmpty` |
 | Settings, Notes | no note | No notes yet. | Add note (row above) | `SettingsNotesEmpty` |
-| Settings, Infrastructure | Ratchet cloud, no runner connected (self-hosted has the launcher built in) | No runner is connected to Ratchet cloud yet. | Start a runner | `InfrastructureEmpty` |
-| This machine (Mac) | the local runner is off | This Mac is not running agents. | Turn on | `MacThisMachineOff` |
+| Settings, Infrastructure | self-hosted, no platform added | No agent platform is added yet. | Add platform | `InfrastructureEmpty` |
 
 Never empty, so no board: Users and groups (you are in it, and one owner always remains), Audit logs (signing in is the first entry), Budgets, General and Single sign-on (settings rows, not lists), a thread (it starts as a Draft).
 
@@ -111,12 +110,11 @@ The web app and the macOS app (target) share behaviour, words and element ids, n
 What the Mac adds:
 
 - Native window chrome: the title bar, toolbar and sidebar are the system's.
-- A menu bar item for the local runner: whether This machine is accepting work, what is running, Pause.
+- A menu bar item: the runs in progress, what needs attention, and Open Ratchet.
 - A native Settings window, with the same sections and rows as the web dialog.
 - Native notifications, for what needs attention.
 - Sign-in through the browser, never a password field in the app.
-- A quit confirmation while agents run on this Mac.
-- An offline banner: the local runner pauses new work until the server is reachable again.
+- An offline banner: the app shows what it last knew, marked as not current, until the server is reachable again.
 
 What the installed web app adds, on Windows and Linux:
 
@@ -126,7 +124,7 @@ What the installed web app adds, on Windows and Linux:
 - Push notifications for what needs attention, asked for at the moment it helps (after starting a run: "Notify me when this run finishes"), never on first load. Turned off in Settings, This device.
 - An offline screen when the server cannot be reached: what was last known, marked as not current, and Try again. Nothing is cached beyond the app itself.
 
-The Mac is a client and a local runner. It may be the "This machine" backend where agents propose, with the same short-lived, read-only, scoped credentials. Measuring never runs on the laptop.
+The Mac is only a client of the server's API. It runs no agents and no sandboxes. "This machine" is deferred.
 
 ## Accessibility
 
