@@ -4,7 +4,7 @@ An environment is an image and a size on an agent platform, named by id (target)
 
 1. **A name and an id.** Give the environment a stable id. Benchmarks refer to it by id, never by a platform's own environment id.
 2. **Its platform.** Name the platform. An environment belongs to one platform.
-3. **An image.** Choose or build the image the platform accepts (for example AgentCore needs a `linux/arm64` container image; on Microsoft Foundry Agent Service and Google Agent Runtime the image is a container image Ratchet supplies, the agent image for an agent session). A repo image comes from the repo's Dockerfile or devcontainer, which is a protected path.
+3. **An image.** Choose or build the image the platform accepts (for example AgentCore needs a `linux/arm64` container image; on Microsoft Foundry Agent Service and Google Agent Runtime the image is a container image Ratchet supplies, the agent image for an agent session; Foundry hosted agents take a `linux/amd64` image in Azure Container Registry at 0.5 vCPU / 1 GiB, 1 / 2 or 2 / 4). A repo image comes from the repo's Dockerfile or devcontainer, which is a protected path.
 4. **A size.** Name the CPU, memory and disk. A benchmark stays on one measuring platform and one environment.
 5. **Which side.** Say whether it is for agent sessions or for evaluator sandboxes. An evaluator environment never runs an agent.
 6. **Network.** List the hosts it may reach, using the platform's allowed-hosts setting where it has one.
