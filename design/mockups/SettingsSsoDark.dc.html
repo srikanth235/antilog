@@ -121,13 +121,16 @@
       <!-- /part -->
       <div class="sd-main"><div class="sd-sec">
         <h3 class="t-section">Single sign-on</h3><p class="sd-lead">How people sign in to Acme. No passwords.</p>
-        <h4 class="sd-gh">OpenID Connect</h4>
-        <div class="stg"><div class="tx"><span class="t-item">Provider</span><span class="dd"><span class="rw g8"><span class="lg lg-okta" role="img" aria-label="Okta"></span><span>Okta · <span class="mono xs">acme.okta.com</span></span></span></span></div><div class="ct"><span class="stc"><i class="ic s i-check" style="color: var(--good);" aria-hidden="true"></i><b>Working</b></span></div></div>
+        <h4 class="sd-gh">Sign-in methods</h4>
+        <div class="stg"><div class="tx"><span class="t-item rw g8"><span class="lg lg-github" role="img" aria-label="GitHub"></span>GitHub</span><span class="dd">People with a verified acme.com email can sign in with GitHub.</span></div><div class="ct"><span class="val">On</span><button class="sw on" role="switch" aria-checked="true" aria-label="Sign in with GitHub"></button></div></div>
+        <div class="stg"><div class="tx"><span class="t-item rw g8"><span class="lg lg-google" role="img" aria-label="Google"></span>Google</span><span class="dd">OpenID Connect. People with a verified acme.com email can sign in with Google.</span></div><div class="ct"><span class="val">On</span><button class="sw on" role="switch" aria-checked="true" aria-label="Sign in with Google"></button></div></div>
+        <div class="stg"><div class="tx"><span class="t-item rw g8"><span class="lg lg-okta" role="img" aria-label="Okta"></span>Your OpenID Connect provider</span><span class="dd">Single sign-on with Okta. Only an owner sets it up.</span></div><div class="ct"><span class="stc"><i class="ic s i-check" style="color: var(--good);" aria-hidden="true"></i><b>Working</b></span></div></div>
+        <h4 class="sd-gh">Your OpenID Connect provider</h4>
+        <div class="stg"><div class="tx"><span class="t-item">Provider</span><span class="dd"><span class="mono xs">acme.okta.com</span></span></div><div class="ct"><button class="btn sm">Edit provider</button></div></div>
         <div class="stg"><div class="tx"><span class="t-item">Client ID</span></div><div class="ct"><span class="val mono xs">0oa9x2k4ratchet</span></div></div>
         <div class="stg"><div class="tx"><span class="t-item">Client secret</span><span class="dd">The server reads it at sign-in. It is never shown.</span></div><div class="ct"><span class="val mono xs">ratchet/oidc-client</span></div></div>
         <div class="stg"><div class="tx"><span class="t-item">New members</span><span class="dd">Anyone in <span class="mono xs">okta:engineering</span> can sign in. Their role comes from the group mapping.</span></div><div class="ct"><button class="btn sm">Edit mapping</button></div></div>
-        <h4 class="sd-gh">Sign-in</h4>
-        <div class="stg"><div class="tx"><span class="t-item">Sign in with GitHub</span><span class="dd">People with a verified acme.com email can sign in with GitHub OAuth.</span></div><div class="ct"><span class="val">On</span><button class="sw on" role="switch" aria-checked="true" aria-label="Sign in with GitHub"></button></div></div>
+        <h4 class="sd-gh">Sessions</h4>
         <div class="stg"><div class="tx"><span class="t-item">Stay signed in for</span><span class="dd">How long a sign-in lasts before Okta asks again.</span></div><div class="ct"><span class="segs" role="group" aria-label="Sign-in length"><button class="seg" aria-pressed="false">1 hour</button><button class="seg on" aria-pressed="true">12 hours</button><button class="seg" aria-pressed="false">7 days</button></span></div></div>
       </div></div>
     </div>

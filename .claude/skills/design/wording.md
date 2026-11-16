@@ -118,9 +118,9 @@ Trial numbers are per experiment, across its sessions. The holdout value is neve
 
 | Card | Fields, in order | Buttons | Collapsed line |
 | --- | --- | --- | --- |
-| Seal experiment | Metric and direction, Evaluation command, Protected paths, Data and holdout, Guardrails, Baseline, Noise check, Cheat checks, Evaluation kind (planted cheats), "Cost and value", Judge platform | "Seal experiment", "Decline" | "Experiment sealed by NAME · 14:02" |
+| Seal experiment | Metric and direction, Evaluation command, Protected paths, Data and holdout, Skill packs ("Recorded on the receipt"), Guardrails, Baseline, Noise check, Cheat checks, Evaluation kind (planted cheats), "Cost and value", Judge platform | "Seal experiment", "Decline" | "Experiment sealed by NAME · 14:02" |
 | Raise budget | Now, Requested, What it may cost, Why | "Raise budget", "Decline" | "Budget raised to $200 by NAME · 14:02" |
-| Add credential | Connector, "Create it first", Agent credential, Judge credential, "What each one gets" | "Add credentials", "Decline" | "Credential added by NAME · 14:02" |
+| Add credential | Connector, "Create it first", Agent credential, Judge credential, "What each one gets" | "Add credential", "Decline" | "Credential added by NAME · 14:02" |
 | Attach repo | Repo, Branch, Access ("Pushes only to the session's own branch") | "Attach repo", "Decline" | "Repo attached by NAME · 14:02" |
 | Change environment | Image, Setup script, Size, Network, What changes | "Change environment", "Decline" | "Environment changed by NAME · 14:02" |
 | Open pull request | Repos and branches, Title, Files changed, Value, Cost | "Open pull request", "Decline" | "Pull request opened by NAME · 14:02" |
@@ -195,6 +195,7 @@ Every title is the card's name. A declined card reads "Declined by NAME · 14:02
 | Where | Words |
 | --- | --- |
 | Sign-in | "Continue with GitHub", "Continue with Google", "Continue with single sign-on"; "Sign-in refused."; "No access" ("This account has no access to HOST. Ask an owner to invite you."), "Use another account", "Sign out" |
+| Settings, Single sign-on | "Sign-in methods", "GitHub", "Google", "Your OpenID Connect provider" ("Only an owner sets it up."), "Stay signed in for" |
 | Rail | "You": Profile, Appearance, Access tokens, This device. "Organization": General, Members, Single sign-on, Agent platforms, Approvals, Budgets, Connections, Audit log |
 | Agent platforms | "Claude Managed Agents", "AWS AgentCore", "OpenAI Agents API", "Microsoft Foundry Agent Service" ("Foundry Agent Service" where space is short), "Google Agent Runtime"; "Add platform", "Test connection", "Update credential", "Remove"; badge "Judge platform"; Connected, Needs attention; "Agents are in Customize"; "bench-std · AWS AgentCore · 4 vCPU, 16 GiB"; Ratchet cloud "Managed by Ratchet." and "Data and retention" |
 | Approvals | "Policy by card"; "Always ask", "Allow up to a limit", "Allow"; "Always asks. A person must type the value."; "Allow never pauses" |
@@ -202,7 +203,7 @@ Every title is the card's name. A declined card reads "Declined by NAME · 14:02
 | Connections | "Repos", "Credentials", "Environments"; "Revoke"; "Added by NAME · date · used by 3 sessions"; "Nothing approved yet." |
 | Audit log | "Who", "What", "When", "Outcome"; "All", "Approvals only" |
 | Access tokens, Members | "Create access token", "Shown once. Copy it now."; Members columns "Member", "Signed in through", "Role"; "Owner", "Editor", "Viewer"; "Only owners can change roles. You can read them." |
-| This device | "Install app", "Get the Mac app" (target), "Notify me when a session needs me" |
+| This device | "Install app", "Get the Mac app" (target), "Notify me when this experiment needs me" |
 | Read-only | "Only owners can change this. You can read it." |
 
 ## Budget by surface
