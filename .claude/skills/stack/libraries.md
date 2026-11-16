@@ -11,7 +11,7 @@ Do not add a dependency for convenience. A new one is a product call: ask the ow
 - `ratchet-core`: all logic and the API routes as an axum `Router`, behind one `Store` trait. It never imports tokio's runtime, `sqlx` or a Cloudflare crate, and builds for `wasm32-unknown-unknown`. It never connects to data.
 - `ratchet-server`: the self-hosted shell around the core. The API, the embedded web app, Postgres. It talks out to the agent platforms over HTTPS.
 - `ratchet-cloud`: the Ratchet cloud shell around the core, a Cloudflare Worker with one Durable Object (SQLite) per organization.
-- The agent platform adapters (Claude Managed Agents, then AWS AgentCore, then the OpenAI Agents API, then Microsoft Foundry Agent Service, then Google Agent Runtime), one adapter each behind one platform trait, in their own crate or crates. They call the platforms over HTTPS from either shell. Ratchet runs no sandboxes and no runner. Which client crates the adapters use is not decided; a new dependency is a product call.
+- The agent platform adapters (AWS AgentCore, then Claude Managed Agents, then the OpenAI Agents API, then Microsoft Foundry Agent Service, then Google Agent Runtime), one adapter each behind one platform trait, in their own crate or crates. They call the platforms over HTTPS from either shell. Ratchet runs no sandboxes and no runner. Which client crates the adapters use is not decided; a new dependency is a product call.
 - `ratchet`: the CLI and the MCP server, built on the API's types.
 
 

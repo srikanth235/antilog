@@ -55,7 +55,7 @@ The judge measures every trial in a judge sandbox with no agent in it, and the r
 
 ## MCP
 
-`ratchet mcp` serves the Ratchet tools on stdio, for an agent on the person's own machine (Claude Code, Codex). The agent can propose a change anywhere; only the judge measures it. It signs in with an access token and is registered with `claude mcp add ratchet -- ratchet mcp`. A tool that matters shows its approval card to the person, in the terminal or the web app.
+`ratchet mcp` serves the Ratchet tools on stdio, for an agent on the person's own machine (Claude Code, Codex). The agent can propose a change anywhere; only the judge measures it. It works inside a session in the experiment, with no platform sandbox, and pushes trial commits to that session's branch with a short-lived git token minted for the session. It ships in the first release. It signs in with an access token and is registered with `claude mcp add ratchet -- ratchet mcp`. A tool that matters shows its approval card to the person, in the terminal or the web app.
 
 ## Decided
 

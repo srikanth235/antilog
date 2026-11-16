@@ -4,7 +4,7 @@ The acceptance criteria decide every win, so a change to them changes what the p
 
 1. **State the change as a promise.** Say which line of [owes.md](owes.md) it keeps or weakens. A change that weakens Decide is a product decision, not an engineering one.
 2. **Keep it one pure function.** It reads inputs (the trial's value, the value of the trial it started from, the noise, the number of trials tried, the guardrails, the confirmation, the holdout result) and returns an outcome with reasons. It does no I/O and no clock reads (target).
-3. **Keep the bar tied to the noise.** A change must say what it does to the bar and to how the bar rises with the number of trials. That rule is open and settled with the first code.
+3. **Keep the bar tied to the noise.** A change must say what it does to the bar and to how the bar rises with the number of trials. Today's rule is in [anti-cheat.md](anti-cheat.md): paired measurement, a lower confidence bound above zero at 1 − 0.05/k.
 4. **Keep confirmation.** A trial that passes the first measurement and fails the confirmation or the holdout is never Kept. A change never lets a win skip either.
 5. **Keep reasons.** Every outcome carries reasons a person can read.
 6. **Never apply by hand.** No setting, tool or route may set an outcome. The judge writes it after calling the function.

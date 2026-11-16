@@ -27,19 +27,19 @@ Where it can run: on an agent platform that can run a command in a sandbox with 
 
 ## 3. Seal checks
 
-Before an experiment can be sealed the judge measures the baseline, measures the same commit twice to get the noise (the noise check), and runs planted cheats the evaluation must reject (the cheat checks): skip the work, hard-code the answer, return early. There is a standard set per kind of evaluation (see [add-evaluation-kind.md](add-evaluation-kind.md)) plus any the proposing agent adds. The seal card shows the results. An experiment that fails a check cannot be sealed.
+Before an experiment can be sealed the judge measures the baseline, pairs the same commit with itself to get the noise of a paired difference (the noise check), and runs planted cheats the evaluation must reject (the cheat checks): skip the work, hard-code the answer, return early. There is a standard set per kind of evaluation (see [add-evaluation-kind.md](add-evaluation-kind.md)) plus any the proposing agent adds. The seal card shows the results. An experiment that fails a check cannot be sealed.
 
 - Stops: an evaluation that is trivially broken, or so noisy a win means nothing.
 - Does not stop: a bad evaluation that passes the planted cheats. Seal checks catch a trivially broken evaluation and cannot prove a good one. A person still reads the card.
 
 ## 4. Confirm before Kept
 
-A trial that beats the bar is measured again in a fresh judge sandbox and checked on the holdout. The bar rises with the number of trials tried, so many attempts cannot win by luck.
+Every measurement is paired: in one fresh judge sandbox the trial and the trial it started from run interleaved for the sealed number of repeats, so drift between sandboxes cancels. A trial beats the bar when the one-sided lower confidence bound of its mean paired gain is above zero at confidence 1 − 0.05/k, where k counts the trials measured in this experiment version. It is then measured again, paired, in another fresh judge sandbox and checked on the holdout. The bar rises with k, so many attempts cannot win by luck.
 
-The quick check that precedes this (one repeat) only stops weak trials early to save cost. It never decides Kept, runs only in the judge, and is sealed with the experiment, so a trial cannot skip or fake it.
+The quick check that precedes this (one pair against the best) only stops weak trials early to save cost. It never decides Kept, runs only in the judge, and is sealed with the experiment, so a trial cannot skip or fake it.
 
 - Stops: a lucky measurement, and fitting to the evaluation data.
-- Does not stop: a slow drift, or a holdout that is too small or too like the evaluation data. How the bar rises with the number of trials is open and settled with the first code.
+- Does not stop: a slow drift, or a holdout that is too small or too like the evaluation data.
 
 ## 5. Second opinion
 

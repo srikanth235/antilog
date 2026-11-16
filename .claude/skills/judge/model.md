@@ -19,12 +19,12 @@ Where [the glossary](../../../docs/GLOSSARY.md) defines a word, this file keeps 
 | data | The evaluation data an agent sees values for, and the holdout it never sees, named by dataset id and version (datasets: [../session/model.md](../session/model.md)) | a connector, a credential |
 | holdout | Data only the judge sandbox may read, enforced by credentials. Shown as "Restricted to the judge" | a validation split an agent can see |
 | seal | A hash over the definition and its protected files at pinned commits, made when a person approves an experiment that passed the seal checks | a signature on a win |
-| seal checks | The baseline measurement, the noise check and the cheat checks | review |
+| seal checks | The baseline measurement, the noise check (the same commit paired with itself) and the cheat checks | review |
 | trial | One `measure` call: a set of commits (one per repo changed), the trial it started from, and a one-line hypothesis | a session, a win |
 | measurement | The judge's signed result for one trial under one experiment version | an agent's own number |
 | outcome | One of: Measuring, Kept, Within noise, Worse, Guardrail failed, Failed holdout, Rejected (changed a protected path), Failed (did not run) | verdict, opinion |
 | Kept | A trial that beat the trial it started from by more than the bar, held every guardrail and was confirmed in a fresh judge sandbox and on the holdout | accepted, a win |
-| bar | The gain a trial must show. Tied to the noise and raised with the number of trials tried. The exact rule is settled with the first code | a fixed threshold |
+| bar | What a trial's paired gain must clear: the one-sided lower confidence bound of the mean paired difference above zero, at confidence 1 − 0.05/k for the k-th trial measured in the experiment version | a fixed threshold |
 | best | The experiment's best Kept trial | any trial that looked good |
 | win | An experiment's best Kept trial, ready to deliver or delivered | a Kept trial that is not the best |
 | receipt | The signed record of a win, in three groups. **Experiment:** version and seal, the value model with its source and who set it, values, repeats, noise, trials tried, holdout result (Passed or Failed), second opinion, spend, the cost of the win (counting trials not kept) and the win's own Return. **Data:** dataset versions read, skill pack versions read, commits per repo, credential scopes used (agents read-only with the holdout excluded, the judge its own). **Compute:** judge platform and environment, judge image and digest, agents and sessions with their platforms. "Signed by the judge", with Verify again | a log, report text |

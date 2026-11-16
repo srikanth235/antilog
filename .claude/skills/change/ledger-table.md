@@ -1,6 +1,6 @@
 # A table, column or migration
 
-The ledger is the store, and the only state: Postgres 18 self-hosted, SQLite in the organization's Durable Object in the cloud. The core sees one `Store` trait and both are supported from day 0. It holds ids, versions, numbers, states, the conversation's words (decided by the owner, see [product rulings](../product/rulings.md)), commit ids, spend and audit rows. It never holds a customer's data, a secret, tool output, a diff or a log. (target: nothing here is built yet.)
+The ledger is the store, and the only state: Postgres 18 self-hosted, SQLite in the organization's Durable Object in the cloud. The core sees one `Store` trait, designed for both from the start; Postgres ships in the first release and SQLite with Ratchet cloud. It holds ids, versions, numbers, states, the conversation's words (decided by the owner, see [product rulings](../product/rulings.md)), commit ids, spend and audit rows. It never holds a customer's data, a secret, tool output, a diff or a log. (target: nothing here is built yet.)
 
 ## Rules (target)
 

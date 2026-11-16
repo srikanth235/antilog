@@ -28,7 +28,8 @@ The settled product, directed by the owner. Everything here is target; nothing i
 - **Anti-cheat is built in:** a seal over the definition and protected files (a trial that changes a protected path is Rejected), a fresh judge sandbox for every measurement, seal checks, confirmation before Kept, a second opinion from a different model provider that flags and never decides, and a signed receipt. See [judge anti-cheat](../judge/anti-cheat.md).
 - **Acceptance.** A trial is Kept when it beats the trial it started from by more than the bar, every guardrail holds, and it is confirmed in a fresh judge sandbox and on the holdout. An experiment's best is its best Kept trial. Outcomes: Measuring, Kept, Within noise, Worse, Guardrail failed, Failed holdout, Rejected, Failed.
 - **What an agent sees.** The measured value and guardrail values on the evaluation data, and the outcome. It may read the evaluation's code and may never change it. It never reads the holdout or learns a holdout value.
-- **Quick check and patience.** A measurement starts with a quick check (one repeat); the full measurement follows only if it beats the best by more than the noise. The quick check never decides Kept. When patience (default 6) trials in a row are not Kept, the experiment waits on a Keep going? card. Both are sealed.
+- **Paired measurement and the bar.** In each fresh judge sandbox the trial and the trial it started from run interleaved, for the sealed number of repeats, and the gain is the mean of the paired differences. The bar: the one-sided lower confidence bound of that gain must be above zero at confidence 1 − 0.05/k, where k is the number of trials measured in this experiment version, this one included, so many attempts cannot win by luck. Confirmation repeats the paired measurement in another fresh sandbox.
+- **Quick check and patience.** A measurement starts with a quick check (one pair: the trial and the experiment's best, run once each in the same sandbox); the full measurement follows only if it beats the best by more than the noise. The quick check never decides Kept. When patience (default 6) trials in a row are not Kept, the experiment waits on a Keep going? card. Both are sealed.
 - **Delivery and watch.** `deliver` opens one linked pull request per repo changed, each carrying the receipt, and refuses any trial that is not Kept. The session stays attached for review comments and CI failures, and a rebase is measured again. A delivered experiment can be watched; a regression wakes or starts a session and notifies.
 - **Receipt.** Every win carries a signed receipt with Experiment, Data and Compute groups, and a Verify action. See [judge model](../judge/model.md).
 - **Value.** A win is Delivered once its pull request is merged. Pending is not in Return. See the three aims below.
@@ -76,15 +77,15 @@ Beside trust: cost control, no tie to one model provider, and Return for the org
 
 ## Offerings, platforms and vendor facts
 
-- **Two offerings, both from day 0, one core.** Self-hosted: Docker Compose (server and Postgres) using agent platform accounts the customer has. Ratchet cloud: we host the server and run every session on Ratchet's platform accounts, billed at cost through the budget.
+- **Two offerings, one core.** Self-hosted ships first and Ratchet cloud follows (see First release below). Self-hosted: Docker Compose (server and Postgres) using agent platform accounts the customer has. Ratchet cloud: we host the server and run every session on Ratchet's platform accounts, billed at cost through the budget.
 - **Ratchet runs no sandboxes for agents. Agent platforms do:** Claude Managed Agents, AWS AgentCore, the OpenAI Agents API, Microsoft Foundry Agent Service and Google Agent Runtime, each behind one agent trait with one adapter (start a session, send input, read events, stop and delete it). Foundry and Google run a container image Ratchet supplies, one per agent.
 - **An agent is a model on a platform:** Claude on Claude Managed Agents, Codex on the OpenAI Agents API, Gemini or Grok on AgentCore, GitHub Copilot on Foundry, Gemini (ADK) on Google Agent Runtime.
-- **Build order.** The traits are designed against all five from the start. Adapters ship: Claude Managed Agents, AgentCore, OpenAI Agents API, Foundry Agent Service, Google Agent Runtime.
+- **Build order.** The traits are designed against all five from the start. Adapters ship: AgentCore (agents and the judge sandbox), then Claude Managed Agents, the OpenAI Agents API, Foundry Agent Service and Google Agent Runtime.
 - **Where the judge sandbox runs:** on a platform that can run a command in a sandbox with no agent. AgentCore can. Google Agent Runtime is checked in the spike. Claude Managed Agents, the OpenAI Agents API and Foundry cannot; on Foundry the likely path is a judge image deployed as a hosted agent that runs no model.
 - **`measure` is asynchronous** so no platform limit applies (Foundry may expire tool outputs after 10 minutes; Google's event stream is undocumented and limited to 10 minutes per query). The spike checks it.
 - **Credentials reach a session only through the platform's credential store,** never a prompt, a repo file or Ratchet's database. No model key enters a sandbox.
 - **Ratchet cloud uses only Ratchet's platform accounts at launch.** The adapters support customer accounts because self-hosted needs them. An enterprise that needs data read in its own network self-hosts, for example with AgentCore in its own AWS account.
-- **Timing is noisier on shared sandboxes,** so the noise band is wider and fewer trials are Kept; the experiment detail page says so.
+- **Timing is noisier on shared sandboxes,** so the noise band is wider and fewer trials are Kept; paired measurement cancels drift between sandboxes, and the experiment detail page says so.
 - **No Helm chart and no OpenTofu at launch.** Self-hosted ships as Docker Compose only; Ratchet cloud ships with the Cloudflare config and `cf`. Ratchet's own platform accounts are set up by hand and owned by the owner.
 - **"This machine" is deferred.** Ratchet never starts an agent on a Mac until a later ruling. `ratchet mcp` is separate: it serves the tools to an agent a person runs themselves, and that agent's trials are still measured only in a judge sandbox. Measuring never runs on a laptop.
 
@@ -113,17 +114,26 @@ OpenID Connect plus GitHub's OAuth, no passwords. Ratchet cloud offers GitHub (O
 | 16 Nov 2026 | Projects, Customize, skill packs and plugins are in; notes and the dashboard page are out. |
 | 16 Nov 2026 | The macOS app's boards are removed until the web direction is approved. |
 | 16 Nov 2026 | No per-repo visibility; roles can be set per project. |
-| 16 Nov 2026 | How the bar rises with the trials tried is settled with the first code. |
 | 16 Nov 2026 | One budget per experiment, changeable at any time, inside the monthly caps. |
 | 16 Nov 2026 | The composer follows Claude Code's, with Mode (Ask or Follow policy). |
 | 16 Nov 2026 | The chat speaks as Ratchet. An agent may read the evaluation's code, never change it. |
 | 16 Nov 2026 | The three aims, with value models, Auto, Return on all spend, sealed quick check and patience, and two new card kinds. |
+| 16 Nov 2026 | The spike measures noise on each judge platform. |
+| 16 Nov 2026 | Paired measurement; the bar is a lower confidence bound above zero at 1 − 0.05/k. |
+| 16 Nov 2026 | AgentCore is the first adapter, for agents and the judge. |
+| 16 Nov 2026 | A thin first release: self-hosted, AgentCore, the web app, Speed, and `ratchet mcp`. |
 
 Decided calls also appear on the Decisions board.
 
 ## Still unproven: the spike
 
-The spike comes before any product code. One tiny experiment is measured end to end on all five platforms. It proves the agent trait, the Ratchet tools served to a session over its event stream and a judge sandbox that holds a credential no agent sees.
+The spike comes before any product code. One tiny experiment is measured end to end on all five platforms. It proves the agent trait, the Ratchet tools served to a session over its event stream and a judge sandbox that holds a credential no agent sees. It also runs one fixed benchmark many times in fresh judge sandboxes on each judge platform and records the spread of paired differences, which says whether Speed experiments can be Kept there.
+
+## First release
+
+Self-hosted with AgentCore, the web app and `ratchet mcp`, one evaluation kind (Speed) with no connectors: seal, measure, Kept, receipt, deliver, budget, approvals and the audit log. Then, in this order unless the owner says otherwise: Ratchet cloud, the other adapters, connectors and the other evaluation kinds, plugins, value models with Return, Ideas and Report, and the Mac app. Their fields stay in the sealed definition and the store from the start, so nothing is redesigned.
+
+A `ratchet mcp` connection works inside a session in the experiment, named by its agent, with no platform sandbox. Its trial commits are pushed to that session's branch with a short-lived git token minted for the session, and are measured only in a judge sandbox.
 
 ## Open questions
 
@@ -131,30 +141,3 @@ The spike comes before any product code. One tiny experiment is measured end to 
 - Whether Ratchet ever reshapes data (today no, see [non-goals](non-goals.md)).
 - Whether "Try a demo" stays in the web app.
 - The licence: not decided.
-
-## Calls for the owner
-
-Proposed 16 Nov 2026, not decided. Each is options with a recommendation and its cost. When one is decided, move it to "Decided by the owner" and to the Decisions board.
-
-**1. The spike measures noise, not only plumbing.**
-- (a) Recommended: the spike also runs one fixed benchmark many times in fresh judge sandboxes on each judge platform and records the spread. Cost: a few more hours of judge time. It says whether Speed experiments can ever be Kept on shared sandboxes.
-- (b) As written: the spike proves the traits and the credential only. Cost: the noise is first seen by a customer.
-
-**2. How a trial is compared with what it started from.** This changes a judge rule.
-- (a) Recommended: paired measurement. Each fresh judge sandbox runs the parent and the trial interleaved, and the bar applies to the paired difference. Cost: about twice the judge time per measurement. Gain: drift between sandboxes cancels, the noise band narrows and more real wins are Kept.
-- (b) As written: compare with the parent's stored numbers. Cost: drift between sandboxes reads as a win or a loss.
-- With either, settle how the bar rises with the trials tried now rather than with the first code, because the receipt shows it.
-
-**3. The first platform.** Claude Managed Agents is first in the build order but cannot run a judge sandbox; only AgentCore is known to.
-- (a) Recommended: AgentCore first, for agents and the judge. Cost: Claude reaches users through AgentCore or second.
-- (b) Claude Managed Agents for agents and AgentCore for the judge. Cost: two platform accounts and two adapters before the first win.
-
-**4. The first release.**
-- (a) Recommended: self-hosted, AgentCore, the web app, one evaluation kind (Speed) with no connectors: seal, measure, Kept, receipt, deliver, budget, approvals and audit. Ratchet cloud, the other adapters, plugins, value models, Return, Ideas, Report and the Mac app follow. Their fields stay in the seal so nothing is redesigned. Cost: Return and Ratchet cloud come later; Return cannot be shown honestly before merged wins exist anyway.
-- (b) As written: both offerings and all five platforms from day 0. Cost: two storage backends, a core that also builds to WebAssembly, and five adapters before the first customer.
-
-**5. `ratchet mcp` as the way in.**
-- (a) Recommended: ship `ratchet mcp` early, so an agent a person already uses gets `seal`, `measure` and `deliver`, measured in a judge sandbox. Open: how its commits reach the judge (pushed to a session branch with a token minted for that person's session).
-- (b) Keep it after the web app. Cost: the first users must move their work into Ratchet's chat to try it.
-
-**6. The licence.** Already open above; it blocks the first self-hosted install by anyone outside.

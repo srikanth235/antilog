@@ -10,7 +10,7 @@ An agent platform runs an agent's loop and its sandbox as one durable session. R
 
 The trait is designed against all five from the start. On the last two, the platform runs a container image Ratchet supplies, so Ratchet supplies one agent image per agent (the agent's own harness inside it). The platform still runs the sandbox; Ratchet still runs none.
 
-Before the first adapter, one tiny experiment is measured end to end on all five to prove the agent trait, the Ratchet tools served over the event stream and a judge sandbox that holds a credential no agent sees.
+Before the first adapter, one tiny experiment is measured end to end on all five to prove the agent trait, the Ratchet tools served over the event stream and a judge sandbox that holds a credential no agent sees, and to record the noise of paired measurement on each judge platform. AgentCore is the first adapter.
 
 ## Steps
 
