@@ -1,7 +1,7 @@
 ---
 name: session
 description: >-
-  How does the chat work, and where does an agent run? Use for sessions and their status (Working, Waiting for you, Done, Failed), the conversation and what the server stores of it, agents and agent platforms (Claude Managed Agents, AWS AgentCore, the OpenAI Agents API, Microsoft Foundry Agent Service, Google Agent Runtime) and their one trait, attaching repos, environments, connectors and credentials, sessions inside an experiment and its project, spawned sessions, skill packs, the setup tools (attach_repo, request_credential, set_environment, request_budget), what agents are told, spend and clean-up, and adding an agent platform, an agent, an environment, a connector or a skill pack.
+  How does the chat work, and where does an agent run? Use for sessions and their status (Working, Waiting for you, Done, Failed), the conversation and what the server stores of it, agents and agent platforms (Claude Managed Agents, AWS AgentCore, the OpenAI Agents API, Microsoft Foundry Agent Service, Google Agent Runtime) and their one trait, attaching repos, environments, connectors and credentials, sessions inside an experiment and its project, spawned sessions, skill packs, the setup tools (attach_repo, request_credential, set_environment, request_budget), what agents are told, spend, cost tier, Auto, hand off, failover, compaction and clean-up, and adding an agent platform, an agent, an environment, a connector or a skill pack.
 ---
 
 # Session
@@ -11,7 +11,7 @@ A session is one agent's work inside an experiment: a chat with one agent in one
 | If you are doing | Read |
 | --- | --- |
 | Deciding what this area promises | [owes.md](owes.md) |
-| Looking up a word (session, agent, agent platform, platform account, environment, attached repo, connector, skill pack, dataset, dataset version, marking, holdout, agent credential, judge credential, credential reference, spawned session, session event, clean-up state) | [model.md](model.md) |
+| Looking up a word (session, agent, agent platform, cost tier, Auto, hand off, failover, agent scoreboard, platform account, environment, attached repo, connector, skill pack, dataset, dataset version, marking, holdout, agent credential, judge credential, credential reference, spawned session, session event, clean-up state) | [model.md](model.md) |
 | Checking a change against the rules that never bend | [rules.md](rules.md) |
 | Changing `spawn`, `attach_repo`, `request_credential`, `set_environment` or `request_budget`, or how tools reach a session | [tools.md](tools.md) |
 | Changing what agents are told | [prompts.md](prompts.md) |

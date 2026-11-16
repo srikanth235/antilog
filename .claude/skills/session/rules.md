@@ -19,7 +19,10 @@ All target.
 - Store no tool output, file contents, diffs or data. Store the conversation's words, tool call names, card states, commit ids, measurements, spend and audit rows, because the rest can carry customer data.
 - Give each agent its own session and branch, because a shared session leaks one agent's state into another's.
 - Never let a spawned session spawn, because an unbounded tree is unbounded spend.
-- Privilege no agent's vendor. Only the judge decides, so every agent works in the same experiment on the same budget, and none is favoured in the product.
+- Privilege no agent's vendor. Only the judge decides, so every agent works in the same experiment on the same budget, and none is favoured in the product. Preselect no agent by brand: Auto picks by measured cost per win among the agents the organization turned on and says why, and a person can always pick a named one, because a default that favours a vendor ties the customer to it.
+- Show agent figures only as measured by the judge on this organization's code, never as a vendor benchmark, because an outside number is a claim nobody here can check.
+- Fail over only to an agent the organization turned on, and record it as a timeline line and an audit row, because a session that moves silently moves spend and code access silently.
+- Hand a spawned or handed-off session a summary and the history, never tool output or diffs, because the server stores neither.
 - Run every session on an agent platform, through the one agent trait, because a second way to start work is a second way to leak it. Ratchet runs no sandboxes of its own.
 - Serve the Ratchet tools to a session over its own event stream, and never require a platform to reach the server, because a self-hosted server may sit behind a firewall.
 - Never give Ratchet access to the customer's cloud: no cross-account role, no stored cloud keys. Ratchet holds only platform credentials, because access we hold is access that can be stolen. On Ratchet cloud they sit in Cloudflare's Secrets Store, bound to the Worker.

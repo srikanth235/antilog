@@ -11,6 +11,13 @@ All of this is target. [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md) defines t
 | agent trait | The one interface every platform adapter implements: start a session (repos, an agent, an environment, credentials, tools), send input, read events, answer a client tool call, stop it and delete it | a second way to start work |
 | platform account | The account Ratchet uses on a platform. Self-hosted: the customer's own, on whichever platforms they have, at least one. Ratchet cloud: Ratchet's, billed through to the customer at cost through the budget | a cloud account Ratchet can reach |
 | agent | A model on an agent platform, such as Claude on Claude Managed Agents, Codex on the OpenAI Agents API, Gemini or Grok on AWS AgentCore, GitHub Copilot on Microsoft Foundry Agent Service, or Gemini on Google Agent Runtime | the platform, a login or key |
+| cost tier | "$" to "$$$" on each agent, with the measured figure ("about $2.40 per trial here"), shown wherever an agent is chosen (the composer's agent menu, the spawn card, Customize, Agents). Priced from the platform's usage (see [add-agent.md](add-agent.md)) | a quality ranking, a vendor claim |
+| agent scoreboard | Customize, Agents, per agent, filtered by evaluation kind and project: experiments, trials, kept, wins delivered, cost per win, median time to a win and Delivered value. All from the judge's measurements in this organization, with the note "Measured by the judge on your code. Not a vendor benchmark." | a leaderboard, a vendor benchmark |
+| Auto | The composer's agent choice that picks the agent with the best cost per win for this evaluation kind in this project, among the agents the organization turned on, and says why in one line ("Auto chose Codex: lowest cost per win on Speed experiments here, $18"). A person can always pick a named agent. Before there is data it uses the organization's default agent, set by an owner in Customize, Agents. The default for a new organization once there is data | a favoured agent |
+| hand off | Moving a session to another agent: "Hand off to..." in the title menu and the composer's agent menu. The new session starts in the same experiment on the same branch with a summary of the conversation and the history; the old one ends as Done, "Handed off to Codex". Skill packs, evaluations and connectors work with every agent | a spawn, a new experiment |
+| failover | When a platform is unavailable or rate-limited, the session is Waiting for you with a Continue on another agent? card naming the agent Auto would choose. Policy may allow it without asking. A timeline line records it | a retry on the same platform |
+| compaction | Summarising a session's context and continuing. Ratchet does it on its own at 80 percent of the context and says so in a timeline line. The Details panel's Context section also offers Compact and "Fresh session with summary" | forgetting, a new experiment |
+| where the spend went | A view on the experiment detail page and in Settings, Budgets: the experiment's spend split by Kept, Within noise, Worse, Guardrail failed, Rejected, Failed and Not measured (agent work that never reached `measure`), each as dollars and a share. Derived from spend records and outcomes | a bill |
 | environment | Image or setup script, size and network policy, on one platform. The agent may propose a change with `set_environment` | a server, a config file |
 | attached repo | A repo on the code host that the session works in. A session attaches any number. It gets a short-lived git token per repo that may push only to the session's own branch | a clone Ratchet keeps |
 | connector | A data system or MCP server an agent's code may read: Snowflake, Databricks, DynamoDB, BigQuery, Postgres, Amazon S3, any MCP server. It holds two credentials, one for agents and one for the judge, and the datasets under it. It has one translator for its system. The code host (GitHub, GitLab) is how repos attach and pull requests open, and is not a connector. Listed in Customize, Connectors. Status: Connected, Reconnect, Not checked | a dataset, a credential, a pipe Ratchet reads through, a cloud account |
@@ -51,11 +58,20 @@ Ratchet keeps neither value. It keeps a credential reference. The customer makes
 
 ## Agents in Customize
 
-Customize, Agents holds the agents table. Settings, Agent platforms keeps the platform accounts only and links here. The table shows the agent (with its logo), its platform, its model, its parallel limit (how many sessions of it may work at once), the number of experiments it is used in and when it was last used. "Add agent" adds one. An agent's page shows its platform and account, model, parallel limit, "What the agent holds" (a short-lived git token for its own branch per repo, and read-only connector credentials that leave out the holdout; no model key, which belongs to the platform account) and its recent trials. There is no agent order and no per-agent budget share: the experiment's budget covers all its sessions, and the agent a person starts or the agent spawns is chosen in the chat.
+Customize, Agents holds the agents table. Settings, Agent platforms keeps the platform accounts only and links here. The table shows the agent (with its logo), its platform, its model, its parallel limit (how many sessions of it may work at once), the number of experiments it is used in and when it was last used. "Add agent" adds one. An agent's page shows its platform and account, model, parallel limit, "What the agent holds" (a short-lived git token for its own branch per repo, and read-only connector credentials that leave out the holdout; no model key, which belongs to the platform account) and its recent trials. The table also shows each agent's cost tier, and the agent scoreboard sits beside it. An owner sets the organization's default agent here, which Auto uses before there is data; no agent is preselected by brand. There is no agent order and no per-agent budget share: the experiment's budget covers all its sessions, and the agent a person starts is chosen in the chat (Auto or a named agent), and `spawn` defaults to the organization's chosen lower-cost agent.
 
 ## Sessions in an experiment
 
 The experiment detail page lists the experiment's sessions in a table: the session (named by its agent), platform, started, ended, spend, state (Working, Done, Failed) and clean-up (Removed, Not removed). A session that is not removed raises a banner on the page: "The Gemini session was not removed. Ratchet retries, and its cost counts until it is gone." A spawned session's card shows its spend of the experiment's budget ("$14 of $100"). Settings, Budgets shows spend by experiment and by session.
+
+## Spending well
+
+- **Cost per trial** is the agent's spend since the session's previous trial plus the judge time for the measurement. Trial cards show it; the scoreboard strip shows cost per kept trial. Derived, never stored.
+- **Estimate first.** The Seal experiment card says what one measurement costs and how many trials the budget buys.
+- **Read history first.** Agents are told to call `history` before proposing a trial, and `spawn` hands the new session a summary of what was tried.
+- **Right-size.** Spawned sessions default to the organization's chosen lower-cost agent unless the lead asks otherwise with a reason.
+- **Patience.** When the sealed number of trials in a row are not Kept, the experiment is Waiting for you with a Keep going? card ([../organization/approvals.md](../organization/approvals.md)).
+- **Where the spend went** is on the experiment detail page and in Settings, Budgets.
 
 ## Talking to a session
 
@@ -104,7 +120,7 @@ One core, two shells. A promise that holds in one and not the other is a defect.
 
 ## How this area refers to the others
 
-- Judge: by experiment id and trial id. An evaluation template under Customize is where an experiment's definition starts; the sealed definition is the judge's (see [../judge/model.md](../judge/model.md)). The judge decides outcomes and the budget meter refuses `measure` when the experiment's spend reaches its budget. Sessions never read the accept rule.
+- Judge: by experiment id and trial id. A value model is the project's and the judge's, never a session's. An evaluation template under Customize is where an experiment's definition starts; the sealed definition is the judge's (see [../judge/model.md](../judge/model.md)). The judge decides outcomes and the budget meter refuses `measure` when the experiment's spend reaches its budget. Sessions never read the accept rule.
 - Organization: by actor id, project id and role. Every platform account, environment, attached repo and credential reference belongs to the organization, and every experiment to a project. Approvals and policy are in [../organization/approvals.md](../organization/approvals.md).
 
 Platform words (agent ids, vault ids, ARNs, regions) stay inside each platform's adapter.

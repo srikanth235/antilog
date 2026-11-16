@@ -172,6 +172,26 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "AddValueModel.dc.html": {
+      "x": 6080,
+      "y": 7250,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Add value model",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AddValueModelDark.dc.html": {
+      "x": 6080,
+      "y": 7250,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Add value model \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "AgentDetail.dc.html": {
       "x": 31920,
       "y": 8350,
@@ -708,6 +728,26 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "Report.dc.html": {
+      "x": 4560,
+      "y": 7250,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Report, November 2026",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "ReportDark.dc.html": {
+      "x": 4560,
+      "y": 7250,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Report, November 2026 \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "Search.dc.html": {
       "x": 7600,
       "y": 6150,
@@ -768,6 +808,26 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "SessionAgentMenu.dc.html": {
+      "x": 31920,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, agent menu",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionAgentMenuDark.dc.html": {
+      "x": 31920,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, agent menu \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "SessionBudget.dc.html": {
       "x": 21280,
       "y": 3370,
@@ -804,6 +864,26 @@
       "w": 1440,
       "h": 900,
       "title": "3 \u00b7 Session, changes \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionComposerExpanded.dc.html": {
+      "x": 30400,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, composer expanded",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionComposerExpandedDark.dc.html": {
+      "x": 30400,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, composer expanded \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -868,6 +948,26 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "SessionFailover.dc.html": {
+      "x": 36480,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, failover",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionFailoverDark.dc.html": {
+      "x": 36480,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, failover \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "SessionFiles.dc.html": {
       "x": 10640,
       "y": 3370,
@@ -884,6 +984,46 @@
       "w": 1440,
       "h": 900,
       "title": "3 \u00b7 Session, files \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionHandOff.dc.html": {
+      "x": 34960,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, hand off",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionHandOffDark.dc.html": {
+      "x": 34960,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, hand off \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionKeepGoing.dc.html": {
+      "x": 33440,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, keep going",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionKeepGoingDark.dc.html": {
+      "x": 33440,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, keep going \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -1983,6 +2123,8 @@
     "AddPluginDark.dc.html",
     "AddSkill.dc.html",
     "AddSkillDark.dc.html",
+    "AddValueModel.dc.html",
+    "AddValueModelDark.dc.html",
     "AgentDetail.dc.html",
     "AgentDetailDark.dc.html",
     "Agents.dc.html",
@@ -2037,24 +2179,36 @@
     "ProjectsDark.dc.html",
     "Receipt.dc.html",
     "ReceiptDark.dc.html",
+    "Report.dc.html",
+    "ReportDark.dc.html",
     "Search.dc.html",
     "SearchDark.dc.html",
     "SearchEmpty.dc.html",
     "SearchEmptyDark.dc.html",
     "SearchStart.dc.html",
     "SearchStartDark.dc.html",
+    "SessionAgentMenu.dc.html",
+    "SessionAgentMenuDark.dc.html",
     "SessionBudget.dc.html",
     "SessionBudgetDark.dc.html",
     "SessionChanges.dc.html",
     "SessionChangesDark.dc.html",
+    "SessionComposerExpanded.dc.html",
+    "SessionComposerExpandedDark.dc.html",
     "SessionCredential.dc.html",
     "SessionCredentialDark.dc.html",
     "SessionDelivered.dc.html",
     "SessionDeliveredDark.dc.html",
     "SessionFailed.dc.html",
     "SessionFailedDark.dc.html",
+    "SessionFailover.dc.html",
+    "SessionFailoverDark.dc.html",
     "SessionFiles.dc.html",
     "SessionFilesDark.dc.html",
+    "SessionHandOff.dc.html",
+    "SessionHandOffDark.dc.html",
+    "SessionKeepGoing.dc.html",
+    "SessionKeepGoingDark.dc.html",
     "SessionNoWin.dc.html",
     "SessionNoWinDark.dc.html",
     "SessionPreview.dc.html",

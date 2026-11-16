@@ -21,10 +21,10 @@ Everything here is target; nothing is built. The design is directed by the owner
 | Kept | A trial's outcome: it beat the trial it started from by more than the bar, held every guardrail and was confirmed in a fresh judge sandbox and on the holdout | Accepted | Kept |
 | Win | An experiment's best Kept trial, ready to deliver or delivered | | Win |
 | Receipt | The signed record of a win. Experiment: version and seal, values, repeats, noise, trials tried, the holdout result, the second opinion, what was spent. Data: dataset versions, commits, credential scopes used. Compute: judge platform and environment, judge image and digest, agents and sessions | | Receipt |
-| Scoreboard | Trials for an experiment, by session; pinned under the experiment page's header once it is sealed | leaderboard | Scoreboard |
+| Scoreboard | Trials for an experiment, by session, with cost per kept trial; pinned under the experiment page's header once it is sealed. Agents across experiments are the agent scoreboard | leaderboard | Scoreboard |
 | Second opinion | An agent from a different model provider than the proposer reads a winning diff and says whether it special-cases the evaluation. It flags and never decides | review | Second opinion |
-| Approval, card | A tool call a person approves in the chat. Card kinds: Seal experiment, Raise budget, Add credential, Attach repo, Change environment, Open pull request | confirmation, dialog | card |
-| Policy | Which card kinds are pre-approved: Always ask, Allow up to a limit, Allow. Add credential can never be pre-approved | permission | Approvals |
+| Approval, card | A tool call a person approves in the chat. Card kinds (eight): Seal experiment, Raise budget, Add credential, Attach repo, Change environment, Open pull request, Keep going?, Continue on another agent? | confirmation, dialog | card |
+| Policy | Which card kinds are pre-approved: Always ask, Allow up to a limit, Allow. Add credential can never be pre-approved, and a value model is never pre-approved | permission | Approvals |
 | Spawned session | A session another session started in the same experiment and on the same budget. It cannot spawn. It appears as a card and opens as its own chat inside the experiment | child, sub-agent | Spawned session |
 | Watch, regression | Measuring a delivered experiment again, on a schedule or when the default branch moves; a regression is a result worse than delivered by more than the noise | monitor | Watching, Regressed |
 | Agent | A model on an agent platform: Claude on Claude Managed Agents, Codex on the OpenAI Agents API, Gemini or Grok on AWS AgentCore, GitHub Copilot on Microsoft Foundry Agent Service, Gemini on Google Agent Runtime (target) | harness (code only), connection | Agent |
@@ -42,11 +42,22 @@ Everything here is target; nothing is built. The design is directed by the owner
 | Guardrail | A metric that must not get worse | limit | Guardrail |
 | Protected path | A file in a repo that an experiment names and a trial may not change. A trial that changes one is Rejected | | Protected path |
 | Budget, spend | One per experiment, covering all its sessions and their judge time: model tokens, sandbox time and judge time. A person sets it when starting and an editor or owner can change it at any time. It sits inside its project's optional monthly cap, inside the organization's monthly cap, and no budget passes either. The default per experiment can be set per project and falls back to the organization's, in Settings, Budgets | cap | Budget, Spend |
-| Delivered | Yearly value of wins whose pull request is merged, derived per experiment when it states a value per unit | locked in, realised | Delivered |
+| Delivered | Yearly value of wins whose pull request is merged, derived per experiment from its value model: (baseline minus best) times the value per unit. With no value model a win counts in no dollar figure. While an experiment is Regressed, the regressed amount comes out of Delivered and shows as At risk | locked in, realised | Delivered |
 | Pending | Yearly value of wins in an open pull request; not counted in Return | unclaimed, waiting | Pending |
-| Return | Delivered divided by spent, as `68×` | ROI | Return |
+| At risk | The regressed amount taken out of Delivered while an experiment is Regressed, until a fix is Kept and merged | loss, failed | At risk |
+| Return | Delivered divided by everything spent in the scope (project, organization, time range), including experiments that found nothing, were stopped or failed, as `68×` | ROI | Return |
+| Value model | What one unit of a metric is worth in dollars a year, with a source (text and an optional link) and the person who set it: "Each 100 ms of checkout p95 is worth $3,600 a year". A project owner sets one per metric on the project page; it is sealed with the experiment; an experiment may have none ("No value set"). Agents never set one | price, estimate | Value model |
+| Quick check | The first step of a measurement: one repeat on the evaluation data. Only if it beats the best by more than the noise does the full measurement follow. A trial that stops here is Within noise or Worse and is marked "Quick check", at a lower cost. Sealed with the experiment, run only in the judge, never decides Kept | preview, dry run | Quick check |
+| Patience | How many trials in a row, across all sessions, may fail to be Kept before the experiment pauses with a Keep going? card. Default 6, sealed | timeout | Patience, Keep going? |
+| Cost per trial | The agent's spend since the session's previous trial plus the judge time for the measurement. Derived from spend records. The scoreboard strip also shows cost per kept trial ("$14.00 per kept trial") | price | Cost per trial |
+| Where the spend went | The experiment's spend split by Kept, Within noise, Worse, Guardrail failed, Rejected, Failed and Not measured (agent work that never reached `measure`), each as dollars and a share. On the experiment detail page and in Settings, Budgets | bill, breakdown | Where the spend went |
+| Agent scoreboard | Customize, Agents: per agent, by evaluation kind and project, experiments, trials, kept, wins delivered, cost per win, median time to a win and Delivered value, all measured by the judge on your code. "Not a vendor benchmark." Never "leaderboard" | leaderboard, ranking | Agent scoreboard |
+| Auto | The agent choice that picks the agent with the best cost per win for this evaluation kind in this project, among the agents the organization turned on, and says why. Before there is data it uses the organization's default agent. A person can always pick a named agent | smart, default model | Auto |
+| Hand off | Moving a session to another agent: a new session in the same experiment on the same branch with a summary and the history; the old one ends as Done, "Handed off to Codex" | transfer, fork | Hand off to... |
+| Ideas | Possible experiments Ratchet suggests on a project page, each with the metric, expected value (from the project's value models), expected cost and their ratio, sorted by it. Ratchet proposes, a person starts. Home shows the top three | suggestions, backlog | Ideas |
+| Report | A page per organization and per project: spent, Delivered, Pending, At risk, Return, where the spend went, the agent scoreboard for the month, the top wins and experiments stopped with no win. Exported as PDF and CSV and emailed monthly to chosen members | log, export | Report |
 
-"Experiment" is the noun for what a user creates, everywhere a user reads it: the web and Mac apps, the CLI, the API (`experiment_id`), the words catalogue and user-facing docs. A session is one agent's work inside an experiment and is never a top-level noun. "Contract" is retired (see [rulings](../.claude/skills/product/rulings.md)). Never "automation", and never "run" as a noun.
+"Experiment" is the noun for what a user creates, everywhere a user reads it: the web and Mac apps, the CLI, the API (`experiment_id`), the words catalogue and user-facing docs. A session is one agent's work inside an experiment and is never a top-level noun. "Contract" is retired (see [rulings](../.claude/skills/product/rulings.md)). Never "automation", "leaderboard", "ROI" or "run" as a noun.
 
 In the chat an agent's message shows the Ratchet mark and the name "Ratchet", with the agent that did the work as a quiet second label ("Ratchet · Claude Code"). Agent logos stay where an agent is the subject: spawned session cards, the Agent chip, settings rows, receipts and lineage.
 
@@ -75,7 +86,7 @@ The boards are in [`design/mockups/`](../design/mockups/) and the rules in [`.cl
 | Project page | A detail page: title, the person's role, counts (experiments, wins), description, New experiment, an Experiments table (experiment, baseline to best, state, activity, budget and spend), Connectors used, Budget (spent this month of the project's cap, default budget per experiment) and Members. A project with no experiment has its own empty page |
 | Customize page | Tabs Evaluations, Skills, Connectors, Agents, Plugins, each with Yours and Discover. One DetailPage layout for every kind of item |
 | Experiment page | The chat of its lead session: a header bar (breadcrumb, title menu, state and activity, panel toggles for Details, Trials, Changes, Terminal, Preview and Files, More, Share), the scoreboard strip once sealed (with Change budget), the conversation of messages and cards, and a composer docked at the foot. Spawned sessions appear as cards and open as their own chat inside the experiment |
-| Card | The only place structured output appears. Approval cards (the six kinds above). Result cards: Trial, Spawned session, Win, Pull request, Regression, and a calm one-line failure |
+| Card | The only place structured output appears. Approval cards (the eight kinds above). Result cards: Trial, Spawned session, Win, Pull request, Regression, and a calm one-line failure |
 | Experiments | Listed on their project's page (there is no list of all experiments; Projects shows Delivered, Pending and Return across them), and a detail page, reached from Details, whose back link goes to its project (the sealed definition, the seal checks, the data with dataset versions, the holdout shown as "Restricted to the judge", the sessions with their spend and clean-up state, the scoreboard, the history of trials across sessions, wins and their pull requests, watch settings, versions) |
 | Experiment state | Not sealed, Sealed, Watching, Regressed |
 | Receipt page | One win: everything on the signed receipt, and the lineage (what each trial started from) |
@@ -87,7 +98,7 @@ The boards are in [`design/mockups/`](../design/mockups/) and the rules in [`.cl
 | Member, service account | User, service principal |
 | Install the web app (Windows, Linux) | Install app (Settings, This device); "Get the Mac app" on macOS |
 | The server cannot be reached | Can't reach acme.ratchet.cloud. (the server's address), Try again |
-| Notification titles | Win, Waiting for you, Regression, Budget spent |
+| Notification titles | Win, Waiting for you, Regression, Budget spent. A monthly report email goes to members an owner chose |
 
 Unchanged between code and screen: win, agent, pull request, Delivered, Pending, Return, project, plugin.
 
@@ -110,4 +121,5 @@ Do not use these except in a `today.md` page about the earlier code or in a date
 | Optimization, context and infrastructure as "the three basics" | Experiment, session, judge, organization floor |
 | Stepper | Cards in the conversation |
 | Dashboard page | Cut; the Projects page holds Delivered, Pending and Return |
-| Agent order | Cut; a person or an agent chooses agents in the chat |
+| Agent order | Cut; a person or an agent chooses agents in the chat, or Auto does |
+| Leaderboard | Agent scoreboard |

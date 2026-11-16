@@ -33,7 +33,7 @@ There is no daemon, no LaunchAgent and no simulation mode. The server is Ratchet
 | `ratchet show <experiment> --json` | One experiment: state, activity, its sessions, trials, kept, spend of budget |
 | `ratchet history <experiment> --json` | Every trial for an experiment across its sessions: hypothesis, outcome, values, commit ids, what it started from |
 | `ratchet receipt <win> --json` | The signed receipt for a win and its lineage |
-| `ratchet spend <experiment> --json` | Spend against the experiment's budget |
+| `ratchet spend <experiment> --json` | Spend against the experiment's budget, cost per trial and cost per kept trial, and where the spend went (Kept, Within noise, Worse, Guardrail failed, Rejected, Failed, Not measured) |
 | `ratchet budget <experiment> <amount> --yes` | Change the experiment's budget (editor or owner) |
 | `ratchet stop <session> --yes` | Stop a session. It is Done, "Stopped by NAME". Wins so far are kept |
 | `ratchet deliver <experiment> --yes` | Open the pull requests with the receipt, by the same card policy as the web app |
@@ -49,9 +49,9 @@ Every session gets the Ratchet tools, and `ratchet mcp` serves the same ones. Th
 | Tool | Does |
 | --- | --- |
 | `seal` | Proposes the experiment's definition. The judge runs the seal checks. A person seals it from a card |
-| `measure` | Sends a trial (commits, the trial it started from, a one-line hypothesis). Returns a ticket at once; the measurement arrives later as an event |
-| `history` | Every trial for an experiment, failures included |
-| `spawn` | Starts another session in the same experiment, on its budget |
+| `measure` | Sends a trial (commits, the trial it started from, a one-line hypothesis). The judge runs a quick check, then the full measurement if it is worth it. Returns a ticket at once; the measurement arrives later as an event |
+| `history` | Every trial for an experiment, failures included, with a flag on a hypothesis that repeats an earlier failed one |
+| `spawn` | Starts another session in the same experiment, on its budget, with a summary of what was tried. Defaults to the organization's lower-cost agent |
 | `deliver` | Opens one pull request per repo changed, each with the receipt. Refuses a trial that is not Kept |
 | `watch` | Has the judge measure the experiment again on a schedule or when the default branch moves |
 | `attach_repo`, `request_credential`, `set_environment`, `request_budget` | The setup tools. Each shows a card in the chat. A credential value is typed into the form, never into the chat |

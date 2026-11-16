@@ -3,8 +3,8 @@
 | Promise | The rule |
 | --- | --- |
 | Permission | Every read and write is checked against the member's role in the project it touches (the organization role unless the project set one), in one place. |
-| Approval | A tool call that matters runs only after a person with the right role approves its card, or policy pre-approves it. Add credential is never pre-approved. |
-| Audit | Every tool call that changes something, and every approval, is recorded with an actor. Changing agent platform accounts, project membership and a project's budget are among them. |
+| Approval | A tool call that matters runs only after a person with the right role approves its card, or policy pre-approves it. Add credential is never pre-approved, and a value model is set or changed only with a project owner's approval. |
+| Audit | Every tool call that changes something, and every approval, is recorded with an actor. Changing agent platform accounts, project membership, a project's budget, a value model, a hand off, a failover and exporting a report are among them. |
 | Budget | An experiment never spends past its budget, a project never past its monthly cap, if it has one, and an organization never past its monthly cap. |
 | Secrets | No response, event or log carries a secret. |
 | No surprise calls | A self-hosted server contacts only the endpoints its administrator configured. A session contacts only the endpoints its environment allows. |
@@ -15,7 +15,7 @@ Each check is (target). Earlier-code facts are in [today.md](today.md).
 
 **Permission.** A test per route that the role matrix is applied, driven from the route table in the OpenAPI document, so a new route without a check fails. A test that a project's role overrides the organization role for that project only, and that an experiment is never reachable through a project its caller has no role in.
 
-**Approval.** A test that each card kind runs its tool only after approval, that a viewer cannot approve, and that Add credential cannot be set to Allow.
+**Approval.** A test that each of the eight card kinds runs its tool only after approval, that a changed value model needs a project owner, that a viewer cannot approve, and that Add credential cannot be set to Allow.
 
 **Audit.** A test that every write route and every approval produces exactly one audit entry with an actor and a name, in the same transaction as the change, and that a denial is audited too.
 

@@ -17,8 +17,8 @@ Ratchet declares them as tools the client provides and answers them over the ses
 
 | | |
 | --- | --- |
-| Inputs | An agent (a model on a platform), an environment, a first message. The new session is in the same experiment |
-| Card | Spawned session: agent, status, its best; opens that session as its own chat inside the experiment |
+| Inputs | An agent (a model on a platform), an environment, a first message. The new session is in the same experiment. The call hands over a summary of what was tried (from `history`) so the new session does not repeat a dead end. With no agent named it defaults to the organization's chosen lower-cost agent; naming a costlier one needs a reason |
+| Card | Spawned session: agent with its cost tier, status, its best; opens that session as its own chat inside the experiment |
 | Who approves | Nobody, inside the budget. The spawned session spends the experiment's budget |
 | Refuses | A call from a spawned session; a budget that is spent; an agent whose platform account is not configured |
 

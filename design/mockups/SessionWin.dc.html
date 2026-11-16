@@ -86,7 +86,7 @@
       <div class="sb-l">
         <span class="sb-k">Checkout p95 latency, lower is better</span>
         <span class="sb-big"><span>1,310 ms</span><span class="to">to</span><span>1,102 ms</span><span class="dlt">-15.9%</span></span>
-        <span class="sb-s"><span><b>14</b> trials</span><span><b>3</b> kept</span><span><b>$42</b> of $100</span><span class="bar" aria-hidden="true"><span style="width: 42%;"></span></span></span>
+        <span class="sb-s"><span><b>14</b> trials</span><span><b>3</b> kept</span><span><b>$42</b> of $100</span><span><b>$14.00</b> per kept trial</span><span class="bar" aria-hidden="true"><span style="width: 42%;"></span></span></span>
       </div>
       <div class="sb-c">
         <div class="sb-t"><span>p95 latency per trial</span><span>Trial</span></div>
@@ -105,7 +105,8 @@
 <div class="am"><span class="av"><svg class="mk" aria-hidden="true" width="20" height="12" viewBox="218 338 600 369"><path d="M397.8 434.8L397.8 466.2A31.5 31.5 0 0 1 366.4 434.8Z" style="fill:var(--mark)" fill-opacity="0.12"/><path d="M407.7 434.8L407.7 466.2A31.5 31.5 0 0 0 439.2 434.8Z" style="fill:var(--mark)" fill-opacity="0.18"/><path d="M361.6 424.9L439.2 424.9A77.6 77.6 0 0 0 361.6 347.3Z" style="fill:var(--mark)" fill-opacity="0.28"/><path d="M351.7 471.0L227.9 471.0A123.8 123.8 0 0 1 351.7 347.3Z" style="fill:var(--mark)" fill-opacity="0.42"/><path d="M444.0 480.9L444.0 697.0A216.1 216.1 0 0 1 227.9 480.9Z" style="fill:var(--mark)" fill-opacity="0.6"/><path d="M453.9 342.5L453.9 697.0A354.5 354.5 0 0 0 808.4 342.5Z" fill="url(#brass)"/></svg></span><div class="bd"><span class="by"><b>Ratchet</b><span class="via">Claude Code</span></span><p class="tx">Trial 12 is Kept. The judge confirmed it in a fresh sandbox and on the holdout. Two repos changed, so it needs one pull request in each.</p></div></div>
         <section class="cd wn" aria-label="Win">
           <div class="wn-h"><i class="ic i-verify" style="color: var(--accent);"></i><h3>Win: 1,310 ms to 1,102 ms</h3><span class="tg" style="--c: var(--good);">Kept</span><span class="dlt" style="margin-left: auto;">-15.9%</span></div>
-          <p class="wn-r">Experiment v2, 3 repeats, noise ±18 ms, 14 trials tried, holdout passed, $42 spent</p>
+          <p class="wn-r">Experiment v2, 3 repeats, noise ±18 ms, 14 trials tried, holdout passed</p>
+          <p class="ac-vl"><span><b>Worth $7,488 a year</b> (208 ms at $36 per ms)</span><span class="xs mut">Value model: each 100 ms of checkout p95 is worth $3,600 a year. Source: Checkout conversion study, Q3 2026. Set by Priya Raman, project owner.</span><span>The win cost $42, including the 11 trials that were not kept.</span></p>
           <div class="wn-o"><i class="ic s i-check"></i><span>Second opinion from OpenAI: no special-casing found.</span></div>
           <div class="wn-f"><a class="btn sm" href="Receipt.dc.html">View receipt</a><span class="xs mut">Trial 12, started from trial 7. Measured by the judge. A number from the session never counts.</span></div>
         </section>
@@ -122,25 +123,18 @@
               <span class="ap-rp"><span class="rn">acme/checkout</span><span>4 files <span class="dlt">+38</span> <span class="dlt bad">-9</span><span class="xs mut"> · src/db/pool.ts and 3 more</span></span></span>
               <span class="ap-rp"><span class="rn">acme/pricing</span><span>2 files <span class="dlt">+14</span> <span class="dlt bad">-3</span><span class="xs mut"> · src/client.ts and 1 more</span></span></span>
             </span></div>
-            <div class="ap-r"><span class="k">Value</span><span class="v"><span>Worth $2,912 a year. Stays Pending while open.</span></span></div>
+            <div class="ap-r"><span class="k">Value</span><span class="v"><span>Worth $7,488 a year (value model: checkout p95). Stays Pending while open.</span></span></div>
           </div>
           <div class="ap-f"><div class="nt"><span>Costs nothing</span><span class="xs">Nothing merges until a person merges it.</span></div><div class="bt"><button class="btn primary">Open pull request</button><button class="btn">Decline</button></div></div>
         </section>
       </div>
     </div>
-    <div class="dock"><div class="c760"><div class="cmpw">
-    <div class="cmp">
-      <textarea class="cmp-in" rows="2" aria-label="Message" placeholder="Answer, or approve the card above"></textarea>
-      <div class="cmp-bar">
-        <button class="ib" aria-label="Attach files, images, repos or connectors"><i class="ic i-plus"></i></button>
-        <span class="go"><button class="ib" aria-label="Dictate"><i class="ic i-mic"></i></button><button class="ib send" aria-label="Send"><i class="ic i-return"></i></button></span>
-      </div>
-    </div>
-    <div class="cmp-opt">
-      <button class="opt" aria-label="Agent"><span class="lg lg-claude" role="img" aria-label="Claude Code"></span><span>Claude Code · Default</span></button>
-      <button class="opt" aria-label="Environment"><i class="ic g-box"></i><span>Checkout staging</span></button>
-      <button class="opt" aria-label="Mode"><i class="ic i-sliders"></i><span>Auto</span></button>
-      <button class="opt" aria-label="Budget"><span class="ring" style="--p: 42;" role="img" aria-label="Budget used"></span><span>$42 of $100</span></button>
+    <div class="dock ac-dock"><div class="c760"><div class="cmpw">
+    <div class="cmp ac-one">
+      <button class="ib" aria-label="Attach files, images, repos or connectors" title="Attach files, images, repos or connectors"><i class="ic i-plus"></i></button>
+      <textarea class="cmp-in" rows="1" aria-label="Message" placeholder="Answer, or approve the card above"></textarea>
+      <span class="ac-opts" role="group" aria-label="Session options. They show in full when the box has focus."><button class="opt" aria-label="Agent: Claude Code · Default" title="Agent: Claude Code · Default"><span class="lg lg-claude" aria-hidden="true"></span></button><button class="opt" aria-label="Environment: Checkout staging" title="Environment: Checkout staging"><i class="ic g-box"></i></button><button class="opt" aria-label="Mode: Auto" title="Mode: Auto"><i class="ic i-sliders"></i></button><button class="opt" aria-label="Budget: $42 of $100" title="Budget: $42 of $100"><span class="ring" style="--p: 42;" aria-hidden="true"></span></button></span>
+      <span class="go"><button class="ib" aria-label="Dictate" title="Dictate"><i class="ic i-mic"></i></button><button class="ib send" aria-label="Send" title="Send"><i class="ic i-return"></i></button></span>
     </div>
   </div></div></div>
     </div>

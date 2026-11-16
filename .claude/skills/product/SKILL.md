@@ -12,6 +12,14 @@ Four things hold it together. A **project** groups the experiments for one area 
 
 The target is a server with a web app as the client of its API, run two ways: self-hosted (a Docker Compose service, server plus Postgres, using the agent platform accounts the customer already has) or Ratchet cloud (we host the server and run every session on Ratchet's platform accounts). Ratchet runs no sandboxes for agents: they run as sessions on agent platforms (Claude Managed Agents, AWS AgentCore, the OpenAI Agents API, Microsoft Foundry Agent Service, Google Agent Runtime) behind one trait. Nothing here is built (target).
 
+## The three aims
+
+Beside trust (the judge's rules never bend), the product serves three aims, decided by the owner on 16 Nov 2026. Every feature is checked against them.
+
+1. **Cost control.** Every dollar and token of an experiment is spent well: cost per trial, an estimate before spending, a quick check before the full measurement, a pause when trials stop paying (patience), history read first, the right-sized agent, compaction, and a view of where the spend went.
+2. **No tie to one model provider.** Agents are measured against each other on the customer's own code (the agent scoreboard), Auto picks among the agents the organization turned on, a session can be handed off to another agent, and a failing platform fails over. No agent is chosen by brand.
+3. **Return for the organization.** A value model says what a unit of the metric is worth, a project owner sets it, and Return counts everything spent, including experiments that found nothing. Ideas are ranked by expected value over expected cost, and a monthly report shows it.
+
 Use the governing principles and the non-goals below as settled. Apply them directly when they answer a question. The rest is in the files below.
 
 ## Governing principles
@@ -22,7 +30,7 @@ Use the governing principles and the non-goals below as settled. Apply them dire
 4. **The agent drives.** The server relays, measures and records. It runs no loop.
 5. **Ratchet never holds the data.** Ids, versions, numbers, states, the conversation's words and audit rows only. Data is read only inside a platform's sandbox.
 6. **Everything is governed.** Approvals by role, every change recorded.
-7. **Derive, do not store.** Value, Return and status come from measurements.
+7. **Derive, do not store.** Value, Return, cost per trial and status come from measurements and spend records.
 8. **Failure is never shown as zero or empty, and nothing unchecked is shown as healthy.**
 9. **One API, every client.** One set of tools, the same words everywhere.
 10. **Self-hosting is first-class.** No call to a service the administrator did not configure.
@@ -64,6 +72,7 @@ If a question survives all of these, it is a product call. Write the options wit
 - Anything that stores or moves customer data, or touches regulated-customer readiness.
 - Anything that touches one of the open questions in [rulings.md](rulings.md).
 - A new card kind, or a card that could be pre-approved when it should always ask.
+- Anything that lets an agent set a value model, or that favours one agent's vendor.
 - The licence, pricing or what Ratchet cloud offers beyond the settled rulings.
 
 ## Before you finish

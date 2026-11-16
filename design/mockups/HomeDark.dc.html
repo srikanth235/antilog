@@ -74,17 +74,19 @@
     <div class="cmp-opt">
       <button class="opt" aria-label="Project"><i class="ic i-folder"></i><span>Checkout platform</span></button>
       <button class="opt" aria-label="Repos"><i class="ic g-git"></i><span>acme/checkout +1</span></button>
-      <button class="opt" aria-label="Agent"><span class="lg lg-claude" role="img" aria-label="Claude Code"></span><span>Claude Code · Default</span></button>
+      <button class="opt" aria-label="Agent" title="Auto picks the agent with the lowest cost per win for this kind of experiment here. Before there is data it uses your organization's default agent."><i class="ic g-spark"></i><span>Auto</span></button>
       <button class="opt" aria-label="Environment"><i class="ic g-box"></i><span>bench-std</span></button>
       <button class="opt" aria-label="Mode"><i class="ic i-sliders"></i><span>Ask</span></button>
       <button class="opt" aria-label="Budget"><span class="ring" style="--p: 0;" role="img" aria-label="Budget used"></span><span>$0 of $10</span></button>
     </div>
   </div>
-        <div class="sugs">
-          <button class="sug"><i class="ic s i-verify"></i>Cut checkout p95 latency</button>
-          <button class="sug"><i class="ic s i-verify"></i>Reduce forecast error</button>
-          <button class="sug"><i class="ic s i-verify"></i>Shrink the production bundle</button>
-        </div>
+        <section class="ac-ideas" aria-labelledby="ideas-h">
+          <div class="ac-ih"><h2 class="t-label" id="ideas-h">Ideas</h2><span class="xs mut">Ratchet suggests, ranked by expected return. You start.</span></div>
+          <div class="ac-ir hd" aria-hidden="true"><span class="xs mut">Experiment</span><span class="xs mut" style="text-align: right;">Worth a year</span><span class="xs mut" style="text-align: right;">Costs about</span><span class="xs mut" style="text-align: right;">Ratio</span><span></span></div>
+          <div class="ac-ir"><span class="tt"><b>Cache the shipping quote for each cart</b><span>Checkout platform · Checkout p95 latency</span></span><span class="nm">$3,600</span><span class="nm">$38</span><span class="rt">95×</span><a class="btn sm" href="SessionStartDark.dc.html" aria-label="Start: Cache the shipping quote for each cart" title="Start: Cache the shipping quote for each cart">Start</a></div>
+          <div class="ac-ir"><span class="tt"><b>Warm the pricing cache when a service starts</b><span>Checkout platform · Checkout p95 latency</span></span><span class="nm">$1,800</span><span class="nm">$27</span><span class="rt">67×</span><a class="btn sm" href="SessionStartDark.dc.html" aria-label="Start: Warm the pricing cache when a service starts" title="Start: Warm the pricing cache when a service starts">Start</a></div>
+          <div class="ac-ir"><span class="tt"><b>Run the smoke suite shards in parallel</b><span>Checkout platform · Smoke suite duration</span></span><span class="nm">$1,050</span><span class="nm">$29</span><span class="rt">36×</span><a class="btn sm" href="SessionStartDark.dc.html" aria-label="Start: Run the smoke suite shards in parallel" title="Start: Run the smoke suite shards in parallel">Start</a></div>
+        </section>
         <section class="wl" aria-labelledby="wait-h">
           <div class="wl-h"><h2 class="t-label" id="wait-h">Waiting for you</h2><span class="xs mut">1</span></div>
           <a class="wr" href="SessionSealDark.dc.html"><span role="img" aria-label="Waiting for you" title="Waiting for you" class="st gi st-wait" style="color: var(--warn);"></span><span class="t">Reduce forecast error</span><span class="w">Seal experiment</span><span class="a">4 min ago</span><i class="ic s mut i-chev"></i></a>

@@ -14,7 +14,10 @@
 | access token | A secret a program uses to act as a member; shown once, stored as a hash | a sign-in session |
 | service account | A non-human member with its own tokens and a role | a shared login |
 | approval card | A tool call a person approves in the chat | a settings form |
-| policy | Per card kind: Always ask, Allow up to a limit, or Allow | a role |
+| value model | What one unit of a metric is worth in dollars a year, with a source and who set it. A project owner sets one per metric on the project's page (a Value section); it is sealed with an experiment and never set by an agent (see [../judge/model.md](../judge/model.md)) | a budget, a price |
+| report | A page per organization and per project: spent, Delivered, Pending, At risk, Return, where the spend went, the agent scoreboard for the month, the top wins with receipt links and experiments stopped with no win. Exported as PDF and CSV and emailed monthly to chosen members | a log, the audit log |
+| ideas | Possible experiments Ratchet suggests on a project page, each with the metric, expected value (from the project's value models), expected cost and their ratio. Ratchet proposes, a person starts | a backlog an agent starts by itself |
+| policy | Per card kind (eight): Always ask, Allow up to a limit, or Allow | a role |
 | budget | What one experiment may spend across all its sessions and their judge time. It sits inside its project's cap | a monthly cap |
 | project cap | An optional monthly limit on the spend of all of a project's experiments. It sits inside the organization's monthly cap | a budget |
 | monthly cap | The most an organization may spend in a month | a budget |
@@ -22,7 +25,7 @@
 | audit entry | An append-only record of a tool call that changed something, or of an approval: actor, name, target, time, outcome | a log line |
 | event | A live message that something changed, carrying no secret | an audit entry |
 
-Roles in one line each, in a project: viewer reads its experiments and approves nothing; editor also starts experiments, talks to agents, approves cards and changes an experiment's budget; owner also manages the project's members, its budget (the cap and the default per experiment) and the project itself. Organization owners also manage members, sign-in, policy, agent platform accounts, the default budget and the organization cap. A person's organization role is their default in every project, and a project can set someone's role for that project, higher or lower. Visibility does not follow repo access.
+Roles in one line each, in a project: viewer reads its experiments and approves nothing (a viewer of a project reads its report); editor also starts experiments, talks to agents, approves cards and changes an experiment's budget; owner also manages the project's members, its budget (the cap and the default per experiment), its value models and the project itself. Organization owners also manage members, sign-in, policy, the default agent, agent platform accounts, the default budget and the organization cap. A person's organization role is their default in every project, and a project can set someone's role for that project, higher or lower. Visibility does not follow repo access.
 
 ## How this area refers to the others
 

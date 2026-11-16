@@ -25,3 +25,6 @@ These are decided. Do not build them, propose them in passing, or leave a hook "
 - **A plugin, skill pack or evaluation template that changes what counts.** A plugin has no powers of its own and can never mark, unmark or grant a dataset. The judge never reads a skill pack, and a pack never holds holdout data. A template is where an experiment starts, not something that edits a sealed one.
 - **A project that is a second permission system.** A project sets a member's role for that project and nothing else. Permission is still decided in the one action layer.
 - **Per-repo visibility.** Roles follow the organization and the project, never a repo.
+- **Vendor benchmark claims.** Ratchet shows what the judge measured on the customer's code ("Measured by the judge on your code. Not a vendor benchmark."). It never ranks or promotes an agent or provider from outside figures, and the word is "agent scoreboard", never "leaderboard".
+- **A value model set by an agent.** An agent may suggest one in prose. Only a project owner sets or approves it, and it is sealed with the experiment.
+- **An agent chosen by brand.** No agent is preselected anywhere. Auto chooses by measured cost per win among the agents an organization turned on, and says why.

@@ -86,7 +86,7 @@
       <div class="sb-l">
         <span class="sb-k">Checkout p95 latency, lower is better</span>
         <span class="sb-big"><span>1,310 ms</span><span class="to">to</span><span>1,102 ms</span><span class="dlt">-15.9%</span></span>
-        <span class="sb-s"><span><b>14</b> trials</span><span><b>3</b> kept</span><span><b>$42</b> of $100</span><button class="textbtn">Change budget</button><span class="bar" aria-hidden="true"><span style="width: 42%;"></span></span></span>
+        <span class="sb-s"><span><b>14</b> trials</span><span><b>3</b> kept</span><span><b>$42</b> of $100</span><span><b>$14.00</b> per kept trial</span><button class="textbtn">Change budget</button><span class="bar" aria-hidden="true"><span style="width: 42%;"></span></span></span>
       </div>
       <div class="sb-c">
         <div class="sb-t"><span>p95 latency per trial</span><span>Trial</span></div>
@@ -111,34 +111,27 @@
           <a class="cd spc" href="SessionSpawnedDark.dc.html"><span class="av"><span class="lg lg-googlegemini" role="img" aria-label="Gemini"></span></span><span class="tx"><span class="nm">Gemini session</span><span class="sub3">2 trials, best 1,266 ms</span><span class="sub3">$6 of $100</span></span><span class="go"><span class="spill" style="--c: var(--accent);"><span class="st run gi st-work"></span>Working</span></span></a>
         </div>
         <article class="cd tc">
-          <div class="tc-h"><span class="tc-n">Trial 10</span><span class="tc-t">Cache price lookups for the length of a request</span><span class="tg" style="--c: var(--ink3);">Within noise</span><i class="ic s chev i-chev"></i></div>
+          <div class="tc-h"><span class="tc-n">Trial 10</span><span class="tc-t">Cache price lookups for the length of a request</span><span class="tg hollow" style="--c: var(--ink3);">Quick check</span><span class="tg" style="--c: var(--ink3);">Within noise</span><i class="ic s chev i-chev"></i></div>
           <div class="tc-v"><span>1,181 ms</span><span class="fr">from</span><span>1,170 ms</span><span class="dlt bad">+0.9%</span></div>
-          <div class="tc-m"><span>Started from trial 7</span><span>1 repo, 2 files</span><span class="ok"><i class="ic i-check"></i>p99 held</span><span class="ok"><i class="ic i-check"></i>Error rate held</span></div>
+          <div class="tc-m"><span class="ac-cost">$2.20</span><span>Stopped after 1 repeat</span><span>Started from trial 7</span><span>1 repo, 2 files</span><span>Guardrails not checked</span></div>
         </article>
         <article class="cd tc">
           <div class="tc-h"><span class="tc-n">Trial 12</span><span class="tc-t">Raise the connection pool to 48 and reuse pricing clients</span><span class="tg" style="--c: var(--good);">Kept</span><i class="ic s chev i-chev"></i></div>
           <div class="tc-v"><span>1,102 ms</span><span class="fr">from</span><span>1,170 ms</span><span class="dlt">-5.8%</span></div>
-          <div class="tc-m"><span>Started from trial 7</span><span>2 repos, 6 files</span><span class="ok"><i class="ic i-check"></i>p99 held</span><span class="ok"><i class="ic i-check"></i>Error rate held</span></div>
+          <div class="tc-m"><span class="ac-cost">$5.20</span><span>Started from trial 7</span><span>2 repos, 6 files</span><span class="ok"><i class="ic i-check"></i>p99 held</span><span class="ok"><i class="ic i-check"></i>Error rate held</span></div>
         </article>
         <article class="cd tc meas">
           <div class="tc-h"><span class="tc-n">Trial 14</span><span class="tc-t">Batch the three pricing calls into one</span><span class="tg hollow" style="--c: var(--ink3);">Measuring</span><i class="ic s chev i-chev"></i></div>
-          <div class="tc-m"><span>Measuring. The result arrives here.</span><span>Started from trial 12</span><span>1 repo, 3 files</span></div>
+          <div class="tc-m"><span class="ac-cost">$1.70 so far</span><span>Measuring. The result arrives here.</span><span>Started from trial 12</span><span>1 repo, 3 files</span></div>
         </article>
       </div>
     </div>
-    <div class="dock"><div class="c760"><div class="cmpw">
-    <div class="cmp">
-      <textarea class="cmp-in" rows="2" aria-label="Message" placeholder="Steer, @ a session, or / for commands"></textarea>
-      <div class="cmp-bar">
-        <button class="ib" aria-label="Attach files, images, repos or connectors"><i class="ic i-plus"></i></button>
-        <span class="go"><button class="ib" aria-label="Dictate"><i class="ic i-mic"></i></button><button class="ib stop" aria-label="Interrupt"><i class="ic st-stop"></i></button></span>
-      </div>
-    </div>
-    <div class="cmp-opt">
-      <button class="opt" aria-label="Agent"><span class="lg lg-claude" role="img" aria-label="Claude Code"></span><span>Claude Code · Default</span></button>
-      <button class="opt" aria-label="Environment"><i class="ic g-box"></i><span>Checkout staging</span></button>
-      <button class="opt" aria-label="Mode"><i class="ic i-sliders"></i><span>Auto</span></button>
-      <button class="opt" aria-label="Budget"><span class="ring" style="--p: 42;" role="img" aria-label="Budget used"></span><span>$42 of $100</span></button>
+    <div class="dock ac-dock"><div class="c760"><div class="cmpw">
+    <div class="cmp ac-one">
+      <button class="ib" aria-label="Attach files, images, repos or connectors" title="Attach files, images, repos or connectors"><i class="ic i-plus"></i></button>
+      <textarea class="cmp-in" rows="1" aria-label="Message" placeholder="Steer, @ a session, or / for commands"></textarea>
+      <span class="ac-opts" role="group" aria-label="Session options. They show in full when the box has focus."><button class="opt" aria-label="Agent: Claude Code · Default" title="Agent: Claude Code · Default"><span class="lg lg-claude" aria-hidden="true"></span></button><button class="opt" aria-label="Environment: Checkout staging" title="Environment: Checkout staging"><i class="ic g-box"></i></button><button class="opt" aria-label="Mode: Auto" title="Mode: Auto"><i class="ic i-sliders"></i></button><button class="opt" aria-label="Budget: $42 of $100" title="Budget: $42 of $100"><span class="ring" style="--p: 42;" aria-hidden="true"></span></button></span>
+      <span class="go"><button class="ib" aria-label="Dictate" title="Dictate"><i class="ic i-mic"></i></button><button class="ib stop" aria-label="Interrupt" title="Interrupt"><i class="ic st-stop"></i></button></span>
     </div>
   </div></div></div>
     </div>
@@ -149,17 +142,17 @@
       <div class="dp-sec" style="gap: 6px; padding-bottom: 12px;">
         <span class="t-meta">Checkout p95 latency, lower is better</span>
         <span class="sb-big"><span>1,310 ms</span><span class="to">to</span><span>1,102 ms</span><span class="dlt">-15.9%</span></span>
-        <span class="sb-s"><span><b>14</b> trials</span><span><b>3</b> kept</span><span>Noise band ±18 ms</span></span>
+        <span class="sb-s"><span><b>14</b> trials</span><span><b>3</b> kept</span><span><b>$14.00</b> per kept trial</span><span>Noise band ±18 ms</span></span>
       </div>
       <div class="pane-b scr" style="border-top: 0;">
-        <a class="tr-r" href="SessionWorkingDark.dc.html"><span class="h"><span class="n">14</span><span class="t">Batch the three pricing calls into one</span><span class="tg hollow" style="--c: var(--ink3);">Measuring</span></span><span class="m"><span class="by"><span class="lg lg-claude" role="img" aria-label="Claude Code"></span>Claude Code</span><span>Measuring. The result arrives here.</span></span></a>
-        <a class="tr-r" href="SessionSpawnedDark.dc.html"><span class="h"><span class="n">13</span><span class="t">Reuse one pricing client per request</span><span class="tg" style="--c: var(--ink3);">Within noise</span></span><span class="m"><span class="by"><span class="lg lg-openai" role="img" aria-label="Codex"></span>Codex</span><span class="tv">1,106 ms</span><span>from 1,102 ms</span><span class="dlt bad">+0.4%</span></span></a>
-        <a class="tr-r" href="ReceiptDark.dc.html"><span class="h"><span class="n">12</span><span class="t">Raise the connection pool to 48 and reuse pricing clients</span><span class="tg" style="--c: var(--good);">Kept</span></span><span class="m"><span class="by"><span class="lg lg-claude" role="img" aria-label="Claude Code"></span>Claude Code</span><span class="tv">1,102 ms</span><span>from 1,170 ms</span><span class="dlt">-5.8%</span></span></a>
-        <a class="tr-r" href="SessionSpawnedDark.dc.html"><span class="h"><span class="n">11</span><span class="t">Disable the response cache</span><span class="tg" style="--c: var(--bad);">Worse</span></span><span class="m"><span class="by"><span class="lg lg-openai" role="img" aria-label="Codex"></span>Codex</span><span class="tv">1,243 ms</span><span>from 1,170 ms</span><span class="dlt bad">+6.2%</span></span></a>
-        <a class="tr-r" href="SessionWorkingDark.dc.html"><span class="h"><span class="n">10</span><span class="t">Cache price lookups for the length of a request</span><span class="tg" style="--c: var(--ink3);">Within noise</span></span><span class="m"><span class="by"><span class="lg lg-claude" role="img" aria-label="Claude Code"></span>Claude Code</span><span class="tv">1,181 ms</span><span>from 1,170 ms</span><span class="dlt bad">+0.9%</span></span></a>
-        <a class="tr-r" href="SessionWorkingDark.dc.html"><span class="h"><span class="n">9</span><span class="t">Move tax rules into a startup table</span><span class="tg" style="--c: var(--bad);">Guardrail failed</span></span><span class="m"><span class="by"><span class="lg lg-googlegemini" role="img" aria-label="Gemini"></span>Gemini</span><span class="tv">1,266 ms</span><span>from 1,310 ms</span><span class="dlt">-3.4%</span></span></a>
-        <a class="tr-r" href="SessionSpawnedDark.dc.html"><span class="h"><span class="n">8</span><span class="t">Use keep-alive for the tax service</span><span class="tg" style="--c: var(--ink3);">Within noise</span></span><span class="m"><span class="by"><span class="lg lg-openai" role="img" aria-label="Codex"></span>Codex</span><span class="tv">1,172 ms</span><span>from 1,170 ms</span><span class="dlt bad">+0.2%</span></span></a>
-        <a class="tr-r" href="ReceiptDark.dc.html"><span class="h"><span class="n">7</span><span class="t">Warm the pool before the first request</span><span class="tg" style="--c: var(--good);">Kept</span></span><span class="m"><span class="by"><span class="lg lg-claude" role="img" aria-label="Claude Code"></span>Claude Code</span><span class="tv">1,170 ms</span><span>from 1,246 ms</span><span class="dlt">-6.1%</span></span></a>
+        <a class="tr-r" href="SessionWorkingDark.dc.html"><span class="h"><span class="n">14</span><span class="t">Batch the three pricing calls into one</span><span class="tg hollow" style="--c: var(--ink3);">Measuring</span></span><span class="m"><span class="by"><span class="lg lg-claude" role="img" aria-label="Claude Code"></span>Claude Code</span><span>Measuring. The result arrives here.</span><span class="ac-cost">$1.70 so far</span></span></a>
+        <a class="tr-r" href="SessionSpawnedDark.dc.html"><span class="h"><span class="n">13</span><span class="t">Replace the tax library with a lookup table</span><span class="tg" style="--c: var(--bad);">Failed holdout</span></span><span class="m"><span class="by"><span class="lg lg-openai" role="img" aria-label="Codex"></span>Codex</span><span class="tv">1,106 ms</span><span>from 1,170 ms</span><span class="dlt">-5.5%</span><span class="ac-cost">$2.40</span></span></a>
+        <a class="tr-r" href="ReceiptDark.dc.html"><span class="h"><span class="n">12</span><span class="t">Raise the connection pool to 48 and reuse pricing clients</span><span class="tg" style="--c: var(--good);">Kept</span></span><span class="m"><span class="by"><span class="lg lg-claude" role="img" aria-label="Claude Code"></span>Claude Code</span><span class="tv">1,102 ms</span><span>from 1,170 ms</span><span class="dlt">-5.8%</span><span class="ac-cost">$5.20</span></span></a>
+        <a class="tr-r" href="SessionSpawnedDark.dc.html"><span class="h"><span class="n">11</span><span class="t">Compress the cart payload</span><span class="tg hollow" style="--c: var(--ink3);">Quick check</span><span class="tg" style="--c: var(--ink3);">Within noise</span></span><span class="m"><span class="by"><span class="lg lg-openai" role="img" aria-label="Codex"></span>Codex</span><span class="tv">1,158 ms</span><span>from 1,170 ms</span><span class="dlt">-1.0%</span><span class="ac-cost">$1.90</span></span></a>
+        <a class="tr-r" href="SessionWorkingDark.dc.html"><span class="h"><span class="n">10</span><span class="t">Cache price lookups for the length of a request</span><span class="tg hollow" style="--c: var(--ink3);">Quick check</span><span class="tg" style="--c: var(--ink3);">Within noise</span></span><span class="m"><span class="by"><span class="lg lg-claude" role="img" aria-label="Claude Code"></span>Claude Code</span><span class="tv">1,181 ms</span><span>from 1,170 ms</span><span class="dlt bad">+0.9%</span><span class="ac-cost">$2.20</span></span></a>
+        <a class="tr-r" href="SessionWorkingDark.dc.html"><span class="h"><span class="n">9</span><span class="t">Precompute shipping zones</span><span class="tg hollow" style="--c: var(--ink3);">Quick check</span><span class="tg" style="--c: var(--bad);">Worse</span></span><span class="m"><span class="by"><span class="lg lg-googlegemini" role="img" aria-label="Gemini"></span>Gemini</span><span class="tv">1,266 ms</span><span>from 1,240 ms</span><span class="dlt bad">+2.1%</span><span class="ac-cost">$2.10</span></span></a>
+        <a class="tr-r" href="SessionSpawnedDark.dc.html"><span class="h"><span class="n">8</span><span class="t">Stream the order summary</span><span class="tg hollow" style="--c: var(--ink3);">Quick check</span><span class="tg" style="--c: var(--ink3);">Within noise</span></span><span class="m"><span class="by"><span class="lg lg-openai" role="img" aria-label="Codex"></span>Codex</span><span class="tv">1,168 ms</span><span>from 1,170 ms</span><span class="dlt">-0.2%</span><span class="ac-cost">$1.80</span></span></a>
+        <a class="tr-r" href="ReceiptDark.dc.html"><span class="h"><span class="n">7</span><span class="t">Reuse HTTP connections to the pricing service</span><span class="tg" style="--c: var(--good);">Kept</span></span><span class="m"><span class="by"><span class="lg lg-claude" role="img" aria-label="Claude Code"></span>Claude Code</span><span class="tv">1,170 ms</span><span>from 1,240 ms</span><span class="dlt">-5.6%</span><span class="ac-cost">$4.70</span></span></a>
         <div style="padding: 10px 16px;"><button class="textbtn">Show 6 earlier trials</button></div>
       </div>
     </aside>

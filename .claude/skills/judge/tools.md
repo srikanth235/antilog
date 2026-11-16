@@ -12,22 +12,23 @@ Five tools every session gets (target). `ratchet mcp` serves the same tools to a
 
 ## seal
 
-- **In:** a proposed definition for the experiment, which may start from an evaluation template (id and version): the metric and direction, the evaluation (command, protected paths with their repos, pinned commits), guardrails, dataset ids and versions including the holdout, repeats, and any planted cheats the proposer adds.
-- **Back:** the seal check results (baseline, noise, each cheat), shown on a Seal experiment card, which also carries a Budget row. After approval, the experiment version and its seal. Until then the experiment is Not sealed.
-- **Asks:** yes. A person seals it from the card.
+- **In:** a proposed definition for the experiment, which may start from an evaluation template (id and version): the metric and direction, the evaluation (command, protected paths with their repos, pinned commits), guardrails, dataset ids and versions including the holdout, repeats, the quick check (on or off, default on), patience (default 6), a reference to the project's value model for the metric (or none), and any planted cheats the proposer adds.
+- **Back:** the seal check results (baseline, noise, each cheat), shown on a Seal experiment card, which carries a Budget row, the estimate ("One measurement costs about $1.80 (3 repeats on Checkout staging). This budget buys about 40 trials."), the project's value model, and the expected return ("Goal: 1,000 ms, worth about $11,160 a year. Budget $100."). After approval, the experiment version and its seal. Until then the experiment is Not sealed.
+- **Asks:** yes. A person seals it from the card, and confirms the value model. A different one the person proposes needs a project owner's approval on the same card. An agent never sets one.
 - **Refuses:** a definition that fails a seal check. An unpinned commit or dataset version. A holdout the agent's own credential can reach.
 
 ## measure
 
 - **In:** the experiment version, the commits (one per repo changed), the trial it started from, and a one-line hypothesis.
+- **Two steps, inside the judge:** a quick check (one repeat on the evaluation data), then, only if it beats the best by more than the noise, the full measurement (all repeats, then confirmation on the holdout). A trial that stops at the quick check is Within noise or Worse, marked "Quick check", at a lower cost.
 - **Back:** a ticket at once. The measurement arrives later as an event in the session: the outcome, the measured value and guardrail values on the evaluation data, the noise band. Never a holdout value.
 - **Asks:** no, inside the budget.
-- **Refuses:** when the experiment's budget is spent (its sessions become Waiting for you with a Raise budget card). A trial that starts from a trial that is not on this experiment version. An unsealed experiment. No platform tool timeout applies, because the call returns a ticket.
+- **Refuses:** when the experiment's budget is spent (its sessions become Waiting for you with a Raise budget card). Patience reached: the experiment becomes Waiting for you with a Keep going? card, and `measure` waits for a person. A trial that starts from a trial that is not on this experiment version. An unsealed experiment. No platform tool timeout applies, because the call returns a ticket.
 
 ## history
 
 - **In:** an experiment, and optionally a filter by session, outcome or lineage.
-- **Back:** every trial for the experiment across all its sessions: hypothesis, outcome, values, commit ids, what it started from. Failures included. Never a holdout value, never a diff (the agent reads diffs from git by commit id).
+- **Back:** every trial for the experiment across all its sessions: hypothesis, outcome, values, commit ids, what it started from. Failures included. A hypothesis that closely matches an earlier failed one is flagged ("Tried in trial 6 by Codex: Worse"). Never a holdout value, never a diff (the agent reads diffs from git by commit id).
 - **Asks:** no. **Refuses:** nothing beyond role and organization checks. This is the notebook: there is no separate notes feature.
 
 ## deliver

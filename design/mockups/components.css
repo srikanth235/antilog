@@ -879,3 +879,107 @@ a.tr-r:hover{background:var(--hover)}
 /* The chat column narrows beside a panel: the scoreboard strip tightens to fit */
 .chat{container-type:inline-size}
 @container (max-width:780px){.sb-in{grid-template-columns:minmax(0,1fr) 296px;gap:16px}.sc-lg{gap:2px 10px}}
+
+/* aims: chat */
+/* The composer floats over the bottom of the conversation, with a fade above it. One line when idle; it grows with the text. */
+.chat>.scroll{padding-bottom:72px;-webkit-mask-image:linear-gradient(to bottom,transparent,var(--ink) 20px);mask-image:linear-gradient(to bottom,transparent,var(--ink) 20px)}
+.ac-dock{position:absolute;left:0;right:0;bottom:0;z-index:5;padding-top:36px;border-top:0;background:linear-gradient(to bottom,transparent,var(--canvas) 36px);pointer-events:none}
+.ac-dock .cmpw{position:relative;margin:0 0 14px;pointer-events:auto}
+.cmp.ac-one{flex-direction:row;align-items:center;gap:2px;padding:6px 8px 6px 6px;border-radius:26px}
+.ac-one .cmp-in{flex:1;min-width:0;width:auto;min-height:0;height:24px;padding:0 6px;line-height:24px}
+.ac-one .go{display:flex;align-items:center;gap:2px}
+.ac-opts{display:flex;align-items:center;flex:none;margin-right:4px}
+.ac-opts .opt{width:30px;min-height:30px;padding:0;justify-content:center;border-radius:50%}
+.ac-opts .opt .ic,.ac-opts .opt .lg{width:16px;height:16px}
+.ac-opts .opt .ring{width:16px;height:16px}
+.cmp.ac-grow{border-radius:22px}
+.cmp.ac-grow .cmp-in{min-height:96px}
+.ac-hint{display:flex;justify-content:space-between;gap:12px;padding:0 10px;font-size:12px;color:var(--ink3)}
+.ac-cost{color:var(--ink2);font-variant-numeric:tabular-nums}
+/* Agent menu: cost tiers, the measured cost per trial, Auto with its reason, Hand off to... */
+.ac-am{position:absolute;z-index:60;right:0;bottom:calc(100% + 6px);width:400px;display:flex;flex-direction:column;gap:2px;padding:6px;background:var(--raised);border:1px solid var(--line2);border-radius:var(--r2);box-shadow:var(--shadow)}
+.ac-am .ac-ah{padding:6px 10px 4px;font-size:12px;color:var(--ink3)}
+.ac-ai{min-height:0;align-content:start;display:grid;grid-template-columns:20px minmax(0,1fr) auto;align-items:center;gap:2px 10px;width:100%;padding:8px 10px;border:0;border-radius:var(--r1);background:none;color:var(--ink);text-align:left;font:inherit;cursor:pointer}
+.ac-ai:hover{background:var(--hover)}
+.ac-ai[aria-checked="true"]{background:var(--sel)}
+.ac-ai .lg,.ac-ai>.ic{width:16px;height:16px;color:var(--ink3)}
+.ac-ai .nm{font-size:13.5px}
+.ac-ai .dsc{grid-column:2/4;font-size:12px;color:var(--ink3);line-height:1.4}
+.ac-ai .dsc.why{color:var(--ink2)}
+.ac-tier{font:500 12px/1 var(--font-mono);letter-spacing:.04em;color:var(--ink)}
+.ac-tier i{font-style:normal;color:var(--line2)}
+.ac-ai .pt{grid-column:3;font-size:12px;color:var(--ink3);text-align:right}
+/* Cost and value group on the Seal card, a collapsed group drawn open */
+.ac-gh{display:flex;align-items:center;gap:8px;width:100%;min-height:34px;padding:0;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink2);font:500 12.5px/1 var(--font-sans);text-align:left;cursor:pointer}
+.ac-gh .chev{color:var(--ink3);transform:rotate(90deg)}
+.ac-gh .sm{margin-left:auto;font-weight:400;color:var(--ink3)}
+.ac-grp .ap-r{padding:6px 0;line-height:1.4}
+.ac-grp .ap-r .xs{line-height:1.4}
+.ac-vm{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px}
+.ac-vm .textbtn{min-height:0;font-size:12.5px;color:var(--ink3)}.ac-vm .textbtn:hover{color:var(--accent)}
+/* Keep going? and Continue on another agent? cards */
+.ac-tr{display:grid;grid-template-columns:108px minmax(0,1fr) auto;align-items:baseline;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}
+.ac-tr:last-child{border-bottom:0}
+.ac-tr .n{color:var(--ink3);font-size:12px}
+.ac-tr .t{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ac-tr .by{white-space:nowrap;display:inline-flex;align-items:center;gap:6px;color:var(--ink3);font-size:12px}
+.ac-tr .by .lg{width:14px;height:14px}
+.ac-pick{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--sunk)}
+.ac-pick .lg{width:20px;height:20px;flex:none}
+.ac-pick .tx{display:flex;flex-direction:column;gap:1px;min-width:0;font-size:13.5px}
+.ac-pick .tx .xs{color:var(--ink3)}
+.ac-pick .tier{margin-left:auto}
+/* Ideas under the Home composer */
+.ac-ideas{display:flex;flex-direction:column}
+.ac-ih{display:flex;align-items:baseline;gap:8px;padding:0 14px 8px}
+.ac-ir{display:grid;grid-template-columns:minmax(0,1fr) 104px 84px 60px 72px;align-items:center;gap:12px;min-height:60px;padding:8px 14px;border-top:1px solid var(--line)}
+.ac-ir:last-child{border-bottom:1px solid var(--line)}
+.ac-ir:hover{background:var(--hover)}
+.ac-ir .tt{display:flex;flex-direction:column;gap:1px;min-width:0}
+.ac-ir .tt b{font-weight:500;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ac-ir .tt span{font-size:12px;color:var(--ink3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ac-ir .nm{display:flex;flex-direction:column;align-items:flex-end;font-size:13px;color:var(--ink)}
+.ac-ir .nm span{font-size:11.5px;color:var(--ink3)}
+.ac-ir .rt{font:500 13px/1 var(--font-mono);text-align:right;color:var(--ink)}
+.ac-ir .btn{justify-self:end}
+/* Win and Regression value lines */
+.ac-vl{display:flex;flex-direction:column;gap:2px;margin:0;font-size:13.5px;color:var(--ink2)}
+.ac-vl b{font-weight:600;color:var(--ink)}
+.ac-risk{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;font-size:13.5px;color:var(--ink2)}
+.ac-risk b{font:600 15px/1.3 var(--font-sans);color:var(--bad)}
+/* Details panel: context actions */
+.ac-ctx{display:flex;gap:16px;margin-left:auto}
+.ac-ctx .textbtn{min-height:28px;font-size:12.5px}
+/* aims: pages */
+.vs.c7{grid-template-columns:repeat(7,minmax(0,1fr));gap:16px}
+.vs.c5{grid-template-columns:repeat(5,minmax(0,1fr));gap:16px}
+.ap-sp{display:flex;gap:2px;height:14px;margin-top:16px}
+.ap-sp>span{display:block;height:100%;min-width:3px;background:var(--c);border-radius:3px}
+.ap-sw{display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--c);flex:none}
+.ap-k1{--c:var(--good)}.ap-k2{--c:var(--ink3)}.ap-k3{--c:var(--bad)}.ap-k4{--c:var(--warn)}.ap-k5{--c:var(--infra)}.ap-k6{--c:var(--ink)}.ap-k7{--c:var(--line2)}.ap-sp>.ap-k7,.ap-sw.ap-k7{box-shadow:inset 0 0 0 1px var(--ink3)}
+.ap-nm{display:flex;align-items:center;gap:10px;min-width:0}
+.tb-sp{--cols:minmax(0,1.6fr) 96px 64px}
+.tb-sp .tb-r{min-height:44px;padding-top:8px;padding-bottom:8px}
+.ap-tr{--cols:36px minmax(0,2.2fr) minmax(0,1.4fr) 124px 100px 84px 76px}
+.ap-note{display:flex;align-items:flex-start;gap:10px;margin-top:12px;padding:10px 14px;border:1px solid var(--line);border-radius:var(--r2);background:var(--sunk);color:var(--ink2);font-size:13px;line-height:1.5}
+.ap-note .ic{flex:none;margin-top:2px;color:var(--ink3)}
+.ap-fl{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin-top:8px}
+.ap-fl .lbl{font-size:12.5px;color:var(--ink3)}
+.ap-ag{--cols:minmax(0,1.8fr) 76px 56px 48px 70px 70px 84px 84px 60px 92px}.ap-ag .tb-r.th,.ap-ak .tb-r.th{align-items:end}.ap-ag .mono,.ap-ak .mono{white-space:nowrap}
+.ap-ak{--cols:minmax(0,1.2fr) 78px 62px 50px 74px 80px 88px 92px}
+.ap-rp2{--cols:minmax(0,1.6fr) 72px 72px 80px 84px 84px}
+.ap-vm{--cols:minmax(0,1.5fr) minmax(0,1.6fr) minmax(0,1.3fr) 92px 130px}
+.ap-id{--cols:minmax(0,2fr) minmax(0,1.2fr) 124px 92px 56px 72px}.ap-id .mono{white-space:nowrap}
+.ap-wn{--cols:minmax(0,2.2fr) 130px minmax(0,1.1fr) 96px 90px 110px}
+.ap-tier{display:inline-flex;align-items:center;font:500 12px/1 var(--font-mono);color:var(--ink2)}
+.ap-tier i{font-style:normal;color:var(--ink3)}
+.ap-pp{display:flex;align-items:center;gap:10px;margin-top:20px}
+.ap-pp .t-label{margin-right:4px}
+.ac-one .att{width:32px;height:32px;border-radius:8px;flex:none;margin-left:4px}
+.ac-one .att .x{opacity:1;top:-5px;right:-5px;width:16px;height:16px}.ac-one .att .x .ic{width:10px;height:10px}
+.ac-tight .ap-r{padding:5px 0}.ac-tight .ap-3{padding:5px 0}.ac-tight .ap-b{padding-top:2px}
+.ac-grp .ap-3 .k{font-size:12.5px}.ac-grp .ap-3 .rw{min-height:34px}
+.ac-ir.hd{min-height:0;padding-top:0;padding-bottom:4px;border-top:0}.ac-ir.hd:hover{background:none}
+.qt .grid .r{text-align:right}
+.ap-rp3{--cols:minmax(0,1.7fr) 64px 56px 76px 70px 96px 84px}.ap-st{--cols:minmax(0,1.5fr) minmax(0,2fr) 80px}
+.ap-r>.k.ac-k{display:flex;flex-direction:column;align-items:flex-start;gap:2px}.ac-k .textbtn{min-height:28px;font-size:12.5px}

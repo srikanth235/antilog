@@ -36,6 +36,8 @@ Before an experiment can be sealed the judge measures the baseline, measures the
 
 A trial that beats the bar is measured again in a fresh judge sandbox and checked on the holdout. The bar rises with the number of trials tried, so many attempts cannot win by luck.
 
+The quick check that precedes this (one repeat) only stops weak trials early to save cost. It never decides Kept, runs only in the judge, and is sealed with the experiment, so a trial cannot skip or fake it.
+
 - Stops: a lucky measurement, and fitting to the evaluation data.
 - Does not stop: a slow drift, or a holdout that is too small or too like the evaluation data. How the bar rises with the number of trials is open and settled with the first code.
 
@@ -48,7 +50,7 @@ Before a win is delivered, an agent from a different model provider than the pro
 
 ## 6. Signed receipt
 
-The experiment version and seal, the commits, the dataset versions read, the skill pack versions the agents read, the values, repeats, noise, the number of trials tried, the holdout result (passed or failed, never the value to an agent), the credential scopes used, the judge platform, environment, image and digest, the agents and sessions, the second opinion and what was spent. It is signed by the judge, and Verify again checks the signature, the signer and the image digest.
+The experiment version and seal, the commits, the dataset versions read, the skill pack versions the agents read, the value model with its source, the values, repeats, noise, the number of trials tried, the holdout result (passed or failed, never the value to an agent), the credential scopes used, the judge platform, environment, image and digest, the agents and sessions, the second opinion, what was spent and the cost of the win. It is signed by the judge, and Verify again checks the signature, the signer and the image digest.
 
 - Stops: a win nobody can check later, and numbers edited after the fact.
 - Does not stop: a cheat the other five mechanisms missed. It makes one findable.

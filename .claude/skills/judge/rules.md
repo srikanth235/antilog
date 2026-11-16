@@ -14,6 +14,9 @@
 - Start a sealed experiment from an evaluation template by copying it, never by reference, because a template that can be edited must not move a sealed definition.
 - Pin the experiment version, the seal and the dataset versions on every measurement, and name them on the receipt, with the skill pack versions the agents read, because a result nobody can reproduce is not a result.
 - Refuse `measure` when the budget is spent, and let the session layer meter it, because the experiment's owner knows what a win is worth and the budget knows what was spent.
+- Let the quick check run only in the judge, and never let it decide Kept, because a cheap partial number may stop a trial early and can never promote one. Only the full measurement, the confirmation and the holdout can.
+- Seal the value model, the quick check setting and patience with the experiment, because a worth that can move would make Return a number anyone can change. Never let an agent set or edit a value model: a project owner does.
+- Count Return as Delivered over everything spent in its scope, including experiments with no win, because a Return that ignores the misses overstates what the money bought. Take a regressed amount out of Delivered and show it as At risk.
 - Count a win as Delivered only once its pull request is merged, and keep Pending apart from Delivered. Pending is never in Return, because a number that mixes them overstates Return.
 - Show a failed trial as failed, never as zero or empty, and never show an unchecked experiment as healthy, because zero reads as a real measurement.
 - Never let the second opinion decide, because it flags and a person reads it.

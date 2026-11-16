@@ -1,6 +1,6 @@
 # Ratchet
 
-Ratchet is a chat and a judge. A person states a goal, which starts an experiment in a project, and talks to a coding agent that works in a sandbox with repos attached. Every session in an experiment gets the judge's tools: only the judge's numbers count, and only a measured win becomes a pull request.
+Ratchet is a chat and a judge. A person states a goal, which starts an experiment in a project, and talks to a coding agent that works in a sandbox with repos attached. Every session in an experiment gets the judge's tools: only the judge's numbers count, and only a measured win becomes a pull request. It serves three aims: every dollar and token spent well, no tie to one model provider, and Return for the organization.
 
 This branch starts fresh. It holds the agreed design and no product code yet.
 

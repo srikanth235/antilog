@@ -103,34 +103,27 @@
 <article class="cd tc">
           <div class="tc-h"><span class="tc-n">Trial 5</span><span class="tc-t">Split the vendor chunk and load charts on demand</span><span class="tg" style="--c: var(--ink3);">Within noise</span><i class="ic s chev i-chev"></i></div>
           <div class="tc-v"><span>838 kB</span><span class="fr">from</span><span>842 kB</span><span class="dlt none">-0.5%</span></div>
-          <div class="tc-m"><span>Started from the baseline</span><span>1 repo, 4 files</span><span class="ok"><i class="ic i-check"></i>Lighthouse score held</span><span class="ok"><i class="ic i-check"></i>Error rate held</span></div>
+          <div class="tc-m"><span class="ac-cost">$3.40</span><span>Started from the baseline</span><span>1 repo, 4 files</span><span class="ok"><i class="ic i-check"></i>Lighthouse score held</span><span class="ok"><i class="ic i-check"></i>Error rate held</span></div>
         </article>
         <article class="cd tc">
           <div class="tc-h"><span class="tc-n">Trial 7</span><span class="tc-t">Replace the date library with a smaller one</span><span class="tg" style="--c: var(--bad);">Worse</span><i class="ic s chev i-chev"></i></div>
           <div class="tc-v"><span>861 kB</span><span class="fr">from</span><span>842 kB</span><span class="dlt bad">+2.3%</span></div>
-          <div class="tc-m"><span>Started from the baseline</span><span>1 repo, 9 files</span><span class="ok"><i class="ic i-check"></i>Lighthouse score held</span><span class="ok"><i class="ic i-check"></i>Error rate held</span></div>
+          <div class="tc-m"><span class="ac-cost">$2.90</span><span>Started from the baseline</span><span>1 repo, 9 files</span><span class="ok"><i class="ic i-check"></i>Lighthouse score held</span><span class="ok"><i class="ic i-check"></i>Error rate held</span></div>
         </article>
         <article class="cd tc">
           <div class="tc-h"><span class="tc-n">Trial 9</span><span class="tc-t">Drop the polyfills for older browsers</span><span class="tg" style="--c: var(--bad);">Guardrail failed</span><i class="ic s chev i-chev"></i></div>
           <div class="tc-v"><span>821 kB</span><span class="fr">from</span><span>842 kB</span><span class="dlt none">-2.5%</span></div>
-          <div class="tc-m"><span>Started from the baseline</span><span>1 repo, 2 files</span><span class="no"><i class="ic i-close"></i>Lighthouse score failed</span><span class="ok"><i class="ic i-check"></i>Error rate held</span></div>
+          <div class="tc-m"><span class="ac-cost">$3.10</span><span>Started from the baseline</span><span>1 repo, 2 files</span><span class="no"><i class="ic i-close"></i>Lighthouse score failed</span><span class="ok"><i class="ic i-check"></i>Error rate held</span></div>
         </article>
         <div class="am"><span class="av"><svg class="mk" aria-hidden="true" width="20" height="12" viewBox="218 338 600 369"><path d="M397.8 434.8L397.8 466.2A31.5 31.5 0 0 1 366.4 434.8Z" style="fill:var(--mark)" fill-opacity="0.12"/><path d="M407.7 434.8L407.7 466.2A31.5 31.5 0 0 0 439.2 434.8Z" style="fill:var(--mark)" fill-opacity="0.18"/><path d="M361.6 424.9L439.2 424.9A77.6 77.6 0 0 0 361.6 347.3Z" style="fill:var(--mark)" fill-opacity="0.28"/><path d="M351.7 471.0L227.9 471.0A123.8 123.8 0 0 1 351.7 347.3Z" style="fill:var(--mark)" fill-opacity="0.42"/><path d="M444.0 480.9L444.0 697.0A216.1 216.1 0 0 1 227.9 480.9Z" style="fill:var(--mark)" fill-opacity="0.6"/><path d="M453.9 342.5L453.9 697.0A354.5 354.5 0 0 0 808.4 342.5Z" fill="url(#brass)"/></svg></span><div class="bd"><span class="by"><b>Ratchet</b><span class="via">Claude Code</span></span><p class="tx">Nine trials, none Kept. Splitting the vendor chunk and dropping unused locales stayed within noise. A smaller date library made the bundle larger. Dropping the polyfills saved 21 kB but broke the Lighthouse score guardrail, so it cannot count. I found nothing that beats the bar, so there is nothing to deliver.</p></div></div>
       </div>
     </div>
-    <div class="dock"><div class="c760"><div class="cmpw">
-    <div class="cmp">
-      <textarea class="cmp-in" rows="2" aria-label="Message" placeholder="Continue this session"></textarea>
-      <div class="cmp-bar">
-        <button class="ib" aria-label="Attach files, images, repos or connectors"><i class="ic i-plus"></i></button>
-        <span class="go"><button class="ib" aria-label="Dictate"><i class="ic i-mic"></i></button><button class="ib send" aria-label="Send"><i class="ic i-return"></i></button></span>
-      </div>
-    </div>
-    <div class="cmp-opt">
-      <button class="opt" aria-label="Agent"><span class="lg lg-claude" role="img" aria-label="Claude Code"></span><span>Claude Code · Default</span></button>
-      <button class="opt" aria-label="Environment"><i class="ic g-box"></i><span>Checkout staging</span></button>
-      <button class="opt" aria-label="Mode"><i class="ic i-sliders"></i><span>Auto</span></button>
-      <button class="opt" aria-label="Budget"><span class="ring" style="--p: 42;" role="img" aria-label="Budget used"></span><span>$42 of $100</span></button>
+    <div class="dock ac-dock"><div class="c760"><div class="cmpw">
+    <div class="cmp ac-one">
+      <button class="ib" aria-label="Attach files, images, repos or connectors" title="Attach files, images, repos or connectors"><i class="ic i-plus"></i></button>
+      <textarea class="cmp-in" rows="1" aria-label="Message" placeholder="Continue this session"></textarea>
+      <span class="ac-opts" role="group" aria-label="Session options. They show in full when the box has focus."><button class="opt" aria-label="Agent: Claude Code · Default" title="Agent: Claude Code · Default"><span class="lg lg-claude" aria-hidden="true"></span></button><button class="opt" aria-label="Environment: Checkout staging" title="Environment: Checkout staging"><i class="ic g-box"></i></button><button class="opt" aria-label="Mode: Auto" title="Mode: Auto"><i class="ic i-sliders"></i></button><button class="opt" aria-label="Budget: $42 of $100" title="Budget: $42 of $100"><span class="ring" style="--p: 42;" aria-hidden="true"></span></button></span>
+      <span class="go"><button class="ib" aria-label="Dictate" title="Dictate"><i class="ic i-mic"></i></button><button class="ib send" aria-label="Send" title="Send"><i class="ic i-return"></i></button></span>
     </div>
   </div></div></div>
     </div>

@@ -87,7 +87,7 @@
       <div class="sb-l">
         <span class="sb-k">Checkout p95 latency, lower is better</span>
         <span class="sb-big"><span>1,310 ms</span><span class="to">to</span><span>1,102 ms</span><span class="dlt">-15.9%</span></span>
-        <span class="sb-s"><span><b>14</b> trials</span><span><b>3</b> kept</span><span><b>$42</b> of $100</span><span class="bar" aria-hidden="true"><span style="width: 42%;"></span></span></span>
+        <span class="sb-s"><span><b>14</b> trials</span><span><b>3</b> kept</span><span><b>$42</b> of $100</span><span><b>$14.00</b> per kept trial</span><span class="bar" aria-hidden="true"><span style="width: 42%;"></span></span></span>
       </div>
       <div class="sb-c">
         <div class="sb-t"><span>p95 latency per trial</span><span>Trial</span></div>
@@ -107,7 +107,7 @@
         <article class="cd tc">
           <div class="tc-h"><span class="tc-n">Trial 12</span><span class="tc-t">Raise the connection pool to 48 and reuse pricing clients</span><span class="tg" style="--c: var(--good);">Kept</span><i class="ic s chev i-chev"></i></div>
           <div class="tc-v"><span>1,102 ms</span><span class="fr">from</span><span>1,170 ms</span><span class="dlt">-5.8%</span></div>
-          <div class="tc-m"><span>Started from trial 7</span><span>2 repos, 6 files</span><span class="ok"><i class="ic i-check"></i>p99 held</span><span class="ok"><i class="ic i-check"></i>Error rate held</span></div>
+          <div class="tc-m"><span class="ac-cost">$5.20</span><span>Started from trial 7</span><span>2 repos, 6 files</span><span class="ok"><i class="ic i-check"></i>p99 held</span><span class="ok"><i class="ic i-check"></i>Error rate held</span></div>
         </article>
         <section class="cd ap" aria-label="Raise budget">
           <div class="ap-h"><h3>Raise budget</h3></div>
@@ -121,19 +121,12 @@
         </section>
       </div>
     </div>
-    <div class="dock"><div class="c760"><div class="cmpw">
-    <div class="cmp dis">
-      <textarea class="cmp-in" rows="2" aria-label="Message" placeholder="Viewers read experiments. Only editors and owners can send." disabled></textarea>
-      <div class="cmp-bar">
-        <button class="ib" aria-label="Attach files, images, repos or connectors" disabled><i class="ic i-plus"></i></button>
-        <span class="go"><button class="ib" aria-label="Dictate" disabled><i class="ic i-mic"></i></button><button class="ib send" aria-label="Send" disabled><i class="ic i-return"></i></button></span>
-      </div>
-    </div>
-    <div class="cmp-opt">
-      <button class="opt" disabled aria-label="Agent"><span class="lg lg-claude" role="img" aria-label="Claude Code"></span><span>Claude Code · Default</span></button>
-      <button class="opt" disabled aria-label="Environment"><i class="ic g-box"></i><span>Checkout staging</span></button>
-      <button class="opt" disabled aria-label="Mode"><i class="ic i-sliders"></i><span>Auto</span></button>
-      <button class="opt" disabled aria-label="Budget"><span class="ring" style="--p: 42;" role="img" aria-label="Budget used"></span><span>$42 of $100</span></button>
+    <div class="dock ac-dock"><div class="c760"><div class="cmpw">
+    <div class="cmp dis ac-one">
+      <button class="ib" aria-label="Attach files, images, repos or connectors" title="Attach files, images, repos or connectors" disabled><i class="ic i-plus"></i></button>
+      <textarea class="cmp-in" rows="1" aria-label="Message" placeholder="Viewers read experiments. Only editors and owners can send." disabled></textarea>
+      <span class="ac-opts" role="group" aria-label="Session options. They show in full when the box has focus."><button class="opt" aria-label="Agent: Claude Code · Default" title="Agent: Claude Code · Default" disabled><span class="lg lg-claude" aria-hidden="true"></span></button><button class="opt" aria-label="Environment: Checkout staging" title="Environment: Checkout staging" disabled><i class="ic g-box"></i></button><button class="opt" aria-label="Mode: Auto" title="Mode: Auto" disabled><i class="ic i-sliders"></i></button><button class="opt" aria-label="Budget: $42 of $100" title="Budget: $42 of $100" disabled><span class="ring" style="--p: 42;" aria-hidden="true"></span></button></span>
+      <span class="go"><button class="ib" aria-label="Dictate" disabled title="Dictate"><i class="ic i-mic"></i></button><button class="ib send" aria-label="Send" disabled title="Send"><i class="ic i-return"></i></button></span>
     </div>
   </div></div></div>
     </div>

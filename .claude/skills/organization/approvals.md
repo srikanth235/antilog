@@ -4,22 +4,24 @@ Settings are tools. A person approves the tool calls that matter, in the chat, w
 
 ## The cards
 
-An approval card has a title, what would happen, what it may cost, and Approve and Decline. The six kinds:
+An approval card has a title, what would happen, what it may cost, and Approve and Decline. The eight kinds:
 
 | Card | Raised by | Shows | Default policy |
 | --- | --- | --- | --- |
-| Seal experiment | `seal` | The definition, the seal check results and a Budget row | Always ask |
+| Seal experiment | `seal` | The definition, the seal check results, a Budget row, the estimate, the expected return and the value model for the metric (or "No value set") | Always ask |
 | Raise budget | `request_budget` | The amount asked, spent so far, the budget now | Allow up to a limit: asks above the limit set in Settings, Approvals |
 | Add credential | `request_credential` | The host and why. A secure form: the value is typed there, never into the chat, and goes straight to the platform's credential store. The agent never sees it | Always ask, and can never be pre-approved |
 | Attach repo | `attach_repo` | The repo and the access asked | Always ask |
 | Change environment | `set_environment` | Image, setup script, size and network, as a change from now | Always ask |
 | Open pull request | `deliver` | One pull request per repo changed, and the receipt | Always ask |
+| Keep going? | Patience reached (sealed, default 6 trials in a row not Kept) | "The last 6 trials did not beat 1,102 ms. $48 of $100 is left." Actions: Keep going, Stop here, and a note of what was tried | Always ask. Allow means never pause |
+| Continue on another agent? | A platform that is unavailable or rate-limited | The agent Auto would choose and why, and what has been done so far | Always ask. Allow continues without asking and records a timeline line |
 
 The tools are in [../session/tools.md](../session/tools.md) and [../judge/tools.md](../judge/tools.md).
 
 ## Policy
 
-Settings, Approvals sets one value per card kind: **Always ask**, **Allow up to a limit** or **Allow**. A card that policy approves still writes its audit row and shows in the chat as approved by policy. Add credential has no pre-approval, because a person must type the value. A card nobody may approve in time stays open and the session is Waiting for you.
+Settings, Approvals sets one value per card kind: **Always ask**, **Allow up to a limit** or **Allow**. A card that policy approves still writes its audit row and shows in the chat as approved by policy. Add credential has no pre-approval, because a person must type the value. Keep going? and Continue on another agent? take the same three values. A value model is never pre-approved: on the Seal experiment card a project owner approves a model the person sealing proposes, and an agent never sets one. A card nobody may approve in time stays open and the session is Waiting for you.
 
 ## Mode
 
@@ -27,7 +29,7 @@ Each experiment has a Mode on its composer: **Ask** (every card asks a person) o
 
 ## Who may approve
 
-Roles are checked at project scope ([model.md](model.md)). A member's role in a project is their organization role unless a project owner set another for that project. Owners and editors of the project approve every card for its experiments. A viewer reads them and approves nothing. Visibility does not follow repo access ([../product/rulings.md](../product/rulings.md)). Changing an experiment's budget needs an editor or owner of its project. A project owner manages the project's members and its budget. Only an organization owner changes policy.
+Roles are checked at project scope ([model.md](model.md)). A member's role in a project is their organization role unless a project owner set another for that project. Owners and editors of the project approve every card for its experiments, except a changed value model, which needs a project owner. A viewer reads them and approves nothing. Visibility does not follow repo access ([../product/rulings.md](../product/rulings.md)). Changing an experiment's budget needs an editor or owner of its project. A project owner manages the project's members, its budget and its value models. Only an organization owner changes policy.
 
 ## Recorded
 
@@ -46,4 +48,5 @@ Settings, Approvals holds policy. Settings, Connections lists the repos, credent
 - A project may have a monthly cap on all its experiments. A project owner changes it, and it cannot pass the organization's. The project page shows spent this month against it.
 - An organization has a monthly cap. No budget, no project cap and no card passes it. Only an organization owner changes the cap.
 - When a budget is spent, the judge refuses `measure`, and the experiment's sessions are Waiting for you with a Raise budget card. A notification says so ([notifications.md](notifications.md)).
+- When patience is reached, the experiment is Waiting for you with a Keep going? card; policy may set it to Allow (never pause) or Always ask.
 - When an experiment is sealed and the budget allows, nothing asks anything.

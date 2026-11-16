@@ -70,7 +70,7 @@ The CLI and MCP tools are read by people too. They print the screen words, and m
 | Breadcrumb in a spawned session | "Project / Experiment title / Codex session" |
 | An agent's message | the Ratchet mark and "Ratchet", then the agent as a quiet second label: "Ratchet · Claude Code", "Ratchet · Codex" |
 | A session a person stopped | Done, with the line "Stopped by NAME" |
-| Title menu (button "Session menu") | "Rename", "Pin" or "Unpin", "Experiment details", "Copy link", "Stop session" (inline confirm in the chat: "Stop session", "Keep working"), "Archive" |
+| Title menu (button "Session menu") | "Rename", "Pin" or "Unpin", "Experiment details", "Copy link", "Hand off to...", "Stop session" (inline confirm in the chat: "Stop session", "Keep working"), "Archive" |
 | Panel toggles (label, then tooltip with the shortcut) | "Details" ("Details (⌘⇧D)"), "Trials" (⌘⇧R), "Changes" (⌘⇧G), "Terminal" (⌘⇧T), "Preview" (⌘⇧P), "Files" (⌘⇧F); a panel's close button "Close Details panel"; its drag handle "Resize panel" |
 | More menu (button "More") | "Export conversation", "Keyboard shortcuts", "Report a problem" |
 | Details panel | sections "Experiment" ("Sealed", "v1", "Experiment details"), "Environment" ("Change environment"), "Repos" ("Attach a repo"), "Agent", "Budget" ("$42 of $100", "Change budget"), "Sessions", "Context" ("44% used", "88k of 200k") |
@@ -80,8 +80,8 @@ The CLI and MCP tools are read by people too. They print the screen words, and m
 | Preview panel | "Reload", "Open in a new tab", "Port 3000"; "Port 3000 in the agent sandbox. Only people in this experiment can open it." |
 | Files panel | "In the agent sandbox", "Read-only" |
 | Share popover (button "Share") | "Share", each person with "Owner", "Editor" or "Viewer" and "From Checkout platform"; "Anyone in the organization with the link can view"; "Sharing never gives more than a person's role in the project."; "Copy link" |
-| Composer, new experiment | placeholder "What do you want to improve? Type / for commands"; send button "Send" (a return arrow; it starts the experiment); "+" "Attach files, images, repos or connectors"; mic "Dictate"; the row under the box: "Project" (for example "Checkout platform"), "Repos", "Agent" ("Claude Code · Default"), "Environment" ("bench-std"), "Mode" ("Ask" or "Auto") and the budget ring ("$0 of $10") |
-| Composer, Working | placeholder "Steer, @ a session, or / for commands"; the send button becomes a stop button with the label "Interrupt" (the "Stop session" action stays in the title menu); the row under the box keeps "Agent", "Environment", "Mode" and the budget ring ("$42 of $100"); an attachment shows as a thumbnail with its file name as its label |
+| Composer, new experiment | placeholder "What do you want to improve? Type / for commands"; send button "Send" (a return arrow; it starts the experiment); "+" "Attach files, images, repos or connectors"; mic "Dictate"; the row under the box: "Project" (for example "Checkout platform"), "Repos", "Agent" ("Auto"), "Environment" ("bench-std"), "Mode" ("Ask" or "Auto") and the budget ring ("$0 of $10") |
+| Composer, Working | placeholder "Steer, @ a session, or / for commands"; the send button becomes a stop button with the label "Interrupt" (the "Stop session" action stays in the title menu); the box is one line while idle, with icon buttons "Agent: Claude Code · Default", "Environment: Checkout staging", "Mode: Auto" and "Budget: $42 of $100" (each with a tooltip of the same words); on focus or with text the row under the box shows "Agent", "Environment", "Mode" and the budget ring ("$42 of $100"); an attachment shows as a thumbnail with its file name as its label |
 | Notify prompt, once after the first measurement | "Notify me when this experiment needs me"; buttons "Notify me", "Not now" |
 | Composer, Waiting for you | placeholder "Answer, or approve the card above" |
 | Composer, Done | placeholder "Continue this session" |
@@ -103,15 +103,24 @@ The CLI and MCP tools are read by people too. They print the screen words, and m
 | --- | --- |
 | Trial outcome tags, one per trial | Measuring, Kept, Within noise, Worse, Guardrail failed, Failed holdout, Rejected, Failed |
 | Outcome notes | Rejected: "Changed a protected path"; Failed: "Did not run"; Failed holdout: "Failed the holdout" (never a value) |
-| Trial card | hypothesis in the agent's words; "1,240 ms from 1,310 ms", "-5.3%"; "Started from trial 11"; "2 repos, 6 files"; guardrails "p99 held", "Error rate held" |
+| Trial card | hypothesis in the agent's words; "1,240 ms from 1,310 ms", "-5.3%"; "Started from trial 11"; "2 repos, 6 files"; guardrails "p99 held", "Error rate held"; the cost "$5.20" (while measuring "$1.70 so far"); a trial that stopped at the quick check adds the tag "Quick check", "Stopped after 1 repeat" and "Guardrails not checked" |
 | Trial being measured | "Measuring. The result arrives here." |
 | Scoreboard strip | "Baseline 1,310 ms", "Best 1,102 ms", "14 trials", "3 kept", "$42 of $100", "Change budget" |
 | Chart | title "p95 latency per trial"; legend "Baseline", "Noise band", one line per session (named by its agent); axis "Trial" |
-| Win card | title "Win: 1,310 ms to 1,102 ms"; receipt in short "Experiment v2, 3 repeats, noise ±18 ms, 14 trials tried, holdout passed, $42 spent"; second opinion line "Second opinion from PROVIDER: no special-casing found." or "Second opinion from PROVIDER flagged: SENTENCE."; button "Open pull request" |
+| Win card | title "Win: 1,310 ms to 1,102 ms"; receipt in short "Experiment v2, 3 repeats, noise ±18 ms, 14 trials tried, holdout passed"; value lines "Worth $7,488 a year (208 ms at $36 per ms)", "Value model: each 100 ms of checkout p95 is worth $3,600 a year. Source: SOURCE. Set by NAME, project owner." and "The win cost $42, including the 11 trials that were not kept."; second opinion line "Second opinion from PROVIDER: no special-casing found." or "Second opinion from PROVIDER flagged: SENTENCE."; button "Open pull request" |
 | Open pull request preview | per repo: repo, branch, title, "6 files changed"; "Worth $X a year. Stays Pending while open."; "Nothing merges until a person merges it." |
 | Spawned session spend | "$14 of $100" |
 | Pull request card | "Pull request opened in 2 repos"; states Open, Checks running, Checks failed, Approved, Merged, Closed; arriving lines "Review comment from NAME on FILE" |
-| Regression card | "Regression: 1,160 ms against 1,102 ms delivered, outside the 18 ms noise band." Action "Start session" |
+| Regression card | "Regression: 1,160 ms against 1,102 ms delivered, outside the 18 ms noise band."; "At risk: $2,088 a year" with "58 ms at $36 per ms, taken out of the $7,488 delivered until a fix is Kept and merged."; action "Start session" |
+| Value model on the Seal card | "Each 1 point of forecast error is worth $2,500 a year"; "Source: SOURCE. Set by NAME, project owner."; "Propose a different value"; "Needs a project owner's approval on this card."; no model: "No value set" |
+| Expected return, cost estimate | "Goal: 14.0%, worth about $11,000 a year. Budget $10."; "One measurement costs about $0.30 (3 repeats on Sales history v7). This budget buys about 12 trials." |
+| Scoreboard strip, cost | "$42 of $100", "$14.00 per kept trial" (absent while nothing is Kept) |
+| Keep going? card | title "Keep going?"; "The last 6 trials did not beat 1,102 ms. $48 of $100 is left."; rows "What was tried" ("Copy as a note") and "Patience" ("6 trials in a row, set when the experiment was sealed."); "Settings, Approvals can let an experiment go on without asking."; actions "Keep going", "Stop here"; timeline line "The last 6 trials in a row were not Kept" |
+| Continue on another agent? card | title "Continue on another agent?"; "The platform behind Codex is rate-limited. Your work is safe on BRANCH."; rows "Auto would choose" (agent, platform, "Lowest cost per win on Speed experiments here among the agents that are available, $21"), "It starts with", "Policy" ("Ask before continuing on another agent."); actions "Continue on Gemini", "Choose another agent", "Wait and try again"; timeline line "OpenAI Agents API is rate-limited. Tried again 3 times." |
+| Agent menu | heading "Agent for this session"; "Auto" with "Auto would choose Codex: lowest cost per win on Speed experiments here, $18"; each agent with its tier ("$", "$$", "$$$") and "About $2.70 per trial here" ("Default · " before it for the default agent); "Hand off to..."; note "Tiers run from $ to $$$. Cost per trial is measured by the judge on your code." |
+| Hand off | timeline line "Priya Raman handed the Claude Code session off to Codex. Same experiment, same branches."; the ended session "Done", "Handed off to Codex"; the summary card "Summary from Claude Code session" with rows "Goal", "Done", "From history", "Where it stopped" |
+| Details panel, Context | "44% used", "88k of 200k", "Compact", "Fresh session with summary"; timeline line "Compacted the conversation automatically at 80% of the context window. 44% used now." |
+| Ideas on Home | heading "Ideas" with "Ratchet suggests, ranked by expected return. You start."; columns "Experiment", "Worth a year", "Costs about", "Ratio" ("95×"); button "Start" |
 | Seal check lines | "Baseline measured: 1,310 ms", "Noise check: ±18 ms across 3 repeats", "Cheat checks: 3 of 3 rejected" |
 | Judge note on every measurement | "Measured by the judge. A number from the session never counts." |
 | Holdout | "Restricted to the judge", "Agents get a credential that leaves it out"; on the dataset page "Marked Holdout. Enforced by the credentials: only the judge's includes it." |
@@ -122,7 +131,7 @@ Trial numbers are per experiment, across its sessions ("trial 11"). The holdout 
 
 | Card | Title | Fields, in order | Buttons | Collapsed line |
 | --- | --- | --- | --- | --- |
-| Seal experiment | "Seal experiment" | Metric and direction, Evaluation command (with "Started from Load test" when it came from a template), Protected paths (per repo), Data and holdout, Skill packs, Guardrails, Baseline, Noise check, Cheat checks, Judge platform and environment, Budget (with "Change budget") | "Seal experiment", "Decline" | "Experiment sealed by NAME · 14:02"; "Declined by NAME · 14:02" |
+| Seal experiment | "Seal experiment" | Metric and direction, Evaluation command (with "Started from Load test" when it came from a template), Protected paths (per repo), Data and holdout, Skill packs, Guardrails, Baseline, Noise check, Cheat checks, then the group "Cost and value" (drawn open, "Part of the sealed definition": Value model, "Propose a different value" ("Needs a project owner's approval on this card."), Expected return, Budget, Quick check ("On", "Never decides Kept"), Patience ("trials in a row"), Cost estimate), Judge platform and environment, Budget (with "Change budget") | "Seal experiment", "Decline" | "Experiment sealed by NAME · 14:02"; "Declined by NAME · 14:02" |
 | Raise budget | "Raise budget" | Now, Requested, What it may cost, Why | "Raise budget", "Decline" | "Budget raised to $200 by NAME · 14:02" |
 | Add credential | "Add credential" | Connector (logo and name), recipe, "What each one gets", Name, Platform, Value (secure field), Scope | "Add credential", "Decline" | "Credential added by NAME · 14:02" |
 | Attach repo | "Attach repo" | Repo, Branch, Access ("Pushes only to the session's branch") | "Attach repo", "Decline" | "Repo attached by NAME · 14:02" |
@@ -167,8 +176,12 @@ Trial numbers are per experiment, across its sessions ("trial 11"). The holdout 
 | Where | Words |
 | --- | --- |
 | Sidebar row and page title | "Projects" |
-| Projects page | columns "Project", "Your role", "Experiments", "Wins", "Spent this month"; action "New project"; strip "Delivered", "Pending", "Return" |
-| Project page | counts "4 experiments", "2 wins"; "New experiment"; sections "Experiments", "Connectors used", "Budget", "Members"; "Your role: Editor" |
+| Projects page | columns "Project", "Your role", "Experiments", "Wins", "Spend this month"; actions "Report", "New project"; strip "Delivered", "Pending", "Spent" ("includes $79 on experiments with no win"), "Return" |
+| Project page | counts "4 experiments", "2 wins"; "New experiment"; sections "Experiments", "Ideas", "Value", "Connectors used", "Budget", "Members"; "Your role: Editor" |
+| Project, Ideas and Value | Ideas columns "Idea", "Metric", "Expected value", "Expected cost", "Ratio", action "Start"; Value columns "Metric", "Value model", "Source", "Set by", "Used by", action "Add value model", "No value set"; dialog "Add value model" with "One unit", "Is worth, dollars a year", "Source", "Link (optional)", "Set by" |
+| Report | title "Report", picker "Project" and "Month", strip "Spent", "Delivered", "Pending", "At risk", "Return"; sections "Where the spend went", "Agent scoreboard", "Top wins", "Experiments stopped with no win"; actions "Export PDF", "Export CSV", "Email this monthly" |
+| Where the spend went | rows "Kept trials", "Within noise", "Worse", "Guardrail failed", "Rejected", "Failed", "Not measured"; columns "Outcome", "Spent", "Share"; on Budgets also "Cost per win by project" |
+| Agent scoreboard | on Customize, Agents and AgentDetail: columns "Experiments", "Trials", "Kept", "Wins delivered", "Cost per win", "Median time to a win", "Delivered", "Auto"; filters "Evaluation kind", "Project", "Range"; note "Measured by the judge on your code. Not a vendor benchmark."; "Default agent"; tier "$" to "$$$" with "about $2.40 per trial here". Never "leaderboard" |
 | Experiments table | columns "Experiment", "Baseline to best", "State", "Activity", "Budget and spend" |
 | Budget | "Spent this month", "Monthly cap", "Default budget per experiment"; "Inside the organization cap" |
 | Members | column "Role in this project"; a role set for the project reads "Set for this project", otherwise "Organization role"; "A project always keeps one owner." |
@@ -238,7 +251,7 @@ Trial numbers are per experiment, across its sessions ("trial 11"). The holdout 
 | Where | Words |
 | --- | --- |
 | Rail groups | "You": Profile, Appearance, Access tokens, This device. "Organization": General, Members, Single sign-on, Agent platforms, Approvals, Budgets, Connections, Audit log |
-| Approvals | rows per card kind with the policy "Always ask", "Allow up to $10", "Allow". Add credential shows "Always asks. A person must type the value." |
+| Approvals | eight rows, one per card kind (the six, then "Keep going?" and "Continue on another agent?"), with the policy "Always ask", "Allow up to $10", "Allow". Add credential shows "Always asks. A person must type the value." |
 | Budgets | "Default budget per experiment", "Monthly cap", "Spent this month"; a table of projects and experiments with budget and spend; "Spend by session" |
 | Budget changes | "Change budget" on the scoreboard strip, the experiment detail page and the Seal experiment card; editors and owners only |
 | Connections | groups "Repos", "Credentials", "Environments"; link "Data systems are under Customize, Connectors"; action "Revoke"; line "Added by NAME · date · used by 3 experiments" |

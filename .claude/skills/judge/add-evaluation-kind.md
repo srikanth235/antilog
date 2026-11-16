@@ -23,12 +23,12 @@ An evaluation has a **kind**, which says what is being measured, and may start f
 4. **Protected paths.** The kind lists what an agent may never change: the evaluation command, the scoring and the holdout. Each path names its repo. A trial that touches one is Rejected before it is measured.
 5. **Runnable with no agent.** The kind must run as a command in a judge sandbox on the judge platform (see [anti-cheat.md](anti-cheat.md)). It needs no network route except to the experiment's data.
 6. **A holdout.** The kind says what its holdout is and how it is marked "Restricted to the judge". A kind with no way to hold data back cannot confirm a win and is not accepted.
-7. **Noise.** The kind defines repeats and how the noise is derived from the baseline and the same-commit measurement. The acceptance criteria are not changed by a new kind.
+7. **Noise and the quick check.** The kind defines repeats and how the noise is derived from the baseline and the same-commit measurement. It says what one repeat is, because the quick check runs exactly one, and what one measurement costs, because the estimate on the Seal experiment card comes from the seal checks. The acceptance criteria are not changed by a new kind.
 8. **Standard planted cheats.** At least: skip the work, hard-code the answer, return early. Add the ones that fit the kind, for example a replay that serves cached responses, or a scorer fed the expected answers. Each must be rejected by the evaluation, or the seal check fails.
 9. **Where a win lands.** A win reaches the world as one pull request per repo changed, through `deliver`. Anything else that writes outside Ratchet is a card a person approves (see [../organization/approvals.md](../organization/approvals.md)).
 10. **A template.** A starter command for the kind that a proposing agent may copy, listed above, with the planted cheats the Seal experiment card will show.
 11. **Tests.** A golden test of the template, a parse test of the output, each planted cheat rejected, and one end-to-end measurement with a scripted agent.
-12. **Receipt.** Say which receipt fields the kind produces (see [owes.md](owes.md)).
+12. **Receipt and value.** Say which receipt fields the kind produces (see [owes.md](owes.md)) and which metric a project owner may attach a value model to, with its unit (for example ms). A kind never sets a value model.
 13. **Customize.** Add the template to the Evaluations list, with its detail page and an Add evaluation path for a person's own. Adding, changing and removing one are audited actions (see [../organization/add-audited-action.md](../organization/add-audited-action.md)).
 
 ## Proving it

@@ -1,7 +1,7 @@
 ---
 name: judge
 description: >-
-  What does "better" mean, and how is a win decided? Use for experiments (the metric and its direction, the evaluation and its protected paths, evaluation templates, guardrails, the data and the holdout, repeats, the acceptance criteria), sealing and seal checks, trials and their outcomes (Kept), measurements, the judge sandbox and the judge platform, the seal, measure, history, deliver and watch tools, receipts, wins, the second opinion, regressions, delivered and pending value, and Return.
+  What does "better" mean, and how is a win decided? Use for experiments (the metric and its direction, the evaluation and its protected paths, evaluation templates, guardrails, the data and the holdout, repeats, the acceptance criteria), sealing and seal checks, trials and their outcomes (Kept), measurements, the judge sandbox and the judge platform, the seal, measure, history, deliver and watch tools, receipts, wins, the second opinion, regressions, delivered, pending and at-risk value, the value model, the quick check, patience, cost per trial, and Return.
 ---
 
 # Judge
@@ -11,7 +11,7 @@ Ratchet is a chat and a judge. The judge is the part of the server that measures
 | If you are doing | Read |
 | --- | --- |
 | Deciding what the judge promises | [owes.md](owes.md) |
-| Looking up a word (experiment, seal, trial, measurement, outcome, win, receipt, watch) or what is stored | [model.md](model.md) |
+| Looking up a word (experiment, seal, value model, quick check, patience, trial, measurement, outcome, win, receipt, watch, Return) or what is stored | [model.md](model.md) |
 | Checking a change against the rules that never bend | [rules.md](rules.md) |
 | Adding or changing a judge tool (seal, measure, history, deliver, watch) | [tools.md](tools.md) |
 | Working on the sealed experiment, the judge sandbox, seal checks, confirmation, the second opinion or the receipt | [anti-cheat.md](anti-cheat.md) |

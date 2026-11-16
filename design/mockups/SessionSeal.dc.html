@@ -86,7 +86,7 @@
       <div class="c760 thread" style="gap: 12px; padding-top: 16px; padding-bottom: 8px;">
         <div class="pm"><span class="who">Priya Raman</span><p class="tx">Reduce forecast error in the pricing model.</p></div>
         <div class="am"><span class="av"><svg class="mk" aria-hidden="true" width="20" height="12" viewBox="218 338 600 369"><path d="M397.8 434.8L397.8 466.2A31.5 31.5 0 0 1 366.4 434.8Z" style="fill:var(--mark)" fill-opacity="0.12"/><path d="M407.7 434.8L407.7 466.2A31.5 31.5 0 0 0 439.2 434.8Z" style="fill:var(--mark)" fill-opacity="0.18"/><path d="M361.6 424.9L439.2 424.9A77.6 77.6 0 0 0 361.6 347.3Z" style="fill:var(--mark)" fill-opacity="0.28"/><path d="M351.7 471.0L227.9 471.0A123.8 123.8 0 0 1 351.7 347.3Z" style="fill:var(--mark)" fill-opacity="0.42"/><path d="M444.0 480.9L444.0 697.0A216.1 216.1 0 0 1 227.9 480.9Z" style="fill:var(--mark)" fill-opacity="0.6"/><path d="M453.9 342.5L453.9 697.0A354.5 354.5 0 0 0 808.4 342.5Z" fill="url(#brass)"/></svg></span><div class="bd"><span class="by"><b>Ratchet</b><span class="via">Claude Code</span></span><p class="tx">The judge measured the baseline, checked the noise and rejected all three planted cheats. The experiment is ready to seal.</p></div></div>
-        <section class="cd ap wait" aria-label="Seal experiment">
+        <section class="cd ap wait ac-tight" aria-label="Seal experiment">
           <div class="ap-h"><h3>Seal experiment</h3><span class="spill" style="--c: var(--warn);"><span class="st gi st-wait"></span>Waiting for you</span></div>
           <p class="ap-lead">A sealed experiment never changes. Trials are measured against it by the judge.</p>
           <div class="ap-b">
@@ -97,33 +97,36 @@
               <span class="ap-rp"><span class="rn">acme/checkout</span><span class="mono">bench/orders_export.py</span></span>
             </span></div>
             <div class="ap-r"><span class="k">Data and holdout</span><span class="v"><span>Evaluation data: Sales history v7</span><span class="rw g8 wrap"><span>Holdout: Forecast holdout v2</span><span class="rj"><i class="ic s i-lock"></i>Restricted to the judge</span></span></span></div>
-            <div class="ap-r"><span class="k">Guardrails</span><span class="v"><span>Training time at most 20 min</span><span>Checkout totals unchanged</span></span></div>
+            <div class="ap-r"><span class="k">Guardrails</span><span class="v"><span class="rw g16 wrap"><span>Training time at most 20 min</span><span>Checkout totals unchanged</span></span></span></div>
             <div class="ap-3">
               <div><span class="k"><i class="ic s i-check"></i>Baseline</span><span>18.4%</span></div>
               <div><span class="k"><i class="ic s i-check"></i>Noise check</span><span>±0.3 points across 3 repeats</span></div>
               <div><span class="k"><i class="ic s i-check"></i>Cheat checks</span><span>3 of 3 rejected</span></div>
             </div>
             <div class="ap-r"><span class="k">Evaluation kind</span><span class="v"><span class="rw g8 wrap"><span class="tag">Quality</span><span class="xs mut">Standard planted cheats for this kind, each rejected</span></span><span class="rw g16 wrap"><span class="okw rw g8"><i class="ic s i-check" style="color: var(--good);"></i>Predict the mean</span><span class="okw rw g8"><i class="ic s i-check" style="color: var(--good);"></i>Copy last period</span><span class="okw rw g8"><i class="ic s i-check" style="color: var(--good);"></i>Fit to the data</span></span></span></div>
-            <div class="ap-r"><span class="k">Budget</span><span class="v"><span class="rw g8"><input class="in mono" value="$10" aria-label="Budget for this experiment" style="width: 110px; font-size: 13px;"><span class="xs mut">Covers every session and the judge. Change it later.</span></span></span></div>
+            <div class="ac-grp">
+              <button class="ac-gh" aria-expanded="true"><i class="ic s i-chev chev"></i>Cost and value<span class="sm">Part of the sealed definition</span></button>
+              <div class="ap-r"><span class="k">Value model</span><span class="v"><span>Each 1 point of forecast error is worth $2,500 a year</span><span class="xs mut">Source: Finance write-off review FY26. Set by Priya Raman, project owner.</span><span class="ac-vm"><button class="textbtn">Propose a different value</button><span class="xs mut">Needs a project owner's approval on this card.</span></span></span></div>
+              <div class="ap-r"><span class="k">Expected return</span><span class="v"><span>Goal: 14.0%, worth about $11,000 a year. Budget $10.</span></span></div>
+              <div class="ap-3">
+                <div><span class="k">Budget</span><span class="rw g8"><input class="in mono" value="$10" aria-label="Budget for this experiment" style="width: 96px; font-size: 13px;"></span></div>
+                <div><span class="k">Quick check</span><span class="rw g8"><span class="tag">On</span><span class="xs mut">Never decides Kept</span></span></div>
+                <div><span class="k">Patience</span><span class="rw g8"><input class="in mono" value="6" aria-label="Patience, trials in a row" style="width: 56px; font-size: 13px;"><span class="xs mut">trials in a row</span></span></div>
+              </div>
+              <div class="ap-r"><span class="k">Cost estimate</span><span class="v"><span>One measurement costs about $0.30 (3 repeats on Sales history v7). This budget buys about 12 trials.</span><span class="xs mut">The quick check measures one repeat first. The full measurement runs only if it beats the best by more than the noise.</span></span></div>
+            </div>
             <div class="ap-r"><span class="k">Judge platform</span><span class="v"><span>bench-std · AWS AgentCore · 4 vCPU, 16 GiB</span></span></div>
           </div>
           <div class="ap-f"><div class="nt"><span>Costs nothing</span><span class="xs">Nothing happens until you approve.</span></div><div class="bt"><button class="btn primary">Seal experiment</button><button class="btn">Decline</button></div></div>
         </section>
       </div>
     </div>
-    <div class="dock"><div class="c760"><div class="cmpw">
-    <div class="cmp">
-      <textarea class="cmp-in" rows="2" aria-label="Message" placeholder="Answer, or approve the card above"></textarea>
-      <div class="cmp-bar">
-        <button class="ib" aria-label="Attach files, images, repos or connectors"><i class="ic i-plus"></i></button>
-        <span class="go"><button class="ib" aria-label="Dictate"><i class="ic i-mic"></i></button><button class="ib send" aria-label="Send"><i class="ic i-return"></i></button></span>
-      </div>
-    </div>
-    <div class="cmp-opt">
-      <button class="opt" aria-label="Agent"><span class="lg lg-claude" role="img" aria-label="Claude Code"></span><span>Claude Code · Default</span></button>
-      <button class="opt" aria-label="Environment"><i class="ic g-box"></i><span>Checkout staging</span></button>
-      <button class="opt" aria-label="Mode"><i class="ic i-sliders"></i><span>Auto</span></button>
-      <button class="opt" aria-label="Budget"><span class="ring" style="--p: 0;" role="img" aria-label="Budget used"></span><span>$0 of $10</span></button>
+    <div class="dock ac-dock"><div class="c760"><div class="cmpw">
+    <div class="cmp ac-one">
+      <button class="ib" aria-label="Attach files, images, repos or connectors" title="Attach files, images, repos or connectors"><i class="ic i-plus"></i></button>
+      <textarea class="cmp-in" rows="1" aria-label="Message" placeholder="Answer, or approve the card above"></textarea>
+      <span class="ac-opts" role="group" aria-label="Session options. They show in full when the box has focus."><button class="opt" aria-label="Agent: Claude Code · Default" title="Agent: Claude Code · Default"><span class="lg lg-claude" aria-hidden="true"></span></button><button class="opt" aria-label="Environment: Checkout staging" title="Environment: Checkout staging"><i class="ic g-box"></i></button><button class="opt" aria-label="Mode: Auto" title="Mode: Auto"><i class="ic i-sliders"></i></button><button class="opt" aria-label="Budget: $0 of $10" title="Budget: $0 of $10"><span class="ring" style="--p: 0;" aria-hidden="true"></span></button></span>
+      <span class="go"><button class="ib" aria-label="Dictate" title="Dictate"><i class="ic i-mic"></i></button><button class="ib send" aria-label="Send" title="Send"><i class="ic i-return"></i></button></span>
     </div>
   </div></div></div>
     </div>
