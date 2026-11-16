@@ -23,6 +23,13 @@ Read the repo page for the file type first: it holds this repo's constraints, it
 | Driving the web app or a board in a browser while you work | [playwright/ratchet.md](playwright/ratchet.md), then [playwright/general/INDEX.md](playwright/general/INDEX.md) | `python3 .claude/skills/stack/playwright/sync.py --check` after a sync |
 | Adding or changing a dependency | [libraries.md](libraries.md) | the check of the language |
 
+## Every language
+
+These hold in Rust, TypeScript, Swift and SQL alike, and win over any `general/` digest.
+
+- **Almost no comments.** A comment that explains what the code does, or why it looks odd, invites the next reader to work around the code instead of fixing it. Make the code say it: a name, a type, a smaller function, a test. A comment is allowed only where nothing else can carry the fact: a `SAFETY:` note, a `reason = "..."` on an `#[expect]`, a link to an outside spec or bug the code must follow, why a `Result` is deliberately dropped, or a public API's doc comment that states its contract. No history, no restating the code, no commented-out code, no `TODO` without an issue link. A narrating comment is a finding.
+- **APIs hide complexity from their callers, agents first.** Most callers will be agents, which read a signature and a one-line description and act. Give each module, endpoint and tool a small surface that does a whole job: one call that takes intent and returns a result or an error that says what to do next, not a sequence of low-level steps the caller must order, retry or clean up. Defaults that are right, no flag the caller must know to set, invariants enforced inside rather than documented for the caller. When a caller would need to read the implementation to use it safely, the API is wrong. This applies to the Rust core's traits, the HTTP API, the Ratchet tools ([mcp/ratchet.md](mcp/ratchet.md)) and the CLI.
+
 Nothing here is built on this branch yet: every check is (target) until code lands, and each page then gets its exact commands. Pages describe how the code is written.
 
 ## Folders

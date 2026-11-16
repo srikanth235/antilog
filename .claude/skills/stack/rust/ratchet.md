@@ -17,6 +17,8 @@ Set `export CARGO_INCREMENTAL=0 CARGO_PROFILE_DEV_DEBUG=0` for local builds when
 
 **Done** when all four are green and the tests for the kind of change are written ([land/tests.md](../../land/tests.md)). `cargo test --workspace` is the fallback while nextest is not set up. For a performance change, reproduce it, measure an optimized build, profile, fix, and measure again with the same inputs; put before and after in the commit message. Routine changes do not need this loop.
 
+Comments and API shape follow "Every language" in [../SKILL.md](../SKILL.md).
+
 Fix the code, not the check. Never add `#[allow]` or loosen a lint to get green. When a lint is wrong for one item, use `#[expect(clippy::name, reason = "...")]` on the narrowest item: it warns when it goes stale.
 
 ## What gets built (target)
