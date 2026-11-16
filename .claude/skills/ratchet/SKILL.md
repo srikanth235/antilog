@@ -1,54 +1,67 @@
 ---
 name: ratchet
-description: Drive Ratchet from the shell with the `ratchet` command (target; not built on this branch). Use when the user asks about their experiments (list, show, status, spend, wins, report), wants to sign in to a Ratchet server, start or stop one, open a pull request for a win, or wants Ratchet as an MCP server (`ratchet mcp`), or names Ratchet.
+description: Drive Ratchet from the shell with the `ratchet` command (target; not built on this branch). Use when the user asks about their sessions or contracts (list, show, history, receipt, spend), wants to start a session from the terminal (`ratchet "cut checkout p95"`), sign in to a Ratchet server, open a pull request for a win, or wants Ratchet's tools as an MCP server (`ratchet mcp`) for an agent on their own machine, or names Ratchet.
 ---
 
 # Ratchet
 
-`ratchet` is a command-line client of a Ratchet server, and `ratchet mcp` is the same client as an MCP server. It is (target): it does not exist on this branch, so the commands below are the design and may change as the program is built. The earlier daemon-based CLI is in [today.md](today.md).
+`ratchet` is a command-line client of a Ratchet server. It is a client of the same sessions as the web app: `ratchet "cut checkout p95"` opens a session in the terminal. `ratchet mcp` serves the Ratchet tools to an agent the person already uses on their own machine. It is (target): it does not exist on this branch, so the commands below are the design and may change as the program is built. The earlier daemon-based CLI is in [today.md](today.md).
 
-There is no daemon, no LaunchAgent and no simulation mode. The server is Ratchet cloud or a self-hosted server at a URL. The client holds no data and runs no sandbox: it asks the server, and the server starts sessions on agent platforms, which do the work.
+There is no daemon, no LaunchAgent and no simulation mode. The server is Ratchet cloud or a self-hosted server at a URL. The client holds no data and runs no sandbox: it asks the server, and the server starts sessions on agent platforms, which do the work. Only the judge's numbers count, whichever client proposed the change.
 
 ## Sign in
 
-- `ratchet login <server-url>` opens browser sign-in (OpenID Connect) and stores a session for that server. With no URL it uses Ratchet cloud.
-- For CI, scripts and MCP, use an access token: `RATCHET_TOKEN` with `RATCHET_SERVER`, or `ratchet login --token`. A token is shown once when a member creates it under Settings, Access tokens, and acts with that member's role.
+- `ratchet sign-in <server-url>` opens browser sign-in (OpenID Connect or GitHub) and stores a session for that server. With no URL it uses Ratchet cloud.
+- For CI, scripts and `ratchet mcp`, use an access token: `RATCHET_TOKEN` with `RATCHET_SERVER`, or `ratchet sign-in --token`. A token is shown once when a member creates it under Settings, Access tokens, and acts with that member's role.
 - Never print or log a token. Never write one into a file in the repo.
-- A viewer can read and not change; an editor can start and stop; an owner can also manage members and settings. A refused command says which role it needs.
+- A viewer can read sessions and contracts and approves nothing; an editor can start sessions and approve cards; an owner can also manage members and settings. A refused command says which role it needs.
 
 ## Rules
 
 - Always add `--json` and read the JSON. Exit 0 is ok, 1 is a failure (read `error.message` and `error.hint`), 2 is a usage error or a command that needs `--yes`.
-- Ids are in `ratchet list --json`. A wrong id exits 1 with a hint.
-- `start`, `stop` and `pr` spend money or change things. Without `--yes` they only print what they would do and exit 2. Show that preview to the user and ask before you run it again with `--yes`. A start with no budget is refused.
-- Say "experiment" for the object everywhere, flags, JSON keys and output included. "Optimization" names only the basic. See `docs/GLOSSARY.md`. Never "automation".
+- Ids are in `ratchet sessions --json` and `ratchet contracts --json`. A wrong id exits 1 with a hint.
+- A command that spends money or changes things (a new session, `stop`, `deliver`) previews without `--yes` and exits 2. Show that preview to the user and ask before you run it again with `--yes`. An approval card in a terminal session is answered by the person, never by you on their behalf. A session with no budget is refused.
+- Say "session" and "contract" everywhere, flags, JSON keys and output included. Never "experiment", "run" or "evaluator". See `docs/GLOSSARY.md`. Never "automation".
 
 ## Commands you will use most
 
 | Command | Does |
 | --- | --- |
-| `ratchet status --json` | The server you are signed in to and your experiments at a glance |
-| `ratchet list --json` | All experiments with ids, state, best result, spend |
-| `ratchet show <id> --json` | One experiment: agents (each with trials, kept, best and spend share), baseline vs best, receipt |
-| `ratchet spend <id> --json` | Spend against the budget |
-| `ratchet wins <id> --json` | Verified wins and their receipts |
-| `ratchet report <id>` | The markdown report |
-| `ratchet start <id> --budget 50 --yes` | Start an approved experiment (preview without `--yes`) |
-| `ratchet stop <id> --yes` | Stop one. Wins found so far are kept |
-| `ratchet note <id> "@Codex focus on database queries" --json` | Steer all agents, or one with @ (target) |
-| `ratchet pr <id> --yes` | Open the pull request with the verified wins |
+| `ratchet "cut checkout p95"` | Open a session in the terminal. Add `--repo owner/name`, `--agent` and `--environment` for the chips the web composer has |
+| `ratchet sessions --json` | Sessions with id, status (Working, Waiting for you, Done, Failed), contract, best result, spend |
+| `ratchet show <session> --json` | One session: status, contract, trials, kept, spend of budget |
+| `ratchet contracts --json` | Contracts with metric, baseline to best, state (Sealed, Watching, Regressed) |
+| `ratchet history <contract> --json` | Every trial for a contract across sessions: hypothesis, outcome, values, commit ids, what it started from |
+| `ratchet receipt <win> --json` | The signed receipt for a win and its lineage |
+| `ratchet spend <session> --json` | Spend against the budget |
+| `ratchet stop <session> --yes` | Stop a session. It is Done, "Stopped by NAME". Wins so far are kept |
+| `ratchet deliver <contract> --yes` | Open the pull requests with the receipt, by the same card policy as the web app |
+| `ratchet sign-in <server-url>` | Sign in |
+| `ratchet mcp` | Serve the Ratchet tools on stdio |
 
 Anything not listed is whatever `ratchet --help` shows; it is the source once the program exists.
 
-## The `measure` tool (target)
+## The Ratchet tools (target)
 
-An agent in its session asks for a measurement with the `measure` tool. It is not a command a person runs and takes no access token: Ratchet provides it to the session as a client tool and answers it over the session's own event stream. It starts one trial: Ratchet measures the agent's current commit in an evaluator sandbox on the experiment's measuring platform, with no agent in it. The result has the trial id, the measured value on the evaluation data, the guardrail values, the noise band and the outcome (Kept, Within noise, Worse, Guardrail failed, Failed holdout, Failed). It never has the holdout value: a Kept trial reads "Kept", a trial that fails the holdout reads "Failed holdout". Numbers an agent makes in its own session never count. It spends from the agent's budget share and takes no `--yes`. Only an agent's session can call it.
+Every session gets the Ratchet tools, and `ratchet mcp` serves the same ones. They are not shell commands a person runs.
+
+| Tool | Does |
+| --- | --- |
+| `seal` | Proposes a contract. The judge runs the seal checks. A person seals it from a card |
+| `measure` | Sends a trial (commits, the trial it started from, a one-line hypothesis). Returns a ticket at once; the measurement arrives later as an event |
+| `history` | Every trial for a contract, failures included |
+| `spawn` | Starts another session on the same contract and budget |
+| `deliver` | Opens one pull request per repo changed, each with the receipt. Refuses a trial that is not Kept |
+| `watch` | Has the judge measure the contract again on a schedule or when the default branch moves |
+| `attach_repo`, `request_credential`, `set_environment`, `request_budget` | The setup tools. Each shows a card in the chat. A credential value is typed into the form, never into the chat |
+
+A trial is measured by the judge in a judge sandbox with no agent in it. The result has the measured value and guardrail values on the evaluation data and the outcome (Kept, Within noise, Worse, Guardrail failed, Failed holdout, Rejected, Failed). It never has the holdout value. Numbers an agent makes in its own session never count. See [judge/tools.md](../judge/tools.md) and [session/tools.md](../session/tools.md).
 
 ## MCP
 
-`ratchet mcp` serves the commands above as MCP tools on stdio, for clients with no shell. It signs in the same way, with an access token. Register it with `claude mcp add ratchet -- ratchet mcp`. A tool that needs `--yes` takes `confirm: true`, and shows its preview first.
+`ratchet mcp` serves the Ratchet tools above on stdio, for an agent on the person's own machine (Claude Code, Codex). The agent can propose a change anywhere; only the judge measures it. It signs in with an access token. Register it with `claude mcp add ratchet -- ratchet mcp`. A tool that matters shows its approval card to the person, in the terminal or in the web app.
 
 ## Decided
 
-- There is no `ratchet chat`. Drafting an experiment with the assistant happens in the web and Mac apps; another agent drives Ratchet through `ratchet mcp`.
-- `start` only starts an experiment that exists as an approved draft, so Approve stays a deliberate step.
+- There is no `ratchet chat` and no separate drafting step. The terminal session is the chat, and an agent drafts a contract in it with `seal`.
+- Approvals are answered by a person. A viewer cannot approve, and Add credential can never be pre-approved.

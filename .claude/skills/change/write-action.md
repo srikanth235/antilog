@@ -4,7 +4,7 @@ Every write goes through one action layer, and nowhere else. A write that skips 
 
 ## The three steps, in order (target)
 
-1. **Check.** The caller's role on the project is checked first, in one place. A denied call changes nothing and records the denial.
+1. **Check.** The caller's role in the organization is checked first, in one place. A denied call changes nothing and records the denial.
 2. **Write and audit.** The change and its audit entry happen in one transaction of the store (Postgres or the organization's SQLite), or neither does. Every row carries its organization.
 3. **Publish.** After the commit, the layer publishes one live event naming what changed (see [live-event.md](live-event.md)).
 
@@ -12,9 +12,9 @@ An action that needs work on an agent platform queues a job in the same transact
 
 ## Adding a write (target)
 
-1. Name it, verb-object, such as `experiment.stop`, and register it with [organization/add-audited-action.md](../organization/add-audited-action.md). That page owns the matrix, the audit fields and the denial rules.
+1. Name it, verb-object, such as `session.stop`, and register it with [organization/add-audited-action.md](../organization/add-audited-action.md). That page owns the matrix, the audit fields and the denial rules.
 2. Add the types and handler by [api-endpoint.md](api-endpoint.md). The handler calls the layer.
-3. Add the CLI command and MCP tool. A command that spends or changes things needs `--yes`.
+3. Add the CLI command, and the Ratchet tool if an agent calls it (see [tool.md](tool.md)). A command that spends or changes things needs `--yes`. A tool call that matters is an approval card by policy (see [organization/approvals.md](../organization/approvals.md)).
 4. Tests: allowed role writes and audits once; denied role writes nothing and audits the denial; the event is published after the commit and not on a denial; no secret in the entry or the event; the audit row and the change roll back together.
 
 ## Refusals

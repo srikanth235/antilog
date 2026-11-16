@@ -22,6 +22,7 @@ One job per layer, each running the commands in [checks.md](checks.md). A pull r
 | web | typecheck, lint, tests |
 | macos-app | build and test the Swift app, on a macOS runner only |
 | platform | the platform contract suite against the fake platform |
+| judge | the acceptance criteria tests, the seal checks against the fake judge sandbox, the protected-path test |
 | infra | only if the repo keeps OpenTofu or Packer for something the target still needs (see [stack/infra/ratchet.md](../stack/infra/ratchet.md)): `tofu fmt`, `validate`, `test`; `packer fmt` and `validate` |
 | release | builds the programs (`ratchet-server`, `ratchet-cloud`, `ratchet`) and the container image; signs them |
 

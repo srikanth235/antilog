@@ -1,6 +1,6 @@
 # Swift and SwiftUI in Ratchet (target)
 
-Nothing of this exists yet. The macOS app is SwiftUI and macOS only. Windows and Linux use the web app ([../typescript/ratchet.md](../typescript/ratchet.md)). Versions are in [libraries.md](../libraries.md), including Sparkle, which updates the app outside the Mac App Store. This page says how the app is written and checked when code lands.
+Nothing of this exists yet, and its boards were removed for now: Mac boards are owed once the web direction is approved. The macOS app is SwiftUI and macOS only. Windows and Linux use the web app ([../typescript/ratchet.md](../typescript/ratchet.md)). Versions are in [libraries.md](../libraries.md), including Sparkle, which updates the app outside the Mac App Store. This page says how the app is written and checked when code lands.
 
 ## Toolchain (a proposal until the owner confirms)
 
@@ -19,12 +19,12 @@ xcodebuild -project Ratchet.xcodeproj -scheme Ratchet -destination 'platform=mac
 
 ## The app (target)
 
-- **An API client only.** The app talks to the server through the same API as the web app, from types generated from the OpenAPI document. It runs no agent and no sandbox. **Measuring never runs on the Mac**: the app never holds the holdout credential or produces a number that counts.
+- **An API client only.** The app talks to the server through the same API as the web app, from types generated from the OpenAPI document. It runs no agent and no sandbox. **The judge never runs on the Mac**: the app never holds the holdout credential or produces a number that counts.
 - **Shell only.** The server owns product rules, screens' content and user-facing words. The Swift shell renders state and performs requested platform effects. **Do not invent product rules or user-facing strings in the shell.** A literal string, colour or rule in a view is a finding.
 - **Share behaviour, words and element ids with the web app, never pixels.** Use the system's chrome: window, toolbar, sidebar, Settings window, menu bar, notifications. Each view sets the same accessibility identifiers as the web element ids ([design behaviour](../../design/behaviour.md)).
 - **Generated, not hand-written (target).** Colours come from `design/tokens.toml` and words from the one words catalogue, written as Swift by the generator, light and dark. Use semantic colours (`Color.ratchetCanvas`-style names the generator emits) and the system's dynamic type; no hex in a view.
 - **Sign-in is OpenID Connect in the browser.** Use `ASWebAuthenticationSession` (needs a presentation context anchor: the key window), with PKCE. The app never shows a password field and holds no long-lived cloud or holdout credential. Tokens live in the Keychain (`SecItem`), never in `UserDefaults` or a file. Sign-out clears them.
-- **The menu bar item.** A `MenuBarExtra` is an entry point showing the running state (what is running, spend against the cap) with a few actions; everything it shows is also reachable from the main window. Its icon is a template image. Details: [general/macos.md](general/macos.md).
+- **The menu bar item.** A `MenuBarExtra` is an entry point showing the running state (sessions that are Working or Waiting for you, spend against the budget) with a few actions; everything it shows is also reachable from the main window. Its icon is a template image. Details: [general/macos.md](general/macos.md).
 - **The Settings scene.** A `Settings` scene holds preferences of this Mac only: the server address, launch at login, notifications. Organisation data and roles are the server's and appear in the web app and the main window, not here.
 - **No helper process.** The app bundles nothing that runs agents or sandboxes. Agents run as sessions on agent platforms, never on the Mac. "This machine", a self-hosted environment of an agent platform where an agent could propose, is deferred ([product rulings](../../product/rulings.md), "Settled 16 Nov"). Do not build a local runner, a helper or a process supervisor for it.
 - **Swift 6 concurrency.** UI on the main actor, shared state behind actors, no data races, no force unwraps in app code. Structured `async`/`await`; no Grand Central Dispatch. Process and network I/O off the main actor.

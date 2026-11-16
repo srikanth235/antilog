@@ -75,7 +75,7 @@ Start fresh. Copy only proven pieces from the earlier code on `claude/peaceful-l
 | | `aws-sdk-ec2` / `aws-sdk-s3` / `aws-sdk-sts` | 1.280.0 / 1.159.0 / 1.126.0 (not needed by the target) |
 | | `aws-sdk-dynamodb` / `aws-sdk-secretsmanager` | 1.139.0 / 1.128.0 (not needed by the target) |
 | GitHub | `octocrab` | 0.54.9 |
-| Postgres connector (not needed by the target unless per-run credential minting is ruled; the server never connects to data) | `tokio-postgres` | 0.7.18 |
+| Postgres connector (not needed by the target unless credential minting is ruled; the server never connects to data) | `tokio-postgres` | 0.7.18 |
 | Egress proxy, TLS interception (not needed by the target: no egress proxy) | `hudsucker` / `rcgen` | 0.25.0 / 0.14.10 |
 | MCP server | `rmcp` | 3.10.0 |
 | Command line | `clap` | 4.6.7 |
@@ -89,7 +89,7 @@ Start fresh. Copy only proven pieces from the earlier code on `claude/peaceful-l
 
 Sessions and access tokens need no library: each is 32 random bytes shown once, stored as a SHA-256 hash through the `Store` and compared in constant time, so both stores behave the same. `tower-sessions` and `aws-lc-rs` were dropped (November 2026): the first ties sessions to a `sqlx` store the cloud cannot use, the second is C code that does not build for wasm. Better Auth was considered and refused: it is TypeScript and keeps its own user, session and organization tables beside ours.
 
-Snowflake, Databricks and BigQuery have no maintained Rust client we would ship; their connectors call each vendor's REST API through `reqwest`. Every connector sits behind one `Connector` trait, so its vocabulary stops there, and each says how to make a read-only, holdout-excluding credential for its system (whether Ratchet mints them per run is open). Agent platforms sit behind one platform trait, one adapter each. Platform crates stay inside each adapter.
+Snowflake, Databricks and BigQuery have no maintained Rust client we would ship; their connectors call each vendor's REST API through `reqwest`. Every connector sits behind one `Connector` trait, so its vocabulary stops there, and each says how to make a read-only, holdout-excluding credential for its system (whether Ratchet mints them per session is open). Agent platforms sit behind one agent trait, one adapter each; the judge is a separate trait. Platform crates stay inside each adapter.
 
 **Cloud adapters (earlier design)**
 
@@ -138,7 +138,7 @@ A proposal, not yet built. The app is SwiftUI and macOS only; Windows and Linux 
 | Deployment target | macOS 26 (a proposal) |
 | Sparkle (updates) | 2.10.0 |
 
-- Sparkle is the update mechanism for the Mac app (decided 15 Nov). The app is a direct download and is not on the Mac App Store.
+- Sparkle is the update mechanism for the Mac app (decided 15 Nov; the app stays ruled in and its boards are owed). The app is a direct download and is not on the Mac App Store.
 - The app is an API client only. It bundles no helper and runs no agent. "This machine" is deferred.
 - Colours and words are generated from `design/tokens.toml` and the words catalogue, never written by hand.
 
