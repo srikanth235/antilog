@@ -15,7 +15,7 @@ Nothing here exists yet. The earlier code's notes (on the other branch) are in [
 
 ## Order (target)
 
-1. The spike: one tiny experiment end to end on Claude Managed Agents, AgentCore and the OpenAI Agents API, to prove the platform trait, the `measure` tool and the evaluator sandbox, with a tiny cap.
+1. The spike: one tiny experiment end to end on all five platforms (Claude Managed Agents, AgentCore, the OpenAI Agents API, Microsoft Foundry Agent Service and Google Agent Runtime), to prove the platform trait, the `measure` tool and the evaluator sandbox, with a tiny cap.
 2. Fakes only: the platform contract suite against the fake platform, and the server against it.
 3. One real platform in a dedicated account, in build order (Claude Managed Agents first), with a tiny cap, confirming tags, the cap stop, that no route runs from an agent session to the evaluator, and clean-up.
 4. A connector credential registered for a real connector: confirm it is read-only and cannot see the holdout; confirm the evaluator's credential can.

@@ -30,7 +30,7 @@ The vocabulary source is [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md), includ
 | user, service principal | member, service account (on screen) |
 | Restricted to evaluator | evaluator only, hidden |
 | Skill (a skill pack) | skill pack on screen; never the repo's guidance files |
-| agent platform (Claude Managed Agents, AWS AgentCore, OpenAI Agents API); measuring platform | runner, launcher, backend, agent host, worker |
+| agent platform (Claude Managed Agents, AWS AgentCore, OpenAI Agents API, Microsoft Foundry Agent Service, Google Agent Runtime); measuring platform | runner, launcher, backend, agent host, worker |
 | Ratchet cloud, Self-hosted | SaaS, on-prem |
 | Infrastructure (Settings page: Agent platforms, Environments, Credentials) | Where work runs, Your infrastructure, Ratchet-managed, deployment mode, BYOC, managed cloud |
 | Add platform, Test connection, Update credential, Remove | Add backend, Connect runner |
@@ -47,7 +47,7 @@ The CLI and MCP tools are read by people too. They print the screen words, and m
 | Where | Words |
 | --- | --- |
 | Page and sections | "Infrastructure"; "Agent platforms", "Environments", "Credentials" |
-| Platforms | "Claude Managed Agents", "AWS AgentCore", "OpenAI Agents API" |
+| Platforms | "Claude Managed Agents", "AWS AgentCore", "OpenAI Agents API", "Microsoft Foundry Agent Service" ("Foundry Agent Service" where space is short), "Google Agent Runtime" |
 | Buttons | "Add platform", "Test connection", "Update credential", "Remove" |
 | Measuring platform | Badge "Measuring platform" on one platform row; field "Measuring platform" on an experiment's environment step |
 | Environment | "bench-std · AWS AgentCore · 4 vCPU, 16 GiB" |
@@ -115,7 +115,7 @@ A `·` never joins two thoughts in one string; it survives only between short me
 - A word means one thing. Do not give one object two names across pages or clients.
 - Money and units are worded the same on every page.
 - Defensive reassurance (a fact followed by what was not lost, deleted or sent) belongs only where the risk decision is made, in full sentences. A status or an empty state repeating the promise is noise.
-- A cloud account is not a connector. Platform names (Claude Managed Agents, AWS AgentCore, OpenAI Agents API) appear under Infrastructure, beside an agent, and where an experiment names its measuring platform. Never Kubernetes.
+- A cloud account is not a connector. Platform names (Claude Managed Agents, AWS AgentCore, OpenAI Agents API, Microsoft Foundry Agent Service, Google Agent Runtime) appear under Infrastructure, beside an agent, and where an experiment names its measuring platform. Never Kubernetes.
 - "Session" is an agent's loop on an agent platform, or a drafting session. It is not the experiment thread, which is the experiment.
 - Model providers are a field on an agent, not a connector category.
 

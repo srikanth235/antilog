@@ -37,7 +37,7 @@ Every path below was checked to exist.
 
 The target replaces most of the above (decided 16 Nov): Ratchet runs no sandboxes, OpenTofu modules, images or runner. Agents run as sessions on agent platforms behind one trait; see [model.md](model.md). What carries over is the shape of spend (append-only rows, a budget stop), tagging everything with its run, and a verified clean-up.
 
-- The platform trait and adapters: Claude Managed Agents, then AWS AgentCore, then the OpenAI Agents API.
+- The platform trait and adapters: Claude Managed Agents, then AWS AgentCore, then the OpenAI Agents API, then Microsoft Foundry Agent Service, then Google Agent Runtime.
 - The `measure` tool, answered over the session's event stream, and the evaluator sandbox on the measuring platform.
 - A run tag on every session, sandbox and spend row, and a verified clean-up state per run.
 - A refusal to start a run with no stated budget.

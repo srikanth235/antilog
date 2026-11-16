@@ -7,7 +7,7 @@
 | Delivered | Yearly value of merged wins | locked in, realised | Delivered |
 | Pending | Yearly value of wins in an open PR; not counted in Return | unclaimed, waiting | Pending |
 | Return | Delivered ÷ spent, as `68×` | ROI | Return |
-| Agent | A model on an agent platform that proposes changes: Claude on Claude Managed Agents, Codex on the OpenAI Agents API, Gemini or Grok on AWS AgentCore (target) | harness (code only), connection | agent |
+| Agent | A model on an agent platform that proposes changes: Claude on Claude Managed Agents, Codex on the OpenAI Agents API, Gemini or Grok on AWS AgentCore, GitHub Copilot on Microsoft Foundry Agent Service, Gemini on Google Agent Runtime (target) | harness (code only), connection | agent |
 | Agent order | The fallback sequence, "Claude Code → Codex → Grok" | priority | agent order |
 | Where | The agent platform an agent runs on (target). "This machine" is deferred; measuring never runs on a Mac | location | Where |
 | Note | Text that steers the agents of a run: all of them, or one with @ ("@Codex focus on database queries") | comment, prompt | note |
@@ -35,7 +35,7 @@ Code and the API use the names of the three basics for their areas; the screen b
 | Plugin | A bundle that adds evaluations, skills, connectors and agents for a domain | none |
 | Customize | One page with Evaluations, Skills, Connectors, Agents and Plugins | none |
 | Settings | A dialog over the app, opened from the user menu or More. A rail of sections in two groups: You (Profile, Appearance, Access tokens, and in the web app This device) and Organization (General, Users and groups, Single sign-on, Infrastructure, Budgets, Notes, Audit logs) | none |
-| Agent platform | A managed service that runs an agent and its sandbox as one session: Claude Managed Agents, the OpenAI Agents API or AWS AgentCore. Set up under Settings, Infrastructure on a self-hosted server; Ratchet cloud manages its own (target) | none |
+| Agent platform | A managed service that runs an agent and its sandbox as one session: Claude Managed Agents, AWS AgentCore, the OpenAI Agents API, Microsoft Foundry Agent Service or Google Agent Runtime. Set up under Settings, Infrastructure on a self-hosted server; Ratchet cloud manages its own (target) | none |
 | Platform account | The account Ratchet uses on an agent platform: yours when self-hosted, Ratchet's on Ratchet cloud, billed to you at cost (target) | none |
 | Session | One agent working on a platform, with its own sandbox and transcript. A drafting session works out an experiment with you; a run has one session per agent (target) | none |
 | Drafting session | An interactive session where you and one agent work out an experiment. It ends by pushing the experiment's files to its config branch (target) | none |
@@ -76,7 +76,7 @@ Code and the API use the names of the three basics for their areas; the screen b
 | signed receipt, signature verified | Signed numbers, Verified (Verify again) |
 | clean-up state of a session or evaluator sandbox | Cleaned up: Running, Removed, Not removed |
 | what the Mac menu bar shows | Runs, Needs attention (the Mac runs no agents) |
-| where agents run | Agent platforms (Settings, Infrastructure): Claude Managed Agents, AWS AgentCore, OpenAI Agents API; one is the Measuring platform |
+| where agents run | Agent platforms (Settings, Infrastructure): Claude Managed Agents, AWS AgentCore, OpenAI Agents API, Microsoft Foundry Agent Service, Google Agent Runtime; one is the Measuring platform |
 | keep a stopped run stopped | Leave stopped |
 | install the web app as a progressive web app (Windows, Linux) | Install app (Settings, This device); "Get the Mac app" on macOS |
 | ask for push notifications after starting a run | Notify me when this run finishes |

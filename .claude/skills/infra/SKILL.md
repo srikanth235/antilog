@@ -1,12 +1,12 @@
 ---
 name: infra
 description: >-
-  Where does work happen, and what may it cost? Use for agent platforms (Claude Managed Agents, the OpenAI Agents API, AWS AgentCore) and their one trait, sessions (drafting sessions and runs), the evaluator sandbox where measuring happens, the measure tool, platform accounts and credential stores, environments (image and size), agents and their models, budgets and spend records, clean-up, and adding an agent platform, an agent or an environment.
+  Where does work happen, and what may it cost? Use for agent platforms (Claude Managed Agents, AWS AgentCore, the OpenAI Agents API, Microsoft Foundry Agent Service, Google Agent Runtime) and their one trait, sessions (drafting sessions and runs), the evaluator sandbox where measuring happens, the measure tool, platform accounts and credential stores, environments (image and size), agents and their models, budgets and spend records, clean-up, and adding an agent platform, an agent or an environment.
 ---
 
 # Infra
 
-Infra runs the work on agent platforms and keeps it cheap and clean (target). Ratchet runs no sandboxes. An agent platform (Claude Managed Agents, the OpenAI Agents API, AWS AgentCore) runs an agent's loop and its sandbox as one durable session, and every platform sits behind one trait. Self-hosted, Ratchet uses the customer's own platform accounts; on Ratchet cloud, its own. A drafting session works out an experiment with a person and ends on a branch; a run starts one autonomous session per agent from that branch. When an agent asks to measure, Ratchet starts an evaluator sandbox on the measuring platform, with no agent in it, for that one trial. The earlier code ran its own sandboxes on AWS; [today.md](today.md) says what it built.
+Infra runs the work on agent platforms and keeps it cheap and clean (target). Ratchet runs no sandboxes. An agent platform (Claude Managed Agents, AWS AgentCore, the OpenAI Agents API, Microsoft Foundry Agent Service, Google Agent Runtime) runs an agent's loop and its sandbox as one durable session, and every platform sits behind one trait. Self-hosted, Ratchet uses the customer's own platform accounts; on Ratchet cloud, its own. A drafting session works out an experiment with a person and ends on a branch; a run starts one autonomous session per agent from that branch. When an agent asks to measure, Ratchet starts an evaluator sandbox on the measuring platform, with no agent in it, for that one trial. The earlier code ran its own sandboxes on AWS; [today.md](today.md) says what it built.
 
 | If you are doing | Read |
 | --- | --- |

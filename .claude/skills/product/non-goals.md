@@ -3,7 +3,7 @@
 These are decided. Do not build them, propose them in passing, or leave a hook "for later". Raising one means asking the owner to reverse a ruling, not slipping it into a change.
 
 - **An evaluator on a laptop.** Measuring never runs on a user's machine: the evaluator runs only on the measuring platform. Agents do not run on a Mac either: "This machine" is deferred (see [rulings](rulings.md)).
-- **Running sandboxes ourselves.** Ratchet has no launcher, runner or sandbox backend. Agent platforms (Claude Managed Agents, the OpenAI Agents API, AWS AgentCore) run every agent's loop and every sandbox, behind one trait. Building our own sandbox layer would put us back in the business those platforms are in.
+- **Running sandboxes ourselves.** Ratchet has no launcher, runner or sandbox backend. Agent platforms (Claude Managed Agents, AWS AgentCore, the OpenAI Agents API, Microsoft Foundry Agent Service, Google Agent Runtime) run every agent's loop and every sandbox, behind one trait. Building our own sandbox layer would put us back in the business those platforms are in.
 - **Stored passwords or a built-in user database.** Sign-in is through an identity provider: OpenID Connect, plus GitHub's OAuth on Ratchet cloud. We do not want to hold credentials worth stealing.
 - **A hosted third-party auth service.** Self-hosting must not depend on a vendor the administrator did not choose.
 - **A separate policy engine.** Roles are checked in the one action layer. A second place that decides who may do what is a second truth.
