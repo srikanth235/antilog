@@ -1,12 +1,14 @@
 # Behaviour
 
-How a screen behaves. The web app and the macOS app (target) share behaviour, words and element ids, never pixels. Values are not here: they live in `design/tokens.toml`, and the boards in `design/mockups/` show the result (see [mockups.md](mockups.md)). The words are in [wording.md](wording.md).
+How a screen behaves. The web app and the macOS app (target; its boards are owed) share behaviour, words and element ids, never pixels. Values are not here: they live in `design/tokens.toml`, and the boards in `design/mockups/` show the result (see [mockups.md](mockups.md)). The words are in [wording.md](wording.md). What a session is, what the judge does and what a card asks is in [session](../session/SKILL.md), [judge](../judge/SKILL.md) and [organization](../organization/approvals.md).
 
-## The app is organised around experiments as sessions (target)
+## The app is a chat and a judge (target)
 
-The three basics still own everything underneath; the screen is not split by them.
+The screen follows the product: a person talks to a coding agent in a session, and the judge's numbers are the only ones that count. There is no mode, no plan step and no separate setup screen. Setup happens in the chat, as a card.
 
-**Frame.** A fixed 256px sidebar and a main area. Sidebar top: Search, Projects, Dashboard, Customize, More (Run history, Settings). A primary "New experiment" button. Then Pinned, then experiments grouped under collapsible project headings: one line each, a run count and one status icon. The six statuses (Running, Draft, Win, Merged, No win, Stopped) each have their own icon shape, never colour alone. The user menu at the bottom has Settings, a quick light and dark switch, host name and Sign out.
+**Frame.** A fixed 256px sidebar and a main area. Sidebar top (`SidebarTop`): the brand, "New session" and Search. Then `SidebarRows`: Sessions, Pinned first and then recent, one line each with a title and one status icon; and a Contracts link. The user menu at the foot (`SidebarFoot`) has Settings, a quick light and dark switch, the host name and Sign out. `Sidebar` is the three together; `SidebarEmpty` is the same chrome with no rows.
+
+The four session statuses each have a word and their own icon shape, never colour alone: Working (an open arc), Waiting for you (a half-filled circle), Done (a check in a circle), Failed (a cross in a circle). A session a person stopped is Done, with the line "Stopped by NAME".
 
 ## Page types
 
@@ -14,83 +16,157 @@ Every screen is one of six page types. The type owns the header, back, search, t
 
 | Page type | Anatomy | Examples |
 | --- | --- | --- |
-| Thread | Header: title, status, primary metric (baseline to best so far), run, trials, spend of budget, elapsed, Stop run with an inline confirm, Pin, menu. Then a chart of the primary metric per trial with the baseline, the noise band and one lane (line) per agent, then the conversation. A composer docks at the foot and follows the state: change the draft, steer the agents or one with @ while running, or start another run with a note. Back: none, the sidebar is the way out. Search: global only. States: a Draft card until Approve; a failed trial is one calm line, never an empty diff | An experiment, in any status |
-| ListPage | Title, a count, search, filter and sort where the list is long, one primary action (a New or Add menu). Rows or cards, never both. Back: none at a sidebar root. Empty: one sentence and at most one action. Loading: a skeleton of the rows. Error: what happened and what to do, with Try again | Projects, Run history (Trials and Sessions tabs), Customize (tabs Evaluations, Skills, Connectors, Agents, Plugins; a Yours and Discover toggle) |
-| DetailPage | Back to the named parent, a title with its status, one primary action, a menu for the rest, then sections of settings rows and quiet tables. One layout for every kind under Customize: a new kind gets no page style of its own. Empty: a section with nothing to show says so in a sentence. Read-only: controls disabled with a one-line reason | A project, an evaluation, a connector, an agent, a skill |
-| Dialog | Over the app, so you keep your place. A title bar with a close button, a dimmed backdrop, focus moves in and Tab stays inside. Esc, the close button or a click on the backdrop close it and return focus to what opened it. Destructive confirms are inline in the page or a small dialog with the verb as its button | Settings, Add connector, Approve a draft |
-| SettingsSection | One section of the Settings dialog: a rail on the left with a search field, the section on the right. Rows, not cards. See "A setting is a row". Read-only for non-owners | Profile, Appearance, Access tokens, This device (web app only), General, Users and groups, Single sign-on, Infrastructure, Budgets, Notes, Audit logs |
-| SignIn | One centred panel on the page ground: the mark, one line of purpose, the provider buttons, nothing else. No sidebar, no search. Errors sit under the buttons in one sentence | Sign-in on Ratchet cloud and on a self-hosted server |
+| Session | Header: title, status, Stop with an inline confirm, Pin, menu. Under it, when a contract is in play, the pinned scoreboard strip. Then the conversation: messages, quiet tool lines, cards. A composer docks at the foot and follows the status. Back: none, the sidebar is the way out. Search: global only. States: a card waits until a person decides; a failure is one calm line, never an empty page. Boards: `SessionStart`, `SessionSeal`, `SessionWorking`, `SessionSpawned`, `SessionWin`, `SessionDelivered`, `SessionNoWin`, `SessionBudget`, `SessionCredential`, `SessionRepo`, `SessionRegression`, `SessionFailed`, `SessionReadOnly` | A session, in any status; Home is the Session page type with no conversation yet |
+| ListPage | Title, a count, search, filter and sort where the list is long, one primary action where one exists. Rows, never cards. Back: none at a sidebar root. Empty: one sentence and at most one action. Loading: a skeleton of the rows. Error: what happened and what to do, with Try again | Contracts, the Waiting for you list on Home, Search results |
+| DetailPage | Back to the named parent, a title with its state, one primary action, a menu for the rest, then sections of settings rows and quiet tables. Empty: a section with nothing to show says so in a sentence. Read-only: controls disabled with a one-line reason | A contract (`ContractDetail`), a receipt (`Receipt`) |
+| Dialog | Over the app, so you keep your place. A title bar with a close button, a dimmed backdrop, focus moves in and Tab stays inside. Esc, the close button or a click on the backdrop close it and return focus to what opened it. Destructive confirms are inline in the page or a small dialog with the verb as its button | Settings, Add platform |
+| SettingsSection | One section of the Settings dialog: a rail on the left with a search field (`SettingsRail`), the section on the right. Rows, not cards. See "A setting is a row". Read-only for non-owners | Profile, Appearance, Access tokens, This device, General, Members, Single sign-on, Agent platforms, Approvals, Budgets, Connections, Audit log |
+| SignIn | One centred panel on the page ground: the mark, one line of purpose, the provider buttons, nothing else. No sidebar, no search. Errors sit under the buttons in one sentence | Sign-in on Ratchet cloud and on a self-hosted server (`SignIn`, `SignInError`, `SignInNoAccess`) |
 
-### Thread
+### Session
 
-An experiment is one thread. The conversation holds, in order: the request, Ratchet in short sentences, the draft card (expanded until approved, then one summary line), a seven-step stepper coloured by owning area (1 Start run, Experiment; 2 Create workspaces, Compute, one session per agent; 3 Mint scoped credentials, Data; 4 Agents iterate: change, measure, keep or discard, Experiment, a step that repeats and shows counts; 5 Pick the best kept trial, Experiment; 6 Store history, open pull request, Data; 7 Clean up, Compute), an Agents section, expandable trial cards, notes from people, and the result card with lineage in three columns (Experiment, Data, Compute), Open pull request and Run again.
+A session is one chat with one agent in one sandbox on one agent platform, with any number of repos attached. It has a status and nothing else.
 
-- **Agents section.** One lane card per agent: name, status (Iterating, Measuring trial 9, Paused, Stopped with its reason), facts (trials, kept, best, spend of its share), what it started from if it adopted another agent's trial, its latest kept trial, and Pause agent. A stopped agent shows that its session ended. The chart draws one lane per agent, so who is improving is visible at a glance.
-- **Trial card.** Agent, hypothesis in the agent's own words, change, files, measured value against that agent's best and the baseline, delta, one outcome tag, diff, guardrail metrics. Holdout shows only as an outcome ("Kept", "Failed holdout"), never a value to the agent. "Steps for this trial" lists: the hypothesis, wrote the change, checked it in its session (does not count), asked for a measurement, evaluator measured (repeats, noise), beat the agent's best by X, confirmed in a fresh evaluator sandbox with the holdout passed, Kept. A trial being measured shows Measuring.
-- **Composer while running** steers the agents: a note goes to all, or to one with @ (for example "@Codex focus on database queries"). Each agent reads it before its next trial.
-- **The stepper's status line** counts: "Step 4 of 7 · 2 agents iterating · 28 trials, 4 kept." On the Mac: "Step 4 of 7 · agents iterate in their sessions; the evaluator sandbox measures with the holdout."
-- The draft card says where it would run (the agent platforms, and the measuring platform with its environment), that agents get read-only credentials that leave out the holdout, and that the evaluator gets its own. Nothing is created until Approve.
-- A trial's diff is the commit on the agent's branch, and its transcript and logs stay on the agent platform; they are fetched when someone opens them, and the card says so. When the platform cannot be reached the trial shows one calm line in the failed state: "Can't reach Claude Managed Agents. Transcripts and logs stay there; try again when it is back." It is never drawn as an empty diff.
-- The result card's Data column names dataset versions, skill versions and the credential scope (read-only, holdout to the evaluator only). Its Compute column names the agent platforms, the measuring platform, the environment (image and size), agent versions and that the evaluator signed the numbers.
+**Header.** The title (the agent names it after the first message; a person can rename it), the status with its icon and word, Stop, Pin and a menu (Rename, Copy link, Delete session). Stop confirms inline: the button becomes "Stop session" and "Keep working". A stopped session is Done with "Stopped by NAME". A viewer sees the header with Stop and Pin disabled and a one-line reason.
 
-### New experiment
+**Scoreboard strip.** Pinned under the header whenever the session works on a contract; absent otherwise. It shows the metric from baseline to best ("1,310 ms to 1,102 ms"), trials, kept, and spend of budget ("$42 of $100"). Beside the numbers is one small chart of the metric per trial, with the baseline and the noise band. When sessions were spawned the chart draws one line per session, each named, so who is improving is visible at a glance. The chart never shows a number from a session, only the judge's. A trial being measured is a hollow point. The strip scrolls with nothing; the conversation scrolls under it.
 
-A dialog that asks one question, "What do you want to improve?", with a text box and pills that open popovers: Project, Evaluation, Skills, Data, Environment, Agents, Budget, Guardrails and paths. Environment picks the measuring platform and an environment (image and size) from those set up under Settings, Infrastructure; a platform not added yet shows "Add platform" and leads there. "Draft experiment" starts a drafting session at once and the experiment is a Draft. No run session starts until Approve.
+**The conversation.** In order of time:
 
-### Customize
+- Messages from people and from the agent, in short sentences. Text streams as it is written; the agent's message ends with a cursor bar until done.
+- Tool calls shown as one quiet line each ("Read 4 files", "Asked the judge to measure"). A chevron expands the line to what was asked and the first lines of what came back.
+- **Long tool output** is collapsed and never stored by Ratchet. Opening it fetches it from the platform: the row shows "Fetching from PLATFORM", then the output in a scrolling code block. When the platform has dropped it the row says "This output has expired on PLATFORM." When the platform cannot be reached it says "Can't reach PLATFORM. Output stays there; try again when it is back." with Try again. Neither is drawn as an empty block.
+- Cards. A card is the only place structured output appears. There is no step list and no side wizard.
 
-A connector is a data system or the code host (Snowflake, Databricks, DynamoDB, BigQuery, Postgres, Amazon S3, GitHub, GitLab, an MCP server). A cloud account is not a connector; it is set up under Infrastructure. Discover shows a featured banner (a carousel for connectors), a "For you" grid whose "+" becomes a check, and a "New" section with Show all. Configure opens the detail page.
+**The composer.** A text box at the foot, and it follows the status.
 
-- A connector's page says how access is scoped: that the credential is read-only, registered once by the customer and kept in the platform's credential store, what agents get (read-only, holdout excluded) and what the evaluator sandbox gets. Adding a connector says Ratchet keeps no connector secret.
-- An agent's page shows the model provider as a field and the platform it runs on (Claude Code · Claude Managed Agents). The platform holds the model access; there is no key source setting.
+- A new session (`SessionStart`, and Home): the text box and three chips, Repos, Agent and Environment. Each chip opens a popover. Nothing else is asked.
+- Working: a person can type to steer, and Send delivers the text to the agent before its next step. "Interrupt" stops the agent's current step and delivers the text at once. "Stop session" ends the session. The agent reads steering as chat; it can change what it tries and never what counts.
+- Waiting for you: the composer stays open for an answer, and the card that waits is above it.
+- Done and Failed: "Continue this session" starts a new sandbox from the session's branches. Failed also offers "Start again" in the failure line.
+- Read-only (`SessionReadOnly`): a viewer reads. The composer is disabled with "Viewers read sessions. Only editors and owners can send."
+
+**Sandbox.** The sandbox is temporary, the conversation is not. When it ends while idle the session says so once, in one line, and sending a message starts a new sandbox from the session's branches.
+
+### Cards
+
+A card sits in the conversation at the moment it is needed. An approval card has a title, what would happen, what it may cost, and two buttons, the approve verb and Decline. Before Approve the card says "Nothing happens until you approve." Nothing is asked when policy already allows it: the card appears already collapsed as "Allowed by policy".
+
+**Collapsed.** An approved or declined card collapses to one line: who, when, and what ("Contract sealed by Maya Chen · 14:02", "Declined by Maya Chen · 14:02"). The line expands to the card as it was decided, with its buttons gone. A card decided in another client shows "Approved by NAME in another client." A viewer sees an approval card with its buttons disabled and "Only editors and owners can approve."
+
+**The six approval cards.**
+
+| Card | Fields, in order | Actions | Board |
+| --- | --- | --- | --- |
+| Seal contract | Metric and its direction; Evaluation command; Protected paths, grouped per repo; Data and holdout (the holdout marked "Restricted to the judge"); Guardrails; Baseline (the judge's measured value); Noise check (for example "±18 ms across 3 repeats"); Cheat checks ("3 of 3 rejected"); Judge platform and environment. A contract that failed a seal check shows the failed line and no Seal contract button | "Seal contract" (not "Approve"), "Decline" | `SessionSeal` |
+| Raise budget | Now; Requested; What it may cost; Why the agent asks | "Raise budget", "Decline" | `SessionBudget` |
+| Add credential | A secure form: Name, Platform, Value, Scope. The note "Typed here, never in the chat. Goes straight to PLATFORM's credential store." The agent never sees the value. Never pre-approved | "Add credential", "Decline" | `SessionCredential` |
+| Attach repo | Repo, Branch, "Pushes only to the session's own branch" | "Attach repo", "Decline" | `SessionRepo` |
+| Change environment | Image, Setup script, Size, Network, and a one-line diff of what changes | "Change environment", "Decline" | `SessionStart` (the chip), and the card in `SessionWorking` |
+| Open pull request | Repos and branches, the receipt in short, the second opinion line, what it costs (nothing) | "Open pull request", "Decline" | `SessionWin` |
+
+When the budget is spent the judge refuses `measure` and the session is Waiting for you with a Raise budget card (`SessionBudget`).
+
+**The result cards.**
+
+| Card | What it shows | Action | Board |
+| --- | --- | --- | --- |
+| Trial | The hypothesis in the agent's words; the outcome tag (Measuring, Kept, Within noise, Worse, Guardrail failed, Failed holdout, Rejected, Failed); value against what it started from and the change in percent; what it started from ("Started from trial 11"); commits and files changed, per repo; guardrail values. A trial being measured shows Measuring and a line that the result arrives here. Holdout shows only as an outcome, never a value. A Rejected trial says "Changed a protected path" | Expand | `SessionWorking`, `SessionNoWin` |
+| Spawned session | Agent, platform, status, its best so far | Open (opens that session as its own Session page, a person can talk to it) | `SessionWorking`, `SessionSpawned` |
+| Win | The receipt in short (contract version, repeats, noise, trials tried, holdout passed, spend), the second opinion line, "Open pull request". A second opinion flag is shown, never hidden | "Open pull request" (asks, by policy), "View receipt" | `SessionWin` |
+| Pull request | One row per repo, the state (Open, Checks running, Checks failed, Approved, Merged, Closed), and review comments and CI failures arriving as lines under it; a rebase says it is being measured again before the receipt is updated | Open on the host | `SessionDelivered` |
+| Regression | The contract, the value now against the delivered value, the noise band | "Start session" | `SessionRegression` |
+| Failure | One calm line: what happened and what to do ("The session failed on PLATFORM. Open the platform's log, or start again.") | "Start again" | `SessionFailed` |
+
+A card for an outcome of no win (`SessionNoWin`) is a Trial card with its tag and the scoreboard unchanged; there is no separate "lost" card.
+
+### Home and New session
+
+New session is a composer on the home page, not a dialog and not a form. Home (`Home`) shows one text box and three chips: Repos, Agent, Environment. Nothing else is asked before the first message. Below the box:
+
+- **Waiting for you.** The sessions that need a person, a ListPage section: each row has the title, the card it waits on ("Raise budget") and its age; it opens the session with the card in view. Empty: the section is absent, not an empty box.
+- **Suggestions** under the box come from the attached repos' contracts ("Cut checkout p95 latency" where a contract exists). A suggestion fills the text box. With no contract there are no suggestions: never a canned feature tour.
+
+With no sessions at all (`HomeEmpty`) the page is the composer alone and the sidebar is `SidebarEmpty`. A sidebar row's status icon updates live.
+
+When a contract exists and the budget allows, nothing asks anything: a person types "cut checkout p95" and the agent starts.
+
+### Contracts
+
+**List** (`Contracts`, a ListPage). Each contract: its metric, baseline to best, state (Sealed, Watching, Regressed) with word and icon, and last activity. Search and sort by last activity or best. A sealed contract is never edited; "New version" is on its page. Empty (`ContractsEmpty`): "No contracts yet." with "Start a session", because a contract begins in a chat.
+
+**Contract page** (`ContractDetail`, a DetailPage). Back to Contracts. A title with its state and version. Sections of rows and quiet tables:
+
+- Definition: Metric and direction, Evaluation command, Protected paths per repo, Guardrails, Repeats, Acceptance criteria in one sentence. Immutable: "Sealed contracts never change. A change makes a new version, and numbers do not carry across versions."
+- Seal checks: the baseline, the noise check, the cheat checks, as they were when sealed.
+- Data: the evaluation data and the holdout, the holdout marked "Restricted to the judge".
+- Scoreboard: the chart of every trial across all sessions, with one line per session, and the numbers.
+- Trials: a table of every trial across all sessions, with hypothesis, outcome, value, session and what it started from. Failures are included. A row opens its session at that trial.
+- Wins and their pull requests, each linking to its receipt.
+- Watch: the switch and its trigger (on a schedule, when the default branch moves), and the last measurement.
+- Versions: each version with its seal date; numbers are never compared across them.
+- Delivered, Pending and Return appear here only when the contract states a value per unit.
+
+**Receipt** (`Receipt`, a DetailPage). One win: the contract version and seal, the commits per repo, the values, repeats and noise, the number of trials tried, the holdout result (Passed or Failed, never a value), the second opinion with its notes, what was spent, and "Signed by the judge". Below it the lineage: what each trial started from, as a chain from the baseline to the win, each node a link to its trial.
 
 ### Global search
 
-A centred palette opened from the sidebar, the top bar, Cmd/Ctrl+K or "/". Scopes: All, Experiments, Projects, Datasets, Customize, Runs, People. With no query it shows Needs attention, Recents and Actions. Results are grouped by kind with the match highlighted, and each opens the exact place: a trial opens its thread with that trial expanded. The footer shows only keys that work.
+A centred palette (`Search`, `SearchEmpty`) opened from the sidebar, Cmd/Ctrl+K or "/". Scopes: All, Sessions, Contracts, Trials, People. With no query it shows Waiting for you, Recents and Actions. Results are grouped by kind with the match highlighted, and each opens the exact place: a trial opens its session with that trial in view. The footer shows only keys that work.
 
 ### Settings
 
-Settings is a dialog, not a page. It opens from the user menu, More, or a Settings result or action in search. It is a large centred dialog with a left rail and a search field. The first Esc clears the rail search. The rail is grouped by whose setting it is, with a hairline between groups: **You** (Profile, Appearance, Access tokens, and in the web app This device) and **Organization** (General, Users and groups, Single sign-on, Infrastructure, Budgets, Notes, Audit logs). It reopens on the section you used last. The rail search filters sections and rows by title, description and keywords, and opens the first section that matches.
+Settings is a dialog, not a page. It opens from the user menu or a Settings result or action in search. It is a large centred dialog with a left rail (`SettingsRail`) and a search field. The first Esc clears the rail search. The rail is grouped by whose setting it is, with a hairline between groups: **You** (Profile, Appearance, Access tokens, This device) and **Organization** (General, Members, Single sign-on, Agent platforms, Approvals, Budgets, Connections, Audit log). It reopens on the section you used last. The rail search filters sections and rows by title, description and keywords, and opens the first section that matches.
 
-- General shows the deployment (Ratchet cloud or Self-hosted) and the server address.
-- Infrastructure (heading "Infrastructure") has three sections: Agent platforms, Environments and Credentials. Agent platforms is a quiet table of Claude Managed Agents, AWS AgentCore, the OpenAI Agents API, Microsoft Foundry Agent Service and Google Agent Runtime: the account, the agents on it, a status (Connected, Needs attention when its credential is rejected), and one platform badged Measuring platform. Row actions are Test connection, Update credential and Remove; an "Add platform" button adds one. Environments lists each one with its platform, image, size and use (Evaluator or Agents). Credentials lists the connector credentials registered once, with where each is kept. Self-hosted, owners manage all of it and others see it read-only. On Ratchet cloud the page is read-only for everyone: Ratchet manages the platform accounts and bills at cost through each run's budget, and the page shows data and retention per platform (for example "United States only, no zero data retention"). The Mac app has no machine section.
-- **A setting is a row.** The title with a one-line muted description under it on the left, the control on the right (switch, select, segmented control, field, button), and a hairline between rows. A sub-setting is indented under its parent and is disabled while the parent is off. A section can have several headed groups. A list inside Settings (users, groups, access tokens, per-experiment budgets, audit logs) is a quiet table: column headers, an icon or avatar and name with a muted second line, a tag for a kind, an icon and word for a status. No cards inside cards.
-- **Organization settings are read-only for non-owners, not hidden.** Owners change them. Editors and viewers see the same section with its controls disabled, a one-line explanation ("Only owners can change roles. You can read them.") and a lock beside the section in the rail. Notes can be added by editors and owners. An organization always keeps at least one owner. The theme is one setting with two places to change it: Appearance, and the quick switch in the user menu.
+Settings are for reading and revoking what was approved. They are not where setup begins. Two things are still set up here, because no session can start without them: agent platforms (self-hosted) and members and sign-in.
+
+What each section shows:
+
+- **Profile** (`SettingsProfile`): name, email, sign-in provider, role. **Appearance** (`SettingsAppearance`): theme, light, dark or system. **Access tokens** (`SettingsTokens`, `SettingsTokensEmpty`): a quiet table of your tokens with scope and last used, Create access token, Revoke; a new token is shown once. **This device** (`SettingsDevice`): Install app, notifications for this device, the server address; installed web app only where it applies.
+- **General** (`SettingsGeneral`): the organization name, the deployment (Ratchet cloud or Self-hosted) and the server address.
+- **Members** (`SettingsMembers`): users and service principals as a quiet table with role (Owner, Editor, Viewer) and status; invite, change role, remove. An organization always keeps at least one owner.
+- **Single sign-on** (`SettingsSso`): OpenID Connect and GitHub, each with its status and the domains it admits. No passwords.
+- **Agent platforms** (`SettingsPlatforms`, `SettingsPlatformsEmpty`, `SettingsPlatformsManaged`, `AddPlatform`, `PlatformError`): a quiet table of Claude Managed Agents, AWS AgentCore, the OpenAI Agents API, Microsoft Foundry Agent Service and Google Agent Runtime: the account, the agents on it, a status (Connected, Needs attention when its credential is rejected), and one platform badged "Judge platform". Row actions are Test connection, Update credential and Remove; an "Add platform" button adds one. Environments and connector credentials are listed under Connections, not here. Self-hosted, owners manage all of it and others see it read-only. On Ratchet cloud the section is read-only for everyone (`SettingsPlatformsManaged`): Ratchet manages the platform accounts and bills at cost through each session's budget, and the section shows data and retention per platform (for example "United States only, no zero data retention"). A rejected credential is `PlatformError`: the row says Needs attention and what to do.
+- **Approvals** (`SettingsApprovals`): one row per card kind with its policy: Always ask, Allow up to a limit, or Allow. Defaults: Seal contract asks; Raise budget asks above a standing allowance per session; Attach repo asks; Change environment asks; Open pull request asks. Add credential always asks and shows no choice: a person must type the value. Which role may approve which card is read here.
+- **Budgets** (`SettingsBudgets`): the standing allowance per session, the monthly cap and spent this month, and a quiet table of sessions by spend.
+- **Connections** (`SettingsConnections`): what was approved in chats, in three groups: Repos, Credentials (names and where each is kept, never values) and Environments. Each row says who added it, when and how many sessions use it, and has Revoke. Connector credentials are read-only and kept in the platform's credential store.
+- **Audit log** (`SettingsAudit`): the tool calls that changed something and the approvals: who, what, when, the outcome, as a quiet table with a filter. Never empty: signing in is the first entry.
+
+Read-only is `SettingsReadOnly`.
+
+- **A setting is a row.** The title with a one-line muted description under it on the left, the control on the right (switch, select, segmented control, field, button), and a hairline between rows. A sub-setting is indented under its parent and is disabled while the parent is off. A section can have several headed groups. A list inside Settings (members, access tokens, connections, audit log) is a quiet table: column headers, an icon or avatar and name with a muted second line, a tag for a kind, an icon and word for a status. No cards inside cards.
+- **Organization settings are read-only for non-owners, not hidden.** Owners change them. Editors and viewers see the same section with its controls disabled, a one-line explanation ("Only owners can change this. You can read it.") and a lock beside the section in the rail. Revoking a connection is an owner action.
 - **Narrow screens.** Below 720px the dialog is full-screen and the rail becomes a search field with a select of sections.
 
 ### Reuse the patterns
 
-One detail-page layout, one popover, one palette and one dialog. A new kind of thing under Customize uses them; it does not get its own page style. Menus and popovers close on an outside click. Every menu item is a `.mi`, every select uses the `.selw` wrapper, and every control has a disabled style.
+One detail-page layout, one popover, one palette and one dialog. A new kind of thing uses them; it does not get its own page style. Menus and popovers close on an outside click. Every menu item is a `.mi`, every select uses the `.selw` wrapper, and every control has a disabled style. A new card kind reuses the card frame: title, what would happen, what it may cost, two buttons.
 
 ## Rules for every page
 
 - **One set of page states.** Every page uses the same six: loading, empty, failed, refused, partial, not checked. Each says what happened and what to do, in a sentence. Failure is never drawn as empty or zero, and something not checked is never drawn as healthy.
-- **The holdout is marked.** A holdout dataset always shows as "Restricted to evaluator" and cannot be granted to agents. The grant control is absent for it, not disabled. The copy says it is enforced by the credentials: an agent's credential leaves it out and only the evaluator's includes it. A skill, a plugin or a connector never changes that. (target: datasets and grants are not built yet.) It has its own board, because the screen looks different.
-- **A new experiment is a short declaration.** The user states the goal and limits, then picks context and infrastructure that already exist. Setting those up happens elsewhere, once, under Customize. (target. Today New optimization is a wizard over repository, benchmark template, agents and AWS.)
-- **A command that spends or changes things shows what it would do first.** Confirm after the preview, never before. In the app that is Draft, then Approve: the draft shows what would run and what it may cost, and nothing is created until Approve. A destructive step such as Stop run confirms inline.
-- **A control says exactly what it does.** A control that does nothing is deleted. A footer or menu lists only keys and actions that work.
+- **The holdout is marked.** A holdout always shows as "Restricted to the judge". An agent never holds the holdout credential and never sees a holdout value, only the outcome ("Kept", "Failed holdout"). No control grants it to an agent: the control is absent, not disabled. The copy says it is enforced by the credentials: an agent's credential leaves it out and only the judge sandbox's includes it. Chat never changes it. (target: contracts are not built yet.) It has its own board, because the screen looks different.
+- **Setup happens in the chat, as a card.** Nobody visits a settings page before the first message. A person states a goal; when the agent needs a repo, a credential, an environment, a budget or a contract, a card appears at that moment.
+- **A card shows what would happen and what it may cost before Approve.** Confirm after the preview, never before. Nothing is created or spent until a person decides. A destructive step such as Stop session confirms inline.
+- **Nothing is asked when policy already allows it.** A pre-approved card collapses at once to "Allowed by policy". Add credential is never pre-approved.
+- **Only the judge's numbers are shown as results.** A number made in a session is never drawn as a result.
+- **A control says exactly what it does.** "Seal contract", not "Approve"; "Stop session", not "OK". A control that does nothing is deleted. A footer or menu lists only keys and actions that work.
 - **Same in every client.** If the web app, the macOS app, the CLI and MCP disagree about state or words, one is wrong.
-- **Status is never colour alone.** Every status and outcome has a word, and a status has its own icon shape.
+- **Status is never colour alone.** Every status and outcome has a word. A session status has its own icon shape: Working, Waiting for you, Done, Failed. A trial outcome is a word in a tag: Measuring, Kept, Within noise, Worse, Guardrail failed, Failed holdout, Rejected, Failed.
 
 ### Empty states
 
-One sentence and at most one action, no feature explanation. A list gets its own board only because the screen looks different. The sidebar is `SidebarEmpty` only when the organization has nothing at all. A count that is zero stays on screen (the Dashboard shows `$0`, `0×`), never hidden.
+One sentence and at most one action, no feature explanation. A list gets its own board only because the screen looks different. The sidebar is `SidebarEmpty` only when the organization has no session and no contract. A count that is zero stays on screen (spend `$0`, `0 kept`), never hidden.
 
 | Screen | Empty when | Sentence | The one action | Board |
 | --- | --- | --- | --- | --- |
-| Projects | no project or experiment in the organization | No experiments yet. | New experiment | `HomeEmpty` |
-| Project | the project has no experiment | No experiments in this project yet. | New experiment (header) | `ProjectEmpty` |
-| Dashboard | no win yet; tiles show zeros and spend | No wins yet. | New experiment | `DashboardEmpty` |
-| Run history, Trials (Sessions the same) | nothing has run | No trials yet. | New experiment | `RunHistoryEmpty` |
-| Evaluations, Skills, Agents | none added | No evaluations / skills / agents yet. | Add evaluation / skill / agent | `EvaluationsEmpty`, `SkillsEmpty`, `AgentsEmpty` |
-| Plugins, Yours | none installed | No plugins installed. | Add plugin | `PluginsEmpty` |
-| Connectors | none added | No connectors yet. | Add connector | `ConnectorsEmpty` |
+| Home | no session in the organization | No sessions yet. | none; the composer is the action | `HomeEmpty` |
+| Sidebar | no session and no contract | Sessions you start appear here. | none | `SidebarEmpty` |
+| Contracts | no contract sealed | No contracts yet. | Start a session | `ContractsEmpty` |
 | Search | no match | No results for “query”. | none | `SearchEmpty` |
 | Settings, Access tokens | you made none | No access tokens yet. | Create access token (row above) | `SettingsTokensEmpty` |
-| Settings, Notes | no note | No notes yet. | Add note (row above) | `SettingsNotesEmpty` |
-| Settings, Infrastructure | self-hosted, no platform added | No agent platform is added yet. | Add platform | `InfrastructureEmpty` |
+| Settings, Agent platforms | self-hosted, none added | No agent platform is added yet. | Add platform | `SettingsPlatformsEmpty` |
 
-Never empty, so no board: Users and groups (you are in it, and one owner always remains), Audit logs (signing in is the first entry), Budgets, General and Single sign-on (settings rows, not lists), a thread (it starts as a Draft).
+Never empty, so no board: Members (you are in it, and one owner always remains), Audit log (signing in is the first entry), Approvals, Budgets, General, Profile, Appearance and Single sign-on (settings rows, not lists), a session (it starts with the composer). Connections is empty until the first card is approved: its row reads "Nothing approved yet." and has no action, and it shares `SettingsConnections` rather than its own board. A contract with no trials or no wins says "No trials yet." or "No wins yet." inside its section, with no board.
 
 ## Colour and type
 
@@ -100,32 +176,23 @@ Midnight Brass. The values are in `design/tokens.toml`; these are the rules.
 - Text meets 4.5:1 in both modes. A control's outline meets 3:1, so a control uses `line2`, not the `line` divider.
 - Status is never colour alone: a word or a shape comes with it.
 - Light and dark are both designed. A change is checked in both, and a board is drawn light, its dark twin generated.
-- The basics keep one colour each in diagrams and navigation: optimization brass, context green, infrastructure blue, organization slate (target; slate is not a token until it is added to `tokens.toml` with a contrast check). Never use these colours for anything else, and never rely on colour alone to say which area a thing belongs to.
+- The areas keep one colour each in diagrams and navigation: the judge is brass, sessions are blue, the organization is slate (target; slate is not a token until it is added to `tokens.toml` with a contrast check). Green is the success state only (Kept, Done, Connected), never an area. Never use these colours for anything else, and never rely on colour alone to say which area a thing belongs to.
 - Tokens are named by meaning (`canvas`, `raised`, `line2`, `ink`, `accent`), and light mode redefines the same names. Never write a raw colour, radius, size or duration in a screen or a board. Type comes from the type classes, never an inline size.
 
 ## Clients
 
-The web app and the macOS app (target) share behaviour, words and element ids, never pixels. The macOS app is SwiftUI, and macOS only; on Windows and Linux the web app installed as a progressive web app is the desktop app. If the two disagree about state or words, one is wrong.
+The web app and the macOS app (target) share behaviour, words and element ids, never pixels. The clients are the web app, the web app installed on Windows and Linux, the `ratchet` CLI and `ratchet mcp`. `ratchet "cut checkout p95"` opens the same session in the terminal (target). The CLI and MCP print the same words and the same cards, as text. If any two disagree about state or words, one is wrong.
 
-What the Mac adds:
+The macOS app is SwiftUI, and macOS only; on Windows and Linux the web app installed as a progressive web app is the desktop app. The Mac app stays ruled in, but its boards are removed for now and are owed once the web direction is approved. When they return, its window chrome, menu bar item, native Settings window, native notifications and offline banner follow the same behaviour as this page. The Mac is only a client of the server's API. It runs no agents and no sandboxes.
 
-- Native window chrome: the title bar, toolbar and sidebar are the system's.
-- A menu bar item: the runs in progress, what needs attention, and Open Ratchet.
-- A native Settings window, with the same sections and rows as the web dialog.
-- Native notifications, for what needs attention.
-- Sign-in through the browser, never a password field in the app.
-- An offline banner: the app shows what it last knew, marked as not current, until the server is reachable again.
-
-What the installed web app adds, on Windows and Linux:
+What the installed web app adds, on Windows and Linux (`WebInstalled`, `WebNotification`, `WebOffline`):
 
 - Its own window and taskbar icon; the page is the same, with no browser toolbar.
 - Install is offered once, quietly: a row in Settings, This device ("Install app"), and the browser's own prompt. Never a banner over work. On macOS the row says "Get the Mac app" instead.
-- A badge on the icon: the count of experiments that need attention.
-- Push notifications for what needs attention, asked for at the moment it helps (after starting a run: "Notify me when this run finishes"), never on first load. Turned off in Settings, This device.
+- A badge on the icon: the count of sessions that are Waiting for you.
+- Push notifications for what needs attention (a win, Waiting for you, a regression, a budget spent), asked for at the moment it helps (after the first message: "Notify me when this session needs me"), never on first load. Turned off in Settings, This device.
 - An offline screen when the server cannot be reached: what was last known, marked as not current, and Try again. Nothing is cached beyond the app itself.
-
-The Mac is only a client of the server's API. It runs no agents and no sandboxes. "This machine" is deferred.
 
 ## Accessibility
 
-Targets, labels and focus are checked on the boards in both light and dark. Every control is reachable by keyboard, the focus ring uses a token, and every icon-only control has a label.
+Targets, labels and focus are checked on the boards in both light and dark. Every control is reachable by keyboard, the focus ring uses a token, and every icon-only control has a label. A streaming message is announced when it ends, not word by word; a card that needs a person is announced when it appears.
