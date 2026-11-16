@@ -19,7 +19,7 @@ The settled product, directed by the owner. Everything here is target; nothing i
 - Eight card kinds: Seal experiment, Raise budget, Add credential, Attach repo, Change environment, Open pull request, Keep going?, Continue on another agent?. Defaults, policy, Mode and who may approve are in [organization approvals](../organization/approvals.md).
 - Add credential always asks and can never be pre-approved: a person types the value into a secure form that goes straight to the platform's credential store.
 - Roles decide who may approve which card; a viewer approves nothing. The audit log lists tool calls that changed something and approvals.
-- Two things are set up in Settings because no experiment can run without them: agent platform accounts (self-hosted) and members and sign-in. Connectors and agents are registered once in Customize, and a chat can ask for the same thing with an Add credential card, so nothing waits on it.
+- Two things are set up in Settings because no experiment can run without them: agent platform accounts (self-hosted, later) and members and sign-in. Connectors and agents are registered once in Customize, and a chat can ask for the same thing with an Add credential card, so nothing waits on it.
 
 ## The judge
 
@@ -79,7 +79,7 @@ Beside trust: cost control, no tie to one model provider, and Return for the org
 
 ## Offerings, platforms and vendor facts
 
-- **Two offerings, one core.** Self-hosted ships first and Ratchet cloud follows (see First release below). Self-hosted: Docker Compose (server and Postgres) using agent platform accounts the customer has. Ratchet cloud: we host the server and run every session on Ratchet's platform accounts, billed at cost through the budget.
+- **Two offerings, one core.** Ratchet cloud ships first and self-hosted follows (see First release below). Ratchet cloud: we host the server and run every session on Ratchet's platform accounts. Self-hosted: Docker Compose (server and Postgres) using agent platform accounts the customer has. The core builds for both from the first commit, so self-hosted needs a shell and a store, not a redesign.
 - **Ratchet runs no sandboxes for agents. Agent platforms do:** Claude Managed Agents, AWS AgentCore, the OpenAI Agents API, Microsoft Foundry Agent Service and Google Agent Runtime, each behind one agent trait with one adapter (start a session, send input, read events, stop and delete it). Foundry and Google run a container image Ratchet supplies, one per agent.
 - **An agent is a model on a platform:** Claude on Claude Managed Agents, Codex on the OpenAI Agents API, Gemini or Grok on AgentCore, GitHub Copilot on Foundry, Gemini (ADK) on Google Agent Runtime.
 - **Build order.** The traits are designed against all five from the start. Adapters ship: AgentCore (agents and the judge sandbox), then Claude Managed Agents, the OpenAI Agents API, Foundry Agent Service and Google Agent Runtime.
@@ -100,6 +100,11 @@ Ratchet is licensed under the Functional Source License, FSL-1.1-ALv2: the sourc
 - **Storage.** Self-hosted uses Postgres 18. Ratchet cloud uses one SQLite database per organization inside one Cloudflare Durable Object, pinnable to the EU, the US or FedRAMP. Moving between them is an export and import of one neutral file format.
 - **One core, two shells.** `ratchet-core` holds all logic and compiles natively and to WebAssembly; storage sits behind one trait. `ratchet-server` and `ratchet-cloud` are the shells. See [stack](../stack/SKILL.md).
 - **We manage everything.** An organization signs in, attaches repos and starts, and runs no infrastructure.
+- **Invite only, no billing at first.** Organizations join by invitation as design partners. Ratchet pays for their platform spend, under a hard monthly cap per organization that the budget meter enforces, and alerts the owner on Ratchet's own total spend. Billing at cost through the budget, with a payment provider, comes after the first release.
+- **US first.** Organizations are created in the US jurisdiction. The EU follows, then FedRAMP; the Durable Object namespace per jurisdiction is designed in from the start.
+- **Models on Bedrock first.** The first cut runs only models AgentCore reaches through Amazon Bedrock, Claude first, so no model key ever enters a sandbox. "No tie to one model provider" is met by more Bedrock models and then the other adapters, not in the first cut.
+- **GitHub first.** Sign-in is GitHub and Google; repos come from GitHub only, through a GitHub App. Other code hosts follow.
+- **A handful of design partners.** Three to five organizations at launch, each with a named contact and a Speed experiment that fits a sandbox with no connectors. More join only when the first release is steady.
 - **Ratchet's platform credentials** sit in Cloudflare's Secrets Store, bound to the Worker, never in an organization's database, a response or a log.
 - **We are a data processor** for every Ratchet cloud organization: a data processing agreement, listed subprocessors (Cloudflare and the agent platforms in use) and a stated retention rule. Ratchet keeps no tool output, file contents or diffs. Each platform's retention and residency is stated beside it: the vendors promise only where data is stored at rest, and the OpenAI Agents API offers United States residency only and no zero data retention.
 
@@ -127,13 +132,19 @@ OpenID Connect plus GitHub's OAuth, no passwords. Ratchet cloud offers GitHub (O
 | 16 Nov 2026 | The spike measures noise on each judge platform. |
 | 16 Nov 2026 | Paired measurement; the bar is a lower confidence bound above zero at 1 − 0.05/k. |
 | 16 Nov 2026 | AgentCore is the first adapter, for agents and the judge. |
-| 16 Nov 2026 | A thin first release: self-hosted, AgentCore, the web app, Speed, and `ratchet mcp`. |
+| 16 Nov 2026 | A thin first release: self-hosted, AgentCore, the web app, Speed, and `ratchet mcp`. Replaced the same day by cloud first. |
 | 16 Nov 2026 | The licence is the Functional Source License (FSL-1.1-ALv2). |
 | 16 Nov 2026 | Cumulative trials at patience, so small gains add up. |
 | 16 Nov 2026 | Watch is paired: the delivered commit against the current head. |
 | 16 Nov 2026 | Holdout as an oracle: read-only judge credential, a sealed cap on holdout checks, a holdout look-alike cheat. |
 | 16 Nov 2026 | Prompt injection is assumed; the session threat model is written. |
 | 16 Nov 2026 | Delivered is labelled "measured offline" until production scoring is decided. |
+| 16 Nov 2026 | Cloud first: the first release is Ratchet cloud; self-hosted follows. |
+| 16 Nov 2026 | Invite only with no billing at first; Ratchet pays under a hard cap per organization. |
+| 16 Nov 2026 | US jurisdiction first, then the EU. |
+| 16 Nov 2026 | Models on Bedrock only in the first cut, Claude first. |
+| 16 Nov 2026 | GitHub is the only code host in the first cut. |
+| 16 Nov 2026 | Three to five design partners at launch. |
 
 Decided calls also appear on the Decisions board.
 
@@ -149,11 +160,13 @@ The spike also answers:
 - **The agent image.** AgentCore runs a container Ratchet supplies, so Ratchet packages the coding agent itself. What goes in it and who maintains it.
 - **Usage timing.** Whether each platform reports usage fast enough for the budget meter to stop spend on time.
 - **Quotas.** Platform and model limits on concurrent sessions, and what happens when one is hit.
+- **One branch per session.** A GitHub App installation token can push to any branch of a repo, not just the session's. Show that pushes can be held to the session's branch (for example a ruleset on a `ratchet/*` prefix, or a push relay that checks the ref), or change the design.
+- **The deployed cloud test.** On a separate Cloudflare account: cold starts with migrations, hibernation, point-in-time restore, real CPU and subrequest limits, `SQLITE_FULL`, idle stream timeouts and throughput per object.
 - **Pair interference.** Whether warm caches, shared state or migrations leak between the two sides of a pair, and whether an ABBA order is enough.
 
 ## First release
 
-Self-hosted with AgentCore, the web app and `ratchet mcp`, one evaluation kind (Speed) with no connectors: seal, measure, Kept, receipt, deliver, budget, approvals and the audit log. Then, in this order unless the owner says otherwise: Ratchet cloud, the other adapters, connectors and the other evaluation kinds, plugins, value models with Return, Ideas and Report, and the Mac app. Their fields stay in the sealed definition and the store from the start, so nothing is redesigned.
+Ratchet cloud, invite only, in the US jurisdiction, with AgentCore and models on Bedrock, GitHub sign-in and repos (and Google sign-in), the web app and `ratchet mcp`, one evaluation kind (Speed) with no connectors: seal, measure, Kept, receipt, deliver, budget, approvals and the audit log, for three to five design partners. Before the first partner: the push scan and second opinion from the threat model, a data processing agreement, the subprocessor list (Cloudflare, AWS, Anthropic through Bedrock), a retention and deletion rule, per-organization caps and spend alerts. Then, in this order unless the owner says otherwise: billing, the EU jurisdiction, self-hosted (Postgres and Docker Compose), the other adapters, connectors and the other evaluation kinds, plugins, value models with Return, Ideas and Report, and the Mac app. Their fields stay in the sealed definition and the store from the start, so nothing is redesigned.
 
 A `ratchet mcp` connection works inside a session in the experiment, named by its agent, with no platform sandbox. Its trial commits are pushed to that session's branch with a short-lived git token minted for the session, and are measured only in a judge sandbox.
 
@@ -165,7 +178,7 @@ A `ratchet mcp` connection works inside a session in the experiment, named by it
 - Whether every trial in the version, from every session and including quick-check stops, should count in k. Spawned sessions raise the bar for all.
 - How experiments on the same code interact: overlapping changes, a default branch that moves mid-experiment, one win making another's baseline stale. Today only delivery rebases.
 - How a secret pasted into the chat is caught before the conversation is stored.
-- Who holds the judge's signing key when self-hosted, how it rotates, and what "Signed by the judge" proves to someone outside the organization.
+- Who holds the judge's signing key when self-hosted (on Ratchet cloud it is Ratchet's, in the Secrets Store), how it rotates, and what "Signed by the judge" proves to someone outside the organization.
 - The seal is the hardest step and seal checks catch only a trivially broken evaluation. How the product helps a team that has no benchmark.
 - How time to merge is shown and eased, since value counts only after a merge.
 - What the second opinion costs per win, and its data path: the diff goes to a second provider.
