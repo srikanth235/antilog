@@ -41,6 +41,8 @@ Do not add a dependency for convenience. A new one is a product call: ask the ow
 | Receipt signing (ed25519), token and session hashes, constant-time compare (pure Rust) | `ed25519-dalek` / `sha2` / `subtle` | 3.0.0 / 0.11.1 / 2.6.1 |
 | Embedded web app | `rust-embed` | 8.14.0 |
 | AWS credentials (workload identity through the default chain) | `aws-config` | 1.13.2 |
+| Server on Lambda: serves the axum `Router` / runs the handler | `lambda_http` / `lambda_runtime` | 1.3.2 / 1.5.0 |
+| Timer adapter on AWS (one-off wake-ups) | `aws-sdk-scheduler` | 1.122.0 |
 | AgentCore adapter (data plane / control plane) | `aws-sdk-bedrockagentcore` / `aws-sdk-bedrockagentcorecontrol` | 1.86.0 / 1.101.0 |
 | Kubernetes sandbox adapter | `kube` / `k8s-openapi` | 5.1.0 / 0.29.0 |
 | Google Agent Runtime adapter (when a GCP client signs) | `google-cloud-aiplatform-v1` | 1.19.0 |
@@ -101,9 +103,10 @@ A proposal, not yet built. The app is SwiftUI and macOS only; Windows and Linux 
 | Tool | Version |
 | --- | --- |
 | `cargo-chef` (Docker builds) | 0.1.78 |
+| `cargo-lambda` (builds and invokes the Lambda binary) | 1.9.2 |
 | Helm (the chart) | pinned when the chart lands (target) |
 | OpenTofu (one module per cloud) | pinned when the first module lands (target) |
-| k3s (demos, and the chart's install test in CI) | pinned when the chart lands (target) |
+| k3s (the chart's install test in CI) | pinned when the chart lands (target) |
 | cosign | 3.1.4 |
 | syft | 1.57.1 |
 

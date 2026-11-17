@@ -26,11 +26,20 @@ Fix the code, not the check. Never add `#[allow]` or loosen a lint to get green.
 One Cargo workspace, versions in [libraries.md](../libraries.md):
 
 - `ratchet-core`: all logic. The acceptance criteria (one pure function), the judge's queue, the budget meter, approvals and policy, permissions, the audit log and the API routes as an axum `Router`. It asks storage by name through one `Store` trait and never writes SQL. It orchestrates and records and **never connects to customer data**.
-- `ratchet-server`: the one server, for Ratchet cloud and self-hosted alike. tokio and axum's server, the Postgres `Store` through `sqlx`, `NOTIFY` for live events, the job queue, object storage through `object_store`, the embedded web app. It reads each session's events from the agent platforms over HTTPS. It ships as a container image and a Helm chart ([../kubernetes/ratchet.md](../kubernetes/ratchet.md)).
+- `ratchet-server`: the one server, for Ratchet cloud and self-hosted alike, with two entry points over the same axum `Router`: a Lambda one through `lambda_http` (built with `cargo-lambda`, for pay-per-use) and a normal tokio listener (for Kubernetes). The Postgres `Store` through `sqlx`, the job queue, object storage through `object_store`, the embedded web app, and `NOTIFY` for live events on Kubernetes only. It reads each session's events from the agent platforms over HTTPS. It ships as one container image and a Helm chart ([../kubernetes/ratchet.md](../kubernetes/ratchet.md)). It is a native Linux binary, not WebAssembly, so tokio, sqlx, rustls and the AWS SDK all work.
 - The platform adapters, each in its own crate: AgentCore first (the AWS SDK's `aws-sdk-bedrockagentcore` and `aws-sdk-bedrockagentcorecontrol`), then the Kubernetes sandbox adapter (`kube`), then Foundry (its REST API with `azure_core` for sign-in, since Azure has no Rust agents crate) and Google Agent Runtime (`google-cloud-aiplatform-v1`).
 - `ratchet`: the CLI and the MCP server, built on the API's generated types.
 
 Shared types (the API's request and response types, ids, states) live in a library crate that all of them use. No gRPC, no Redis: the queue lives in Postgres ([../postgres/ratchet.md](../postgres/ratchet.md)). Every agent platform is one adapter behind the platform trait; the core does not change for a new one, and depends on none of them. All connections go out over HTTPS.
+
+### Two ways to run, one set of rules (target)
+
+Scale-to-zero (Lambda on AWS; Cloud Run on GCP and Container Apps on Azure when a client needs them) freezes the process between requests. The core obeys these rules in both setups, so it never knows which one it is in:
+
+- **Nothing runs after a response is sent.** No spawned tokio task, in-process timer or background loop outlives its request. Work that must happen later is a row in Postgres plus a wake-up.
+- **Timers sit behind a trait.** Due jobs stay rows in Postgres. The Lambda adapter books each due time as a one-off wake-up with the cloud's scheduler (EventBridge Scheduler through `aws-sdk-scheduler`); the Kubernetes adapter runs the timer in the process. One adapter per cloud, and the core gets timers only through the trait. Wake-ups are at least once, so job handlers stay idempotent.
+- **An invocation is at most 15 minutes.** Long work (relaying a session's events, waiting on a measurement or a watch) runs as resumable steps of about 10 minutes, each saving the platform's event cursor and booking its next wake-up. Agent sessions and judge runs run on AgentCore, never in the server. Lambda durable functions are not used: their SDK is TypeScript and Python only.
+- **Event streams end before the cap.** The browser reconnects with `Last-Event-ID` and the stream replays from the events table. See [../../change/live-event.md](../../change/live-event.md).
 
 ### The core stays clean
 

@@ -7,7 +7,7 @@ A platform job is work the server does on an agent platform. There are two trait
 | Part | Rule |
 | --- | --- |
 | Queue | A row in the store (Postgres), queued by an action in the same transaction as the change that caused it. |
-| Worker | The server takes the job and calls the platform over HTTPS, through the trait. No platform calls the server: a `measure` call arrives on the session's event stream, which the server reads. |
+| Worker | The server takes the job and calls the platform over HTTPS, through the trait. On pay-per-use a scheduler wake-up invokes it (the timer trait); on Kubernetes a worker in the process polls. No platform calls the server: a `measure` call arrives on the session's event stream, which the server reads. |
 | Sent to the platform | Ids, the repos and branches, the agent definition, the environment id, limits, and references to credentials in the platform's credential store. Never a secret, never data. |
 | Result back | Ids, numbers, states, commit ids and spend. A diff, a transcript or a log is not a result: it is fetched from the platform when someone asks, and not stored. |
 | Idempotent | A job carries an id and a lease. Running it twice leaves one outcome, so a server that restarts can take it again. A session is found again by its session tag, not started twice. |
@@ -34,9 +34,10 @@ A platform job is work the server does on an agent platform. There are two trait
 2. Add the table or state it needs by [ledger-table.md](ledger-table.md), and the action that queues it by [write-action.md](write-action.md).
 3. Implement the handler behind the platform trait (see [session/add-platform.md](../session/add-platform.md)). Platform words stay in the adapter.
 4. Report progress as writes to the store, so the action layer publishes events. See [live-event.md](live-event.md).
-5. Tests: against the fake platform (the job is queued, taken, finished, and a lost lease is retaken without a second session); the shared platform test suite for every adapter, and the judge trait's own suite; a test that the payload and result carry no secret; a test that the server opens no connection to a connector; a test that no agent session is given the judge's credential.
+5. Make the handler resumable and idempotent: it saves its cursor, finishes inside about 10 minutes, and starts no work that outlives its response ([../stack/rust/ratchet.md](../stack/rust/ratchet.md)).
+6. Tests: against the fake platform (the job is queued, taken, finished, and a lost lease is retaken without a second session); the shared platform test suite for every adapter, and the judge trait's own suite; a test that the payload and result carry no secret; a test that the server opens no connection to a connector; a test that no agent session is given the judge's credential.
 
 ## How the server follows a session (target)
 
-- The server reads each session's events by streaming or polling the platform over HTTPS, whichever the adapter offers. Self-hosted servers behind a firewall work because every connection goes out.
+- The server reads each session's events by streaming or polling the platform over HTTPS, whichever the adapter offers. On pay-per-use this runs as resumable steps of about 10 minutes (a Lambda invocation ends at 15): each step saves the platform's event cursor, does nothing after it returns, and books the next wake-up with the timer trait. A handler that waits on a measurement or a watch is a step too, never a loop. Self-hosted servers behind a firewall work because every connection goes out.
 - A session whose events stop for a set time (a starting default of 5 minutes) is marked as needing attention. The server does not start a replacement on its own; it keeps enforcing caps and clean-up from what it knows.

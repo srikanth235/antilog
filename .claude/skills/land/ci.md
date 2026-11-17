@@ -19,6 +19,7 @@ One job per layer, each running the commands in [checks.md](checks.md). A pull r
 | api | the OpenAPI document and generated client are current |
 | storage | the storage suite against Postgres (a container); migrations from empty and from the last release |
 | deploy-config | `helm lint` and `helm template` per cloud, `tofu validate` per module, and an install of the chart on k3s with a smoke test |
+| lambda | `cargo lambda build --release --arm64`, then a local invoke with `cargo lambda watch` and `cargo lambda invoke` against a Postgres container |
 | web | typecheck, lint, tests |
 | macos-app | build and test the Swift app, on a macOS runner only |
 | platform | the platform test suite against the fake platform |

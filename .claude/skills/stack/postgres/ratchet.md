@@ -72,9 +72,10 @@ The queue is a table in Postgres. No Redis, no message bus, no cloud queue ([lib
   ```
 
 - **A claim is a lease.** A worker renews it while it works. A reaper puts jobs whose lease expired back to `queued` (counting the attempt), so a worker that dies does not hold a job forever. Jobs are therefore delivered **at least once**: the handler must be idempotent, keyed by the job id.
+- **Who wakes a worker depends on how the server runs.** On pay-per-use (Lambda) nothing polls: each due time books a one-off wake-up with the cloud's scheduler (EventBridge Scheduler on AWS), which invokes the server to claim what is due, and a process never waits between requests. On Kubernetes a worker polls in the process. Either way the claim below is the same query.
 - **The server takes its own jobs.** Jobs are platform jobs ([../../change/platform-job.md](../../change/platform-job.md)): a server process claims one and calls the agent platform over HTTPS. No platform calls the server. The claim is the same query, scoped to the organization. Results are ids, numbers and states, not customer data.
 - **Bounded and observable.** Cap attempts, record the last error (without secrets), move a job that keeps failing to a `failed` state with a reason, and expose queue depth and oldest-job age as metrics. Keep a partial index for the hot path: `create index on jobs (priority desc, created_at) where state = 'queued'`.
-- **Keep it small.** Autovacuum settings on the queue table are tightened because rows churn ([general/postgres-best-practices.md](general/postgres-best-practices.md)); finished jobs older than a retention period are moved or deleted in batches. `LISTEN/NOTIFY` may wake a worker sooner, but polling must still work if a notification is missed.
+- **Keep it small.** Autovacuum settings on the queue table are tightened because rows churn ([general/postgres-best-practices.md](general/postgres-best-practices.md)); finished jobs older than a retention period are moved or deleted in batches. On Kubernetes, `LISTEN/NOTIFY` may wake a worker sooner, but polling must still work if a notification is missed. `LISTEN/NOTIFY` is not used on Lambda, which holds no connection between requests.
 - **Use a transaction-scoped advisory lock** for singleton work (one scheduler, one reaper) rather than a dummy row.
 
 ## Tests
