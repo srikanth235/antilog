@@ -194,8 +194,8 @@ Every title is the card's name. A declined card reads "Declined by NAME · 14:02
 
 | Where | Words |
 | --- | --- |
-| Sign-in | "Continue with GitHub", "Continue with Google", "Continue with single sign-on"; "Sign-in refused."; "No access" ("This account has no access to HOST. Ask an owner to invite you."), "Use another account", "Sign out" |
-| Settings, Single sign-on | "Sign-in methods", "GitHub", "Google", "Your OpenID Connect provider" ("Only an owner sets it up."), "Stay signed in for" |
+| Sign-in | "Continue with GitHub", "Continue with Google", and on a self-hosted server "Continue with single sign-on"; "Sign-in refused."; "No access" ("This account has no access to HOST. Ask an owner to invite you."), "Use another account", "Sign out" |
+| Settings, Single sign-on | "Sign-in methods", "GitHub", "Google", "Your OpenID Connect provider" (self-hosted only; "Only an owner sets it up."), "Stay signed in for" |
 | Rail | "You": Profile, Appearance, Access tokens, This device. "Organization": General, Members, Single sign-on, Agent platforms, Approvals, Budgets, Connections, Audit log |
 | Agent platforms | "Claude Managed Agents", "AWS AgentCore", "OpenAI Agents API", "Microsoft Foundry Agent Service" ("Foundry Agent Service" where space is short), "Google Agent Runtime"; "Add platform", "Test connection", "Update credential", "Remove"; badge "Judge platform"; Connected, Needs attention; "Agents are in Customize"; "bench-std · AWS AgentCore · 4 vCPU, 16 GiB"; Antilog cloud "Managed by Antilog." and "Data and retention" |
 | Approvals | "Policy by card"; "Always ask", "Allow up to a limit", "Allow"; "Always asks. A person must type the value."; "Allow never pauses" |

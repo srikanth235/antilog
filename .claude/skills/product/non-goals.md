@@ -9,7 +9,7 @@ These are decided. Do not build them, propose them in passing, or leave a hook "
 - **No generic coding-agent chat without the judge.** Every session always has the Antilog tools. A chat that cannot measure is a product we do not need to build.
 - **A judge on a laptop.** Measuring never runs on a user's machine. A judge sandbox runs only on a judge platform, with no agent in it. Agents do not run on a Mac either: "This machine" is deferred (see [rulings](rulings.md)).
 - **Running sandboxes ourselves.** Antilog has no launcher, runner or sandbox backend. Agent platforms (Claude Managed Agents, AWS AgentCore, the OpenAI Agents API, Microsoft Foundry Agent Service, Google Agent Runtime) run every agent and every judge sandbox, behind their traits. Building our own sandbox layer would put us back in the business those platforms are in.
-- **Stored passwords or a built-in user database.** Sign-in is through an identity provider: OpenID Connect, plus GitHub's OAuth on Antilog cloud. We do not want to hold credentials worth stealing.
+- **Stored passwords or a built-in user database.** Sign-in is through an identity provider: OpenID Connect, plus GitHub's OAuth on Antilog cloud, which offers only GitHub and Google. We do not want to hold credentials worth stealing.
 - **A hosted third-party auth service.** Self-hosting must not depend on a vendor the administrator did not choose.
 - **A separate policy engine.** Roles are checked in the one action layer, and approval policy is a list of card kinds. A second place that decides who may do what is a second truth.
 - **Running the measurement in the browser.** A measurement runs in a judge sandbox, never in a page.

@@ -1,7 +1,7 @@
 ---
 name: organization
 description: >-
-  Who may approve what, and how is it recorded? Use for organizations, projects, members and roles (owner, editor, viewer, in the organization and per project), sign-in with OpenID Connect and GitHub, access tokens and service accounts, approvals and approval cards, policy (pre-approval), budgets and the monthly cap, the audit log, notifications, live events, permission checks, and adding a role, a sign-in provider or an audited action.
+  Who may approve what, and how is it recorded? Use for organizations, projects, members and roles (owner, editor, viewer, in the organization and per project), sign-in (GitHub and Google on Antilog cloud, the client's OpenID Connect provider when self-hosted), access tokens and service accounts, approvals and approval cards, policy (pre-approval), budgets and the monthly cap, the audit log, notifications, live events, permission checks, and adding a role, a sign-in provider or an audited action.
 ---
 
 # Organization
