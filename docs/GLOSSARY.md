@@ -115,7 +115,6 @@ Do not use these. This is the only list of retired words.
 | Thread | Experiment, or its session |
 | Note, as a feature | Talk to the agent |
 | Evaluator, evaluator sandbox | Judge, judge sandbox |
-| Ratchet, as the product name (renamed 17 Nov 2026; the domain was unavailable) | Antilog |
 | Measuring platform | Judge platform |
 | Optimization, context and infrastructure as "the three basics" | Experiment, session, judge, organization floor |
 | Stepper | Cards in the conversation |

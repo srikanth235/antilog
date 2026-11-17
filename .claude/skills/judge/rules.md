@@ -3,7 +3,7 @@
 - Count only the judge's numbers, because a number made in an agent's session is not a trusted measurement. It is never shown as a result.
 - Never give an agent the holdout credential, because an agent that sees the held-back data will fit it. Only the judge sandbox holds it.
 - Never change a sealed experiment, because a definition that can move is not a benchmark. A new version starts a new record, and numbers never carry across versions.
-- Never let a person or an agent mark a win, because a rule a person can override is not a ratchet. Only the acceptance criteria can, and they are one pure function in code.
+- Never let a person or an agent mark a win, because a win a person can override proves nothing. Only the acceptance criteria can, and they are one pure function in code.
 - Let chat change what an agent tries and never what counts, because the words in a conversation are not evidence.
 - Take protected files from the seal for every trial, never from the trial, because a trial that carries its own evaluation grades itself.
 - Let an agent read the evaluation's code and never change it, because reading helps it iterate and changing it changes the score.
