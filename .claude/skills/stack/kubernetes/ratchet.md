@@ -2,7 +2,7 @@
 
 (target) Nothing here is on this branch yet. This page says how Ratchet is packaged and deployed when it lands. Versions are in [libraries.md](../libraries.md).
 
-The one image runs two ways. Phase 1 Ratchet cloud runs it pay-per-use on Lambda and Aurora Serverless v2; this page is the other way, Kubernetes, for a client who needs steady traffic, whose contract requires it, or who self-hosts in phase 2. The server's two entry points and the rules that scale-to-zero forces are in [../rust/ratchet.md](../rust/ratchet.md).
+The one image runs two ways. Phase 1 Ratchet cloud runs it pay-per-use on Lambda and Aurora Serverless v2; this page is the other way, Kubernetes, for a client who needs steady traffic, whose contract requires it, or who self-hosts in phase 2. The server's two entry points and the rules that scale-to-zero forces are in [../rust/ratchet.md](../rust/ratchet.md); the pay-per-use setup on AWS is in [../aws/ratchet.md](../aws/ratchet.md).
 
 ## What gets built (target)
 

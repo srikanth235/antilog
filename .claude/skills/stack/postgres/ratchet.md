@@ -1,6 +1,6 @@
 # Postgres and SQL in Ratchet
 
-(target) Postgres is the only store, on Ratchet cloud (RDS, or in-cluster for demos) and self-hosted (RDS, Azure Database for PostgreSQL, Cloud SQL, or the client's own), reached through `sqlx` with the `postgres` feature. Queries live behind the `Store` trait in the Postgres store crate; the core never writes SQL. Nothing of it is on this branch. Versions are in [libraries.md](../libraries.md): Postgres 18, `sqlx` 0.9 (and `sqlx-cli`), `testcontainers` for tests.
+(target) Postgres is the only store, on Ratchet cloud (Aurora Serverless v2 at zero when pay-per-use, RDS on EKS; in-cluster only for local tests) and self-hosted (RDS, Azure Database for PostgreSQL, Cloud SQL, or the client's own), reached through `sqlx` with the `postgres` feature. Queries live behind the `Store` trait in the Postgres store crate; the core never writes SQL. Nothing of it is on this branch. Versions are in [libraries.md](../libraries.md): Postgres 18, `sqlx` 0.9 (and `sqlx-cli`), `testcontainers` for tests.
 
 ## Workflow and done criteria
 

@@ -41,6 +41,8 @@ Scale-to-zero (Lambda on AWS; Cloud Run on GCP and Container Apps on Azure when 
 - **An invocation is at most 15 minutes.** Long work (relaying a session's events, waiting on a measurement or a watch) runs as resumable steps of about 10 minutes, each saving the platform's event cursor and booking its next wake-up. Agent sessions and judge runs run on AgentCore, never in the server. Lambda durable functions are not used: their SDK is TypeScript and Python only.
 - **Event streams end before the cap.** The browser reconnects with `Last-Event-ID` and the stream replays from the events table. See [../../change/live-event.md](../../change/live-event.md).
 
+The AWS side of this (Lambda, Aurora, the scheduler) is in [../aws/ratchet.md](../aws/ratchet.md).
+
 ### The core stays clean
 
 - **`ratchet-core` never imports `sqlx`, a cloud SDK or an adapter crate.** Time, ids, storage and platforms come in through traits that the server implements, so the core is tested with doubles and fixed clocks.
