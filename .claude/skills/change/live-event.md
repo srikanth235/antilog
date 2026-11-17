@@ -4,13 +4,12 @@ Events tell a client that something changed so it can refetch. An event is not t
 
 ## How events work (target)
 
-- One stream from the server (`ratchet-server` self-hosted, the organization's Durable Object in the cloud), server-sent events, scoped to the signed-in member's organization. A client only receives events for what its role may read.
+- One stream from the server (`ratchet-server`), server-sent events, scoped to the signed-in member's organization. A client only receives events for what its role may read.
 - Each event has a kebab-case type, a sequence id and the JSON of the whole event.
 - The first message on a connection is `hello`. A client that reconnects sends `Last-Event-ID` and receives what it missed. If the server no longer has it, the first message is `resync` and the client refetches what it shows.
 - The action layer publishes the event after the write commits (see [write-action.md](write-action.md)). Reports of session state, messages and spend, read from the platforms' events, and a measurement arriving for a `measure` ticket, come in as writes, so they publish events the same way.
 - Events are rows. The action layer writes the event to an append-only table in the same transaction as the change. A stream replays from that table by `Last-Event-ID`. Rows older than the replay window are pruned; a client further behind gets `resync`. No Redis.
-- Self-hosted, `NOTIFY` wakes every server process, so any process can serve any client.
-- In the cloud the organization's Durable Object is the only writer and holds the open streams, so it publishes to them directly after the commit and needs no `NOTIFY`.
+- `NOTIFY` wakes every server process, so any process can serve any client.
 
 ## Adding an event (target)
 

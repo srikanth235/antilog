@@ -18,7 +18,7 @@ fi
 fail=0
 bad() { echo "pre-commit: $1" >&2; fail=1; }
 # Upstream text copied verbatim keeps its own style: house rules skip it.
-VENDORED='^\.claude/skills/stack/(web|cloudflare|security|mcp|playwright)/general/'
+VENDORED='^\.claude/skills/stack/(web|security|mcp|playwright)/general/'
 search() { # search <message> <regex> [house]: grep the files, text only
   list=$files
   [ "$3" = house ] && list=$(printf '%s\n' "$files" | grep -v -E "$VENDORED")
@@ -65,11 +65,6 @@ if printf '%s\n' "$files" | grep -q '^.claude/skills/stack/web/'; then
     || bad "web guides out of step: run python3 .claude/skills/stack/web/sync.py --check"
 fi
 
-# Cloudflare skills: the copy matches the lists in sync.py
-if printf '%s\n' "$files" | grep -q '^.claude/skills/stack/cloudflare/'; then
-  python3 .claude/skills/stack/cloudflare/sync.py --check >/dev/null 2>&1 \
-    || bad "cloudflare skills out of step: run python3 .claude/skills/stack/cloudflare/sync.py --check"
-fi
 
 # Security review skills: the copy matches the lists in sync.py
 if printf '%s\n' "$files" | grep -q '^.claude/skills/stack/security/'; then

@@ -69,6 +69,15 @@ Beside trust: cost control, no tie to one model provider, and Return for the org
 - **Auto picks the agent** with the best cost per win for this evaluation kind in this project, among the agents the organization turned on, and says why. Before there is data it uses the organization's default agent, set by an owner in Customize, Agents. A person can always pick a named agent, and no agent is preselected by brand.
 - **Cost views.** Cost per trial, an estimate on the Seal experiment card, Where the spend went, the agent scoreboard (measured on the customer's code, never a vendor benchmark), hand off, failover, compaction, Ideas and a monthly Report. See [session model](../session/model.md), [judge model](../judge/model.md) and [organization approvals](../organization/approvals.md).
 
+## Business model
+
+- **Services first, on our own platform.** Ratchet is sold as engagements: our engineers work inside a client's organization with Ratchet and deliver measured wins. Client engineers get their own roles as the engagement goes on and keep using Ratchet after it ends. The platform's job is to make each engagement cheaper than the last: time to first win, engineer-days per engagement and evaluations reused are tracked.
+- **Pricing.** A fixed fee per engagement, a capped success fee on verified wins, and a platform subscription once client engineers run it themselves. The success fee rests on the value model, which the client signs off on the Seal experiment card, so a dispute is settled before work starts.
+- **Named offers, sold broadly.** Engagements are sold as modernisation with proof, delivered through a few named offers with ready evaluations and value models (cost and latency, build and test time first). Evaluation kinds and connectors are built as paying engagements need them.
+- **Two phases.** Phase 1 is Ratchet cloud: we run it on our AWS account for early clients and pilots. Phase 2 is self-hosted in the client's own cloud account (AWS, Azure or GCP), which is what the Fortune 100 buy. Both run the same container images and Helm chart, so every phase 1 engagement tests what phase 2 ships. At least one Fortune 100 pilot, on a low-risk repo, runs in phase 1.
+- **Our staff across organizations.** Our engineers work in several client organizations at once: one sign-in reaches each organization they are members of, and every action is in that organization's audit log.
+- **Compute is rebilled.** Platform spend (tokens, sandboxes, judge time) is metered by the budget and appears on the client's invoice. Self-hosted, it is on the client's own cloud bill.
+
 ## The screen and the clients
 
 - **Frame and pages.** A fixed 256px sidebar and a main area; a New experiment composer with five chips (Project, Repos, Agent, Environment, Budget), not a dialog; an experiment page that is the chat of its lead session; Projects, a project page, Customize, an experiment detail page, a receipt page and Settings as a dialog. A new experiment starts Not sealed: the agent explores, measures the baseline and proposes a definition with `seal`, and it may stay Not sealed and end there. The composer follows Claude Code's, with a Mode per experiment (Ask or Follow policy; "Auto" names only the agent choice). A card is the only place structured output appears. See [design behaviour](../design/behaviour.md).
@@ -79,45 +88,44 @@ Beside trust: cost control, no tie to one model provider, and Return for the org
 
 ## Offerings, platforms and vendor facts
 
-- **Two offerings, one core.** Ratchet cloud ships first and self-hosted follows (see First release below). Ratchet cloud: we host the server and run every session on Ratchet's platform accounts. Self-hosted: Docker Compose (server and Postgres) using agent platform accounts the customer has. The core builds for both from the first commit, so self-hosted needs a shell and a store, not a redesign.
+- **Two offerings, one core.** Ratchet cloud (phase 1) and self-hosted (phase 2) run the same server, images and Helm chart on Kubernetes with Postgres. Ratchet cloud: we run it on our AWS account and every session runs on Ratchet's platform accounts. Self-hosted: the client runs it in its own AWS, Azure or GCP account, on its own platform accounts. Nothing is specific to one cloud except a thin infrastructure module per cloud; see Deployment below.
 - **Ratchet runs no sandboxes for agents. Agent platforms do:** Claude Managed Agents, AWS AgentCore, the OpenAI Agents API, Microsoft Foundry Agent Service and Google Agent Runtime, each behind one agent trait with one adapter (start a session, send input, read events, stop and delete it). Foundry and Google run a container image Ratchet supplies, one per agent.
 - **An agent is a model on a platform:** Claude on Claude Managed Agents, Codex on the OpenAI Agents API, Gemini or Grok on AgentCore, GitHub Copilot on Foundry, Gemini (ADK) on Google Agent Runtime.
-- **Build order.** The traits are designed against all five from the start. Adapters ship: AgentCore (agents and the judge sandbox), then Claude Managed Agents, the OpenAI Agents API, Foundry Agent Service and Google Agent Runtime.
-- **Where the judge sandbox runs:** on a platform that can run a command in a sandbox with no agent. AgentCore can. Google Agent Runtime is checked in the spike. Claude Managed Agents, the OpenAI Agents API and Foundry cannot; on Foundry the likely path is a judge image deployed as a hosted agent that runs no model.
+- **Build order.** The traits are designed against all five from the start. Adapters ship: AgentCore (agents and the judge sandbox), then a Kubernetes sandbox adapter, then Foundry Agent Service and Google Agent Runtime as clients on Azure and GCP need them, then Claude Managed Agents and the OpenAI Agents API.
+- **A Kubernetes sandbox adapter.** It runs the judge sandbox, and optionally agents, as isolated pods (gVisor or Kata) on a dedicated node pool in the cluster Ratchet runs in. It gives one judge that behaves the same on every cloud, keeps the client's code in its own cluster, and gives quieter timing than shared sandboxes.
+- **Where the judge sandbox runs:** on a platform that can run a command in a sandbox with no agent. AgentCore can. Google Agent Runtime is checked in the spike. Claude Managed Agents, the OpenAI Agents API and Foundry cannot; on Azure and GCP the judge runs in the Kubernetes sandbox adapter.
 - **`measure` is asynchronous** so no platform limit applies (Foundry may expire tool outputs after 10 minutes; Google's event stream is undocumented and limited to 10 minutes per query). The spike checks it.
 - **Credentials reach a session only through the platform's credential store,** never a prompt, a repo file or Ratchet's database. No model key enters a sandbox.
-- **Ratchet cloud uses only Ratchet's platform accounts at launch.** The adapters support customer accounts because self-hosted needs them. An enterprise that needs data read in its own network self-hosts, for example with AgentCore in its own AWS account.
+- **Ratchet cloud uses only Ratchet's platform accounts.** The adapters support the client's accounts because self-hosted needs them. A client that needs its code and data to stay in its own network self-hosts.
 - **Timing is noisier on shared sandboxes,** so the noise band is wider and fewer trials are Kept; paired measurement cancels drift between sandboxes, and the experiment detail page says so.
-- **No Helm chart and no OpenTofu at launch.** Self-hosted ships as Docker Compose only; Ratchet cloud ships with the Cloudflare config and `cf`. Ratchet's own platform accounts are set up by hand and owned by the owner.
+- **A Helm chart and OpenTofu.** The server ships as signed container images and one Helm chart. One OpenTofu module per cloud creates what sits around the cluster. Docker Compose is kept for local development and quick evaluations only. Ratchet's own accounts are owned by the owner.
 - **"This machine" is deferred.** Ratchet never starts an agent on a Mac until a later ruling. `ratchet mcp` is separate: it serves the tools to an agent a person runs themselves, and that agent's trials are still measured only in a judge sandbox. Measuring never runs on a laptop.
 
 ## Licence
 
 Ratchet is licensed under the Functional Source License, FSL-1.1-ALv2: the source is public and anyone may run, change and self-host it, but not offer it as a competing product or service, and each release becomes Apache-2.0 two years after it is published. The licensor is Duaility, LLC; the text is in [`LICENSE.md`](../../../LICENSE.md). Every dependency's licence must allow this ([stack/libraries.md](../stack/libraries.md)).
 
-## Ratchet cloud
+## Deployment
 
-- **Storage.** Self-hosted uses Postgres 18. Ratchet cloud uses one SQLite database per organization inside one Cloudflare Durable Object, pinnable to the EU, the US or FedRAMP. Moving between them is an export and import of one neutral file format.
-- **One core, two shells.** `ratchet-core` holds all logic and compiles natively and to WebAssembly; storage sits behind one trait. `ratchet-server` and `ratchet-cloud` are the shells. See [stack](../stack/SKILL.md).
-- **We manage everything.** An organization signs in, attaches repos and starts, and runs no infrastructure.
-- **Invite only, no billing at first.** Organizations join by invitation as design partners. Ratchet pays for their platform spend, under a hard monthly cap per organization that the budget meter enforces, and alerts the owner on Ratchet's own total spend. Billing at cost through the budget, with a payment provider, comes after the first release.
-- **US first.** Organizations are created in the US jurisdiction. The EU follows, then FedRAMP; the Durable Object namespace per jurisdiction is designed in from the start.
-- **Models on Bedrock first.** The first cut runs only models AgentCore reaches through Amazon Bedrock, Claude first, so no model key ever enters a sandbox. "No tie to one model provider" is met by more Bedrock models and then the other adapters, not in the first cut.
-- **GitHub first.** Sign-in is GitHub and Google; repos come from GitHub only, through a GitHub App. Other code hosts follow.
-- **A handful of design partners.** Three to five organizations at launch, each with a named contact and a Speed experiment that fits a sandbox with no connectors. More join only when the first release is steady.
-- **Ratchet's platform credentials** sit in Cloudflare's Secrets Store, bound to the Worker, never in an organization's database, a response or a log.
-- **We are a data processor** for every Ratchet cloud organization: a data processing agreement, listed subprocessors (Cloudflare and the agent platforms in use) and a stated retention rule. Ratchet keeps no tool output, file contents or diffs. Each platform's retention and residency is stated beside it: the vendors promise only where data is stored at rest, and the OpenAI Agents API offers United States residency only and no zero data retention.
+- **The server is cloud-agnostic.** One Rust server (`ratchet-server`) with the web app built in, and Postgres 18 as the only stateful dependency, which also holds the job queue and live events. Files and exports go to object storage through one crate that speaks S3, Azure Blob and GCS. Secrets are read from mounted files or the environment, never through a cloud SDK. Cloud access is by workload identity, with no stored cloud keys. Telemetry is OpenTelemetry, exported to whatever the client uses. Images are signed, with an SBOM, and can be pushed to a client's own registry for an air-gapped install.
+- **Kubernetes everywhere.** EKS, AKS, GKE or OpenShift run the same Helm chart. Upgrades are a Helm upgrade with a job that runs forward-only migrations first.
+- **One OpenTofu module per cloud** creates managed Postgres (RDS, Azure Database for PostgreSQL, Cloud SQL), a bucket, a key in the cloud's key service and workload identity. A client with its own cluster uses the chart alone. AWS ships first; Azure and GCP are built when the first client on each signs.
+- **Ratchet cloud grows in steps, the chart unchanged.** Demos: one small EC2 instance running k3s, with Postgres in the cluster and a nightly backup to S3, stopped between demos (about $5 a month idle). First paying client: EKS with RDS, one namespace and one database per client (about $200 a month). Clients relying on it: Multi-AZ RDS and more nodes (about $400 to $500 a month). A client whose contract requires it gets its own database instance or cluster.
+- **Ratchet cloud in phase 1** runs in the US. Organizations join by invitation. Sign-in is GitHub and Google; repos come from GitHub only, through a GitHub App. The first cut runs only models AgentCore reaches through Amazon Bedrock, Claude first, so no model key enters a sandbox; Claude is also on Microsoft Foundry and Vertex AI for phase 2 on Azure and GCP.
+- **Ratchet's platform credentials** sit in AWS Secrets Manager, read by the server through workload identity, never in an organization's database, a response or a log.
+- **We are a data processor** for every Ratchet cloud organization: a data processing agreement, listed subprocessors (AWS, and Anthropic through Bedrock) and a stated retention rule. Ratchet keeps no tool output, file contents or diffs. Each platform's retention and residency is stated beside it: the vendors promise only where data is stored at rest, and the OpenAI Agents API offers United States residency only and no zero data retention. Self-hosted, the data stays in the client's account and a services agreement sets our engineers' access.
+- **Security paperwork starts in phase 1.** SOC 2 Type I is started during phase 1, since the Fortune 100 ask for it on the first call.
 
 ## Sign-in
 
-OpenID Connect plus GitHub's OAuth, no passwords. Ratchet cloud offers GitHub (OAuth with its user API, since GitHub offers no OpenID Connect for app sign-in), Google (OpenID Connect) and an organization's own OpenID Connect provider (single sign-on, set up only by an owner). A self-hosted server uses the administrator's provider.
+OpenID Connect plus GitHub's OAuth, no passwords. Ratchet cloud offers GitHub (OAuth with its user API, since GitHub offers no OpenID Connect for app sign-in), Google (OpenID Connect) and an organization's own OpenID Connect provider (single sign-on, set up only by an owner). A self-hosted server uses the client's provider (Entra ID, Okta, Google).
 
 ## Decided by the owner
 
 | Date | Decision |
 | --- | --- |
 | 14 and 15 Nov 2026 | A native macOS app, SwiftUI, macOS only at launch. |
-| 15 and 16 Nov 2026 | Ratchet cloud on Cloudflare, one Durable Object per organization. |
+| 15 and 16 Nov 2026 | Ratchet cloud on Cloudflare, one Durable Object per organization. Replaced on 17 Nov by AWS and Kubernetes. |
 | 16 Nov 2026 | The design is a chat and a judge. |
 | 16 Nov 2026 | The server stores the conversation's words, never tool output. |
 | 16 Nov 2026 | The customer's CI runner is not a judge sandbox; the trait leaves room for it. |
@@ -140,11 +148,18 @@ OpenID Connect plus GitHub's OAuth, no passwords. Ratchet cloud offers GitHub (O
 | 16 Nov 2026 | Prompt injection is assumed; the session threat model is written. |
 | 16 Nov 2026 | Delivered is labelled "measured offline" until production scoring is decided. |
 | 16 Nov 2026 | Cloud first: the first release is Ratchet cloud; self-hosted follows. |
-| 16 Nov 2026 | Invite only with no billing at first; Ratchet pays under a hard cap per organization. |
+| 16 Nov 2026 | Invite only with no billing at first; Ratchet pays under a hard cap per organization. Replaced on 17 Nov: compute is rebilled. |
 | 16 Nov 2026 | US jurisdiction first, then the EU. |
 | 16 Nov 2026 | Models on Bedrock only in the first cut, Claude first. |
 | 16 Nov 2026 | GitHub is the only code host in the first cut. |
-| 16 Nov 2026 | Three to five design partners at launch. |
+| 16 Nov 2026 | Three to five design partners at launch. Replaced on 17 Nov by paid engagements and pilots. |
+| 17 Nov 2026 | Services first: our engineers deliver engagements on Ratchet, client engineers take over. |
+| 17 Nov 2026 | Pricing: a fixed fee per engagement, a capped success fee on verified wins, then a subscription. |
+| 17 Nov 2026 | Phase 1 is Ratchet cloud on our AWS; phase 2 is self-hosted in the client's AWS, Azure or GCP account. |
+| 17 Nov 2026 | Cloudflare is dropped. Kubernetes, one Helm chart and one OpenTofu module per cloud. |
+| 17 Nov 2026 | A Kubernetes sandbox adapter runs the judge on any cloud. |
+| 17 Nov 2026 | Demos run on k3s on one EC2 instance; EKS from the first paying client. |
+| 17 Nov 2026 | Value models, Return and the Report are in the first release. |
 
 Decided calls also appear on the Decisions board.
 
@@ -161,12 +176,13 @@ The spike also answers:
 - **Usage timing.** Whether each platform reports usage fast enough for the budget meter to stop spend on time.
 - **Quotas.** Platform and model limits on concurrent sessions, and what happens when one is hit.
 - **One branch per session.** A GitHub App installation token can push to any branch of a repo, not just the session's. Show that pushes can be held to the session's branch (for example a ruleset on a `ratchet/*` prefix, or a push relay that checks the ref), or change the design.
-- **The deployed cloud test.** On a separate Cloudflare account: cold starts with migrations, hibernation, point-in-time restore, real CPU and subrequest limits, `SQLITE_FULL`, idle stream timeouts and throughput per object.
+- **The Kubernetes judge.** How noisy and how well isolated judge pods (gVisor or Kata, dedicated nodes) are, beside AgentCore.
+- **Cost of one experiment.** Tokens, sandbox and judge time for one sealed experiment end to end, which sets engagement pricing.
 - **Pair interference.** Whether warm caches, shared state or migrations leak between the two sides of a pair, and whether an ABBA order is enough.
 
 ## First release
 
-Ratchet cloud, invite only, in the US jurisdiction, with AgentCore and models on Bedrock, GitHub sign-in and repos (and Google sign-in), the web app and `ratchet mcp`, one evaluation kind (Speed) with no connectors: seal, measure, Kept, receipt, deliver, budget, approvals and the audit log, for three to five design partners. Before the first partner: the push scan and second opinion from the threat model, a data processing agreement, the subprocessor list (Cloudflare, AWS, Anthropic through Bedrock), a retention and deletion rule, per-organization caps and spend alerts. Then, in this order unless the owner says otherwise: billing, the EU jurisdiction, self-hosted (Postgres and Docker Compose), the other adapters, connectors and the other evaluation kinds, plugins, value models with Return, Ideas and Report, and the Mac app. Their fields stay in the sealed definition and the store from the start, so nothing is redesigned.
+Ratchet cloud on our AWS (k3s for demos, EKS from the first paying client), with AgentCore and models on Bedrock, GitHub sign-in and repos (and Google sign-in), the web app and `ratchet mcp`, one evaluation kind (Speed) with no connectors: seal, measure, Kept, receipt, deliver, budget, approvals and the audit log, plus value models, Return and the Report, since they are what an engagement is paid on. Before the first client: the push scan and second opinion from the threat model, a data processing agreement, the subprocessor list, a retention and deletion rule, the cross-organization staff sign-in and spend alerts. Then, in this order unless the owner says otherwise: the Kubernetes sandbox adapter, self-hosted on the client's AWS, evaluation kinds and connectors as engagements need them, Azure and GCP with their adapters, plugins, Ideas, and the Mac app. Their fields stay in the sealed definition and the store from the start, so nothing is redesigned.
 
 A `ratchet mcp` connection works inside a session in the experiment, named by its agent, with no platform sandbox. Its trial commits are pushed to that session's branch with a short-lived git token minted for the session, and are measured only in a judge sandbox.
 
@@ -178,7 +194,7 @@ A `ratchet mcp` connection works inside a session in the experiment, named by it
 - Whether every trial in the version, from every session and including quick-check stops, should count in k. Spawned sessions raise the bar for all.
 - How experiments on the same code interact: overlapping changes, a default branch that moves mid-experiment, one win making another's baseline stale. Today only delivery rebases.
 - How a secret pasted into the chat is caught before the conversation is stored.
-- Who holds the judge's signing key when self-hosted (on Ratchet cloud it is Ratchet's, in the Secrets Store), how it rotates, and what "Signed by the judge" proves to someone outside the organization.
+- Who holds the judge's signing key when self-hosted (on Ratchet cloud it is Ratchet's, in AWS Secrets Manager), how it rotates, and what "Signed by the judge" proves to someone outside the organization.
 - The seal is the hardest step and seal checks catch only a trivially broken evaluation. How the product helps a team that has no benchmark.
 - How time to merge is shown and eased, since value counts only after a merge.
 - What the second opinion costs per win, and its data path: the diff goes to a second provider.

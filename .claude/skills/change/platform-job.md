@@ -6,7 +6,7 @@ A platform job is work the server does on an agent platform. There are two trait
 
 | Part | Rule |
 | --- | --- |
-| Queue | A row in the store (Postgres self-hosted, the organization's Durable Object in the cloud), queued by an action in the same transaction as the change that caused it. |
+| Queue | A row in the store (Postgres), queued by an action in the same transaction as the change that caused it. |
 | Worker | The server takes the job and calls the platform over HTTPS, through the trait. No platform calls the server: a `measure` call arrives on the session's event stream, which the server reads. |
 | Sent to the platform | Ids, the repos and branches, the agent definition, the environment id, limits, and references to credentials in the platform's credential store. Never a secret, never data. |
 | Result back | Ids, numbers, states, commit ids and spend. A diff, a transcript or a log is not a result: it is fetched from the platform when someone asks, and not stored. |

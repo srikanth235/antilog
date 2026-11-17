@@ -25,7 +25,7 @@ All target.
 - Hand a spawned or handed-off session a summary and the history, never tool output or diffs, because the server stores neither.
 - Run every session on an agent platform, through the one agent trait, because a second way to start work is a second way to leak it. Ratchet runs no sandboxes of its own.
 - Serve the Ratchet tools to a session over its own event stream, and never require a platform to reach the server, because a self-hosted server may sit behind a firewall.
-- Never give Ratchet access to the customer's cloud: no cross-account role, no stored cloud keys. Ratchet holds only platform credentials, because access we hold is access that can be stolen. On Ratchet cloud they sit in Cloudflare's Secrets Store, bound to the Worker.
+- Never give Ratchet access to the customer's cloud: no cross-account role, no stored cloud keys. Ratchet holds only platform credentials, because access we hold is access that can be stolen. On Ratchet cloud they sit in AWS Secrets Manager, read by the server through workload identity.
 - Record spend from the platform's usage, and make the judge refuse `measure` when the budget is spent, because a cap that is only advice is not a cap. Use the platform's own limits (turns, time, tokens) as a second stop where it has them.
 - Attribute every spend record to its session and agent, because one session must not spend another's money unseen.
 - End and delete a stopped or idle session's sandbox at once, and call it finished only when deletion is verified on its platform, because an idle sandbox is spend with no work. One not removed shows Not removed, is retried, and its cost counts until it is gone.

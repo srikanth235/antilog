@@ -1,6 +1,6 @@
 # Postgres and SQL in Ratchet
 
-(target) Postgres is the self-hosted store, reached through `sqlx` with the `postgres` feature. The cloud store is SQLite in a Durable Object (see "SQLite in the cloud" below). Queries live behind the `Store` trait in the Postgres store crate; the core never writes SQL. Nothing of it is on this branch. Versions are in [libraries.md](../libraries.md): Postgres 18, `sqlx` 0.9 (and `sqlx-cli`), `testcontainers` for tests.
+(target) Postgres is the only store, on Ratchet cloud (RDS, or in-cluster for demos) and self-hosted (RDS, Azure Database for PostgreSQL, Cloud SQL, or the client's own), reached through `sqlx` with the `postgres` feature. Queries live behind the `Store` trait in the Postgres store crate; the core never writes SQL. Nothing of it is on this branch. Versions are in [libraries.md](../libraries.md): Postgres 18, `sqlx` 0.9 (and `sqlx-cli`), `testcontainers` for tests.
 
 ## Workflow and done criteria
 
@@ -19,7 +19,7 @@ cargo nextest run -p <crate>             # (target) database tests, against Post
 - **The audit log is append-only.** Rows are inserted, never updated or deleted by the application. A job's state history, a verdict and a receipt are recorded, not overwritten. Tokens are stored as hashes. Receipts are signed ([libraries.md](../libraries.md)).
 - **Every row carries its organization.** Each table that belongs to an organization has `organization_id`, indexed (usually the first column of its composite indexes), and every query filters by it. A query that forgets the organization is a data leak between customers. Prefer a function or a typed repository per module that takes the organization as an argument so it cannot be forgotten.
 - **Each module owns its tables.** No joins across modules; a module asks another through its Rust API. Write SQL plain enough to move.
-- **Row-level security is not used for end users.** There is one database client, the server, which enforces access in code ([organization skill](../../organization/SKILL.md)). Do not give the database users that mirror Ratchet's members. A policy on each organization table is an extra Postgres-only guard for a self-hosted server with several organizations; the code never relies on it, and the cloud has none because each organization has its own database.
+- **Row-level security is not used for end users.** There is one database client, the server, which enforces access in code ([organization skill](../../organization/SKILL.md)). Do not give the database users that mirror Ratchet's members. A policy on each organization table is an extra guard; the code never relies on it.
 
 ## sqlx
 
@@ -39,28 +39,23 @@ cargo nextest run -p <crate>             # (target) database tests, against Post
 - **Test the migration.** A test applies all migrations to an empty database and checks that the schema matches what the queries expect; the offline query check also catches drift. A migration that rewrites data has a test with sample rows.
 - Foreign keys are on, and every foreign key column has an index. Use plain `snake_case` lowercase names, unquoted.
 
-## The shared schema
+## One schema
 
-Both stores run the same logical schema, so a type must exist in both.
-
-- Ids are `text` (UUIDv7 made in Rust). Times are integer milliseconds since the epoch. JSON is `text`. States are `text` with a `check`. Money is integer minor units with a currency column.
-- No Postgres-only type (`uuid`, `timestamptz`, `jsonb`, `numeric`, arrays, enums) in the shared schema. Use the plain type above even where Postgres has a better one.
-- Migrations are numbered the same in both dialects, one directory per dialect, written twice. A number that exists in one directory and not the other fails CI. A test applies each directory to an empty database and compares the tables and columns.
-- Append-only tables (audit log, events, verdicts, receipts, spend) are enforced by triggers in both dialects.
-- A Postgres-only addition (row-level security, a partial index) goes in a Postgres-only migration file that changes no table the other dialect has.
-- One storage test suite runs against both stores in CI ([land/tests.md](../../land/tests.md)).
+- Ids are `uuid` (UUIDv7 made in Rust). Times are `timestamptz`. A document the server stores whole is `jsonb`. States are `text` with a `check`. Money is `bigint` minor units with a currency column.
+- Append-only tables (audit log, events, verdicts, receipts, spend) are enforced by triggers.
+- Moving an organization between deployments (Ratchet cloud to the client's own) is an export and import of one neutral file format, not a database copy, so the schema can change without breaking a move.
 
 ## Types and ids
 
-- Ids are text holding a UUIDv7, made in Rust (`uuid` with the `v7` feature) so a test can fix them, and time-ordered so inserts are not scattered across the index. The owner confirms the id scheme when the first schema lands (target). Never expose a sequential id that leaks counts to a customer.
-- Times are integers, milliseconds since the epoch, UTC. Money and spend are integer minor units with a currency column, never a float. Counts and versions that must add up are integers.
-- States are `text` with a `check` constraint, never a Postgres enum, so both dialects read the same. Mirror them as a Rust enum with an exhaustive `match`; a test lists the values in both and compares them.
-- JSON is stored as text, only for a document the server stores whole and does not query into (a receipt payload, a spec). Anything you filter or join on is a column. Do not store a secret in it.
+- Ids are `uuid` holding a UUIDv7, made in Rust (`uuid` with the `v7` feature) so a test can fix them, and time-ordered so inserts are not scattered across the index. The owner confirms the id scheme when the first schema lands (target). Never expose a sequential id that leaks counts to a customer.
+- Times are `timestamptz`, written in UTC. Money and spend are integer minor units with a currency column, never a float. Counts and versions that must add up are integers.
+- States are `text` with a `check` constraint, never a Postgres enum, so adding a state is a plain migration. Mirror them as a Rust enum with an exhaustive `match`; a test lists the values in both and compares them.
+- JSON is `jsonb`, only for a document the server stores whole and does not query into (a receipt payload, a spec). Anything you filter or join on is a column. Do not store a secret in it.
 - Constrain in the database what the database can know: `not null`, `check`, `unique`, foreign keys with a deliberate `on delete`.
 
 ## The job queue
 
-The queue is a table in the store: Postgres self-hosted, the organization's Durable Object in the cloud. No Redis, no message bus ([libraries.md](../libraries.md)). The claim query below is the Postgres one; in the cloud the object is the only writer, so a claim is a plain update in one transaction.
+The queue is a table in Postgres. No Redis, no message bus, no cloud queue ([libraries.md](../libraries.md)), so it runs the same on every cloud.
 
 - **Claim with `FOR UPDATE SKIP LOCKED`**, in one statement that also marks the row, so concurrent workers each take a different job and none waits:
 
@@ -82,35 +77,21 @@ The queue is a table in the store: Postgres self-hosted, the organization's Dura
 - **Keep it small.** Autovacuum settings on the queue table are tightened because rows churn ([general/postgres-best-practices.md](general/postgres-best-practices.md)); finished jobs older than a retention period are moved or deleted in batches. `LISTEN/NOTIFY` may wake a worker sooner, but polling must still work if a notification is missed.
 - **Use a transaction-scoped advisory lock** for singleton work (one scheduler, one reaper) rather than a dummy row.
 
-## SQLite in the cloud (target)
-
-- Ratchet cloud keeps one SQLite database per organization, in the built-in storage of one Durable Object per organization. The Worker reaches it only through that object, which is the only writer.
-- The SQLite `Store` implements the same trait as the Postgres one and runs the SQLite migration directory. No `sqlx` here: the object's own SQL API is used.
-- One writer means no row-level security, no `SKIP LOCKED` and no `NOTIFY`. The object holds live streams and timers (alarms) itself.
-- Limits to design for: 10 GB per organization, about 1,000 requests a second per object, 30-day point-in-time recovery built in. Keep transactions short and page by keyset cursor.
-- Residency: an object can be pinned to the EU, the US or FedRAMP (Durable Object jurisdictions).
-- Every table is `STRICT`, so a text value cannot land in an integer column; SQLite's default typing accepts anything, and the bug shows up only on export or in Postgres.
-- Foreign keys are on for each connection and every statement is parameterised, as in Postgres.
-- Moving between cloud and self-hosted is an export and import of one neutral file format, not a database copy.
-- Details (strict tables, foreign keys, transactions, limits, migrations, numbers across JavaScript): [general/sqlite.md](general/sqlite.md).
-
 ## Tests
 
-- Run database tests against a real Postgres 18 in a container (`testcontainers`), one database per test or per module with a clean schema, not a mock. There is no in-memory stand-in for Postgres. The same storage suite also runs against the SQLite store, and a store test that passes on one and fails on the other is a schema or query bug.
+- Run database tests against a real Postgres 18 in a container (`testcontainers`), one database per test or per module with a clean schema, not a mock. There is no in-memory stand-in for Postgres.
 - Test the claim query with concurrent workers (no job taken twice, none skipped forever), lease expiry, and idempotent re-delivery.
 - Test that every organization-scoped query cannot see another organization's rows.
 
 ## Pitfalls
 
 - **A migration that locks a hot table** blocks the whole server. Check what lock a statement takes before shipping it, and set `lock_timeout`.
-- **`OFFSET` pagination** gets slower with depth and skips or repeats rows while new ones arrive; the timeline, the audit log and trial lists page by a keyset cursor on `(time, id)`, in both stores ([general/postgres-best-practices.md](general/postgres-best-practices.md)).
+- **`OFFSET` pagination** gets slower with depth and skips or repeats rows while new ones arrive; the timeline, the audit log and trial lists page by a keyset cursor on `(time, id)` ([general/postgres-best-practices.md](general/postgres-best-practices.md)).
 - **A long-lived transaction** holds locks and stops vacuum. Set `idle_in_transaction_session_timeout`.
 - **Unindexed foreign keys** make deletes and joins scan. Run the missing-index query in review.
 - **`timestamp` without time zone, `float` for money, `varchar(n)` for nothing** are the usual type mistakes: see the types above.
 - **Enum drift.** Adding a state in Rust without the migration (or the reverse) is caught by the test that compares the lists; keep that test.
 
 ## General guidance
-
-[`general/sqlite.md`](general/sqlite.md): our own notes on SQLite in a Durable Object, from SQLite's and Cloudflare's documentation.
 
 [`general/postgres-best-practices.md`](general/postgres-best-practices.md): query performance, indexes, connections and pooling, schema design, locking and concurrency, data access, diagnostics and migrations. It is a digest of [Supabase's postgres-best-practices](https://github.com/supabase/agent-skills) (MIT, [`licenses/supabase-agent-skills-LICENSE`](licenses/supabase-agent-skills-LICENSE)).

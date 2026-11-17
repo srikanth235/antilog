@@ -15,7 +15,7 @@ These are decided. Do not build them, propose them in passing, or leave a hook "
 - **Running the measurement in the browser.** A measurement runs in a judge sandbox, never in a page.
 - **A mobile app.** The product is a desk tool; a phone adds a client to secure and keep in step for no job we have.
 - **A wrapped desktop app for Windows and Linux.** The native app is macOS only; Windows and Linux use the web app, installed as a progressive web app.
-- **Dependence on one hosting vendor or agent platform.** The self-hosted server runs wherever a container runs, and agent platforms sit behind one trait. Ratchet cloud runs on Cloudflare, and the self-hosted server is its exit, so the core never depends on Cloudflare.
+- **Dependence on one hosting vendor or agent platform.** The self-hosted server runs wherever a container runs, and agent platforms sit behind one trait. Ratchet cloud and self-hosted run the same Helm chart on any Kubernetes with Postgres; only a thin infrastructure module differs per cloud.
 - **A second design language.** One look, Midnight Brass, in every client and in the docs.
 - **Transforms or data pipelines inside Ratchet.** Connectors say what an agent's code may read; Ratchet does not reshape data. Customers already own their pipelines.
 - **Agents holding write, cloud, model or holdout credentials.** Agents get only read-only connector credentials that exclude the holdout, and a short-lived git token that may push only to the session's own branch, all through the platform's credential store. Credentials are typed into a secure form, never the chat, and the agent never sees them.

@@ -101,10 +101,10 @@ Git is the hand-off: a trial is a set of commits, one per repo changed. Ratchet 
 
 ## Two offerings
 
-- **Self-hosted:** a Docker Compose service (server and Postgres) on the customer's own platform accounts.
-- **Ratchet cloud:** we host the server and run every session on Ratchet's platform accounts, billed at cost through the budget.
+- **Ratchet cloud (phase 1):** we run the server on our AWS account and every session on Ratchet's platform accounts; spend is rebilled through the budget.
+- **Self-hosted (phase 2):** the same Helm chart in the client's own AWS, Azure or GCP account, on its own platform accounts.
 
-One core, two shells. A promise that holds in one and not the other is a defect.
+One server, one chart. A promise that holds in one and not the other is a defect.
 
 ## How this area refers to the others
 

@@ -10,7 +10,7 @@ Sign-in is OpenID Connect, plus GitHub's OAuth on Ratchet cloud. Ratchet never s
 6. **Group claims.** If the provider sends groups, map them to roles (see [add-role.md](add-role.md)). (target)
 7. **Session.** A successful sign-in starts a short-lived sign-in session: a random token in a secure, HTTP-only cookie, stored only as a hash through the `Store`. Sign-out and expiry end it. (target)
 8. **Audit.** Sign-in, sign-out and a failed sign-in are audited actions (see [add-audited-action.md](add-audited-action.md)). (target)
-9. **One cryptography stack.** Use the pure-Rust crates named in [../stack/SKILL.md](../stack/SKILL.md) (`sha2`, `subtle`, `ed25519-dalek`), which build for wasm. Do not add a second library for tokens or signatures. (target)
+9. **One cryptography stack.** Use the pure-Rust crates named in [../stack/SKILL.md](../stack/SKILL.md) (`sha2`, `subtle`, `ed25519-dalek`) . Do not add a second library for tokens or signatures. (target)
 10. **Tests.** A fake provider in tests, a rejected token, an expired session, and a check that no password field exists anywhere.
 
 ## Proving it
