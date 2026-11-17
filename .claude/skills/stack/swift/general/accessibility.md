@@ -1,6 +1,6 @@
 # Accessibility
 
-Source: [SwiftUI Pro](https://github.com/twostraws/SwiftUI-Agent-Skill) by Paul Hudson (MIT, [`../licenses/twostraws-SwiftUI-Agent-Skill-LICENSE`](../licenses/twostraws-SwiftUI-Agent-Skill-LICENSE)), condensed and adapted for a macOS app. The app is macOS only, so iOS-only advice is dropped; macOS points are in [macos.md](macos.md). [`../ratchet.md`](../ratchet.md) wins where they differ.
+Source: [SwiftUI Pro](https://github.com/twostraws/SwiftUI-Agent-Skill) by Paul Hudson (MIT, [`../licenses/twostraws-SwiftUI-Agent-Skill-LICENSE`](../licenses/twostraws-SwiftUI-Agent-Skill-LICENSE)), condensed and adapted for a macOS app. The app is macOS only, so iOS-only advice is dropped; macOS points are in [macos.md](macos.md). [`../antilog.md`](../antilog.md) wins where they differ.
 
 - Respect the user's accessibility settings for fonts, colors, animations, and more.
 - Do not force specific font sizes. Prefer Dynamic Type (`.font(.body)`, `.font(.headline)`, etc.).

@@ -1,6 +1,6 @@
 # macOS specifics for a SwiftUI app
 
-Source: Ratchet's own notes from Apple's SwiftUI and AppKit documentation, kept here because the digests next to this file ([swift.md](swift.md), [views.md](views.md)) cover iOS and macOS together and say little about the Mac shell. [`../ratchet.md`](../ratchet.md) wins where they differ. Check each API against the deployment target before use.
+Source: Antilog's own notes from Apple's SwiftUI and AppKit documentation, kept here because the digests next to this file ([swift.md](swift.md), [views.md](views.md)) cover iOS and macOS together and say little about the Mac shell. [`../antilog.md`](../antilog.md) wins where they differ. Check each API against the deployment target before use.
 
 ## Scenes and windows
 
@@ -12,7 +12,7 @@ Source: Ratchet's own notes from Apple's SwiftUI and AppKit documentation, kept 
 
 ## Menu bar item (`MenuBarExtra`)
 
-- `MenuBarExtra("Ratchet", systemImage: "...") { ... }` with `.menuBarExtraStyle(.menu)` gives a plain menu; `.window` gives a small popover-like panel for richer content. Pick `.menu` unless the content needs it.
+- `MenuBarExtra("Antilog", systemImage: "...") { ... }` with `.menuBarExtraStyle(.menu)` gives a plain menu; `.window` gives a small popover-like panel for richer content. Pick `.menu` unless the content needs it.
 - A menu bar item is an entry point, not the app. Anything it shows (running experiments, spend) must also be reachable from the main window.
 - Its label should be a template image so it follows the light and dark menu bar. Do not put a coloured logo there.
 - To make an app menu-bar-only, set `LSUIElement` in `Info.plist`; then the Dock icon and main menu are absent, so Settings must be reachable from the menu bar item (`SettingsLink`).

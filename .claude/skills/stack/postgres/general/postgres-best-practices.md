@@ -1,8 +1,8 @@
 # Postgres best practices (digest)
 
-Source: [supabase-postgres-best-practices](https://github.com/supabase/agent-skills/tree/main/skills/supabase-postgres-best-practices) in supabase/agent-skills, by Supabase (version 1.1.1 in the skill header, MIT, [`../licenses/supabase-agent-skills-LICENSE`](../licenses/supabase-agent-skills-LICENSE)). The original is one short rule per file, each with an incorrect and a correct SQL example, in eight categories. This digest condenses the plain-Postgres rules and keeps the order of impact. [`../ratchet.md`](../ratchet.md) wins where they differ.
+Source: [supabase-postgres-best-practices](https://github.com/supabase/agent-skills/tree/main/skills/supabase-postgres-best-practices) in supabase/agent-skills, by Supabase (version 1.1.1 in the skill header, MIT, [`../licenses/supabase-agent-skills-LICENSE`](../licenses/supabase-agent-skills-LICENSE)). The original is one short rule per file, each with an incorrect and a correct SQL example, in eight categories. This digest condenses the plain-Postgres rules and keeps the order of impact. [`../antilog.md`](../antilog.md) wins where they differ.
 
-Dropped as Supabase-specific or not applicable to Ratchet: row-level security and end-user privilege rules (`security-rls-basics`, `security-rls-performance`, `security-privileges`: Ratchet's server is the only database client and enforces access in code, and stores no customer data), the Supabase pooler ports and dashboard links, full-text search and JSONB indexing (`advanced-*`; add them only when a query needs them), and the `auth.*` helpers.
+Dropped as Supabase-specific or not applicable to Antilog: row-level security and end-user privilege rules (`security-rls-basics`, `security-rls-performance`, `security-privileges`: Antilog's server is the only database client and enforces access in code, and stores no customer data), the Supabase pooler ports and dashboard links, full-text search and JSONB indexing (`advanced-*`; add them only when a query needs them), and the `auth.*` helpers.
 
 ## 1. Query performance (critical)
 
@@ -61,7 +61,7 @@ Dropped as Supabase-specific or not applicable to Ratchet: row-level security an
 - **`pg_stat_statements`** shows which statements cost the most in total and on average. Sort by `total_exec_time` for the biggest bill and by `mean_exec_time` for the slowest; reset after a fix to measure it.
 - **Keep statistics fresh.** Autovacuum does it; run `analyze <table>` after a bulk change, and lower `autovacuum_vacuum_scale_factor` on high-churn tables such as a job queue so dead rows are reclaimed quickly. Check `pg_stat_user_tables` for `last_autovacuum`.
 
-## Migrations: what the source covers, and what Ratchet adds
+## Migrations: what the source covers, and what Antilog adds
 
 The source has one migration rule (guarded constraint creation, above). The points below are not from it: they are standard Postgres practice, kept here so the migration advice is in one place. Check them against the Postgres documentation for the version in [`../../libraries.md`](../../libraries.md).
 

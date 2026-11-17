@@ -1,6 +1,6 @@
 # Data flow, shared state, and property wrappers
 
-Source: [SwiftUI Pro](https://github.com/twostraws/SwiftUI-Agent-Skill) by Paul Hudson (MIT, [`../licenses/twostraws-SwiftUI-Agent-Skill-LICENSE`](../licenses/twostraws-SwiftUI-Agent-Skill-LICENSE)), condensed and adapted for a macOS app. The app is macOS only, so iOS-only advice is dropped; macOS points are in [macos.md](macos.md). [`../ratchet.md`](../ratchet.md) wins where they differ.
+Source: [SwiftUI Pro](https://github.com/twostraws/SwiftUI-Agent-Skill) by Paul Hudson (MIT, [`../licenses/twostraws-SwiftUI-Agent-Skill-LICENSE`](../licenses/twostraws-SwiftUI-Agent-Skill-LICENSE)), condensed and adapted for a macOS app. The app is macOS only, so iOS-only advice is dropped; macOS points are in [macos.md](macos.md). [`../antilog.md`](../antilog.md) wins where they differ.
 
 It is important that SwiftUI body code and logic code be kept separate in order to make code easier to read, write, and maintain. That usually means placing code into methods rather than inline in the `body` property, but often also means carving functionality out into separate `@Observable` classes.
 

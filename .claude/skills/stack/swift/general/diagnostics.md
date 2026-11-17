@@ -1,8 +1,8 @@
 # Swift compiler and concurrency diagnostics
 
-Source: the Swift and concurrency diagnostics of [Bama](https://github.com/daveebbelaar/bama) by Dave Ebbelaar (MIT, [`../licenses/Bama-LICENSE`](../licenses/Bama-LICENSE)), adapted. [`../ratchet.md`](../ratchet.md) wins where they differ.
+Source: the Swift and concurrency diagnostics of [Bama](https://github.com/daveebbelaar/bama) by Dave Ebbelaar (MIT, [`../licenses/Bama-LICENSE`](../licenses/Bama-LICENSE)), adapted. [`../antilog.md`](../antilog.md) wins where they differ.
 
-Fix the first diagnostic first; later errors can be consequences of it. The app and its tests use Swift 6 language mode, which enforces complete concurrency checking. Preserve actor isolation and Sendable ownership; do not weaken language mode or suppress diagnostics to get a build. The `xcodebuild` invocation is in [`../ratchet.md`](../ratchet.md).
+Fix the first diagnostic first; later errors can be consequences of it. The app and its tests use Swift 6 language mode, which enforces complete concurrency checking. Preserve actor isolation and Sendable ownership; do not weaken language mode or suppress diagnostics to get a build. The `xcodebuild` invocation is in [`../antilog.md`](../antilog.md).
 
 ## Compiler errors
 

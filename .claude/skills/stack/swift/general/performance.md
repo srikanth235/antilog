@@ -1,6 +1,6 @@
 # Performance
 
-Source: [SwiftUI Pro](https://github.com/twostraws/SwiftUI-Agent-Skill) by Paul Hudson (MIT, [`../licenses/twostraws-SwiftUI-Agent-Skill-LICENSE`](../licenses/twostraws-SwiftUI-Agent-Skill-LICENSE)), condensed and adapted for a macOS app. The app is macOS only, so iOS-only advice is dropped; macOS points are in [macos.md](macos.md). [`../ratchet.md`](../ratchet.md) wins where they differ.
+Source: [SwiftUI Pro](https://github.com/twostraws/SwiftUI-Agent-Skill) by Paul Hudson (MIT, [`../licenses/twostraws-SwiftUI-Agent-Skill-LICENSE`](../licenses/twostraws-SwiftUI-Agent-Skill-LICENSE)), condensed and adapted for a macOS app. The app is macOS only, so iOS-only advice is dropped; macOS points are in [macos.md](macos.md). [`../antilog.md`](../antilog.md) wins where they differ.
 
 Use this workflow for performance work, not as a required step for every Swift change. Reproduce the slow action, measure an optimized build, find the cause, fix it, then repeat the same measurement. Measure a Release build: debug Swift is substantially slower, and numbers from a busy machine are noise, so repeat the run.
 

@@ -1,6 +1,6 @@
 # General TypeScript practices
 
-Detailed language, testing, and performance guidance. The Ratchet page [`../ratchet.md`](../ratchet.md) takes precedence.
+Detailed language, testing, and performance guidance. The Antilog page [`../antilog.md`](../antilog.md) takes precedence.
 
 ## 1. Mindset
 

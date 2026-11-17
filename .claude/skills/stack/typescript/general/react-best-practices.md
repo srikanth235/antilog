@@ -1,6 +1,6 @@
 # React best practices (digest)
 
-Source: [react-best-practices](https://github.com/vercel-labs/agent-skills/tree/main/skills/react-best-practices) in vercel-labs/agent-skills, by Vercel Engineering (version 1.0.0, MIT as declared in the repo's README and skill header; see [`../licenses/vercel-labs-agent-skills-NOTICE.md`](../licenses/vercel-labs-agent-skills-NOTICE.md)). The original has 70 rules in 8 categories, ordered by impact. This digest keeps the client-side rules for a Vite single page app and drops the Next.js and React Server Components parts (server actions, `React.cache`, RSC serialization, `after()`, hydration, `next/dynamic`). Where the original names SWR, read TanStack Query, which this repo uses. [`../ratchet.md`](../ratchet.md) wins where they differ.
+Source: [react-best-practices](https://github.com/vercel-labs/agent-skills/tree/main/skills/react-best-practices) in vercel-labs/agent-skills, by Vercel Engineering (version 1.0.0, MIT as declared in the repo's README and skill header; see [`../licenses/vercel-labs-agent-skills-NOTICE.md`](../licenses/vercel-labs-agent-skills-NOTICE.md)). The original has 70 rules in 8 categories, ordered by impact. This digest keeps the client-side rules for a Vite single page app and drops the Next.js and React Server Components parts (server actions, `React.cache`, RSC serialization, `after()`, hydration, `next/dynamic`). Where the original names SWR, read TanStack Query, which this repo uses. [`../antilog.md`](../antilog.md) wins where they differ.
 
 Apply these when you write or review components, fetch data, or chase a slow screen. Measure before you rewrite: a rule helps only where the cost is real.
 
@@ -74,4 +74,4 @@ Micro-optimisations. Apply them in hot paths (large lists, per-keystroke work), 
 
 ## Dropped from the source
 
-Server actions and auth, `React.cache`, cross-request LRU caches, RSC prop serialisation and deduplication, parallel server fetching, `after()`, `next/dynamic` and `optimizePackageImports`, and hydration mismatch handling. They belong to a server-rendered React framework; Ratchet's web client is a client-rendered single page app that the server only serves.
+Server actions and auth, `React.cache`, cross-request LRU caches, RSC prop serialisation and deduplication, parallel server fetching, `after()`, `next/dynamic` and `optimizePackageImports`, and hydration mismatch handling. They belong to a server-rendered React framework; Antilog's web client is a client-rendered single page app that the server only serves.
