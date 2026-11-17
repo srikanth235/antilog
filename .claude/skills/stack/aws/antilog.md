@@ -6,6 +6,8 @@ For everything else about AWS, use the AWS agent skills (the Agent Toolkit for A
 
 ## What gets built (target)
 
+- **Region: `us-east-1`** for everything on Antilog cloud (owner's call, 17 Nov 2026). Check that each service used, AgentCore and the Claude models on Bedrock included, is offered there before relying on it.
+
 - **The server on Lambda.** The unchanged axum `Router` served through `lambda_http` and `lambda_runtime`, built with `cargo-lambda`, behind a Lambda function URL with response streaming. A native Linux binary: tokio, axum, `sqlx`, rustls and the AWS SDK all work, with no WebAssembly. No API Gateway, NAT gateway or load balancer.
 - **Aurora Serverless v2 (PostgreSQL)** with a minimum of 0 ACUs and auto-pause, on an engine version that supports it. Idle cost is storage only.
 - **A timer adapter** on EventBridge Scheduler (`aws-sdk-scheduler`), behind the core's timer trait.

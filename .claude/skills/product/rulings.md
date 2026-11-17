@@ -119,7 +119,7 @@ Antilog is licensed under the Functional Source License, FSL-1.1-ALv2: the sourc
 
 ## Sign-in
 
-OpenID Connect plus GitHub's OAuth, no passwords. Antilog cloud offers GitHub (OAuth with its user API, since GitHub offers no OpenID Connect for app sign-in), Google (OpenID Connect) and an organization's own OpenID Connect provider (single sign-on, set up only by an owner). A self-hosted server uses the client's provider (Entra ID, Okta, Google).
+No passwords. Antilog cloud offers exactly two sign-ins, GitHub (OAuth with its user API, since GitHub offers no OpenID Connect for app sign-in) and Google (OpenID Connect). It has no per-organization single sign-on (owner's call, 17 Nov 2026). A self-hosted server uses the client's own OpenID Connect provider (Entra ID, Okta, Google).
 
 ## Decided by the owner
 
@@ -163,6 +163,8 @@ OpenID Connect plus GitHub's OAuth, no passwords. Antilog cloud offers GitHub (O
 | 17 Nov 2026 | Phase 1 Antilog cloud runs pay-per-use (Lambda, Aurora Serverless v2 at zero); the Helm chart on EKS stays for clients who need steady traffic and for phase 2. Same server and image both ways. |
 | 17 Nov 2026 | Value models, Return and the Report are in the first release. |
 | 17 Nov 2026 | The product is renamed Antilog; it is hosted at antilog.tech. |
+| 17 Nov 2026 | Antilog cloud sign-in is GitHub and Google only, with no per-organization single sign-on. Self-hosted keeps the client's own OpenID Connect provider. |
+| 17 Nov 2026 | Antilog cloud runs in AWS region us-east-1. |
 
 Decided calls also appear on the Decisions board.
 
