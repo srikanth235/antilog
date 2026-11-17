@@ -1,6 +1,6 @@
 # Libraries
 
-Do not add a dependency for convenience. A new one is a product call: ask the owner. Prefer what is already here. Before proposing one, review it with the supply-chain skill ([security/ratchet.md](security/ratchet.md)) and run `cargo deny check`; the review goes in the proposal.
+Do not add a dependency for convenience. A new one is a product call: ask the owner. Prefer what is already here. Before proposing one, review it with the supply-chain skill ([security/antilog.md](security/antilog.md)) and run `cargo deny check`; the review goes in the proposal.
 
 ## Chosen for the target
 
@@ -8,10 +8,10 @@ Do not add a dependency for convenience. A new one is a product call: ask the ow
 
 **Shape.** One Cargo workspace builds one core and one server, with the CLI:
 
-- `ratchet-core`: all logic and the API routes as an axum `Router`, behind one `Store` trait. It never imports `sqlx`, a cloud SDK or an adapter crate. It never connects to data.
-- `ratchet-server`: the one server, for Ratchet cloud and self-hosted. The API, the embedded web app, Postgres, object storage. It ships as a container image and a Helm chart, and talks out to the agent platforms over HTTPS.
-- The agent platform adapters (AWS AgentCore, then the Kubernetes sandbox adapter, then Microsoft Foundry Agent Service and Google Agent Runtime, then Claude Managed Agents and the OpenAI Agents API), one adapter each behind one platform trait, in their own crate or crates. They call the platforms over HTTPS. Ratchet runs no sandboxes of its own outside the Kubernetes adapter, which runs them in the same cluster. Their client crates are in the table below.
-- `ratchet`: the CLI and the MCP server, built on the API's types.
+- `antilog-core`: all logic and the API routes as an axum `Router`, behind one `Store` trait. It never imports `sqlx`, a cloud SDK or an adapter crate. It never connects to data.
+- `antilog-server`: the one server, for Antilog cloud and self-hosted. The API, the embedded web app, Postgres, object storage. It ships as a container image and a Helm chart, and talks out to the agent platforms over HTTPS.
+- The agent platform adapters (AWS AgentCore, then the Kubernetes sandbox adapter, then Microsoft Foundry Agent Service and Google Agent Runtime, then Claude Managed Agents and the OpenAI Agents API), one adapter each behind one platform trait, in their own crate or crates. They call the platforms over HTTPS. Antilog runs no sandboxes of its own outside the Kubernetes adapter, which runs them in the same cluster. Their client crates are in the table below.
+- `antilog`: the CLI and the MCP server, built on the API's types.
 
 
 **Toolchain**
@@ -62,13 +62,13 @@ Do not add a dependency for convenience. A new one is a product call: ask the ow
 
 Sessions and access tokens need no library: each is 32 random bytes shown once, stored as a SHA-256 hash through the `Store` and compared in constant time. `tower-sessions` was dropped (November 2026): the hashed-token scheme is small and keeps sessions in our own tables. Better Auth was considered and refused: it is TypeScript and keeps its own user, session and organization tables beside ours.
 
-Snowflake, Databricks and BigQuery have no maintained Rust client we would ship; their connectors call each vendor's REST API through `reqwest`. Every connector sits behind one `Connector` trait, so its vocabulary stops there, and each says how to make a read-only, holdout-excluding credential for its system (whether Ratchet mints them per session is open). Agent platforms sit behind one agent trait, one adapter each; the judge is a separate trait. Platform crates stay inside each adapter.
+Snowflake, Databricks and BigQuery have no maintained Rust client we would ship; their connectors call each vendor's REST API through `reqwest`. Every connector sits behind one `Connector` trait, so its vocabulary stops there, and each says how to make a read-only, holdout-excluding credential for its system (whether Antilog mints them per session is open). Agent platforms sit behind one agent trait, one adapter each; the judge is a separate trait. Platform crates stay inside each adapter.
 
 Cloud SDKs stay inside their adapter crate. The server reads secrets from mounted files or the environment, so it needs no secrets-manager SDK on any cloud.
 
 Background jobs (platform jobs, see [change/platform-job.md](../change/platform-job.md)) use a small queue in the store: Postgres with `FOR UPDATE SKIP LOCKED`. No Redis, no message bus, no cloud queue.
 
-**Web app (TypeScript)**: see [typescript.md](typescript/ratchet.md).
+**Web app (TypeScript)**: see [typescript.md](typescript/antilog.md).
 
 | Package | Version |
 | --- | --- |
@@ -83,7 +83,7 @@ Background jobs (platform jobs, see [change/platform-job.md](../change/platform-
 
 **macOS app (target)**
 
-A proposal, not yet built. The app is SwiftUI and macOS only; Windows and Linux use the web app. See [swift.md](swift/ratchet.md).
+A proposal, not yet built. The app is SwiftUI and macOS only; Windows and Linux use the web app. See [swift.md](swift/antilog.md).
 
 | Tool | Version |
 | --- | --- |
@@ -110,4 +110,4 @@ A proposal, not yet built. The app is SwiftUI and macOS only; Windows and Linux 
 | cosign | 3.1.4 |
 | syft | 1.57.1 |
 
-Rules for any addition: self-hosting must keep working (no call to a service the administrator did not configure), the licence must suit a product we ship, and the crate must be maintained. A new outside system also needs a trait with a real and a mock implementation (an agent platform has the fake platform); see [rust.md](rust/ratchet.md).
+Rules for any addition: self-hosting must keep working (no call to a service the administrator did not configure), the licence must suit a product we ship, and the crate must be maintained. A new outside system also needs a trait with a real and a mock implementation (an agent platform has the fake platform); see [rust.md](rust/antilog.md).

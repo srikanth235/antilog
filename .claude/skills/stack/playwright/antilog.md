@@ -1,4 +1,4 @@
-# Playwright in Ratchet
+# Playwright in Antilog
 
 `general/` is a copy of Microsoft's `playwright-cli` skill from [microsoft/playwright-cli](https://github.com/microsoft/playwright-cli) (Apache-2.0, [licence](licenses/microsoft-playwright-cli-LICENSE)). Start at [general/INDEX.md](general/INDEX.md). The list is in [sync.py](sync.py).
 
@@ -13,7 +13,7 @@
 
 - **Never run `playwright install`.** In cloud sessions Chromium is already installed. Use it. Elsewhere, say the browser was not available.
 - **Screenshots, traces and videos are scratch.** Keep them outside the repo or delete them. The pre-commit check rejects images outside `design/icon`, and a board is HTML, not a picture ([../../design/mockups.md](../../design/mockups.md)).
-- **Stay on Ratchet's own pages.** Point it at the local web app or a board on disk. Do not sign in to a customer system or paste a token into a page; state saved by the skill (cookies, storage) holds credentials, so keep it out of the repo.
+- **Stay on Antilog's own pages.** Point it at the local web app or a board on disk. Do not sign in to a customer system or paste a token into a page; state saved by the skill (cookies, storage) holds credentials, so keep it out of the repo.
 - **Check what you changed.** Open the screen in light and dark, below 720px wide, and with the keyboard, as [../../design/behaviour.md](../../design/behaviour.md) says. Report what you looked at; do not call a flow verified from a screenshot alone.
 
 ## Updating general/

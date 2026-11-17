@@ -3,13 +3,13 @@
 | Promise | The rule |
 | --- | --- |
 | Nothing asked first | Before the first message a person chooses at most a project, repos, an agent, an environment and a budget, each with a default. No settings page, no form, no plan step (target). |
-| Credentials never in chat | A credential value is typed into a secure form and goes straight to the platform's credential store. It is never in the conversation, a prompt, a repo file or Ratchet's database (target). |
-| Clean up | Every session and sandbox Ratchet starts is ended, deleted on its platform and shown as Removed. One that is not deleted shows Not removed, is retried, and its cost counts until it is gone (target). |
+| Credentials never in chat | A credential value is typed into a secure form and goes straight to the platform's credential store. It is never in the conversation, a prompt, a repo file or Antilog's database (target). |
+| Clean up | Every session and sandbox Antilog starts is ended, deleted on its platform and shown as Removed. One that is not deleted shows Not removed, is retried, and its cost counts until it is gone (target). |
 | Spend recorded honestly | Nothing is spent without a budget. Every dollar is tied to an experiment, a session and its agent, read from the platform's usage, and shown per session and per experiment. The budget covers all its sessions and the judge time (target). |
 | Spend well | Cost per trial is shown and derived from spend records, the Seal experiment card estimates a measurement before it is bought, agents read `history` before they propose, spawned sessions default to the lower-cost agent, and Where the spend went accounts for every dollar (target). |
 | No tie to one provider | Auto chooses by measured cost per win among the agents turned on and says why, a session can be handed off to another agent, and a platform that fails hands the session to a Continue on another agent? card. No agent is preselected by brand (target). |
 | Failure never shown as empty | A conversation, a tool output or a log that cannot be fetched says so. It is never shown as blank or as healthy (target). |
-| Least access | Ratchet holds only agent platform credentials: the customer's when self-hosted, its own on Ratchet cloud. No cross-account role, no cloud keys, no connector admin secrets (target). |
+| Least access | Antilog holds only agent platform credentials: the customer's when self-hosted, its own on Antilog cloud. No cross-account role, no cloud keys, no connector admin secrets (target). |
 | Any platform | The same promises hold on every agent platform (target). |
 
 ## How each is checked

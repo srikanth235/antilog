@@ -1,6 +1,6 @@
 # Judge: the tools
 
-Five tools every session gets (target). `ratchet mcp` serves the same tools to an agent a person already uses on their own machine, so a change can be proposed anywhere and is measured only by the judge. `spawn` and the setup tools (`attach_repo`, `request_credential`, `set_environment`, `request_budget`) are in [../session/tools.md](../session/tools.md).
+Five tools every session gets (target). `antilog mcp` serves the same tools to an agent a person already uses on their own machine, so a change can be proposed anywhere and is measured only by the judge. `spawn` and the setup tools (`attach_repo`, `request_credential`, `set_environment`, `request_budget`) are in [../session/tools.md](../session/tools.md).
 
 | Tool | Asks a person? |
 | --- | --- |

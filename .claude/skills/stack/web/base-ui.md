@@ -1,8 +1,8 @@
-# Base UI in Ratchet
+# Base UI in Antilog
 
 (target) The web client does not exist on this branch. This page says how [Base UI](https://base-ui.com) (`@base-ui/react`, MIT, by the MUI team) is used when it lands.
 
-Base UI's own docs teach the library. This page steers: which component to reach for on our screens, where the docs' demos would lead you away from our rules, and what done looks like. When this page and a Base UI page disagree about how Ratchet looks or is built, this page wins. When they disagree about how a component behaves, Base UI's page wins: it is newer than your memory.
+Base UI's own docs teach the library. This page steers: which component to reach for on our screens, where the docs' demos would lead you away from our rules, and what done looks like. When this page and a Base UI page disagree about how Antilog looks or is built, this page wins. When they disagree about how a component behaves, Base UI's page wins: it is newer than your memory.
 
 ## Before you write a component
 
@@ -42,10 +42,10 @@ From the boards in `design/mockups/`. "Not" is the near miss to avoid.
 
 Base UI's demos are written to be self-contained. Take their structure, parts and data attributes; leave the rest.
 
-- **Colours, sizes and fonts.** Demos hard-code values, Tailwind first and raw colours even in the CSS-modules version. Ours come only from the generated tokens CSS (`var(--...)`) and its type classes ([../typescript/ratchet.md](../typescript/ratchet.md)). No Tailwind.
+- **Colours, sizes and fonts.** Demos hard-code values, Tailwind first and raw colours even in the CSS-modules version. Ours come only from the generated tokens CSS (`var(--...)`) and its type classes ([../typescript/antilog.md](../typescript/antilog.md)). No Tailwind.
 - **Dark mode.** Demos add their own `prefers-color-scheme` or `dark:` styles. Never copy them. Our theme is `data-theme` on `<html>`, set before React runs; a portal renders into `<body>`, so popups get the right tokens without a `container` prop. Do not put `data-theme` on any inner element.
-- **Icons.** Demos import icon components. Ours come from the one sprite ([ratchet.md](ratchet.md)).
-- **Words.** Demo labels are placeholders. Every string comes from the words catalogue by key ([../typescript/ratchet.md](../typescript/ratchet.md)).
+- **Icons.** Demos import icon components. Ours come from the one sprite ([antilog.md](antilog.md)).
+- **Words.** Demo labels are placeholders. Every string comes from the words catalogue by key ([../typescript/antilog.md](../typescript/antilog.md)).
 - **Links.** Demos use a framework's `Link`. Ours is the TanStack Router link, passed through `render`.
 - **Animation libraries.** The animation page shows Motion. We do not use one; CSS transitions only.
 
@@ -82,7 +82,7 @@ Build these natively, as the matching guide says: copy button, spinner, tables, 
 - Motion stops under `prefers-reduced-motion`.
 - Every control has a name; every dialog has a title; words come from the catalogue.
 - Links are links; the URL opens the dialogs that are places.
-- Tests query by role and name and cover open, choose and close ([../typescript/ratchet.md](../typescript/ratchet.md)).
+- Tests query by role and name and cover open, choose and close ([../typescript/antilog.md](../typescript/antilog.md)).
 - The top comment names the web guide it follows.
 
 ## Upgrading

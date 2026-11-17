@@ -1,6 +1,6 @@
 # Add a skill pack
 
-A skill pack is a versioned pack of written know-how that agents read before they propose changes, for example "Postgres query tuning". On screen it is a Skill, under Customize, Skills. It is not a file in this repo's `.claude/skills/`, which guides people and agents working on Ratchet's code, so docs and code say "skill pack" where the two could be confused. All steps are target.
+A skill pack is a versioned pack of written know-how that agents read before they propose changes, for example "Postgres query tuning". On screen it is a Skill, under Customize, Skills. It is not a file in this repo's `.claude/skills/`, which guides people and agents working on Antilog's code, so docs and code say "skill pack" where the two could be confused. All steps are target.
 
 A skill pack is added from Customize, Skills (boards `Skills`, `SkillsEmpty`, `SkillsDiscover`, `SkillDetail`, `AddSkill`), or arrives with a plugin. What a card in a chat adds appears there too.
 

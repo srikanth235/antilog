@@ -4,7 +4,7 @@
     "v": 1,
     "at": "2026-11-14T09:00:00Z"
   },
-  "title": "Ratchet Mockups",
+  "title": "Antilog Mockups",
   "launch": {
     "view": "canvas",
     "page": "web-light"
@@ -1513,7 +1513,7 @@
       "y": 9450,
       "w": 1440,
       "h": 900,
-      "title": "8 \u00b7 Settings, Agent platforms, Ratchet cloud",
+      "title": "8 \u00b7 Settings, Agent platforms, Antilog cloud",
       "page": "web-light",
       "expand": "fill",
       "is_interactive": true
@@ -1523,7 +1523,7 @@
       "y": 9450,
       "w": 1440,
       "h": 900,
-      "title": "8 \u00b7 Settings, Agent platforms, Ratchet cloud \u00b7 dark",
+      "title": "8 \u00b7 Settings, Agent platforms, Antilog cloud \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true

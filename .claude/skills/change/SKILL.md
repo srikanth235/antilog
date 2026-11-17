@@ -6,14 +6,14 @@ description: >-
 
 # Change
 
-A change crosses layers that must agree: Rust types, the generated OpenAPI document, the generated TypeScript client, the Ratchet tools (served to a session and by `ratchet mcp`), the CLI, the action layer, the store (Postgres), the platform job interface, the boards, the tests and the docs. Checks fail until they do. Find the row, follow it, then prove it with [land](../land/SKILL.md).
+A change crosses layers that must agree: Rust types, the generated OpenAPI document, the generated TypeScript client, the Antilog tools (served to a session and by `antilog mcp`), the CLI, the action layer, the store (Postgres), the platform job interface, the boards, the tests and the docs. Checks fail until they do. Find the row, follow it, then prove it with [land](../land/SKILL.md).
 
-The pages describe the target: `ratchet-core`, the server `ratchet-server` (one Helm chart for Ratchet cloud and self-hosted), and `ratchet` (the CLI and MCP). Nothing of it is built on this branch, so each path and command that does not exist yet is marked (target).
+The pages describe the target: `antilog-core`, the server `antilog-server` (one Helm chart for Antilog cloud and self-hosted), and `antilog` (the CLI and MCP). Nothing of it is built on this branch, so each path and command that does not exist yet is marked (target).
 
 | If you are doing | Read |
 | --- | --- |
 | An endpoint, a field, a request or response type | [api-endpoint.md](api-endpoint.md) |
-| A tool (one of the Ratchet tools), new or changed | [tool.md](tool.md) |
+| A tool (one of the Antilog tools), new or changed | [tool.md](tool.md) |
 | A write (a command that changes state) | [write-action.md](write-action.md) |
 | A live event the clients react to | [live-event.md](live-event.md) |
 | A table, column or migration | [ledger-table.md](ledger-table.md) |

@@ -1,4 +1,4 @@
-# design/tokens.toml: the only source of design values for Ratchet.
+# design/tokens.toml: the only source of design values for Antilog.
 #
 # `python3 design/tools/tokens.py` reads this file and writes
 # `design/mockups/tokens.css` (colours as CSS variables, light on :root and

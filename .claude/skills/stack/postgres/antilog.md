@@ -1,6 +1,6 @@
-# Postgres and SQL in Ratchet
+# Postgres and SQL in Antilog
 
-(target) Postgres is the only store, on Ratchet cloud (Aurora Serverless v2 at zero when pay-per-use, RDS on EKS; in-cluster only for local tests) and self-hosted (RDS, Azure Database for PostgreSQL, Cloud SQL, or the client's own), reached through `sqlx` with the `postgres` feature. Queries live behind the `Store` trait in the Postgres store crate; the core never writes SQL. Nothing of it is on this branch. Versions are in [libraries.md](../libraries.md): Postgres 18, `sqlx` 0.9 (and `sqlx-cli`), `testcontainers` for tests.
+(target) Postgres is the only store, on Antilog cloud (Aurora Serverless v2 at zero when pay-per-use, RDS on EKS; in-cluster only for local tests) and self-hosted (RDS, Azure Database for PostgreSQL, Cloud SQL, or the client's own), reached through `sqlx` with the `postgres` feature. Queries live behind the `Store` trait in the Postgres store crate; the core never writes SQL. Nothing of it is on this branch. Versions are in [libraries.md](../libraries.md): Postgres 18, `sqlx` 0.9 (and `sqlx-cli`), `testcontainers` for tests.
 
 ## Workflow and done criteria
 
@@ -14,12 +14,12 @@ cargo nextest run -p <crate>             # (target) database tests, against Post
 
 ## What the database holds, and does not
 
-- **Ids, versions, numbers, states, commit ids, the conversation's words, spend and audit rows only.** Ratchet stores no customer data. It never holds a dataset's rows, a holdout row, a connector secret, a model key or a token in the clear. The server never connects to customer data; the agents' sandboxes and the judge sandboxes on the agent platforms do. If a column would hold something a customer would call their data, stop and ask.
+- **Ids, versions, numbers, states, commit ids, the conversation's words, spend and audit rows only.** Antilog stores no customer data. It never holds a dataset's rows, a holdout row, a connector secret, a model key or a token in the clear. The server never connects to customer data; the agents' sandboxes and the judge sandboxes on the agent platforms do. If a column would hold something a customer would call their data, stop and ask.
 - **Never store what can be derived** (product principle 6). Value, Return and status are computed from measured results, not written as columns that can drift. If a derived value must be stored for speed, it is a cache with a rebuild path and a test that recomputes it.
 - **The audit log is append-only.** Rows are inserted, never updated or deleted by the application. A job's state history, a verdict and a receipt are recorded, not overwritten. Tokens are stored as hashes. Receipts are signed ([libraries.md](../libraries.md)).
 - **Every row carries its organization.** Each table that belongs to an organization has `organization_id`, indexed (usually the first column of its composite indexes), and every query filters by it. A query that forgets the organization is a data leak between customers. Prefer a function or a typed repository per module that takes the organization as an argument so it cannot be forgotten.
 - **Each module owns its tables.** No joins across modules; a module asks another through its Rust API. Write SQL plain enough to move.
-- **Row-level security is not used for end users.** There is one database client, the server, which enforces access in code ([organization skill](../../organization/SKILL.md)). Do not give the database users that mirror Ratchet's members. A policy on each organization table is an extra guard; the code never relies on it.
+- **Row-level security is not used for end users.** There is one database client, the server, which enforces access in code ([organization skill](../../organization/SKILL.md)). Do not give the database users that mirror Antilog's members. A policy on each organization table is an extra guard; the code never relies on it.
 
 ## sqlx
 
@@ -43,7 +43,7 @@ cargo nextest run -p <crate>             # (target) database tests, against Post
 
 - Ids are `uuid` (UUIDv7 made in Rust). Times are `timestamptz`. A document the server stores whole is `jsonb`. States are `text` with a `check`. Money is `bigint` minor units with a currency column.
 - Append-only tables (audit log, events, verdicts, receipts, spend) are enforced by triggers.
-- Moving an organization between deployments (Ratchet cloud to the client's own) is an export and import of one neutral file format, not a database copy, so the schema can change without breaking a move.
+- Moving an organization between deployments (Antilog cloud to the client's own) is an export and import of one neutral file format, not a database copy, so the schema can change without breaking a move.
 
 ## Types and ids
 

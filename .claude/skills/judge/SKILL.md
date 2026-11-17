@@ -6,7 +6,7 @@ description: >-
 
 # Judge
 
-Ratchet is a chat and a judge. The judge is the part of the server that measures: an agent asks it to measure a change, and only its numbers count. Code decides which trials are Kept and which is the win (target). The judge depends on the session area by id only, and the session area calls the judge through five tools.
+Antilog is a chat and a judge. The judge is the part of the server that measures: an agent asks it to measure a change, and only its numbers count. Code decides which trials are Kept and which is the win (target). The judge depends on the session area by id only, and the session area calls the judge through five tools.
 
 | If you are doing | Read |
 | --- | --- |

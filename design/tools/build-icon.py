@@ -4,8 +4,8 @@
   python3 design/tools/build-icon.py
 
 Single source of the icon: design/icon/AppIcon.icon (icon.json, written by hand; Assets/*.svg, written here).
-Also writes design/icon/ratchet-icon.svg, the flat 1024 x 1024 reference with a tile. The full mark
-(design/icon/ratchet-mark.svg) keeps all six chambers; the icon is its small-size cut:
+Also writes design/icon/antilog-icon.svg, the flat 1024 x 1024 reference with a tile. The full mark
+(design/icon/antilog-mark.svg) keeps all six chambers; the icon is its small-size cut:
 
   * the two smallest chambers (radius 31.5) are left out: at 16 pt they are half a pixel wide and read as noise;
   * the other four are scaled so the glyph is about 50% of the canvas width (it was 57%) and centred;
@@ -15,9 +15,9 @@ import os
 
 ROOT = os.path.join(os.path.dirname(__file__), "..", "..")
 ICON = os.path.join(ROOT, "design", "icon", "AppIcon.icon", "Assets")
-FLAT = os.path.join(ROOT, "design", "icon", "ratchet-icon.svg")
+FLAT = os.path.join(ROOT, "design", "icon", "antilog-icon.svg")
 
-# (center, start, end, radius, sweep, opacity of the glass chamber). Source: design/icon/ratchet-mark.svg.
+# (center, start, end, radius, sweep, opacity of the glass chamber). Source: design/icon/antilog-mark.svg.
 CHAMBERS = [
     ((361.6, 424.9), (439.2, 424.9), (361.6, 347.3), 77.6, 0, 0.55),
     ((351.7, 471.0), (227.9, 471.0), (351.7, 347.3), 123.8, 1, 0.78),
@@ -63,7 +63,7 @@ write(os.path.join(ICON, "back.svg"), svg("\n".join("  " + line for line in back
 
 glass = "\n".join("  " + path(ch, f' fill="#DCE3EE" fill-opacity="{ch[5]:.2f}"') for ch in CHAMBERS)
 flat = (
-    "<title>Ratchet</title>\n<defs>\n"
+    "<title>Antilog</title>\n<defs>\n"
     '  <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1B2539"/><stop offset="1" stop-color="#05080E"/></linearGradient>\n'
     '  <linearGradient id="brass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F8E4B8"/><stop offset=".6" stop-color="#E2BE7C"/><stop offset="1" stop-color="#BE8F49"/></linearGradient>\n'
     '  <clipPath id="tile"><rect width="1024" height="1024" rx="230"/></clipPath>\n</defs>\n'

@@ -13,7 +13,7 @@ Everything here is target; nothing is built (see [rulings](../.claude/skills/pro
 | Plugin | A bundle that adds evaluations, skill packs, suggested connectors and recommended agents under their own kinds. It has no powers of its own and can never mark, unmark or grant access to a dataset. Removing one asks whether to keep its items; an item in use is never removed | extension, integration | Plugin |
 | Seal, sealed | A person approves an experiment that passed the seal checks; its definition is fixed | lock, freeze | Seal experiment, Sealed |
 | Seal checks | The baseline, the noise check (the same commit paired with itself) and the cheat checks (planted cheats the evaluation must reject: skip the work, hard-code the answer, return early) | validation | Seal checks, Noise check, Cheat checks |
-| Judge | The part of Ratchet that measures. A trait separate from the agent platform trait | evaluator | Judge |
+| Judge | The part of Antilog that measures. A trait separate from the agent platform trait | evaluator | Judge |
 | Judge sandbox | A fresh sandbox, with no agent in it, where one measurement runs. The only place with the holdout credential. Removed afterwards | evaluator sandbox | Judge sandbox |
 | Judge platform | The agent platform that hosts judge sandboxes | measuring platform | Judge platform |
 | Trial | One `measure` call: a set of commits (one per repo changed), the trial it started from and a one-line hypothesis | candidate, attempt | Trial |
@@ -29,14 +29,14 @@ Everything here is target; nothing is built (see [rulings](../.claude/skills/pro
 | Watch, regression | Pairing the delivered commit with the current head of the default branch, on a schedule or when it moves; a regression is a paired loss whose lower confidence bound is above zero | monitor | Watching, Regressed |
 | Agent | A model on an agent platform: Claude on Claude Managed Agents, Codex on the OpenAI Agents API, Gemini or Grok on AWS AgentCore, GitHub Copilot on Microsoft Foundry Agent Service, Gemini on Google Agent Runtime (target) | harness (code only), connection | Agent |
 | Agent platform | A managed service that runs an agent and its sandbox as one session: Claude Managed Agents, AWS AgentCore, the OpenAI Agents API, Microsoft Foundry Agent Service or Google Agent Runtime | | Agent platform |
-| Platform account | The account Ratchet uses on an agent platform: yours when self-hosted, Ratchet's on Ratchet cloud, with spend rebilled through your budget | | Platform account |
+| Platform account | The account Antilog uses on an agent platform: yours when self-hosted, Antilog's on Antilog cloud, with spend rebilled through your budget | | Platform account |
 | Environment | The image or setup script, size and network policy a session's sandbox starts from | | Environment |
-| Clean-up state | Whether a session and its sandbox are gone from the platform. Removed: the platform confirms it. Not removed: Ratchet retries and the cost counts until it is gone | Deleted, Orphaned | Removed, Not removed |
+| Clean-up state | Whether a session and its sandbox are gone from the platform. Removed: the platform confirms it. Not removed: Antilog retries and the cost counts until it is gone | Deleted, Orphaned | Removed, Not removed |
 | Connector | A data system or MCP server an agent's code may read: Snowflake, Databricks, DynamoDB, BigQuery, Postgres, Amazon S3, any MCP server. Registered once in Customize, Connectors, with two credentials and the datasets under it. Status: Connected, Reconnect, Not checked. The code host (GitHub, GitLab) is how repos attach and pull requests open. A cloud account is not a connector | source, integration | Connector |
-| Dataset | A named table or file set under one connector that an experiment reads. Ratchet records its name, versions, size and marking, never its rows | table, query | Dataset |
+| Dataset | A named table or file set under one connector that an experiment reads. Antilog records its name, versions, size and marking, never its rows | table, query | Dataset |
 | Dataset version | One state of a dataset, with an id and a date. It never changes after it is created; a receipt names the versions read | snapshot, latest | Dataset version ("orders v4") |
 | Marking | A label on a dataset that limits who may read it. Holdout is the only one | tag | Marking |
-| Agent credential | A read-only credential for one connector, on the views listed, holdout excluded. Registered once, kept in the platform's credential store, handed to a session short-lived and minted per session. Ratchet keeps none | token, key | Agent credential |
+| Agent credential | A read-only credential for one connector, on the views listed, holdout excluded. Registered once, kept in the platform's credential store, handed to a session short-lived and minted per session. Antilog keeps none | token, key | Agent credential |
 | Judge credential | A separate read-only credential for the same connector that also covers the holdout. Kept on the judge platform, minted per judge sandbox. No agent holds it | | Judge credential |
 | Holdout | A marking on a dataset: evaluation data only the judge can read. Enforced by the credentials: the agent credential leaves it out and only the judge credential includes it. No control grants it to an agent. An agent never reads it or learns a value from it | test set, hidden | Restricted to the judge |
 | Guardrail | A metric that must not get worse | limit | Guardrail |
@@ -55,12 +55,12 @@ Everything here is target; nothing is built (see [rulings](../.claude/skills/pro
 | Auto | Only the agent choice (never an approval mode): the choice that picks the agent with the best cost per win for this evaluation kind in this project, among the agents the organization turned on, and says why. Before there is data it uses the organization's default agent. A person can always pick a named agent | smart, default model | Auto |
 | Mode | How an experiment's cards are approved, set on its composer: Ask (every card asks a person) or Follow policy (cards that policy allows go through, each still audited). Policy is the ceiling | autonomy level | Composer, Settings, Approvals |
 | Hand off | Moving a session to another agent: a new session in the same experiment on the same branch with a summary and the history; the old one ends as Done, "Handed off to Codex" | transfer, fork | Hand off to... |
-| Ideas | Possible experiments Ratchet suggests on a project page, each with the metric, expected value (from the project's value models), expected cost and their ratio, sorted by it. Ratchet proposes, a person starts. Home shows the top three | suggestions, backlog | Ideas |
+| Ideas | Possible experiments Antilog suggests on a project page, each with the metric, expected value (from the project's value models), expected cost and their ratio, sorted by it. Antilog proposes, a person starts. Home shows the top three | suggestions, backlog | Ideas |
 | Report | A page per organization and per project: spent, Delivered, Pending, At risk, Return, where the spend went, the agent scoreboard for the month, the top wins and experiments stopped with no win. Exported as PDF and CSV and emailed monthly to chosen members | log, export | Report |
 
 "Experiment" is the noun for what a user creates, everywhere a user reads it: the web and Mac apps, the CLI, the API (`experiment_id`), the words catalogue and user-facing docs. A session is one agent's work inside an experiment and is never a top-level noun. Retired words are listed at the end.
 
-In the chat an agent's message shows the Ratchet mark and the name "Ratchet", with the agent that did the work as a quiet second label ("Ratchet · Claude Code"). Agent logos stay where an agent is the subject: spawned session cards, the Agent chip, settings rows, receipts and lineage.
+In the chat an agent's message shows the Antilog mark and the name "Antilog", with the agent that did the work as a quiet second label ("Antilog · Claude Code"). Agent logos stay where an agent is the subject: spawned session cards, the Agent chip, settings rows, receipts and lineage.
 
 ## Trial outcomes
 
@@ -98,7 +98,7 @@ The boards are in [`design/mockups/`](../design/mockups/) and the rules in [`.cl
 | Role | Owner, Editor, Viewer. The organization role is the default in every project, and a project can set another for a member. A viewer reads experiments and approves nothing. Project owners manage the project's members and budget; organization owners manage organization settings |
 | Member, service account | User, service principal |
 | Install the web app (Windows, Linux) | Install app (Settings, This device); "Get the Mac app" on macOS |
-| The server cannot be reached | Can't reach acme.ratchet.cloud. (the server's address), Try again |
+| The server cannot be reached | Can't reach acme.antilog.tech. (the server's address), Try again |
 | Notification titles | Win, Waiting for you, Regression, Budget spent. A monthly report email goes to members an owner chose |
 
 Unchanged between code and screen: win, agent, pull request, Delivered, Pending, Return, project, plugin.
@@ -115,6 +115,7 @@ Do not use these. This is the only list of retired words.
 | Thread | Experiment, or its session |
 | Note, as a feature | Talk to the agent |
 | Evaluator, evaluator sandbox | Judge, judge sandbox |
+| Ratchet, as the product name (renamed 17 Nov 2026; the domain was unavailable) | Antilog |
 | Measuring platform | Judge platform |
 | Optimization, context and infrastructure as "the three basics" | Experiment, session, judge, organization floor |
 | Stepper | Cards in the conversation |

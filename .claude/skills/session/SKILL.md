@@ -6,7 +6,7 @@ description: >-
 
 # Session
 
-A session is one agent's work inside an experiment: a chat with one agent in one sandbox on one agent platform, with any number of repos attached (target). It belongs to an experiment, which belongs to a project, and is named on screen by its agent ("Claude Code session"). The agent drives the work. The server relays the session, runs the judge and keeps a ledger, and runs no loop. Ratchet runs no sandboxes: each agent platform runs the agent's loop and its sandbox as one durable session, behind one trait, on the customer's own platform accounts when self-hosted and Ratchet's on Ratchet cloud. The judge, and what counts as a win, is in [../judge/SKILL.md](../judge/SKILL.md).
+A session is one agent's work inside an experiment: a chat with one agent in one sandbox on one agent platform, with any number of repos attached (target). It belongs to an experiment, which belongs to a project, and is named on screen by its agent ("Claude Code session"). The agent drives the work. The server relays the session, runs the judge and keeps a ledger, and runs no loop. Antilog runs no sandboxes: each agent platform runs the agent's loop and its sandbox as one durable session, behind one trait, on the customer's own platform accounts when self-hosted and Antilog's on Antilog cloud. The judge, and what counts as a win, is in [../judge/SKILL.md](../judge/SKILL.md).
 
 | If you are doing | Read |
 | --- | --- |

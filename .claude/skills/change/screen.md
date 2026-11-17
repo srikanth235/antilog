@@ -8,11 +8,11 @@ Start with a board in `design/mockups/`: edit the light board, change `design/to
 
 ## 2. The web app (target)
 
-(target) A screen is built for the web client. It is React and TypeScript over the same API and the same behaviour and words. It does not exist yet. See [stack/typescript/ratchet.md](../stack/typescript/ratchet.md). If the screen needs new data, do [api-endpoint.md](api-endpoint.md) first.
+(target) A screen is built for the web client. It is React and TypeScript over the same API and the same behaviour and words. It does not exist yet. See [stack/typescript/antilog.md](../stack/typescript/antilog.md). If the screen needs new data, do [api-endpoint.md](api-endpoint.md) first.
 
 ## 3. The macOS app (target)
 
-SwiftUI, macOS only; Windows and Linux use the installed web app. Its boards are owed. It shares behaviour, words and element ids with the web app, never pixels, and reads colours and words generated from the same sources. See [stack/swift/ratchet.md](../stack/swift/ratchet.md).
+SwiftUI, macOS only; Windows and Linux use the installed web app. Its boards are owed. It shares behaviour, words and element ids with the web app, never pixels, and reads colours and words generated from the same sources. See [stack/swift/antilog.md](../stack/swift/antilog.md).
 
 A new kind of thing under Customize (a tab with Yours and Discover) uses the one DetailPage layout and gets no page style of its own. Its boards follow the Customize set: a list, an empty state, Discover, a detail page and an Add page.
 

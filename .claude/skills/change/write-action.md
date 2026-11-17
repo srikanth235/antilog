@@ -14,7 +14,7 @@ An action that needs work on an agent platform queues a job in the same transact
 
 1. Name it, verb-object, such as `session.stop`, and register it with [organization/add-audited-action.md](../organization/add-audited-action.md). That page owns the matrix, the audit fields and the denial rules.
 2. Add the types and handler by [api-endpoint.md](api-endpoint.md). The handler calls the layer.
-3. Add the CLI command, and the Ratchet tool if an agent calls it (see [tool.md](tool.md)). A command that spends or changes things needs `--yes`. A tool call that matters is an approval card by policy (see [organization/approvals.md](../organization/approvals.md)).
+3. Add the CLI command, and the Antilog tool if an agent calls it (see [tool.md](tool.md)). A command that spends or changes things needs `--yes`. A tool call that matters is an approval card by policy (see [organization/approvals.md](../organization/approvals.md)).
 4. Tests: allowed role writes and audits once; denied role writes nothing and audits the denial; the event is published after the commit and not on a denial; no secret in the entry or the event; the audit row and the change roll back together.
 
 ## Refusals

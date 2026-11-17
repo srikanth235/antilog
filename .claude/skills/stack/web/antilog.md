@@ -1,4 +1,4 @@
-# The web platform in Ratchet
+# The web platform in Antilog
 
 Read this before writing HTML, CSS or browser-side TypeScript in the web client (target) or a design board. Then find the guide for the job in [general/INDEX.md](general/INDEX.md) and read it **before** writing the code: models default to older patterns, and these guides say what the platform does natively now.
 
@@ -12,14 +12,14 @@ Read this before writing HTML, CSS or browser-side TypeScript in the web client 
 
 The upstream guides tell agents to run `npx modern-web-guidance`. Here the guides are local files; do not run the CLI.
 
-## Where Ratchet's rules win
+## Where Antilog's rules win
 
-A guide is advice from outside; these are decisions. When they disagree, follow this page, then [../typescript/ratchet.md](../typescript/ratchet.md) and the [design](../../design/SKILL.md) skill.
+A guide is advice from outside; these are decisions. When they disagree, follow this page, then [../typescript/antilog.md](../typescript/antilog.md) and the [design](../../design/SKILL.md) skill.
 
 - **Browser support.** The client supports the current and previous major version of Chrome, Edge, Firefox and Safari on desktop. Baseline Widely available features need no fallback. Baseline Newly available features are allowed with the fallback the guide gives, feature-detected, adding no dependency; a polyfill package is a product call ([../libraries.md](../libraries.md)). Features not yet Baseline only as progressive enhancement: the screen must work and read correctly without them.
 - **Tokens, not values.** Guides write colours, sizes and fonts inline to stay self-contained. Ours come from `design/tokens.toml` through the generated tokens CSS. Take the technique, never the values.
 - **Themes.** Light and dark are keyed on `[data-theme="dark"]`, and the tokens CSS sets `color-scheme` for each, as the dark-mode guide asks. Do not add `light-dark()` tokens or a second `prefers-color-scheme` palette in a component; a theme change is a change to `tokens.toml`.
-- **Components.** Base UI is the chosen base ([../typescript/ratchet.md](../typescript/ratchet.md)). Where it has the component (dialog, menu, popover, tooltip, tabs, select, combobox, checkbox, radio, switch, slider, number field, meter, progress, toast, accordion and more), use it, read the guide for the job and apply its accessibility and styling rules to the Base UI part; do not swap in the native element on your own. Our rules for using it are in [base-ui.md](base-ui.md). Where it has none (copy button, spinner, tables, sticky headers, scroll shadows), build it natively as the guide says.
+- **Components.** Base UI is the chosen base ([../typescript/antilog.md](../typescript/antilog.md)). Where it has the component (dialog, menu, popover, tooltip, tabs, select, combobox, checkbox, radio, switch, slider, number field, meter, progress, toast, accordion and more), use it, read the guide for the job and apply its accessibility and styling rules to the Base UI part; do not swap in the native element on your own. Our rules for using it are in [base-ui.md](base-ui.md). Where it has none (copy button, spinner, tables, sticky headers, scroll shadows), build it natively as the guide says.
 - **Icons.** One mask sprite, coloured by `currentColor`, as the icons guide's CSS icon system describes. Add an icon to the sprite; do not add an icon font or a second set.
 - **Focus, layers and height.** Never `outline: none` without a `:focus-visible` ring from the tokens in its place. Stack overlays in the top layer (`popover`, `<dialog>`, Base UI's portals), never by raising `z-index`; a new `z-index` above the base layers is a finding. Full-height layouts use `dvh` (or `svh`), not `100vh`, which hides content under mobile browser bars.
 - **Words.** Example labels and messages in a guide are placeholders. On-screen words come from the catalogue and follow `docs/GLOSSARY.md` and the design skill's wording rules.

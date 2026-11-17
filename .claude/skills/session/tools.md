@@ -1,14 +1,14 @@
 # Session: spawn and the setup tools
 
-All target. Every session gets the Ratchet tools. This page covers `spawn` and the four setup tools. The work tools `seal`, `measure`, `history`, `deliver` and `watch` are in [../judge/tools.md](../judge/tools.md). Cards, policy and who may approve are in [../organization/approvals.md](../organization/approvals.md).
+All target. Every session gets the Antilog tools. This page covers `spawn` and the four setup tools. The work tools `seal`, `measure`, `history`, `deliver` and `watch` are in [../judge/tools.md](../judge/tools.md). Cards, policy and who may approve are in [../organization/approvals.md](../organization/approvals.md).
 
 ## How the tools reach a session
 
-Ratchet declares them as tools the client provides and answers them over the session's own event stream. No platform has to reach the server, so a self-hosted server behind a firewall works. Two platform limits are unproven and checked in the spike ([add-platform.md](add-platform.md)).
+Antilog declares them as tools the client provides and answers them over the session's own event stream. No platform has to reach the server, so a self-hosted server behind a firewall works. Two platform limits are unproven and checked in the spike ([add-platform.md](add-platform.md)).
 
 `measure` is asynchronous: it returns a ticket at once and the measurement arrives later as a session event, which sidesteps both limits.
 
-`ratchet mcp` serves the same tools to an agent on a person's own machine (Claude Code, Codex), so a change can be proposed anywhere and is measured only by the judge.
+`antilog mcp` serves the same tools to an agent on a person's own machine (Claude Code, Codex), so a change can be proposed anywhere and is measured only by the judge.
 
 ## spawn
 
@@ -39,6 +39,6 @@ An editor or owner can also change the experiment's budget at any time without a
 - It names what would happen and what it may cost on its card.
 - It changes nothing until approved, unless policy pre-approves it.
 - A call that changes something, and its approval, is an audit row.
-- It works the same through `ratchet mcp`.
+- It works the same through `antilog mcp`.
 
 Follow [../change/SKILL.md](../change/SKILL.md) to add one.

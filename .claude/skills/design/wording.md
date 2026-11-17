@@ -51,7 +51,7 @@ The vocabulary source is [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md), includ
 | Connected, Reconnect, Not checked (connector status) | Healthy, Broken, Unknown, Offline |
 | user, service principal | member, service account (on screen) |
 | Restricted to the judge | holdout only, hidden |
-| Ratchet cloud, Self-hosted | SaaS, on-prem |
+| Antilog cloud, Self-hosted | SaaS, on-prem |
 | a readable label ("Experiment sealed") | a raw action code (`experiment.seal`) |
 
 Add each new term to the glossary in the same change that introduces it. Prefer the term Palantir Foundry or Databricks already uses; if a screen needs a word that is not in the glossary, find theirs first and add the row.
@@ -63,7 +63,7 @@ Add each new term to the glossary in the same change that introduces it. Prefer 
 | Sidebar | "New experiment", "Search" (hint ⌘K), "Projects", "Customize", "Pinned"; sessions "Claude Code session", "Codex session" |
 | States, activities | Not sealed, Sealed, Watching, Regressed; Working, Waiting for you, Done, Failed |
 | Header | breadcrumb "Project / Experiment title" (spawned: "... / Codex session"), "More", "Share" |
-| An agent's message | the Ratchet mark and "Ratchet", then the agent as a quiet label: "Ratchet · Claude Code" |
+| An agent's message | the Antilog mark and "Antilog", then the agent as a quiet label: "Antilog · Claude Code" |
 | Stopped session | Done, with "Stopped by NAME" |
 | Title menu (button "Session menu") | "Rename", "Pin" or "Unpin", "Experiment details", "Copy link", "Hand off to...", "Stop session" (inline confirm: "Stop session", "Keep working"), "Archive" |
 | Panel toggles | "Details", "Trials", "Changes", "Terminal", "Preview", "Files", each with a tooltip naming its shortcut ("Terminal (⌘⇧T)"); "Close Details panel"; "Resize panel" |
@@ -90,7 +90,7 @@ Add each new term to the glossary in the same change that introduces it. Prefer 
 | Compaction | "Compacted the conversation automatically at 80% of the context window. 44% used now." |
 | Agent menu | "Agent for this session"; "Auto" with "Auto would choose Codex: lowest cost per win on Speed experiments here, $18"; tiers "$", "$$", "$$$" with "About $2.70 per trial here"; "Hand off to..."; "Tiers run from $ to $$$. Cost per trial is measured by the judge on your code." |
 | Hand off | "Priya Raman handed the Claude Code session off to Codex. Same experiment, same branches."; "Handed off to Codex"; "Summary from Claude Code session" with "Goal", "Done", "From history", "Where it stopped" |
-| Home | "Ideas" ("Ratchet suggests, ranked by expected return. You start."; columns "Experiment", "Worth a year", "Costs about", "Ratio"; "Start"); "Waiting for you" |
+| Home | "Ideas" ("Antilog suggests, ranked by expected return. You start."; columns "Experiment", "Worth a year", "Costs about", "Ratio"; "Start"); "Waiting for you" |
 | Notification titles | Win, Waiting for you, Regression, Budget spent, Failed |
 
 ## Judge words in the chat
@@ -147,7 +147,7 @@ Every title is the card's name. A declined card reads "Declined by NAME · 14:02
 | Value section | "Worth", "Cost so far", "Return", "How At risk works." |
 | Where the spend went | "Kept trials", "Within noise", "Worse", "Guardrail failed", "Rejected", "Failed", "Not measured"; columns "Outcome", "Spent", "Share" |
 | Sessions table | "Session", "Platform", "Started", "Ended", "Spend", "State", "Clean-up"; "Lead session", "Spawned session"; Removed, Not removed; "Running", "When it ends" |
-| Session not removed | "The Gemini session was not removed. Ratchet retries, and its cost counts until it is gone." |
+| Session not removed | "The Gemini session was not removed. Antilog retries, and its cost counts until it is gone." |
 | Trials table | "Trial", "Hypothesis", "Session", "Outcome", "Value", "Cost", "Started from"; "Show all 14 trials" |
 | Watch, Versions | "Watch this experiment", "On a schedule", "When the default branch moves", "Last measurement"; "Current", "Superseded"; "Numbers are never compared across versions." |
 | Receipt | "Receipt for trial 12"; "Signed by the judge", "Verify again"; "The signature matches", "The signer is the judge", "The judge image matches"; sections "Experiment", "Data", "Compute", "Commits", "Values", "Repeats and noise", "Trials tried", "Holdout", "Second opinion", "Spend", "Lineage"; "Worth of this win", "Cost of the win", "Return of the win"; "Dataset versions", "Repo commits", "Agent credential", "Judge credential"; "Judge platform", "Judge image", "Agents and sessions", "Measured on"; holdout "Passed" or "Failed", never a value; "Baseline, then trial 3, trial 7, trial 12. Each started from the one before it." |
@@ -169,10 +169,10 @@ Every title is the card's name. A declined card reads "Declined by NAME · 14:02
 | --- | --- |
 | Page | "Customize"; tabs "Evaluations", "Skills", "Connectors", "Agents", "Plugins"; "Yours", "Discover"; shelves "Featured", "For you", "New", "Show all" (connectors "Featured connectors", "Top connectors"); "Add evaluation", "Add skill", "Add connector", "Add agent", "Add plugin"; row action "Configure" |
 | Evaluations | columns "Evaluation", "Kind", "Seal checks", "Used in"; "Seal checks passed today"; "The template", "Check again", "Experiments using it" |
-| Skills | columns "Skill pack", "Source", "Version", "Used in"; "Your team", "By Ratchet"; "Versions", "What agents get", "Who can read it", "On", "Off"; "Agents read it. The judge never reads it, so a skill pack cannot change how a result is measured." |
+| Skills | columns "Skill pack", "Source", "Version", "Used in"; "Your team", "By Antilog"; "Versions", "What agents get", "Who can read it", "On", "Off"; "Agents read it. The judge never reads it, so a skill pack cannot change how a result is measured." |
 | Plugins | columns "Plugin", "Adds", "Status" ("Added"); "A plugin runs no code and has no powers of its own. It can never mark, unmark or grant access to a dataset."; "Remove plugin" opens "Keep the items it added?" with "Keep items", "Remove items"; "Items in use by an experiment stay." |
 | Connectors | columns "Connector", "Status", "Used by"; "Snowflake · ANALYTICS", "Checked 2 min ago", "Used by 3 experiments", "Not used yet"; "Snowflake", "Databricks", "BigQuery", "Postgres", "DynamoDB", "Amazon S3", "MCP server"; "The code host is under Connections"; buttons "Check connection", "Check again", "Update credential", "Remove", "Browse connectors" |
-| How access is scoped | "Credentials" ("Registered once and kept in each platform's credential store. Ratchet keeps none."), "Agents get" ("A read-only credential on the views listed below. The holdout is left out."), "The judge gets" ("Its own read-only credential that also covers the holdout, kept on the judge platform."), "Lifetime" ("Short-lived, minted per session.") |
+| How access is scoped | "Credentials" ("Registered once and kept in each platform's credential store. Antilog keeps none."), "Agents get" ("A read-only credential on the views listed below. The holdout is left out."), "The judge gets" ("Its own read-only credential that also covers the holdout, kept on the judge platform."), "Lifetime" ("Short-lived, minted per session.") |
 | Datasets table | "Dataset", "Version", "Marking", "Agents", "Judge"; "Can read", "No access"; holdout row "Restricted to the judge", no control; "A dataset version never changes after it is created." |
 | Add connector | "Agent credential", "Judge credential", "What each one gets"; "Create it in Snowflake first: a read-only role on the views you list, holdout tables not granted."; "A separate read-only role that also covers the holdout."; "Goes to each agent platform's credential store." |
 | Connector error | "Can't read the credential for orders-db."; "2 experiments cannot measure until then:"; "Not checked" |
@@ -197,7 +197,7 @@ Every title is the card's name. A declined card reads "Declined by NAME · 14:02
 | Sign-in | "Continue with GitHub", "Continue with Google", "Continue with single sign-on"; "Sign-in refused."; "No access" ("This account has no access to HOST. Ask an owner to invite you."), "Use another account", "Sign out" |
 | Settings, Single sign-on | "Sign-in methods", "GitHub", "Google", "Your OpenID Connect provider" ("Only an owner sets it up."), "Stay signed in for" |
 | Rail | "You": Profile, Appearance, Access tokens, This device. "Organization": General, Members, Single sign-on, Agent platforms, Approvals, Budgets, Connections, Audit log |
-| Agent platforms | "Claude Managed Agents", "AWS AgentCore", "OpenAI Agents API", "Microsoft Foundry Agent Service" ("Foundry Agent Service" where space is short), "Google Agent Runtime"; "Add platform", "Test connection", "Update credential", "Remove"; badge "Judge platform"; Connected, Needs attention; "Agents are in Customize"; "bench-std · AWS AgentCore · 4 vCPU, 16 GiB"; Ratchet cloud "Managed by Ratchet." and "Data and retention" |
+| Agent platforms | "Claude Managed Agents", "AWS AgentCore", "OpenAI Agents API", "Microsoft Foundry Agent Service" ("Foundry Agent Service" where space is short), "Google Agent Runtime"; "Add platform", "Test connection", "Update credential", "Remove"; badge "Judge platform"; Connected, Needs attention; "Agents are in Customize"; "bench-std · AWS AgentCore · 4 vCPU, 16 GiB"; Antilog cloud "Managed by Antilog." and "Data and retention" |
 | Approvals | "Policy by card"; "Always ask", "Allow up to a limit", "Allow"; "Always asks. A person must type the value."; "Allow never pauses" |
 | Budgets | "Default budget per experiment", "Monthly cap", "Spent this month"; "Experiments, with budget and spend"; "Sessions of EXPERIMENT"; "Where the spend went"; "Cost per win by project"; "Change budget" (also on the strip, the experiment page and the Seal card; editors and owners only) |
 | Connections | "Repos", "Credentials", "Environments"; "Revoke"; "Added by NAME · date · used by 3 sessions"; "Nothing approved yet." |
@@ -258,7 +258,7 @@ A `·` never joins two thoughts in one string; it survives only between short me
 - Money and units are worded the same on every page.
 - Defensive reassurance (a fact followed by what was not lost, deleted or sent) belongs only where the risk decision is made, in full sentences. A status or an empty state repeating the promise is noise.
 - A cloud account is not a connector, and neither is the code host. Platform names appear under Agent platforms in Settings, beside an agent, and on the Seal experiment card as the judge platform. Never Kubernetes.
-- An agent's message is signed "Ratchet", with the agent as a quiet second label. An agent's logo appears only where the agent is the subject.
+- An agent's message is signed "Antilog", with the agent as a quiet second label. An agent's logo appears only where the agent is the subject.
 - Model providers are a field on an agent, not a connector category.
 - Only the judge's numbers are worded as results. A number from a session is "checked in the session" and never shown as a result.
 
