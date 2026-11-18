@@ -215,6 +215,8 @@ jobs:
           ANTILOG_SCHEDULER_TARGET_ARN: arn:aws:lambda:us-east-1:000000000000:function:local
           ANTILOG_SCHEDULER_ROLE_ARN: arn:aws:iam::000000000000:role/local
           ANTILOG_WAKE_SECRET: local-wake-secret
+          # Must match the x-antilog-origin header in crates/antilog-aws/tests/events/health.json.
+          ANTILOG_ORIGIN_SECRET: local-origin-secret
           ANTILOG_SECRET_RECEIPT_KEY: "0000000000000000000000000000000000000000000000000000000000000001"
           AWS_REGION: us-east-1
         run: |
