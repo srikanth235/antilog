@@ -107,10 +107,6 @@ fn cheats() -> Value {
 }
 
 fn app() -> Router {
-    app_with(None)
-}
-
-fn app_with(wake_secret: Option<String>) -> Router {
     let mut platform = FakePlatform::default().with("base", Profile::new(100.0));
     for i in 0..4 {
         platform = platform.with(&format!("cheat-{i}"), Profile::new(10.0).holdout(100.0));
@@ -125,7 +121,7 @@ fn app_with(wake_secret: Option<String>) -> Router {
             providers: vec![Provider::Fake(FakeSignIn)],
             open_organizations: true,
             secure_cookies: true,
-            wake_secret,
+            wake_secret: None,
         },
     )
 }
@@ -233,8 +229,8 @@ async fn from_sign_in_to_a_signed_receipt() {
 }
 
 #[tokio::test]
-async fn a_scheduler_wake_up_steps_the_session_with_the_shared_secret() {
-    let app = app_with(Some("wake-secret".into()));
+async fn a_scheduler_wake_up_steps_the_session_without_sign_in() {
+    let app = app();
     let owner = sign_in(&app).await;
     let (_, project) = send(
         &app,
@@ -263,38 +259,18 @@ async fn a_scheduler_wake_up_steps_the_session_with_the_shared_secret() {
         json!({"agent": "claude", "prompt": "go"}),
     )
     .await;
-    let (_, me) = send(&app, Method::GET, "/organization", &owner, json!({})).await;
-    let org = me["id"].as_str().unwrap().to_owned();
-    let wake = |org: String, job: String, secret: Option<&'static str>| {
-        let mut request = Request::post(format!("/internal/wake/{org}/{job}"));
-        if let Some(secret) = secret {
-            request = request.header("x-antilog-wake", secret);
-        }
-        let request = request.body(Body::empty()).unwrap();
+    let wake = |job: String| {
+        let request = Request::post(format!("/internal/wake/{job}"))
+            .body(Body::empty())
+            .unwrap();
         let app = app.clone();
         async move { app.oneshot(request).await.unwrap().status() }
     };
     let id = session["id"].as_str().unwrap().to_owned();
+    assert_eq!(wake(id.clone()).await, StatusCode::OK);
+    assert_eq!(wake(id).await, StatusCode::OK, "a second wake-up is safe");
     assert_eq!(
-        wake(org.clone(), id.clone(), None).await,
-        StatusCode::UNAUTHORIZED
-    );
-    assert_eq!(
-        wake(org.clone(), id.clone(), Some("wrong")).await,
-        StatusCode::UNAUTHORIZED
-    );
-    assert_eq!(
-        wake(org.clone(), id.clone(), Some("wake-secret")).await,
-        StatusCode::OK
-    );
-    assert_eq!(
-        wake(org.clone(), id, Some("wake-secret")).await,
-        StatusCode::OK,
-        "a second wake-up is safe"
-    );
-    let ghost = "018f3b1e-0000-7000-8000-000000000000";
-    assert_eq!(
-        wake(org, ghost.into(), Some("wake-secret")).await,
+        wake("018f3b1e-0000-7000-8000-000000000000".into()).await,
         StatusCode::NO_CONTENT
     );
     let doc: Value = serde_json::from_str(&antilog_server::api::openapi_json()).unwrap();
@@ -304,19 +280,5 @@ async fn a_scheduler_wake_up_steps_the_session_with_the_shared_secret() {
             .unwrap()
             .keys()
             .all(|p| !p.starts_with("/internal"))
-    );
-}
-
-#[tokio::test]
-async fn the_wake_route_is_absent_without_a_secret() {
-    let app = app();
-    let request = Request::post(
-        "/internal/wake/018f3b1e-0000-7000-8000-000000000000/018f3b1e-0000-7000-8000-000000000000",
-    )
-    .body(Body::empty())
-    .unwrap();
-    assert_eq!(
-        app.oneshot(request).await.unwrap().status(),
-        StatusCode::NOT_FOUND
     );
 }

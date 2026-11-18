@@ -11,8 +11,8 @@ use antilog_core::store::{OrganizationStore, SessionStore};
 use antilog_core::tools::{Caller, ToolHost, Toolbox, definitions};
 use antilog_types::judge::{Receipt, TrialId};
 use antilog_types::{
-    ApiError, Experiment, ExperimentId, NewExperiment, OrganizationId, ProjectId, SendMessage,
-    Session, SessionId, StartSession, StepResult, ToolCall, ToolDefinition, ToolResult,
+    ApiError, Experiment, ExperimentId, NewExperiment, ProjectId, SendMessage, Session, SessionId,
+    StartSession, StepResult, ToolCall, ToolDefinition, ToolResult,
 };
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
@@ -376,42 +376,38 @@ async fn receipt<D: Deps + 'static>(
         .ok_or(Refusal::NotFound.into())
 }
 
-/// The scheduler's wake-up for a job, which is a session id. No sign-in; the platform in front
-/// blocks `/internal` for the internet and `ANTILOG_WAKE_SECRET` is required in `x-antilog-wake`.
-/// A session that no longer exists is answered 204 so the scheduler stops retrying it.
+/// The scheduler's wake-up for a job, which is a session id. No sign-in: the platform in front
+/// blocks `/internal` for the internet, and `ANTILOG_WAKE_SECRET`, when set, is also required.
+/// A job that no longer exists is answered 204 so the scheduler stops retrying it.
 async fn wake<D: Deps + 'static>(
     State(app): Shared<D>,
     headers: axum::http::HeaderMap,
-    Path((organization, job)): Path<(OrganizationId, uuid::Uuid)>,
+    Path(job): Path<uuid::Uuid>,
 ) -> Result<Response, Fail> {
-    let secret = app.settings.wake_secret.as_deref().unwrap_or_default();
-    let given = headers
-        .get("x-antilog-wake")
-        .map_or(&[][..], |value| value.as_bytes());
-    if secret.is_empty() || !bool::from(subtle::ConstantTimeEq::ct_eq(given, secret.as_bytes())) {
-        return Err(Fail::Unauthenticated);
+    if let Some(secret) = &app.settings.wake_secret {
+        let given = headers
+            .get("x-antilog-wake")
+            .map_or(&[][..], |value| value.as_bytes());
+        if !bool::from(subtle::ConstantTimeEq::ct_eq(given, secret.as_bytes())) {
+            return Err(Fail::Unauthenticated);
+        }
     }
-    match session::step(
+    let Some(found) = app.store().find_session(SessionId::from_uuid(job)).await? else {
+        return Ok(StatusCode::NO_CONTENT.into_response());
+    };
+    let done = session::step(
         &*app.deps,
         &Toolbox(&*app.deps),
-        organization,
-        SessionId::from_uuid(job),
+        found.organization_id,
+        found.id,
     )
     .await
-    {
-        Ok(done) => Ok(Json(StepResult {
-            status: done.status,
-            events: u32::try_from(done.events).unwrap_or(u32::MAX),
-        })
-        .into_response()),
-        Err(SessionError::NotFound) => Ok(StatusCode::NO_CONTENT.into_response()),
-        Err(error) => Err(Fail::Session(error)),
-    }
-}
-
-/// Mounted only when `ANTILOG_WAKE_SECRET` is set; not in the OpenAPI document.
-pub fn wake_routes<D: Deps + 'static>() -> Router<Arc<App<D>>> {
-    Router::new().route("/internal/wake/{organization}/{job}", post(wake::<D>))
+    .map_err(Fail::Session)?;
+    Ok(Json(StepResult {
+        status: done.status,
+        events: u32::try_from(done.events).unwrap_or(u32::MAX),
+    })
+    .into_response())
 }
 
 pub fn routes<D: Deps + 'static>() -> Router<Arc<App<D>>> {
@@ -431,5 +427,6 @@ pub fn routes<D: Deps + 'static>() -> Router<Arc<App<D>>> {
         .route("/sessions/{id}/messages", post(message::<D>))
         .route("/sessions/{id}/stop", post(stop::<D>))
         .route("/sessions/{id}/step", post(step::<D>))
+        .route("/internal/wake/{job}", post(wake::<D>))
         .route("/trials/{id}/receipt", get(receipt::<D>))
 }
