@@ -2,14 +2,14 @@
 
 ## Today
 
-On this branch there is one real check, for a design change:
+On this branch the Rust checks below exist, and so does one for a design change:
 
 ```
 python3 design/tools/tokens.py
 python3 design/tools/tokens.py --check
 ```
 
-A doc-only change has no command: read the links and fix every statement the change made false. Everything else below is target. Say so in the report; never call an unrun layer verified.
+A doc-only change has no command: read the links and fix every statement the change made false. The rows marked (target) have no command yet. Say so in the report; never call an unrun layer verified.
 
 ## Target
 
@@ -17,14 +17,14 @@ One gate command with profiles (local, pull request, nightly, release) is the ta
 
 | Layer | Run (all target) | Stack |
 | --- | --- | --- |
-| Rust (`antilog-core`, `antilog-server`, `antilog`) | `cargo fmt --all --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo nextest run --workspace` (`cargo test --doc` for doctests), `cargo deny check` | [stack/rust/antilog.md](../stack/rust/antilog.md) |
-| An API type, route or event | the Rust checks, `cargo xtask openapi --check`, the generated TypeScript client up to date; see [change/api-endpoint.md](../change/api-endpoint.md) | [stack/rust/antilog.md](../stack/rust/antilog.md) |
+| Rust (`antilog-core`, `antilog-server`, `antilog`) | `cargo fmt --all --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo nextest run --workspace` (`cargo test --doc` for doctests), `cargo deny check` (all four exist; CI job `rust`) | [stack/rust/antilog.md](../stack/rust/antilog.md) |
+| An API type, route or event | the Rust checks, `cargo run -q -p antilog-server -- openapi | diff - openapi/antilog.json`, then `pnpm generate:api` in `web/` leaves no diff (CI jobs `rust` and `web-client`); see [change/api-endpoint.md](../change/api-endpoint.md) | [stack/rust/antilog.md](../stack/rust/antilog.md) |
 | The CLI, an Antilog tool or `antilog mcp` | the Rust checks, then the CLI test script against a built `antilog` and a test server | [stack/rust/antilog.md](../stack/rust/antilog.md), [stack/mcp/antilog.md](../stack/mcp/antilog.md) |
 | TypeScript (the web app, the generated client) | `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm lint`, `pnpm test` (the browser tests are `@playwright/test`; never run `playwright install`, see [stack/playwright/antilog.md](../stack/playwright/antilog.md)) | [stack/typescript/antilog.md](../stack/typescript/antilog.md) |
 | Swift (the macOS app) | `xcodebuild -project Antilog.xcodeproj -scheme Antilog -destination 'platform=macOS' test`, on macOS only | [stack/swift/antilog.md](../stack/swift/antilog.md) |
 | The Helm chart or an OpenTofu module (target) | `helm lint`, `helm template` against each cloud's values, `tofu fmt -check` and `tofu validate`; an install on a local k3s cluster in CI | [stack/kubernetes/antilog.md](../stack/kubernetes/antilog.md) |
 | The Lambda build or a timer adapter (target) | `cargo lambda build --release --arm64`, then a local invoke with `cargo lambda watch` and `cargo lambda invoke`, beside the k3s chart install; a test that no work runs after the response and that a re-delivered wake-up leaves one outcome | [stack/rust/antilog.md](../stack/rust/antilog.md) |
-| The store: a migration or query | the storage suite against a Postgres container, `cargo sqlx prepare --check`, migrations applied to an empty database and to the last release | [stack/postgres/antilog.md](../stack/postgres/antilog.md) |
+| The store: a migration or query | the storage suite against a Postgres container (`antilog_core::testing::store_suite`), `cargo sqlx prepare --workspace --check`, migrations applied to an empty database and to the last release | [stack/postgres/antilog.md](../stack/postgres/antilog.md) |
 | An agent platform adapter | the Rust checks, and the platform test suite against the fake platform | [stack/rust/antilog.md](../stack/rust/antilog.md) |
 | The judge: the acceptance criteria, the seal checks, anti-cheat | the Rust checks, the acceptance criteria as one pure function with property tests (`proptest`) and a table of known cases, the seal checks (baseline, noise, planted cheats) against the fake judge sandbox, and a test that a trial that changes a protected path is Rejected; see [judge/change-acceptance.md](../judge/change-acceptance.md) and [judge/anti-cheat.md](../judge/anti-cheat.md) | [stack/rust/antilog.md](../stack/rust/antilog.md) |
 | A change to `.github/workflows/`, a new dependency, or a trust-boundary change | the checks of the layer, plus a review with the skill in [stack/security/antilog.md](../stack/security/antilog.md); a new dependency also `cargo deny check` | [stack/security/antilog.md](../stack/security/antilog.md) |

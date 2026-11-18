@@ -6,8 +6,8 @@
 
 ```bash
 sqlx migrate run                         # apply migrations to the local database
-cargo sqlx prepare --workspace --check   # (target) offline query data is up to date
-cargo nextest run -p <crate>             # (target) database tests, against Postgres in a container
+cargo sqlx prepare --workspace --check   # offline query data is up to date
+cargo nextest run -p <crate>             # database tests, against Postgres in a container (Docker needed)
 ```
 
 **Done** when a new migration applies to an empty database and to one at the previous version, the offline query data is regenerated and committed, the tests pass, and a changed query has had its plan read ([general/postgres-best-practices.md](general/postgres-best-practices.md)). How a table or migration travels through the layers: [change/ledger-table.md](../../change/ledger-table.md).

@@ -12,11 +12,11 @@ Read the repo page for the file type first: it holds this repo's constraints, it
 
 | File type | Read | Check |
 | --- | --- | --- |
-| `.rs`, `Cargo.toml` | [rust/antilog.md](rust/antilog.md) | `cargo fmt --all --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo nextest run`, `cargo deny check` (target) |
+| `.rs`, `Cargo.toml` | [rust/antilog.md](rust/antilog.md) | `cargo fmt --all --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo nextest run`, `cargo deny check` |
 | `.ts`, `.tsx`, `.css` in the web client | [typescript/antilog.md](typescript/antilog.md) | `pnpm build && pnpm typecheck && pnpm test` (target) |
 | HTML, CSS and browser APIs, in the web client or a board | [web/antilog.md](web/antilog.md), then the guide for the job in [web/general/INDEX.md](web/general/INDEX.md); for a Base UI component also [web/base-ui.md](web/base-ui.md) | the check of the file type; `python3 .claude/skills/stack/web/sync.py --check` after a sync |
 | `.swift`, the macOS app (boards owed) | [swift/antilog.md](swift/antilog.md) | `xcodebuild ... test` on macOS (target); report it unrun elsewhere |
-| SQL, migrations, `sqlx` queries, the job queue | [postgres/antilog.md](postgres/antilog.md) | `cargo sqlx prepare --check` and the storage tests (target) |
+| SQL, migrations, `sqlx` queries, the job queue | [postgres/antilog.md](postgres/antilog.md) | `cargo sqlx prepare --workspace --check` and the storage tests |
 | The container image, the Helm chart, an OpenTofu module, the Kubernetes sandbox adapter's pods | [kubernetes/antilog.md](kubernetes/antilog.md) | `helm lint`, `helm template` per cloud, `tofu validate` per module (target) |
 | A security review: a Rust change at the trust boundary, a new dependency, an API or config design, `.github/workflows/`, a property test | [security/antilog.md](security/antilog.md), then the skill for the job in [security/general/INDEX.md](security/general/INDEX.md) | the check of the language; `python3 .claude/skills/stack/security/sync.py --check` after a sync |
 | The MCP server (`antilog mcp`), the Antilog tools it serves and their descriptions | [mcp/antilog.md](mcp/antilog.md), then [mcp/general/INDEX.md](mcp/general/INDEX.md) | the Rust check; `python3 .claude/skills/stack/mcp/sync.py --check` after a sync |

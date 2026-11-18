@@ -8,7 +8,7 @@ description: >-
 
 Prove the change at the layer it lives in, report what ran and what did not.
 
-The only real check on this branch today is `python3 design/tools/tokens.py --check`. There is no code and no CI here yet. The pages describe the target checks, with each command that does not exist yet marked (target).
+The real checks on this branch are the Rust checks and `python3 design/tools/tokens.py --check`, run by CI. The pages describe the target checks, with each command that does not exist yet marked (target).
 
 | If you are doing | Read |
 | --- | --- |

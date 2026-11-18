@@ -4,7 +4,7 @@ Antilog is a chat and a judge. A person states a goal and talks to a coding agen
 
 ## This branch starts fresh
 
-`main` holds the agreed design and no product code: these skills, the design boards and tokens in `design/` (`mockups/`, `tokens.toml`, `tools/`), the logo in `design/icon/` and the glossary. Nothing is built here yet.
+`main` holds the agreed design: these skills, the design boards and tokens in `design/` (`mockups/`, `tokens.toml`, `tools/`), the logo in `design/icon/` and the glossary. This branch adds the Foundation: the Cargo workspace in `crates/` (`antilog-types`, `antilog-core` with its traits and fakes, `antilog-server` with the Postgres `Store`, `antilog-agentcore` and `antilog`, the last two empty), `openapi/antilog.json` and the generated client in `web/`. Nothing else is built yet.
 
 Every skill describes the target. A path or command that does not exist on this branch yet is marked "(target)".
 
@@ -12,7 +12,18 @@ When code lands on this branch, update the pages that name its paths and command
 
 ## Checks
 
-There is no code on this branch, so there is no build or test to run yet. For a design change, edit the light board and run `python3 design/tools/tokens.py`, then `python3 design/tools/tokens.py --check`. Git hooks in `.githooks/` check each commit (Claude Code sessions turn them on at start; elsewhere run `git config core.hooksPath .githooks`), and `.github/workflows/checks.yml` runs the same checks on every push. Add the real checks here with the first code.
+Rust (from the repo root; Docker is needed for the Postgres tests):
+
+```bash
+cargo fmt --all --check
+cargo clippy --workspace --all-targets -- -D warnings
+cargo nextest run --workspace
+cargo deny check
+cargo sqlx prepare --workspace --check   # DATABASE_URL points at a database with the migrations applied
+cargo run -q -p antilog-server -- openapi | diff - openapi/antilog.json
+```
+
+A changed type or route: regenerate `openapi/antilog.json` (`cargo run -q -p antilog-server -- openapi > openapi/antilog.json`), then the client (`cd web && pnpm install && pnpm generate:api`). A changed query: `cargo sqlx prepare --workspace` and commit `.sqlx/`. For a design change, edit the light board and run `python3 design/tools/tokens.py`, then `python3 design/tools/tokens.py --check`. Git hooks in `.githooks/` check each commit (Claude Code sessions turn them on at start; elsewhere run `git config core.hooksPath .githooks`), and `.github/workflows/checks.yml` runs the same checks on every push, plus the Rust and web-client jobs.
 
 - Fix the code, not the check. Do not loosen a lint, test or snapshot to get green.
 

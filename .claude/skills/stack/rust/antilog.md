@@ -1,6 +1,6 @@
 # Rust in Antilog
 
-(target) No product Rust is on this branch yet. This page says how the code is written when it lands.
+The Foundation is on this branch: `crates/antilog-types`, `antilog-core` (the traits `Store`, `Platform`, `Timer`, `Clock`, `Signer`, `Secrets` with fakes in `antilog_core::fakes`, and the storage suite in `antilog_core::testing`), `antilog-server` (the health route, the OpenAPI document and the Postgres `Store`), and empty `antilog-agentcore` and `antilog`. Toolchain 1.100.0 is pinned in `rust-toolchain.toml`; `deny.toml` holds the licence and advisory policy. Everything else on this page is still how the code is written when it lands.
 
 ## Workflow and done criteria
 
@@ -9,8 +9,8 @@ Run these, in this order, and fix code rather than weakening a check:
 ```bash
 cargo fmt --all --check
 cargo clippy --workspace --all-targets -- -D warnings
-cargo nextest run --workspace          # (target); `cargo test --doc` for doctests
-cargo deny check                       # (target) licences, advisories, duplicate and banned crates
+cargo nextest run --workspace          # `cargo test --doc` for doctests
+cargo deny check                       # licences, advisories, duplicate and banned crates
 ```
 
 Set `export CARGO_INCREMENTAL=0 CARGO_PROFILE_DEV_DEBUG=0` for local builds when a cloud SDK makes full debug info huge.

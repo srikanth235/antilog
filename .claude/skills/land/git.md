@@ -4,7 +4,7 @@
 - Commit only when asked. Open a pull request only when asked.
 - Do not force-push a branch someone else is working on.
 - Never skip, disable or delete a test, hook or check to get green. Fix the code.
-- Do not commit generated files by hand. Regenerate them: `design/mockups/tokens.css` and the dark twins (from `python3 design/tools/tokens.py`), and (target) the OpenAPI document and the generated TypeScript client.
+- Do not commit generated files by hand. Regenerate them: `design/mockups/tokens.css` and the dark twins (from `python3 design/tools/tokens.py`), and the OpenAPI document (`openapi/antilog.json`) and the generated TypeScript client (`web/src/api/schema.d.ts`).
 - Never commit a secret, a token or a `.env` file.
 - **Hooks.** `.githooks/pre-commit` blocks secrets, build output, files over 1 MB, em dashes, model names and a failing design check; `.githooks/commit-msg` checks the subject. Every Claude Code session turns them on at start (`.claude/settings.json`); anywhere else run `git config core.hooksPath .githooks` once. CI runs both on every push ([ci.md](ci.md)). Keep hooks under a second.
 - No model names in commits, code, docs or pull request text.
