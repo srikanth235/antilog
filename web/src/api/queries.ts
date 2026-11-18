@@ -6,6 +6,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { agentLabel } from "../lib/domain";
 import { api, type Schemas, unwrap } from "./client";
 
 export const keys = {
@@ -184,6 +185,12 @@ export function useAgents() {
     queryKey: keys.agents(),
     queryFn: async () => unwrap(await api.GET("/agents")),
   });
+}
+
+/** Turns an agent id into its display name; "An agent" until the list has loaded. */
+export function useAgentLabel() {
+  const agents = useAgents();
+  return (id: string) => agentLabel(agents.data, id);
 }
 
 /** What Auto would start and why; a refusal says to pick one. */

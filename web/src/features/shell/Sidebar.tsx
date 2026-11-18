@@ -1,13 +1,13 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useMatchRoute, useNavigate } from "@tanstack/react-router";
 import { api, unwrap } from "../../api/client";
-import { useMe } from "../../api/queries";
+import { useAgentLabel, useMe } from "../../api/queries";
 import { Mark } from "../../components/brand/Brand";
 import { Group } from "../../components/collapsible/Collapsible";
 import { Icon, StatusIcon } from "../../components/icon/Icon";
 import { Menu, MenuItem } from "../../components/menu/Menu";
 import { setAppearance, useAppearance } from "../../lib/appearance";
-import { activityOf, agentName, pendingCards } from "../../lib/domain";
+import { activityOf, pendingCards } from "../../lib/domain";
 import { initial } from "../../lib/format";
 import { setFolded, togglePin, useFolded, usePins } from "../../lib/prefs";
 import { w } from "../../words";
@@ -15,6 +15,7 @@ import { useSidebarData } from "./useSidebarData";
 
 export function Sidebar() {
   const data = useSidebarData();
+  const agentLabel = useAgentLabel();
   const pins = usePins();
   const folded = useFolded();
   const matchRoute = useMatchRoute();
@@ -63,7 +64,7 @@ export function Sidebar() {
                 search={{ session: session.id }}
               >
                 <StatusIcon activity={session.status} />
-                <span className="t">{w.sidebar.session(agentName(session.agent))}</span>
+                <span className="t">{w.sidebar.session(agentLabel(session.agent))}</span>
               </Link>
             ))}
           </div>

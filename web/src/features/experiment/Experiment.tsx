@@ -1,11 +1,13 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import {
   keys,
+  useAgentLabel,
   useExperiment,
   useExperimentApprovals,
   useExperimentSessions,
+  useExperimentSpend,
   useHistory,
   useMember,
   useMembers,
@@ -18,9 +20,9 @@ import {
 import { Failed, Loading } from "../../components/state/State";
 import {
   activityOf,
-  agentName,
   canEdit,
   leadSession,
+  MCP_AGENT,
   pendingCards,
   platformName,
 } from "../../lib/domain";
@@ -32,7 +34,7 @@ import { Composer } from "./Composer";
 import { Header, type Panel } from "./Header";
 import { DetailsPanel, PlatformPanel, TrialsPanel } from "./Panels";
 import { Scoreboard } from "./Scoreboard";
-import { Transcript } from "./Transcript";
+import { Message, TranscriptError } from "./Transcript";
 import { TrialCard } from "./TrialCard";
 import { Win } from "./Win";
 
@@ -51,6 +53,8 @@ export function Experiment(props: {
   const projects = useProjects();
   const members = useMembers();
   const me = useMember();
+  const spend = useExperimentSpend(experimentId);
+  const agentLabel = useAgentLabel();
   const client = useQueryClient();
   const navigate = useNavigate();
   const [budgetOpen, setBudgetOpen] = useState(false);
@@ -92,6 +96,136 @@ export function Experiment(props: {
     await client.invalidateQueries({ queryKey: keys.history(experimentId) });
   };
 
+  const events = transcript.data ?? [];
+  const opening = events.find((event) => event.kind === "person");
+  // The conversation in time order: what was said, the sessions started and the cards raised, where they happened.
+  const timeline: { key: string; at: number; rank: number; node: ReactNode }[] = [];
+  if (opening !== undefined)
+    timeline.push({
+      key: `event-${opening.seq}`,
+      at: Number.NEGATIVE_INFINITY,
+      rank: 0,
+      node: (
+        <div key={`event-${opening.seq}`} className="bubble">
+          <span>{opening.text}</span>
+        </div>
+      ),
+    });
+  timeline.push({
+    key: "sealed",
+    at: e.createdAt,
+    rank: 1,
+    node: (
+      <div key="sealed" className="tl">
+        {e.status === "not_sealed" ? w.experiment.notSealedLine : w.experiment.sealedLine}
+      </div>
+    ),
+  });
+  for (const session of list) {
+    timeline.push({
+      key: `start-${session.id}`,
+      at: session.createdAt,
+      rank: 2,
+      node: (
+        <div key={`start-${session.id}`} className="tl">
+          {session.agent === MCP_AGENT
+            ? w.experiment.connectedAgent
+            : w.experiment.startedSession(
+                agentLabel(session.agent),
+                platformName(session.platform),
+              )}
+        </div>
+      ),
+    });
+    if (session.id !== lead?.id)
+      timeline.push({
+        key: `spawned-${session.id}`,
+        at: session.createdAt,
+        rank: 3,
+        node: (
+          <Link
+            key={`spawned-${session.id}`}
+            className="cd spc"
+            to="/experiments/$experimentId"
+            params={{ experimentId: e.id }}
+            search={{ session: session.id }}
+          >
+            <span className="tx">
+              <span className="nm">{w.sidebar.session(agentLabel(session.agent))}</span>
+            </span>
+            <span className="go">
+              <span className="spill">{w.activity[session.status]}</span>
+            </span>
+          </Link>
+        ),
+      });
+  }
+  for (const event of events) {
+    if (event === opening) continue;
+    timeline.push({
+      key: `event-${event.seq}`,
+      at: event.at,
+      rank: 4 + event.seq / 1e12,
+      node: (
+        <Message key={`event-${event.seq}`} event={event} agent={agentLabel(active?.agent ?? "")} />
+      ),
+    });
+  }
+  for (const approval of cards)
+    timeline.push({
+      key: `card-${approval.id}`,
+      at: approval.createdAt,
+      rank: 5,
+      node: (
+        <ApprovalCard
+          key={approval.id}
+          approval={approval}
+          experiment={e.id}
+          canDecide={editor}
+          decidedBy={someone(approval.decidedBy)}
+          budgetCapCents={e.budgetCapCents}
+          spentCents={spend.data?.spentCents}
+          history={parsed}
+        />
+      ),
+    });
+  timeline.sort((a, b) => (a.at === b.at ? a.rank - b.rank : a.at < b.at ? -1 : 1));
+  // Trials carry no time yet, so they follow what has a time. (API work owed)
+  for (const row of parsed.trials)
+    timeline.push({
+      key: `trial-${row.trial}`,
+      at: Number.POSITIVE_INFINITY,
+      rank: row.number,
+      node: <TrialCard key={`trial-${row.trial}`} row={row} unit={parsed.unit} />,
+    });
+  if (parsed.best !== null)
+    timeline.push({
+      key: "win",
+      at: Number.POSITIVE_INFINITY,
+      rank: Number.MAX_SAFE_INTEGER,
+      node: (
+        <Win
+          key="win"
+          history={parsed}
+          trial={parsed.best}
+          experiment={e.id}
+          canDeliver={editor}
+          onCard={() => void refresh()}
+        />
+      ),
+    });
+
+  const thread = (
+    <>
+      {opening === undefined && transcript.isSuccess ? (
+        <div className="bubble">
+          <span>{e.goal}</span>
+        </div>
+      ) : null}
+      {timeline.map((item) => item.node)}
+    </>
+  );
+
   return (
     <>
       <Header
@@ -126,69 +260,8 @@ export function Experiment(props: {
             }}
           >
             <div className="c760 thread" style={{ gap: 12, paddingTop: 12, paddingBottom: 8 }}>
-              {transcript.isSuccess && !transcript.data.some((event) => event.kind === "person") ? (
-                <div className="bubble">
-                  <span>{e.goal}</span>
-                </div>
-              ) : null}
-              {e.status === "not_sealed" ? (
-                <div className="tl">{w.experiment.notSealedLine}</div>
-              ) : (
-                <div className="tl">{w.experiment.sealedLine}</div>
-              )}
-              {list.map((session) => (
-                <div key={session.id} className="tl">
-                  {w.experiment.startedSession(
-                    agentName(session.agent),
-                    platformName(session.platform),
-                  )}
-                </div>
-              ))}
-              {list
-                .filter((session) => session.id !== lead?.id)
-                .map((session) => (
-                  <Link
-                    key={session.id}
-                    className="cd spc"
-                    to="/experiments/$experimentId"
-                    params={{ experimentId: e.id }}
-                    search={{ session: session.id }}
-                  >
-                    <span className="tx">
-                      <span className="nm">{w.sidebar.session(agentName(session.agent))}</span>
-                    </span>
-                    <span className="go">
-                      <span className="spill">{w.activity[session.status]}</span>
-                    </span>
-                  </Link>
-                ))}
-              {parsed.trials.map((row) => (
-                <TrialCard key={row.trial} row={row} unit={parsed.unit} />
-              ))}
-              {parsed.best === null ? null : (
-                <Win
-                  history={parsed}
-                  trial={parsed.best}
-                  experiment={e.id}
-                  canDeliver={editor}
-                  onCard={() => void refresh()}
-                />
-              )}
-              {cards.map((approval) => (
-                <ApprovalCard
-                  key={approval.id}
-                  approval={approval}
-                  experiment={e.id}
-                  canDecide={editor}
-                  decidedBy={someone(approval.decidedBy)}
-                />
-              ))}
-              <Transcript
-                events={transcript.data ?? []}
-                agent={active?.agent ?? ""}
-                error={transcript.error}
-                onRetry={() => void transcript.refetch()}
-              />
+              {thread}
+              <TranscriptError error={transcript.error} onRetry={() => void transcript.refetch()} />
               {active?.status === "failed" ? (
                 <div className="tl" role="alert">
                   {w.experiment.sessionFailed}
@@ -232,7 +305,7 @@ export function Experiment(props: {
           <Composer
             status={active?.status ?? "none"}
             canSend={editor}
-            agent={active === undefined ? w.home.auto : agentName(active.agent)}
+            agent={active === undefined ? w.home.auto : agentLabel(active.agent)}
             budgetCents={e.budgetCapCents}
             onInterrupt={() => setConfirmStop(true)}
             onSend={async (text) => {

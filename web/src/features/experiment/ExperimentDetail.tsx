@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import {
+  useAgentLabel,
   useExperiment,
   useExperimentSessions,
   useExperimentSpend,
@@ -10,7 +11,7 @@ import {
 } from "../../api/queries";
 import { Icon } from "../../components/icon/Icon";
 import { Empty, Failed, Loading } from "../../components/state/State";
-import { agentName, canEdit, platformName } from "../../lib/domain";
+import { canEdit, platformName } from "../../lib/domain";
 import { dateTime, dollars } from "../../lib/format";
 import { kept, OUTCOME_WORDS, parseHistory } from "../../lib/history";
 import { w } from "../../words";
@@ -44,6 +45,7 @@ export function ExperimentDetail({ experimentId }: { experimentId: string }) {
   const spend = useExperimentSpend(experimentId);
   const projects = useProjects();
   const me = useMember();
+  const agentLabel = useAgentLabel();
   const [budgetOpen, setBudgetOpen] = useState(false);
   if (experiment.isPending)
     return (
@@ -175,7 +177,7 @@ export function ExperimentDetail({ experimentId }: { experimentId: string }) {
                 search={{ session: s.id }}
               >
                 <span className="n">
-                  <span>{w.sidebar.session(agentName(s.agent))}</span>
+                  <span>{w.sidebar.session(agentLabel(s.agent))}</span>
                 </span>
                 <span>{platformName(s.platform)}</span>
                 <span className="ink2">{dateTime(s.createdAt)}</span>

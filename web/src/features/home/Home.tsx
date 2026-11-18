@@ -135,6 +135,7 @@ export function Home({ project: preferred }: { project: string | undefined }) {
         <div className="cmp-opt">
           {list.length > 0 ? (
             <Select
+              variant="chip"
               label={w.home.project}
               value={selectedId}
               options={list.map((p) => ({ value: p.id, label: p.name }))}
@@ -157,26 +158,28 @@ export function Home({ project: preferred }: { project: string | undefined }) {
             />
           </label>
           <Select
+            variant="chip"
             label={w.home.agent}
+            title={
+              agent !== "auto"
+                ? undefined
+                : auto.data !== undefined
+                  ? w.home.autoWould(auto.data.agent.name, auto.data.reason)
+                  : auto.isError
+                    ? reason(auto.error)
+                    : w.home.autoHint
+            }
             value={agent}
             options={[
-              {
-                value: "auto",
-                label:
-                  auto.data === undefined ? w.home.auto : `${w.home.auto}: ${auto.data.agent.name}`,
-              },
+              { value: "auto", label: w.home.auto },
               ...(agents.data ?? [])
                 .filter((item) => item.enabled)
                 .map((item) => ({ value: item.id, label: item.name })),
             ]}
             onChange={setAgent}
           />
-          {agent === "auto" ? (
-            <span className="xs mut" role="status">
-              {auto.data?.reason ?? (auto.isError ? reason(auto.error) : "")}
-            </span>
-          ) : null}
           <Select
+            variant="chip"
             label={w.home.environment}
             value={environment ?? environments.data?.[0]?.id ?? null}
             options={(environments.data ?? []).map((item) => ({
@@ -186,6 +189,7 @@ export function Home({ project: preferred }: { project: string | undefined }) {
             onChange={setEnvironment}
           />
           <Select
+            variant="chip"
             label={w.home.mode}
             value={follow}
             options={[
@@ -194,7 +198,7 @@ export function Home({ project: preferred }: { project: string | undefined }) {
             ]}
             onChange={setFollow}
           />
-          <label className="opt">
+          <label className="opt" title={fallback === null ? w.home.noBudgetHint : undefined}>
             <span className="ring" style={{ ["--p" as string]: 0 }} />
             <span className="sr-only">{w.home.budgetAmount}</span>
             <input

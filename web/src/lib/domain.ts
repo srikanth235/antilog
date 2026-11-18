@@ -1,5 +1,6 @@
 import type { Schemas } from "../api/client";
 import type { Activity } from "../components/icon/Icon";
+import { w } from "../words";
 
 export type Role = Schemas["Role"];
 
@@ -37,13 +38,17 @@ export function pendingCards(approvals: readonly Schemas["Approval"][]): Schemas
   return approvals.filter((approval) => approval.status === "pending");
 }
 
-/** "claude-code" reads as "Claude Code". */
-export function agentName(agent: string): string {
-  return agent
-    .split(/[-_ ]/)
-    .filter((part) => part !== "")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
+/** `antilog mcp` opens its sessions as agent "mcp" on platform "external". */
+export const MCP_AGENT = "mcp";
+
+/** The agent a session ran: its display name from the organization's list. An id never becomes a name. */
+export function agentLabel(
+  agents: readonly Pick<Schemas["Agent"], "id" | "name">[] | undefined,
+  id: string,
+): string {
+  const found = agents?.find((agent) => agent.id === id);
+  if (found !== undefined) return found.name;
+  return id === MCP_AGENT ? w.session.yourAgent : w.session.unknownAgent;
 }
 
 const PLATFORMS: Record<string, string> = {
@@ -53,9 +58,10 @@ const PLATFORMS: Record<string, string> = {
   openai: "OpenAI Agents API",
   foundry: "Microsoft Foundry Agent Service",
   google: "Google Agent Runtime",
+  external: "your machine",
 };
 export function platformName(platform: string): string {
-  return PLATFORMS[platform] ?? agentName(platform);
+  return PLATFORMS[platform] ?? w.session.unknownPlatform;
 }
 
 /** The default budget the server applies to a new experiment: the project's, else the organization's, else none. */

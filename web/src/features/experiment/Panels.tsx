@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import type { Schemas } from "../../api/client";
+import { useAgentLabel } from "../../api/queries";
 import { Icon } from "../../components/icon/Icon";
-import { agentName, platformName } from "../../lib/domain";
+import { platformName } from "../../lib/domain";
 import { dollars } from "../../lib/format";
 import { type History, OUTCOME_COLOR, OUTCOME_WORDS } from "../../lib/history";
 import { w } from "../../words";
@@ -42,6 +43,7 @@ export function DetailsPanel(props: {
   canEdit: boolean;
 }) {
   const e = props.experiment;
+  const agentLabel = useAgentLabel();
   return (
     <PanelFrame panel="details" onClose={props.onClose}>
       <div className="pane-b scr">
@@ -86,7 +88,7 @@ export function DetailsPanel(props: {
               search={{ session: session.id }}
             >
               <span className="col">
-                <span>{agentName(session.agent)}</span>
+                <span>{agentLabel(session.agent)}</span>
                 <span className="xs mut">
                   {w.activity[session.status]} · {platformName(session.platform)}
                 </span>
@@ -106,7 +108,8 @@ export function TrialsPanel(props: {
 }) {
   const h = props.history;
   const rows = [...h.trials].reverse();
-  const agentOf = (id: string) => agentName(props.sessions.find((s) => s.id === id)?.agent ?? "");
+  const agentLabel = useAgentLabel();
+  const agentOf = (id: string) => agentLabel(props.sessions.find((s) => s.id === id)?.agent ?? "");
   return (
     <PanelFrame panel="trials" onClose={props.onClose} sub={`${h.trials.length} trials`}>
       <div className="pane-b scr">

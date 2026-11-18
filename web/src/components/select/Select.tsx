@@ -14,6 +14,10 @@ export function Select<T extends string>(props: {
   options: readonly Option<T>[];
   onChange: (value: T) => void;
   disabled?: boolean;
+  /** Said on hover and to assistive technology; for what the chip alone cannot hold. */
+  title?: string | undefined;
+  /** "chip" is the quiet option of the composer row; the default is a field. */
+  variant?: "chip";
 }) {
   const current = props.options.find((option) => option.value === props.value);
   return (
@@ -25,7 +29,11 @@ export function Select<T extends string>(props: {
         if (value !== null) props.onChange(value as T);
       }}
     >
-      <Base.Trigger className={styles.trigger} aria-label={props.label}>
+      <Base.Trigger
+        className={props.variant === "chip" ? `${styles.trigger} ${styles.chip}` : styles.trigger}
+        aria-label={props.label}
+        title={props.title}
+      >
         <span>{current?.label ?? ""}</span>
         <Icon name="chev" size="s" />
       </Base.Trigger>
