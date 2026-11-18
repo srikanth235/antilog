@@ -8,16 +8,18 @@ use crate::store::Store;
 /// The id a person or an agent writes to say "choose for me".
 pub const AUTO: &str = "auto";
 
+/// The agent on Antilog cloud: AgentCore with GLM 4.7 Flash (zai.glm-4.7-flash) and Qwen3 Coder 30B
+/// (qwen.qwen3-coder-30b-a3b-v1:0) as the fallback, named for the platform and not a brand.
 /// Offered only while the organization has set up no agent of its own, so a first experiment
 /// starts without a settings visit. An owner's list replaces it, and Auto says it is the reason.
 fn built_in(platform: &str) -> Agent {
     Agent {
-        id: "claude-code".to_owned(),
-        name: "Claude Code".to_owned(),
+        id: "agentcore-glm".to_owned(),
+        name: "AgentCore · GLM 4.7 Flash".to_owned(),
         platform: platform.to_owned(),
         enabled: true,
         is_default: false,
-        cost_tier: CostTier::Medium,
+        cost_tier: CostTier::Low,
         built_in: true,
     }
 }
@@ -68,7 +70,7 @@ pub async fn auto<S: Store>(
         )),
         [only] if only.built_in => Ok((
             (*only).clone(),
-            "No agent is set up yet, so Antilog starts Claude Code.".to_owned(),
+            "No agent is set up yet, so Antilog uses the AgentCore agent (GLM 4.7 Flash, with Qwen3 Coder 30B as the fallback).".to_owned(),
         )),
         [only] => Ok(((*only).clone(), "The only agent turned on.".to_owned())),
         _ => Err(Refusal::Invalid(

@@ -938,13 +938,13 @@ async fn auto_picks_the_default_the_only_agent_or_asks_and_only_an_owner_sets_ag
 
     // Nothing set up: the built-in agent keeps a first experiment from waiting on a settings visit.
     let (agent, reason) = agents::auto(&world.store, org, "fake").await.unwrap();
-    assert_eq!((agent.id.as_str(), agent.built_in), ("claude-code", true));
+    assert_eq!((agent.id.as_str(), agent.built_in), ("agentcore-glm", true));
     assert!(reason.contains("No agent is set up yet"));
     assert_eq!(
         agents::resolve(&world.store, org, "fake", "auto")
             .await
             .unwrap(),
-        "claude-code"
+        "agentcore-glm"
     );
     assert_eq!(
         agents::resolve(&world.store, org, "fake", "codex")

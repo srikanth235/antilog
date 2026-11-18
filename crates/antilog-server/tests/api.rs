@@ -1190,10 +1190,10 @@ async fn agents_auto_and_environments_are_read_by_members_and_set_by_owners() {
         .to_owned();
 
     let listed = org.call(Method::GET, "/agents", &viewer, None).await;
-    assert_eq!(listed.body[0]["id"], "claude-code");
+    assert_eq!(listed.body[0]["id"], "agentcore-glm");
     assert_eq!(listed.body[0]["builtIn"], true);
     let auto = org.call(Method::GET, "/agents/auto", &viewer, None).await;
-    assert_eq!(auto.body["agent"]["id"], "claude-code");
+    assert_eq!(auto.body["agent"]["id"], "agentcore-glm");
     let environments = org.call(Method::GET, "/environments", &viewer, None).await;
     assert_eq!(environments.body[0]["id"], "default");
 
@@ -1208,7 +1208,7 @@ async fn agents_auto_and_environments_are_read_by_members_and_set_by_owners() {
         .await;
     assert_eq!(
         (started.status, &started.body["agent"]),
-        (StatusCode::CREATED, &json!("claude-code"))
+        (StatusCode::CREATED, &json!("agentcore-glm"))
     );
 
     let body = json!({"name": "Codex", "platform": "agentcore", "enabled": true, "isDefault": false, "costTier": "high"});

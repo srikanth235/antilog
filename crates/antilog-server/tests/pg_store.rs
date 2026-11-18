@@ -355,17 +355,34 @@ async fn a_query_that_forgets_its_organization_sees_nothing() -> anyhow::Result<
         (members, organizations, projects),
         (1, vec!["a".to_owned()], 0)
     );
+    // Read-only: nothing changes through the window, and a write is refused.
+    let changed = sqlx::query("update members set name = 'x'")
+        .execute(&mut *tx)
+        .await?;
+    assert_eq!(changed.rows_affected(), 0);
+    let insert = sqlx::query(
+        "insert into projects (id, organization_id, name, description, created_at) select gen_random_uuid(), organization_id, 'p', '', now() from members",
+    )
+    .execute(&mut *tx)
+    .await;
+    assert!(insert.is_err());
     tx.rollback().await?;
-    assert_eq!(
-        store
+    // Each identity is shown only its own membership, never another's.
+    for (subject, organization) in [("a", &a), ("b", &b)] {
+        let found = store
             .memberships(&antilog_types::Identity {
                 provider: "fake".into(),
-                subject: "b".into()
+                subject: subject.into(),
             })
-            .await?
-            .len(),
-        1
-    );
+            .await?;
+        assert_eq!(
+            found
+                .iter()
+                .map(|found| (found.organization.id, found.member.name.as_str()))
+                .collect::<Vec<_>>(),
+            vec![(organization.id, "owner")]
+        );
+    }
 
     let mut tx = pool.begin().await?;
     sqlx::query("select set_config('antilog.organization_id', $1, true)")

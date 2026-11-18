@@ -318,7 +318,7 @@ async fn auto_agent<D: Deps + 'static>(
 
 #[utoipa::path(
     put, path = "/agents/{id}", operation_id = "set_agent", security(("bearer" = [])),
-    params(("id" = String, Path, description = "A lower-case slug such as claude-code")),
+    params(("id" = String, Path, description = "A lower-case slug such as agentcore-glm")),
     request_body = NewAgent,
     responses((status = 200, description = "Set; organization owners only", body = Agent))
 )]

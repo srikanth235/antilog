@@ -77,7 +77,7 @@
           {
             "name": "id",
             "in": "path",
-            "description": "A lower-case slug such as claude-code",
+            "description": "A lower-case slug such as agentcore-glm",
             "required": true,
             "schema": {
               "type": "string"

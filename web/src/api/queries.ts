@@ -137,7 +137,7 @@ export function useExperimentApprovals(id: string) {
 }
 
 /** The conversation of a session, oldest first: every page is read, and the list is asked for again while it works. */
-export function useTranscript(session: string) {
+export function useTranscript(session: string, status: Schemas["SessionStatus"] | undefined) {
   return useQuery({
     queryKey: keys.transcript(session),
     enabled: session !== "",
@@ -159,7 +159,8 @@ export function useTranscript(session: string) {
       }
       return events;
     },
-    refetchInterval: LIVE_MS,
+    // The poll pauses in a hidden tab (the default) and ends once the session is Done or Failed.
+    refetchInterval: status === "done" || status === "failed" ? false : LIVE_MS,
   });
 }
 

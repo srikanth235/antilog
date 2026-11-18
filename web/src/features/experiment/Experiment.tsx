@@ -60,7 +60,7 @@ export function Experiment(props: {
   const lead = leadSession(list);
   const active = list.find((session) => session.id === props.sessionId) ?? lead;
   const send = useSendMessage(experimentId, active?.id ?? "");
-  const transcript = useTranscript(active?.id ?? "");
+  const transcript = useTranscript(active?.id ?? "", active?.status);
   const start = useStartSession(experimentId);
   const stop = useStopSession(experimentId);
 

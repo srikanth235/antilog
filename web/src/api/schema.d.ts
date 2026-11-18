@@ -1364,7 +1364,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description A lower-case slug such as claude-code */
+                /** @description A lower-case slug such as agentcore-glm */
                 id: string;
             };
             cookie?: never;
