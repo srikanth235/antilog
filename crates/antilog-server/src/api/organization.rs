@@ -285,6 +285,7 @@ async fn set_experiment_budget<D: Deps + 'static>(
 }
 
 #[derive(Deserialize, IntoParams)]
+#[into_params(parameter_in = Query)]
 #[serde(rename_all = "camelCase")]
 struct TokenQuery {
     /// Whose tokens (owners only); omitted: the caller's.
@@ -409,6 +410,7 @@ async fn decide<D: Deps + 'static>(
 }
 
 #[derive(Deserialize, IntoParams)]
+#[into_params(parameter_in = Query)]
 #[serde(rename_all = "camelCase")]
 struct AuditQuery {
     /// The cursor of the previous page: its `at` and `id`, together.
