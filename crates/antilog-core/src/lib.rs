@@ -8,3 +8,4 @@ pub mod signer;
 pub mod store;
 pub mod testing;
 pub mod timer;
+pub mod token;

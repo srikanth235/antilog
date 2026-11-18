@@ -94,8 +94,10 @@ dependencies = [
  "antilog-types",
  "jiff",
  "sha2",
+ "subtle",
  "thiserror",
  "tokio",
+ "uuid",
 ]
 
 [[package]]
@@ -113,6 +115,7 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "utoipa",
+ "uuid",
 ]
 
 [[package]]

@@ -1,0 +1,266 @@
+use antilog_types::{
+    AccessToken, AuditEntry, Identity, Member, MemberId, Organization, OrganizationId, Project,
+    ProjectId, ProjectRole, Role, TokenId,
+};
+
+use super::{FakeStore, ledger::not_found, locked};
+use crate::store::{OrganizationStore, StoreError, TokenRecord};
+
+impl OrganizationStore for FakeStore {
+    async fn create_organization(&self, organization: &Organization) -> Result<(), StoreError> {
+        let mut ledger = locked(&self.ledger);
+        let taken = ledger
+            .organizations
+            .iter()
+            .any(|row| row.id == organization.id || row.name == organization.name);
+        if taken {
+            return Err(StoreError::Conflict);
+        }
+        ledger.organizations.push(organization.clone());
+        Ok(())
+    }
+
+    async fn organization(&self, id: OrganizationId) -> Result<Option<Organization>, StoreError> {
+        Ok(locked(&self.ledger).organization(id).cloned())
+    }
+
+    async fn add_member(&self, member: &Member, audit: &AuditEntry) -> Result<(), StoreError> {
+        let mut ledger = locked(&self.ledger);
+        not_found(ledger.organization(member.organization_id))?;
+        let taken = ledger.members.iter().any(|row| {
+            row.id == member.id
+                || (row.organization_id == member.organization_id
+                    && member.identity.is_some()
+                    && row.identity == member.identity)
+        });
+        if taken {
+            return Err(StoreError::Conflict);
+        }
+        ledger.members.push(member.clone());
+        ledger.audit.push(audit.clone());
+        Ok(())
+    }
+
+    async fn member(
+        &self,
+        organization: OrganizationId,
+        id: MemberId,
+    ) -> Result<Option<Member>, StoreError> {
+        Ok(locked(&self.ledger).member(organization, id).cloned())
+    }
+
+    async fn member_by_identity(
+        &self,
+        organization: OrganizationId,
+        identity: &Identity,
+    ) -> Result<Option<Member>, StoreError> {
+        Ok(locked(&self.ledger)
+            .members
+            .iter()
+            .find(|row| {
+                row.organization_id == organization && row.identity.as_ref() == Some(identity)
+            })
+            .cloned())
+    }
+
+    async fn members(&self, organization: OrganizationId) -> Result<Vec<Member>, StoreError> {
+        Ok(locked(&self.ledger)
+            .members
+            .iter()
+            .filter(|row| row.organization_id == organization)
+            .cloned()
+            .collect())
+    }
+
+    async fn set_member_role(
+        &self,
+        organization: OrganizationId,
+        member: MemberId,
+        role: Role,
+        audit: &AuditEntry,
+    ) -> Result<(), StoreError> {
+        let mut ledger = locked(&self.ledger);
+        let row = not_found(
+            ledger
+                .members
+                .iter_mut()
+                .find(|row| row.organization_id == organization && row.id == member),
+        )?;
+        let before = std::mem::replace(&mut row.role, role);
+        if let Err(error) = ledger.keeps_owners(organization) {
+            if let Some(row) = ledger.members.iter_mut().find(|row| row.id == member) {
+                row.role = before;
+            }
+            return Err(error);
+        }
+        ledger.audit.push(audit.clone());
+        Ok(())
+    }
+
+    async fn create_project(
+        &self,
+        project: &Project,
+        owner: MemberId,
+        audit: &AuditEntry,
+    ) -> Result<(), StoreError> {
+        let mut ledger = locked(&self.ledger);
+        not_found(ledger.organization(project.organization_id))?;
+        not_found(ledger.member(project.organization_id, owner))?;
+        let taken = ledger.projects.iter().any(|row| {
+            row.id == project.id
+                || (row.organization_id == project.organization_id && row.name == project.name)
+        });
+        if taken {
+            return Err(StoreError::Conflict);
+        }
+        ledger.project_limits_fit(project)?;
+        ledger.projects.push(project.clone());
+        ledger.project_roles.push((
+            project.id,
+            ProjectRole {
+                member_id: owner,
+                role: Role::Owner,
+            },
+        ));
+        ledger.audit.push(audit.clone());
+        Ok(())
+    }
+
+    async fn project(
+        &self,
+        organization: OrganizationId,
+        id: ProjectId,
+    ) -> Result<Option<Project>, StoreError> {
+        Ok(locked(&self.ledger).project(organization, id).cloned())
+    }
+
+    async fn projects(&self, organization: OrganizationId) -> Result<Vec<Project>, StoreError> {
+        Ok(locked(&self.ledger)
+            .projects
+            .iter()
+            .filter(|row| row.organization_id == organization)
+            .cloned()
+            .collect())
+    }
+
+    async fn set_project_role(
+        &self,
+        organization: OrganizationId,
+        project: ProjectId,
+        member: MemberId,
+        role: Option<Role>,
+        audit: &AuditEntry,
+    ) -> Result<(), StoreError> {
+        let mut ledger = locked(&self.ledger);
+        not_found(ledger.project(organization, project))?;
+        not_found(ledger.member(organization, member))?;
+        let before = ledger.project_roles.clone();
+        ledger
+            .project_roles
+            .retain(|(id, row)| !(*id == project && row.member_id == member));
+        if let Some(role) = role {
+            ledger.project_roles.push((
+                project,
+                ProjectRole {
+                    member_id: member,
+                    role,
+                },
+            ));
+        }
+        if let Err(error) = ledger.keeps_owners(organization) {
+            ledger.project_roles = before;
+            return Err(error);
+        }
+        ledger.audit.push(audit.clone());
+        Ok(())
+    }
+
+    async fn project_roles(
+        &self,
+        organization: OrganizationId,
+        project: ProjectId,
+    ) -> Result<Vec<ProjectRole>, StoreError> {
+        let ledger = locked(&self.ledger);
+        if ledger.project(organization, project).is_none() {
+            return Ok(Vec::new());
+        }
+        let mut roles: Vec<_> = ledger
+            .project_roles
+            .iter()
+            .filter(|(id, _)| *id == project)
+            .map(|(_, row)| *row)
+            .collect();
+        roles.sort_by_key(|row| row.member_id);
+        Ok(roles)
+    }
+
+    async fn role_in_project(
+        &self,
+        organization: OrganizationId,
+        project: ProjectId,
+        member: MemberId,
+    ) -> Result<Option<Role>, StoreError> {
+        Ok(locked(&self.ledger).role_in_project(organization, project, member))
+    }
+
+    async fn create_access_token(
+        &self,
+        record: &TokenRecord,
+        audit: &AuditEntry,
+    ) -> Result<(), StoreError> {
+        let mut ledger = locked(&self.ledger);
+        not_found(ledger.member(record.token.organization_id, record.token.member_id))?;
+        let taken = ledger
+            .tokens
+            .iter()
+            .any(|row| row.token.id == record.token.id || row.hash == record.hash);
+        if taken {
+            return Err(StoreError::Conflict);
+        }
+        ledger.tokens.push(record.clone());
+        ledger.audit.push(audit.clone());
+        Ok(())
+    }
+
+    async fn access_token(&self, id: TokenId) -> Result<Option<TokenRecord>, StoreError> {
+        Ok(locked(&self.ledger)
+            .tokens
+            .iter()
+            .find(|row| row.token.id == id)
+            .cloned())
+    }
+
+    async fn access_tokens(
+        &self,
+        organization: OrganizationId,
+        member: MemberId,
+    ) -> Result<Vec<AccessToken>, StoreError> {
+        Ok(locked(&self.ledger)
+            .tokens
+            .iter()
+            .filter(|row| {
+                row.token.organization_id == organization && row.token.member_id == member
+            })
+            .map(|row| row.token.clone())
+            .collect())
+    }
+
+    async fn revoke_access_token(
+        &self,
+        organization: OrganizationId,
+        id: TokenId,
+        at: i64,
+        audit: &AuditEntry,
+    ) -> Result<(), StoreError> {
+        let mut ledger = locked(&self.ledger);
+        let row = not_found(
+            ledger
+                .tokens
+                .iter_mut()
+                .find(|row| row.token.organization_id == organization && row.token.id == id),
+        )?;
+        row.token.revoked_at.get_or_insert(at);
+        ledger.audit.push(audit.clone());
+        Ok(())
+    }
+}

@@ -1,9 +1,14 @@
 use std::collections::HashMap;
 use std::sync::{Mutex, MutexGuard, PoisonError};
 
-use antilog_types::{Organization, OrganizationId};
 use jiff::{SignedDuration, Timestamp};
 use sha2::{Digest, Sha256};
+
+mod approval;
+mod budget;
+mod ledger;
+mod organization;
+mod session;
 
 use crate::clock::Clock;
 use crate::platform::{
@@ -38,27 +43,13 @@ impl Clock for FakeClock {
 }
 
 #[derive(Default)]
-pub struct FakeStore(Mutex<HashMap<OrganizationId, Organization>>);
+pub struct FakeStore {
+    ledger: Mutex<ledger::Ledger>,
+}
 
 impl Store for FakeStore {
     async fn ping(&self) -> Result<(), StoreError> {
         Ok(())
-    }
-
-    async fn create_organization(&self, organization: &Organization) -> Result<(), StoreError> {
-        let mut rows = locked(&self.0);
-        let taken = rows
-            .values()
-            .any(|row| row.id == organization.id || row.name == organization.name);
-        if taken {
-            return Err(StoreError::Conflict);
-        }
-        rows.insert(organization.id, organization.clone());
-        Ok(())
-    }
-
-    async fn organization(&self, id: OrganizationId) -> Result<Option<Organization>, StoreError> {
-        Ok(locked(&self.0).get(&id).cloned())
     }
 }
 
