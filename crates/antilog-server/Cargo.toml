@@ -1,0 +1,25 @@
+[package]
+name = "antilog-server"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+antilog-core.workspace = true
+antilog-types.workspace = true
+anyhow.workspace = true
+axum.workspace = true
+sqlx.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+utoipa.workspace = true
+
+[dev-dependencies]
+testcontainers.workspace = true
+tower.workspace = true
+
+[lints]
+workspace = true

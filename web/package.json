@@ -1,0 +1,11 @@
+{
+  "name": "antilog-web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate:api": "openapi-typescript ../openapi/antilog.json -o src/api/schema.d.ts"
+  },
+  "devDependencies": {
+    "openapi-typescript": "7.13.0"
+  }
+}
