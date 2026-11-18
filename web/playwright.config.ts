@@ -33,6 +33,8 @@ export default defineConfig({
               ANTILOG_FAKE_SIGN_IN: "1",
               ANTILOG_OPEN_ORGANIZATIONS: "1",
               ANTILOG_INSECURE_COOKIES: "1",
+              ANTILOG_CODE_HOST_WEBHOOK_SECRET: "e2e-code-host-secret",
+              ANTILOG_E2E_SEED: "1",
               ANTILOG_LISTEN: new URL(api).host,
             },
           },

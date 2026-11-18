@@ -34,6 +34,7 @@ fn app(fake: bool, open: bool) -> Router {
             secure_cookies: true,
             wake_secret: None,
             code_host_webhook_secret: None,
+            e2e_seed: false,
         },
     )
 }
@@ -890,6 +891,7 @@ async fn org_with_store() -> (Org, Arc<FakeDeps>) {
             secure_cookies: true,
             wake_secret: None,
             code_host_webhook_secret: None,
+            e2e_seed: false,
         },
     );
     let created = create_organization(&app, "acme", "ada").await;

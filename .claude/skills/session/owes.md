@@ -24,7 +24,7 @@ Nothing on this branch checks them yet.
 
 **Spend recorded honestly.** Check: the budget meter stops a session at its limit, every spend row carries the session and the agent, rows reconcile against the platform's bill, and the sessions table and Settings, Budgets sum to the experiment's spend.
 
-**Spend well.** Check: cost per trial equals the spend rows since the session's previous trial plus the judge time, and the Where the spend went categories sum to the experiment's spend, with Not measured the remainder. A test that `spawn` with no agent named picks the organization's lower-cost agent, and that the brief tells agents to call `history` first.
+**Spend well.** Check: cost per trial equals the spend rows since the session's previous trial plus the judge time, and the Where the spend went categories sum to the experiment's spend, with Not measured the remainder. Built for the Report (`tests/value.rs`): a spend row names its trial or goes to the session's next trial by time; target: judge spend booked against its trial, and the same table on the experiment page. A test that `spawn` with no agent named picks the organization's lower-cost agent, and that the brief tells agents to call `history` first.
 
 **No tie to one provider.** Check: a test that Auto picks the best cost per win among enabled agents only and records its reason, that with no data it picks the organization's default and with none set asks, that a handed-off session starts on the same branch with a summary and the old one is Done, and that a platform failure raises the Continue on another agent? card (or follows policy and records it).
 

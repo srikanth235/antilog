@@ -127,6 +127,7 @@ fn app_with(wake_secret: Option<String>) -> Router {
             secure_cookies: true,
             wake_secret,
             code_host_webhook_secret: None,
+            e2e_seed: false,
         },
     )
 }

@@ -71,6 +71,9 @@ pub struct Settings {
     pub wake_secret: Option<String>,
     /// When set, `/webhooks/code-host` is mounted and checks `x-hub-signature-256` against it.
     pub code_host_webhook_secret: Option<String>,
+    /// `ANTILOG_E2E_SEED=1` mounts `/internal/e2e/win`, which makes a win without an agent. For the
+    /// server on its fakes in end-to-end tests only.
+    pub e2e_seed: bool,
 }
 
 fn setting(name: &str) -> Option<String> {
@@ -137,6 +140,7 @@ impl Settings {
             secure_cookies: setting("ANTILOG_INSECURE_COOKIES").as_deref() != Some("1"),
             wake_secret: secret("ANTILOG_WAKE_SECRET"),
             code_host_webhook_secret: secret("ANTILOG_CODE_HOST_WEBHOOK_SECRET"),
+            e2e_seed: setting("ANTILOG_E2E_SEED").as_deref() == Some("1"),
         }
     }
 }

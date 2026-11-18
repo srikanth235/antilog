@@ -400,3 +400,186 @@ pub async fn wins_suite<S: Store, J: crate::store::judge::JudgeStore>(
         "a refused write leaves no audit row"
     );
 }
+
+/// A Kept trial, its signed receipt and an open pull request, made without a running agent. Only
+/// for the server on its fakes, so an end-to-end test can start from "a win exists" and then
+/// let the code host's webhook merge it: the same sealing, receipt and pull-request code runs.
+#[derive(Debug, Clone)]
+pub struct SeededWin {
+    pub trial: antilog_types::judge::TrialId,
+    pub repo: String,
+    pub pull_requests: Vec<(String, u64)>,
+}
+
+pub async fn kept_win<D: crate::deps::Deps>(
+    deps: &D,
+    organization: antilog_types::OrganizationId,
+    experiment: antilog_types::ExperimentId,
+    actor: Option<antilog_types::MemberId>,
+) -> Result<SeededWin, String> {
+    use antilog_types::judge::{
+        Decision, Finished, HoldoutResult, Measurement, Outcome, RepoPin, SealedExperiment, Stage,
+        Trial, TrialId, ValueModelRef,
+    };
+    use antilog_types::{
+        Approval, ApprovalId, ApprovalStatus, CardKind, CardPayload, ExperimentStatus,
+    };
+
+    use crate::judge::fixtures;
+    use crate::store::SessionStore as _;
+    use crate::store::judge::JudgeStore;
+
+    let now = crate::session::now_ms(deps);
+    let store = deps.store();
+    let judge = deps.judge(organization);
+    let row = store
+        .experiment(organization, experiment)
+        .await
+        .map_err(|e| e.to_string())?
+        .ok_or("no such experiment")?;
+    let repo = format!("e2e/{}", experiment.as_uuid().simple());
+    let mut definition = fixtures::definition();
+    definition.evaluation.repos = vec![RepoPin {
+        repo: repo.clone(),
+        commit: "base".into(),
+    }];
+    for path in &mut definition.evaluation.protected {
+        path.repo.clone_from(&repo);
+    }
+    definition.value_model = judge
+        .value_models(row.project_id)
+        .await
+        .map_err(|e| e.to_string())?
+        .into_iter()
+        .find(|m| m.model.metric == definition.metric.name)
+        .map(|m| ValueModelRef {
+            id: m.model.id,
+            version: m.model.version,
+        });
+    let mut version = 1;
+    while judge
+        .sealed(experiment, version)
+        .await
+        .map_err(|e| e.to_string())?
+        .is_some()
+    {
+        version += 1;
+    }
+    let sealed = SealedExperiment::seal(
+        experiment,
+        version,
+        definition,
+        vec![],
+        fixtures::checks(),
+        now,
+    )
+    .map_err(|e| format!("{e:?}"))?;
+    judge.put_sealed(&sealed).await.map_err(|e| e.to_string())?;
+    let entry = AuditEntry::new(
+        organization,
+        actor,
+        "experiment.seal",
+        experiment,
+        AuditOutcome::Done,
+        now,
+    );
+    store
+        .set_experiment_status(organization, experiment, ExperimentStatus::Sealed, &entry)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let session = crate::session::open_external(deps, organization, experiment, actor)
+        .await
+        .map_err(|e| e.to_string())?;
+    let trial = Trial {
+        id: TrialId::new(),
+        experiment,
+        version,
+        session: session.id,
+        parent: None,
+        commits: vec![antilog_types::judge::CommitRef {
+            repo: repo.clone(),
+            sha: "fast".into(),
+        }],
+        hypothesis: "cache the cart".into(),
+        at: now,
+    };
+    judge.begin_trial(&trial).await.map_err(|e| e.to_string())?;
+    judge
+        .finish_trial(
+            trial.id,
+            &Finished {
+                measurement: Some(Measurement {
+                    trial: trial.id,
+                    experiment,
+                    version,
+                    seal: sealed.seal_hash().clone(),
+                    stage: Stage::Full,
+                    k: 1,
+                    noise: 2.0,
+                    parent_value: sealed.checks().baseline(),
+                    value: 80.0,
+                    gain: None,
+                    confirmation: None,
+                    guardrails: vec![],
+                    holdout: Some(HoldoutResult::Passed),
+                }),
+                decision: Decision {
+                    outcome: Outcome::Kept,
+                    reasons: vec![],
+                    criteria: 1,
+                },
+            },
+        )
+        .await
+        .map_err(|e| e.to_string())?;
+    let record = judge
+        .trial(trial.id)
+        .await
+        .map_err(|e| e.to_string())?
+        .ok_or("the trial was lost")?;
+    let caller = crate::tools::Caller {
+        organization,
+        experiment,
+        session: session.id,
+        actor,
+        call: "seed".into(),
+    };
+    if !crate::tools::issue_receipt(deps, &caller, &sealed, &record).await {
+        return Err("the receipt could not be signed".into());
+    }
+    let card = Approval {
+        id: ApprovalId::new(),
+        organization_id: organization,
+        experiment_id: experiment,
+        session_id: Some(session.id),
+        card: CardKind::OpenPullRequest,
+        summary: "Open pull requests".into(),
+        payload: Some(CardPayload::OpenPullRequest {
+            trial: trial.id,
+            hypothesis: trial.hypothesis.clone(),
+            repos: vec![repo.clone()],
+        }),
+        cost_cents: None,
+        needs_owner: false,
+        status: ApprovalStatus::Approved,
+        decided_by: actor,
+        created_at: now,
+        decided_at: Some(now),
+    };
+    crate::delivery::open_approved(deps, &card)
+        .await
+        .map_err(|e| e.to_string())?;
+    let pull_requests =
+        crate::store::CodeHostStore::pull_requests_of(store, organization, trial.id)
+            .await
+            .map_err(|e| e.to_string())?
+            .into_iter()
+            .map(|row| (row.repo, row.number))
+            .collect();
+    Ok(SeededWin {
+        trial: trial.id,
+        repo,
+        pull_requests,
+    })
+}

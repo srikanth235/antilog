@@ -5,7 +5,7 @@ import { reason } from "../../components/state/State";
 import { dollars, time } from "../../lib/format";
 import type { History } from "../../lib/history";
 import { w } from "../../words";
-import { cardRows, splitSummary } from "./cardRows";
+import { cardLead, cardRows } from "./cardRows";
 
 /** A card is a frame: a title, what would happen, what it may cost, two buttons. */
 export function ApprovalCard(props: {
@@ -41,9 +41,7 @@ export function ApprovalCard(props: {
   const keepGoing = approval.card === "keep_going";
   const cost = approval.costCents;
   const rows = cardRows(approval, props);
-  const lead = rows.some((row) => row.key === "why")
-    ? splitSummary(approval.summary).lead
-    : approval.summary;
+  const lead = cardLead(approval);
   return (
     <section className="cd ap wait" aria-label={title} data-card={approval.card}>
       <div className="ap-h">

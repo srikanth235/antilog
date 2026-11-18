@@ -51,3 +51,5 @@ Settings, Approvals holds policy. Settings, Connections lists the repos, credent
 - An organization has a monthly cap. No budget, no project cap and no card passes it. Only an organization owner changes the cap.
 - When a budget is spent, the judge refuses `measure`, and the experiment's sessions are Waiting for you with a Raise budget card. A notification says so ([notifications.md](notifications.md)).
 - When patience is reached, the experiment is Waiting for you with a Keep going? card; policy may set it to Allow (never pause) or Always ask.
+
+**Card fields.** Each card kind carries a typed payload (`CardPayload` in `antilog-types/src/ledger.rs`): Raise budget the budget now, the amount asked and why; Attach repo the repo, access and branch; Open pull request the trial and its repos; and so on. A tool raises the card with its payload, the web card renders from it and the action after approval reads from it. Never put what a person must read only in the summary text, and never parse the summary.

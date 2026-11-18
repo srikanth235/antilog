@@ -392,7 +392,7 @@ pub(super) async fn finish<D: Deps>(deps: &D, caller: &Caller, ticket: &Ticket) 
 }
 
 /// The judge signs the receipt of a Kept trial that is the best so far; false when it cannot.
-async fn issue_receipt<D: Deps>(
+pub(crate) async fn issue_receipt<D: Deps>(
     deps: &D,
     caller: &Caller,
     sealed: &SealedExperiment,

@@ -1,6 +1,6 @@
 # Judge: the tools
 
-Five tools every session gets. `seal`, `measure`, `history` and `deliver` are built as far as the card (`antilog-core/src/tools/judge.rs`); `watch` and the pull request behind `deliver` are target. `antilog mcp` serves the same tools to an agent a person already uses on their own machine, so a change can be proposed anywhere and is measured only by the judge. `spawn` and the setup tools (`attach_repo`, `request_credential`, `set_environment`, `request_budget`) are in [../session/tools.md](../session/tools.md).
+Five tools every session gets. `seal`, `measure`, `history` and `deliver` are built as far as the card (`antilog-core/src/tools/judge.rs`); the pull request behind `deliver` is built (`antilog-core/src/delivery.rs`: an approved card opens one per repo through `CodeHost`, the code host's webhook `POST /webhooks/code-host` writes merged and closed), on `FakeCodeHost` only; `watch` and the periodic reconcile of pull requests are target. `antilog mcp` serves the same tools to an agent a person already uses on their own machine, so a change can be proposed anywhere and is measured only by the judge. `spawn` and the setup tools (`attach_repo`, `request_credential`, `set_environment`, `request_budget`) are in [../session/tools.md](../session/tools.md).
 
 | Tool | Asks a person? |
 | --- | --- |

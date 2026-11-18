@@ -23,6 +23,7 @@ fn app(secret: Option<&str>) -> Router {
             secure_cookies: true,
             wake_secret: None,
             code_host_webhook_secret: secret.map(str::to_owned),
+            e2e_seed: false,
         },
     )
 }
