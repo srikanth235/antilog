@@ -157,7 +157,9 @@ pub async fn set_value_model<S: Store, J: JudgeStore>(
         },
         set_by: who.member.as_uuid(),
     };
-    judge.put_value_model(project, &model, now).await?;
+    // The audit row goes first, so a change never lands without one: a failure in between
+    // leaves a row for a change that did not land, never the other way round. The judge's
+    // tables and the ledger are two stores, so the two writes cannot share a transaction.
     store
         .append_audit(&entry(
             who,
@@ -167,6 +169,7 @@ pub async fn set_value_model<S: Store, J: JudgeStore>(
             now,
         ))
         .await?;
+    judge.put_value_model(project, &model, now).await?;
     Ok(ProjectValueModel {
         project_id: project,
         model,
