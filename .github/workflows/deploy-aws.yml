@@ -160,6 +160,9 @@ jobs:
             --cli-read-timeout 300 --payload fileb://deploy/tofu/aws/events/migrate.json /tmp/migrate.out
           cat /tmp/migrate.out; echo
           grep -q migrated /tmp/migrate.out
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22.23.5
       - name: Publish the web app, when it has a build
         run: |
           if jq -e '.scripts.build' web/package.json >/dev/null; then
