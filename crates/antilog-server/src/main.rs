@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 use antilog_server::api;
 use antilog_server::deps::ServerDeps;
+use antilog_server::origin::OriginGuard;
 use antilog_server::pg::PgStore;
 use anyhow::Context;
 use sqlx::postgres::PgPoolOptions;
@@ -36,13 +37,17 @@ async fn main() -> anyhow::Result<()> {
         .await
         .with_context(|| format!("binding {listen}"))?;
     tracing::info!(%listen, "serving");
-    axum::serve(
-        listener,
-        api::router(
-            Arc::new(ServerDeps::on_fakes(store)),
-            api::auth::Settings::from_env(),
-        ),
-    )
-    .await
-    .context("serving")
+    let router = api::router(
+        Arc::new(ServerDeps::on_fakes(store)),
+        api::auth::Settings::from_env(),
+    );
+    let guard = OriginGuard::from_env();
+    let router = if guard.is_on() {
+        router.layer(axum::middleware::from_fn(move |request, next| {
+            guard.clone().layer(request, next)
+        }))
+    } else {
+        router
+    };
+    axum::serve(listener, router).await.context("serving")
 }

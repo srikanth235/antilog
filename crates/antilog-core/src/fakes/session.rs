@@ -188,6 +188,54 @@ impl SessionStore for FakeStore {
             .collect())
     }
 
+    async fn event_marks(
+        &self,
+        organization: OrganizationId,
+        after: i64,
+        limit: u32,
+    ) -> Result<Vec<(i64, SessionId)>, StoreError> {
+        let ledger = locked(&self.ledger);
+        Ok(ledger
+            .events
+            .iter()
+            .map(|(_, event)| event)
+            .filter(|event| {
+                event.seq > after && ledger.session(organization, event.session_id).is_some()
+            })
+            .take(limit as usize)
+            .map(|event| (event.seq, event.session_id))
+            .collect())
+    }
+
+    async fn latest_event_seq(&self, organization: OrganizationId) -> Result<i64, StoreError> {
+        let ledger = locked(&self.ledger);
+        Ok(ledger
+            .events
+            .iter()
+            .map(|(_, event)| event)
+            .filter(|event| ledger.session(organization, event.session_id).is_some())
+            .map(|event| event.seq)
+            .max()
+            .unwrap_or(0))
+    }
+
+    async fn sessions_changed(
+        &self,
+        organization: OrganizationId,
+        since: i64,
+        limit: u32,
+    ) -> Result<Vec<Session>, StoreError> {
+        let mut rows: Vec<Session> = locked(&self.ledger)
+            .sessions
+            .iter()
+            .filter(|row| row.organization_id == organization && row.updated_at >= since)
+            .cloned()
+            .collect();
+        rows.sort_by_key(|row| row.updated_at);
+        rows.truncate(limit as usize);
+        Ok(rows)
+    }
+
     async fn put_agent(
         &self,
         organization: OrganizationId,

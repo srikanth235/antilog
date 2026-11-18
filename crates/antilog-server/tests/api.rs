@@ -1536,3 +1536,404 @@ async fn value_models_are_set_by_project_owners_and_value_and_return_are_read_by
         .await;
     assert_eq!(missing.status, StatusCode::NOT_FOUND);
 }
+
+// ---- live updates: GET /events/stream ----
+
+mod live {
+    use std::time::Duration;
+
+    use antilog_core::approval::{self, CardRequest};
+    use antilog_core::clock::Clock;
+    use antilog_core::deps::Deps;
+    use antilog_core::store::{NewEvent, SessionStore};
+    use antilog_server::api::auth::App;
+    use antilog_server::api::live::{self, Options};
+    use antilog_types::{
+        AuditEntry, AuditOutcome, CardKind, EventKind, ExperimentId, LiveEvent, OrganizationId,
+        Session, SessionId,
+    };
+    use tokio_stream::StreamExt;
+
+    use super::*;
+
+    /// One open `GET /events/stream`, parsed into (event name, id, data).
+    struct Sse {
+        body: axum::body::BodyDataStream,
+        pending: String,
+    }
+
+    impl Sse {
+        async fn open(
+            org: &Org,
+            token: &str,
+            last: Option<&str>,
+        ) -> (StatusCode, axum::http::HeaderMap, Self) {
+            let mut request = Request::get("/events/stream")
+                .header(header::AUTHORIZATION, format!("Bearer {token}"));
+            if let Some(last) = last {
+                request = request.header("last-event-id", last);
+            }
+            let response = org
+                .app
+                .clone()
+                .oneshot(
+                    request
+                        .body(Body::empty())
+                        .unwrap_or_else(|e| unreachable!("{e}")),
+                )
+                .await
+                .unwrap_or_else(|e| unreachable!("{e}"));
+            let (parts, body) = response.into_parts();
+            (
+                parts.status,
+                parts.headers,
+                Self {
+                    body: body.into_data_stream(),
+                    pending: String::new(),
+                },
+            )
+        }
+
+        /// The next event, skipping keep-alive comments. Fails the test if none comes in 15 s.
+        async fn next(&mut self) -> (String, Option<String>, Value) {
+            loop {
+                if let Some(end) = self.pending.find("\n\n") {
+                    let block: String = self.pending.drain(..end + 2).collect();
+                    let (mut name, mut id, mut data) = (String::new(), None, String::new());
+                    for line in block.lines() {
+                        if let Some(v) = line.strip_prefix("event: ") {
+                            name = v.to_owned();
+                        } else if let Some(v) = line.strip_prefix("id: ") {
+                            id = Some(v.to_owned());
+                        } else if let Some(v) = line.strip_prefix("data: ") {
+                            data.push_str(v);
+                        }
+                    }
+                    if name.is_empty() {
+                        continue;
+                    }
+                    return (name, id, serde_json::from_str(&data).unwrap_or(Value::Null));
+                }
+                let chunk = tokio::time::timeout(Duration::from_secs(15), self.body.next())
+                    .await
+                    .unwrap_or_else(|_| unreachable!("no event within 15 seconds"))
+                    .unwrap_or_else(|| unreachable!("the stream ended"))
+                    .unwrap_or_else(|e| unreachable!("{e}"));
+                self.pending.push_str(&String::from_utf8_lossy(&chunk));
+            }
+        }
+
+        /// Reads until an event named `name` arrives and returns it, with everything before it.
+        async fn until(&mut self, name: &str) -> Vec<(String, Option<String>, Value)> {
+            let mut seen = Vec::new();
+            loop {
+                let got = self.next().await;
+                let done = got.0 == name;
+                seen.push(got);
+                if done {
+                    return seen;
+                }
+            }
+        }
+    }
+
+    struct World {
+        org: Org,
+        deps: Arc<FakeDeps>,
+        organization: OrganizationId,
+        experiment: ExperimentId,
+    }
+
+    async fn world() -> World {
+        let (org, deps) = org_with_store().await;
+        let organization = OrganizationId::from_uuid(org.organization.parse().unwrap_or_default());
+        let (experiment, _) = experiment_in(&org, &org.owner).await;
+        World {
+            org,
+            deps,
+            organization,
+            experiment,
+        }
+    }
+
+    async fn experiment_in(org: &Org, token: &str) -> (ExperimentId, String) {
+        let project = org
+            .call(
+                Method::POST,
+                "/projects",
+                token,
+                Some(json!({"name": "checkout", "description": ""})),
+            )
+            .await;
+        let project_id = project.body["id"].as_str().unwrap_or_default().to_owned();
+        let experiment = org
+            .call(
+                Method::POST,
+                &format!("/projects/{project_id}/experiments"),
+                token,
+                Some(json!({"goal": "cut p95", "budgetCapCents": 500})),
+            )
+            .await;
+        assert_eq!(experiment.status, StatusCode::CREATED);
+        (
+            ExperimentId::from_uuid(
+                experiment.body["id"]
+                    .as_str()
+                    .unwrap_or_default()
+                    .parse()
+                    .unwrap_or_default(),
+            ),
+            project_id,
+        )
+    }
+
+    impl World {
+        fn now(&self) -> i64 {
+            self.deps.clock().now().as_millisecond()
+        }
+
+        async fn session(&self, organization: OrganizationId, experiment: ExperimentId) -> Session {
+            let session = Session::new(organization, experiment, "claude", "fake", self.now());
+            self.deps
+                .store
+                .create_session(
+                    &session,
+                    &AuditEntry::new(
+                        organization,
+                        None,
+                        "session.start",
+                        session.id,
+                        AuditOutcome::Done,
+                        self.now(),
+                    ),
+                )
+                .await
+                .unwrap_or_else(|e| unreachable!("{e}"));
+            session
+        }
+
+        async fn say(&self, organization: OrganizationId, session: SessionId, key: &str) {
+            self.deps
+                .store
+                .append_event(&NewEvent {
+                    organization,
+                    session,
+                    key: key.to_owned(),
+                    kind: EventKind::Agent,
+                    member: None,
+                    text: "Profiling.".into(),
+                    at: self.now(),
+                })
+                .await
+                .unwrap_or_else(|e| unreachable!("{e}"));
+        }
+    }
+
+    #[tokio::test]
+    async fn a_stream_needs_sign_in_and_is_an_uncached_event_stream() {
+        let world = world().await;
+        let unauthenticated = send(
+            &world.org.app,
+            Method::GET,
+            "/events/stream",
+            None,
+            None,
+            None,
+        )
+        .await;
+        assert_eq!(unauthenticated.status, StatusCode::UNAUTHORIZED);
+
+        let (status, headers, mut stream) = Sse::open(&world.org, &world.org.owner, None).await;
+        assert_eq!(status, StatusCode::OK);
+        assert_eq!(headers[header::CONTENT_TYPE], "text/event-stream");
+        assert_eq!(headers[header::CACHE_CONTROL], "no-cache");
+        let (name, id, data) = stream.next().await;
+        assert_eq!((name.as_str(), id.as_deref()), ("hello", Some("0")));
+        assert_eq!(data, json!({"type": "hello", "cursor": 0}));
+    }
+
+    #[tokio::test]
+    async fn another_organizations_events_never_arrive() {
+        let world = world().await;
+        let globex = create_organization(&world.org.app, "globex", "grace").await;
+        let globex_token = globex.body["session"]["secret"]
+            .as_str()
+            .unwrap_or_default()
+            .to_owned();
+        let globex_org = OrganizationId::from_uuid(
+            globex.body["organization"]["id"]
+                .as_str()
+                .unwrap_or_default()
+                .parse()
+                .unwrap_or_default(),
+        );
+        let (globex_experiment, _) = experiment_in(&world.org, &globex_token).await;
+
+        let (_, _, mut acme) = Sse::open(&world.org, &world.org.owner, None).await;
+        let (_, _, mut globex_stream) = Sse::open(&world.org, &globex_token, None).await;
+        assert_eq!(acme.next().await.0, "hello");
+        assert_eq!(globex_stream.next().await.0, "hello");
+
+        // Globex speaks first, acme after. Events arrive in `seq` order, so if globex's leaked
+        // into acme's stream it would come before acme's own message.
+        let theirs = world.session(globex_org, globex_experiment).await;
+        world.say(globex_org, theirs.id, "a").await;
+        let ours = world.session(world.organization, world.experiment).await;
+        world.say(world.organization, ours.id, "a").await;
+
+        let heard = acme.until("message").await;
+        for (name, _, data) in &heard {
+            assert_ne!(data["sessionId"], json!(theirs.id), "{name} leaked");
+            assert_ne!(data["experimentId"], json!(globex_experiment));
+        }
+        let (_, _, message) = heard.last().cloned().unwrap_or_default();
+        assert_eq!(message["sessionId"], json!(ours.id));
+        assert_eq!(message["experimentId"], json!(world.experiment));
+        // The session itself was announced to acme, and its status too.
+        assert!(heard.iter().all(|(name, ..)| name != "cards"));
+
+        let heard = globex_stream.until("message").await;
+        let (_, _, message) = heard.last().cloned().unwrap_or_default();
+        assert_eq!(message["sessionId"], json!(theirs.id));
+        for (_, _, data) in &heard {
+            assert_ne!(data["sessionId"], json!(ours.id));
+        }
+    }
+
+    #[tokio::test]
+    async fn a_reconnect_replays_from_last_event_id_and_resyncs_when_it_cannot() {
+        let world = world().await;
+        let session = world.session(world.organization, world.experiment).await;
+        for key in ["one", "two", "three"] {
+            world.say(world.organization, session.id, key).await;
+        }
+        let owner = &world.org.owner;
+
+        // No Last-Event-ID: start at now, no replay.
+        let (_, _, mut fresh) = Sse::open(&world.org, owner, None).await;
+        let (name, id, _) = fresh.next().await;
+        assert_eq!((name.as_str(), id.as_deref()), ("hello", Some("3")));
+
+        // After seq 1: hello at 1, then 2 and 3, in order, each with its seq as the id.
+        let (_, _, mut resumed) = Sse::open(&world.org, owner, Some("1")).await;
+        let (name, id, _) = resumed.next().await;
+        assert_eq!((name.as_str(), id.as_deref()), ("hello", Some("1")));
+        for want in ["2", "3"] {
+            let (name, id, data) = resumed.next().await;
+            assert_eq!((name.as_str(), id.as_deref()), ("message", Some(want)));
+            assert_eq!(data["seq"], json!(want.parse::<i64>().unwrap_or_default()));
+            assert_eq!(data["sessionId"], json!(session.id));
+        }
+        // What arrives after the gap continues the same stream.
+        world.say(world.organization, session.id, "four").await;
+        let heard = resumed.until("message").await;
+        assert_eq!(heard.last().and_then(|e| e.1.as_deref()), Some("4"));
+
+        // A cursor from a different ledger: resync, then continue from the latest.
+        let (_, _, mut ahead) = Sse::open(&world.org, owner, Some("99999")).await;
+        let (name, id, data) = ahead.next().await;
+        assert_eq!((name.as_str(), id.as_deref()), ("resync", Some("4")));
+        assert_eq!(data["type"], "resync");
+    }
+
+    #[tokio::test]
+    async fn cards_and_session_status_are_announced() {
+        let world = world().await;
+        let (_, _, mut stream) = Sse::open(&world.org, &world.org.owner, None).await;
+        assert_eq!(stream.next().await.0, "hello");
+
+        let session = world.session(world.organization, world.experiment).await;
+        let heard = stream.until("session").await;
+        let (_, id, data) = heard.last().cloned().unwrap_or_default();
+        assert_eq!(id, None);
+        assert_eq!(data["sessionId"], json!(session.id));
+        assert_eq!(data["status"], "working");
+
+        let card = approval::raise(
+            &world.deps.store,
+            world.now(),
+            None,
+            CardRequest {
+                organization: world.organization,
+                experiment: world.experiment,
+                session: Some(session.id),
+                card: CardKind::RaiseBudget,
+                summary: "Raise the budget by $5".into(),
+                cost_cents: Some(500),
+                needs_owner: false,
+                follow_policy: false,
+                payload: None,
+            },
+        )
+        .await
+        .unwrap_or_else(|e| unreachable!("{e}"));
+        let heard = stream.until("cards").await;
+        assert_eq!(
+            heard.last().map(|e| e.2.clone()),
+            Some(json!({"type": "cards", "pending": 1}))
+        );
+        // Never the card's words.
+        assert!(!format!("{heard:?}").contains("Raise the budget"));
+
+        let decided = world
+            .org
+            .call(
+                Method::POST,
+                &format!("/approvals/{}/decision", card.id),
+                &world.org.owner,
+                Some(json!({"decision": "approve"})),
+            )
+            .await;
+        assert_eq!(decided.status, StatusCode::OK);
+        let heard = stream.until("cards").await;
+        assert_eq!(
+            heard.last().map(|e| e.2.clone()),
+            Some(json!({"type": "cards", "pending": 0}))
+        );
+    }
+
+    #[tokio::test]
+    async fn a_stream_ends_at_its_age_limit_so_the_browser_can_reconnect() {
+        let world = world().await;
+        let who = antilog_core::organization::Principal {
+            organization: world.organization,
+            member: {
+                let me = world
+                    .org
+                    .call(Method::GET, "/me", &world.org.owner, None)
+                    .await;
+                antilog_types::MemberId::from_uuid(
+                    me.body["member"]["id"]
+                        .as_str()
+                        .unwrap_or_default()
+                        .parse()
+                        .unwrap_or_default(),
+                )
+            },
+        };
+        let app = Arc::new(App {
+            deps: world.deps.clone(),
+            settings: Settings {
+                providers: Vec::new(),
+                open_organizations: false,
+                secure_cookies: true,
+                wake_secret: None,
+                code_host_webhook_secret: None,
+                e2e_seed: false,
+            },
+        });
+        let options = Options {
+            poll: Duration::from_millis(5),
+            max_age: Duration::from_millis(60),
+            ..Options::default()
+        };
+        let mut events = live::open(app, who, None, options);
+        let first = events.recv().await;
+        assert_eq!(first, Some(LiveEvent::Hello { cursor: 0 }));
+        let ended = tokio::time::timeout(Duration::from_secs(10), async {
+            while events.recv().await.is_some() {}
+        })
+        .await;
+        assert!(ended.is_ok(), "the stream did not end");
+    }
+}

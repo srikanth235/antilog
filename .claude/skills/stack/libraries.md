@@ -27,7 +27,8 @@ Do not add a dependency for convenience. A new one is a product call: ask the ow
 
 | Need | Crate | Version |
 | --- | --- | --- |
-| Async runtime | `tokio` | 1.54.1 |
+| Async runtime | `tokio` (features include `time` for the live stream's sleeps) | 1.54.1 |
+| Server-sent events for axum (`ReceiverStream`, `StreamExt::map`); already in the build through axum and sqlx, default features off | `tokio-stream` | 0.1.19 |
 | HTTP server, live events | `axum` | 0.8.9 |
 | Middleware | `tower` / `tower-http` | 0.5.3 / 0.7.1 |
 | HTTP | `hyper` | 1.12.0 |

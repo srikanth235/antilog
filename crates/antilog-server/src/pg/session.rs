@@ -317,6 +317,60 @@ impl SessionStore for PgStore {
         .collect()
     }
 
+    async fn event_marks(
+        &self,
+        organization: OrganizationId,
+        after: i64,
+        limit: u32,
+    ) -> Result<Vec<(i64, SessionId)>, StoreError> {
+        let mut tx = self.scoped(organization).await?;
+        Ok(sqlx::query!(
+            "select seq, session_id from session_events where organization_id = $1 and seq > $2 order by seq limit $3",
+            organization.as_uuid(),
+            after,
+            i64::from(limit),
+        )
+        .fetch_all(&mut *tx)
+        .await
+        .map_err(map)?
+        .into_iter()
+        .map(|row| (row.seq, SessionId::from_uuid(row.session_id)))
+        .collect())
+    }
+
+    async fn latest_event_seq(&self, organization: OrganizationId) -> Result<i64, StoreError> {
+        let mut tx = self.scoped(organization).await?;
+        sqlx::query_scalar!(
+            "select coalesce(max(seq), 0) as \"seq!\" from session_events where organization_id = $1",
+            organization.as_uuid(),
+        )
+        .fetch_one(&mut *tx)
+        .await
+        .map_err(map)
+    }
+
+    async fn sessions_changed(
+        &self,
+        organization: OrganizationId,
+        since: i64,
+        limit: u32,
+    ) -> Result<Vec<Session>, StoreError> {
+        let mut tx = self.scoped(organization).await?;
+        sqlx::query_as!(
+            SessionRow,
+            "select id, organization_id, experiment_id, parent_session_id, agent, platform, platform_handle, status, note, cleanup, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from updated_at) * 1000)::bigint as \"updated_at!\" from sessions where organization_id = $1 and updated_at >= to_timestamp($2::bigint / 1000.0) order by updated_at, id limit $3",
+            organization.as_uuid(),
+            since,
+            i64::from(limit),
+        )
+        .fetch_all(&mut *tx)
+        .await
+        .map_err(map)?
+        .into_iter()
+        .map(Session::try_from)
+        .collect()
+    }
+
     async fn put_agent(
         &self,
         organization: OrganizationId,

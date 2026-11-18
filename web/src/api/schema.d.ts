@@ -244,6 +244,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/events/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["stream"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/experiments/{id}": {
         parameters: {
             query?: never;
@@ -1165,6 +1181,42 @@ export interface components {
             defaultBudgetCents?: number | null;
             /** Format: int64 */
             monthlyCapCents?: number | null;
+        };
+        /**
+         * @description One message on `GET /events/stream`: a hint that something changed, so a client refetches
+         *     what it shows. It carries ids, a count and a status, never words, a card's text or any
+         *     secret. The SSE `event:` name is the kebab-case `type` and the `id:` is a conversation
+         *     `seq` (on `hello`, `resync` and `message`), which a reconnecting browser sends back as
+         *     `Last-Event-ID`.
+         */
+        LiveEvent: {
+            /** Format: int64 */
+            cursor: number;
+            /** @enum {string} */
+            type: "hello";
+        } | {
+            /** Format: int64 */
+            cursor: number;
+            /** @enum {string} */
+            type: "resync";
+        } | {
+            experimentId: components["schemas"]["ExperimentId"];
+            /** Format: int64 */
+            seq: number;
+            sessionId: components["schemas"]["SessionId"];
+            /** @enum {string} */
+            type: "message";
+        } | {
+            experimentId: components["schemas"]["ExperimentId"];
+            sessionId: components["schemas"]["SessionId"];
+            status: components["schemas"]["SessionStatus"];
+            /** @enum {string} */
+            type: "session";
+        } | {
+            /** Format: int32 */
+            pending: number;
+            /** @enum {string} */
+            type: "cards";
         };
         /**
          * @description Who is signed in: the member, their organization and their role in it, and every
@@ -2103,6 +2155,37 @@ export interface operations {
                 };
             };
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    stream: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description The `id` of the last event seen; the stream replays what came after it */
+                "Last-Event-ID"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Server-sent events, each the JSON of a `LiveEvent`; the first is `hello` (or `resync`). The server ends the stream after a few minutes and the browser reconnects */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["LiveEvent"];
+                };
+            };
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };

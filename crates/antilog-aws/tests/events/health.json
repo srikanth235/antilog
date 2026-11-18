@@ -3,7 +3,7 @@
   "routeKey": "$default",
   "rawPath": "/health",
   "rawQueryString": "",
-  "headers": {"accept": "application/json"},
+  "headers": {"accept": "application/json", "x-antilog-origin": "local-origin-secret"},
   "requestContext": {
     "accountId": "anonymous",
     "apiId": "local",

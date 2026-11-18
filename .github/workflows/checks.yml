@@ -169,6 +169,11 @@ jobs:
             tofu -chdir="$dir" init -backend=false -input=false
             tofu -chdir="$dir" validate
           done
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22.23.5
+      - name: CloudFront functions behave as their tests say
+        run: node --test deploy/tofu/aws/functions/*.test.mjs
 
   lambda:
     runs-on: ubuntu-latest

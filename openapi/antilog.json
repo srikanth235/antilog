@@ -616,6 +616,53 @@
         ]
       }
     },
+    "/events/stream": {
+      "get": {
+        "tags": [],
+        "operationId": "stream",
+        "parameters": [
+          {
+            "name": "Last-Event-ID",
+            "in": "header",
+            "description": "The `id` of the last event seen; the stream replays what came after it",
+            "required": false,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Server-sent events, each the JSON of a `LiveEvent`; the first is `hello` (or `resync`). The server ends the stream after a few minutes and the browser reconnects",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveEvent"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/experiments/{id}": {
       "get": {
         "tags": [],
@@ -3658,6 +3705,127 @@
           }
         },
         "additionalProperties": false
+      },
+      "LiveEvent": {
+        "oneOf": [
+          {
+            "type": "object",
+            "description": "First message of a connection. Refetch what you show: it may have changed while you\nwere away. `cursor` is the `seq` the stream continues from.",
+            "required": [
+              "cursor",
+              "type"
+            ],
+            "properties": {
+              "cursor": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "hello"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "The server cannot replay what was missed. Refetch everything you show.",
+            "required": [
+              "cursor",
+              "type"
+            ],
+            "properties": {
+              "cursor": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "resync"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "A conversation item was added to a session. Fetch `GET /sessions/{id}/events?after=`.",
+            "required": [
+              "sessionId",
+              "experimentId",
+              "seq",
+              "type"
+            ],
+            "properties": {
+              "experimentId": {
+                "$ref": "#/components/schemas/ExperimentId"
+              },
+              "seq": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "sessionId": {
+                "$ref": "#/components/schemas/SessionId"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "message"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "A session's status changed.",
+            "required": [
+              "sessionId",
+              "experimentId",
+              "status",
+              "type"
+            ],
+            "properties": {
+              "experimentId": {
+                "$ref": "#/components/schemas/ExperimentId"
+              },
+              "sessionId": {
+                "$ref": "#/components/schemas/SessionId"
+              },
+              "status": {
+                "$ref": "#/components/schemas/SessionStatus"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "session"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "The cards waiting for this member changed; `pending` is how many wait now.",
+            "required": [
+              "pending",
+              "type"
+            ],
+            "properties": {
+              "pending": {
+                "type": "integer",
+                "format": "int32",
+                "minimum": 0
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "cards"
+                ]
+              }
+            }
+          }
+        ],
+        "description": "One message on `GET /events/stream`: a hint that something changed, so a client refetches\nwhat it shows. It carries ids, a count and a status, never words, a card's text or any\nsecret. The SSE `event:` name is the kebab-case `type` and the `id:` is a conversation\n`seq` (on `hello`, `resync` and `message`), which a reconnecting browser sends back as\n`Last-Event-ID`."
       },
       "Me": {
         "type": "object",

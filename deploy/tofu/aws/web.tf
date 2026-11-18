@@ -1,8 +1,10 @@
 # The web app: static files in a private S3 bucket behind CloudFront. The API is on the
 # same host under /api, so cookies stay same-origin: a viewer-request function strips the
-# prefix and CloudFront sends the request to the function URL. CloudFront cuts a response
-# that is silent for 30 seconds, so the server ends event streams earlier and the browser
-# reconnects with Last-Event-ID.
+# prefix and CloudFront sends the request to the function URL. The live-update stream
+# (/api/events/stream, server-sent events) has its own behavior: never cached, never
+# compressed, and the origin read timeout (60 seconds of silence) is never reached because the
+# server sends a comment every 10 seconds and ends each stream after 4 minutes, well inside
+# the function's own limit; the browser reconnects with Last-Event-ID.
 
 resource "aws_s3_bucket" "web" {
   bucket = "${local.prefix}-web-${var.account_id}"
@@ -43,6 +45,13 @@ resource "aws_cloudfront_function" "block_internal" {
       return { statusCode: 403, statusDescription: 'Forbidden', headers: { 'content-type': { value: 'application/json' } }, body: '{"code":"forbidden","message":"Not available.","fields":[]}' };
     }
   EOT
+}
+
+resource "aws_cloudfront_function" "spa_fallback" {
+  name    = "${local.prefix}-spa-fallback"
+  runtime = "cloudfront-js-2.0"
+  publish = true
+  code    = file("${path.module}/functions/spa-fallback.js")
 }
 
 resource "aws_cloudfront_function" "strip_api_prefix" {
@@ -86,6 +95,11 @@ resource "aws_cloudfront_distribution" "web" {
     origin_id   = "api"
     domain_name = local.function_url_domain
 
+    custom_header {
+      name  = "x-antilog-origin"
+      value = local.origin_active
+    }
+
     custom_origin_config {
       http_port                = 80
       https_port               = 443
@@ -103,6 +117,32 @@ resource "aws_cloudfront_distribution" "web" {
     cached_methods         = ["GET", "HEAD"]
     compress               = true
     cache_policy_id        = local.caching_optimized
+
+    # A reload on a screen of the app gets the app. Only this behavior: /api/* and /internal/*
+    # keep their real status codes (a distribution-wide error page would turn an API refusal
+    # into HTML with status 200).
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.spa_fallback.arn
+    }
+  }
+
+  # Server-sent events: no cache, no compression, nothing buffered; the viewer's Accept,
+  # Last-Event-ID and cookies are forwarded (all viewer headers except Host).
+  ordered_cache_behavior {
+    path_pattern             = "/api/events/*"
+    target_origin_id         = "api"
+    viewer_protocol_policy   = "https-only"
+    allowed_methods          = ["GET", "HEAD", "OPTIONS"]
+    cached_methods           = ["GET", "HEAD"]
+    compress                 = false
+    cache_policy_id          = local.caching_disabled
+    origin_request_policy_id = local.all_viewer_except_host
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.strip_api_prefix.arn
+    }
   }
 
   ordered_cache_behavior {
@@ -136,21 +176,6 @@ resource "aws_cloudfront_distribution" "web" {
   }
 
   aliases = var.domain_name == "" ? [] : [var.domain_name]
-
-  # A path the app owns in the browser is answered with the app, so a reload keeps working.
-  custom_error_response {
-    error_code            = 403
-    response_code         = 200
-    response_page_path    = "/index.html"
-    error_caching_min_ttl = 0
-  }
-
-  custom_error_response {
-    error_code            = 404
-    response_code         = 200
-    response_page_path    = "/index.html"
-    error_caching_min_ttl = 0
-  }
 
   restrictions {
     geo_restriction {

@@ -6,7 +6,7 @@ description: >-
 
 # Organization
 
-The shared floor under sessions and the judge. It holds members, roles, projects, sign-in, approvals, budgets and the audit log. Built on this branch: the action layer, the permission matrix, sign-in, approvals, policy, budgets and caps, and the audit log reads (`antilog-core/src/organization.rs`, `auth.rs`, `approval.rs`, `budget.rs`; `antilog-server/src/api/auth.rs`, `api/organization.rs`, `signin.rs`). `GET /me`, sign-in without an organization id and the pending-cards list are built too. Group mappings, notifications, live events and the Settings pages are target.
+The shared floor under sessions and the judge. It holds members, roles, projects, sign-in, approvals, budgets and the audit log. Built on this branch: the action layer, the permission matrix, sign-in, approvals, policy, budgets and caps, and the audit log reads (`antilog-core/src/organization.rs`, `auth.rs`, `approval.rs`, `budget.rs`; `antilog-server/src/api/auth.rs`, `api/organization.rs`, `signin.rs`). `GET /me`, sign-in without an organization id and the pending-cards list are built too. Live events are built too (`api/live.rs`, `GET /events/stream`, see [../change/live-event.md](../change/live-event.md)). Group mappings, notifications and the Settings pages are target.
 
 | If you are doing | Read |
 | --- | --- |
