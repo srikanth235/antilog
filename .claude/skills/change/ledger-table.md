@@ -1,16 +1,16 @@
 # A table, column or migration
 
-The ledger is the store, and the only state: Postgres 18, on Antilog cloud and self-hosted alike. The core sees one `Store` trait, so tests of other modules use an in-memory double. It holds ids, versions, numbers, states, the conversation's words (decided by the owner, see [product rulings](../product/rulings.md)), commit ids, spend and audit rows. It never holds a customer's data, a secret, tool output, a diff or a log. (target: nothing here is built yet.)
+The ledger is the store, and the only state: Postgres 18, on Antilog cloud and self-hosted alike. The core sees one `Store` trait, so tests of other modules use an in-memory double. It holds ids, versions, numbers, states, the conversation's words (decided by the owner, see [product rulings](../product/rulings.md)), commit ids, spend and audit rows. It never holds a customer's data, a secret, tool output, a diff or a log. Built: the organization and session side (organizations, members, projects and project roles, access tokens, experiments' rows, sessions, spend, policy, approvals, audit log). Not built: the judge's tables and row-level security (target).
 
 ## Rules (target)
 
-- Access is behind the `Store` trait; the core never writes SQL. The Postgres store uses sqlx, with queries checked against the schema (offline query data is committed, see [stack/postgres/antilog.md](../stack/postgres/antilog.md)).
+- Access is behind the `Store` trait, one supertrait per area in `crates/antilog-core/src/store/` (a fake per area in `fakes/`, the Postgres impl per area in `crates/antilog-server/src/pg/`); the core never writes SQL. A write takes its audit entry and stores both in one transaction. The Postgres store uses sqlx, with queries checked against the schema (offline query data is committed, see [stack/postgres/antilog.md](../stack/postgres/antilog.md)).
 - The shared schema uses text ids, integer millisecond timestamps and JSON as text, with no Postgres-only type.
 - Migrations are forward only, numbered files in one directory. Add a table or column as a new file. Never edit one that has shipped. There are no down migrations: a mistake is fixed by the next migration.
 - Every row carries its organization. A query without it can cross customers. On Antilog cloud each client also has its own database; the column stays so an export moves between deployments.
 - Each area owns its own tables: the session (experiments' sessions, messages, cards, environments, platform accounts), the judge (experiments and their versions, seals, trials, measurements, receipts, the judge's queue) and the organization floor (members, projects, project members and their roles, tokens, approvals, policy, budgets (one per experiment, with an optional cap per project), the audit log). Customize items (evaluation templates, skill packs and their versions, connectors, agents, plugins) belong to the area that governs them: evaluation templates to the judge, skill packs, connectors and agents to the session. An experiment row carries its project id.
 - No joins across areas. An area reads another through its API, by id and version.
-- Spend rows, measurements, the audit log and the receipts are append-only, enforced by triggers and not by the code that writes them.
+- Spend rows, measurements, the audit log and the receipts are append-only, enforced by triggers and not by the code that writes them. The same goes for invariants the database can know: the last project owner, nested caps, final session states, a decided approval (errcodes `AL001` to `AL005`, mapped to `Invariant` in the store).
 - Platform jobs are rows in the store; see [platform-job.md](platform-job.md).
 
 ## Steps (target)
