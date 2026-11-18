@@ -3,7 +3,9 @@ import { useDecide } from "../../api/queries";
 import { Icon, StatusIcon } from "../../components/icon/Icon";
 import { reason } from "../../components/state/State";
 import { dollars, time } from "../../lib/format";
+import type { History } from "../../lib/history";
 import { w } from "../../words";
+import { cardRows, splitSummary } from "./cardRows";
 
 /** A card is a frame: a title, what would happen, what it may cost, two buttons. */
 export function ApprovalCard(props: {
@@ -11,6 +13,9 @@ export function ApprovalCard(props: {
   experiment: string;
   canDecide: boolean;
   decidedBy: string;
+  budgetCapCents: number;
+  spentCents: number | undefined;
+  history: History;
 }) {
   const { approval } = props;
   const decide = useDecide(props.experiment);
@@ -35,6 +40,10 @@ export function ApprovalCard(props: {
   const credential = approval.card === "add_credential";
   const keepGoing = approval.card === "keep_going";
   const cost = approval.costCents;
+  const rows = cardRows(approval, props);
+  const lead = rows.some((row) => row.key === "why")
+    ? splitSummary(approval.summary).lead
+    : approval.summary;
   return (
     <section className="cd ap wait" aria-label={title} data-card={approval.card}>
       <div className="ap-h">
@@ -44,8 +53,20 @@ export function ApprovalCard(props: {
           {w.activity.waiting_for_you}
         </span>
       </div>
-      <p className="ap-lead">{approval.summary}</p>
+      <p className="ap-lead">{lead}</p>
       <div className="ap-b">
+        {rows.map((row) => (
+          <div key={row.key} className="ap-r">
+            <span className="k">{row.label}</span>
+            <span className="v">
+              {row.lines.map((line) => (
+                <span key={line} className={row.mono ? "mono" : undefined}>
+                  {line}
+                </span>
+              ))}
+            </span>
+          </div>
+        ))}
         <div className="ap-r">
           <span className="k">{w.card.whatCost}</span>
           <span className="v">

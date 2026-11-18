@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 import { Dialog } from "../../components/dialog/Dialog";
 import { Glyph, Icon } from "../../components/icon/Icon";
 import { w } from "../../words";
@@ -69,6 +70,14 @@ const BODY: Record<Section, () => React.ReactNode> = {
 /** Settings is a dialog whose place is in the URL: /settings/<section>. */
 export function SettingsDialog({ section }: { section: Section }) {
   const navigate = useNavigate();
+  const [query, setQuery] = useState("");
+  const needle = query.trim().toLowerCase();
+  const shown = (id: Section) =>
+    needle === "" || w.settings.sections[id].toLowerCase().includes(needle);
+  const groups = RAIL.map((group) => ({
+    ...group,
+    items: group.items.filter((item) => shown(item.id)),
+  })).filter((group) => group.items.length > 0);
   return (
     <Dialog
       open
@@ -78,8 +87,21 @@ export function SettingsDialog({ section }: { section: Section }) {
     >
       <div className="sd-body">
         <div className="sd-rail">
+          <label className="sfield">
+            <Icon name="search" />
+            <input
+              type="search"
+              placeholder={w.settings.search}
+              aria-label={w.settings.search}
+              autoComplete="off"
+              spellCheck={false}
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+          </label>
           <nav className="sd-groups" aria-label={w.settings.rail}>
-            {RAIL.map((group) => (
+            {groups.length === 0 ? <p className="sd-none">{w.settings.noMatch}</p> : null}
+            {groups.map((group) => (
               <div key={group.group} className="sd-grp">
                 <span className="t-label">{w.settings.groups[group.group]}</span>
                 {group.items.map((item) => (

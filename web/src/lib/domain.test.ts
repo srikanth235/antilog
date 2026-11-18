@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Schemas } from "../api/client";
 import {
   activityOf,
-  agentName,
+  agentLabel,
   canEdit,
   defaultBudgetCents,
   leadSession,
@@ -47,7 +47,11 @@ describe("domain", () => {
       "acme/pricing",
     ]);
   });
-  it("names agents", () => {
-    expect(agentName("claude-code")).toBe("Claude Code");
+  it("names agents by their display name, never by their id", () => {
+    const agents = [{ id: "agentcore-glm", name: "AgentCore · GLM 4.7 Flash" }];
+    expect(agentLabel(agents, "agentcore-glm")).toBe("AgentCore · GLM 4.7 Flash");
+    expect(agentLabel(agents, "mcp")).toBe("Your agent");
+    expect(agentLabel(agents, "claude-code")).toBe("An agent");
+    expect(agentLabel(undefined, "agentcore-glm")).toBe("An agent");
   });
 });

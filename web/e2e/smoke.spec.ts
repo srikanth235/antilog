@@ -31,7 +31,7 @@ test("start an experiment, approve a card, read the settings", async ({ page }, 
   await page.getByLabel("New experiment").fill("Cut checkout p95 latency");
   // No default budget anywhere: the person must enter one, and sees it.
   await expect(page.getByRole("button", { name: "Send" })).toBeDisabled();
-  await expect(page.getByPlaceholder("No budget is set. Enter an amount to send.")).toBeVisible();
+  await expect(page.getByPlaceholder("Set a budget")).toBeVisible();
   await page.getByLabel("Budget ($)").fill("10");
   await page.getByRole("button", { name: "Send" }).click();
   await expect(
@@ -89,12 +89,17 @@ test("a viewer can read but not send", async ({ page, browser }) => {
   // The owner adds a viewer who signs in with the test provider.
   const viewer = unique("vic");
   await page.goto("/settings/members");
-  await page.getByLabel("Name", { exact: true }).fill(viewer);
-  await page.getByLabel("Sign-in provider").fill("fake");
-  await page.getByLabel("Account at the provider").fill(viewer);
-  await page.getByRole("combobox", { name: "Role", exact: true }).click();
-  await page.getByRole("option", { name: "Viewer" }).click();
   await page.getByRole("button", { name: "Add member" }).click();
+  const add = page.getByRole("dialog", { name: "Add member" });
+  await add.getByLabel("Name", { exact: true }).fill(viewer);
+  // The provider is chosen from the ones the server lists; the test server lists only the test one.
+  await expect(add.getByRole("combobox", { name: "Sign-in provider" })).toContainText(
+    "Test sign-in",
+  );
+  await add.getByLabel("Account at the provider").fill(viewer);
+  await add.getByRole("combobox", { name: "Role", exact: true }).click();
+  await page.getByRole("option", { name: "Viewer" }).click();
+  await add.getByRole("button", { name: "Add member" }).click();
   await expect(page.getByText(viewer).first()).toBeVisible();
 
   const context = await browser.newContext({ baseURL: "http://127.0.0.1:4173" });

@@ -4,6 +4,11 @@ import { dollars, plural } from "./lib/format";
 
 export const w = {
   brand: "Antilog",
+  session: {
+    yourAgent: "Your agent",
+    unknownAgent: "An agent",
+    unknownPlatform: "an agent platform",
+  },
   loading: "Loading",
   noData: "No data",
   tryAgain: "Try again",
@@ -56,6 +61,12 @@ export const w = {
   signIn: {
     title: "Sign in to Antilog",
     purpose: "A chat with a coding agent, and a judge that decides what counts.",
+    providerNames: {
+      github: "GitHub",
+      google: "Google",
+      oidc: "Your organization",
+      fake: "Test sign-in",
+    } as Record<string, string>,
     github: "Continue with GitHub",
     google: "Continue with Google",
     refused: "Sign-in refused.",
@@ -85,6 +96,7 @@ export const w = {
     repos: "Repos",
     agent: "Agent",
     auto: "Auto",
+    autoWould: (agent: string, why: string) => `Auto would choose ${agent}: ${why}`,
     autoHint:
       "Auto picks the agent with the lowest cost per win for this kind of experiment here. Before there is data it uses your organization's default agent.",
     environment: "Environment",
@@ -93,7 +105,8 @@ export const w = {
     modeFollow: "Follow policy",
     budget: "Budget",
     budgetOf: (spent: number, cap: number) => `${dollars(spent)} of ${dollars(cap)}`,
-    noBudget: "No budget is set. Enter an amount to send.",
+    noBudget: "Set a budget",
+    noBudgetHint: "No budget is set. Enter an amount to send.",
     budgetAmount: "Budget ($)",
     ideas: "Ideas",
     ideasHint: "Antilog suggests, ranked by expected return. You start.",
@@ -102,7 +115,7 @@ export const w = {
     noExperiments: "No experiments yet.",
     needProject: "Create a project first. An experiment belongs to one.",
     createProject: "New project",
-    reposPlaceholder: "owner/name, owner/name",
+    reposPlaceholder: "owner/name",
     reposHint: "Repos to attach, separated by commas.",
     startFailed: "The experiment could not start.",
     open: "Open",
@@ -230,6 +243,7 @@ export const w = {
     experimentStarted: (goal: string) => `Experiment started: ${goal}`,
     notSealedLine: "Not sealed. The agent proposes a definition on a Seal experiment card.",
     sealedLine: "Sealed. Only the judge's numbers count.",
+    connectedAgent: "Your agent connected from your machine",
     startedSession: (agent: string, platform: string) =>
       `Started a session on ${platform} with ${agent}`,
     sessionFailed: "The session failed. Open the platform's log, or start again.",
@@ -341,6 +355,19 @@ export const w = {
       keep_going: "Keep going",
       continue_on_another_agent: "Continue",
     },
+    rows: {
+      now: "Now",
+      requested: "Requested",
+      why: "Why",
+      repo: "Repo",
+      access: "Access",
+      connector: "Connector",
+      change: "Change",
+      tried: "What was tried",
+      allSpent: (cap: string) => `${cap}, all spent`,
+      ofCap: (spent: string, cap: string) => `${spent} of ${cap}`,
+      pushesOwnBranch: "Pushes only to the session's own branch",
+    },
     whatCost: "What it may cost",
     decline: "Decline",
     declineKeepGoing: "Stop here",
@@ -405,6 +432,7 @@ export const w = {
     title: "Settings",
     rail: "Settings sections",
     search: "Search settings",
+    noMatch: "No setting matches.",
     groups: { you: "You", organization: "Organization" },
     sections: {
       profile: "Profile",

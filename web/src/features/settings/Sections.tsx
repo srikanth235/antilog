@@ -10,6 +10,7 @@ import {
   useOrganization,
   usePolicies,
   useProjects,
+  useProviders,
   useRevokeToken,
   useSetMemberRole,
   useSetOrganizationLimits,
@@ -17,7 +18,8 @@ import {
   useSpend,
   useTokens,
 } from "../../api/queries";
-import { Confirm } from "../../components/dialog/Dialog";
+import { Confirm, Dialog } from "../../components/dialog/Dialog";
+import { Icon } from "../../components/icon/Icon";
 import { ROLE_OPTIONS } from "../../components/select/roles";
 import { Select } from "../../components/select/Select";
 import { Empty, Failed, Loading, reason } from "../../components/state/State";
@@ -309,6 +311,10 @@ function GeneralForm(props: {
   );
 }
 
+function providerName(id: string): string {
+  return w.signIn.providerNames[id] ?? id;
+}
+
 export function Members() {
   const members = useMembers();
   const add = useAddMember();
@@ -318,7 +324,11 @@ export function Members() {
   const m = w.settings.members;
   const [name, setName] = useState("");
   const [subject, setSubject] = useState("");
-  const [provider, setProvider] = useState("github");
+  const providers = useProviders();
+  const offered = providers.data ?? [];
+  const [chosenProvider, setProvider] = useState<string | null>(null);
+  const provider = chosenProvider ?? offered[0] ?? "";
+  const [adding, setAdding] = useState(false);
   const [role, setNewRole] = useState<Schemas["Role"]>("editor");
   const cols = "minmax(0, 1.6fr) minmax(0, 1.2fr) 130px";
 
@@ -371,9 +381,16 @@ export function Members() {
         </p>
       ) : null}
       {owner ? (
+        <div className="rw g12" style={{ marginTop: 16 }}>
+          <button type="button" className="btn sm" onClick={() => setAdding(true)}>
+            <Icon name="plus" size="s" />
+            {m.add}
+          </button>
+        </div>
+      ) : null}
+      <Dialog open={adding} onClose={() => setAdding(false)} title={m.add} size="narrow">
         <form
           className="form-col"
-          style={{ marginTop: 16 }}
           onSubmit={(event) => {
             event.preventDefault();
             add.mutate(
@@ -386,12 +403,12 @@ export function Members() {
                 onSuccess: () => {
                   setName("");
                   setSubject("");
+                  setAdding(false);
                 },
               },
             );
           }}
         >
-          <h4 className="sd-gh">{m.add}</h4>
           <label className="field">
             {m.name}
             <input
@@ -401,14 +418,17 @@ export function Members() {
               onChange={(event) => setName(event.target.value)}
             />
           </label>
-          <label className="field">
-            {m.provider}
-            <input
-              className="input"
-              value={provider}
-              onChange={(event) => setProvider(event.target.value)}
-            />
-          </label>
+          {offered.length === 0 ? null : (
+            <div className="field">
+              <span>{m.provider}</span>
+              <Select
+                label={m.provider}
+                value={provider}
+                options={offered.map((id) => ({ value: id, label: providerName(id) }))}
+                onChange={setProvider}
+              />
+            </div>
+          )}
           <label className="field">
             {m.subject}
             <input
@@ -417,8 +437,16 @@ export function Members() {
               onChange={(event) => setSubject(event.target.value)}
             />
           </label>
-          <div className="rw g12">
+          <div className="field">
+            <span>{m.role}</span>
             <Select label={m.role} value={role} options={ROLE_OPTIONS} onChange={setNewRole} />
+          </div>
+          {add.isError ? (
+            <p className="error-line" role="alert">
+              {reason(add.error)}
+            </p>
+          ) : null}
+          <div className="rw g12">
             <button
               type="submit"
               className="btn primary sm"
@@ -426,14 +454,12 @@ export function Members() {
             >
               {m.add}
             </button>
+            <button type="button" className="btn sm" onClick={() => setAdding(false)}>
+              {w.cancel}
+            </button>
           </div>
-          {add.isError ? (
-            <p className="error-line" role="alert">
-              {reason(add.error)}
-            </p>
-          ) : null}
         </form>
-      ) : null}
+      </Dialog>
     </div>
   );
 }
