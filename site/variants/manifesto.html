@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Antilog: Agents in. Waste out.</title>
+<meta name="description" content="Autonomous agents cut your cloud bill. An independent judge verifies every saving. Your engineers approve it.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --w:#fff; --k:#000; --sig:#ff3d00; --sig-ink:#c22d00; --grey:#595959; --rule:#000;
+  --g:clamp(16px,3.2vw,48px);
+  --sans:"Inter Tight","Helvetica Neue",Helvetica,Arial,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--w);color:var(--k);font-family:var(--sans);font-size:18px;line-height:1.4;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--sig);outline-offset:3px}
+.dark :focus-visible{outline-color:#fff}
+.wrap{padding-inline:var(--g);max-width:1920px;margin-inline:auto}
+.mono{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;font-weight:500}
+.skip{position:absolute;left:-999px;top:0;background:var(--k);color:#fff;padding:12px 16px;z-index:10}
+.skip:focus{left:0}
+
+/* header */
+header.top{border-bottom:1px solid var(--rule);position:relative}
+header.top .wrap{display:flex;align-items:center;justify-content:space-between;min-height:64px;gap:12px}
+.logo{font-weight:900;font-size:24px;letter-spacing:-.04em;text-decoration:none;display:inline-flex;align-items:center;min-height:44px}
+.logo i{display:inline-block;width:.42em;height:.42em;background:var(--sig);margin-left:.12em;transform:translateY(.02em)}
+nav{display:flex;align-items:center;gap:8px}
+.link{display:inline-flex;align-items:center;min-height:44px;padding:0 14px;text-decoration:none;font-weight:700;font-size:15px}
+.link:hover{text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:2px}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 20px;background:var(--k);color:#fff;text-decoration:none;font-weight:700;font-size:15px;border:2px solid var(--k);transition:background .15s,color .15s}
+.btn:hover{background:var(--sig);border-color:var(--sig);color:#000}
+.dark .btn{background:#fff;color:#000;border-color:#fff}
+.dark .btn:hover{background:var(--sig);border-color:var(--sig)}
+
+/* hero */
+.hero{border-bottom:1px solid var(--rule)}
+.hero .meta{display:flex;justify-content:space-between;gap:16px;padding-block:16px;border-bottom:1px solid var(--rule);flex-wrap:wrap}
+h1{margin:0;font-weight:800;letter-spacing:-.06em;word-spacing:.14em;line-height:.9;font-size:clamp(64px,19.2vw,360px);padding-block:clamp(24px,4vw,64px) clamp(16px,2vw,32px);text-transform:none}
+h1 span{display:block}
+h1 .o{color:var(--sig)}
+.sub{display:grid;grid-template-columns:repeat(12,1fr);gap:var(--g);padding-block:0 clamp(32px,4vw,64px)}
+.sub p{grid-column:1 / span 7;margin:0;font-size:clamp(20px,2.2vw,32px);line-height:1.15;letter-spacing:-.02em;font-weight:500;max-width:30em}
+.sub .cta{grid-column:9 / span 4;display:flex;gap:8px;align-items:flex-start;justify-content:flex-end;flex-wrap:wrap}
+.sub .cta .btn{min-height:56px;padding:0 28px;font-size:17px}
+.sub .cta .link{min-height:56px;border:2px solid transparent}
+
+/* ticker */
+.ticker{background:var(--k);color:#fff;display:flex;align-items:stretch;overflow:hidden}
+.ticker .tag{flex:none;background:var(--sig);color:#000;padding:0 var(--g);display:flex;align-items:center;font-weight:700;position:relative;z-index:1}
+.ticker .win{overflow:hidden;flex:1;min-width:0;display:flex;align-items:center}
+.track{display:flex;flex:none;white-space:nowrap;padding-block:18px;gap:0}
+.track ul{display:flex;list-style:none;margin:0;padding:0;flex:none}
+.track li{font-family:var(--mono);font-size:14px;padding-inline:28px;border-right:1px solid #444;display:flex;gap:10px;align-items:center}
+.track b{color:var(--sig);font-weight:700}
+.track em{font-style:normal;color:#fff;font-weight:700}
+.track .dup{display:none}
+@media (prefers-reduced-motion:no-preference){
+  .track .dup{display:flex}
+  .track{animation:run 48s linear infinite}
+  .ticker:hover .track{animation-play-state:paused}
+  @keyframes run{to{transform:translateX(-50%)}}
+}
+@media (prefers-reduced-motion:reduce){
+  .win{overflow-x:auto}
+}
+
+/* sections */
+section{border-bottom:1px solid var(--rule)}
+.label{display:flex;justify-content:space-between;gap:16px;padding-block:16px;border-bottom:1px solid currentColor}
+.label span:last-child{color:var(--grey)}
+.dark .label span:last-child{color:#bdbdbd}
+.dark{background:var(--k);color:#fff}
+.dark .label{border-color:#fff}
+h2{margin:0;font-weight:800;letter-spacing:-.05em;word-spacing:.12em;line-height:.9;font-size:clamp(48px,11.2vw,208px);padding-block:clamp(32px,5vw,80px)}
+h2 .o{color:var(--sig)}
+.cols2{display:grid;grid-template-columns:repeat(12,1fr);gap:var(--g);padding-bottom:clamp(40px,6vw,96px)}
+.cols2 p{margin:0;font-size:clamp(18px,1.8vw,26px);line-height:1.25;letter-spacing:-.015em;font-weight:500}
+.cols2 .a{grid-column:1 / span 5}
+.cols2 .b{grid-column:7 / span 6;color:inherit}
+.big{font-family:var(--sans);font-weight:800;font-size:clamp(64px,9vw,160px);letter-spacing:-.06em;line-height:.9;display:block}
+
+/* system */
+.flow{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid #000}
+.step{padding:clamp(16px,2vw,32px) var(--g) clamp(32px,4vw,64px) clamp(16px,2vw,32px);border-right:1px solid #000;display:flex;flex-direction:column;gap:clamp(24px,5vw,96px);min-width:0;position:relative}
+.step:last-child{border-right:0}
+.step .n{display:flex;justify-content:space-between}
+.step h3{margin:0;font-weight:800;letter-spacing:-.055em;word-spacing:.1em;line-height:.9;font-size:clamp(40px,6.4vw,120px);overflow-wrap:anywhere}
+.step h3 small{display:block;font-size:inherit;color:var(--sig)}
+.step p{margin:0;font-size:clamp(16px,1.4vw,20px);line-height:1.3;font-weight:500;max-width:22em}
+.step .who{margin-top:auto}
+.step.judge{background:var(--k);color:#fff}
+.step.judge h3 small{color:var(--sig)}
+.arrow{position:absolute;right:calc(var(--g) * -.5);top:clamp(16px,2vw,32px);font-family:var(--mono);font-weight:700;background:var(--sig);color:#000;width:32px;height:32px;display:flex;align-items:center;justify-content:center;z-index:2;font-size:16px}
+.step:last-child .arrow{display:none}
+.sys-lead{padding-bottom:clamp(24px,3vw,48px)}
+
+/* control */
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid #fff}
+.cell{padding:clamp(16px,2vw,32px);border-right:1px solid #fff;display:flex;flex-direction:column;gap:clamp(32px,7vw,120px);min-width:0}
+.cell:last-child{border-right:0}
+.cell .big2{font-weight:800;letter-spacing:-.055em;word-spacing:.1em;line-height:.9;font-size:clamp(40px,5.4vw,104px);overflow-wrap:anywhere}
+.cell .big2 .o{color:var(--sig)}
+.cell p{margin:0;font-size:clamp(16px,1.3vw,19px);line-height:1.35;color:#e6e6e6;max-width:22em}
+.cell .mono{color:#bdbdbd}
+.ent{display:flex;flex-wrap:wrap;gap:0;border-top:1px solid #fff;margin:0;padding:0;list-style:none}
+.ent li{flex:1 1 220px;padding:18px clamp(16px,2vw,32px);border-right:1px solid #fff;font-family:var(--mono);font-size:13px;text-transform:uppercase;letter-spacing:.05em;font-weight:500}
+.ent li:last-child{border-right:0}
+.ent li::before{content:"+ ";color:var(--sig);font-weight:700}
+
+/* cta */
+.cta-sec{background:var(--sig);color:#000;border-bottom:0}
+.cta-sec .label{border-color:#000}
+.cta-sec .label span:last-child{color:#000}
+.cta-sec h2{font-size:clamp(72px,21vw,400px);line-height:.85;padding-bottom:clamp(24px,3vw,48px)}
+.mail{display:block;font-weight:800;letter-spacing:-.04em;line-height:1;font-size:clamp(22px,6.2vw,120px);text-decoration:none;border-top:2px solid #000;padding-block:clamp(16px,2vw,32px);word-break:break-all}
+.mail:hover{background:#000;color:var(--sig)}
+.cta-row{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;padding-block:20px;border-top:1px solid #000}
+.cta-sec .btn{background:#000;color:#fff;border-color:#000}
+.cta-sec .btn:hover{background:#fff;color:#000;border-color:#fff}
+.cta-sec :focus-visible{outline-color:#000}
+
+footer{background:var(--k);color:#fff}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-block:20px}
+footer a{display:inline-flex;align-items:center;min-height:44px}
+footer span{display:inline-flex;align-items:center;min-height:44px;color:#bdbdbd}
+
+/* responsive */
+@media (max-width:1100px){
+  .grid4{grid-template-columns:repeat(2,1fr)}
+  .cell:nth-child(2){border-right:0}
+  .cell:nth-child(-n+2){border-bottom:1px solid #fff}
+}
+@media (max-width:900px){
+  .sub p{grid-column:1 / -1}
+  .sub .cta{grid-column:1 / -1;justify-content:flex-start}
+  .cols2 .a,.cols2 .b{grid-column:1 / -1}
+  .flow{grid-template-columns:1fr}
+  .step{border-right:0;border-bottom:1px solid #000;gap:32px}
+  .step:last-child{border-bottom:0}
+  .step.judge{border-bottom-color:#000}
+  .arrow{right:auto;left:var(--g);top:auto;bottom:-16px;transform:rotate(90deg)}
+  .step h3{font-size:clamp(56px,14vw,120px)}
+}
+@media (max-width:600px){
+  .grid4{grid-template-columns:1fr}
+  .cell{border-right:0;border-bottom:1px solid #fff;gap:32px}
+  .cell:last-child{border-bottom:0}
+  .cell:nth-child(2){border-bottom:1px solid #fff}
+  .ent li{border-right:0;border-bottom:1px solid #fff;flex-basis:100%}
+  .ent li:last-child{border-bottom:0}
+  .hero .meta .hide-s{display:none}
+  .ticker .tag{padding-inline:12px}
+  .nav-hide{display:none}
+  .mail{font-size:clamp(18px,5.6vw,40px)}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="#top" aria-label="Antilog home">antilog<i aria-hidden="true"></i></a>
+    <nav aria-label="Primary">
+      <a class="link" href="https://app.antilog.tech">Sign in</a>
+      <a class="btn" href="mailto:hello@antilog.tech">Talk to us</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+<section class="hero" id="top" aria-labelledby="h1">
+  <div class="wrap">
+    <div class="meta mono"><span>Autonomous agents</span><span class="hide-s">×</span><span>Cloud spend</span></div>
+    <h1 id="h1"><span>Agents in.</span><span class="o">Waste out.</span></h1>
+    <div class="sub">
+      <p>Autonomous agents cut your cloud bill. An independent judge verifies every saving. Your engineers approve it.</p>
+      <div class="cta">
+        <a class="btn" href="mailto:hello@antilog.tech">Talk to us</a>
+        <a class="link" href="https://app.antilog.tech">Sign in &rarr;</a>
+      </div>
+    </div>
+  </div>
+  <div class="ticker" role="region" aria-label="Illustrative feed of agent actions">
+    <div class="tag mono">Illustrative</div>
+    <div class="win" tabindex="0">
+      <div class="track">
+        <ul>
+          <li><span>agent-07</span> cached product lookups <b>judged</b> <em>approved</em> <span>&minus;$ example</span></li>
+          <li><span>agent-12</span> batched N+1 order query <b>judged</b> <em>approved</em> <span>&minus;$ example</span></li>
+          <li><span>agent-03</span> trimmed 41 KB response payload <b>judged</b> <em>approved</em> <span>&minus;$ example</span></li>
+          <li><span>agent-19</span> collapsed chatty service call <b>judged</b> <em>rejected: p95 +9%</em> <span>$0</span></li>
+          <li><span>agent-05</span> right-sized nightly job <b>judged</b> <em>approved</em> <span>&minus;$ example</span></li>
+          <li><span>agent-22</span> budget reached <b>stopped</b> <em>waiting for you</em></li>
+        </ul>
+        <ul class="dup" aria-hidden="true">
+          <li><span>agent-07</span> cached product lookups <b>judged</b> <em>approved</em> <span>&minus;$ example</span></li>
+          <li><span>agent-12</span> batched N+1 order query <b>judged</b> <em>approved</em> <span>&minus;$ example</span></li>
+          <li><span>agent-03</span> trimmed 41 KB response payload <b>judged</b> <em>approved</em> <span>&minus;$ example</span></li>
+          <li><span>agent-19</span> collapsed chatty service call <b>judged</b> <em>rejected: p95 +9%</em> <span>$0</span></li>
+          <li><span>agent-05</span> right-sized nightly job <b>judged</b> <em>approved</em> <span>&minus;$ example</span></li>
+          <li><span>agent-22</span> budget reached <b>stopped</b> <em>waiting for you</em></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="problem">
+  <div class="wrap">
+    <div class="label mono"><span>01 / Problem</span><span>Where the bill comes from</span></div>
+    <h2 id="problem">The waste is in your <span class="o">code.</span><br>Not your servers.</h2>
+    <div class="cols2">
+      <p class="a">N+1 queries. Missing caches. Oversized payloads. Chatty services.</p>
+      <p class="b">No dashboard flags them and no one has the week to chase them. Every request pays for them, all month.</p>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="system">
+  <div class="wrap">
+    <div class="label mono"><span>02 / System</span><span>Three roles. No overlap.</span></div>
+    <h2 id="system" class="sys-lead">Proposed.<br>Judged. <span class="o">Approved.</span></h2>
+  </div>
+  <div class="flow">
+    <div class="step">
+      <div class="n mono"><span>A</span><span>Agents</span></div>
+      <h3>Agents<br><small>propose.</small></h3>
+      <p>They work your code, databases and caches around the clock, find waste and try fixes.</p>
+      <span class="arrow" aria-hidden="true">&rarr;</span>
+    </div>
+    <div class="step judge">
+      <div class="n mono"><span>B</span><span>Judge</span></div>
+      <h3>The judge<br><small>decides.</small></h3>
+      <p>Separate from the agents. It measures each change on your own code against a bar you fixed in advance.</p>
+      <span class="arrow" aria-hidden="true">&rarr;</span>
+    </div>
+    <div class="step">
+      <div class="n mono"><span>C</span><span>You</span></div>
+      <h3>You<br><small>approve.</small></h3>
+      <p>Only verified savings arrive, as changes in your own repositories. Nothing ships on its own.</p>
+    </div>
+  </div>
+</section>
+
+<section class="dark" aria-labelledby="control">
+  <div class="wrap">
+    <div class="label mono"><span>03 / Control</span><span>No surprises</span></div>
+    <h2 id="control">Autonomy with <span class="o">a leash.</span></h2>
+  </div>
+  <div class="grid4">
+    <div class="cell">
+      <span class="mono">Cap</span>
+      <div class="big2">Hard<br>budget<span class="o">.</span></div>
+      <p>You set the goal and the spend. When it runs out, the agents stop and wait.</p>
+    </div>
+    <div class="cell">
+      <span class="mono">Bar</span>
+      <div class="big2">Fixed<br>quality<span class="o">.</span></div>
+      <p>Latency, error rate and tests, set before any agent starts. Never moved afterwards.</p>
+    </div>
+    <div class="cell">
+      <span class="mono">Proof</span>
+      <div class="big2">Signed<br>record<span class="o">.</span></div>
+      <p>Each saving carries what changed, what it was measured against, the checks it passed and what it cost to find.</p>
+    </div>
+    <div class="cell">
+      <span class="mono">Enterprise</span>
+      <div class="big2">Yours<span class="o">.</span></div>
+      <p>We keep results, never your code or data. Your sign-in, your approvals, a full audit trail.</p>
+    </div>
+  </div>
+  <ul class="ent">
+    <li>Your data stays yours</li>
+    <li>Hosted today. Your cloud next</li>
+    <li>Audit trail</li>
+    <li>Claude, AWS, OpenAI, Microsoft, Google. No lock-in</li>
+  </ul>
+</section>
+
+<section class="cta-sec" aria-labelledby="cta">
+  <div class="wrap">
+    <div class="label mono"><span>04 / Start</span><span>Our engineers set it up with yours</span></div>
+    <h2 id="cta">Cut the<br>bill.</h2>
+    <a class="mail" href="mailto:hello@antilog.tech">hello@antilog.tech</a>
+    <div class="cta-row">
+      <a class="btn" href="mailto:hello@antilog.tech" style="min-height:56px;padding:0 28px;font-size:17px">Talk to us</a>
+      <a class="link" href="https://app.antilog.tech">Sign in &rarr;</a>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="dark">
+  <div class="wrap mono">
+    <span>&copy; Antilog</span>
+    <a href="mailto:hello@antilog.tech">hello@antilog.tech</a>
+    <a href="https://app.antilog.tech">Sign in</a>
+  </div>
+</footer>
+</body>
+</html>
