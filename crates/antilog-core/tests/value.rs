@@ -332,7 +332,7 @@ async fn delivered_needs_a_merge_pending_stays_out_of_return_and_a_miss_counts_i
         "$36.00 over $36.00 spent, the miss included"
     );
 
-    let org = value::organization_value(&w.store, &w.judge, &w.owner, all())
+    let org = value::organization_value(&w.store, &w.judge, &w.owner, T0 + 1, all())
         .await
         .unwrap();
     assert_eq!(org, f);
@@ -520,7 +520,7 @@ async fn the_report_adds_up_the_month_and_names_what_found_nothing() {
         .await
         .unwrap();
 
-    let report = value::report(&w.store, &w.judge, &w.owner, "2027-01", None)
+    let report = value::report(&w.store, &w.judge, &w.owner, T0, "2027-01", None)
         .await
         .unwrap();
     assert_eq!(report.month, "2027-01");
@@ -563,7 +563,7 @@ async fn the_report_adds_up_the_month_and_names_what_found_nothing() {
     );
 
     // A month nobody spent in is empty, not an error; a bad month is refused.
-    let empty = value::report(&w.store, &w.judge, &w.owner, "2026-02", None)
+    let empty = value::report(&w.store, &w.judge, &w.owner, T0, "2026-02", None)
         .await
         .unwrap();
     assert_eq!(
@@ -571,7 +571,7 @@ async fn the_report_adds_up_the_month_and_names_what_found_nothing() {
         (0, None)
     );
     assert!(matches!(
-        value::report(&w.store, &w.judge, &w.owner, "2027-13", None).await,
+        value::report(&w.store, &w.judge, &w.owner, T0, "2027-13", None).await,
         Err(Refusal::Invalid(_))
     ));
 }

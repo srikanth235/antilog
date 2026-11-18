@@ -1482,23 +1482,28 @@ async fn value_models_are_set_by_project_owners_and_value_and_return_are_read_by
     // 10 ms at 720 cents a year per ms.
     assert_eq!(seen.body["wins"][0]["yearlyCents"], 7_200);
     assert_eq!(seen.body["figures"]["deliveredCents"], 7_200);
-    let everything = org.call(Method::GET, "/value", &viewer, None).await;
+    // The organization's figures and report are for owners and editors; a viewer reads a project's.
+    for uri in ["/value", "/report?month=2026-11"] {
+        let denied = org.call(Method::GET, uri, &viewer, None).await;
+        assert_eq!(denied.status, StatusCode::FORBIDDEN, "{uri}");
+    }
+    let everything = org.call(Method::GET, "/value", &editor, None).await;
     assert_eq!(everything.body["deliveredCents"], 7_200);
     let outside = org
-        .call(Method::GET, "/value?from=5000&to=9000", &viewer, None)
+        .call(Method::GET, "/value?from=5000&to=9000", &editor, None)
         .await;
     assert_eq!(outside.body["deliveredCents"], 0);
     let backwards = org
-        .call(Method::GET, "/value?from=9&to=3", &viewer, None)
+        .call(Method::GET, "/value?from=9&to=3", &editor, None)
         .await;
     assert_eq!(backwards.status, StatusCode::UNPROCESSABLE_ENTITY);
 
     let report = org
-        .call(Method::GET, "/report?month=2026-11", &viewer, None)
+        .call(Method::GET, "/report?month=2026-11", &editor, None)
         .await;
     assert_eq!(report.status, StatusCode::OK, "{:?}", report.body);
     assert_eq!(report.body["month"], "2026-11");
-    let current = org.call(Method::GET, "/report", &viewer, None).await;
+    let current = org.call(Method::GET, "/report", &editor, None).await;
     assert_eq!(current.status, StatusCode::OK);
     let scoped = org
         .call(
@@ -1511,7 +1516,7 @@ async fn value_models_are_set_by_project_owners_and_value_and_return_are_read_by
     assert_eq!(scoped.body["projectId"], json!(project));
     for bad in ["2026-13", "nov", "2026-1"] {
         let reply = org
-            .call(Method::GET, &format!("/report?month={bad}"), &viewer, None)
+            .call(Method::GET, &format!("/report?month={bad}"), &editor, None)
             .await;
         assert_eq!(reply.status, StatusCode::UNPROCESSABLE_ENTITY, "{bad}");
     }

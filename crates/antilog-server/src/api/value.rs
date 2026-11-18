@@ -117,7 +117,7 @@ async fn project_value<D: Deps + 'static>(
 #[utoipa::path(
     get, path = "/value", security(("bearer" = [])),
     params(Between),
-    responses((status = 200, description = "Delivered, Pending, At risk and Return of the organization, measured offline", body = ValueFigures))
+    responses((status = 200, description = "Delivered, Pending, At risk and Return of the organization, measured offline; organization owners and editors", body = ValueFigures), (status = 403, body = ApiError))
 )]
 async fn organization_value<D: Deps + 'static>(
     State(app): Shared<D>,
@@ -127,7 +127,7 @@ async fn organization_value<D: Deps + 'static>(
     let judge = app.deps.judge(authed.who.organization);
     let range = Range::new(app.now(), between.from, between.to)?;
     Ok(Json(
-        value::organization_value(app.store(), &judge, &authed.who, range).await?,
+        value::organization_value(app.store(), &judge, &authed.who, app.now(), range).await?,
     ))
 }
 
@@ -157,6 +157,7 @@ async fn experiment_value<D: Deps + 'static>(
     params(ReportQuery),
     responses(
         (status = 200, description = "The month's report: spent, Delivered, Pending, At risk, Return, where the spend went, the agent scoreboard, top wins and experiments stopped with no win", body = Report),
+        (status = 403, description = "The organization report is for owners and editors", body = ApiError),
         (status = 404, body = ApiError),
         (status = 422, body = ApiError),
     )
@@ -174,7 +175,15 @@ async fn report<D: Deps + 'static>(
         ))?,
     };
     Ok(Json(
-        value::report(app.store(), &judge, &authed.who, &month, query.project).await?,
+        value::report(
+            app.store(),
+            &judge,
+            &authed.who,
+            app.now(),
+            &month,
+            query.project,
+        )
+        .await?,
     ))
 }
 

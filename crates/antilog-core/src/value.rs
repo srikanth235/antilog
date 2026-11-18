@@ -451,14 +451,15 @@ pub async fn project_value<S: Store, J: JudgeStore>(
     .await
 }
 
-/// The same for the whole organization.
+/// The same for the whole organization: organization owners and editors read it.
 pub async fn organization_value<S: Store, J: JudgeStore>(
     store: &S,
     judge: &J,
     who: &Principal,
+    now: i64,
     range: Range,
 ) -> Result<ValueFigures, Refusal> {
-    member_of(store, who).await?;
+    permit(store, who, Action::ReportRead, None, "value", now).await?;
     let experiments = experiments_in(store, who.organization, None).await?;
     figures_of(
         store,
@@ -617,17 +618,21 @@ fn total(lines: &[SpendLine], keep: impl Fn(&SpendLine) -> bool) -> i64 {
 
 /// The month's report for the organization or one project: spent, Delivered, Pending, At risk and
 /// Return, where the spend went, the agent scoreboard, the top wins and the experiments stopped
-/// with no win. Every member reads it; it carries numbers, titles and ids, never a diff or data.
+/// with no win. The organization's is read by owners and editors, a project's by every member; it carries numbers, titles and ids, never a diff or data.
 /// A trial has no time of its own, so the scoreboard counts the trials of the sessions that spent
 /// in the month.
 pub async fn report<S: Store, J: JudgeStore>(
     store: &S,
     judge: &J,
     who: &Principal,
+    now: i64,
     month: &str,
     project: Option<ProjectId>,
 ) -> Result<Report, Refusal> {
     member_of(store, who).await?;
+    if project.is_none() {
+        permit(store, who, Action::ReportRead, None, month, now).await?;
+    }
     let range = month_range(month)?;
     if let Some(project) = project {
         known_project(store, who, project).await?;

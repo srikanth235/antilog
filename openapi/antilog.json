@@ -1792,6 +1792,16 @@
               }
             }
           },
+          "403": {
+            "description": "The organization report is for owners and editors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
           "404": {
             "content": {
               "application/json": {
@@ -2272,11 +2282,20 @@
         ],
         "responses": {
           "200": {
-            "description": "Delivered, Pending, At risk and Return of the organization, measured offline",
+            "description": "Delivered, Pending, At risk and Return of the organization, measured offline; organization owners and editors",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ValueFigures"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
                 }
               }
             }

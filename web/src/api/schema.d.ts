@@ -2865,6 +2865,15 @@ export interface operations {
                     "application/json": components["schemas"]["Report"];
                 };
             };
+            /** @description The organization report is for owners and editors */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -3194,13 +3203,21 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Delivered, Pending, At risk and Return of the organization, measured offline */
+            /** @description Delivered, Pending, At risk and Return of the organization, measured offline; organization owners and editors */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["ValueFigures"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
                 };
             };
         };
