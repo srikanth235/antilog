@@ -1,11 +1,10 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
 import type { Schemas } from "../../api/client";
-import { useProjects, useReport } from "../../api/queries";
+import { useAgentLabel, useProjects, useReport } from "../../api/queries";
 import { Icon } from "../../components/icon/Icon";
 import { Select } from "../../components/select/Select";
 import { Empty, Failed, Loading } from "../../components/state/State";
-import { agentName } from "../../lib/domain";
 import { dollars } from "../../lib/format";
 import { agentTotals, costPerWin, fromTo, monthOptions, percent } from "../../lib/value";
 import { w } from "../../words";
@@ -217,6 +216,7 @@ function Spend({ report }: { report: Schemas["Report"] }) {
 }
 
 function Agents({ report, monthName }: { report: Schemas["Report"]; monthName: string }) {
+  const agentLabel = useAgentLabel();
   const total = agentTotals(report.agents);
   const cost = (spent: number, delivered: number) => {
     const each = costPerWin(spent, delivered);
@@ -249,7 +249,7 @@ function Agents({ report, monthName }: { report: Schemas["Report"]; monthName: s
           {report.agents.map((row) => (
             <div key={row.agent} className="tb-r">
               <span className="n">
-                <span>{agentName(row.agent)}</span>
+                <span>{agentLabel(row.agent)}</span>
                 {row.winsPending === 0 ? null : (
                   <span className="m">
                     {t.pendingLine(row.winsPending, dollars(row.pendingCents))}
@@ -280,6 +280,7 @@ function Agents({ report, monthName }: { report: Schemas["Report"]; monthName: s
 }
 
 function TopWins(props: { report: Schemas["Report"]; projectName: (id: string) => string }) {
+  const agentLabel = useAgentLabel();
   return (
     <section className="ds" aria-labelledby="h-wins">
       <div className="ds-h">
@@ -308,7 +309,7 @@ function TopWins(props: { report: Schemas["Report"]; projectName: (id: string) =
                   {props.projectName(top.projectId)} · {fromTo(top.win)}
                 </span>
               </span>
-              <span className="ink2">{top.agent == null ? "-" : agentName(top.agent)}</span>
+              <span className="ink2">{top.agent == null ? "-" : agentLabel(top.agent)}</span>
               <span>
                 <WinState state={top.win.state} />
               </span>

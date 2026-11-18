@@ -42,7 +42,7 @@ test("an owner adds a value model and sees it on the Project page", async ({ pag
 
   await expect(value.getByText("Each 100 ms is worth $3,600 a year")).toBeVisible();
   await expect(value.getByText("Checkout conversion study, Q3 2026")).toBeVisible();
-  await expect(value.getByText("v1")).toBeVisible();
+  await expect(value.getByText("v1", { exact: true })).toBeVisible();
   await expect(value.getByText("No value set")).toHaveCount(0);
 
   // A change to the same metric is the next version.
@@ -54,7 +54,7 @@ test("an owner adds a value model and sees it on the Project page", async ({ pag
   await change.getByRole("button", { name: "Change value model" }).click();
   await expect(change).toBeHidden();
   await expect(value.getByText("Each 100 ms is worth $4,800 a year")).toBeVisible();
-  await expect(value.getByText("v2")).toBeVisible();
+  await expect(value.getByText("v2", { exact: true })).toBeVisible();
   await page.screenshot({ path: `test-results/project-value-${info.project.name}.png` });
 });
 
@@ -64,12 +64,16 @@ test("a viewer sees the value models but cannot add one", async ({ page, browser
   await createProject(page, project);
   const viewer = unique("vic");
   await page.goto("/settings/members");
-  await page.getByLabel("Name", { exact: true }).fill(viewer);
-  await page.getByLabel("Sign-in provider").fill("fake");
-  await page.getByLabel("Account at the provider").fill(viewer);
-  await page.getByRole("combobox", { name: "Role", exact: true }).click();
+  await page
+    .getByRole("dialog", { name: "Settings" })
+    .getByRole("button", { name: "Add member" })
+    .click();
+  const add = page.getByRole("dialog", { name: "Add member" });
+  await add.getByLabel("Name", { exact: true }).fill(viewer);
+  await add.getByLabel("Account at the provider").fill(viewer);
+  await add.getByRole("combobox", { name: "Role", exact: true }).click();
   await page.getByRole("option", { name: "Viewer" }).click();
-  await page.getByRole("button", { name: "Add member" }).click();
+  await add.getByRole("button", { name: "Add member" }).click();
   await expect(page.getByText(viewer).first()).toBeVisible();
 
   const context = await browser.newContext({ baseURL: "http://127.0.0.1:4173" });
