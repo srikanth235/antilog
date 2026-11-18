@@ -121,6 +121,7 @@ fn app() -> Router {
             providers: vec![Provider::Fake(FakeSignIn)],
             open_organizations: true,
             secure_cookies: true,
+            wake_secret: None,
         },
     )
 }
@@ -224,5 +225,60 @@ async fn from_sign_in_to_a_signed_receipt() {
     assert!(
         started[0]["actor"].is_string(),
         "the audit names the member: {started:?}"
+    );
+}
+
+#[tokio::test]
+async fn a_scheduler_wake_up_steps_the_session_without_sign_in() {
+    let app = app();
+    let owner = sign_in(&app).await;
+    let (_, project) = send(
+        &app,
+        Method::POST,
+        "/projects",
+        &owner,
+        json!({"name": "p", "description": ""}),
+    )
+    .await;
+    let (_, experiment) = send(
+        &app,
+        Method::POST,
+        &format!("/projects/{}/experiments", project["id"].as_str().unwrap()),
+        &owner,
+        json!({"goal": "g", "budgetCapCents": 1000}),
+    )
+    .await;
+    let (_, session) = send(
+        &app,
+        Method::POST,
+        &format!(
+            "/experiments/{}/sessions",
+            experiment["id"].as_str().unwrap()
+        ),
+        &owner,
+        json!({"agent": "claude", "prompt": "go"}),
+    )
+    .await;
+    let wake = |job: String| {
+        let request = Request::post(format!("/internal/wake/{job}"))
+            .body(Body::empty())
+            .unwrap();
+        let app = app.clone();
+        async move { app.oneshot(request).await.unwrap().status() }
+    };
+    let id = session["id"].as_str().unwrap().to_owned();
+    assert_eq!(wake(id.clone()).await, StatusCode::OK);
+    assert_eq!(wake(id).await, StatusCode::OK, "a second wake-up is safe");
+    assert_eq!(
+        wake("018f3b1e-0000-7000-8000-000000000000".into()).await,
+        StatusCode::NO_CONTENT
+    );
+    let doc: Value = serde_json::from_str(&antilog_server::api::openapi_json()).unwrap();
+    assert!(
+        doc["paths"]
+            .as_object()
+            .unwrap()
+            .keys()
+            .all(|p| !p.starts_with("/internal"))
     );
 }

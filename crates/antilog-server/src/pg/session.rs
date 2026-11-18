@@ -215,6 +215,20 @@ impl SessionStore for PgStore {
         .transpose()
     }
 
+    async fn find_session(&self, id: SessionId) -> Result<Option<Session>, StoreError> {
+        let mut tx = self.found(id.as_uuid()).await?;
+        sqlx::query_as!(
+            SessionRow,
+            "select id, organization_id, experiment_id, parent_session_id, agent, platform, platform_handle, status, note, cleanup, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from updated_at) * 1000)::bigint as \"updated_at!\" from sessions where id = $1",
+            id.as_uuid(),
+        )
+        .fetch_optional(&mut *tx)
+        .await
+        .map_err(map)?
+        .map(Session::try_from)
+        .transpose()
+    }
+
     async fn sessions(
         &self,
         organization: OrganizationId,

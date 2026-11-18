@@ -67,6 +67,8 @@ pub struct Settings {
     pub open_organizations: bool,
     /// Cookies are `Secure` unless this server is reached over plain http (local development).
     pub secure_cookies: bool,
+    /// When set, `/internal/wake` needs it in the `x-antilog-wake` header.
+    pub wake_secret: Option<String>,
 }
 
 fn setting(name: &str) -> Option<String> {
@@ -131,6 +133,7 @@ impl Settings {
             providers,
             open_organizations: setting("ANTILOG_OPEN_ORGANIZATIONS").as_deref() == Some("1"),
             secure_cookies: setting("ANTILOG_INSECURE_COOKIES").as_deref() != Some("1"),
+            wake_secret: secret("ANTILOG_WAKE_SECRET"),
         }
     }
 }

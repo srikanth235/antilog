@@ -32,6 +32,7 @@ fn app(fake: bool, open: bool) -> Router {
             providers,
             open_organizations: open,
             secure_cookies: true,
+            wake_secret: None,
         },
     )
 }

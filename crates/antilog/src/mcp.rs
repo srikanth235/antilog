@@ -211,6 +211,7 @@ mod tests {
                 providers: Vec::new(),
                 open_organizations: false,
                 secure_cookies: true,
+                wake_secret: None,
             },
         );
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();

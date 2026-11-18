@@ -93,6 +93,7 @@ mod tests {
                 providers: Vec::new(),
                 open_organizations: false,
                 secure_cookies: true,
+                wake_secret: None,
             },
         );
         let response = app
