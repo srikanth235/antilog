@@ -142,9 +142,9 @@ pub(super) async fn finish<D: Deps>(
         .update_session(organization, id, &change, now_ms(deps), Some(&entry))
         .await?;
     if removed {
-        deps.timer().cancel(job(id)).await?;
+        deps.timer().cancel(organization, job(id)).await?;
     } else {
-        book(deps, id, STEP).await?;
+        book(deps, organization, id, STEP).await?;
     }
     Ok(session)
 }
@@ -268,7 +268,7 @@ pub async fn step<D: Deps, H: ToolHost>(
     };
     if !session.status.is_active() {
         if session.cleanup == Some(antilog_types::Cleanup::Removed) {
-            deps.timer().cancel(job(id)).await?;
+            deps.timer().cancel(organization, job(id)).await?;
         } else if deps.platform().delete(&handle).await.is_ok() {
             let change = SessionChange {
                 cleanup: Some(antilog_types::Cleanup::Removed),
@@ -277,9 +277,9 @@ pub async fn step<D: Deps, H: ToolHost>(
             deps.store()
                 .update_session(organization, id, &change, now_ms(deps), None)
                 .await?;
-            deps.timer().cancel(job(id)).await?;
+            deps.timer().cancel(organization, job(id)).await?;
         } else {
-            book(deps, id, STEP).await?;
+            book(deps, organization, id, STEP).await?;
         }
         return Ok(Step {
             status: session.status,
@@ -335,7 +335,7 @@ pub async fn step<D: Deps, H: ToolHost>(
         set_status(deps, &session, SessionStatus::WaitingForYou, None).await?;
         status = SessionStatus::WaitingForYou;
     }
-    book(deps, id, STEP).await?;
+    book(deps, organization, id, STEP).await?;
     Ok(Step {
         status,
         events: pulled.events,

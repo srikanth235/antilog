@@ -82,6 +82,7 @@ impl BudgetStore for PgStore {
     }
 
     async fn record_spend(&self, spend: &Spend) -> Result<(), StoreError> {
+        let mut tx = self.scoped(spend.organization_id).await?;
         sqlx::query!(
             "insert into spend (id, organization_id, session_id, kind, amount_cents, tokens, occurred_at) values ($1, $2, $3, $4, $5, $6, to_timestamp($7::bigint / 1000.0))",
             spend.id.as_uuid(),
@@ -92,10 +93,10 @@ impl BudgetStore for PgStore {
             spend.tokens,
             spend.occurred_at,
         )
-        .execute(&self.pool)
+        .execute(&mut *tx)
         .await
-        .map(|_| ())
-        .map_err(map)
+        .map_err(map)?;
+        tx.commit().await.map_err(map)
     }
 
     async fn spend(
@@ -105,6 +106,7 @@ impl BudgetStore for PgStore {
         from: i64,
         to: i64,
     ) -> Result<SpendTotal, StoreError> {
+        let mut tx = self.scoped(organization).await?;
         let (cents, tokens) = match scope {
             SpendScope::Organization => {
                 let row = sqlx::query!(
@@ -113,7 +115,7 @@ impl BudgetStore for PgStore {
                     from,
                     to,
                 )
-                .fetch_one(&self.pool)
+                .fetch_one(&mut *tx)
                 .await
                 .map_err(map)?;
                 (row.cents, row.tokens)
@@ -126,7 +128,7 @@ impl BudgetStore for PgStore {
                     from,
                     to,
                 )
-                .fetch_one(&self.pool)
+                .fetch_one(&mut *tx)
                 .await
                 .map_err(map)?;
                 (row.cents, row.tokens)
@@ -139,7 +141,7 @@ impl BudgetStore for PgStore {
                     from,
                     to,
                 )
-                .fetch_one(&self.pool)
+                .fetch_one(&mut *tx)
                 .await
                 .map_err(map)?;
                 (row.cents, row.tokens)

@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into receipts (trial_id, organization_id, doc) values ($1, $2, $3)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "9c17fec6d191a89107686b1c0599b8ca89c57fcc5fa3dc0d274ac949605dbf2e"
+}

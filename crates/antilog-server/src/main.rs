@@ -3,6 +3,7 @@
 use std::sync::Arc;
 
 use antilog_server::api;
+use antilog_server::deps::ServerDeps;
 use antilog_server::pg::PgStore;
 use anyhow::Context;
 use sqlx::postgres::PgPoolOptions;
@@ -26,12 +27,22 @@ async fn main() -> anyhow::Result<()> {
         .context("connecting to Postgres")?;
     let store = PgStore::new(pool);
     store.migrate().await.context("applying migrations")?;
+    anyhow::ensure!(
+        std::env::var("ANTILOG_PLATFORM").as_deref() == Ok("fake"),
+        "no agent platform adapter is built yet: set ANTILOG_PLATFORM=fake to serve on the fakes"
+    );
 
     let listener = tokio::net::TcpListener::bind(&listen)
         .await
         .with_context(|| format!("binding {listen}"))?;
     tracing::info!(%listen, "serving");
-    axum::serve(listener, api::router(Arc::new(store)))
-        .await
-        .context("serving")
+    axum::serve(
+        listener,
+        api::router(
+            Arc::new(ServerDeps::on_fakes(store)),
+            api::auth::Settings::from_env(),
+        ),
+    )
+    .await
+    .context("serving")
 }

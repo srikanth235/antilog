@@ -5,9 +5,12 @@ use sqlx::{PgConnection, PgPool, Postgres, Transaction};
 
 mod approval;
 mod budget;
+mod judge;
 mod organization;
 mod relay;
 mod session;
+
+pub use judge::PgJudge;
 
 pub static MIGRATOR: Migrator = sqlx::migrate!("./migrations");
 

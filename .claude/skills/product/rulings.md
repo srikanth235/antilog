@@ -171,6 +171,8 @@ No passwords. Antilog cloud offers exactly two sign-ins, GitHub (OAuth with its 
 | 18 Nov 2026 | Done and Failed sessions are final; resuming means a new session. |
 | 18 Nov 2026 | The seal is refused when the smallest gain the setup can detect is above 10% of the baseline; tuned after the spike. |
 | 18 Nov 2026 | Only the receipt is signed; it carries a hash of each of its measurements. |
+| 18 Nov 2026 | The kill-switch runs under a role the owner creates and holds, outside `antilog-*`, so the agent's boundary cannot reach it. |
+| 18 Nov 2026 | antilog.tech's DNS and the landing page are on Cloudflare (free plan, Pages); the product stays on AWS at `app.antilog.tech`, through a DNS-only record to CloudFront. A narrow exception to "Cloudflare is dropped" (17 Nov). The owner sets the domain up by hand; OpenTofu takes the certificate ARN as an input and creates no DNS. |
 
 Decided calls also appear on the Decisions board.
 

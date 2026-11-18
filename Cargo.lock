@@ -114,8 +114,10 @@ dependencies = [
 name = "antilog-aws"
 version = "0.0.0"
 dependencies = [
+ "antilog-agentcore",
  "antilog-core",
  "antilog-server",
+ "antilog-types",
  "anyhow",
  "aws-config",
  "aws-sdk-scheduler",
@@ -123,12 +125,14 @@ dependencies = [
  "jiff",
  "lambda_http",
  "serde_json",
+ "sha2 0.11.1",
  "sqlx",
  "thiserror 2.0.21",
  "tokio",
  "tower",
  "tracing",
  "tracing-subscriber",
+ "uuid",
 ]
 
 [[package]]

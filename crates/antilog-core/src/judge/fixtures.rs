@@ -66,6 +66,62 @@ pub fn sealed() -> SealedExperiment {
     sealed_with(definition())
 }
 
+pub fn sealed_for(experiment: ExperimentId) -> SealedExperiment {
+    SealedExperiment::seal(experiment, 1, definition(), vec![], checks(), 0)
+        .expect("the fixture definition is sealable")
+}
+
+pub fn value_model(version: u32) -> ValueModel {
+    ValueModel {
+        id: ValueModelId::new(),
+        version,
+        metric: "p95".into(),
+        cents_per_unit: 360.0,
+        source: ValueSource {
+            text: "finance estimate".into(),
+            link: None,
+        },
+        set_by: uuid::Uuid::now_v7(),
+    }
+}
+
+pub fn receipt(sealed: &SealedExperiment, trial: TrialId) -> Receipt {
+    let body = ReceiptBody {
+        id: ReceiptId::new(),
+        experiment: ExperimentSection {
+            experiment: sealed.experiment(),
+            version: sealed.version(),
+            seal: sealed.seal_hash().clone(),
+            trial,
+            value_model: None,
+            baseline: 100.0,
+            value: 90.0,
+            repeats: 5,
+            noise: 2.0,
+            trials_tried: 1,
+            holdout: HoldoutResult::Passed,
+            second_opinion: None,
+            spend: Cents(100),
+            cost_of_win: Cents(100),
+            win_return: None,
+        },
+        data: DataSection {
+            datasets: vec![],
+            skill_packs: vec![],
+            commits: vec![],
+            credential_scopes: vec![],
+        },
+        compute: ComputeSection {
+            platform: "fake".into(),
+            environment: "default".into(),
+            judge_image: "judge".into(),
+            judge_digest: "sha256:0".into(),
+            agents: vec![],
+        },
+    };
+    Receipt::sign(body, |_| ("fixture".into(), vec![1, 2, 3])).expect("the fixture body signs")
+}
+
 pub fn trial(sealed: &SealedExperiment, parent: Option<TrialId>, sha: &str) -> Trial {
     Trial {
         id: TrialId::new(),

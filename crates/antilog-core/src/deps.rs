@@ -1,3 +1,5 @@
+use antilog_types::OrganizationId;
+
 use crate::clock::Clock;
 use crate::code_host::CodeHost;
 use crate::platform::Platform;
@@ -17,7 +19,8 @@ pub trait Deps: Send + Sync {
     type Code: CodeHost;
 
     fn store(&self) -> &Self::Store;
-    fn judge(&self) -> &Self::Judge;
+    /// The judge's store, scoped to one organization.
+    fn judge(&self, organization: OrganizationId) -> Self::Judge;
     fn platform(&self) -> &Self::Platform;
     fn signer(&self) -> &Self::Signer;
     fn clock(&self) -> &Self::Clock;

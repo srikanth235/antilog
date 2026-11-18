@@ -10,11 +10,14 @@ use std::sync::Arc;
 
 use antilog_core::clock::{Clock, SystemClock};
 use antilog_core::timer::{JobId, Timer, TimerError};
+use antilog_types::OrganizationId;
 use aws_sdk_scheduler::error::SdkError;
 use aws_sdk_scheduler::types::{
     ActionAfterCompletion, FlexibleTimeWindow, FlexibleTimeWindowMode, Target,
 };
 use jiff::{SignedDuration, Timestamp, tz::TimeZone};
+use sha2::{Digest, Sha256};
+use uuid::Uuid;
 
 use crate::lambda;
 
@@ -29,6 +32,8 @@ pub struct SchedulerConfig {
     pub target_arn: String,
     /// The role Scheduler assumes to invoke it (the one role that may).
     pub role_arn: String,
+    /// Sent in `x-antilog-wake`; the server mounts the wake route only when it has the same one.
+    pub wake_secret: String,
 }
 
 impl SchedulerConfig {
@@ -43,6 +48,7 @@ impl SchedulerConfig {
             group: get("ANTILOG_SCHEDULER_GROUP")?,
             target_arn: get("ANTILOG_SCHEDULER_TARGET_ARN")?,
             role_arn: get("ANTILOG_SCHEDULER_ROLE_ARN")?,
+            wake_secret: get("ANTILOG_WAKE_SECRET")?,
         })
     }
 }
@@ -76,21 +82,32 @@ pub trait Scheduling: Send + Sync {
 pub struct SchedulerTimer<S> {
     scheduling: S,
     clock: Arc<dyn Clock>,
+    wake_secret: String,
 }
 
 impl<S: Scheduling> SchedulerTimer<S> {
-    pub fn new(scheduling: S) -> Self {
-        Self::with_clock(scheduling, Arc::new(SystemClock))
+    pub fn new(scheduling: S, wake_secret: String) -> Self {
+        Self::with_clock(scheduling, wake_secret, Arc::new(SystemClock))
     }
 
-    pub fn with_clock(scheduling: S, clock: Arc<dyn Clock>) -> Self {
-        Self { scheduling, clock }
+    pub fn with_clock(scheduling: S, wake_secret: String, clock: Arc<dyn Clock>) -> Self {
+        Self {
+            scheduling,
+            clock,
+            wake_secret,
+        }
     }
 }
 
-/// A schedule name is at most 64 characters of `[0-9a-zA-Z-_.]`.
-pub fn schedule_name(job: JobId) -> String {
-    format!("antilog-wake-{:032x}", job.0)
+/// A schedule name is at most 64 characters of `[0-9a-zA-Z-_.]`, and an organization and a
+/// job are two uuids, so the name is a hash of both: the same pair is always the same schedule.
+pub fn schedule_name(organization: OrganizationId, job: JobId) -> String {
+    let mut hash = Sha256::new();
+    hash.update(organization.as_uuid().as_bytes());
+    hash.update(job.0.to_be_bytes());
+    let digest = hash.finalize();
+    let hex: String = digest.iter().take(20).map(|b| format!("{b:02x}")).collect();
+    format!("antilog-wake-{hex}")
 }
 
 fn expression(at: Timestamp) -> String {
@@ -99,12 +116,21 @@ fn expression(at: Timestamp) -> String {
 }
 
 impl<S: Scheduling> Timer for SchedulerTimer<S> {
-    async fn wake_at(&self, job: JobId, at: Timestamp) -> Result<(), TimerError> {
+    async fn wake_at(
+        &self,
+        organization: OrganizationId,
+        job: JobId,
+        at: Timestamp,
+    ) -> Result<(), TimerError> {
         let soonest = self.clock.now().checked_add(SOONEST).unwrap_or(at);
         let booking = Booking {
-            name: schedule_name(job),
+            name: schedule_name(organization, job),
             expression: expression(at.max(soonest)),
-            input: lambda::wake_event(&format!("{:032x}", job.0)),
+            input: lambda::wake_event(
+                organization.as_uuid(),
+                Uuid::from_u128(job.0),
+                &self.wake_secret,
+            ),
         };
         match self.scheduling.create(&booking).await {
             Ok(()) => Ok(()),
@@ -116,8 +142,12 @@ impl<S: Scheduling> Timer for SchedulerTimer<S> {
         }
     }
 
-    async fn cancel(&self, job: JobId) -> Result<(), TimerError> {
-        match self.scheduling.delete(&schedule_name(job)).await {
+    async fn cancel(&self, organization: OrganizationId, job: JobId) -> Result<(), TimerError> {
+        match self
+            .scheduling
+            .delete(&schedule_name(organization, job))
+            .await
+        {
             // It fired and deleted itself, or was never booked.
             Ok(()) | Err(ScheduleError::NotFound) => Ok(()),
             Err(other) => Err(unavailable(other)),
@@ -306,7 +336,11 @@ mod tests {
         let now: Timestamp = "2026-11-18T10:00:00Z"
             .parse()
             .unwrap_or_else(|e| unreachable!("{e}"));
-        SchedulerTimer::with_clock(Stub::default(), Arc::new(At(now)))
+        SchedulerTimer::with_clock(Stub::default(), "s3cret".to_owned(), Arc::new(At(now)))
+    }
+
+    fn org() -> OrganizationId {
+        OrganizationId::from_uuid(Uuid::from_u128(7))
     }
 
     fn ts(text: &str) -> Timestamp {
@@ -317,38 +351,39 @@ mod tests {
     async fn a_wake_up_is_one_schedule_at_the_time_in_utc() {
         let timer = timer();
         timer
-            .wake_at(JobId(255), ts("2026-11-18T10:30:00Z"))
+            .wake_at(org(), JobId(255), ts("2026-11-18T10:30:00Z"))
             .await
             .unwrap_or_else(|e| unreachable!("{e}"));
         let all = timer.scheduling.all();
         let booking = all
-            .get(&schedule_name(JobId(255)))
+            .get(&schedule_name(org(), JobId(255)))
             .unwrap_or_else(|| unreachable!("booked"));
-        assert_eq!(
-            booking.name,
-            "antilog-wake-000000000000000000000000000000ff"
-        );
+        assert!(booking.name.starts_with("antilog-wake-") && booking.name.len() <= 64);
+        let other = OrganizationId::from_uuid(Uuid::from_u128(8));
+        assert_ne!(booking.name, schedule_name(other, JobId(255)));
         assert_eq!(booking.expression, "at(2026-11-18T10:30:00)");
-        assert!(
-            booking
-                .input
-                .contains("/internal/wake/000000000000000000000000000000ff")
+        let path = format!(
+            "/internal/wake/{}/{}",
+            org().as_uuid(),
+            Uuid::from_u128(255)
         );
+        assert!(booking.input.contains(&path));
+        assert!(booking.input.contains("s3cret"));
     }
 
     #[tokio::test]
     async fn booking_a_job_twice_moves_it_and_adds_nothing() {
         let timer = timer();
         timer
-            .wake_at(JobId(1), ts("2026-11-18T10:30:00Z"))
+            .wake_at(org(), JobId(1), ts("2026-11-18T10:30:00Z"))
             .await
             .unwrap_or_else(|e| unreachable!("{e}"));
         timer
-            .wake_at(JobId(1), ts("2026-11-18T11:00:00Z"))
+            .wake_at(org(), JobId(1), ts("2026-11-18T11:00:00Z"))
             .await
             .unwrap_or_else(|e| unreachable!("{e}"));
         timer
-            .wake_at(JobId(1), ts("2026-11-18T11:00:00Z"))
+            .wake_at(org(), JobId(1), ts("2026-11-18T11:00:00Z"))
             .await
             .unwrap_or_else(|e| unreachable!("{e}"));
         let all = timer.scheduling.all();
@@ -363,7 +398,7 @@ mod tests {
     async fn a_time_in_the_past_is_booked_for_just_after_now() {
         let timer = timer();
         timer
-            .wake_at(JobId(2), ts("2026-11-18T09:00:00Z"))
+            .wake_at(org(), JobId(2), ts("2026-11-18T09:00:00Z"))
             .await
             .unwrap_or_else(|e| unreachable!("{e}"));
         let all = timer.scheduling.all();
@@ -377,16 +412,16 @@ mod tests {
     async fn cancel_deletes_and_cancelling_again_is_fine() {
         let timer = timer();
         timer
-            .wake_at(JobId(3), ts("2026-11-18T10:30:00Z"))
+            .wake_at(org(), JobId(3), ts("2026-11-18T10:30:00Z"))
             .await
             .unwrap_or_else(|e| unreachable!("{e}"));
         timer
-            .cancel(JobId(3))
+            .cancel(org(), JobId(3))
             .await
             .unwrap_or_else(|e| unreachable!("{e}"));
         assert!(timer.scheduling.all().is_empty());
         timer
-            .cancel(JobId(3))
+            .cancel(org(), JobId(3))
             .await
             .unwrap_or_else(|e| unreachable!("{e}"));
     }
@@ -400,11 +435,13 @@ mod tests {
             .lock()
             .unwrap_or_else(PoisonError::into_inner) = true;
         assert!(matches!(
-            timer.wake_at(JobId(4), ts("2026-11-18T10:30:00Z")).await,
+            timer
+                .wake_at(org(), JobId(4), ts("2026-11-18T10:30:00Z"))
+                .await,
             Err(TimerError::Unavailable(_))
         ));
         assert!(matches!(
-            timer.cancel(JobId(4)).await,
+            timer.cancel(org(), JobId(4)).await,
             Err(TimerError::Unavailable(_))
         ));
     }

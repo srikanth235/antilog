@@ -90,74 +90,16 @@ resource "aws_cloudwatch_log_group" "killswitch" {
   retention_in_days = 90
 }
 
-resource "aws_iam_role" "killswitch" {
-  name                 = "${local.prefix}-killswitch"
-  description          = "Locks the other antilog roles when spend runs away"
-  permissions_boundary = var.permissions_boundary_arn
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect    = "Allow"
-      Principal = { Service = "lambda.amazonaws.com" }
-      Action    = "sts:AssumeRole"
-    }]
-  })
-}
-
-resource "aws_iam_role_policy" "killswitch" {
-  name = "killswitch"
-  role = aws_iam_role.killswitch.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid      = "Logs"
-        Effect   = "Allow"
-        Action   = ["logs:CreateLogStream", "logs:PutLogEvents"]
-        Resource = "${aws_cloudwatch_log_group.killswitch.arn}:*"
-      },
-      {
-        Sid      = "DenyAllOnTheLockedRoles"
-        Effect   = "Allow"
-        Action   = ["iam:PutRolePolicy", "iam:DeleteRolePolicy"]
-        Resource = [for name in local.locked_roles : "arn:aws:iam::${var.account_id}:role/${name}"]
-      },
-      {
-        Sid      = "StopTheServerFromRunning"
-        Effect   = "Allow"
-        Action   = ["lambda:PutFunctionConcurrency", "lambda:DeleteFunctionConcurrency"]
-        Resource = aws_lambda_function.server.arn
-      },
-      {
-        Sid      = "DisableTheSchedules"
-        Effect   = "Allow"
-        Action   = ["scheduler:GetSchedule", "scheduler:UpdateSchedule"]
-        Resource = "arn:aws:scheduler:${var.region}:${var.account_id}:schedule/${aws_scheduler_schedule_group.wake.name}/*"
-      },
-      {
-        # ListSchedules cannot be limited to a group; it lists names only.
-        Sid      = "ListTheSchedules"
-        Effect   = "Allow"
-        Action   = "scheduler:ListSchedules"
-        Resource = "*"
-      },
-      {
-        Sid       = "HandTheSchedulerItsRole"
-        Effect    = "Allow"
-        Action    = "iam:PassRole"
-        Resource  = aws_iam_role.scheduler.arn
-        Condition = { StringEquals = { "iam:PassedToService" = "scheduler.amazonaws.com" } }
-      },
-    ]
-  })
+# The role is the owner's, outside antilog-*, so the boundary does not cap it and its own
+# deny-all can never lock it. CI passes it to the function (the owner allows that).
+data "aws_iam_role" "killswitch" {
+  name = var.killswitch_role_name
 }
 
 resource "aws_lambda_function" "killswitch" {
   function_name = local.killswitch
   description   = "Spend kill switch: deny-all on antilog roles, concurrency 0, schedules off"
-  role          = aws_iam_role.killswitch.arn
+  role          = data.aws_iam_role.killswitch.arn
 
   runtime       = "python3.13"
   architectures = ["arm64"]
@@ -180,8 +122,6 @@ resource "aws_lambda_function" "killswitch" {
     log_format = "Text"
     log_group  = aws_cloudwatch_log_group.killswitch.name
   }
-
-  depends_on = [aws_iam_role_policy.killswitch]
 }
 
 resource "aws_lambda_permission" "alarms" {

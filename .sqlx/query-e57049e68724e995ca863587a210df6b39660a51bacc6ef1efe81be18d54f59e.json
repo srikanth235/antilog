@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update trials set finished = $3 where organization_id = $1 and id = $2 and finished is null",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e57049e68724e995ca863587a210df6b39660a51bacc6ef1efe81be18d54f59e"
+}

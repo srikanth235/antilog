@@ -158,3 +158,30 @@ variable "public_url" {
   type        = string
   default     = ""
 }
+
+variable "killswitch_role_name" {
+  description = <<-EOT
+    The role the kill-switch function runs as. The owner creates it OUTSIDE antilog-* (like
+    budget-stop-executor), so the permissions boundary does not cap it and the deny-all it
+    writes cannot lock it. Its policy is listed in deploy/tofu/aws/README.md.
+  EOT
+  type        = string
+  default     = "kill-switch-executor"
+}
+
+variable "domain_name" {
+  description = "A name for the web app, such as dev.antilog.tech. DNS is managed by hand at Cloudflare: add a DNS-only CNAME to the web_domain output. Empty uses the *.cloudfront.net name."
+  type        = string
+  default     = ""
+}
+
+variable "certificate_arn" {
+  description = "An ACM certificate in us-east-1 covering domain_name, created by the owner. Required with domain_name."
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = var.certificate_arn == "" || startswith(var.certificate_arn, "arn:aws:acm:us-east-1:")
+    error_message = "CloudFront only takes certificates from us-east-1."
+  }
+}

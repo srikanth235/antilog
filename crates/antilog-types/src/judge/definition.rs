@@ -4,9 +4,9 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use utoipa::ToSchema;
 
-use super::{CommitRef, ValueModelId, canonical_json, hex, id};
+use super::{CommitRef, ValueModelId, canonical_json, hex};
 
-id!(ExperimentId);
+pub use crate::ExperimentId;
 
 pub const CRITERIA_VERSION: u32 = 1;
 pub const ALPHA: f64 = 0.05;

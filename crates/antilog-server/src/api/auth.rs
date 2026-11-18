@@ -6,8 +6,9 @@ use antilog_core::auth::{
     self, Challenge, Credential, FakeSignIn, Proven, SignInError, SignInProvider,
 };
 use antilog_core::clock::Clock;
+use antilog_core::deps::Deps;
 use antilog_core::organization::{Principal, Refusal};
-use antilog_core::store::{Invariant, Store};
+use antilog_core::store::Invariant;
 use antilog_core::token::SESSION_TTL_MS;
 use antilog_types::{
     ApiError, OrganizationCreated, SessionIssued, SignInCallback, SignInProviders, SignInStart,
@@ -66,6 +67,8 @@ pub struct Settings {
     pub open_organizations: bool,
     /// Cookies are `Secure` unless this server is reached over plain http (local development).
     pub secure_cookies: bool,
+    /// When set, `/internal/wake` needs it in the `x-antilog-wake` header.
+    pub wake_secret: Option<String>,
 }
 
 fn setting(name: &str) -> Option<String> {
@@ -130,19 +133,23 @@ impl Settings {
             providers,
             open_organizations: setting("ANTILOG_OPEN_ORGANIZATIONS").as_deref() == Some("1"),
             secure_cookies: setting("ANTILOG_INSECURE_COOKIES").as_deref() != Some("1"),
+            wake_secret: secret("ANTILOG_WAKE_SECRET"),
         }
     }
 }
 
-pub struct App<S> {
-    pub store: Arc<S>,
-    pub clock: Arc<dyn Clock>,
+pub struct App<D> {
+    pub deps: Arc<D>,
     pub settings: Settings,
 }
 
-impl<S> App<S> {
+impl<D: Deps> App<D> {
+    pub fn store(&self) -> &D::Store {
+        self.deps.store()
+    }
+
     pub fn now(&self) -> i64 {
-        self.clock.now().as_millisecond()
+        self.deps.clock().now().as_millisecond()
     }
 
     fn provider(&self, name: &str) -> Result<&Provider, Fail> {
@@ -159,6 +166,7 @@ pub enum Fail {
     Unauthenticated,
     Refused(Refusal),
     SignIn(SignInError),
+    Session(antilog_core::session::SessionError),
 }
 
 impl From<Refusal> for Fail {
@@ -193,6 +201,7 @@ impl IntoResponse for Fail {
                 "unauthenticated",
                 "Sign in or present an access token.",
             ),
+            Self::Session(error) => super::session::refuse(error),
             Self::SignIn(SignInError::Refused) => body(
                 StatusCode::UNAUTHORIZED,
                 "sign_in_refused",
@@ -260,12 +269,12 @@ pub struct Authed {
     pub credential: Credential,
 }
 
-impl<S: Store + 'static> FromRequestParts<Arc<App<S>>> for Authed {
+impl<D: Deps + 'static> FromRequestParts<Arc<App<D>>> for Authed {
     type Rejection = Fail;
 
     async fn from_request_parts(
         parts: &mut Parts,
-        app: &Arc<App<S>>,
+        app: &Arc<App<D>>,
     ) -> Result<Self, Self::Rejection> {
         let bearer = parts
             .headers
@@ -275,7 +284,7 @@ impl<S: Store + 'static> FromRequestParts<Arc<App<S>>> for Authed {
         let presented = bearer
             .or_else(|| cookie(&parts.headers, SESSION_COOKIE))
             .ok_or(Fail::Unauthenticated)?;
-        let (who, credential) = auth::authenticate(&*app.store, presented, app.now())
+        let (who, credential) = auth::authenticate(app.store(), presented, app.now())
             .await?
             .ok_or(Fail::Unauthenticated)?;
         Ok(Self { who, credential })
@@ -313,7 +322,7 @@ impl utoipa::Modify for Bearer {
     get, path = "/auth/providers",
     responses((status = 200, description = "The sign-in providers this server offers", body = SignInProviders))
 )]
-async fn providers<S: Store + 'static>(State(app): State<Arc<App<S>>>) -> Json<SignInProviders> {
+async fn providers<D: Deps + 'static>(State(app): State<Arc<App<D>>>) -> Json<SignInProviders> {
     Json(SignInProviders {
         providers: app
             .settings
@@ -332,8 +341,8 @@ async fn providers<S: Store + 'static>(State(app): State<Arc<App<S>>>) -> Json<S
         (status = 404, description = "No such provider", body = ApiError),
     )
 )]
-async fn start<S: Store + 'static>(
-    State(app): State<Arc<App<S>>>,
+async fn start<D: Deps + 'static>(
+    State(app): State<Arc<App<D>>>,
     Path(provider): Path<String>,
 ) -> Result<Response, Fail> {
     let provider = app.provider(&provider)?;
@@ -358,8 +367,8 @@ async fn start<S: Store + 'static>(
         .into_response())
 }
 
-async fn prove<S: Store + 'static>(
-    app: &App<S>,
+async fn prove<D: Deps + 'static>(
+    app: &App<D>,
     provider: &str,
     headers: &HeaderMap,
     code: &str,
@@ -377,7 +386,7 @@ async fn prove<S: Store + 'static>(
 }
 
 fn issued(
-    app: &App<impl Sized>,
+    app: &App<impl Deps>,
     signed: &auth::SignedIn,
 ) -> (SessionIssued, [(axum::http::HeaderName, HeaderValue); 2]) {
     let session = &signed.issued.record.session;
@@ -414,14 +423,14 @@ fn issued(
         (status = 403, description = "Not a member of that organization", body = ApiError),
     )
 )]
-async fn callback<S: Store + 'static>(
-    State(app): State<Arc<App<S>>>,
+async fn callback<D: Deps + 'static>(
+    State(app): State<Arc<App<D>>>,
     Path(provider): Path<String>,
     headers: HeaderMap,
     Json(request): Json<SignInCallback>,
 ) -> Result<Response, Fail> {
     let proven = prove(&app, &provider, &headers, &request.code, &request.state).await?;
-    let signed = auth::sign_in(&*app.store, app.now(), request.organization, &proven).await?;
+    let signed = auth::sign_in(app.store(), app.now(), request.organization, &proven).await?;
     let (body, cookies) = issued(&app, &signed);
     Ok((AppendHeaders(cookies), Json(body)).into_response())
 }
@@ -436,8 +445,8 @@ async fn callback<S: Store + 'static>(
         (status = 409, description = "The name is taken", body = ApiError),
     )
 )]
-async fn create_organization<S: Store + 'static>(
-    State(app): State<Arc<App<S>>>,
+async fn create_organization<D: Deps + 'static>(
+    State(app): State<Arc<App<D>>>,
     Path(provider): Path<String>,
     headers: HeaderMap,
     Json(request): Json<antilog_types::NewOrganization>,
@@ -447,7 +456,7 @@ async fn create_organization<S: Store + 'static>(
     }
     let proven = prove(&app, &provider, &headers, &request.code, &request.state).await?;
     let (organization, signed) =
-        auth::create_organization(&*app.store, app.now(), &request.name, &proven).await?;
+        auth::create_organization(app.store(), app.now(), &request.name, &proven).await?;
     let (session, cookies) = issued(&app, &signed);
     Ok((
         StatusCode::CREATED,
@@ -467,12 +476,12 @@ async fn create_organization<S: Store + 'static>(
         (status = 401, description = "Not signed in", body = ApiError),
     )
 )]
-async fn sign_out<S: Store + 'static>(
-    State(app): State<Arc<App<S>>>,
+async fn sign_out<D: Deps + 'static>(
+    State(app): State<Arc<App<D>>>,
     authed: Authed,
 ) -> Result<Response, Fail> {
     if let Credential::SignIn(session) = &authed.credential {
-        auth::sign_out(&*app.store, session, app.now()).await?;
+        auth::sign_out(app.store(), session, app.now()).await?;
     }
     Ok((
         StatusCode::NO_CONTENT,
@@ -484,14 +493,14 @@ async fn sign_out<S: Store + 'static>(
         .into_response())
 }
 
-pub fn routes<S: Store + 'static>() -> Router<Arc<App<S>>> {
+pub fn routes<D: Deps + 'static>() -> Router<Arc<App<D>>> {
     Router::new()
-        .route("/auth/providers", get(providers::<S>))
-        .route("/auth/{provider}/start", get(start::<S>))
-        .route("/auth/{provider}/callback", post(callback::<S>))
+        .route("/auth/providers", get(providers::<D>))
+        .route("/auth/{provider}/start", get(start::<D>))
+        .route("/auth/{provider}/callback", post(callback::<D>))
         .route(
             "/auth/{provider}/organization",
-            post(create_organization::<S>),
+            post(create_organization::<D>),
         )
-        .route("/auth/sign-out", post(sign_out::<S>))
+        .route("/auth/sign-out", post(sign_out::<D>))
 }

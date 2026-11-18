@@ -56,6 +56,7 @@ pub(crate) fn now_ms<D: Deps>(deps: &D) -> i64 {
 
 pub(crate) async fn book<D: Deps>(
     deps: &D,
+    organization: OrganizationId,
     session: SessionId,
     after: Duration,
 ) -> Result<(), TimerError> {
@@ -66,7 +67,7 @@ pub(crate) async fn book<D: Deps>(
         .now()
         .checked_add(after)
         .unwrap_or_else(|_| deps.clock().now());
-    deps.timer().wake_at(job(session), at).await
+    deps.timer().wake_at(organization, job(session), at).await
 }
 
 pub(crate) fn audit<D: Deps>(
@@ -154,7 +155,7 @@ pub async fn start<D: Deps>(
         .update_session(organization, session.id, &change, now_ms(deps), None)
         .await?;
     if started {
-        book(deps, session.id, STEP).await?;
+        book(deps, organization, session.id, STEP).await?;
     }
     Ok(session)
 }
@@ -164,9 +165,10 @@ pub async fn open_external<D: Deps>(
     deps: &D,
     organization: OrganizationId,
     experiment: ExperimentId,
+    actor: Option<MemberId>,
 ) -> Result<Session, SessionError> {
     let session = Session::new(organization, experiment, "mcp", "external", now_ms(deps));
-    let entry = audit(deps, organization, None, "session.start", session.id);
+    let entry = audit(deps, organization, actor, "session.start", session.id);
     deps.store().create_session(&session, &entry).await?;
     Ok(session)
 }
@@ -195,6 +197,7 @@ pub async fn message<D: Deps>(
     deps: &D,
     organization: OrganizationId,
     id: SessionId,
+    actor: Option<MemberId>,
     text: &str,
 ) -> Result<Session, SessionError> {
     let (_, handle) = active(deps, organization, id).await?;
@@ -205,9 +208,15 @@ pub async fn message<D: Deps>(
     };
     let session = deps
         .store()
-        .update_session(organization, id, &change, now_ms(deps), None)
+        .update_session(
+            organization,
+            id,
+            &change,
+            now_ms(deps),
+            Some(&audit(deps, organization, actor, "session.message", id)),
+        )
         .await?;
-    book(deps, id, Duration::ZERO).await?;
+    book(deps, organization, id, Duration::ZERO).await?;
     Ok(session)
 }
 

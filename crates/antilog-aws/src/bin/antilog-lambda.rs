@@ -10,6 +10,7 @@
 use std::sync::Arc;
 use std::time::Duration;
 
+use antilog_aws::deps::AwsDeps;
 use antilog_aws::lambda;
 use antilog_core::secrets::{EnvSecrets, Secrets};
 use antilog_server::api;
@@ -39,9 +40,9 @@ async fn main() -> anyhow::Result<()> {
         .acquire_timeout(Duration::from_secs(45))
         .connect_lazy(&database_url)
         .context("reading the database url")?;
-    let store = Arc::new(PgStore::new(pool));
+    let deps = Arc::new(AwsDeps::from_env(PgStore::new(pool)).await?);
 
-    lambda::serve(build_router(store))
+    lambda::serve(build_router(deps))
         .await
         .map_err(|e| anyhow::anyhow!(e))
 }
@@ -49,19 +50,23 @@ async fn main() -> anyhow::Result<()> {
 /// The server's routes plus the one operation the deploy needs: migrations, run once by
 /// the deploy workflow before traffic, never at start-up (each instance would race).
 /// Both are routes of the same `Router`; `/internal/` is closed to the internet.
-fn build_router(store: Arc<PgStore>) -> Router {
+fn build_router(deps: Arc<AwsDeps>) -> Router {
     let operations = Router::new()
         .route("/internal/migrate", post(migrate))
-        .with_state(store.clone());
-    api::router(store).merge(operations)
+        .with_state(deps.clone());
+    api::router(deps, api::auth::Settings::from_env()).merge(operations)
 }
 
-async fn migrate(State(store): State<Arc<PgStore>>) -> Result<&'static str, (StatusCode, String)> {
-    store.migrate().await.map(|()| "migrated").map_err(|error| {
-        tracing::error!(%error, "migration failed");
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "migration failed".to_owned(),
-        )
-    })
+async fn migrate(State(deps): State<Arc<AwsDeps>>) -> Result<&'static str, (StatusCode, String)> {
+    deps.store
+        .migrate()
+        .await
+        .map(|()| "migrated")
+        .map_err(|error| {
+            tracing::error!(%error, "migration failed");
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "migration failed".to_owned(),
+            )
+        })
 }

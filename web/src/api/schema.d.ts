@@ -132,6 +132,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/experiments/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["experiment"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/experiments/{id}/approvals": {
         parameters: {
             query?: never;
@@ -158,6 +174,38 @@ export interface paths {
         get?: never;
         put: operations["set_experiment_budget"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/experiments/{id}/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sessions"];
+        put?: never;
+        post: operations["start"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/experiments/{id}/tools/{tool}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["call"];
         delete?: never;
         options?: never;
         head?: never;
@@ -244,103 +292,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/organizations/{organization}/experiments/{experiment}/sessions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["sessions"];
-        put?: never;
-        post: operations["start"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/organizations/{organization}/experiments/{experiment}/tools/{tool}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["call"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/organizations/{organization}/sessions/{session}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["read"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/organizations/{organization}/sessions/{session}/messages": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["message"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/organizations/{organization}/sessions/{session}/step": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** The timer's wake-up for a session. At least once, so safe to call again. */
-        post: operations["step"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/organizations/{organization}/sessions/{session}/stop": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["stop"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/policies": {
         parameters: {
             query?: never;
@@ -367,6 +318,22 @@ export interface paths {
         get: operations["projects"];
         put?: never;
         post: operations["create_project"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{id}/experiments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["experiments"];
+        put?: never;
+        post: operations["create_experiment"];
         delete?: never;
         options?: never;
         head?: never;
@@ -421,6 +388,71 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sessions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["read"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/{id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["message"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/{id}/step": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** The timer's wake-up for a session. At least once, so safe to call again. */
+        post: operations["step"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/{id}/stop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["stop"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tokens": {
         parameters: {
             query?: never;
@@ -469,6 +501,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/trials/{id}/receipt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["receipt"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -483,6 +531,11 @@ export interface components {
             organizationId: components["schemas"]["OrganizationId"];
             /** Format: int64 */
             revokedAt?: number | null;
+        };
+        AgentRun: {
+            agent: string;
+            platform: string;
+            session: components["schemas"]["SessionId"];
         };
         ApiError: {
             code: string;
@@ -546,19 +599,96 @@ export interface components {
         };
         /** @enum {string} */
         CardKind: "SealExperiment" | "RaiseBudget" | "AddCredential" | "AttachRepo" | "ChangeEnvironment" | "OpenPullRequest" | "KeepGoing" | "ContinueOnAnotherAgent";
+        /** Format: int64 */
+        Cents: number;
         /** @enum {string} */
         Cleanup: "Removed" | "NotRemoved";
+        CommitRef: {
+            repo: string;
+            sha: string;
+        };
+        ComputeSection: {
+            agents: components["schemas"]["AgentRun"][];
+            environment: string;
+            judgeDigest: string;
+            judgeImage: string;
+            platform: string;
+        };
+        /** @enum {string} */
+        CredentialHolder: "agent" | "judge";
+        CredentialScope: {
+            holder: components["schemas"]["CredentialHolder"];
+            scope: string;
+        };
+        DataSection: {
+            commits: components["schemas"]["CommitRef"][];
+            credentialScopes: components["schemas"]["CredentialScope"][];
+            datasets: components["schemas"]["DatasetRef"][];
+            skillPacks: components["schemas"]["SkillPackRef"][];
+        };
+        DatasetRef: {
+            id: string;
+            /** Format: int32 */
+            version: number;
+        };
         Decide: {
             decision: components["schemas"]["Decision"];
         };
         /** @enum {string} */
         Decision: "Approve" | "Decline";
+        /** @description The row of an experiment; its sealed definition belongs to the judge. */
+        Experiment: {
+            /**
+             * Format: int64
+             * @description What all its sessions and judge time may spend, in US cents.
+             */
+            budgetCapCents: number;
+            /** Format: int64 */
+            createdAt: number;
+            createdBy: components["schemas"]["MemberId"];
+            /** @description The composer's Mode: false asks a person for every card, true lets policy approve. */
+            followPolicy: boolean;
+            goal: string;
+            id: components["schemas"]["ExperimentId"];
+            organizationId: components["schemas"]["OrganizationId"];
+            projectId: components["schemas"]["ProjectId"];
+            status: components["schemas"]["ExperimentStatus"];
+        };
         ExperimentBudget: {
             /** Format: int64 */
             budgetCapCents: number;
         };
         /** Format: uuid */
         ExperimentId: string;
+        ExperimentSection: {
+            /** Format: double */
+            baseline: number;
+            costOfWin: components["schemas"]["Cents"];
+            experiment: components["schemas"]["ExperimentId"];
+            holdout: components["schemas"]["HoldoutResult"];
+            /** Format: double */
+            noise: number;
+            /** Format: int32 */
+            repeats: number;
+            seal: components["schemas"]["SealHash"];
+            secondOpinion?: components["schemas"]["SecondOpinion"] | null;
+            spend: components["schemas"]["Cents"];
+            trial: components["schemas"]["TrialId"];
+            /** Format: int32 */
+            trialsTried: number;
+            /** Format: double */
+            value: number;
+            valueModel?: components["schemas"]["ValueModel"] | null;
+            /** Format: int32 */
+            version: number;
+            /** Format: double */
+            winReturn?: number | null;
+        };
+        /**
+         * @description Sealing is the judge's; Watching and Regressed are derived, never stored.
+         * @enum {string}
+         */
+        ExperimentStatus: "NotSealed" | "Sealed";
         FieldError: {
             field: string;
             message: string;
@@ -568,6 +698,8 @@ export interface components {
         };
         /** @enum {string} */
         HealthStatus: "ok";
+        /** @enum {string} */
+        HoldoutResult: "passed" | "failed";
         /** @description A person's identity at a sign-in provider. */
         Identity: {
             provider: string;
@@ -600,6 +732,13 @@ export interface components {
         MemberId: string;
         /** @enum {string} */
         MemberKind: "Person" | "Service";
+        /** @description What starts an experiment in a project. The budget defaults to the project's, then the organization's. */
+        NewExperiment: {
+            /** Format: int64 */
+            budgetCapCents?: number | null;
+            followPolicy?: boolean;
+            goal: string;
+        };
         NewMember: {
             identity?: components["schemas"]["Identity"] | null;
             name: string;
@@ -687,11 +826,30 @@ export interface components {
             /** Format: int64 */
             spentCents: number;
         };
+        /** @description A body and the judge's signature over it. There is no unsigned receipt. */
+        Receipt: {
+            body: components["schemas"]["ReceiptBody"];
+            keyId: string;
+            signature: number[];
+        };
+        ReceiptBody: {
+            compute: components["schemas"]["ComputeSection"];
+            data: components["schemas"]["DataSection"];
+            experiment: components["schemas"]["ExperimentSection"];
+            id: components["schemas"]["ReceiptId"];
+        };
+        /** Format: uuid */
+        ReceiptId: string;
         /**
          * @description Ordered: a higher role may do what a lower one may.
          * @enum {string}
          */
         Role: "Viewer" | "Editor" | "Owner";
+        SealHash: string;
+        SecondOpinion: {
+            flags: string[];
+            provider: string;
+        };
         SendMessage: {
             text: string;
         };
@@ -743,6 +901,11 @@ export interface components {
             authorizeUrl: string;
             state: string;
         };
+        SkillPackRef: {
+            id: string;
+            /** Format: int32 */
+            version: number;
+        };
         /** @description What starts a session in an experiment. */
         StartSession: {
             agent: string;
@@ -755,10 +918,6 @@ export interface components {
             /** Format: int32 */
             events: number;
             status: components["schemas"]["SessionStatus"];
-        };
-        StopSession: {
-            /** @description Shown as "Stopped by NAME". */
-            by: string;
         };
         /** Format: uuid */
         TokenId: string;
@@ -784,6 +943,31 @@ export interface components {
             /** @description A measurement that was accepted: how it ended, in words. Never a holdout value. */
             followup?: string | null;
             session: components["schemas"]["SessionId"];
+        };
+        /** Format: uuid */
+        TrialId: string;
+        ValueModel: {
+            /**
+             * Format: double
+             * @description Cents a year that one unit of the metric is worth.
+             */
+            centsPerUnit: number;
+            id: components["schemas"]["ValueModelId"];
+            metric: string;
+            /**
+             * Format: uuid
+             * @description The project owner who set it; never an agent.
+             */
+            setBy: string;
+            source: components["schemas"]["ValueSource"];
+            /** Format: int32 */
+            version: number;
+        };
+        /** Format: uuid */
+        ValueModelId: string;
+        ValueSource: {
+            link?: string | null;
+            text: string;
         };
     };
     responses: never;
@@ -1054,6 +1238,36 @@ export interface operations {
             };
         };
     };
+    experiment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The experiment */
+                id: components["schemas"]["ExperimentId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Experiment"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
     approvals: {
         parameters: {
             query?: never;
@@ -1102,6 +1316,106 @@ export interface operations {
             };
             /** @description The budget would pass the project's cap */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    sessions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The experiment */
+                id: components["schemas"]["ExperimentId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Session"][];
+                };
+            };
+        };
+    };
+    start: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The experiment */
+                id: components["schemas"]["ExperimentId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartSession"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Session"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    call: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The experiment */
+                id: components["schemas"]["ExperimentId"];
+                /** @description A tool from /tools */
+                tool: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ToolCall"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ToolResult"];
+                };
+            };
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1278,233 +1592,6 @@ export interface operations {
             };
         };
     };
-    sessions: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                organization: components["schemas"]["OrganizationId"];
-                experiment: components["schemas"]["ExperimentId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Session"][];
-                };
-            };
-        };
-    };
-    start: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                organization: components["schemas"]["OrganizationId"];
-                experiment: components["schemas"]["ExperimentId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StartSession"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Session"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-        };
-    };
-    call: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                organization: components["schemas"]["OrganizationId"];
-                experiment: components["schemas"]["ExperimentId"];
-                tool: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ToolCall"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ToolResult"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-        };
-    };
-    read: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                organization: components["schemas"]["OrganizationId"];
-                session: components["schemas"]["SessionId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Session"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-        };
-    };
-    message: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                organization: components["schemas"]["OrganizationId"];
-                session: components["schemas"]["SessionId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SendMessage"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Session"];
-                };
-            };
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-        };
-    };
-    step: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                organization: components["schemas"]["OrganizationId"];
-                session: components["schemas"]["SessionId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StepResult"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-        };
-    };
-    stop: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                organization: components["schemas"]["OrganizationId"];
-                session: components["schemas"]["SessionId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StopSession"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Session"];
-                };
-            };
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-        };
-    };
     policies: {
         parameters: {
             query?: never;
@@ -1609,6 +1696,65 @@ export interface operations {
             };
         };
     };
+    experiments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The project */
+                id: components["schemas"]["ProjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Its experiments, oldest first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Experiment"][];
+                };
+            };
+        };
+    };
+    create_experiment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The project */
+                id: components["schemas"]["ProjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewExperiment"];
+            };
+        };
+        responses: {
+            /** @description Created; editors and owners of the project */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Experiment"];
+                };
+            };
+            /** @description The budget would pass a cap */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
     set_project_limits: {
         parameters: {
             query?: never;
@@ -1702,6 +1848,131 @@ export interface operations {
             };
         };
     };
+    read: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The session */
+                id: components["schemas"]["SessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Session"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    message: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The session */
+                id: components["schemas"]["SessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendMessage"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Session"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    step: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The session */
+                id: components["schemas"]["SessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StepResult"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    stop: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The session */
+                id: components["schemas"]["SessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Done, "Stopped by" the caller */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Session"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
     tokens: {
         parameters: {
             query?: never;
@@ -1785,6 +2056,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ToolDefinition"][];
+                };
+            };
+        };
+    };
+    receipt: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A Kept trial that was the win when it ran */
+                id: components["schemas"]["TrialId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The judge's signed receipt */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Receipt"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
                 };
             };
         };

@@ -12,6 +12,7 @@ publish = false
 [workspace.dependencies]
 antilog-types = { path = "crates/antilog-types" }
 antilog-core = { path = "crates/antilog-core" }
+antilog-agentcore = { path = "crates/antilog-agentcore" }
 antilog-server = { path = "crates/antilog-server" }
 anyhow = "1.0.104"
 aws-config = "1.13.2"

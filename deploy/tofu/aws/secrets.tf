@@ -54,3 +54,20 @@ resource "aws_secretsmanager_secret" "judge_credential" {
   description             = "Read access to the holdout, for the judge runtime only (set by the owner)"
   recovery_window_in_days = 7
 }
+
+# Sent by EventBridge Scheduler in `x-antilog-wake`; the server mounts its wake route only when it has it.
+resource "random_password" "wake" {
+  length  = 48
+  special = false
+}
+
+resource "aws_secretsmanager_secret" "wake" {
+  name                    = "${local.prefix}/wake-secret"
+  description             = "Authenticates the scheduler's wake-up requests"
+  recovery_window_in_days = 7
+}
+
+resource "aws_secretsmanager_secret_version" "wake" {
+  secret_id     = aws_secretsmanager_secret.wake.id
+  secret_string = random_password.wake.result
+}

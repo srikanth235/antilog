@@ -5,5 +5,6 @@
 //! ([`scheduler`]). Secrets need no adapter: they come from the function's environment
 //! (`antilog_core::secrets::EnvSecrets`).
 
+pub mod deps;
 pub mod lambda;
 pub mod scheduler;

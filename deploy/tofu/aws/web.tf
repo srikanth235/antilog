@@ -33,6 +33,18 @@ resource "aws_cloudfront_origin_access_control" "web" {
   signing_protocol                  = "sigv4"
 }
 
+# /internal is for the scheduler alone, whatever the host and however the path is reached.
+resource "aws_cloudfront_function" "block_internal" {
+  name    = "${local.prefix}-block-internal"
+  runtime = "cloudfront-js-2.0"
+  publish = true
+  code    = <<-EOT
+    function handler(event) {
+      return { statusCode: 403, statusDescription: 'Forbidden', headers: { 'content-type': { value: 'application/json' } }, body: '{"code":"forbidden","message":"Not available.","fields":[]}' };
+    }
+  EOT
+}
+
 resource "aws_cloudfront_function" "strip_api_prefix" {
   name    = "${local.prefix}-strip-api-prefix"
   runtime = "cloudfront-js-2.0"
@@ -41,6 +53,9 @@ resource "aws_cloudfront_function" "strip_api_prefix" {
     function handler(event) {
       var request = event.request;
       request.uri = request.uri.replace(/^\/api(\/|$)/, '/');
+      if (/^\/internal(\/|$)/.test(request.uri)) {
+        return { statusCode: 403, statusDescription: 'Forbidden', headers: { 'content-type': { value: 'application/json' } }, body: '{"code":"forbidden","message":"Not available.","fields":[]}' };
+      }
       return request;
     }
   EOT
@@ -106,6 +121,22 @@ resource "aws_cloudfront_distribution" "web" {
     }
   }
 
+  ordered_cache_behavior {
+    path_pattern           = "/internal/*"
+    target_origin_id       = "web"
+    viewer_protocol_policy = "https-only"
+    allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+    cached_methods         = ["GET", "HEAD"]
+    cache_policy_id        = local.caching_disabled
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.block_internal.arn
+    }
+  }
+
+  aliases = var.domain_name == "" ? [] : [var.domain_name]
+
   # A path the app owns in the browser is answered with the app, so a reload keeps working.
   custom_error_response {
     error_code            = 403
@@ -128,7 +159,10 @@ resource "aws_cloudfront_distribution" "web" {
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = true
+    cloudfront_default_certificate = var.certificate_arn == ""
+    acm_certificate_arn            = var.certificate_arn == "" ? null : var.certificate_arn
+    ssl_support_method             = var.certificate_arn == "" ? null : "sni-only"
+    minimum_protocol_version       = var.certificate_arn == "" ? null : "TLSv1.2_2021"
   }
 }
 

@@ -1,5 +1,6 @@
 use std::time::Duration;
 
+use antilog_core::store::judge::judge_store_suite;
 use antilog_core::store::{ApprovalStore, OrganizationStore};
 use antilog_core::testing::store_suite;
 use antilog_server::pg::{MIGRATOR, PgStore};
@@ -255,16 +256,6 @@ async fn concurrent_demotions_cannot_orphan_a_project() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Pending row-level security: the session area's tables, owned by another track.
-const WITHOUT_ROW_LEVEL_SECURITY: [&str; 6] = [
-    "approvals_told",
-    "experiments",
-    "seal_proposals",
-    "session_relay",
-    "sessions",
-    "spend",
-];
-
 /// A pool that connects as a role that owns nothing and is no superuser, as the server does.
 async fn app_store() -> anyhow::Result<(PgStore, PgPool, ContainerAsync<GenericImage>)> {
     let (admin, container, url) = database_at().await?;
@@ -382,9 +373,77 @@ async fn a_query_that_forgets_its_organization_sees_nothing() -> anyhow::Result<
 }
 
 #[tokio::test]
+async fn the_session_area_and_the_judge_see_only_their_organization() -> anyhow::Result<()> {
+    let (store, pool, _container) = app_store().await?;
+    let a = antilog_core::seed::experiment(&store, 1_000).await;
+    let b = antilog_core::seed::experiment(&store, 1_000).await;
+    let tables = [
+        "experiments",
+        "sessions",
+        "spend",
+        "session_relay",
+        "seal_proposals",
+        "approvals_told",
+        "sealed_experiments",
+        "trials",
+        "receipts",
+        "value_models",
+    ];
+    judge_store_suite(&store.judge(a.organization.id), a.experiment.id).await;
+    judge_store_suite(&store.judge(b.organization.id), b.experiment.id).await;
+    for table in tables {
+        let unscoped: i64 =
+            sqlx::query_scalar(sqlx::AssertSqlSafe(format!("select count(*) from {table}")))
+                .fetch_one(&pool)
+                .await?;
+        assert_eq!(unscoped, 0, "{table} without an organization set");
+    }
+    let mut tx = pool.begin().await?;
+    sqlx::query("select set_config('antilog.organization_id', $1, true)")
+        .bind(a.organization.id.to_string())
+        .execute(&mut *tx)
+        .await?;
+    for table in tables {
+        let foreign: i64 = sqlx::query_scalar(sqlx::AssertSqlSafe(format!(
+            "select count(*) from {table} where organization_id = $1"
+        )))
+        .bind(b.organization.id.as_uuid())
+        .fetch_one(&mut *tx)
+        .await?;
+        assert_eq!(foreign, 0, "{table} shows another organization's rows");
+    }
+    let own: i64 = sqlx::query_scalar("select count(*) from trials")
+        .fetch_one(&mut *tx)
+        .await?;
+    assert_eq!(own, 2, "only a's two trials");
+    let forged = sqlx::query("insert into experiments (id, organization_id, project_id, goal, status, budget_cap_cents, created_by, created_at) select gen_random_uuid(), $1, project_id, 'x', 'not_sealed', 0, created_by, now() from experiments")
+        .bind(b.organization.id.as_uuid())
+        .execute(&mut *tx)
+        .await;
+    let code = forged.err().and_then(|e| {
+        e.as_database_error()
+            .and_then(|d| d.code().map(String::from))
+    });
+    assert_eq!(
+        code.as_deref(),
+        Some("42501"),
+        "a write into another organization is refused"
+    );
+    Ok(())
+}
+
+#[tokio::test]
+async fn postgres_judge_store_passes_the_suite() -> anyhow::Result<()> {
+    let (store, _pool, _container) = migrated_store().await?;
+    let seed = antilog_core::seed::experiment(&store, 1_000).await;
+    judge_store_suite(&store.judge(seed.organization.id), seed.experiment.id).await;
+    Ok(())
+}
+
+#[tokio::test]
 async fn every_table_with_an_organization_has_row_level_security() -> anyhow::Result<()> {
     let (_store, pool, _container) = migrated_store().await?;
-    let mut without: Vec<String> = sqlx::query_scalar(
+    let without: Vec<String> = sqlx::query_scalar(
         "select c.relname::text from pg_class c join pg_namespace n on n.oid = c.relnamespace
          where n.nspname = 'public' and c.relkind = 'r' and not c.relrowsecurity
            and c.relname <> '_sqlx_migrations'
@@ -392,7 +451,6 @@ async fn every_table_with_an_organization_has_row_level_security() -> anyhow::Re
     )
     .fetch_all(&pool)
     .await?;
-    without.retain(|table| !WITHOUT_ROW_LEVEL_SECURITY.contains(&table.as_str()));
     assert!(without.is_empty(), "no row-level security: {without:?}");
     Ok(())
 }

@@ -1,6 +1,11 @@
+output "web_domain" {
+  description = "The CloudFront name. Add a DNS-only CNAME from domain_name to it at Cloudflare, by hand."
+  value       = aws_cloudfront_distribution.web.domain_name
+}
+
 output "web_url" {
   description = "Where people reach the app. Copy it into public_url and apply again."
-  value       = "https://${aws_cloudfront_distribution.web.domain_name}"
+  value       = var.domain_name == "" ? "https://${aws_cloudfront_distribution.web.domain_name}" : "https://${var.domain_name}"
 }
 
 output "web_bucket" {

@@ -13,21 +13,25 @@ use lambda_http::http::{Request, Response, StatusCode};
 use lambda_http::request::RequestContext;
 use lambda_http::{Body, Error, RequestExt, service_fn};
 use tower::ServiceExt;
+use uuid::Uuid;
 
 /// The domain name a scheduler-sent event carries in its request context.
 pub const SCHEDULER_DOMAIN: &str = "scheduler.antilog.internal";
 pub const INTERNAL_PREFIX: &str = "/internal/";
 pub const WAKE_PREFIX: &str = "/internal/wake/";
+pub const WAKE_HEADER: &str = "x-antilog-wake";
 
-/// The event Scheduler hands the function for one job: a `POST` to `/internal/wake/{job}`.
-pub fn wake_event(job: &str) -> String {
-    let path = format!("{WAKE_PREFIX}{job}");
+/// The event Scheduler hands the function for one job: a `POST` to
+/// `/internal/wake/{organization}/{job}` carrying the wake secret in `x-antilog-wake`,
+/// which the server requires (and mounts the route only when it has one).
+pub fn wake_event(organization: Uuid, job: Uuid, secret: &str) -> String {
+    let path = format!("{WAKE_PREFIX}{organization}/{job}");
     serde_json::json!({
         "version": "2.0",
         "routeKey": "$default",
         "rawPath": path,
         "rawQueryString": "",
-        "headers": {"content-type": "application/json"},
+        "headers": {"content-type": "application/json", WAKE_HEADER: secret},
         "requestContext": {
             "accountId": "anonymous",
             "apiId": "antilog-scheduler",
@@ -110,7 +114,7 @@ mod tests {
     fn router() -> Router {
         Router::new()
             .route("/health", get(|| async { "ok" }))
-            .route("/internal/wake/{job}", post(|| async { "woke" }))
+            .route("/internal/wake/{org}/{job}", post(|| async { "woke" }))
     }
 
     async fn text(response: Response<axum::body::Body>) -> (StatusCode, String) {
@@ -158,8 +162,17 @@ mod tests {
 
     #[tokio::test]
     async fn the_scheduler_event_is_a_wake_request() {
-        let request = from_str(&wake_event("00ff")).unwrap_or_else(|e| unreachable!("{e}"));
-        assert_eq!(request.uri().path(), "/internal/wake/00ff");
+        let (org, job) = (Uuid::from_u128(1), Uuid::from_u128(2));
+        let request =
+            from_str(&wake_event(org, job, "s3cret")).unwrap_or_else(|e| unreachable!("{e}"));
+        assert_eq!(request.uri().path(), format!("/internal/wake/{org}/{job}"));
+        assert_eq!(
+            request
+                .headers()
+                .get(WAKE_HEADER)
+                .and_then(|v| v.to_str().ok()),
+            Some("s3cret")
+        );
         let response = handle(router(), request)
             .await
             .unwrap_or_else(|e| unreachable!("{e}"));
@@ -168,7 +181,7 @@ mod tests {
 
     #[tokio::test]
     async fn the_internet_cannot_reach_internal_paths() {
-        let response = handle(router(), url_request("/internal/wake/00ff", "POST"))
+        let response = handle(router(), url_request("/internal/wake/a/b", "POST"))
             .await
             .unwrap_or_else(|e| unreachable!("{e}"));
         let (status, body) = text(response).await;

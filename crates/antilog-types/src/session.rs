@@ -22,6 +22,8 @@ pub struct Experiment {
     pub budget_cap_cents: i64,
     pub created_by: MemberId,
     pub created_at: i64,
+    /// The composer's Mode: false asks a person for every card, true lets policy approve.
+    pub follow_policy: bool,
 }
 
 impl Experiment {
@@ -42,6 +44,7 @@ impl Experiment {
             budget_cap_cents,
             created_by,
             created_at,
+            follow_policy: false,
         }
     }
 }
@@ -108,6 +111,16 @@ impl Session {
     }
 }
 
+/// What starts an experiment in a project. The budget defaults to the project's, then the organization's.
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct NewExperiment {
+    pub goal: String,
+    pub budget_cap_cents: Option<i64>,
+    #[serde(default)]
+    pub follow_policy: bool,
+}
+
 /// What starts a session in an experiment.
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -123,13 +136,6 @@ pub struct StartSession {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SendMessage {
     pub text: String,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct StopSession {
-    /// Shown as "Stopped by NAME".
-    pub by: String,
 }
 
 /// The result of one relay step.

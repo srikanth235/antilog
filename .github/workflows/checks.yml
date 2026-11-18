@@ -151,6 +151,15 @@ jobs:
       - name: Invoke the health route locally, with no AWS
         env:
           DATABASE_URL: postgres://postgres:pw@127.0.0.1:5432/postgres
+          # Placeholders: the clients are built but nothing calls AWS on /health.
+          ANTILOG_AGENTCORE_AGENT_RUNTIME: arn:aws:bedrock-agentcore:us-east-1:000000000000:runtime/local_agent
+          ANTILOG_AGENTCORE_JUDGE_RUNTIME: arn:aws:bedrock-agentcore:us-east-1:000000000000:runtime/local_judge
+          ANTILOG_SCHEDULER_GROUP: antilog
+          ANTILOG_SCHEDULER_TARGET_ARN: arn:aws:lambda:us-east-1:000000000000:function:local
+          ANTILOG_SCHEDULER_ROLE_ARN: arn:aws:iam::000000000000:role/local
+          ANTILOG_WAKE_SECRET: local-wake-secret
+          ANTILOG_SECRET_RECEIPT_KEY: "0000000000000000000000000000000000000000000000000000000000000001"
+          AWS_REGION: us-east-1
         run: |
           cargo lambda watch -A 127.0.0.1 -P 9000 -p antilog-aws --bin antilog-lambda > watch.log 2>&1 &
           for i in $(seq 1 60); do

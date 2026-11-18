@@ -26,17 +26,15 @@ pub struct Http {
     client: reqwest::Client,
     base: String,
     token: String,
-    organization: String,
     experiment: String,
 }
 
 impl Http {
-    pub fn new(base: &str, token: &str, organization: &str, experiment: &str) -> Self {
+    pub fn new(base: &str, token: &str, experiment: &str) -> Self {
         Self {
             client: reqwest::Client::new(),
             base: base.trim_end_matches('/').to_owned(),
             token: token.to_owned(),
-            organization: organization.to_owned(),
             experiment: experiment.to_owned(),
         }
     }
@@ -80,10 +78,7 @@ impl Api for Http {
         session: Option<SessionId>,
         input: Value,
     ) -> Result<ToolResult, String> {
-        let url = format!(
-            "{}/organizations/{}/experiments/{}/tools/{tool}",
-            self.base, self.organization, self.experiment
-        );
+        let url = format!("{}/experiments/{}/tools/{tool}", self.base, self.experiment);
         let body = serde_json::json!({ "session": session, "input": input });
         self.send(self.client.post(url).json(&body)).await
     }
@@ -192,7 +187,33 @@ mod tests {
             FakeCodeHost::default(),
         ));
         let seed = experiment(&deps.store, 1_000).await;
-        let app = antilog_server::api::session::router(deps.clone());
+        let now = antilog_core::clock::Clock::now(&deps.clock).as_millisecond();
+        let issued =
+            antilog_core::token::issue(seed.organization.id, seed.owner.id, "laptop", now).unwrap();
+        let entry = antilog_types::AuditEntry::new(
+            seed.organization.id,
+            Some(seed.owner.id),
+            "token.create",
+            seed.owner.id,
+            antilog_types::AuditOutcome::Done,
+            now,
+        );
+        antilog_core::store::OrganizationStore::create_access_token(
+            &deps.store,
+            &issued.record,
+            &entry,
+        )
+        .await
+        .unwrap();
+        let app = antilog_server::api::router(
+            deps.clone(),
+            antilog_server::api::auth::Settings {
+                providers: Vec::new(),
+                open_organizations: false,
+                secure_cookies: true,
+                wake_secret: None,
+            },
+        );
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
         let port = listener.local_addr().unwrap().port();
         tokio::spawn(async move {
@@ -200,8 +221,7 @@ mod tests {
         });
         let http = Http::new(
             &format!("http://127.0.0.1:{port}"),
-            "token",
-            &seed.organization.id.to_string(),
+            &issued.secret,
             &seed.experiment.id.to_string(),
         );
         (Mcp::new(http), deps, seed)

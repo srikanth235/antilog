@@ -93,12 +93,17 @@ impl FakeTimer {
 }
 
 impl Timer for FakeTimer {
-    async fn wake_at(&self, job: JobId, at: Timestamp) -> Result<(), TimerError> {
+    async fn wake_at(
+        &self,
+        _: antilog_types::OrganizationId,
+        job: JobId,
+        at: Timestamp,
+    ) -> Result<(), TimerError> {
         locked(&self.0).insert(job, at);
         Ok(())
     }
 
-    async fn cancel(&self, job: JobId) -> Result<(), TimerError> {
+    async fn cancel(&self, _: antilog_types::OrganizationId, job: JobId) -> Result<(), TimerError> {
         locked(&self.0).remove(&job);
         Ok(())
     }
@@ -188,9 +193,15 @@ mod tests {
     async fn fake_timer_books_and_cancels() {
         let timer = FakeTimer::default();
         let at: Timestamp = "2026-11-18T00:10:00Z".parse().unwrap();
-        timer.wake_at(JobId(1), at).await.unwrap();
+        timer
+            .wake_at(antilog_types::OrganizationId::new(), JobId(1), at)
+            .await
+            .unwrap();
         assert_eq!(timer.booked(), vec![(JobId(1), at)]);
-        timer.cancel(JobId(1)).await.unwrap();
+        timer
+            .cancel(antilog_types::OrganizationId::new(), JobId(1))
+            .await
+            .unwrap();
         assert!(timer.booked().is_empty());
     }
 
