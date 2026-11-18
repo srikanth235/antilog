@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select id, organization_id, project_id, goal, status, budget_cap_cents, created_by, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\" from experiments where organization_id = $1 and project_id = $2 order by created_at, id",
+  "query": "select id, organization_id, project_id, goal, status, budget_cap_cents, created_by, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", follow_policy from experiments where organization_id = $1 and project_id = $2 order by created_at, id",
   "describe": {
     "columns": [
       {
@@ -85,6 +85,17 @@
         "name": "created_at!",
         "type_info": "Int8",
         "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "follow_policy",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "experiments",
+            "name": "follow_policy"
+          }
+        }
       }
     ],
     "parameters": {
@@ -101,8 +112,9 @@
       false,
       false,
       false,
-      null
+      null,
+      false
     ]
   },
-  "hash": "b94c0a18e9a1410a55db85e7c66250ecd5848145659e2aa42ed64c08fc69c1b9"
+  "hash": "a89c6d097ee067ce2a29bb9c63b6276df425f39d8680d0c804622c13be1557d3"
 }

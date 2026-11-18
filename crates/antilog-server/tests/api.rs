@@ -8,10 +8,9 @@
 use std::sync::Arc;
 
 use antilog_core::auth::FakeSignIn;
-use antilog_core::clock::SystemClock;
-use antilog_core::fakes::FakeStore;
-use antilog_server::api::auth::{App, Provider, Settings};
-use antilog_server::api::{openapi_json, router_with};
+use antilog_core::fakes::{FakeCodeHost, FakeDeps, FakePlatform};
+use antilog_server::api::auth::{Provider, Settings};
+use antilog_server::api::{openapi_json, router};
 use axum::Router;
 use axum::body::Body;
 use axum::http::{Method, Request, StatusCode, header};
@@ -19,23 +18,21 @@ use serde_json::{Value, json};
 use tower::ServiceExt;
 
 fn app(fake: bool, open: bool) -> Router {
-    let store = Arc::new(FakeStore::default());
     let providers = if fake {
         vec![Provider::Fake(FakeSignIn)]
     } else {
         Vec::new()
     };
-    router_with(
-        store.clone(),
-        Arc::new(App {
-            store,
-            clock: Arc::new(SystemClock),
-            settings: Settings {
-                providers,
-                open_organizations: open,
-                secure_cookies: true,
-            },
-        }),
+    router(
+        Arc::new(FakeDeps::new(
+            FakePlatform::default(),
+            FakeCodeHost::default(),
+        )),
+        Settings {
+            providers,
+            open_organizations: open,
+            secure_cookies: true,
+        },
     )
 }
 

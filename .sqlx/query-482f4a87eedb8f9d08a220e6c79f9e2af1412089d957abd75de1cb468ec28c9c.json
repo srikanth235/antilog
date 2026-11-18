@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select doc from receipts where organization_id = $1 and trial_id = $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "doc",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "receipts",
+            "name": "doc"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "482f4a87eedb8f9d08a220e6c79f9e2af1412089d957abd75de1cb468ec28c9c"
+}

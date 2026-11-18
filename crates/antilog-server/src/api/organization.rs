@@ -3,8 +3,9 @@
 
 use std::sync::Arc;
 
+use antilog_core::deps::Deps;
 use antilog_core::organization::{self as floor, Refusal};
-use antilog_core::store::Store;
+use antilog_core::store::OrganizationStore;
 use antilog_core::{approval, budget};
 use antilog_types::{
     AccessToken, ApiError, Approval, ApprovalId, AuditCursor, AuditId, AuditPage, BudgetSummary,
@@ -21,7 +22,7 @@ use utoipa::{IntoParams, OpenApi};
 
 use super::auth::{App, Authed, Fail};
 
-type Shared<S> = State<Arc<App<S>>>;
+type Shared<D> = State<Arc<App<D>>>;
 type Reply<T> = Result<Json<T>, Fail>;
 
 #[derive(OpenApi)]
@@ -53,11 +54,11 @@ pub struct ApiDoc;
     get, path = "/organization", security(("bearer" = [])),
     responses((status = 200, description = "The caller's organization", body = Organization))
 )]
-async fn organization<S: Store + 'static>(
-    State(app): Shared<S>,
+async fn organization<D: Deps + 'static>(
+    State(app): Shared<D>,
     authed: Authed,
 ) -> Reply<Organization> {
-    Ok(Json(floor::organization(&*app.store, &authed.who).await?))
+    Ok(Json(floor::organization(app.store(), &authed.who).await?))
 }
 
 #[utoipa::path(
@@ -68,13 +69,13 @@ async fn organization<S: Store + 'static>(
         (status = 409, description = "The cap would pass a limit inside it", body = ApiError),
     )
 )]
-async fn set_organization_limits<S: Store + 'static>(
-    State(app): Shared<S>,
+async fn set_organization_limits<D: Deps + 'static>(
+    State(app): Shared<D>,
     authed: Authed,
     Json(limits): Json<Limits>,
 ) -> Result<StatusCode, Fail> {
     budget::set_organization_limits(
-        &*app.store,
+        app.store(),
         &authed.who,
         app.now(),
         limits.monthly_cap_cents,
@@ -88,11 +89,8 @@ async fn set_organization_limits<S: Store + 'static>(
     get, path = "/budgets", security(("bearer" = [])),
     responses((status = 200, description = "This month's spend against the caps", body = BudgetSummary))
 )]
-async fn budgets<S: Store + 'static>(
-    State(app): Shared<S>,
-    authed: Authed,
-) -> Reply<BudgetSummary> {
-    let summary = budget::summary(&*app.store, &authed.who, app.now()).await?;
+async fn budgets<D: Deps + 'static>(State(app): Shared<D>, authed: Authed) -> Reply<BudgetSummary> {
+    let summary = budget::summary(app.store(), &authed.who, app.now()).await?;
     Ok(Json(BudgetSummary {
         organization: LimitSpend {
             cap_cents: summary.organization.cap_cents,
@@ -114,9 +112,9 @@ async fn budgets<S: Store + 'static>(
     get, path = "/members", security(("bearer" = [])),
     responses((status = 200, description = "The organization's members", body = Vec<Member>))
 )]
-async fn members<S: Store + 'static>(State(app): Shared<S>, authed: Authed) -> Reply<Vec<Member>> {
-    floor::member_of(&*app.store, &authed.who).await?;
-    Ok(Json(app.store.members(authed.who.organization).await?))
+async fn members<D: Deps + 'static>(State(app): Shared<D>, authed: Authed) -> Reply<Vec<Member>> {
+    floor::member_of(app.store(), &authed.who).await?;
+    Ok(Json(app.store().members(authed.who.organization).await?))
 }
 
 #[utoipa::path(
@@ -127,13 +125,13 @@ async fn members<S: Store + 'static>(State(app): Shared<S>, authed: Authed) -> R
         (status = 409, description = "That identity is already a member", body = ApiError),
     )
 )]
-async fn add_member<S: Store + 'static>(
-    State(app): Shared<S>,
+async fn add_member<D: Deps + 'static>(
+    State(app): Shared<D>,
     authed: Authed,
     Json(new): Json<NewMember>,
 ) -> Result<(StatusCode, Json<Member>), Fail> {
     let member = floor::add_member(
-        &*app.store,
+        app.store(),
         &authed.who,
         app.now(),
         &new.name,
@@ -153,13 +151,13 @@ async fn add_member<S: Store + 'static>(
         (status = 409, description = "The organization or a project would be left without an owner", body = ApiError),
     )
 )]
-async fn set_member_role<S: Store + 'static>(
-    State(app): Shared<S>,
+async fn set_member_role<D: Deps + 'static>(
+    State(app): Shared<D>,
     authed: Authed,
     Path(id): Path<MemberId>,
     Json(set): Json<SetRole>,
 ) -> Result<StatusCode, Fail> {
-    floor::set_member_role(&*app.store, &authed.who, app.now(), id, set.role).await?;
+    floor::set_member_role(app.store(), &authed.who, app.now(), id, set.role).await?;
     Ok(StatusCode::NO_CONTENT)
 }
 
@@ -167,12 +165,9 @@ async fn set_member_role<S: Store + 'static>(
     get, path = "/projects", security(("bearer" = [])),
     responses((status = 200, description = "The organization's projects", body = Vec<Project>))
 )]
-async fn projects<S: Store + 'static>(
-    State(app): Shared<S>,
-    authed: Authed,
-) -> Reply<Vec<Project>> {
-    floor::member_of(&*app.store, &authed.who).await?;
-    Ok(Json(app.store.projects(authed.who.organization).await?))
+async fn projects<D: Deps + 'static>(State(app): Shared<D>, authed: Authed) -> Reply<Vec<Project>> {
+    floor::member_of(app.store(), &authed.who).await?;
+    Ok(Json(app.store().projects(authed.who.organization).await?))
 }
 
 #[utoipa::path(
@@ -183,13 +178,13 @@ async fn projects<S: Store + 'static>(
         (status = 409, description = "The name is taken", body = ApiError),
     )
 )]
-async fn create_project<S: Store + 'static>(
-    State(app): Shared<S>,
+async fn create_project<D: Deps + 'static>(
+    State(app): Shared<D>,
     authed: Authed,
     Json(new): Json<NewProject>,
 ) -> Result<(StatusCode, Json<Project>), Fail> {
     let project = floor::create_project(
-        &*app.store,
+        app.store(),
         &authed.who,
         app.now(),
         &new.name,
@@ -204,13 +199,13 @@ async fn create_project<S: Store + 'static>(
     params(("id" = ProjectId, Path, description = "The project")),
     responses((status = 200, description = "Roles set for this project; the rest have their organization role", body = Vec<ProjectRole>))
 )]
-async fn project_roles<S: Store + 'static>(
-    State(app): Shared<S>,
+async fn project_roles<D: Deps + 'static>(
+    State(app): Shared<D>,
     authed: Authed,
     Path(id): Path<ProjectId>,
 ) -> Reply<Vec<ProjectRole>> {
     Ok(Json(
-        floor::project_roles(&*app.store, &authed.who, id).await?,
+        floor::project_roles(app.store(), &authed.who, id).await?,
     ))
 }
 
@@ -226,13 +221,13 @@ async fn project_roles<S: Store + 'static>(
         (status = 409, description = "The project would be left without an owner", body = ApiError),
     )
 )]
-async fn set_project_role<S: Store + 'static>(
-    State(app): Shared<S>,
+async fn set_project_role<D: Deps + 'static>(
+    State(app): Shared<D>,
     authed: Authed,
     Path((id, member)): Path<(ProjectId, MemberId)>,
     Json(set): Json<SetProjectRole>,
 ) -> Result<StatusCode, Fail> {
-    floor::set_project_role(&*app.store, &authed.who, app.now(), id, member, set.role).await?;
+    floor::set_project_role(app.store(), &authed.who, app.now(), id, member, set.role).await?;
     Ok(StatusCode::NO_CONTENT)
 }
 
@@ -245,14 +240,14 @@ async fn set_project_role<S: Store + 'static>(
         (status = 409, description = "The cap would pass the organization's, or a budget inside it", body = ApiError),
     )
 )]
-async fn set_project_limits<S: Store + 'static>(
-    State(app): Shared<S>,
+async fn set_project_limits<D: Deps + 'static>(
+    State(app): Shared<D>,
     authed: Authed,
     Path(id): Path<ProjectId>,
     Json(limits): Json<Limits>,
 ) -> Result<StatusCode, Fail> {
     budget::set_project_limits(
-        &*app.store,
+        app.store(),
         &authed.who,
         app.now(),
         id,
@@ -272,14 +267,14 @@ async fn set_project_limits<S: Store + 'static>(
         (status = 409, description = "The budget would pass the project's cap", body = ApiError),
     )
 )]
-async fn set_experiment_budget<S: Store + 'static>(
-    State(app): Shared<S>,
+async fn set_experiment_budget<D: Deps + 'static>(
+    State(app): Shared<D>,
     authed: Authed,
     Path(id): Path<ExperimentId>,
     Json(set): Json<ExperimentBudget>,
 ) -> Result<StatusCode, Fail> {
     budget::set_experiment_budget(
-        &*app.store,
+        app.store(),
         &authed.who,
         app.now(),
         id,
@@ -301,13 +296,13 @@ struct TokenQuery {
     params(TokenQuery),
     responses((status = 200, description = "Tokens without their secrets", body = Vec<AccessToken>))
 )]
-async fn tokens<S: Store + 'static>(
-    State(app): Shared<S>,
+async fn tokens<D: Deps + 'static>(
+    State(app): Shared<D>,
     authed: Authed,
     Query(query): Query<TokenQuery>,
 ) -> Reply<Vec<AccessToken>> {
     Ok(Json(
-        floor::tokens(&*app.store, &authed.who, query.member_id).await?,
+        floor::tokens(app.store(), &authed.who, query.member_id).await?,
     ))
 }
 
@@ -316,13 +311,13 @@ async fn tokens<S: Store + 'static>(
     request_body = NewToken,
     responses((status = 201, description = "Created; the secret is shown only now", body = TokenIssued))
 )]
-async fn create_token<S: Store + 'static>(
-    State(app): Shared<S>,
+async fn create_token<D: Deps + 'static>(
+    State(app): Shared<D>,
     authed: Authed,
     Json(new): Json<NewToken>,
 ) -> Result<(StatusCode, Json<TokenIssued>), Fail> {
     let issued = floor::create_token(
-        &*app.store,
+        app.store(),
         &authed.who,
         app.now(),
         new.member_id,
@@ -343,12 +338,12 @@ async fn create_token<S: Store + 'static>(
     params(("id" = TokenId, Path, description = "The token")),
     responses((status = 204, description = "Revoked; your own, or any if an organization owner"))
 )]
-async fn revoke_token<S: Store + 'static>(
-    State(app): Shared<S>,
+async fn revoke_token<D: Deps + 'static>(
+    State(app): Shared<D>,
     authed: Authed,
     Path(id): Path<TokenId>,
 ) -> Result<StatusCode, Fail> {
-    floor::revoke_token(&*app.store, &authed.who, app.now(), id).await?;
+    floor::revoke_token(app.store(), &authed.who, app.now(), id).await?;
     Ok(StatusCode::NO_CONTENT)
 }
 
@@ -356,8 +351,8 @@ async fn revoke_token<S: Store + 'static>(
     get, path = "/policies", security(("bearer" = [])),
     responses((status = 200, description = "One policy per card kind; what was never set always asks", body = Vec<Policy>))
 )]
-async fn policies<S: Store + 'static>(State(app): Shared<S>, authed: Authed) -> Reply<Vec<Policy>> {
-    Ok(Json(approval::policies(&*app.store, &authed.who).await?))
+async fn policies<D: Deps + 'static>(State(app): Shared<D>, authed: Authed) -> Reply<Vec<Policy>> {
+    Ok(Json(approval::policies(app.store(), &authed.who).await?))
 }
 
 #[utoipa::path(
@@ -368,12 +363,12 @@ async fn policies<S: Store + 'static>(State(app): Shared<S>, authed: Authed) -> 
         (status = 409, description = "Add credential only ever asks", body = ApiError),
     )
 )]
-async fn set_policy<S: Store + 'static>(
-    State(app): Shared<S>,
+async fn set_policy<D: Deps + 'static>(
+    State(app): Shared<D>,
     authed: Authed,
     Json(policy): Json<Policy>,
 ) -> Result<StatusCode, Fail> {
-    approval::set_policy(&*app.store, &authed.who, app.now(), policy).await?;
+    approval::set_policy(app.store(), &authed.who, app.now(), policy).await?;
     Ok(StatusCode::NO_CONTENT)
 }
 
@@ -382,13 +377,13 @@ async fn set_policy<S: Store + 'static>(
     params(("id" = ExperimentId, Path, description = "The experiment")),
     responses((status = 200, description = "Its cards, oldest first", body = Vec<Approval>))
 )]
-async fn approvals<S: Store + 'static>(
-    State(app): Shared<S>,
+async fn approvals<D: Deps + 'static>(
+    State(app): Shared<D>,
     authed: Authed,
     Path(id): Path<ExperimentId>,
 ) -> Reply<Vec<Approval>> {
     Ok(Json(
-        approval::approvals(&*app.store, &authed.who, id).await?,
+        approval::approvals(app.store(), &authed.who, id).await?,
     ))
 }
 
@@ -402,14 +397,14 @@ async fn approvals<S: Store + 'static>(
         (status = 409, description = "It was already decided", body = ApiError),
     )
 )]
-async fn decide<S: Store + 'static>(
-    State(app): Shared<S>,
+async fn decide<D: Deps + 'static>(
+    State(app): Shared<D>,
     authed: Authed,
     Path(id): Path<ApprovalId>,
     Json(decide): Json<Decide>,
 ) -> Reply<Approval> {
     Ok(Json(
-        approval::decide(&*app.store, &authed.who, app.now(), id, decide.decision).await?,
+        approval::decide(app.store(), &authed.who, app.now(), id, decide.decision).await?,
     ))
 }
 
@@ -428,8 +423,8 @@ struct AuditQuery {
     params(AuditQuery),
     responses((status = 200, description = "Newest first; organization owners only", body = AuditPage))
 )]
-async fn audit<S: Store + 'static>(
-    State(app): Shared<S>,
+async fn audit<D: Deps + 'static>(
+    State(app): Shared<D>,
     authed: Authed,
     Query(query): Query<AuditQuery>,
 ) -> Reply<AuditPage> {
@@ -439,7 +434,7 @@ async fn audit<S: Store + 'static>(
         _ => return Err(Refusal::Invalid("give beforeAt and beforeId together").into()),
     };
     let limit = query.limit.unwrap_or(50).clamp(1, 200);
-    let entries = floor::audit_log(&*app.store, &authed.who, app.now(), before, limit).await?;
+    let entries = floor::audit_log(app.store(), &authed.who, app.now(), before, limit).await?;
     let next = (entries.len() == usize::try_from(limit).unwrap_or(usize::MAX))
         .then(|| {
             entries.last().map(|last| AuditCursor {
@@ -451,22 +446,22 @@ async fn audit<S: Store + 'static>(
     Ok(Json(AuditPage { entries, next }))
 }
 
-pub fn routes<S: Store + 'static>() -> Router<Arc<App<S>>> {
+pub fn routes<D: Deps + 'static>() -> Router<Arc<App<D>>> {
     Router::new()
-        .route("/organization", get(organization::<S>))
-        .route("/organization/limits", put(set_organization_limits::<S>))
-        .route("/budgets", get(budgets::<S>))
-        .route("/members", get(members::<S>).post(add_member::<S>))
-        .route("/members/{id}/role", put(set_member_role::<S>))
-        .route("/projects", get(projects::<S>).post(create_project::<S>))
-        .route("/projects/{id}/roles", get(project_roles::<S>))
-        .route("/projects/{id}/roles/{member}", put(set_project_role::<S>))
-        .route("/projects/{id}/limits", put(set_project_limits::<S>))
-        .route("/experiments/{id}/budget", put(set_experiment_budget::<S>))
-        .route("/experiments/{id}/approvals", get(approvals::<S>))
-        .route("/tokens", get(tokens::<S>).post(create_token::<S>))
-        .route("/tokens/{id}", delete(revoke_token::<S>))
-        .route("/policies", get(policies::<S>).put(set_policy::<S>))
-        .route("/approvals/{id}/decision", post(decide::<S>))
-        .route("/audit", get(audit::<S>))
+        .route("/organization", get(organization::<D>))
+        .route("/organization/limits", put(set_organization_limits::<D>))
+        .route("/budgets", get(budgets::<D>))
+        .route("/members", get(members::<D>).post(add_member::<D>))
+        .route("/members/{id}/role", put(set_member_role::<D>))
+        .route("/projects", get(projects::<D>).post(create_project::<D>))
+        .route("/projects/{id}/roles", get(project_roles::<D>))
+        .route("/projects/{id}/roles/{member}", put(set_project_role::<D>))
+        .route("/projects/{id}/limits", put(set_project_limits::<D>))
+        .route("/experiments/{id}/budget", put(set_experiment_budget::<D>))
+        .route("/experiments/{id}/approvals", get(approvals::<D>))
+        .route("/tokens", get(tokens::<D>).post(create_token::<D>))
+        .route("/tokens/{id}", delete(revoke_token::<D>))
+        .route("/policies", get(policies::<D>).put(set_policy::<D>))
+        .route("/approvals/{id}/decision", post(decide::<D>))
+        .route("/audit", get(audit::<D>))
 }

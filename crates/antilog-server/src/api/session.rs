@@ -1,168 +1,289 @@
+//! Experiments, sessions and tools: each call is a signed-in member or token, checked by the
+//! action layer; handlers decode, call `antilog-core` and encode.
+
 use std::sync::Arc;
 
 use antilog_core::deps::Deps;
+use antilog_core::organization::{self as floor, Action, Refusal};
 use antilog_core::session::{self, NewSession, SessionError};
-use antilog_core::store::SessionStore;
+use antilog_core::store::judge::JudgeStore;
+use antilog_core::store::{OrganizationStore, SessionStore};
 use antilog_core::tools::{Caller, ToolHost, Toolbox, definitions};
+use antilog_types::judge::{Receipt, TrialId};
 use antilog_types::{
-    ApiError, ExperimentId, OrganizationId, SendMessage, Session, SessionId, StartSession,
-    StepResult, StopSession, ToolCall, ToolDefinition, ToolResult,
+    ApiError, Experiment, ExperimentId, NewExperiment, ProjectId, SendMessage, Session, SessionId,
+    StartSession, StepResult, ToolCall, ToolDefinition, ToolResult,
 };
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use utoipa::OpenApi;
 
+use super::auth::{App, Authed, Fail};
+
 #[derive(OpenApi)]
-#[openapi(paths(start, sessions, read, message, stop, step, tools, call))]
+#[openapi(paths(
+    create_experiment,
+    experiments,
+    experiment,
+    start,
+    sessions,
+    read,
+    message,
+    stop,
+    step,
+    tools,
+    call,
+    receipt
+))]
 pub struct Doc;
 
-type Failure = (StatusCode, Json<ApiError>);
+type Shared<D> = State<Arc<App<D>>>;
 
-fn fail(status: StatusCode, code: &str, message: impl ToString) -> Failure {
+pub fn refuse(error: SessionError) -> Response {
+    let (status, code, message) = match error {
+        SessionError::NotFound => (
+            StatusCode::NOT_FOUND,
+            "not_found",
+            "No such experiment or session here: check the ids.".to_owned(),
+        ),
+        SessionError::Ended => (
+            StatusCode::CONFLICT,
+            "session_ended",
+            "The session has ended: start a new one.".to_owned(),
+        ),
+        SessionError::Budget(error) => (StatusCode::CONFLICT, "budget_spent", error.to_string()),
+        SessionError::Platform(_) | SessionError::Timer(_) | SessionError::Store(_) => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            "unavailable",
+            "A dependency does not answer; retry shortly.".to_owned(),
+        ),
+    };
     (
         status,
         Json(ApiError {
             code: code.to_owned(),
-            message: message.to_string(),
+            message,
             fields: Vec::new(),
         }),
     )
+        .into_response()
 }
 
-fn refuse(error: SessionError) -> Failure {
-    match error {
-        SessionError::NotFound => fail(
-            StatusCode::NOT_FOUND,
-            "not_found",
-            "No such experiment or session here: check the ids.",
-        ),
-        SessionError::Ended => fail(
-            StatusCode::CONFLICT,
-            "session_ended",
-            "The session has ended: start a new one.",
-        ),
-        SessionError::Budget(error) => fail(StatusCode::CONFLICT, "budget_spent", error),
-        SessionError::Platform(_) | SessionError::Timer(_) | SessionError::Store(_) => fail(
-            StatusCode::SERVICE_UNAVAILABLE,
-            "unavailable",
-            "A dependency does not answer; retry shortly.",
-        ),
-    }
+async fn owned<D: Deps + 'static>(
+    app: &App<D>,
+    authed: &Authed,
+    id: SessionId,
+) -> Result<Session, Fail> {
+    floor::member_of(app.store(), &authed.who).await?;
+    Ok(app
+        .store()
+        .session(authed.who.organization, id)
+        .await?
+        .ok_or(Refusal::NotFound)?)
+}
+
+async fn permit<D: Deps + 'static>(
+    app: &App<D>,
+    authed: &Authed,
+    action: Action,
+    experiment: ExperimentId,
+) -> Result<(), Fail> {
+    Ok(floor::permit_session(
+        app.store(),
+        &authed.who,
+        app.now(),
+        action,
+        experiment,
+        experiment,
+    )
+    .await?)
 }
 
 #[utoipa::path(
-    post,
-    path = "/organizations/{organization}/experiments/{experiment}/sessions",
-    params(("organization" = OrganizationId, Path), ("experiment" = ExperimentId, Path)),
+    post, path = "/projects/{id}/experiments", security(("bearer" = [])),
+    params(("id" = ProjectId, Path, description = "The project")),
+    request_body = NewExperiment,
+    responses(
+        (status = 201, description = "Created; editors and owners of the project", body = Experiment),
+        (status = 409, description = "The budget would pass a cap", body = ApiError),
+    )
+)]
+async fn create_experiment<D: Deps + 'static>(
+    State(app): Shared<D>,
+    authed: Authed,
+    Path(project): Path<ProjectId>,
+    Json(new): Json<NewExperiment>,
+) -> Result<(StatusCode, Json<Experiment>), Fail> {
+    let made = floor::create_experiment(app.store(), &authed.who, app.now(), project, new).await?;
+    Ok((StatusCode::CREATED, Json(made)))
+}
+
+#[utoipa::path(
+    get, path = "/projects/{id}/experiments", security(("bearer" = [])),
+    params(("id" = ProjectId, Path, description = "The project")),
+    responses((status = 200, description = "Its experiments, oldest first", body = Vec<Experiment>))
+)]
+async fn experiments<D: Deps + 'static>(
+    State(app): Shared<D>,
+    authed: Authed,
+    Path(project): Path<ProjectId>,
+) -> Result<Json<Vec<Experiment>>, Fail> {
+    Ok(Json(
+        floor::experiments(app.store(), &authed.who, project).await?,
+    ))
+}
+
+#[utoipa::path(
+    get, path = "/experiments/{id}", security(("bearer" = [])),
+    params(("id" = ExperimentId, Path, description = "The experiment")),
+    responses((status = 200, body = Experiment), (status = 404, body = ApiError))
+)]
+async fn experiment<D: Deps + 'static>(
+    State(app): Shared<D>,
+    authed: Authed,
+    Path(id): Path<ExperimentId>,
+) -> Result<Json<Experiment>, Fail> {
+    Ok(Json(floor::experiment(app.store(), &authed.who, id).await?))
+}
+
+#[utoipa::path(
+    post, path = "/experiments/{id}/sessions", security(("bearer" = [])),
+    params(("id" = ExperimentId, Path, description = "The experiment")),
     request_body = StartSession,
     responses((status = 201, body = Session), (status = 404, body = ApiError), (status = 409, body = ApiError))
 )]
 async fn start<D: Deps + 'static>(
-    State(deps): State<Arc<D>>,
-    Path((organization, experiment)): Path<(OrganizationId, ExperimentId)>,
+    State(app): Shared<D>,
+    authed: Authed,
+    Path(experiment): Path<ExperimentId>,
     Json(body): Json<StartSession>,
-) -> Result<(StatusCode, Json<Session>), Failure> {
+) -> Result<(StatusCode, Json<Session>), Fail> {
+    permit(&app, &authed, Action::SessionStart, experiment).await?;
     let new = NewSession {
         agent: body.agent,
         prompt: body.prompt,
         repos: body.repos,
         environment: body.environment,
+        actor: Some(authed.who.member),
         ..NewSession::default()
     };
-    let session = session::start(&*deps, organization, experiment, new)
+    let session = session::start(&*app.deps, authed.who.organization, experiment, new)
         .await
-        .map_err(refuse)?;
+        .map_err(Fail::Session)?;
     Ok((StatusCode::CREATED, Json(session)))
 }
 
 #[utoipa::path(
-    get,
-    path = "/organizations/{organization}/experiments/{experiment}/sessions",
-    params(("organization" = OrganizationId, Path), ("experiment" = ExperimentId, Path)),
+    get, path = "/experiments/{id}/sessions", security(("bearer" = [])),
+    params(("id" = ExperimentId, Path, description = "The experiment")),
     responses((status = 200, body = Vec<Session>))
 )]
 async fn sessions<D: Deps + 'static>(
-    State(deps): State<Arc<D>>,
-    Path((organization, experiment)): Path<(OrganizationId, ExperimentId)>,
-) -> Result<Json<Vec<Session>>, Failure> {
-    let rows = deps
-        .store()
-        .sessions(organization, experiment)
-        .await
-        .map_err(|e| refuse(e.into()))?;
-    Ok(Json(rows))
+    State(app): Shared<D>,
+    authed: Authed,
+    Path(experiment): Path<ExperimentId>,
+) -> Result<Json<Vec<Session>>, Fail> {
+    floor::experiment(app.store(), &authed.who, experiment).await?;
+    Ok(Json(
+        app.store()
+            .sessions(authed.who.organization, experiment)
+            .await?,
+    ))
 }
 
 #[utoipa::path(
-    get,
-    path = "/organizations/{organization}/sessions/{session}",
-    params(("organization" = OrganizationId, Path), ("session" = SessionId, Path)),
+    get, path = "/sessions/{id}", security(("bearer" = [])),
+    params(("id" = SessionId, Path, description = "The session")),
     responses((status = 200, body = Session), (status = 404, body = ApiError))
 )]
 async fn read<D: Deps + 'static>(
-    State(deps): State<Arc<D>>,
-    Path((organization, id)): Path<(OrganizationId, SessionId)>,
-) -> Result<Json<Session>, Failure> {
-    deps.store()
-        .session(organization, id)
-        .await
-        .map_err(|e| refuse(e.into()))?
-        .map(Json)
-        .ok_or_else(|| refuse(SessionError::NotFound))
+    State(app): Shared<D>,
+    authed: Authed,
+    Path(id): Path<SessionId>,
+) -> Result<Json<Session>, Fail> {
+    Ok(Json(owned(&app, &authed, id).await?))
 }
 
 #[utoipa::path(
-    post,
-    path = "/organizations/{organization}/sessions/{session}/messages",
-    params(("organization" = OrganizationId, Path), ("session" = SessionId, Path)),
+    post, path = "/sessions/{id}/messages", security(("bearer" = [])),
+    params(("id" = SessionId, Path, description = "The session")),
     request_body = SendMessage,
     responses((status = 200, body = Session), (status = 409, body = ApiError))
 )]
 async fn message<D: Deps + 'static>(
-    State(deps): State<Arc<D>>,
-    Path((organization, id)): Path<(OrganizationId, SessionId)>,
+    State(app): Shared<D>,
+    authed: Authed,
+    Path(id): Path<SessionId>,
     Json(body): Json<SendMessage>,
-) -> Result<Json<Session>, Failure> {
-    session::message(&*deps, organization, id, &body.text)
-        .await
-        .map(Json)
-        .map_err(refuse)
+) -> Result<Json<Session>, Fail> {
+    let row = owned(&app, &authed, id).await?;
+    permit(&app, &authed, Action::SessionMessage, row.experiment_id).await?;
+    session::message(
+        &*app.deps,
+        authed.who.organization,
+        id,
+        Some(authed.who.member),
+        &body.text,
+    )
+    .await
+    .map(Json)
+    .map_err(Fail::Session)
 }
 
 #[utoipa::path(
-    post,
-    path = "/organizations/{organization}/sessions/{session}/stop",
-    params(("organization" = OrganizationId, Path), ("session" = SessionId, Path)),
-    request_body = StopSession,
-    responses((status = 200, body = Session), (status = 409, body = ApiError))
+    post, path = "/sessions/{id}/stop", security(("bearer" = [])),
+    params(("id" = SessionId, Path, description = "The session")),
+    responses((status = 200, description = "Done, \"Stopped by\" the caller", body = Session), (status = 409, body = ApiError))
 )]
 async fn stop<D: Deps + 'static>(
-    State(deps): State<Arc<D>>,
-    Path((organization, id)): Path<(OrganizationId, SessionId)>,
-    Json(body): Json<StopSession>,
-) -> Result<Json<Session>, Failure> {
-    session::stop(&*deps, organization, id, None, &body.by)
-        .await
-        .map(Json)
-        .map_err(refuse)
+    State(app): Shared<D>,
+    authed: Authed,
+    Path(id): Path<SessionId>,
+) -> Result<Json<Session>, Fail> {
+    let row = owned(&app, &authed, id).await?;
+    permit(&app, &authed, Action::SessionStop, row.experiment_id).await?;
+    let name = app
+        .store()
+        .member(authed.who.organization, authed.who.member)
+        .await?
+        .map(|member| member.name)
+        .ok_or(Refusal::NotFound)?;
+    session::stop(
+        &*app.deps,
+        authed.who.organization,
+        id,
+        Some(authed.who.member),
+        &name,
+    )
+    .await
+    .map(Json)
+    .map_err(Fail::Session)
 }
 
 /// The timer's wake-up for a session. At least once, so safe to call again.
 #[utoipa::path(
-    post,
-    path = "/organizations/{organization}/sessions/{session}/step",
-    params(("organization" = OrganizationId, Path), ("session" = SessionId, Path)),
+    post, path = "/sessions/{id}/step", security(("bearer" = [])),
+    params(("id" = SessionId, Path, description = "The session")),
     responses((status = 200, body = StepResult), (status = 404, body = ApiError))
 )]
 async fn step<D: Deps + 'static>(
-    State(deps): State<Arc<D>>,
-    Path((organization, id)): Path<(OrganizationId, SessionId)>,
-) -> Result<Json<StepResult>, Failure> {
-    let done = session::step(&*deps, &Toolbox(&*deps), organization, id)
-        .await
-        .map_err(refuse)?;
+    State(app): Shared<D>,
+    authed: Authed,
+    Path(id): Path<SessionId>,
+) -> Result<Json<StepResult>, Fail> {
+    let row = owned(&app, &authed, id).await?;
+    permit(&app, &authed, Action::SessionStep, row.experiment_id).await?;
+    let done = session::step(
+        &*app.deps,
+        &Toolbox(&*app.deps),
+        authed.who.organization,
+        id,
+    )
+    .await
+    .map_err(Fail::Session)?;
     Ok(Json(StepResult {
         status: done.status,
         events: u32::try_from(done.events).unwrap_or(u32::MAX),
@@ -184,39 +305,45 @@ async fn tools() -> Json<Vec<ToolDefinition>> {
 }
 
 #[utoipa::path(
-    post,
-    path = "/organizations/{organization}/experiments/{experiment}/tools/{tool}",
-    params(("organization" = OrganizationId, Path), ("experiment" = ExperimentId, Path), ("tool" = String, Path)),
+    post, path = "/experiments/{id}/tools/{tool}", security(("bearer" = [])),
+    params(("id" = ExperimentId, Path, description = "The experiment"), ("tool" = String, Path, description = "A tool from /tools")),
     request_body = ToolCall,
     responses((status = 200, body = ToolResult), (status = 404, body = ApiError))
 )]
 async fn call<D: Deps + 'static>(
-    State(deps): State<Arc<D>>,
-    Path((organization, experiment, tool)): Path<(OrganizationId, ExperimentId, String)>,
+    State(app): Shared<D>,
+    authed: Authed,
+    Path((experiment, tool)): Path<(ExperimentId, String)>,
     Json(body): Json<ToolCall>,
-) -> Result<Json<ToolResult>, Failure> {
+) -> Result<Json<ToolResult>, Fail> {
+    permit(&app, &authed, Action::ToolCall, experiment).await?;
+    let organization = authed.who.organization;
     let session = match body.session {
-        Some(id) => deps
+        Some(id) => app
             .store()
             .session(organization, id)
-            .await
-            .map_err(|e| refuse(e.into()))?
+            .await?
             .filter(|s| s.experiment_id == experiment)
-            .ok_or_else(|| refuse(SessionError::NotFound))?,
-        None => session::open_external(&*deps, organization, experiment)
-            .await
-            .map_err(refuse)?,
+            .ok_or(Refusal::NotFound)?,
+        None => session::open_external(
+            &*app.deps,
+            organization,
+            experiment,
+            Some(authed.who.member),
+        )
+        .await
+        .map_err(Fail::Session)?,
     };
     let caller = Caller {
         organization,
         experiment,
         session: session.id,
-        actor: None,
+        actor: Some(authed.who.member),
         call: body
             .call
             .unwrap_or_else(|| uuid::Uuid::now_v7().to_string()),
     };
-    let host = Toolbox(&*deps);
+    let host = Toolbox(&*app.deps);
     let reply = host.call(&caller, &tool, body.input).await;
     let followup = match &reply.ticket {
         Some(ticket) => Some(host.finish(&caller, ticket).await),
@@ -229,174 +356,42 @@ async fn call<D: Deps + 'static>(
     }))
 }
 
-pub fn router<D: Deps + 'static>(deps: Arc<D>) -> Router {
+#[utoipa::path(
+    get, path = "/trials/{id}/receipt", security(("bearer" = [])),
+    params(("id" = TrialId, Path, description = "A Kept trial that was the win when it ran")),
+    responses((status = 200, description = "The judge's signed receipt", body = Receipt), (status = 404, body = ApiError))
+)]
+async fn receipt<D: Deps + 'static>(
+    State(app): Shared<D>,
+    authed: Authed,
+    Path(id): Path<TrialId>,
+) -> Result<Json<Receipt>, Fail> {
+    floor::member_of(app.store(), &authed.who).await?;
+    app.deps
+        .judge(authed.who.organization)
+        .receipt(id)
+        .await
+        .map_err(|error| Refusal::Unavailable(Box::new(error)))?
+        .map(Json)
+        .ok_or(Refusal::NotFound.into())
+}
+
+pub fn routes<D: Deps + 'static>() -> Router<Arc<App<D>>> {
     Router::new()
         .route("/tools", get(tools))
         .route(
-            "/organizations/{organization}/experiments/{experiment}/sessions",
+            "/projects/{id}/experiments",
+            post(create_experiment::<D>).get(experiments::<D>),
+        )
+        .route("/experiments/{id}", get(experiment::<D>))
+        .route(
+            "/experiments/{id}/sessions",
             post(start::<D>).get(sessions::<D>),
         )
-        .route(
-            "/organizations/{organization}/experiments/{experiment}/tools/{tool}",
-            post(call::<D>),
-        )
-        .route(
-            "/organizations/{organization}/sessions/{session}",
-            get(read::<D>),
-        )
-        .route(
-            "/organizations/{organization}/sessions/{session}/messages",
-            post(message::<D>),
-        )
-        .route(
-            "/organizations/{organization}/sessions/{session}/stop",
-            post(stop::<D>),
-        )
-        .route(
-            "/organizations/{organization}/sessions/{session}/step",
-            post(step::<D>),
-        )
-        .with_state(deps)
-}
-
-#[cfg(test)]
-#[allow(clippy::unwrap_used, clippy::indexing_slicing)]
-mod tests {
-    use antilog_core::fakes::{FakeCodeHost, FakeDeps, FakePlatform};
-    use antilog_core::seed::experiment;
-    use axum::body::Body;
-    use axum::http::Request;
-    use serde_json::{Value, json};
-    use tower::ServiceExt;
-
-    use super::*;
-
-    async fn send(app: &Router, method: &str, uri: &str, body: Value) -> (StatusCode, Value) {
-        let request = Request::builder()
-            .method(method)
-            .uri(uri)
-            .header("content-type", "application/json")
-            .body(Body::from(body.to_string()))
-            .unwrap();
-        let response = app.clone().oneshot(request).await.unwrap();
-        let status = response.status();
-        let bytes = axum::body::to_bytes(response.into_body(), 1 << 20)
-            .await
-            .unwrap();
-        (
-            status,
-            serde_json::from_slice(&bytes).unwrap_or(Value::Null),
-        )
-    }
-
-    #[tokio::test]
-    async fn a_session_is_started_stepped_talked_to_and_stopped() {
-        let deps = Arc::new(FakeDeps::new(
-            FakePlatform::default(),
-            FakeCodeHost::default(),
-        ));
-        let seed = experiment(&deps.store, 1_000).await;
-        let (org, exp) = (seed.organization.id, seed.experiment.id);
-        let app = router(deps.clone());
-        let base = format!("/organizations/{org}");
-
-        let (status, session) = send(
-            &app,
-            "POST",
-            &format!("{base}/experiments/{exp}/sessions"),
-            json!({"agent": "claude", "prompt": "cut p95"}),
-        )
-        .await;
-        assert_eq!(status, StatusCode::CREATED, "{session}");
-        let id = session["id"].as_str().unwrap().to_owned();
-        let (status, stepped) = send(
-            &app,
-            "POST",
-            &format!("{base}/sessions/{id}/step"),
-            json!({}),
-        )
-        .await;
-        assert_eq!(
-            (status, stepped["status"].as_str()),
-            (StatusCode::OK, Some("working"))
-        );
-        let (status, _) = send(
-            &app,
-            "POST",
-            &format!("{base}/sessions/{id}/messages"),
-            json!({"text": "go"}),
-        )
-        .await;
-        assert_eq!(status, StatusCode::OK);
-        let (status, stopped) = send(
-            &app,
-            "POST",
-            &format!("{base}/sessions/{id}/stop"),
-            json!({"by": "Grace"}),
-        )
-        .await;
-        assert_eq!(
-            (status, stopped["note"].as_str()),
-            (StatusCode::OK, Some("Stopped by Grace"))
-        );
-        let (status, ended) = send(
-            &app,
-            "POST",
-            &format!("{base}/sessions/{id}/messages"),
-            json!({"text": "again"}),
-        )
-        .await;
-        assert_eq!(
-            (status, ended["code"].as_str()),
-            (StatusCode::CONFLICT, Some("session_ended"))
-        );
-        let (status, listed) = send(
-            &app,
-            "GET",
-            &format!("{base}/experiments/{exp}/sessions"),
-            json!({}),
-        )
-        .await;
-        assert_eq!(
-            (status, listed.as_array().map(Vec::len)),
-            (StatusCode::OK, Some(1))
-        );
-        let (status, _) = send(
-            &app,
-            "GET",
-            &format!("{base}/sessions/{}", SessionId::new()),
-            json!({}),
-        )
-        .await;
-        assert_eq!(status, StatusCode::NOT_FOUND);
-    }
-
-    #[tokio::test]
-    async fn a_tool_call_without_a_session_opens_one_and_says_what_to_do_next() {
-        let deps = Arc::new(FakeDeps::new(
-            FakePlatform::default(),
-            FakeCodeHost::default(),
-        ));
-        let seed = experiment(&deps.store, 1_000).await;
-        let (org, exp) = (seed.organization.id, seed.experiment.id);
-        let app = router(deps);
-        let uri = format!("/organizations/{org}/experiments/{exp}/tools/measure");
-        let call = json!({"input": {"commits": [{"repo": "app", "sha": "x"}], "hypothesis": "h"}});
-        let (status, first) = send(&app, "POST", &uri, call).await;
-        assert_eq!(status, StatusCode::OK);
-        assert!(
-            first["answer"]["error"]
-                .as_str()
-                .unwrap()
-                .contains("call seal")
-        );
-        let again = json!({"session": first["session"], "input": {}});
-        let (_, second) = send(&app, "POST", &uri, again).await;
-        assert_eq!(second["session"], first["session"]);
-        let (status, tools) = send(&app, "GET", "/tools", json!({})).await;
-        assert_eq!(
-            (status, tools.as_array().map(Vec::len)),
-            (StatusCode::OK, Some(9))
-        );
-    }
+        .route("/experiments/{id}/tools/{tool}", post(call::<D>))
+        .route("/sessions/{id}", get(read::<D>))
+        .route("/sessions/{id}/messages", post(message::<D>))
+        .route("/sessions/{id}/stop", post(stop::<D>))
+        .route("/sessions/{id}/step", post(step::<D>))
+        .route("/trials/{id}/receipt", get(receipt::<D>))
 }

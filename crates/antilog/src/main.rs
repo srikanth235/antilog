@@ -20,8 +20,6 @@ enum Command {
         #[arg(long)]
         server: String,
         #[arg(long)]
-        organization: String,
-        #[arg(long)]
         experiment: String,
         /// An access token; defaults to the ANTILOG_TOKEN environment variable.
         #[arg(long)]
@@ -35,14 +33,13 @@ async fn main() -> anyhow::Result<()> {
         None => Ok(()),
         Some(Command::Mcp {
             server,
-            organization,
             experiment,
             token,
         }) => {
             let token = token
                 .or_else(|| std::env::var("ANTILOG_TOKEN").ok())
                 .ok_or_else(|| anyhow::anyhow!("give --token or set ANTILOG_TOKEN"))?;
-            let api = mcp::Http::new(&server, &token, &organization, &experiment);
+            let api = mcp::Http::new(&server, &token, &experiment);
             let running = mcp::Mcp::new(api).serve(rmcp::transport::stdio()).await?;
             running.waiting().await?;
             Ok(())

@@ -16,6 +16,7 @@ struct ExperimentRow {
     budget_cap_cents: i64,
     created_by: Uuid,
     created_at: i64,
+    follow_policy: bool,
 }
 
 impl TryFrom<ExperimentRow> for Experiment {
@@ -32,6 +33,7 @@ impl TryFrom<ExperimentRow> for Experiment {
             budget_cap_cents: row.budget_cap_cents,
             created_by: MemberId::from_uuid(row.created_by),
             created_at: row.created_at,
+            follow_policy: row.follow_policy,
         })
     }
 }
@@ -82,9 +84,9 @@ impl SessionStore for PgStore {
         experiment: &Experiment,
         entry: &AuditEntry,
     ) -> Result<(), StoreError> {
-        let mut tx = self.pool.begin().await.map_err(map)?;
+        let mut tx = self.scoped(experiment.organization_id).await?;
         sqlx::query!(
-            "insert into experiments (id, organization_id, project_id, goal, status, budget_cap_cents, created_by, created_at) values ($1, $2, $3, $4, $5, $6, $7, to_timestamp($8::bigint / 1000.0))",
+            "insert into experiments (id, organization_id, project_id, goal, status, budget_cap_cents, created_by, created_at, follow_policy) values ($1, $2, $3, $4, $5, $6, $7, to_timestamp($8::bigint / 1000.0), $9)",
             experiment.id.as_uuid(),
             experiment.organization_id.as_uuid(),
             experiment.project_id.as_uuid(),
@@ -93,6 +95,7 @@ impl SessionStore for PgStore {
             experiment.budget_cap_cents,
             experiment.created_by.as_uuid(),
             experiment.created_at,
+            experiment.follow_policy,
         )
         .execute(&mut *tx)
         .await
@@ -106,13 +109,14 @@ impl SessionStore for PgStore {
         organization: OrganizationId,
         id: ExperimentId,
     ) -> Result<Option<Experiment>, StoreError> {
+        let mut tx = self.scoped(organization).await?;
         sqlx::query_as!(
             ExperimentRow,
-            "select id, organization_id, project_id, goal, status, budget_cap_cents, created_by, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\" from experiments where organization_id = $1 and id = $2",
+            "select id, organization_id, project_id, goal, status, budget_cap_cents, created_by, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", follow_policy from experiments where organization_id = $1 and id = $2",
             organization.as_uuid(),
             id.as_uuid(),
         )
-        .fetch_optional(&self.pool)
+        .fetch_optional(&mut *tx)
         .await
         .map_err(map)?
         .map(Experiment::try_from)
@@ -124,13 +128,14 @@ impl SessionStore for PgStore {
         organization: OrganizationId,
         project: ProjectId,
     ) -> Result<Vec<Experiment>, StoreError> {
+        let mut tx = self.scoped(organization).await?;
         sqlx::query_as!(
             ExperimentRow,
-            "select id, organization_id, project_id, goal, status, budget_cap_cents, created_by, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\" from experiments where organization_id = $1 and project_id = $2 order by created_at, id",
+            "select id, organization_id, project_id, goal, status, budget_cap_cents, created_by, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", follow_policy from experiments where organization_id = $1 and project_id = $2 order by created_at, id",
             organization.as_uuid(),
             project.as_uuid(),
         )
-        .fetch_all(&self.pool)
+        .fetch_all(&mut *tx)
         .await
         .map_err(map)?
         .into_iter()
@@ -145,7 +150,7 @@ impl SessionStore for PgStore {
         status: ExperimentStatus,
         entry: &AuditEntry,
     ) -> Result<(), StoreError> {
-        let mut tx = self.pool.begin().await.map_err(map)?;
+        let mut tx = self.scoped(organization).await?;
         let changed = sqlx::query!(
             "update experiments set status = $3 where organization_id = $1 and id = $2",
             organization.as_uuid(),
@@ -168,7 +173,7 @@ impl SessionStore for PgStore {
         session: &Session,
         entry: &AuditEntry,
     ) -> Result<(), StoreError> {
-        let mut tx = self.pool.begin().await.map_err(map)?;
+        let mut tx = self.scoped(session.organization_id).await?;
         sqlx::query!(
             "insert into sessions (id, organization_id, experiment_id, parent_session_id, agent, platform, platform_handle, status, note, cleanup, created_at, updated_at) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, to_timestamp($11::bigint / 1000.0), to_timestamp($12::bigint / 1000.0))",
             session.id.as_uuid(),
@@ -196,13 +201,14 @@ impl SessionStore for PgStore {
         organization: OrganizationId,
         id: SessionId,
     ) -> Result<Option<Session>, StoreError> {
+        let mut tx = self.scoped(organization).await?;
         sqlx::query_as!(
             SessionRow,
             "select id, organization_id, experiment_id, parent_session_id, agent, platform, platform_handle, status, note, cleanup, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from updated_at) * 1000)::bigint as \"updated_at!\" from sessions where organization_id = $1 and id = $2",
             organization.as_uuid(),
             id.as_uuid(),
         )
-        .fetch_optional(&self.pool)
+        .fetch_optional(&mut *tx)
         .await
         .map_err(map)?
         .map(Session::try_from)
@@ -214,13 +220,14 @@ impl SessionStore for PgStore {
         organization: OrganizationId,
         experiment: ExperimentId,
     ) -> Result<Vec<Session>, StoreError> {
+        let mut tx = self.scoped(organization).await?;
         sqlx::query_as!(
             SessionRow,
             "select id, organization_id, experiment_id, parent_session_id, agent, platform, platform_handle, status, note, cleanup, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from updated_at) * 1000)::bigint as \"updated_at!\" from sessions where organization_id = $1 and experiment_id = $2 order by created_at, id",
             organization.as_uuid(),
             experiment.as_uuid(),
         )
-        .fetch_all(&self.pool)
+        .fetch_all(&mut *tx)
         .await
         .map_err(map)?
         .into_iter()
@@ -236,7 +243,7 @@ impl SessionStore for PgStore {
         at: i64,
         entry: Option<&AuditEntry>,
     ) -> Result<Session, StoreError> {
-        let mut tx = self.pool.begin().await.map_err(map)?;
+        let mut tx = self.scoped(organization).await?;
         let row = sqlx::query_as!(
             SessionRow,
             "update sessions set status = coalesce($3, status), note = coalesce($4, note), platform_handle = coalesce($5, platform_handle), cleanup = coalesce($6, cleanup), updated_at = to_timestamp($7::bigint / 1000.0) where organization_id = $1 and id = $2 returning id, organization_id, experiment_id, parent_session_id, agent, platform, platform_handle, status, note, cleanup, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from updated_at) * 1000)::bigint as \"updated_at!\"",

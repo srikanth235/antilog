@@ -2,6 +2,7 @@ pub mod session;
 
 use std::sync::Arc;
 
+use antilog_core::deps::Deps;
 use antilog_core::store::Store;
 use antilog_types::{ApiError, Health, HealthStatus};
 use axum::Json;
@@ -29,10 +30,10 @@ struct ApiDoc;
         (status = 503, description = "The store does not answer", body = ApiError),
     )
 )]
-async fn health<S: Store + 'static>(
-    State(store): State<Arc<S>>,
+async fn health<D: Deps + 'static>(
+    State(app): State<Arc<auth::App<D>>>,
 ) -> Result<Json<Health>, (StatusCode, Json<ApiError>)> {
-    match store.ping().await {
+    match app.store().ping().await {
         Ok(()) => Ok(Json(Health {
             status: HealthStatus::Ok,
         })),
@@ -50,20 +51,17 @@ async fn health<S: Store + 'static>(
     }
 }
 
-pub fn router<S: Store + 'static>(store: Arc<S>) -> Router {
-    let app = Arc::new(auth::App {
-        store: store.clone(),
-        clock: Arc::new(antilog_core::clock::SystemClock),
-        settings: auth::Settings::from_env(),
-    });
-    router_with(store, app)
+pub fn router<D: Deps + 'static>(deps: Arc<D>, settings: auth::Settings) -> Router {
+    router_with(Arc::new(auth::App { deps, settings }))
 }
 
-pub fn router_with<S: Store + 'static>(store: Arc<S>, app: Arc<auth::App<S>>) -> Router {
+pub fn router_with<D: Deps + 'static>(app: Arc<auth::App<D>>) -> Router {
     Router::new()
-        .route("/health", get(health::<S>))
-        .with_state(store)
-        .merge(auth::routes().merge(organization::routes()).with_state(app))
+        .route("/health", get(health::<D>))
+        .merge(auth::routes())
+        .merge(organization::routes())
+        .merge(session::routes())
+        .with_state(app)
 }
 
 pub fn openapi_json() -> String {
@@ -77,7 +75,7 @@ pub fn openapi_json() -> String {
 
 #[cfg(test)]
 mod tests {
-    use antilog_core::fakes::FakeStore;
+    use antilog_core::fakes::{FakeCodeHost, FakeDeps, FakePlatform};
     use axum::body::Body;
     use axum::http::Request;
     use tower::ServiceExt;
@@ -86,7 +84,17 @@ mod tests {
 
     #[tokio::test]
     async fn health_answers_ok_from_the_fake_store() {
-        let app = router(Arc::new(FakeStore::default()));
+        let app = router(
+            Arc::new(FakeDeps::new(
+                FakePlatform::default(),
+                FakeCodeHost::default(),
+            )),
+            auth::Settings {
+                providers: Vec::new(),
+                open_organizations: false,
+                secure_cookies: true,
+            },
+        );
         let response = app
             .oneshot(Request::get("/health").body(Body::empty()).unwrap())
             .await
