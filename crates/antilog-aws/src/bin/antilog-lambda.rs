@@ -14,6 +14,7 @@ use antilog_aws::deps::AwsDeps;
 use antilog_aws::lambda;
 use antilog_core::secrets::{EnvSecrets, Secrets};
 use antilog_server::api;
+use antilog_server::origin::OriginGuard;
 use antilog_server::pg::PgStore;
 use anyhow::Context;
 use axum::Router;
@@ -42,7 +43,7 @@ async fn main() -> anyhow::Result<()> {
         .context("reading the database url")?;
     let deps = Arc::new(AwsDeps::from_env(PgStore::new(pool)).await?);
 
-    lambda::serve(build_router(deps))
+    lambda::serve(build_router(deps), OriginGuard::required_from_env())
         .await
         .map_err(|e| anyhow::anyhow!(e))
 }

@@ -7,7 +7,11 @@
 //! path under `/internal/` is therefore refused unless the event says the scheduler sent
 //! it: a function URL request always carries the URL's own domain name, so no outside
 //! caller can forge the scheduler's.
+//!
+//! Everything else must carry CloudFront's origin secret (`antilog_server::origin`), with
+//! no exception for `/health`; with no secret set the function refuses all of it.
 
+use antilog_server::origin::OriginGuard;
 use axum::Router;
 use lambda_http::http::{Request, Response, StatusCode};
 use lambda_http::request::RequestContext;
@@ -67,9 +71,15 @@ fn from_scheduler(request: &Request<Body>) -> bool {
 /// Runs one request through the router, keeping `/internal/` for the scheduler.
 pub async fn handle(
     router: Router,
+    guard: &OriginGuard,
     request: Request<Body>,
 ) -> Result<Response<axum::body::Body>, Error> {
-    if request.uri().path().starts_with(INTERNAL_PREFIX) && !from_scheduler(&request) {
+    let scheduler = from_scheduler(&request);
+    // Only CloudFront (which adds the origin secret) and the scheduler may reach the server.
+    if !scheduler && !guard.allows(request.headers()) {
+        return Ok(OriginGuard::refusal());
+    }
+    if request.uri().path().starts_with(INTERNAL_PREFIX) && !scheduler {
         let mut refused = Response::new(axum::body::Body::from(
             r#"{"code":"not_found","message":"No such route.","fields":[]}"#,
         ));
@@ -97,9 +107,11 @@ pub async fn handle(
 /// Serves `router` on Lambda with response streaming, until the runtime stops.
 /// Build the router first (connections are lazy, so a paused database does not block
 /// start-up) and pass it in; nothing here knows how it was wired.
-pub async fn serve(router: Router) -> Result<(), Error> {
+pub async fn serve(router: Router, guard: OriginGuard) -> Result<(), Error> {
+    let guard = std::sync::Arc::new(guard);
     lambda_http::run_with_streaming_response(service_fn(move |request| {
-        handle(router.clone(), request)
+        let (router, guard) = (router.clone(), guard.clone());
+        async move { handle(router, &guard, request).await }
     }))
     .await
 }
@@ -115,6 +127,18 @@ mod tests {
         Router::new()
             .route("/health", get(|| async { "ok" }))
             .route("/internal/wake/{org}/{job}", post(|| async { "woke" }))
+    }
+
+    fn open() -> OriginGuard {
+        OriginGuard::off()
+    }
+
+    fn with_secret(mut request: Request<Body>, secret: &str) -> Request<Body> {
+        request.headers_mut().insert(
+            antilog_server::origin::ORIGIN_HEADER,
+            secret.parse().unwrap_or_else(|e| unreachable!("{e}")),
+        );
+        request
     }
 
     async fn text(response: Response<axum::body::Body>) -> (StatusCode, String) {
@@ -154,7 +178,7 @@ mod tests {
 
     #[tokio::test]
     async fn a_function_url_request_reaches_the_router() {
-        let response = handle(router(), url_request("/health", "GET"))
+        let response = handle(router(), &open(), url_request("/health", "GET"))
             .await
             .unwrap_or_else(|e| unreachable!("{e}"));
         assert_eq!(text(response).await, (StatusCode::OK, "ok".to_owned()));
@@ -173,7 +197,7 @@ mod tests {
                 .and_then(|v| v.to_str().ok()),
             Some("s3cret")
         );
-        let response = handle(router(), request)
+        let response = handle(router(), &open(), request)
             .await
             .unwrap_or_else(|e| unreachable!("{e}"));
         assert_eq!(text(response).await, (StatusCode::OK, "woke".to_owned()));
@@ -181,11 +205,49 @@ mod tests {
 
     #[tokio::test]
     async fn the_internet_cannot_reach_internal_paths() {
-        let response = handle(router(), url_request("/internal/wake/a/b", "POST"))
+        let response = handle(router(), &open(), url_request("/internal/wake/a/b", "POST"))
             .await
             .unwrap_or_else(|e| unreachable!("{e}"));
         let (status, body) = text(response).await;
         assert_eq!(status, StatusCode::NOT_FOUND);
         assert!(body.contains("not_found"));
+    }
+
+    #[tokio::test]
+    async fn without_the_origin_secret_the_function_refuses_everything_but_the_scheduler() {
+        let guard = OriginGuard::requiring([antilog_core::secrets::Secret::new("front")]);
+        for request in [
+            url_request("/health", "GET"),
+            with_secret(url_request("/health", "GET"), "back"),
+        ] {
+            let response = handle(router(), &guard, request)
+                .await
+                .unwrap_or_else(|e| unreachable!("{e}"));
+            assert_eq!(response.status(), StatusCode::FORBIDDEN);
+        }
+        let through = handle(
+            router(),
+            &guard,
+            with_secret(url_request("/health", "GET"), "front"),
+        )
+        .await
+        .unwrap_or_else(|e| unreachable!("{e}"));
+        assert_eq!(text(through).await, (StatusCode::OK, "ok".to_owned()));
+        let (org, job) = (Uuid::from_u128(1), Uuid::from_u128(2));
+        let wake =
+            from_str(&wake_event(org, job, "s3cret")).unwrap_or_else(|e| unreachable!("{e}"));
+        let response = handle(router(), &guard, wake)
+            .await
+            .unwrap_or_else(|e| unreachable!("{e}"));
+        assert_eq!(text(response).await, (StatusCode::OK, "woke".to_owned()));
+    }
+
+    #[tokio::test]
+    async fn an_unset_secret_fails_closed() {
+        let guard = OriginGuard::requiring([]);
+        let response = handle(router(), &guard, url_request("/health", "GET"))
+            .await
+            .unwrap_or_else(|e| unreachable!("{e}"));
+        assert_eq!(response.status(), StatusCode::FORBIDDEN);
     }
 }

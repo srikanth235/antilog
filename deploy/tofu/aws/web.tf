@@ -86,6 +86,11 @@ resource "aws_cloudfront_distribution" "web" {
     origin_id   = "api"
     domain_name = local.function_url_domain
 
+    custom_header {
+      name  = "x-antilog-origin"
+      value = local.origin_active
+    }
+
     custom_origin_config {
       http_port                = 80
       https_port               = 443

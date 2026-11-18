@@ -95,7 +95,8 @@ resource "aws_lambda_function" "server" {
         RUST_LOG                     = "info"
         ANTILOG_SECRET_DATABASE_URL  = aws_secretsmanager_secret_version.database_url.secret_string
         ANTILOG_WAKE_SECRET          = aws_secretsmanager_secret_version.wake.secret_string
-        ANTILOG_WAKE_SECRET          = aws_secretsmanager_secret_version.wake.secret_string
+        ANTILOG_ORIGIN_SECRET        = local.origin_active
+        ANTILOG_ORIGIN_SECRET_NEXT   = local.origin_next
         ANTILOG_SECRET_RECEIPT_KEY   = aws_secretsmanager_secret_version.receipt_key.secret_string
         ANTILOG_SCHEDULER_GROUP      = aws_scheduler_schedule_group.wake.name
         ANTILOG_SCHEDULER_TARGET_ARN = "arn:aws:lambda:${var.region}:${var.account_id}:function:${local.server_function}"
@@ -127,6 +128,9 @@ resource "aws_lambda_function" "server" {
   depends_on = [aws_iam_role_policy.server]
 }
 
+# The URL is public (a function behind CloudFront cannot be private without IAM signing of
+# POST bodies), so the server itself refuses every request that lacks CloudFront's
+# `x-antilog-origin` secret; see secrets.tf. Only the scheduler's direct invokes pass without it.
 resource "aws_lambda_function_url" "server" {
   function_name      = aws_lambda_function.server.function_name
   authorization_type = "NONE"

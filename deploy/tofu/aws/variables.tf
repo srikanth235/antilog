@@ -128,6 +128,17 @@ variable "github_client_id" {
   default     = ""
 }
 
+variable "origin_secret_active" {
+  description = "Which of the two generated origin secrets (\"a\" or \"b\") CloudFront sends. The function accepts both. Rotate by replacing the other one, then switching this."
+  type        = string
+  default     = "a"
+
+  validation {
+    condition     = contains(["a", "b"], var.origin_secret_active)
+    error_message = "origin_secret_active is \"a\" or \"b\"."
+  }
+}
+
 variable "signin_secrets_populated" {
   description = "Set true once the owner has put the GitHub client secret in its Secrets Manager entry."
   type        = bool

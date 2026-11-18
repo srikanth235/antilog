@@ -71,3 +71,34 @@ resource "aws_secretsmanager_secret_version" "wake" {
   secret_id     = aws_secretsmanager_secret.wake.id
   secret_string = random_password.wake.result
 }
+
+# CloudFront adds one of these to every /api request in `x-antilog-origin`, and the server
+# refuses a request without one of them, so the Lambda function URL (public by design) is no
+# way around CloudFront. Two values exist so one can be rotated while the other still works:
+# CloudFront sends the `origin_secret_active` one; the function accepts both. To rotate, see
+# the README ("Rotating the origin secret").
+resource "random_password" "origin" {
+  for_each = toset(["a", "b"])
+  length   = 48
+  special  = false
+}
+
+locals {
+  origin_other  = var.origin_secret_active == "a" ? "b" : "a"
+  origin_active = random_password.origin[var.origin_secret_active].result
+  origin_next   = random_password.origin[local.origin_other].result
+}
+
+resource "aws_secretsmanager_secret" "origin" {
+  name                    = "${local.prefix}/origin-secret"
+  description             = "CloudFront's secret header for the API origin (active and the other accepted value)"
+  recovery_window_in_days = 7
+}
+
+resource "aws_secretsmanager_secret_version" "origin" {
+  secret_id = aws_secretsmanager_secret.origin.id
+  secret_string = jsonencode({
+    active = local.origin_active
+    other  = local.origin_next
+  })
+}
