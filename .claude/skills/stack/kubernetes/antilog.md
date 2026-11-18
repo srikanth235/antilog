@@ -8,7 +8,7 @@ The one image runs two ways. Phase 1 Antilog cloud runs it pay-per-use on Lambda
 
 - **One container image** for `antilog-server`, with the web app built in, multi-architecture (arm64 and amd64), built with `cargo-chef`, signed with cosign and shipped with an SBOM from syft.
 - **One Helm chart**, `deploy/chart/` (target), for every Kubernetes deployment: an Antilog cloud client on EKS, and every client's self-hosted install, on EKS, AKS, GKE or OpenShift. k3s is used only as the chart's install test in CI. It holds the server Deployment, a migration Job that runs before an upgrade, the Service and Ingress, the judge sandbox node pool's settings, and a values file per cloud.
-- **One OpenTofu module per cloud**, `deploy/tofu/aws/`, `azure/`, `gcp/` (target). It creates what sits around the cluster: managed Postgres (RDS, Azure Database for PostgreSQL, Cloud SQL), a bucket, a key in the cloud's key service, the secret store entries and workload identity for the server's service account. AWS comes first; Azure and GCP are written when the first client on each signs. A client with its own cluster and database uses the chart alone.
+- **One OpenTofu module per cloud**, `deploy/tofu/aws/` (built, for the pay-per-use stage: see [../aws/antilog.md](../aws/antilog.md); the EKS and RDS stage is not written), `azure/`, `gcp/` (target). It creates what sits around the cluster: managed Postgres (RDS, Azure Database for PostgreSQL, Cloud SQL), a bucket, a key in the cloud's key service, the secret store entries and workload identity for the server's service account. AWS comes first; Azure and GCP are written when the first client on each signs. A client with its own cluster and database uses the chart alone.
 
 ## Antilog cloud, in steps
 
@@ -38,8 +38,8 @@ The chart is the same at every Kubernetes stage; only the values and the module 
 ```bash
 helm lint deploy/chart                                    # (target)
 helm template deploy/chart -f deploy/chart/values-aws.yaml # (target) and each cloud's values
-tofu fmt -check -recursive deploy/tofu                    # (target)
-tofu -chdir=deploy/tofu/aws validate                      # (target) and each module
+tofu fmt -check -recursive deploy/tofu
+tofu -chdir=deploy/tofu/aws validate                      # after init -backend=false; and each module
 ```
 
 CI also installs the chart on a k3s cluster and runs a smoke test ([../../land/ci.md](../../land/ci.md)). That is the only use of k3s.

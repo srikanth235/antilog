@@ -6,6 +6,10 @@
 | --- | --- |
 | commits | `.githooks/commit-msg` on every commit since the default branch (the new commits only, on the default branch) |
 | files | `.githooks/pre-commit --all`: secrets, stray and oversized files, em dashes, model names, and `python3 design/tools/tokens.py --check` |
+| tofu | `tofu fmt -check` and `tofu validate` for each module under `deploy/tofu/aws`, with no backend |
+| lambda | `cargo lambda build --release --arm64`, then `cargo lambda watch` and a local `cargo lambda invoke` of `/health` against a Postgres service |
+
+`.github/workflows/deploy-aws.yml` is the only deploy: a pull request is checked without AWS, and a manual run plans and (on request) applies in the `aws-dev` environment, behind its reviewers. A push never starts it.
 
 Add each job below with the first code of its layer, and keep the local hooks fast: anything slower than a second belongs here, not in a hook.
 
@@ -18,8 +22,7 @@ One job per layer, each running the commands in [checks.md](checks.md). A pull r
 | rust | fmt, clippy with warnings denied, tests, `cargo deny`, on Linux and on macOS (the CLI builds for both) |
 | api | the OpenAPI document and generated client are current |
 | storage | the storage suite against Postgres (a container); migrations from empty and from the last release |
-| deploy-config | `helm lint` and `helm template` per cloud, `tofu validate` per module, and an install of the chart on k3s with a smoke test |
-| lambda | `cargo lambda build --release --arm64`, then a local invoke with `cargo lambda watch` and `cargo lambda invoke` against a Postgres container |
+| deploy-config | `helm lint` and `helm template` per cloud, and an install of the chart on k3s with a smoke test |
 | web | typecheck, lint, tests |
 | macos-app | build and test the Swift app, on a macOS runner only |
 | platform | the platform test suite against the fake platform |

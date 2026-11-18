@@ -61,6 +61,8 @@ Do not add a dependency for convenience. A new one is a product call: ask the ow
 | Postgres in tests (`GenericImage`; `testcontainers-modules` 0.15.0 needs `testcontainers` 0.27, so it is dropped) | `testcontainers` | 0.28.0 |
 | Test runner, licences | `cargo-nextest` / `cargo-deny` | 0.9.152 / 0.20.2 |
 
+The three AWS SDK crates are used with `default-features = false` and `default-https-client`, `rt-tokio`: their default `rustls` feature is the legacy client (rustls 0.21 and h2 0.3) and fails `cargo deny`.
+
 Sessions and access tokens need no library: each is 32 random bytes shown once, stored as a SHA-256 hash through the `Store` and compared in constant time. `tower-sessions` was dropped (November 2026): the hashed-token scheme is small and keeps sessions in our own tables. Better Auth was considered and refused: it is TypeScript and keeps its own user, session and organization tables beside ours.
 
 Snowflake, Databricks and BigQuery have no maintained Rust client we would ship; their connectors call each vendor's REST API through `reqwest`. Every connector sits behind one `Connector` trait, so its vocabulary stops there, and each says how to make a read-only, holdout-excluding credential for its system (whether Antilog mints them per session is open). Agent platforms sit behind one agent trait, one adapter each; the judge is a separate trait. Platform crates stay inside each adapter.
@@ -106,7 +108,7 @@ A proposal, not yet built. The app is SwiftUI and macOS only; Windows and Linux 
 | `cargo-chef` (Docker builds) | 0.1.78 |
 | `cargo-lambda` (builds and invokes the Lambda binary) | 1.9.2 |
 | Helm (the chart) | pinned when the chart lands (target) |
-| OpenTofu (one module per cloud) | pinned when the first module lands (target) |
+| OpenTofu (one module per cloud) | 1.13.9, with the `aws` provider `~> 6.73` |
 | k3s (the chart's install test in CI) | pinned when the chart lands (target) |
 | cosign | 3.1.4 |
 | syft | 1.57.1 |
