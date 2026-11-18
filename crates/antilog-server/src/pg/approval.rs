@@ -192,6 +192,24 @@ impl ApprovalStore for PgStore {
         .collect()
     }
 
+    async fn pending_approvals(
+        &self,
+        organization: OrganizationId,
+    ) -> Result<Vec<Approval>, StoreError> {
+        let mut tx = self.scoped(organization).await?;
+        sqlx::query_as!(
+            ApprovalRow,
+            "select id, organization_id, experiment_id, session_id, card, summary, cost_cents, needs_owner, status, decided_by, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from decided_at) * 1000)::bigint as \"decided_at\" from approvals where organization_id = $1 and status = 'pending' order by created_at, id",
+            organization.as_uuid(),
+        )
+        .fetch_all(&mut *tx)
+        .await
+        .map_err(map)?
+        .into_iter()
+        .map(Approval::try_from)
+        .collect()
+    }
+
     async fn append_audit(&self, entry: &AuditEntry) -> Result<(), StoreError> {
         let mut tx = self.scoped(entry.organization_id).await?;
         audit(&mut tx, entry).await?;

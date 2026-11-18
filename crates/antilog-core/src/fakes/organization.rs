@@ -4,7 +4,7 @@ use antilog_types::{
 };
 
 use super::{FakeStore, ledger::not_found, locked};
-use crate::store::{OrganizationStore, SignInRecord, StoreError, TokenRecord};
+use crate::store::{Membership, OrganizationStore, SignInRecord, StoreError, TokenRecord};
 
 impl OrganizationStore for FakeStore {
     async fn create_organization(&self, organization: &Organization) -> Result<(), StoreError> {
@@ -65,6 +65,23 @@ impl OrganizationStore for FakeStore {
                 row.organization_id == organization && row.identity.as_ref() == Some(identity)
             })
             .cloned())
+    }
+
+    async fn memberships(&self, identity: &Identity) -> Result<Vec<Membership>, StoreError> {
+        let ledger = locked(&self.ledger);
+        let mut found: Vec<Membership> = ledger
+            .members
+            .iter()
+            .filter(|row| row.identity.as_ref() == Some(identity))
+            .filter_map(|member| {
+                Some(Membership {
+                    member: member.clone(),
+                    organization: ledger.organization(member.organization_id)?.clone(),
+                })
+            })
+            .collect();
+        found.sort_by_key(|found| (found.member.created_at, found.member.id.as_uuid()));
+        Ok(found)
     }
 
     async fn members(&self, organization: OrganizationId) -> Result<Vec<Member>, StoreError> {

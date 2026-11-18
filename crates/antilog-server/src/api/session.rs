@@ -11,10 +11,11 @@ use antilog_core::store::{OrganizationStore, SessionStore};
 use antilog_core::tools::{Caller, ToolHost, Toolbox, definitions};
 use antilog_types::judge::{Receipt, TrialId};
 use antilog_types::{
-    ApiError, Experiment, ExperimentId, NewExperiment, OrganizationId, ProjectId, SendMessage,
-    Session, SessionId, StartSession, StepResult, ToolCall, ToolDefinition, ToolResult,
+    ApiError, EventPage, Experiment, ExperimentId, NewExperiment, OrganizationId, ProjectId,
+    SendMessage, Session, SessionId, StartSession, StepResult, ToolCall, ToolDefinition,
+    ToolResult,
 };
-use axum::extract::{Path, State};
+use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
@@ -33,6 +34,7 @@ use super::auth::{App, Authed, Fail};
     read,
     message,
     stop,
+    events,
     step,
     tools,
     call,
@@ -263,6 +265,43 @@ async fn stop<D: Deps + 'static>(
     .map_err(Fail::Session)
 }
 
+#[derive(serde::Deserialize, utoipa::IntoParams)]
+#[into_params(parameter_in = Query)]
+#[serde(rename_all = "camelCase")]
+struct EventsQuery {
+    /// The `seq` of the last item already seen; leave out for the start.
+    after: Option<i64>,
+    /// At most this many items (default 100, at most 500).
+    limit: Option<u32>,
+}
+
+#[utoipa::path(
+    get, path = "/sessions/{id}/events", security(("bearer" = [])),
+    params(("id" = SessionId, Path, description = "The session"), EventsQuery),
+    responses(
+        (status = 200, description = "The conversation, oldest first: words people and agents said and the names of tools called, never a tool's output", body = EventPage),
+        (status = 404, body = ApiError),
+    )
+)]
+async fn events<D: Deps + 'static>(
+    State(app): Shared<D>,
+    authed: Authed,
+    Path(id): Path<SessionId>,
+    Query(query): Query<EventsQuery>,
+) -> Result<Json<EventPage>, Fail> {
+    owned(&app, &authed, id).await?;
+    session::transcript(
+        app.store(),
+        authed.who.organization,
+        id,
+        query.after,
+        query.limit,
+    )
+    .await
+    .map(Json)
+    .map_err(Fail::Session)
+}
+
 /// The timer's wake-up for a session. At least once, so safe to call again.
 #[utoipa::path(
     post, path = "/sessions/{id}/step", security(("bearer" = [])),
@@ -429,6 +468,7 @@ pub fn routes<D: Deps + 'static>() -> Router<Arc<App<D>>> {
         .route("/experiments/{id}/tools/{tool}", post(call::<D>))
         .route("/sessions/{id}", get(read::<D>))
         .route("/sessions/{id}/messages", post(message::<D>))
+        .route("/sessions/{id}/events", get(events::<D>))
         .route("/sessions/{id}/stop", post(stop::<D>))
         .route("/sessions/{id}/step", post(step::<D>))
         .route("/trials/{id}/receipt", get(receipt::<D>))

@@ -127,6 +127,22 @@ impl ApprovalStore for FakeStore {
             .collect())
     }
 
+    async fn pending_approvals(
+        &self,
+        organization: OrganizationId,
+    ) -> Result<Vec<Approval>, StoreError> {
+        let mut pending: Vec<_> = locked(&self.ledger)
+            .approvals
+            .iter()
+            .filter(|row| {
+                row.organization_id == organization && row.status == ApprovalStatus::Pending
+            })
+            .cloned()
+            .collect();
+        pending.sort_by_key(|row| (row.created_at, row.id.as_uuid()));
+        Ok(pending)
+    }
+
     async fn append_audit(&self, entry: &AuditEntry) -> Result<(), StoreError> {
         let mut ledger = locked(&self.ledger);
         not_found(ledger.organization(entry.organization_id))?;

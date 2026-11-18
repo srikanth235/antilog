@@ -24,9 +24,31 @@ pub struct SignInStart {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SignInCallback {
-    pub organization: OrganizationId,
+    /// Left out, the person's organizations are found from their identity: the oldest
+    /// membership signs in, and `GET /me` lists the rest.
+    #[serde(default)]
+    pub organization: Option<OrganizationId>,
     pub code: String,
     pub state: String,
+}
+
+/// Who is signed in: the member, their organization and their role in it, and every
+/// organization the same identity belongs to.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Me {
+    pub member: Member,
+    pub organization: Organization,
+    /// Their organization role, which is their default in every project.
+    pub role: Role,
+    pub organizations: Vec<OrganizationRef>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct OrganizationRef {
+    pub id: OrganizationId,
+    pub name: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
@@ -138,6 +160,38 @@ pub struct ProjectSpend {
 pub struct BudgetSummary {
     pub organization: LimitSpend,
     pub projects: Vec<ProjectSpend>,
+}
+
+/// What one kind of spend came to.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct KindSpend {
+    pub kind: crate::SpendKind,
+    pub cents: i64,
+    pub tokens: i64,
+}
+
+/// What one session spent.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SessionSpend {
+    pub session_id: crate::SessionId,
+    pub cents: i64,
+    pub tokens: i64,
+}
+
+/// All the spend of one experiment since it began, against its budget. Spend rows name a session
+/// and a kind, not a trial, so it is split by kind and by session, never by a trial's outcome.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ExperimentSpend {
+    pub experiment_id: crate::ExperimentId,
+    pub project_id: ProjectId,
+    pub budget_cap_cents: i64,
+    pub spent_cents: i64,
+    pub tokens: i64,
+    pub by_kind: Vec<KindSpend>,
+    pub by_session: Vec<SessionSpend>,
 }
 
 /// Newest first; `next` is the cursor for the page after this one.

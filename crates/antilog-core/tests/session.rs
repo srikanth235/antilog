@@ -516,3 +516,79 @@ async fn a_spent_budget_stops_new_sessions_and_measurements() {
     .await;
     assert!(matches!(again, Err(session::SessionError::Budget(_))));
 }
+
+#[tokio::test]
+async fn the_conversation_keeps_words_and_tool_names_and_never_what_a_tool_returned() {
+    let (deps, seed) = world(1_000).await;
+    let (session, handle) = lead(&deps, &seed).await;
+    let org = seed.organization.id;
+    deps.platform.emit(
+        &handle,
+        PlatformEvent::Message {
+            text: "Profiling first.".into(),
+        },
+    );
+    call(
+        &deps,
+        &handle,
+        "c1",
+        "history",
+        json!({"secret-looking": "never stored"}),
+    );
+    session::step(&deps, &Toolbox(&deps), org, session.id)
+        .await
+        .unwrap();
+    session::message(&deps, org, session.id, Some(seed.owner.id), "try caching")
+        .await
+        .unwrap();
+
+    let page = session::transcript(&deps.store, org, session.id, None, None)
+        .await
+        .unwrap();
+    let said: Vec<_> = page
+        .events
+        .iter()
+        .map(|event| (event.kind.as_str(), event.text.as_str()))
+        .collect();
+    assert_eq!(
+        said,
+        vec![
+            ("person", "cut p95"),
+            ("agent", "started claude: cut p95"),
+            ("agent", "Profiling first."),
+            ("tool", "history"),
+            ("person", "try caching"),
+        ]
+    );
+    assert_eq!(page.events[0].member_id, None);
+    assert_eq!(page.events[4].member_id, Some(seed.owner.id));
+    assert!(
+        !serde_json::to_string(&page)
+            .unwrap()
+            .contains("never stored"),
+        "a tool's input is not kept"
+    );
+    assert_eq!(page.next, None);
+
+    let first = session::transcript(&deps.store, org, session.id, None, Some(2))
+        .await
+        .unwrap();
+    assert_eq!(first.events.len(), 2);
+    let next = first.next.expect("more follow");
+    let rest = session::transcript(&deps.store, org, session.id, Some(next), Some(3))
+        .await
+        .unwrap();
+    assert_eq!(rest.events.len(), 3);
+    assert_eq!(rest.next, None);
+    assert!(
+        session::transcript(
+            &deps.store,
+            antilog_types::OrganizationId::new(),
+            session.id,
+            None,
+            None
+        )
+        .await
+        .is_err()
+    );
+}

@@ -409,6 +409,185 @@ async fn who_may_decide_a_card() {
     );
 }
 
+#[tokio::test]
+async fn pending_cards_are_the_ones_this_person_may_decide_across_experiments() {
+    let world = World::new().await;
+    let one = world.project().await;
+    let two = org::create_project(&world.store, &world.owner, T0, "search", "")
+        .await
+        .unwrap();
+    let first = world.experiment(&one, 1_000).await;
+    let second = world.experiment(&two, 1_000).await;
+    let (editor, editor_member) = world.member("ed", Role::Editor).await;
+    let (viewer, _) = world.member("vi", Role::Viewer).await;
+    // Ed is only a viewer in the second project.
+    org::set_project_role(
+        &world.store,
+        &world.owner,
+        T0,
+        two.id,
+        editor_member.id,
+        Some(Role::Viewer),
+    )
+    .await
+    .unwrap();
+
+    let plain = raised(&world, &first, CardKind::RaiseBudget, 100, false, false).await;
+    let elsewhere = raised(&world, &second, CardKind::RaiseBudget, 100, false, false).await;
+    let model = raised(&world, &first, CardKind::SealExperiment, 0, true, true).await;
+    let decided = raised(&world, &first, CardKind::KeepGoing, 0, false, false).await;
+    approval::decide(
+        &world.store,
+        &world.owner,
+        T0,
+        decided.id,
+        Decision::Decline,
+    )
+    .await
+    .unwrap();
+
+    let ids =
+        |cards: Vec<antilog_types::Approval>| cards.into_iter().map(|c| c.id).collect::<Vec<_>>();
+    assert_eq!(
+        ids(approval::pending(&world.store, &world.owner).await.unwrap()),
+        vec![plain.id, elsewhere.id, model.id]
+    );
+    assert_eq!(
+        ids(approval::pending(&world.store, &editor).await.unwrap()),
+        vec![plain.id],
+        "an editor of one project, a viewer of the other, and no value-model card"
+    );
+    assert!(
+        approval::pending(&world.store, &viewer)
+            .await
+            .unwrap()
+            .is_empty()
+    );
+    let stranger = Principal {
+        organization: world.organization.id,
+        member: antilog_types::MemberId::new(),
+    };
+    assert!(matches!(
+        approval::pending(&world.store, &stranger).await,
+        Err(Refusal::Denied)
+    ));
+}
+
+#[tokio::test]
+async fn me_names_the_member_their_role_and_every_organization_of_their_identity() {
+    let world = World::new().await;
+    let me = org::me(&world.store, &world.owner).await.unwrap();
+    assert_eq!(me.member.id, world.owner.member);
+    assert_eq!(
+        (me.role, me.organization.id),
+        (Role::Owner, world.organization.id)
+    );
+    assert_eq!(me.organizations.len(), 1);
+
+    // The same person is invited to a second organization.
+    let (other, signed) = auth::create_organization(&world.store, T0 + 1, "globex", &proven("ada"))
+        .await
+        .unwrap();
+    let there = org::me(
+        &world.store,
+        &Principal {
+            organization: other.id,
+            member: signed.member.id,
+        },
+    )
+    .await
+    .unwrap();
+    let names: Vec<_> = there
+        .organizations
+        .iter()
+        .map(|o| o.name.as_str())
+        .collect();
+    assert_eq!(names, ["acme", "globex"]);
+
+    // A service account has only its own organization.
+    let service = org::add_member(&world.store, &world.owner, T0, "ci", None, Role::Editor)
+        .await
+        .unwrap();
+    let ci = org::me(
+        &world.store,
+        &Principal {
+            organization: world.organization.id,
+            member: service.id,
+        },
+    )
+    .await
+    .unwrap();
+    assert_eq!(ci.organizations.len(), 1);
+    assert!(matches!(
+        org::me(
+            &world.store,
+            &Principal {
+                organization: world.organization.id,
+                member: antilog_types::MemberId::new()
+            }
+        )
+        .await,
+        Err(Refusal::Denied)
+    ));
+}
+
+#[tokio::test]
+async fn signing_in_without_an_organization_finds_the_oldest_membership() {
+    let world = World::new().await;
+    let signed = auth::sign_in(&world.store, T0 + 5, None, &proven("ada"))
+        .await
+        .unwrap();
+    assert_eq!(signed.member.organization_id, world.organization.id);
+
+    let (other, _) = auth::create_organization(&world.store, T0 + 10, "globex", &proven("ada"))
+        .await
+        .unwrap();
+    let again = auth::sign_in(&world.store, T0 + 11, None, &proven("ada"))
+        .await
+        .unwrap();
+    assert_eq!(
+        again.member.organization_id, world.organization.id,
+        "the oldest membership signs in; a named one is still reachable"
+    );
+    let named = auth::sign_in(&world.store, T0 + 12, Some(other.id), &proven("ada"))
+        .await
+        .unwrap();
+    assert_eq!(named.member.organization_id, other.id);
+    assert!(matches!(
+        auth::sign_in(&world.store, T0 + 13, None, &proven("mallory")).await,
+        Err(Refusal::Denied)
+    ));
+}
+
+#[tokio::test]
+async fn spend_is_read_by_experiment_kind_and_session() {
+    let world = World::new().await;
+    let project = world.project().await;
+    let first = world.experiment(&project, 1_000).await;
+    let second = world.experiment(&project, 1_000).await;
+    spend(&world, &first, 40, T0).await;
+    spend(&world, &first, 5, T0 + 1).await;
+    spend(&world, &second, 7, T0).await;
+    let (viewer, _) = world.member("vi", Role::Viewer).await;
+
+    let one = budget::experiment_spend(&world.store, &viewer, first.id)
+        .await
+        .unwrap();
+    assert_eq!((one.spent_cents, one.budget_cap_cents), (45, 1_000));
+    assert_eq!(one.by_session.len(), 2);
+    assert_eq!(one.by_kind.iter().map(|k| k.cents).sum::<i64>(), 45);
+    let all = budget::all_spend(&world.store, &viewer).await.unwrap();
+    assert_eq!(
+        all.iter().map(|s| s.spent_cents).sum::<i64>(),
+        52,
+        "every experiment of the organization"
+    );
+    assert!(matches!(
+        budget::experiment_spend(&world.store, &viewer, antilog_types::ExperimentId::new()).await,
+        Err(Refusal::NotFound)
+    ));
+}
+
 async fn spend(world: &World, experiment: &Experiment, cents: i64, at: i64) {
     let session = Session::new(world.organization.id, experiment.id, "claude", "fake", at);
     world
@@ -591,7 +770,7 @@ async fn sign_in_admits_members_and_audits_strangers() {
     let world = World::new().await;
     let id = world.organization.id;
     let (_, ada) = world.member("grace", Role::Viewer).await;
-    let signed = auth::sign_in(&world.store, T0, id, &proven("grace"))
+    let signed = auth::sign_in(&world.store, T0, Some(id), &proven("grace"))
         .await
         .unwrap();
     assert_eq!(signed.member.id, ada.id);
@@ -602,7 +781,7 @@ async fn sign_in_admits_members_and_audits_strangers() {
     assert_eq!(principal.member, ada.id);
     assert!(matches!(credential, Credential::SignIn(_)));
     assert!(matches!(
-        auth::sign_in(&world.store, T0, id, &proven("mallory")).await,
+        auth::sign_in(&world.store, T0, Some(id), &proven("mallory")).await,
         Err(Refusal::Denied)
     ));
     assert_eq!(world.audited("sign_in", AuditOutcome::Denied).await, 1);
@@ -610,7 +789,7 @@ async fn sign_in_admits_members_and_audits_strangers() {
         auth::sign_in(
             &world.store,
             T0,
-            antilog_types::OrganizationId::new(),
+            Some(antilog_types::OrganizationId::new()),
             &proven("grace")
         )
         .await,

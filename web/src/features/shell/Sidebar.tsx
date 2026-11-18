@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useMatchRoute, useNavigate } from "@tanstack/react-router";
 import { api, unwrap } from "../../api/client";
-import { useMembers, useOrganization } from "../../api/queries";
+import { useMe } from "../../api/queries";
 import { Mark } from "../../components/brand/Brand";
 import { Group } from "../../components/collapsible/Collapsible";
 import { Icon, StatusIcon } from "../../components/icon/Icon";
@@ -9,7 +9,6 @@ import { Menu, MenuItem } from "../../components/menu/Menu";
 import { setAppearance, useAppearance } from "../../lib/appearance";
 import { activityOf, agentName, pendingCards } from "../../lib/domain";
 import { initial } from "../../lib/format";
-import { forgetIdentity, useIdentity } from "../../lib/identity";
 import { setFolded, togglePin, useFolded, usePins } from "../../lib/prefs";
 import { w } from "../../words";
 import { useSidebarData } from "./useSidebarData";
@@ -150,13 +149,11 @@ export function Sidebar() {
 }
 
 function UserMenu() {
-  const identity = useIdentity();
-  const members = useMembers();
-  const organization = useOrganization();
+  const signedIn = useMe().data;
   const appearance = useAppearance();
   const navigate = useNavigate();
   const client = useQueryClient();
-  const me = members.data?.find((member) => member.id === identity?.memberId);
+  const me = signedIn?.member;
   const name = me?.name ?? w.you;
   const via = me?.identity?.provider;
 
@@ -164,7 +161,6 @@ function UserMenu() {
     try {
       unwrap(await api.POST("/auth/sign-out"));
     } finally {
-      forgetIdentity();
       client.clear();
       await navigate({ to: "/signin" });
     }
@@ -187,7 +183,7 @@ function UserMenu() {
             <span className="col grow" style={{ lineHeight: 1.25, textAlign: "left" }}>
               <span style={{ color: "var(--ink)" }}>{name}</span>
               <span className="xs mut">
-                {via === undefined ? organization.data?.name : `via ${via}`}
+                {via === undefined ? signedIn?.organization.name : `via ${via}`}
               </span>
             </span>
             <Icon name="more" size="s" />

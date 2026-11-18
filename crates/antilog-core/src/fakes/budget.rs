@@ -1,7 +1,7 @@
 use antilog_types::{AuditEntry, ExperimentId, OrganizationId, ProjectId, Spend};
 
 use super::{FakeStore, ledger::not_found, locked};
-use crate::store::{BudgetStore, SpendScope, SpendTotal, StoreError};
+use crate::store::{BudgetStore, SpendLine, SpendScope, SpendTotal, StoreError};
 
 impl BudgetStore for FakeStore {
     async fn set_organization_limits(
@@ -77,6 +77,44 @@ impl BudgetStore for FakeStore {
         }
         ledger.spend.push(spend.clone());
         Ok(())
+    }
+
+    async fn spend_lines(
+        &self,
+        organization: OrganizationId,
+        experiment: Option<ExperimentId>,
+    ) -> Result<Vec<SpendLine>, StoreError> {
+        let ledger = locked(&self.ledger);
+        let mut lines: Vec<SpendLine> = Vec::new();
+        for row in ledger
+            .spend
+            .iter()
+            .filter(|row| row.organization_id == organization)
+        {
+            let Some(session) = ledger.session(organization, row.session_id) else {
+                continue;
+            };
+            if experiment.is_some_and(|wanted| wanted != session.experiment_id) {
+                continue;
+            }
+            match lines
+                .iter_mut()
+                .find(|line| line.session == row.session_id && line.kind == row.kind)
+            {
+                Some(line) => {
+                    line.cents += row.amount_cents;
+                    line.tokens += row.tokens;
+                }
+                None => lines.push(SpendLine {
+                    experiment: session.experiment_id,
+                    session: row.session_id,
+                    kind: row.kind,
+                    cents: row.amount_cents,
+                    tokens: row.tokens,
+                }),
+            }
+        }
+        Ok(lines)
     }
 
     async fn spend(

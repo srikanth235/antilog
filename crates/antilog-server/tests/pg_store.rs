@@ -111,6 +111,9 @@ async fn audit_log_and_spend_refuse_every_change() -> anyhow::Result<()> {
         "update spend set amount_cents = 0",
         "delete from spend",
         "truncate spend",
+        "update session_events set text = 'x'",
+        "delete from session_events",
+        "truncate session_events",
     ] {
         let error = sqlx::query(statement).execute(&pool).await.err();
         let code = error.and_then(|error| {
@@ -324,6 +327,43 @@ async fn a_query_that_forgets_its_organization_sees_nothing() -> anyhow::Result<
                 .await?;
         assert_eq!(unscoped, 0, "{table} without an organization set");
     }
+
+    // The identity window shows the rows of one identity and the organizations they belong to, no more.
+    let mut tx = pool.begin().await?;
+    for (setting, value) in [
+        ("antilog.identity_provider", "fake"),
+        ("antilog.identity_subject", "a"),
+    ] {
+        sqlx::query("select set_config($1, $2, true)")
+            .bind(setting)
+            .bind(value)
+            .execute(&mut *tx)
+            .await?;
+    }
+    let members: i64 = sqlx::query_scalar("select count(*) from members")
+        .fetch_one(&mut *tx)
+        .await?;
+    let organizations: Vec<String> = sqlx::query_scalar("select name from organizations")
+        .fetch_all(&mut *tx)
+        .await?;
+    let projects: i64 = sqlx::query_scalar("select count(*) from projects")
+        .fetch_one(&mut *tx)
+        .await?;
+    assert_eq!(
+        (members, organizations, projects),
+        (1, vec!["a".to_owned()], 0)
+    );
+    tx.rollback().await?;
+    assert_eq!(
+        store
+            .memberships(&antilog_types::Identity {
+                provider: "fake".into(),
+                subject: "b".into()
+            })
+            .await?
+            .len(),
+        1
+    );
 
     let mut tx = pool.begin().await?;
     sqlx::query("select set_config('antilog.organization_id', $1, true)")

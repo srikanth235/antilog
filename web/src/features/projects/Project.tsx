@@ -5,12 +5,15 @@ import { api, unwrap } from "../../api/client";
 import {
   keys,
   useBudgets,
+  useMember,
   useMembers,
   useOrganization,
+  usePendingApprovals,
   useProjectExperiments,
   useProjectRoles,
   useProjects,
   useSetProjectRole,
+  useSpend,
 } from "../../api/queries";
 import { Icon, StatusIcon } from "../../components/icon/Icon";
 import { ROLE_OPTIONS } from "../../components/select/roles";
@@ -18,7 +21,6 @@ import { Select } from "../../components/select/Select";
 import { Empty, Failed, Loading } from "../../components/state/State";
 import { activityOf, defaultBudgetCents, isOwner, pendingCards } from "../../lib/domain";
 import { dollars, initial, plural, share } from "../../lib/format";
-import { useIdentity } from "../../lib/identity";
 import { w } from "../../words";
 import { ProjectBudget } from "./ProjectBudget";
 
@@ -27,9 +29,9 @@ export function Project({ projectId }: { projectId: string }) {
   const experiments = useProjectExperiments(projectId);
   const roles = useProjectRoles(projectId);
   const members = useMembers();
+  const me = useMember();
   const organization = useOrganization();
   const budgets = useBudgets();
-  const identity = useIdentity();
   const setRole = useSetProjectRole(projectId);
   const [budgetOpen, setBudgetOpen] = useState(false);
   const project = projects.data?.find((item) => item.id === projectId);
@@ -43,15 +45,8 @@ export function Project({ projectId }: { projectId: string }) {
         ),
     })),
   });
-  const approvals = useQueries({
-    queries: list.map((experiment) => ({
-      queryKey: keys.approvals(experiment.id),
-      queryFn: async () =>
-        unwrap(
-          await api.GET("/experiments/{id}/approvals", { params: { path: { id: experiment.id } } }),
-        ),
-    })),
-  });
+  const pending = usePendingApprovals();
+  const spend = useSpend();
 
   if (projects.isPending)
     return (
@@ -66,8 +61,7 @@ export function Project({ projectId }: { projectId: string }) {
       </section>
     );
 
-  const me = members.data?.find((member) => member.id === identity?.memberId);
-  const myProjectRole = roles.data?.find((role) => role.memberId === identity?.memberId)?.role;
+  const myProjectRole = roles.data?.find((role) => role.memberId === me?.id)?.role;
   const role = myProjectRole ?? me?.role;
   const owner = isOwner(role);
   const spent =
@@ -159,7 +153,9 @@ export function Project({ projectId }: { projectId: string }) {
             {list.map((experiment, index) => {
               const activity = activityOf(
                 sessions[index]?.data ?? [],
-                pendingCards(approvals[index]?.data ?? []).length,
+                pendingCards(
+                  pending.data?.filter((card) => card.experimentId === experiment.id) ?? [],
+                ).length,
               );
               return (
                 <Link
@@ -187,7 +183,11 @@ export function Project({ projectId }: { projectId: string }) {
                       </>
                     )}
                   </span>
-                  <span className="mono">{dollars(experiment.budgetCapCents)}</span>
+                  <span className="mono">
+                    {spend.data === undefined
+                      ? w.noData
+                      : `${dollars(spend.data.find((row) => row.experimentId === experiment.id)?.spentCents ?? 0)} / ${dollars(experiment.budgetCapCents)}`}
+                  </span>
                   <Icon name="chev" size="s" />
                 </Link>
               );

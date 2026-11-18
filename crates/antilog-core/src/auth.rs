@@ -124,13 +124,24 @@ fn audit(
     )
 }
 
-/// Signs a proven identity in to an organization they are a member of. A stranger is refused and audited.
+/// Signs a proven identity in to an organization they are a member of. A stranger is refused and
+/// audited. With no organization named, the identity's own memberships are looked up and the oldest
+/// signs in; `me` lists the rest. A stranger to every organization has none to audit it in.
 pub async fn sign_in<S: Store>(
     store: &S,
     now: i64,
-    organization: OrganizationId,
+    organization: Option<OrganizationId>,
     proven: &Proven,
 ) -> Result<SignedIn, Refusal> {
+    let organization = match organization {
+        Some(organization) => organization,
+        None => store
+            .memberships(&proven.identity)
+            .await?
+            .first()
+            .map(|found| found.organization.id)
+            .ok_or(Refusal::Denied)?,
+    };
     store
         .organization(organization)
         .await?
@@ -203,7 +214,7 @@ pub async fn create_organization<S: Store>(
             ),
         )
         .await?;
-    let signed = sign_in(store, now, organization.id, proven).await?;
+    let signed = sign_in(store, now, Some(organization.id), proven).await?;
     Ok((organization, signed))
 }
 

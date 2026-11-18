@@ -874,3 +874,290 @@ fn openapi_operation_ids_are_unique_and_path_parameters_are_in_the_path() {
         }
     }
 }
+
+/// An organization on a store the test can also reach, for what only the relay or a tool writes.
+async fn org_with_store() -> (Org, Arc<FakeDeps>) {
+    let deps = Arc::new(FakeDeps::new(
+        FakePlatform::default(),
+        FakeCodeHost::default(),
+    ));
+    let app = router(
+        deps.clone(),
+        Settings {
+            providers: vec![Provider::Fake(FakeSignIn)],
+            open_organizations: true,
+            secure_cookies: true,
+            wake_secret: None,
+        },
+    );
+    let created = create_organization(&app, "acme", "ada").await;
+    assert_eq!(created.status, StatusCode::CREATED);
+    let org = Org {
+        owner: created.body["session"]["secret"]
+            .as_str()
+            .unwrap_or_default()
+            .to_owned(),
+        organization: created.body["organization"]["id"]
+            .as_str()
+            .unwrap_or_default()
+            .to_owned(),
+        app,
+    };
+    (org, deps)
+}
+
+#[tokio::test]
+async fn me_names_the_member_and_signing_in_needs_no_organization_id() {
+    let org = org().await;
+    let (_, token) = org.member("grace", "viewer").await;
+
+    let me = org.call(Method::GET, "/me", &token, None).await;
+    assert_eq!(me.status, StatusCode::OK);
+    assert_eq!(me.body["member"]["name"], "grace");
+    assert_eq!(me.body["role"], "viewer");
+    assert_eq!(me.body["organization"]["name"], "acme");
+    assert_eq!(me.body["organizations"][0]["id"], json!(org.organization));
+    assert!(me.body["member"]["identity"]["provider"] == "fake");
+
+    // No organization in the request: the identity's membership is found.
+    let (state, cookie) = start(&org.app).await;
+    let signed = send(
+        &org.app,
+        Method::POST,
+        "/auth/fake/callback",
+        None,
+        Some(&cookie),
+        Some(json!({"code": "fake:grace", "state": state})),
+    )
+    .await;
+    assert_eq!(signed.status, StatusCode::OK);
+    assert_eq!(
+        signed.body["member"]["organizationId"],
+        json!(org.organization)
+    );
+    let (state, cookie) = start(&org.app).await;
+    let stranger = send(
+        &org.app,
+        Method::POST,
+        "/auth/fake/callback",
+        None,
+        Some(&cookie),
+        Some(json!({"code": "fake:mallory", "state": state})),
+    )
+    .await;
+    assert_eq!(stranger.status, StatusCode::FORBIDDEN);
+
+    // The same person in a second organization sees both, and each session is its own.
+    let globex = create_organization(&org.app, "globex", "grace").await;
+    assert_eq!(globex.status, StatusCode::CREATED);
+    let secret = globex.body["session"]["secret"]
+        .as_str()
+        .unwrap_or_default();
+    let there = org.call(Method::GET, "/me", secret, None).await;
+    assert_eq!(there.body["organization"]["name"], "globex");
+    let names: Vec<_> = there.body["organizations"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|o| o["name"].as_str())
+        .collect();
+    assert_eq!(names, ["acme", "globex"]);
+    let still = org.call(Method::GET, "/me", &token, None).await;
+    assert_eq!(still.body["organization"]["name"], "acme");
+}
+
+#[tokio::test]
+async fn pending_cards_the_transcript_and_spend_are_read_across_roles() {
+    use antilog_core::approval::{self, CardRequest};
+    use antilog_core::store::{BudgetStore, NewEvent, SessionStore};
+    use antilog_types::{
+        CardKind, ExperimentId, OrganizationId, Session, Spend, SpendId, SpendKind,
+    };
+
+    let (org, deps) = org_with_store().await;
+    let (_, viewer) = org.member("vi", "viewer").await;
+    let (_, editor) = org.member("ed", "editor").await;
+    let project = org
+        .call(
+            Method::POST,
+            "/projects",
+            &org.owner,
+            Some(json!({"name": "checkout", "description": ""})),
+        )
+        .await;
+    let project_id = project.body["id"].as_str().unwrap_or_default().to_owned();
+    let experiment = org
+        .call(
+            Method::POST,
+            &format!("/projects/{project_id}/experiments"),
+            &editor,
+            Some(json!({"goal": "cut p95", "budgetCapCents": 500})),
+        )
+        .await;
+    assert_eq!(experiment.status, StatusCode::CREATED);
+    let experiment_id = experiment.body["id"]
+        .as_str()
+        .unwrap_or_default()
+        .to_owned();
+    let organization = OrganizationId::from_uuid(org.organization.parse().unwrap_or_default());
+    let experiment_uuid = ExperimentId::from_uuid(experiment_id.parse().unwrap_or_default());
+    let card = approval::raise(
+        &deps.store,
+        1_700_000_000_000,
+        None,
+        CardRequest {
+            organization,
+            experiment: experiment_uuid,
+            session: None,
+            card: CardKind::RaiseBudget,
+            summary: "Raise the budget by $5".into(),
+            cost_cents: Some(500),
+            needs_owner: false,
+            follow_policy: false,
+        },
+    )
+    .await
+    .unwrap_or_else(|e| unreachable!("{e}"));
+
+    let seen = |reply: &Reply| -> Vec<String> {
+        reply
+            .body
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(|c| c["id"].as_str().map(str::to_owned))
+            .collect()
+    };
+    let for_editor = org
+        .call(Method::GET, "/approvals/pending", &editor, None)
+        .await;
+    assert_eq!(seen(&for_editor), vec![card.id.to_string()]);
+    let for_viewer = org
+        .call(Method::GET, "/approvals/pending", &viewer, None)
+        .await;
+    assert_eq!(
+        (for_viewer.status, seen(&for_viewer)),
+        (StatusCode::OK, Vec::new())
+    );
+    let decided = org
+        .call(
+            Method::POST,
+            &format!("/approvals/{}/decision", card.id),
+            &editor,
+            Some(json!({"decision": "approve"})),
+        )
+        .await;
+    assert_eq!(decided.status, StatusCode::OK);
+    let after = org
+        .call(Method::GET, "/approvals/pending", &editor, None)
+        .await;
+    assert!(seen(&after).is_empty());
+
+    // A session with a conversation and spend.
+    let session = Session::new(
+        organization,
+        experiment_uuid,
+        "claude",
+        "fake",
+        1_700_000_000_000,
+    );
+    deps.store
+        .create_session(
+            &session,
+            &antilog_types::AuditEntry::new(
+                organization,
+                None,
+                "session.start",
+                session.id,
+                antilog_types::AuditOutcome::Done,
+                1_700_000_000_000,
+            ),
+        )
+        .await
+        .unwrap_or_else(|e| unreachable!("{e}"));
+    for (i, (kind, text)) in [
+        (antilog_types::EventKind::Person, "make it faster"),
+        (antilog_types::EventKind::Agent, "Profiling."),
+        (antilog_types::EventKind::Tool, "measure"),
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        deps.store
+            .append_event(&NewEvent {
+                organization,
+                session: session.id,
+                key: format!("k{i}"),
+                kind,
+                member: None,
+                text: text.into(),
+                at: 1_700_000_000_000 + i64::try_from(i).unwrap_or_default(),
+            })
+            .await
+            .unwrap_or_else(|e| unreachable!("{e}"));
+    }
+    let page = org
+        .call(
+            Method::GET,
+            &format!("/sessions/{}/events?limit=2", session.id),
+            &viewer,
+            None,
+        )
+        .await;
+    assert_eq!(page.status, StatusCode::OK);
+    assert_eq!(page.body["events"].as_array().map(Vec::len), Some(2));
+    let next = page.body["next"].as_i64().unwrap_or_default();
+    let rest = org
+        .call(
+            Method::GET,
+            &format!("/sessions/{}/events?after={next}", session.id),
+            &viewer,
+            None,
+        )
+        .await;
+    assert_eq!(rest.body["events"][0]["text"], "measure");
+    assert_eq!(rest.body["events"][0]["kind"], "tool");
+    assert!(rest.body["next"].is_null());
+    let missing = org
+        .call(
+            Method::GET,
+            "/sessions/018f3b1e-0000-7000-8000-000000000000/events",
+            &viewer,
+            None,
+        )
+        .await;
+    assert_eq!(missing.status, StatusCode::NOT_FOUND);
+
+    for (kind, cents) in [(SpendKind::Tokens, 40), (SpendKind::Judge, 25)] {
+        deps.store
+            .record_spend(&Spend {
+                id: SpendId::new(),
+                organization_id: organization,
+                session_id: session.id,
+                kind,
+                amount_cents: cents,
+                tokens: 0,
+                occurred_at: 1_700_000_000_000,
+            })
+            .await
+            .unwrap_or_else(|e| unreachable!("{e}"));
+    }
+    let spend = org
+        .call(
+            Method::GET,
+            &format!("/experiments/{experiment_id}/spend"),
+            &viewer,
+            None,
+        )
+        .await;
+    assert_eq!(spend.status, StatusCode::OK);
+    assert_eq!(spend.body["spentCents"], 65);
+    assert_eq!(spend.body["budgetCapCents"], 500);
+    assert_eq!(spend.body["byKind"].as_array().map(Vec::len), Some(2));
+    assert_eq!(
+        spend.body["bySession"][0]["sessionId"],
+        json!(session.id.to_string())
+    );
+    let all = org.call(Method::GET, "/spend", &viewer, None).await;
+    assert_eq!(all.body[0]["spentCents"], 65);
+}

@@ -1,10 +1,12 @@
 //! Budgets and caps: what is left to spend, and the refusal when nothing is.
 
-use antilog_types::{AuditOutcome, ExperimentId, OrganizationId, ProjectId};
+use antilog_types::{
+    AuditOutcome, ExperimentId, ExperimentSpend, KindSpend, OrganizationId, ProjectId, SessionSpend,
+};
 use jiff::Timestamp;
 
 use crate::organization::{Action, Principal, Refusal, entry, member_of, permit, project_of};
-use crate::store::{SpendScope, Store};
+use crate::store::{SpendLine, SpendScope, Store};
 
 /// Epoch milliseconds of the first instant of the UTC month `now` falls in, and of the next.
 pub fn month_bounds(now: i64) -> Option<(i64, i64)> {
@@ -284,4 +286,82 @@ pub async fn summary<S: Store>(store: &S, who: &Principal, now: i64) -> Result<S
         organization,
         projects,
     })
+}
+
+/// One experiment's spend since it began against its budget, by kind and by session. Every member reads.
+pub async fn experiment_spend<S: Store>(
+    store: &S,
+    who: &Principal,
+    experiment: ExperimentId,
+) -> Result<ExperimentSpend, Refusal> {
+    member_of(store, who).await?;
+    let row = store
+        .experiment(who.organization, experiment)
+        .await?
+        .ok_or(Refusal::NotFound)?;
+    let lines = store
+        .spend_lines(who.organization, Some(experiment))
+        .await?;
+    Ok(collect(&row, &lines))
+}
+
+/// The same for every experiment of the organization, oldest experiment first.
+pub async fn all_spend<S: Store>(
+    store: &S,
+    who: &Principal,
+) -> Result<Vec<ExperimentSpend>, Refusal> {
+    member_of(store, who).await?;
+    let lines = store.spend_lines(who.organization, None).await?;
+    let mut all = Vec::new();
+    for project in store.projects(who.organization).await? {
+        for experiment in store.experiments(who.organization, project.id).await? {
+            all.push(collect(&experiment, &lines));
+        }
+    }
+    all.sort_by_key(|spend| spend.experiment_id.as_uuid());
+    Ok(all)
+}
+
+fn collect(experiment: &antilog_types::Experiment, lines: &[SpendLine]) -> ExperimentSpend {
+    let mut spend = ExperimentSpend {
+        experiment_id: experiment.id,
+        project_id: experiment.project_id,
+        budget_cap_cents: experiment.budget_cap_cents,
+        spent_cents: 0,
+        tokens: 0,
+        by_kind: Vec::new(),
+        by_session: Vec::new(),
+    };
+    for line in lines.iter().filter(|line| line.experiment == experiment.id) {
+        spend.spent_cents += line.cents;
+        spend.tokens += line.tokens;
+        match spend.by_kind.iter_mut().find(|kind| kind.kind == line.kind) {
+            Some(kind) => {
+                kind.cents += line.cents;
+                kind.tokens += line.tokens;
+            }
+            None => spend.by_kind.push(KindSpend {
+                kind: line.kind,
+                cents: line.cents,
+                tokens: line.tokens,
+            }),
+        }
+        match spend
+            .by_session
+            .iter_mut()
+            .find(|session| session.session_id == line.session)
+        {
+            Some(session) => {
+                session.cents += line.cents;
+                session.tokens += line.tokens;
+            }
+            None => spend.by_session.push(SessionSpend {
+                session_id: line.session,
+                cents: line.cents,
+                tokens: line.tokens,
+            }),
+        }
+    }
+    spend.by_kind.sort_by_key(|kind| kind.kind.as_str());
+    spend
 }

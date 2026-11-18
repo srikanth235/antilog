@@ -5,12 +5,12 @@
 
 use antilog_types::{
     Approval, ApprovalId, ApprovalStatus, AuditEntry, AuditId, AuditOutcome, CardKind, Cleanup,
-    Decision, Experiment, ExperimentStatus, Identity, Member, MemberId, Organization,
+    Decision, EventKind, Experiment, ExperimentStatus, Identity, Member, MemberId, Organization,
     OrganizationId, Policy, PolicyMode, Project, ProjectRole, Role, Session, SessionStatus, Spend,
     SpendId, SpendKind,
 };
 
-use crate::store::{Invariant, SessionChange, SpendScope, SpendTotal, Store, StoreError};
+use crate::store::{Invariant, NewEvent, SessionChange, SpendScope, SpendTotal, Store, StoreError};
 use crate::token;
 
 const T0: i64 = 1_700_000_000_000;
@@ -138,6 +138,7 @@ pub async fn store_suite<S: Store>(store: &S) {
     store.ping().await.expect("the store answers a ping");
     organizations(store).await;
     members_and_roles(store).await;
+    memberships(store).await;
     tokens(store).await;
     owners_and_sign_ins(store).await;
     budgets_and_spend(store).await;
@@ -400,6 +401,50 @@ async fn members_and_roles<S: Store>(store: &S) {
     );
 }
 
+/// One identity in two organizations is found in both, oldest membership first; a stranger in none.
+async fn memberships<S: Store>(store: &S) {
+    let identity = Identity {
+        provider: "fake".into(),
+        subject: unique(),
+    };
+    let mut joined = Vec::new();
+    for (name, at) in [("later", T0 + 5), ("earlier", T0)] {
+        let organization = Organization::new(format!("{name}-{}", unique()), at);
+        store
+            .create_organization(&organization)
+            .await
+            .expect("created");
+        let member = Member::person(organization.id, "Grace", identity.clone(), Role::Owner, at);
+        store
+            .add_member(&member, &entry(organization.id, member.id, "member.add"))
+            .await
+            .expect("added");
+        joined.push((organization, member));
+    }
+    let found = store.memberships(&identity).await.expect("looked up");
+    let names: Vec<_> = found
+        .iter()
+        .map(|found| found.organization.name.clone())
+        .collect();
+    assert_eq!(
+        names,
+        joined
+            .iter()
+            .rev()
+            .map(|(organization, _)| organization.name.clone())
+            .collect::<Vec<_>>()
+    );
+    assert!(found.iter().all(
+        |found| found.member.organization_id == found.organization.id
+            && found.member.identity.as_ref() == Some(&identity)
+    ));
+    let stranger = Identity {
+        provider: "fake".into(),
+        subject: unique(),
+    };
+    assert!(store.memberships(&stranger).await.expect("none").is_empty());
+}
+
 async fn world_org<S: Store>(store: &S) -> OrganizationId {
     let organization = Organization::new(format!("other-{}", unique()), T0);
     store
@@ -653,6 +698,32 @@ async fn budgets_and_spend<S: Store>(store: &S) {
             .expect("read"),
         sum(0, 0)
     );
+
+    let lines = store
+        .spend_lines(org, Some(first.id))
+        .await
+        .expect("an experiment's lines");
+    let mut got: Vec<_> = lines
+        .iter()
+        .map(|line| (line.session, line.kind.as_str(), line.cents, line.tokens))
+        .collect();
+    got.sort();
+    let mut want = vec![(lead.id, "judge", 25, 0), (lead.id, "tokens", 41, 901)];
+    want.sort();
+    assert_eq!(got, want);
+    assert!(lines.iter().all(|line| line.experiment == first.id));
+    assert_eq!(
+        store.spend_lines(org, None).await.expect("all").len(),
+        3,
+        "the other experiment's sandbox spend joins the rest"
+    );
+    assert!(
+        store
+            .spend_lines(world_org(store).await, None)
+            .await
+            .expect("another organization")
+            .is_empty()
+    );
 }
 
 async fn experiments_and_sessions<S: Store>(store: &S) {
@@ -823,6 +894,82 @@ async fn experiments_and_sessions<S: Store>(store: &S) {
                 T0,
                 None,
             )
+            .await,
+    );
+
+    let say = |key: &str, kind, member, text: &str, at| NewEvent {
+        organization: org,
+        session: lead.id,
+        key: key.to_owned(),
+        kind,
+        member,
+        text: text.to_owned(),
+        at,
+    };
+    for event in [
+        say(
+            "prompt",
+            EventKind::Person,
+            Some(world.owner.id),
+            "make it faster",
+            T0 + 1,
+        ),
+        say("agent:0", EventKind::Agent, None, "On it.", T0 + 2),
+        say("tool:c1", EventKind::Tool, None, "measure", T0 + 3),
+        say("agent:0", EventKind::Agent, None, "On it. (again)", T0 + 4),
+    ] {
+        store.append_event(&event).await.expect("appended");
+    }
+    let all = store
+        .session_events(org, lead.id, 0, 10)
+        .await
+        .expect("the conversation");
+    assert_eq!(
+        all.iter()
+            .map(|event| (event.kind, event.text.as_str()))
+            .collect::<Vec<_>>(),
+        vec![
+            (EventKind::Person, "make it faster"),
+            (EventKind::Agent, "On it."),
+            (EventKind::Tool, "measure"),
+        ],
+        "a key lands once, and the first word stays"
+    );
+    let seqs: Vec<i64> = all.iter().map(|event| event.seq).collect();
+    assert!(seqs.windows(2).all(|pair| pair.first() < pair.get(1)));
+    assert_eq!(
+        all.first().and_then(|event| event.member_id),
+        Some(world.owner.id)
+    );
+    let page = store
+        .session_events(org, lead.id, seqs.first().copied().expect("one"), 1)
+        .await
+        .expect("a page");
+    assert_eq!(page.len(), 1);
+    assert_eq!(
+        page.first().map(|event| event.text.as_str()),
+        Some("On it.")
+    );
+    assert!(
+        store
+            .session_events(org, lead.id, seqs.last().copied().expect("one"), 10)
+            .await
+            .expect("the end")
+            .is_empty()
+    );
+    assert!(
+        store
+            .session_events(world_org(store).await, lead.id, 0, 10)
+            .await
+            .expect("another organization")
+            .is_empty()
+    );
+    not_found(
+        store
+            .append_event(&NewEvent {
+                organization: world_org(store).await,
+                ..say("x", EventKind::Agent, None, "x", T0)
+            })
             .await,
     );
 }
@@ -1019,6 +1166,23 @@ async fn approvals<S: Store>(store: &S) {
             .expect("read")
             .len(),
         3
+    );
+    let waiting = card(CardKind::AttachRepo, ApprovalStatus::Pending);
+    store
+        .request_approval(&waiting, &world.log("approval.request"))
+        .await
+        .expect("requested");
+    let pending = store.pending_approvals(org).await.expect("pending");
+    assert_eq!(
+        pending.iter().map(|row| row.id).collect::<Vec<_>>(),
+        vec![waiting.id]
+    );
+    assert!(
+        store
+            .pending_approvals(world_org(store).await)
+            .await
+            .expect("another organization")
+            .is_empty()
     );
 }
 

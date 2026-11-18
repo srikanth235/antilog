@@ -9,10 +9,10 @@ mod relay;
 mod session;
 
 pub use approval::ApprovalStore;
-pub use budget::{BudgetStore, SpendScope, SpendTotal};
-pub use organization::{OrganizationStore, SignInRecord, TokenRecord};
+pub use budget::{BudgetStore, SpendLine, SpendScope, SpendTotal};
+pub use organization::{Membership, OrganizationStore, SignInRecord, TokenRecord};
 pub use relay::RelayStore;
-pub use session::{SessionChange, SessionStore};
+pub use session::{NewEvent, SessionChange, SessionStore};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
 pub enum Invariant {

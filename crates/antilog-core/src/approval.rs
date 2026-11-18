@@ -150,6 +150,45 @@ pub async fn approvals<S: Store>(
     Ok(store.approvals(who.organization, experiment).await?)
 }
 
+/// Every pending card across the organization's experiments that this person may decide: their
+/// role in the card's project is read from the one place and held against the matrix, so a viewer
+/// sees none and a value-model card shows only to a project owner. Reads write no audit row.
+pub async fn pending<S: Store>(store: &S, who: &Principal) -> Result<Vec<Approval>, Refusal> {
+    member_of(store, who).await?;
+    let mut projects = std::collections::HashMap::new();
+    let mut roles = std::collections::HashMap::new();
+    let mut mine = Vec::new();
+    for approval in store.pending_approvals(who.organization).await? {
+        let project = match projects.get(&approval.experiment_id) {
+            Some(project) => *project,
+            None => {
+                let project = project_of(store, who, approval.experiment_id).await?;
+                projects.insert(approval.experiment_id, project);
+                project
+            }
+        };
+        let role = match roles.get(&project) {
+            Some(role) => *role,
+            None => {
+                let role = store
+                    .role_in_project(who.organization, project, who.member)
+                    .await?;
+                roles.insert(project, role);
+                role
+            }
+        };
+        let action = if approval.needs_owner {
+            Action::ApprovalDecideValueModel
+        } else {
+            Action::ApprovalDecide
+        };
+        if role.is_some_and(|role| role >= action.minimum()) {
+            mine.push(approval);
+        }
+    }
+    Ok(mine)
+}
+
 pub async fn policies<S: Store>(store: &S, who: &Principal) -> Result<Vec<Policy>, Refusal> {
     member_of(store, who).await?;
     Ok(effective(&store.policies(who.organization).await?))

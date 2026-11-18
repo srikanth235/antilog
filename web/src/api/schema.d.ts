@@ -4,6 +4,22 @@
  */
 
 export interface paths {
+    "/approvals/pending": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["pending"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/approvals/{id}/decision": {
         parameters: {
             query?: never;
@@ -196,6 +212,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/experiments/{id}/spend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["experiment_spend"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/experiments/{id}/tools/{tool}": {
         parameters: {
             query?: never;
@@ -220,6 +252,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["health"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["me"];
         put?: never;
         post?: never;
         delete?: never;
@@ -404,6 +452,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sessions/{id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["events"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sessions/{id}/messages": {
         parameters: {
             query?: never;
@@ -447,6 +511,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["stop"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/spend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["all_spend"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -636,6 +716,17 @@ export interface components {
         };
         /** @enum {string} */
         Decision: "approve" | "decline";
+        /**
+         * @description Who spoke: a person, an agent, or the name of a tool an agent called.
+         * @enum {string}
+         */
+        EventKind: "person" | "agent" | "tool";
+        /** @description Oldest first. `next` is the `after` for the page that follows, or `null` when this is the end so far. */
+        EventPage: {
+            events: components["schemas"]["SessionEvent"][];
+            /** Format: int64 */
+            next?: number | null;
+        };
         /** @description The row of an experiment; its sealed definition belongs to the judge. */
         Experiment: {
             /**
@@ -685,6 +776,22 @@ export interface components {
             winReturn?: number | null;
         };
         /**
+         * @description All the spend of one experiment since it began, against its budget. Spend rows name a session
+         *     and a kind, not a trial, so it is split by kind and by session, never by a trial's outcome.
+         */
+        ExperimentSpend: {
+            /** Format: int64 */
+            budgetCapCents: number;
+            byKind: components["schemas"]["KindSpend"][];
+            bySession: components["schemas"]["SessionSpend"][];
+            experimentId: components["schemas"]["ExperimentId"];
+            projectId: components["schemas"]["ProjectId"];
+            /** Format: int64 */
+            spentCents: number;
+            /** Format: int64 */
+            tokens: number;
+        };
+        /**
          * @description Sealing is the judge's; Watching and Regressed are derived, never stored.
          * @enum {string}
          */
@@ -705,6 +812,14 @@ export interface components {
             provider: string;
             subject: string;
         };
+        /** @description What one kind of spend came to. */
+        KindSpend: {
+            /** Format: int64 */
+            cents: number;
+            kind: components["schemas"]["SpendKind"];
+            /** Format: int64 */
+            tokens: number;
+        };
         LimitSpend: {
             /** Format: int64 */
             capCents?: number | null;
@@ -716,6 +831,17 @@ export interface components {
             defaultBudgetCents?: number | null;
             /** Format: int64 */
             monthlyCapCents?: number | null;
+        };
+        /**
+         * @description Who is signed in: the member, their organization and their role in it, and every
+         *     organization the same identity belongs to.
+         */
+        Me: {
+            member: components["schemas"]["Member"];
+            organization: components["schemas"]["Organization"];
+            organizations: components["schemas"]["OrganizationRef"][];
+            /** @description Their organization role, which is their default in every project. */
+            role: components["schemas"]["Role"];
         };
         Member: {
             /** Format: int64 */
@@ -782,6 +908,10 @@ export interface components {
         };
         /** Format: uuid */
         OrganizationId: string;
+        OrganizationRef: {
+            id: components["schemas"]["OrganizationId"];
+            name: string;
+        };
         /** @description What policy does with one card kind. Add credential only ever asks. */
         Policy: {
             card: components["schemas"]["CardKind"];
@@ -871,6 +1001,23 @@ export interface components {
             /** Format: int64 */
             updatedAt: number;
         };
+        /**
+         * @description One item of a session's conversation. A tool call carries only its name, never its input or
+         *     output; the server stores the words people and agents said and nothing a tool returned.
+         */
+        SessionEvent: {
+            /** Format: int64 */
+            at: number;
+            kind: components["schemas"]["EventKind"];
+            memberId?: components["schemas"]["MemberId"] | null;
+            /**
+             * Format: int64
+             * @description Orders the conversation; a page is asked for by the last `seq` seen.
+             */
+            seq: number;
+            sessionId: components["schemas"]["SessionId"];
+            text: string;
+        };
         /** Format: uuid */
         SessionId: string;
         /** @description A sign-in session; the secret is shown once and is also set as a cookie. */
@@ -879,6 +1026,14 @@ export interface components {
             expiresAt: number;
             member: components["schemas"]["Member"];
             secret: string;
+        };
+        /** @description What one session spent. */
+        SessionSpend: {
+            /** Format: int64 */
+            cents: number;
+            sessionId: components["schemas"]["SessionId"];
+            /** Format: int64 */
+            tokens: number;
         };
         /** @enum {string} */
         SessionStatus: "working" | "waiting_for_you" | "done" | "failed";
@@ -891,7 +1046,7 @@ export interface components {
         };
         SignInCallback: {
             code: string;
-            organization: components["schemas"]["OrganizationId"];
+            organization?: components["schemas"]["OrganizationId"] | null;
             state: string;
         };
         SignInProviders: {
@@ -906,6 +1061,8 @@ export interface components {
             /** Format: int32 */
             version: number;
         };
+        /** @enum {string} */
+        SpendKind: "tokens" | "sandbox" | "judge";
         /** @description What starts a session in an experiment. */
         StartSession: {
             agent: string;
@@ -984,6 +1141,26 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    pending: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Every card across experiments that the caller may decide, oldest first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Approval"][];
+                };
+            };
+        };
+    };
     decide: {
         parameters: {
             query?: never;
@@ -1136,7 +1313,7 @@ export interface operations {
                     "application/json": components["schemas"]["ApiError"];
                 };
             };
-            /** @description Not a member of that organization */
+            /** @description Not a member of that organization, or of any when none is named */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -1395,6 +1572,37 @@ export interface operations {
             };
         };
     };
+    experiment_spend: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The experiment */
+                id: components["schemas"]["ExperimentId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Its spend since it began, against its budget */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExperimentSpend"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
     call: {
         parameters: {
             query?: never;
@@ -1451,6 +1659,35 @@ export interface operations {
             };
             /** @description The store does not answer */
             503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    me: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The signed-in member, their organization and role, and the organizations their identity belongs to */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Me"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1884,6 +2121,42 @@ export interface operations {
             };
         };
     };
+    events: {
+        parameters: {
+            query?: {
+                /** @description The `seq` of the last item already seen; leave out for the start. */
+                after?: number;
+                /** @description At most this many items (default 100, at most 500). */
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                /** @description The session */
+                id: components["schemas"]["SessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The conversation, oldest first: words people and agents said and the names of tools called, never a tool's output */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventPage"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
     message: {
         parameters: {
             query?: never;
@@ -1975,6 +2248,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    all_spend: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The spend of every experiment, since it began */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExperimentSpend"][];
                 };
             };
         };

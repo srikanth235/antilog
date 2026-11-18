@@ -1,8 +1,9 @@
 use antilog_types::{
-    Approval, ApprovalStatus, CardKind, OrganizationId, Session, SessionId, SessionStatus,
+    Approval, ApprovalStatus, CardKind, EventKind, OrganizationId, Session, SessionId,
+    SessionStatus,
 };
 
-use super::{STEP, SessionError, audit, book, job, now_ms};
+use super::{STEP, SessionError, audit, book, job, now_ms, record};
 use crate::deps::Deps;
 use crate::platform::{Platform, PlatformError, PlatformEvent, SessionHandle};
 use crate::spend::record_usage;
@@ -70,6 +71,15 @@ async fn pull<D: Deps, H: ToolHost>(
                     name,
                     input,
                 } => {
+                    record(
+                        deps,
+                        session,
+                        format!("tool:{call}"),
+                        EventKind::Tool,
+                        None,
+                        &name,
+                    )
+                    .await?;
                     let caller = Caller {
                         organization: org,
                         experiment: session.experiment_id,
@@ -87,7 +97,18 @@ async fn pull<D: Deps, H: ToolHost>(
                     }
                     pulled.idle = false;
                 }
-                PlatformEvent::Message { .. } => pulled.idle = false,
+                PlatformEvent::Message { text } => {
+                    record(
+                        deps,
+                        session,
+                        format!("agent:{seed}"),
+                        EventKind::Agent,
+                        None,
+                        &text,
+                    )
+                    .await?;
+                    pulled.idle = false;
+                }
                 PlatformEvent::Idle => pulled.idle = true,
                 PlatformEvent::Ended { failed } => pulled.ended = Some(failed),
             }

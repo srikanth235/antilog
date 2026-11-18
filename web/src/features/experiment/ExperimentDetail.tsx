@@ -4,7 +4,7 @@ import {
   useExperiment,
   useExperimentSessions,
   useHistory,
-  useMembers,
+  useMember,
   useProjects,
 } from "../../api/queries";
 import { Icon } from "../../components/icon/Icon";
@@ -12,7 +12,6 @@ import { Empty, Failed, Loading } from "../../components/state/State";
 import { agentName, canEdit, platformName } from "../../lib/domain";
 import { dateTime, dollars } from "../../lib/format";
 import { kept, OUTCOME_WORDS, parseHistory } from "../../lib/history";
-import { useIdentity } from "../../lib/identity";
 import { w } from "../../words";
 import { BudgetDialog } from "./BudgetDialog";
 
@@ -40,8 +39,7 @@ export function ExperimentDetail({ experimentId }: { experimentId: string }) {
   const sessions = useExperimentSessions(experimentId);
   const history = useHistory(experimentId);
   const projects = useProjects();
-  const members = useMembers();
-  const identity = useIdentity();
+  const me = useMember();
   const [budgetOpen, setBudgetOpen] = useState(false);
   if (experiment.isPending)
     return (
@@ -58,7 +56,6 @@ export function ExperimentDetail({ experimentId }: { experimentId: string }) {
   const e = experiment.data;
   const parsed = parseHistory(history.data);
   const project = projects.data?.find((p) => p.id === e.projectId);
-  const me = members.data?.find((m) => m.id === identity?.memberId);
   const list = sessions.data ?? [];
   const cols = "minmax(0, 1.4fr) minmax(0, 1.4fr) 150px 110px";
   return (

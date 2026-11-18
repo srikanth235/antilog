@@ -21,6 +21,13 @@ pub struct SignInRecord {
     pub hash: [u8; 32],
 }
 
+/// One organization a person belongs to, and who they are in it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Membership {
+    pub member: Member,
+    pub organization: Organization,
+}
+
 /// Organizations, members, projects and their roles, access tokens.
 /// Every write takes the audit entry that is stored with it or not at all.
 pub trait OrganizationStore {
@@ -52,6 +59,13 @@ pub trait OrganizationStore {
         organization: OrganizationId,
         identity: &Identity,
     ) -> impl Future<Output = Result<Option<Member>, StoreError>> + Send;
+
+    /// Every organization this identity is a member of, oldest membership first. The one
+    /// read that crosses organizations; it sees only rows of the identity it is given.
+    fn memberships(
+        &self,
+        identity: &Identity,
+    ) -> impl Future<Output = Result<Vec<Membership>, StoreError>> + Send;
 
     fn members(
         &self,

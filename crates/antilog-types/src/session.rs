@@ -111,6 +111,34 @@ impl Session {
     }
 }
 
+text_enum!(
+    /// Who spoke: a person, an agent, or the name of a tool an agent called.
+    EventKind { Person => "person", Agent => "agent", Tool => "tool" }
+);
+
+/// One item of a session's conversation. A tool call carries only its name, never its input or
+/// output; the server stores the words people and agents said and nothing a tool returned.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SessionEvent {
+    /// Orders the conversation; a page is asked for by the last `seq` seen.
+    pub seq: i64,
+    pub session_id: SessionId,
+    pub kind: EventKind,
+    /// Who said it, for a person's message.
+    pub member_id: Option<MemberId>,
+    pub text: String,
+    pub at: i64,
+}
+
+/// Oldest first. `next` is the `after` for the page that follows, or `null` when this is the end so far.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct EventPage {
+    pub events: Vec<SessionEvent>,
+    pub next: Option<i64>,
+}
+
 /// What starts an experiment in a project. The budget defaults to the project's, then the organization's.
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]

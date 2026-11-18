@@ -5,20 +5,19 @@ import { useProviders } from "../../api/queries";
 import { Mark } from "../../components/brand/Brand";
 import { Icon } from "../../components/icon/Icon";
 import { w } from "../../words";
-import { failureOf, fakeSignIn, lastOrganization, startRedirect } from "./signin";
+import { failureOf, fakeSignIn, startRedirect } from "./signin";
 
 export function SignIn({ failure }: { failure: "refused" | "noaccess" | undefined }) {
   const providers = useProviders();
   const navigate = useNavigate();
   const client = useQueryClient();
-  const [organization, setOrganization] = useState(lastOrganization());
   const [error, setError] = useState<"refused" | "noaccess" | undefined>(failure);
   const names = providers.data ?? [];
 
   const redirect = async (provider: string) => {
     setError(undefined);
     try {
-      await startRedirect(provider, organization);
+      await startRedirect(provider);
     } catch (caught) {
       setError(failureOf(caught));
     }
@@ -89,21 +88,8 @@ export function SignIn({ failure }: { failure: "refused" | "noaccess" | undefine
           !names.includes("fake") ? (
             <p className="t-body ink2">{w.signIn.noProviders}</p>
           ) : null}
-          {names.some((name) => name === "github" || name === "google") ? (
-            <label className="field">
-              <span className="xs mut">{w.signIn.organization}</span>
-              <input
-                className="input"
-                value={organization}
-                onChange={(e) => setOrganization(e.target.value)}
-              />
-              <span className="xs mut">{w.signIn.organizationHint}</span>
-            </label>
-          ) : null}
         </div>
-        {names.includes("fake") ? (
-          <FakeForm onDone={done} onFail={setError} initialOrganization={organization} />
-        ) : null}
+        {names.includes("fake") ? <FakeForm onDone={done} onFail={setError} /> : null}
         {error === "refused" ? (
           <p
             className="rw g8 sm"
@@ -146,17 +132,15 @@ function Heading({ title, lead }: { title: string; lead: string }) {
 function FakeForm(props: {
   onDone: () => Promise<void>;
   onFail: (failure: "refused" | "noaccess") => void;
-  initialOrganization: string;
 }) {
   const [name, setName] = useState("");
-  const [organization, setOrganization] = useState(props.initialOrganization);
   const [create, setCreate] = useState(false);
   const [orgName, setOrgName] = useState("");
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     try {
-      await fakeSignIn({ name, organization, newOrganization: create ? orgName : null });
+      await fakeSignIn({ name, newOrganization: create ? orgName : null });
       await props.onDone();
     } catch (caught) {
       props.onFail(failureOf(caught));
@@ -189,17 +173,7 @@ function FakeForm(props: {
             onChange={(e) => setOrgName(e.target.value)}
           />
         </label>
-      ) : (
-        <label className="field">
-          {w.signIn.organization}
-          <input
-            className="input"
-            required
-            value={organization}
-            onChange={(e) => setOrganization(e.target.value)}
-          />
-        </label>
-      )}
+      ) : null}
       <button type="submit" className="btn full">
         {w.signIn.testGo}
       </button>

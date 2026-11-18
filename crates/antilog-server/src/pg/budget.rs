@@ -1,7 +1,9 @@
-use antilog_core::store::{BudgetStore, SpendScope, SpendTotal, StoreError};
-use antilog_types::{AuditEntry, ExperimentId, OrganizationId, ProjectId, Spend};
+use antilog_core::store::{BudgetStore, SpendLine, SpendScope, SpendTotal, StoreError};
+use antilog_types::{
+    AuditEntry, ExperimentId, OrganizationId, ProjectId, SessionId, Spend, SpendKind,
+};
 
-use super::{PgStore, audit, map};
+use super::{PgStore, audit, corrupt, map};
 
 impl BudgetStore for PgStore {
     async fn set_organization_limits(
@@ -97,6 +99,33 @@ impl BudgetStore for PgStore {
         .await
         .map_err(map)?;
         tx.commit().await.map_err(map)
+    }
+
+    async fn spend_lines(
+        &self,
+        organization: OrganizationId,
+        experiment: Option<ExperimentId>,
+    ) -> Result<Vec<SpendLine>, StoreError> {
+        let mut tx = self.scoped(organization).await?;
+        sqlx::query!(
+            "select n.experiment_id, s.session_id, s.kind, coalesce(sum(s.amount_cents), 0)::bigint as \"cents!\", coalesce(sum(s.tokens), 0)::bigint as \"tokens!\" from spend s join sessions n on n.organization_id = s.organization_id and n.id = s.session_id where s.organization_id = $1 and ($2::uuid is null or n.experiment_id = $2) group by n.experiment_id, s.session_id, s.kind order by n.experiment_id, s.session_id, s.kind",
+            organization.as_uuid(),
+            experiment.map(|id| id.as_uuid()),
+        )
+        .fetch_all(&mut *tx)
+        .await
+        .map_err(map)?
+        .into_iter()
+        .map(|row| {
+            Ok(SpendLine {
+                experiment: ExperimentId::from_uuid(row.experiment_id),
+                session: SessionId::from_uuid(row.session_id),
+                kind: SpendKind::parse(&row.kind).ok_or_else(|| corrupt("spend kind", &row.kind))?,
+                cents: row.cents,
+                tokens: row.tokens,
+            })
+        })
+        .collect()
     }
 
     async fn spend(

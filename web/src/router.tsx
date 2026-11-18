@@ -8,7 +8,7 @@ import {
   redirect,
 } from "@tanstack/react-router";
 import { ApiFailure, api, unwrap } from "./api/client";
-import { keys, useOrganization } from "./api/queries";
+import { keys, useMe } from "./api/queries";
 import { TipProvider } from "./components/tooltip/Tooltip";
 import { AddEvaluation } from "./features/customize/AddEvaluation";
 import { EvaluationDetail } from "./features/customize/EvaluationDetail";
@@ -81,8 +81,8 @@ const app = createRoute({
   beforeLoad: async ({ context }) => {
     try {
       await context.queryClient.fetchQuery({
-        queryKey: keys.organization(),
-        queryFn: async () => unwrap(await api.GET("/organization")),
+        queryKey: keys.me(),
+        queryFn: async () => unwrap(await api.GET("/me")),
         staleTime: 60_000,
         retry: false,
       });
@@ -93,7 +93,7 @@ const app = createRoute({
     }
   },
   component: function Shell() {
-    useOrganization();
+    useMe();
     return (
       <div className="board app shell">
         <Sidebar />

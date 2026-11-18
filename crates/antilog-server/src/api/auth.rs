@@ -11,7 +11,7 @@ use antilog_core::organization::{Principal, Refusal};
 use antilog_core::store::Invariant;
 use antilog_core::token::SESSION_TTL_MS;
 use antilog_types::{
-    ApiError, OrganizationCreated, SessionIssued, SignInCallback, SignInProviders, SignInStart,
+    ApiError, Me, OrganizationCreated, SessionIssued, SignInCallback, SignInProviders, SignInStart,
 };
 use axum::extract::{FromRequestParts, Path, State};
 use axum::http::header::{AUTHORIZATION, COOKIE, SET_COOKIE};
@@ -301,7 +301,7 @@ fn set_cookie(name: &str, value: &str, max_age: i64, secure: bool) -> HeaderValu
 
 #[derive(OpenApi)]
 #[openapi(
-    paths(providers, start, callback, create_organization, sign_out),
+    paths(providers, start, callback, create_organization, sign_out, me),
     modifiers(&Bearer)
 )]
 pub struct ApiDoc;
@@ -420,7 +420,7 @@ fn issued(
     responses(
         (status = 200, description = "Signed in; the session is also set as a cookie", body = SessionIssued),
         (status = 401, description = "The provider did not accept the sign-in", body = ApiError),
-        (status = 403, description = "Not a member of that organization", body = ApiError),
+        (status = 403, description = "Not a member of that organization, or of any when none is named", body = ApiError),
     )
 )]
 async fn callback<D: Deps + 'static>(
@@ -493,6 +493,22 @@ async fn sign_out<D: Deps + 'static>(
         .into_response())
 }
 
+#[utoipa::path(
+    get, path = "/me", security(("bearer" = [])),
+    responses(
+        (status = 200, description = "The signed-in member, their organization and role, and the organizations their identity belongs to", body = Me),
+        (status = 401, description = "Not signed in", body = ApiError),
+    )
+)]
+async fn me<D: Deps + 'static>(
+    State(app): State<Arc<App<D>>>,
+    authed: Authed,
+) -> Result<Json<Me>, Fail> {
+    Ok(Json(
+        antilog_core::organization::me(app.store(), &authed.who).await?,
+    ))
+}
+
 pub fn routes<D: Deps + 'static>() -> Router<Arc<App<D>>> {
     Router::new()
         .route("/auth/providers", get(providers::<D>))
@@ -503,4 +519,5 @@ pub fn routes<D: Deps + 'static>() -> Router<Arc<App<D>>> {
             post(create_organization::<D>),
         )
         .route("/auth/sign-out", post(sign_out::<D>))
+        .route("/me", get(me::<D>))
 }

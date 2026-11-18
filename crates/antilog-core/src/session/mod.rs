@@ -3,15 +3,15 @@ mod relay;
 use std::time::Duration;
 
 use antilog_types::{
-    AuditEntry, AuditOutcome, ExperimentId, MemberId, OrganizationId, Session, SessionId,
-    SessionStatus,
+    AuditEntry, AuditOutcome, EventKind, ExperimentId, MemberId, OrganizationId, Session,
+    SessionId, SessionStatus,
 };
 use jiff::SignedDuration;
 
 use crate::deps::Deps;
 use crate::platform::{Platform, PlatformError, SessionHandle, SessionSpec};
 use crate::spend::{BudgetError, ensure_budget};
-use crate::store::{SessionChange, SessionStore, StoreError};
+use crate::store::{NewEvent, SessionChange, SessionStore, StoreError};
 use crate::timer::{JobId, Timer, TimerError};
 use crate::tools::definitions;
 
@@ -68,6 +68,30 @@ pub(crate) async fn book<D: Deps>(
         .checked_add(after)
         .unwrap_or_else(|_| deps.clock().now());
     deps.timer().wake_at(organization, job(session), at).await
+}
+
+/// Keeps one item of the conversation. Only the words said and the name of a tool called, never a
+/// tool's input or output. Keyed, so a relay that delivers it twice records it once.
+pub(crate) async fn record<D: Deps>(
+    deps: &D,
+    session: &Session,
+    key: String,
+    kind: EventKind,
+    member: Option<MemberId>,
+    text: &str,
+) -> Result<(), SessionError> {
+    deps.store()
+        .append_event(&NewEvent {
+            organization: session.organization_id,
+            session: session.id,
+            key,
+            kind,
+            member,
+            text: text.chars().take(100_000).collect(),
+            at: now_ms(deps),
+        })
+        .await?;
+    Ok(())
 }
 
 pub(crate) fn audit<D: Deps>(
@@ -128,6 +152,17 @@ pub async fn start<D: Deps>(
     session.parent = new.parent;
     let entry = audit(deps, organization, new.actor, "session.start", session.id);
     deps.store().create_session(&session, &entry).await?;
+    if !new.prompt.trim().is_empty() {
+        record(
+            deps,
+            &session,
+            "prompt".to_owned(),
+            EventKind::Person,
+            new.actor,
+            &new.prompt,
+        )
+        .await?;
+    }
     let spec = SessionSpec {
         agent: new.agent,
         prompt: new.prompt,
@@ -200,8 +235,17 @@ pub async fn message<D: Deps>(
     actor: Option<MemberId>,
     text: &str,
 ) -> Result<Session, SessionError> {
-    let (_, handle) = active(deps, organization, id).await?;
+    let (row, handle) = active(deps, organization, id).await?;
     deps.platform().send_input(&handle, text).await?;
+    record(
+        deps,
+        &row,
+        format!("message:{}", uuid::Uuid::now_v7()),
+        EventKind::Person,
+        actor,
+        text,
+    )
+    .await?;
     let change = SessionChange {
         status: Some(SessionStatus::Working),
         ..SessionChange::default()
@@ -257,4 +301,30 @@ pub async fn budget_left<D: Deps>(
         .ok_or(SessionError::NotFound)?;
     let spent = crate::spend::spent(deps.store(), deps.clock(), organization, experiment).await?;
     Ok(row.budget_cap_cents.saturating_sub(spent.cents))
+}
+
+/// The default and largest page of a conversation.
+pub const PAGE: u32 = 100;
+pub const PAGE_MAX: u32 = 500;
+
+/// A page of the conversation, oldest first, after the `seq` the reader last saw.
+pub async fn transcript<S: SessionStore>(
+    store: &S,
+    organization: OrganizationId,
+    session: SessionId,
+    after: Option<i64>,
+    limit: Option<u32>,
+) -> Result<antilog_types::EventPage, SessionError> {
+    let limit = limit.unwrap_or(PAGE).clamp(1, PAGE_MAX);
+    store
+        .session(organization, session)
+        .await?
+        .ok_or(SessionError::NotFound)?;
+    let mut events = store
+        .session_events(organization, session, after.unwrap_or(0).max(0), limit + 1)
+        .await?;
+    let more = events.len() > limit as usize;
+    events.truncate(limit as usize);
+    let next = events.last().filter(|_| more).map(|event| event.seq);
+    Ok(antilog_types::EventPage { events, next })
 }

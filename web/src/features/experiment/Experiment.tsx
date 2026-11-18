@@ -7,6 +7,7 @@ import {
   useExperimentApprovals,
   useExperimentSessions,
   useHistory,
+  useMember,
   useMembers,
   useProjects,
   useSendMessage,
@@ -23,7 +24,6 @@ import {
   platformName,
 } from "../../lib/domain";
 import { parseHistory } from "../../lib/history";
-import { useIdentity } from "../../lib/identity";
 import { w } from "../../words";
 import { ApprovalCard } from "./ApprovalCard";
 import { BudgetDialog } from "./BudgetDialog";
@@ -48,7 +48,7 @@ export function Experiment(props: {
   const history = useHistory(experimentId);
   const projects = useProjects();
   const members = useMembers();
-  const identity = useIdentity();
+  const me = useMember();
   const client = useQueryClient();
   const navigate = useNavigate();
   const [budgetOpen, setBudgetOpen] = useState(false);
@@ -74,7 +74,6 @@ export function Experiment(props: {
     return <Failed error={experiment.error} retry={() => void experiment.refetch()} />;
   const e = experiment.data;
   const project = projects.data?.find((p) => p.id === e.projectId);
-  const me = members.data?.find((member) => member.id === identity?.memberId);
   const editor = canEdit(me?.role);
   const cards = approvals.data ?? [];
   const waiting = pendingCards(cards);

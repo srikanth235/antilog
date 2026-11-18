@@ -1,8 +1,8 @@
 use std::future::Future;
 
 use antilog_types::{
-    AuditEntry, Cleanup, Experiment, ExperimentId, ExperimentStatus, OrganizationId, ProjectId,
-    Session, SessionId, SessionStatus,
+    AuditEntry, Cleanup, EventKind, Experiment, ExperimentId, ExperimentStatus, MemberId,
+    OrganizationId, ProjectId, Session, SessionEvent, SessionId, SessionStatus,
 };
 
 use super::StoreError;
@@ -14,6 +14,19 @@ pub struct SessionChange {
     pub note: Option<String>,
     pub platform_handle: Option<String>,
     pub cleanup: Option<Cleanup>,
+}
+
+/// One item to append to a conversation. `key` is unique within the session: appending it again
+/// changes nothing, so a relay that delivers a page twice records it once.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct NewEvent {
+    pub organization: OrganizationId,
+    pub session: SessionId,
+    pub key: String,
+    pub kind: EventKind,
+    pub member: Option<MemberId>,
+    pub text: String,
+    pub at: i64,
 }
 
 pub trait SessionStore {
@@ -73,4 +86,17 @@ pub trait SessionStore {
         at: i64,
         audit: Option<&AuditEntry>,
     ) -> impl Future<Output = Result<Session, StoreError>> + Send;
+
+    /// Idempotent on (session, key). Refused with `NotFound` for a session that is not there.
+    fn append_event(&self, event: &NewEvent)
+    -> impl Future<Output = Result<(), StoreError>> + Send;
+
+    /// The conversation, oldest first: up to `limit` items after `after` (a `seq`; 0 for the start).
+    fn session_events(
+        &self,
+        organization: OrganizationId,
+        session: SessionId,
+        after: i64,
+        limit: u32,
+    ) -> impl Future<Output = Result<Vec<SessionEvent>, StoreError>> + Send;
 }

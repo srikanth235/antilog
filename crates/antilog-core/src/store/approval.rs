@@ -52,6 +52,12 @@ pub trait ApprovalStore {
         experiment: ExperimentId,
     ) -> impl Future<Output = Result<Vec<Approval>, StoreError>> + Send;
 
+    /// Every card of the organization still waiting for a person, oldest first.
+    fn pending_approvals(
+        &self,
+        organization: OrganizationId,
+    ) -> impl Future<Output = Result<Vec<Approval>, StoreError>> + Send;
+
     /// For what has no write to ride on, such as a denial.
     fn append_audit(
         &self,

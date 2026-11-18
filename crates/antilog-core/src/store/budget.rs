@@ -1,6 +1,8 @@
 use std::future::Future;
 
-use antilog_types::{AuditEntry, ExperimentId, OrganizationId, ProjectId, Spend};
+use antilog_types::{
+    AuditEntry, ExperimentId, OrganizationId, ProjectId, SessionId, Spend, SpendKind,
+};
 
 use super::StoreError;
 
@@ -13,6 +15,16 @@ pub enum SpendScope {
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct SpendTotal {
+    pub cents: i64,
+    pub tokens: i64,
+}
+
+/// What one session spent of one kind, summed over all time.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SpendLine {
+    pub experiment: ExperimentId,
+    pub session: SessionId,
+    pub kind: SpendKind,
     pub cents: i64,
     pub tokens: i64,
 }
@@ -47,6 +59,13 @@ pub trait BudgetStore {
     ) -> impl Future<Output = Result<(), StoreError>> + Send;
 
     fn record_spend(&self, spend: &Spend) -> impl Future<Output = Result<(), StoreError>> + Send;
+
+    /// The organization's spend summed per experiment, session and kind, or one experiment's.
+    fn spend_lines(
+        &self,
+        organization: OrganizationId,
+        experiment: Option<ExperimentId>,
+    ) -> impl Future<Output = Result<Vec<SpendLine>, StoreError>> + Send;
 
     /// Spend that occurred in `from..to` (epoch milliseconds).
     fn spend(

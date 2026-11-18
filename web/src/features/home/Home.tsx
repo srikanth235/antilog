@@ -2,13 +2,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { type FormEvent, useState } from "react";
 import { api, unwrap } from "../../api/client";
-import { keys, useMembers, useOrganization, useProjects } from "../../api/queries";
+import { keys, useMember, useOrganization, useProjects } from "../../api/queries";
 import { Glyph, Icon } from "../../components/icon/Icon";
 import { Select } from "../../components/select/Select";
 import { reason } from "../../components/state/State";
 import { canEdit, defaultBudgetCents, parseRepos } from "../../lib/domain";
 import { parseDollars } from "../../lib/format";
-import { useIdentity } from "../../lib/identity";
 import { w } from "../../words";
 import { NewProject } from "../projects/NewProject";
 import { useSidebarData } from "../shell/useSidebarData";
@@ -18,8 +17,7 @@ import { Waiting } from "./Waiting";
 export function Home({ project: preferred }: { project: string | undefined }) {
   const projects = useProjects();
   const organization = useOrganization();
-  const members = useMembers();
-  const identity = useIdentity();
+  const me = useMember();
   const navigate = useNavigate();
   const client = useQueryClient();
   const data = useSidebarData();
@@ -33,7 +31,6 @@ export function Home({ project: preferred }: { project: string | undefined }) {
   const [creating, setCreating] = useState(false);
 
   const list = projects.data ?? [];
-  const me = members.data?.find((member) => member.id === identity?.memberId);
   const selectedId =
     chosen ?? (list.some((p) => p.id === preferred) ? (preferred ?? null) : (list[0]?.id ?? null));
   const project = list.find((p) => p.id === selectedId);

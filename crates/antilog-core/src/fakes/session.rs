@@ -1,10 +1,10 @@
 use antilog_types::{
     AuditEntry, Experiment, ExperimentId, ExperimentStatus, OrganizationId, ProjectId, Session,
-    SessionId,
+    SessionEvent, SessionId,
 };
 
 use super::{FakeStore, ledger::not_found, locked};
-use crate::store::{Invariant, SessionChange, SessionStore, StoreError};
+use crate::store::{Invariant, NewEvent, SessionChange, SessionStore, StoreError};
 
 impl SessionStore for FakeStore {
     async fn create_experiment(
@@ -143,5 +143,48 @@ impl SessionStore for FakeStore {
         let updated = row.clone();
         ledger.audit.extend(audit.cloned());
         Ok(updated)
+    }
+
+    async fn append_event(&self, event: &NewEvent) -> Result<(), StoreError> {
+        let mut ledger = locked(&self.ledger);
+        not_found(ledger.session(event.organization, event.session))?;
+        let key = format!("{}:{}", event.session.as_uuid(), event.key);
+        if ledger.events.iter().any(|(known, _)| *known == key) {
+            return Ok(());
+        }
+        let seq = i64::try_from(ledger.events.len()).unwrap_or(i64::MAX) + 1;
+        ledger.events.push((
+            key,
+            SessionEvent {
+                seq,
+                session_id: event.session,
+                kind: event.kind,
+                member_id: event.member,
+                text: event.text.clone(),
+                at: event.at,
+            },
+        ));
+        Ok(())
+    }
+
+    async fn session_events(
+        &self,
+        organization: OrganizationId,
+        session: SessionId,
+        after: i64,
+        limit: u32,
+    ) -> Result<Vec<SessionEvent>, StoreError> {
+        let ledger = locked(&self.ledger);
+        if ledger.session(organization, session).is_none() {
+            return Ok(Vec::new());
+        }
+        Ok(ledger
+            .events
+            .iter()
+            .map(|(_, event)| event)
+            .filter(|event| event.session_id == session && event.seq > after)
+            .take(limit as usize)
+            .cloned()
+            .collect())
     }
 }

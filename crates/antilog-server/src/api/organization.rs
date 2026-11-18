@@ -9,9 +9,9 @@ use antilog_core::store::OrganizationStore;
 use antilog_core::{approval, budget};
 use antilog_types::{
     AccessToken, ApiError, Approval, ApprovalId, AuditCursor, AuditId, AuditPage, BudgetSummary,
-    Decide, ExperimentBudget, ExperimentId, LimitSpend, Limits, Member, MemberId, NewMember,
-    NewProject, NewToken, Organization, Policy, Project, ProjectId, ProjectRole, ProjectSpend,
-    SetProjectRole, SetRole, TokenId, TokenIssued,
+    Decide, ExperimentBudget, ExperimentId, ExperimentSpend, LimitSpend, Limits, Member, MemberId,
+    NewMember, NewProject, NewToken, Organization, Policy, Project, ProjectId, ProjectRole,
+    ProjectSpend, SetProjectRole, SetRole, TokenId, TokenIssued,
 };
 use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
@@ -45,6 +45,9 @@ type Reply<T> = Result<Json<T>, Fail>;
     policies,
     set_policy,
     approvals,
+    pending,
+    experiment_spend,
+    all_spend,
     decide,
     audit
 ))]
@@ -389,6 +392,43 @@ async fn approvals<D: Deps + 'static>(
 }
 
 #[utoipa::path(
+    get, path = "/experiments/{id}/spend", security(("bearer" = [])),
+    params(("id" = ExperimentId, Path, description = "The experiment")),
+    responses(
+        (status = 200, description = "Its spend since it began, against its budget", body = ExperimentSpend),
+        (status = 404, body = ApiError),
+    )
+)]
+async fn experiment_spend<D: Deps + 'static>(
+    State(app): Shared<D>,
+    authed: Authed,
+    Path(id): Path<ExperimentId>,
+) -> Reply<ExperimentSpend> {
+    Ok(Json(
+        budget::experiment_spend(app.store(), &authed.who, id).await?,
+    ))
+}
+
+#[utoipa::path(
+    get, path = "/spend", security(("bearer" = [])),
+    responses((status = 200, description = "The spend of every experiment, since it began", body = Vec<ExperimentSpend>))
+)]
+async fn all_spend<D: Deps + 'static>(
+    State(app): Shared<D>,
+    authed: Authed,
+) -> Reply<Vec<ExperimentSpend>> {
+    Ok(Json(budget::all_spend(app.store(), &authed.who).await?))
+}
+
+#[utoipa::path(
+    get, path = "/approvals/pending", security(("bearer" = [])),
+    responses((status = 200, description = "Every card across experiments that the caller may decide, oldest first", body = Vec<Approval>))
+)]
+async fn pending<D: Deps + 'static>(State(app): Shared<D>, authed: Authed) -> Reply<Vec<Approval>> {
+    Ok(Json(approval::pending(app.store(), &authed.who).await?))
+}
+
+#[utoipa::path(
     post, path = "/approvals/{id}/decision", security(("bearer" = [])),
     params(("id" = ApprovalId, Path, description = "The card")),
     request_body = Decide,
@@ -464,6 +504,9 @@ pub fn routes<D: Deps + 'static>() -> Router<Arc<App<D>>> {
         .route("/tokens", get(tokens::<D>).post(create_token::<D>))
         .route("/tokens/{id}", delete(revoke_token::<D>))
         .route("/policies", get(policies::<D>).put(set_policy::<D>))
+        .route("/spend", get(all_spend::<D>))
+        .route("/experiments/{id}/spend", get(experiment_spend::<D>))
+        .route("/approvals/pending", get(pending::<D>))
         .route("/approvals/{id}/decision", post(decide::<D>))
         .route("/audit", get(audit::<D>))
 }

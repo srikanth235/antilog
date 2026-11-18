@@ -2,20 +2,18 @@ import { useQueries } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { api, unwrap } from "../../api/client";
-import { keys, useBudgets, useMembers, useProjects } from "../../api/queries";
+import { keys, useBudgets, useMember, useProjects } from "../../api/queries";
 import { Icon } from "../../components/icon/Icon";
 import { Empty, Failed, Loading } from "../../components/state/State";
 import { canEdit } from "../../lib/domain";
 import { dollars, plural } from "../../lib/format";
-import { useIdentity } from "../../lib/identity";
 import { w } from "../../words";
 import { NewProject } from "./NewProject";
 
 export function Projects() {
   const projects = useProjects();
   const budgets = useBudgets();
-  const members = useMembers();
-  const identity = useIdentity();
+  const me = useMember();
   const [query, setQuery] = useState("");
   const [creating, setCreating] = useState(false);
   const list = projects.data ?? [];
@@ -35,7 +33,6 @@ export function Projects() {
         unwrap(await api.GET("/projects/{id}/roles", { params: { path: { id: project.id } } })),
     })),
   });
-  const me = members.data?.find((member) => member.id === identity?.memberId);
   const visible = list.filter((project) =>
     project.name.toLowerCase().includes(query.toLowerCase()),
   );
@@ -109,9 +106,7 @@ export function Projects() {
           </div>
           {visible.map((project) => {
             const index = list.indexOf(project);
-            const own = roles[index]?.data?.find(
-              (role) => role.memberId === identity?.memberId,
-            )?.role;
+            const own = roles[index]?.data?.find((role) => role.memberId === me?.id)?.role;
             const role = own ?? me?.role;
             const spend = budgets.data?.projects.find(
               (entry) => entry.projectId === project.id,

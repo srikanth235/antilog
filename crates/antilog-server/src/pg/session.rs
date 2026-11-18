@@ -1,7 +1,7 @@
-use antilog_core::store::{SessionChange, SessionStore, StoreError};
+use antilog_core::store::{NewEvent, SessionChange, SessionStore, StoreError};
 use antilog_types::{
-    AuditEntry, Cleanup, Experiment, ExperimentId, ExperimentStatus, MemberId, OrganizationId,
-    ProjectId, Session, SessionId, SessionStatus,
+    AuditEntry, Cleanup, EventKind, Experiment, ExperimentId, ExperimentStatus, MemberId,
+    OrganizationId, ProjectId, Session, SessionEvent, SessionId, SessionStatus,
 };
 use uuid::Uuid;
 
@@ -264,5 +264,55 @@ impl SessionStore for PgStore {
         }
         tx.commit().await.map_err(map)?;
         row.try_into()
+    }
+
+    async fn append_event(&self, event: &NewEvent) -> Result<(), StoreError> {
+        let mut tx = self.scoped(event.organization).await?;
+        sqlx::query!(
+            "insert into session_events (organization_id, session_id, key, kind, member_id, text, at) values ($1, $2, $3, $4, $5, $6, to_timestamp($7::bigint / 1000.0)) on conflict (session_id, key) do nothing",
+            event.organization.as_uuid(),
+            event.session.as_uuid(),
+            event.key,
+            event.kind.as_str(),
+            event.member.map(|member| member.as_uuid()),
+            event.text,
+            event.at,
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(map)?;
+        tx.commit().await.map_err(map)
+    }
+
+    async fn session_events(
+        &self,
+        organization: OrganizationId,
+        session: SessionId,
+        after: i64,
+        limit: u32,
+    ) -> Result<Vec<SessionEvent>, StoreError> {
+        let mut tx = self.scoped(organization).await?;
+        sqlx::query!(
+            "select seq, kind, member_id, text, (extract(epoch from at) * 1000)::bigint as \"at!\" from session_events where organization_id = $1 and session_id = $2 and seq > $3 order by seq limit $4",
+            organization.as_uuid(),
+            session.as_uuid(),
+            after,
+            i64::from(limit),
+        )
+        .fetch_all(&mut *tx)
+        .await
+        .map_err(map)?
+        .into_iter()
+        .map(|row| {
+            Ok(SessionEvent {
+                seq: row.seq,
+                session_id: session,
+                kind: EventKind::parse(&row.kind).ok_or_else(|| corrupt("event kind", &row.kind))?,
+                member_id: row.member_id.map(MemberId::from_uuid),
+                text: row.text,
+                at: row.at,
+            })
+        })
+        .collect()
     }
 }

@@ -10,6 +10,8 @@ import { api, type Schemas, unwrap } from "./client";
 
 export const keys = {
   providers: () => ["providers"] as const,
+  me: () => ["me"] as const,
+  pending: () => ["approvals", "pending"] as const,
   organization: () => ["organization"] as const,
   members: () => ["members"] as const,
   projects: () => ["projects"] as const,
@@ -22,6 +24,9 @@ export const keys = {
   receipt: (trial: string) => ["trials", trial, "receipt"] as const,
   history: (id: string) => ["experiments", id, "history"] as const,
   budgets: () => ["budgets"] as const,
+  spend: () => ["spend"] as const,
+  experimentSpend: (id: string) => ["experiments", id, "spend"] as const,
+  transcript: (session: string) => ["sessions", session, "events"] as const,
   policies: () => ["policies"] as const,
   tokens: () => ["tokens"] as const,
   audit: () => ["audit"] as const,
@@ -39,7 +44,30 @@ export function useProviders() {
   });
 }
 
-/** Also the "am I signed in" probe: a 401 means no. */
+/** Who is signed in, and the "am I signed in" probe: a 401 means no. */
+export function useMe() {
+  return useQuery({
+    queryKey: keys.me(),
+    queryFn: async () => unwrap(await api.GET("/me")),
+    retry: false,
+    staleTime: 60_000,
+  });
+}
+
+/** The signed-in member, once `/me` has answered. */
+export function useMember() {
+  return useMe().data?.member;
+}
+
+/** Every card across experiments the person may decide; Home and the sidebar read this one list. */
+export function usePendingApprovals() {
+  return useQuery({
+    queryKey: keys.pending(),
+    queryFn: async () => unwrap(await api.GET("/approvals/pending")),
+    refetchInterval: LIVE_MS,
+  });
+}
+
 export function useOrganization() {
   return useQuery({
     queryKey: keys.organization(),
@@ -117,6 +145,25 @@ export function useBudgets() {
   return useQuery({
     queryKey: keys.budgets(),
     queryFn: async () => unwrap(await api.GET("/budgets")),
+  });
+}
+
+/** The spend of every experiment since it began: the project table and "Where the spend went". */
+export function useSpend() {
+  return useQuery({
+    queryKey: keys.spend(),
+    queryFn: async () => unwrap(await api.GET("/spend")),
+    refetchInterval: LIVE_MS * 4,
+  });
+}
+
+/** One experiment's spend against its budget, by kind and by session: the ring and the breakdown. */
+export function useExperimentSpend(id: string) {
+  return useQuery({
+    queryKey: keys.experimentSpend(id),
+    queryFn: async () =>
+      unwrap(await api.GET("/experiments/{id}/spend", { params: { path: { id } } })),
+    refetchInterval: LIVE_MS,
   });
 }
 

@@ -66,8 +66,6 @@ export const w = {
       `This account has no access to ${host}. Ask an owner to invite you.`,
     anotherAccount: "Use another account",
     signOut: "Sign out",
-    organization: "Organization ID",
-    organizationHint: "Needed once on this browser.",
     testAccount: "Test sign-in",
     testAccountHint: "For local servers and agents only. It is not offered on a real server.",
     testName: "Account name",

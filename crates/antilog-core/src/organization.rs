@@ -1,9 +1,9 @@
 //! The organization floor's action layer: one permission check, one audit entry per write.
 
 use antilog_types::{
-    AccessToken, AuditEntry, AuditId, AuditOutcome, Experiment, ExperimentId, Identity, Member,
-    MemberId, NewExperiment, Organization, OrganizationId, Project, ProjectId, ProjectRole, Role,
-    TokenId,
+    AccessToken, AuditEntry, AuditId, AuditOutcome, Experiment, ExperimentId, Identity, Me, Member,
+    MemberId, NewExperiment, Organization, OrganizationId, OrganizationRef, Project, ProjectId,
+    ProjectRole, Role, TokenId,
 };
 
 use crate::store::{Invariant, Store, StoreError};
@@ -225,6 +225,39 @@ pub async fn permit<S: Store>(
             Err(Refusal::Denied)
         }
     }
+}
+
+/// Who is signed in, and every organization their identity belongs to.
+pub async fn me<S: Store>(store: &S, who: &Principal) -> Result<Me, Refusal> {
+    let member = member_of(store, who).await?;
+    let organization = store
+        .organization(who.organization)
+        .await?
+        .ok_or(Refusal::NotFound)?;
+    let mut organizations = match &member.identity {
+        Some(identity) => store
+            .memberships(identity)
+            .await?
+            .into_iter()
+            .map(|found| OrganizationRef {
+                id: found.organization.id,
+                name: found.organization.name,
+            })
+            .collect(),
+        None => Vec::new(),
+    };
+    if organizations.is_empty() {
+        organizations.push(OrganizationRef {
+            id: organization.id,
+            name: organization.name.clone(),
+        });
+    }
+    Ok(Me {
+        role: member.role,
+        member,
+        organization,
+        organizations,
+    })
 }
 
 /// A read needs only membership: every member reads every project.

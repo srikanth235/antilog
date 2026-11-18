@@ -1,4 +1,4 @@
-use antilog_core::store::{OrganizationStore, SignInRecord, StoreError, TokenRecord};
+use antilog_core::store::{Membership, OrganizationStore, SignInRecord, StoreError, TokenRecord};
 use antilog_types::{
     AccessToken, AuditEntry, Identity, Member, MemberId, MemberKind, Organization, OrganizationId,
     Project, ProjectId, ProjectRole, Role, SignInId, SignInSession, TokenId,
@@ -184,6 +184,52 @@ impl OrganizationStore for PgStore {
         .map_err(map)?
         .map(Member::try_from)
         .transpose()
+    }
+
+    async fn memberships(&self, identity: &Identity) -> Result<Vec<Membership>, StoreError> {
+        let mut tx = self.pool.begin().await.map_err(map)?;
+        for (setting, value) in [
+            ("antilog.identity_provider", &identity.provider),
+            ("antilog.identity_subject", &identity.subject),
+        ] {
+            sqlx::query("select set_config($1, $2, true)")
+                .bind(setting)
+                .bind(value)
+                .execute(&mut *tx)
+                .await
+                .map_err(map)?;
+        }
+        let rows = sqlx::query_as!(
+            MemberRow,
+            "select id, organization_id, kind, name, provider, subject, role, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\" from members where provider = $1 and subject = $2 order by created_at, id",
+            identity.provider,
+            identity.subject,
+        )
+        .fetch_all(&mut *tx)
+        .await
+        .map_err(map)?;
+        let mut found = Vec::with_capacity(rows.len());
+        for row in rows {
+            let organization = sqlx::query!(
+                "select id, name, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", monthly_cap_cents, default_budget_cents from organizations where id = $1",
+                row.organization_id,
+            )
+            .fetch_one(&mut *tx)
+            .await
+            .map_err(map)?;
+            found.push(Membership {
+                member: Member::try_from(row)?,
+                organization: Organization {
+                    id: OrganizationId::from_uuid(organization.id),
+                    name: organization.name,
+                    created_at: organization.created_at,
+                    monthly_cap_cents: organization.monthly_cap_cents,
+                    default_budget_cents: organization.default_budget_cents,
+                },
+            });
+        }
+        tx.commit().await.map_err(map)?;
+        Ok(found)
     }
 
     async fn members(&self, organization: OrganizationId) -> Result<Vec<Member>, StoreError> {

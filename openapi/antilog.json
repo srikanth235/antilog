@@ -10,6 +10,32 @@
     "version": "0.0.0"
   },
   "paths": {
+    "/approvals/pending": {
+      "get": {
+        "tags": [],
+        "operationId": "pending",
+        "responses": {
+          "200": {
+            "description": "Every card across experiments that the caller may decide, oldest first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Approval"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/approvals/{id}/decision": {
       "post": {
         "tags": [],
@@ -219,7 +245,7 @@
             }
           },
           "403": {
-            "description": "Not a member of that organization",
+            "description": "Not a member of that organization, or of any when none is named",
             "content": {
               "application/json": {
                 "schema": {
@@ -573,6 +599,49 @@
         ]
       }
     },
+    "/experiments/{id}/spend": {
+      "get": {
+        "tags": [],
+        "operationId": "experiment_spend",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The experiment",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ExperimentId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Its spend since it began, against its budget",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExperimentSpend"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/experiments/{id}/tools/{tool}": {
       "post": {
         "tags": [],
@@ -660,6 +729,39 @@
             }
           }
         }
+      }
+    },
+    "/me": {
+      "get": {
+        "tags": [],
+        "operationId": "me",
+        "responses": {
+          "200": {
+            "description": "The signed-in member, their organization and role, and the organizations their identity belongs to",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
       }
     },
     "/members": {
@@ -1233,6 +1335,70 @@
         ]
       }
     },
+    "/sessions/{id}/events": {
+      "get": {
+        "tags": [],
+        "operationId": "events",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The session",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/SessionId"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "description": "The `seq` of the last item already seen; leave out for the start.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "At most this many items (default 100, at most 500).",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The conversation, oldest first: words people and agents said and the names of tools called, never a tool's output",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventPage"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/sessions/{id}/messages": {
       "post": {
         "tags": [],
@@ -1359,6 +1525,32 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/spend": {
+      "get": {
+        "tags": [],
+        "operationId": "all_spend",
+        "responses": {
+          "200": {
+            "description": "The spend of every experiment, since it began",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExperimentSpend"
+                  }
                 }
               }
             }
@@ -1993,6 +2185,38 @@
           "decline"
         ]
       },
+      "EventKind": {
+        "type": "string",
+        "description": "Who spoke: a person, an agent, or the name of a tool an agent called.",
+        "enum": [
+          "person",
+          "agent",
+          "tool"
+        ]
+      },
+      "EventPage": {
+        "type": "object",
+        "description": "Oldest first. `next` is the `after` for the page that follows, or `null` when this is the end so far.",
+        "required": [
+          "events"
+        ],
+        "properties": {
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SessionEvent"
+            }
+          },
+          "next": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false
+      },
       "Experiment": {
         "type": "object",
         "description": "The row of an experiment; its sealed definition belongs to the judge.",
@@ -2151,6 +2375,52 @@
         },
         "additionalProperties": false
       },
+      "ExperimentSpend": {
+        "type": "object",
+        "description": "All the spend of one experiment since it began, against its budget. Spend rows name a session\nand a kind, not a trial, so it is split by kind and by session, never by a trial's outcome.",
+        "required": [
+          "experimentId",
+          "projectId",
+          "budgetCapCents",
+          "spentCents",
+          "tokens",
+          "byKind",
+          "bySession"
+        ],
+        "properties": {
+          "budgetCapCents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "byKind": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/KindSpend"
+            }
+          },
+          "bySession": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SessionSpend"
+            }
+          },
+          "experimentId": {
+            "$ref": "#/components/schemas/ExperimentId"
+          },
+          "projectId": {
+            "$ref": "#/components/schemas/ProjectId"
+          },
+          "spentCents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "tokens": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false
+      },
       "ExperimentStatus": {
         "type": "string",
         "description": "Sealing is the judge's; Watching and Regressed are derived, never stored.",
@@ -2217,6 +2487,29 @@
         },
         "additionalProperties": false
       },
+      "KindSpend": {
+        "type": "object",
+        "description": "What one kind of spend came to.",
+        "required": [
+          "kind",
+          "cents",
+          "tokens"
+        ],
+        "properties": {
+          "cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/SpendKind"
+          },
+          "tokens": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false
+      },
       "LimitSpend": {
         "type": "object",
         "required": [
@@ -2253,6 +2546,35 @@
               "null"
             ],
             "format": "int64"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Me": {
+        "type": "object",
+        "description": "Who is signed in: the member, their organization and their role in it, and every\norganization the same identity belongs to.",
+        "required": [
+          "member",
+          "organization",
+          "role",
+          "organizations"
+        ],
+        "properties": {
+          "member": {
+            "$ref": "#/components/schemas/Member"
+          },
+          "organization": {
+            "$ref": "#/components/schemas/Organization"
+          },
+          "organizations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrganizationRef"
+            }
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role",
+            "description": "Their organization role, which is their default in every project."
           }
         },
         "additionalProperties": false
@@ -2479,6 +2801,22 @@
       "OrganizationId": {
         "type": "string",
         "format": "uuid"
+      },
+      "OrganizationRef": {
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/OrganizationId"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
       },
       "Policy": {
         "type": "object",
@@ -2777,6 +3115,49 @@
         },
         "additionalProperties": false
       },
+      "SessionEvent": {
+        "type": "object",
+        "description": "One item of a session's conversation. A tool call carries only its name, never its input or\noutput; the server stores the words people and agents said and nothing a tool returned.",
+        "required": [
+          "seq",
+          "sessionId",
+          "kind",
+          "text",
+          "at"
+        ],
+        "properties": {
+          "at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/EventKind"
+          },
+          "memberId": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/MemberId",
+                "description": "Who said it, for a person's message."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "seq": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Orders the conversation; a page is asked for by the last `seq` seen."
+          },
+          "sessionId": {
+            "$ref": "#/components/schemas/SessionId"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "SessionId": {
         "type": "string",
         "format": "uuid"
@@ -2799,6 +3180,29 @@
           },
           "secret": {
             "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SessionSpend": {
+        "type": "object",
+        "description": "What one session spent.",
+        "required": [
+          "sessionId",
+          "cents",
+          "tokens"
+        ],
+        "properties": {
+          "cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "sessionId": {
+            "$ref": "#/components/schemas/SessionId"
+          },
+          "tokens": {
+            "type": "integer",
+            "format": "int64"
           }
         },
         "additionalProperties": false
@@ -2844,7 +3248,6 @@
       "SignInCallback": {
         "type": "object",
         "required": [
-          "organization",
           "code",
           "state"
         ],
@@ -2853,7 +3256,15 @@
             "type": "string"
           },
           "organization": {
-            "$ref": "#/components/schemas/OrganizationId"
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/OrganizationId",
+                "description": "Left out, the person's organizations are found from their identity: the oldest\nmembership signs in, and `GET /me` lists the rest."
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "state": {
             "type": "string"
@@ -2909,6 +3320,14 @@
           }
         },
         "additionalProperties": false
+      },
+      "SpendKind": {
+        "type": "string",
+        "enum": [
+          "tokens",
+          "sandbox",
+          "judge"
+        ]
       },
       "StartSession": {
         "type": "object",

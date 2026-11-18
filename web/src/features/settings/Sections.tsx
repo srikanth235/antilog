@@ -5,6 +5,7 @@ import {
   useAudit,
   useBudgets,
   useCreateToken,
+  useMember,
   useMembers,
   useOrganization,
   usePolicies,
@@ -23,18 +24,11 @@ import { useToast } from "../../components/toast/Toast";
 import { setAppearance, useAppearance } from "../../lib/appearance";
 import { isOwner } from "../../lib/domain";
 import { date, dateTime, dollars, initial, parseDollars, share } from "../../lib/format";
-import { useIdentity } from "../../lib/identity";
 import { w } from "../../words";
 import { ReadOnly, Row, Table } from "./Table";
 
-function useMe() {
-  const members = useMembers();
-  const identity = useIdentity();
-  return members.data?.find((member) => member.id === identity?.memberId);
-}
-
 export function Profile() {
-  const me = useMe();
+  const me = useMember();
   const organization = useOrganization();
   const p = w.settings.profile;
   return (
@@ -93,7 +87,7 @@ export function Tokens() {
   const create = useCreateToken();
   const revoke = useRevokeToken();
   const toast = useToast();
-  const me = useMe();
+  const me = useMember();
   const [name, setName] = useState("");
   const [shown, setShown] = useState<string | null>(null);
   const [revoking, setRevoking] = useState<Schemas["AccessToken"] | null>(null);
@@ -218,7 +212,7 @@ export function Tokens() {
 export function General() {
   const organization = useOrganization();
   const set = useSetOrganizationLimits();
-  const me = useMe();
+  const me = useMember();
   const toast = useToast();
   const g = w.settings.general;
   const o = organization.data;
@@ -317,7 +311,7 @@ export function Members() {
   const members = useMembers();
   const add = useAddMember();
   const setRole = useSetMemberRole();
-  const me = useMe();
+  const me = useMember();
   const owner = isOwner(me?.role);
   const m = w.settings.members;
   const [name, setName] = useState("");
@@ -445,7 +439,7 @@ export function Members() {
 export function Approvals() {
   const policies = usePolicies();
   const set = useSetPolicy();
-  const me = useMe();
+  const me = useMember();
   const owner = isOwner(me?.role);
   const a = w.settings.approvals;
   const cols = "minmax(0, 1.4fr) 160px 120px";
@@ -599,7 +593,7 @@ function readable(action: string): string {
 }
 
 export function Audit() {
-  const me = useMe();
+  const me = useMember();
   const audit = useAudit();
   const members = useMembers();
   const a = w.settings.audit;
