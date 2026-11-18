@@ -171,6 +171,7 @@ No passwords. Antilog cloud offers exactly two sign-ins, GitHub (OAuth with its 
 | 18 Nov 2026 | Done and Failed sessions are final; resuming means a new session. |
 | 18 Nov 2026 | The seal is refused when the smallest gain the setup can detect is above 10% of the baseline; tuned after the spike. |
 | 18 Nov 2026 | Only the receipt is signed; it carries a hash of each of its measurements. |
+| 18 Nov 2026 | The kill-switch runs under a role the owner creates and holds, outside `antilog-*`, so the agent's boundary cannot reach it. |
 
 Decided calls also appear on the Decisions board.
 
