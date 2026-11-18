@@ -1,3 +1,5 @@
+pub mod judge;
+
 use std::future::Future;
 
 use antilog_types::{Organization, OrganizationId};
