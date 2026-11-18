@@ -35,150 +35,136 @@
   <main id="main">
     <section class="lp-heroband" id="top" aria-labelledby="h-hero">
       <div class="wrap-in lp-hero">
-        <div class="col g24 copy">
-          <p class="lp-eyebrow"><span class="dot" aria-hidden="true"></span>Cloud cost optimization for SaaS teams</p>
-          <h1 class="t-hero" id="h-hero">Cut your cloud bill without pulling engineers off features.</h1>
+        <h1 class="t-hero" id="h-hero">Cut your cloud bill without pulling engineers off features.</h1>
+        <div class="lp-herobar">
           <p class="lead">Antilog finds the inefficiencies inflating your cloud costs and fixes them across code, databases, caches and connected services. You set the goal, the quality bar and the budget. Only independently verified improvements reach your team, ready to review.</p>
           <div class="ctas">
             <a class="btn primary big" href="mailto:hello@antilog.tech">Talk to us</a>
             <a class="btn big ghost" href="#how">See how it works<i class="ic s i-arrow" aria-hidden="true"></i></a>
           </div>
-          <ul class="lp-trust" aria-label="In short">
-            <li><i class="ic i-check" aria-hidden="true"></i>A hard spending limit</li>
-            <li><i class="ic i-check" aria-hidden="true"></i>Quality requirements always hold</li>
-            <li><i class="ic i-check" aria-hidden="true"></i>Nothing merges without your developers</li>
-          </ul>
         </div>
-        <figure class="lp-stage">
-          <div class="card lp-rc" role="group" aria-label="Example improvement ready for review">
-            <div class="h"><div class="col" style="gap: 4px; min-width: 0;"><span class="t-label">Ready for review</span><span class="t-item">Cache product lookups in the checkout service</span></div><span class="tg" style="--c: var(--good);">Verified</span></div>
-            <div class="r"><span class="k">Goal</span><span class="v"><i class="ic i-chart" aria-hidden="true"></i><span>Lower compute cost for checkout</span></span></div>
-            <div class="r"><span class="k">Saving</span><span class="v"><i class="ic i-check" aria-hidden="true"></i><span>Measured against the code it started from, beyond noise</span></span></div>
-            <div class="r"><span class="k">Quality</span><span class="v"><i class="ic i-check" aria-hidden="true"></i><span>Every requirement held: p95 latency, error rate, tests</span></span></div>
-            <div class="r"><span class="k">Verified</span><span class="v"><i class="ic i-check" aria-hidden="true"></i><span>In a fresh sandbox, and on data the agent never saw</span></span></div>
-            <div class="r"><span class="k">Experiment cost</span><span class="v"><i class="ic i-check" aria-hidden="true"></i><span>Inside your budget, itemized</span></span></div>
-            <div class="f"><span class="sig"><i class="ic i-verify" aria-hidden="true"></i>Signed by the judge</span><span class="btn primary sm">Review pull request<i class="ic s i-arrow" aria-hidden="true"></i></span></div>
+        <figure class="lp-ledger">
+          <div class="lp-log" role="group" aria-label="Example judge's log for one goal">
+            <div class="lg-head"><p class="goal" style="margin: 0;">Goal<b>Lower compute cost for checkout</b></p><span class="cols">The judge's verdict on each change an agent tried</span></div>
+            <ol class="lg-rows">
+              <li class="lg-row"><span class="what">Batch inventory calls</span><span class="tg hollow" style="--c: var(--ink3);">Within noise</span></li>
+              <li class="lg-row"><span class="what">Index orders.customer_id</span><span class="tg" style="--c: var(--bad);">Worse</span></li>
+              <li class="lg-row"><span class="what">Drop a slow test</span><span class="tg hollow" style="--c: var(--bad);">Rejected: changed a protected path</span></li>
+              <li class="lg-row"><span class="what">Rewrite serializer</span><span class="tg" style="--c: var(--warn);">Guardrail failed: p95 latency</span></li>
+              <li class="lg-row"><span class="what">Pool DB connections</span><span class="tg" style="--c: var(--bad);">Failed holdout</span></li>
+              <li class="lg-row kept">
+                <div class="kt"><span class="what">Cache product lookups</span><span class="tg">Kept</span></div>
+                <div class="lg-end"><i class="ic i-verify" aria-hidden="true"></i>Pull request opened · receipt signed by the judge</div>
+              </li>
+            </ol>
           </div>
-          <figcaption class="t-meta">An example. A real one carries the measured numbers.</figcaption>
+          <figcaption>An example. A real log carries the measured numbers.</figcaption>
         </figure>
       </div>
     </section>
 
     <section class="lp-sec alt" id="problem" aria-labelledby="h-problem">
       <div class="wrap-in lp-split">
-        <div class="intro"><p class="t-label">The problem</p><h2 class="t-display" id="h-problem">Inefficient code is a line item you pay every month.</h2><p class="sub">An N+1 query, a missing cache, an oversized payload, a chatty call to another service. Each costs a little. Together they inflate the bill as traffic grows.</p></div>
-        <ol class="lp-points">
-          <li><span class="n" aria-hidden="true">1</span><div><h3 class="t-item">Engineers know the waste is there.</h3><p class="t-body ink2">Finding it means hours in traces, profiles and query plans.</p></div></li>
-          <li><span class="n" aria-hidden="true">2</span><div><h3 class="t-item">Fixing it competes with features.</h3><p class="t-body ink2">And features win, every sprint.</p></div></li>
-          <li><span class="n" aria-hidden="true">3</span><div><h3 class="t-item">Clean-ups don't last.</h3><p class="t-body ink2">The next release brings new waste, and nobody is watching.</p></div></li>
-        </ol>
+        <div class="intro"><h2 class="t-display" id="h-problem">Inefficient code is a line item you pay every month.</h2><p class="sub">An N+1 query, a missing cache, an oversized payload, a chatty call to another service. Each costs a little. Together they inflate the bill as traffic grows.</p></div>
+        <ul class="ruled lp-points">
+          <li><h3>Engineers know the waste is there.</h3><p>Finding it means hours in traces, profiles and query plans.</p></li>
+          <li><h3>Fixing it competes with features.</h3><p>And features win, every sprint.</p></li>
+          <li><h3>Clean-ups don't last.</h3><p>The next release brings new waste, and nobody is watching.</p></li>
+        </ul>
       </div>
     </section>
 
     <section class="lp-sec" id="how" aria-labelledby="h-how">
       <div class="wrap-in">
-        <div class="intro"><p class="t-label">How it works</p><h2 class="t-display" id="h-how">Set the goal. Antilog does the investigating.</h2></div>
-        <ol class="lp-flow">
-          <li>
-            <div class="node"><span class="n">01</span><span class="tile lg"><i class="ic i-sliders" aria-hidden="true"></i></span></div>
-            <h3 class="t-item">Set the goal and the limits</h3>
-            <p class="t-body ink2">"Lower compute cost for the checkout service": the quality requirements it must hold (latency, error rate, tests), and the most you will spend finding it.</p>
-            <span class="who you">You</span>
-          </li>
-          <li>
-            <div class="node"><span class="n">02</span><span class="tile lg"><i class="ic i-search" aria-hidden="true"></i></span></div>
-            <h3 class="t-item">Antilog finds the bottlenecks</h3>
-            <p class="t-body ink2">It reads your application telemetry, traces and query plans, and shows where the money goes.</p>
-            <span class="who">Antilog</span>
-          </li>
-          <li>
-            <div class="node"><span class="n">03</span><span class="tile lg"><i class="ic i-verify" aria-hidden="true"></i></span></div>
-            <h3 class="t-item">It experiments with fixes</h3>
-            <p class="t-body ink2">Agents try changes across the stack. An independent judge measures each one on your code, against your quality requirements.</p>
-            <span class="who">Antilog</span>
-          </li>
-          <li>
-            <div class="node"><span class="n">04</span><span class="tile lg"><i class="ic i-diff" aria-hidden="true"></i></span></div>
-            <h3 class="t-item">You review only what worked</h3>
-            <p class="t-body ink2">Verified improvements arrive as pull requests, with the measured result and what the experiment cost. Your developers decide what ships.</p>
-            <span class="who you">You</span>
-          </li>
-        </ol>
-        <div class="lp-bracket" aria-hidden="true"><svg viewBox="0 0 1000 40" preserveAspectRatio="none" focusable="false"><path d="M1 2 V20 H999 V2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="4 5" vector-effect="non-scaling-stroke"/></svg><span>Inside the budget you set</span></div>
+        <div class="intro"><h2 class="t-display" id="h-how">Set the goal. Antilog does the investigating.</h2></div>
+        <div class="lp-seq">
+          <div class="lp-bound" aria-hidden="true"><span>Inside the budget you set</span><i></i></div>
+          <p class="lp-note">Steps 2 and 3 run inside the budget you set.</p>
+          <ol class="lp-steps">
+            <li>
+              <span class="who you">You</span>
+              <div class="node"><span class="dot" aria-hidden="true">1</span></div>
+              <h3>Set the goal and the limits</h3>
+              <p>"Lower compute cost for the checkout service": the quality requirements it must hold (latency, error rate, tests), and the most you will spend finding it.</p>
+            </li>
+            <li>
+              <span class="who">Antilog</span>
+              <div class="node"><span class="dot" aria-hidden="true">2</span></div>
+              <h3>Antilog finds the bottlenecks</h3>
+              <p>It reads your application telemetry, traces and query plans, and shows where the money goes.</p>
+            </li>
+            <li>
+              <span class="who">Antilog</span>
+              <div class="node"><span class="dot" aria-hidden="true">3</span></div>
+              <h3>It experiments with fixes</h3>
+              <p>Agents try changes across the stack. An independent judge measures each one on your code, against your quality requirements.</p>
+            </li>
+            <li>
+              <span class="who you">You</span>
+              <div class="node"><span class="dot" aria-hidden="true">4</span></div>
+              <h3>You review only what worked</h3>
+              <p>Verified improvements arrive as pull requests, with the measured result and what the experiment cost. Your developers decide what ships.</p>
+            </li>
+          </ol>
+        </div>
       </div>
     </section>
 
     <section class="lp-sec alt" id="stack" aria-labelledby="h-stack">
       <div class="wrap-in">
-        <div class="intro"><p class="t-label">Across the stack</p><h2 class="t-display" id="h-stack">Waste hides everywhere. Antilog looks everywhere.</h2></div>
-        <div class="lp-bento">
-          <div class="card lp-layer b-code">
-            <div class="lh"><span class="tile"><i class="ic g-code" aria-hidden="true"></i></span><h3 class="t-item">Code</h3></div>
-            <p class="t-body ink2">Hot paths, wasted work in loops, heavy serialization, oversized payloads.</p>
-            <svg class="art" viewBox="0 0 240 56" aria-hidden="true" focusable="false"><g fill="currentColor"><rect x="0" y="4" width="120" height="6" rx="3" opacity=".25"/><rect x="16" y="18" width="150" height="6" rx="3" opacity=".25"/><rect x="16" y="32" width="96" height="6" rx="3" style="fill:var(--accent)"/><rect x="0" y="46" width="70" height="6" rx="3" opacity=".25"/></g></svg>
-          </div>
-          <div class="card lp-layer b-db">
-            <div class="lh"><span class="tile"><i class="ic g-db" aria-hidden="true"></i></span><h3 class="t-item">Databases</h3></div>
-            <p class="t-body ink2">N+1 queries, missing indexes, unbounded scans, connection churn.</p>
-          </div>
-          <div class="card lp-layer b-cache">
-            <div class="lh"><span class="tile"><i class="ic g-gauge" aria-hidden="true"></i></span><h3 class="t-item">Caches</h3></div>
-            <p class="t-body ink2">What to cache, for how long, and what is fetched twice.</p>
-          </div>
-          <div class="card lp-layer b-svc">
-            <div class="lh"><span class="tile"><i class="ic g-cloud" aria-hidden="true"></i></span><h3 class="t-item">Connected services</h3></div>
-            <p class="t-body ink2">Chatty calls, retries, missed batching, third-party API spend.</p>
-            <svg class="art" viewBox="0 0 240 56" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="30" cy="28" r="9" opacity=".5"/><circle cx="120" cy="14" r="9" opacity=".5"/><circle cx="120" cy="42" r="9" opacity=".5"/><circle cx="210" cy="28" r="9" style="stroke:var(--accent)"/><path d="M39 25 L111 15 M39 31 L111 41 M129 15 L201 25 M129 41 L201 31" opacity=".35"/></g></svg>
-          </div>
-        </div>
-        <p class="t-meta" style="margin-top: 16px;">Examples of what Antilog looks for, not a fixed list.</p>
+        <div class="intro"><h2 class="t-display" id="h-stack">Waste hides everywhere. Antilog looks everywhere.</h2></div>
+        <ul class="lp-index">
+          <li><h3>Code</h3><p>Hot paths, wasted work in loops, heavy serialization, oversized payloads.</p></li>
+          <li><h3>Databases</h3><p>N+1 queries, missing indexes, unbounded scans, connection churn.</p></li>
+          <li><h3>Caches</h3><p>What to cache, for how long, and what is fetched twice.</p></li>
+          <li><h3>Connected services</h3><p>Chatty calls, retries, missed batching, third-party API spend.</p></li>
+        </ul>
+        <p class="lp-fine">Examples of what Antilog looks for, not a fixed list.</p>
       </div>
     </section>
 
     <section class="lp-sec" id="control" aria-labelledby="h-control">
       <div class="wrap-in lp-split ctl">
         <div class="intro">
-          <p class="t-label">You stay in control</p><h2 class="t-display" id="h-control">You set the limits. Antilog stays inside them.</h2>
+          <h2 class="t-display" id="h-control">You set the limits. Antilog stays inside them.</h2>
           <div class="lp-meter" role="img" aria-label="A budget bar: spending rises until it reaches the limit, where work stops and waits for you">
-            <div class="mt"><span>Goal budget</span><span class="ms">Work stops and waits for you</span></div>
-            <div class="mbar"><i></i><b></b></div>
+            <div class="mt"><span>Goal budget</span><span>Work stops and waits for you</span></div>
+            <div class="mbar"><i></i><u></u></div>
             <div class="mb"><span>Cost shown for every experiment</span><span>Hard limit</span></div>
           </div>
         </div>
-        <ul class="lp-ctl">
-          <li><span class="tile"><i class="ic i-chart" aria-hidden="true"></i></span><div><h3 class="t-item">A hard spending limit</h3><p class="t-body ink2">Every goal has a budget. When it is spent, work stops and waits for you. You see the cost of every experiment, and an estimate before it runs.</p></div></li>
-          <li><span class="tile"><i class="ic i-lock" aria-hidden="true"></i></span><div><h3 class="t-item">Quality that cannot slip</h3><p class="t-body ink2">Your requirements are sealed before work starts. A change that breaks one is never delivered, however much it saves.</p></div></li>
-          <li><span class="tile"><i class="ic i-verify" aria-hidden="true"></i></span><div><h3 class="t-item">Verified by a judge, not the agent</h3><p class="t-body ink2">Every result is measured in a fresh sandbox the agent never touches, and confirmed on data the agent never saw.</p></div></li>
-          <li><span class="tile"><i class="ic i-users" aria-hidden="true"></i></span><div><h3 class="t-item">Your developers decide</h3><p class="t-body ink2">Changes arrive as pull requests. Nothing merges or deploys without a person.</p></div></li>
+        <ul class="ruled lp-ctl">
+          <li><h3>A hard spending limit</h3><p>Every goal has a budget. When it is spent, work stops and waits for you. You see the cost of every experiment, and an estimate before it runs.</p></li>
+          <li><h3>Quality that cannot slip</h3><p>Your requirements are sealed before work starts. A change that breaks one is never delivered, however much it saves.</p></li>
+          <li><h3>Verified by a judge, not the agent</h3><p>Every result is measured in a fresh sandbox the agent never touches, and confirmed on data the agent never saw.</p></li>
+          <li><h3>Your developers decide</h3><p>Changes arrive as pull requests. Nothing merges or deploys without a person.</p></li>
         </ul>
       </div>
     </section>
 
     <section class="lp-sec alt" id="readers" aria-labelledby="h-readers">
       <div class="wrap-in">
-        <div class="intro"><p class="t-label">Built for both sides of the review</p><h2 class="sr" id="h-readers">Built for engineering leaders and developers</h2></div>
-        <div class="lp-cols2 lp-two">
-          <div class="card lp-card lead-col">
-            <span class="tile"><i class="ic i-return" aria-hidden="true"></i></span>
-            <h3 class="t-title">For engineering leaders</h3>
+        <div class="intro"><h2 class="t-display" id="h-readers">Built for both sides of the review</h2></div>
+        <div class="lp-cols2">
+          <div class="lp-col">
+            <h3>For engineering leaders</h3>
             <ul class="lp-ticks">
-              <li><i class="ic i-check" aria-hidden="true"></i><span>Lower operating costs, with one number to report: savings delivered, against everything spent finding them.</span></li>
-              <li><i class="ic i-check" aria-hidden="true"></i><span>Engineering time back for the roadmap.</span></li>
-              <li><i class="ic i-check" aria-hidden="true"></i><span>A budget that never surprises you.</span></li>
-              <li><i class="ic i-check" aria-hidden="true"></i><span>Agents on the platform you choose. No lock-in.</span></li>
+              <li>Lower operating costs, with one number to report: savings delivered, against everything spent finding them.</li>
+              <li>Engineering time back for the roadmap.</li>
+              <li>A budget that never surprises you.</li>
+              <li>Agents on the platform you choose. No lock-in.</li>
             </ul>
             <div class="lp-plats"><span class="chip"><span class="lg lg-claude" role="img" aria-label="Claude Managed Agents"></span>Claude Managed Agents</span><span class="chip"><span class="lg lg-awsagentcore" role="img" aria-label="AWS AgentCore"></span>AWS AgentCore</span><span class="chip"><span class="lg lg-openai" role="img" aria-label="OpenAI Agents API"></span>OpenAI Agents API</span><span class="chip"><span class="lg lg-foundryagentservice" role="img" aria-label="Microsoft Foundry Agent Service"></span>Microsoft Foundry Agent Service</span><span class="chip"><span class="lg lg-googleagentruntime" role="img" aria-label="Google Agent Runtime"></span>Google Agent Runtime</span></div>
           </div>
-          <div class="card lp-card dev-col">
-            <span class="tile"><i class="ic g-git" aria-hidden="true"></i></span>
-            <h3 class="t-title">For developers</h3>
+          <div class="lp-col">
+            <h3>For developers</h3>
             <ul class="lp-ticks">
-              <li><i class="ic i-check" aria-hidden="true"></i><span>Changes small enough to review, each with the measurement behind it.</span></li>
-              <li><i class="ic i-check" aria-hidden="true"></i><span>Quality requirements you define, enforced on every change.</span></li>
-              <li><i class="ic i-check" aria-hidden="true"></i><span>No tickets to investigate, no flame graphs to read.</span></li>
-              <li><i class="ic i-check" aria-hidden="true"></i><span>Merged improvements are watched. A regression is flagged and investigated.</span></li>
+              <li>Changes small enough to review, each with the measurement behind it.</li>
+              <li>Quality requirements you define, enforced on every change.</li>
+              <li>No tickets to investigate, no flame graphs to read.</li>
+              <li>Merged improvements are watched. A regression is flagged and investigated.</li>
             </ul>
-            <div class="lp-pr" role="group" aria-label="What a developer sees on a pull request"><span class="t-label">On every pull request</span><span><i class="ic i-diff" aria-hidden="true"></i>The change, small enough to read</span><span><i class="ic i-chart" aria-hidden="true"></i>The measurement behind it</span><span><i class="ic i-list" aria-hidden="true"></i>What the experiment cost</span></div>
+            <p class="lp-pr"><b>On every pull request</b>The change, small enough to read. The measurement behind it. What the experiment cost.</p>
           </div>
         </div>
       </div>
@@ -186,30 +172,28 @@
 
     <section class="lp-sec" id="security" aria-labelledby="h-sec">
       <div class="wrap-in">
-        <div class="intro"><p class="t-label">Security</p><h2 class="t-display" id="h-sec">Built to pass your security review.</h2></div>
+        <div class="intro"><h2 class="t-display" id="h-sec">Built to pass your security review.</h2></div>
         <ul class="lp-sec-list">
-          <li><span class="tile"><i class="ic i-lock" aria-hidden="true"></i></span><div><h3 class="t-item">Your telemetry and code stay put</h3><p class="t-body ink2">Analysis runs in sandboxes. Antilog's server never connects to your data and never stores file contents, diffs or tool output.</p></div></li>
-          <li><span class="tile"><i class="ic i-key" aria-hidden="true"></i></span><div><h3 class="t-item">Least access</h3><p class="t-body ink2">Agents get read-only credentials, and a short-lived git token that pushes only to their own branch.</p></div></li>
-          <li><span class="tile"><i class="ic i-list" aria-hidden="true"></i></span><div><h3 class="t-item">Approvals and an audit log</h3><p class="t-body ink2">Anything that matters asks a person first, and every change and approval is logged: who, what, when.</p></div></li>
-          <li><span class="tile"><i class="ic i-users" aria-hidden="true"></i></span><div><h3 class="t-item">Your sign-in</h3><p class="t-body ink2">GitHub or Google on Antilog cloud. Your own OpenID Connect provider when self-hosted.</p></div></li>
-          <li><span class="tile"><i class="ic i-globe" aria-hidden="true"></i></span><div><h3 class="t-item">Your cloud</h3><p class="t-body ink2">Antilog cloud runs on AWS. Self-hosting in your own AWS, Azure or Google Cloud account follows.</p></div></li>
+          <li><h3>Your telemetry and code stay put</h3><p>Analysis runs in sandboxes. Antilog's server never connects to your data and never stores file contents, diffs or tool output.</p></li>
+          <li><h3>Least access</h3><p>Agents get read-only credentials, and a short-lived git token that pushes only to their own branch.</p></li>
+          <li><h3>Approvals and an audit log</h3><p>Anything that matters asks a person first, and every change and approval is logged: who, what, when.</p></li>
+          <li><h3>Your sign-in</h3><p>GitHub or Google on Antilog cloud. Your own OpenID Connect provider when self-hosted.</p></li>
+          <li><h3>Your cloud</h3><p>Antilog cloud runs on AWS. Self-hosting in your own AWS, Azure or Google Cloud account follows.</p></li>
         </ul>
       </div>
     </section>
 
     <section class="lp-sec alt" id="start" aria-labelledby="h-start">
-      <div class="wrap-in">
-        <div class="card lp-start">
-          <div class="col g16"><p class="t-label">Getting started</p><h2 class="t-display" id="h-start">Our engineers set it up with you.</h2></div>
-          <div class="col g24"><p class="lead">We connect your repos and telemetry, agree the first goal and its quality requirements with your team, and deliver the first verified savings. Then your team runs it.</p>
-            <p class="pay"><i class="ic i-return" aria-hidden="true"></i>Most of our fee depends on verified savings.</p></div>
-        </div>
+      <div class="wrap-in lp-start">
+        <h2 class="t-display" id="h-start">Our engineers set it up with you.</h2>
+        <div class="col g24"><p class="lead">We connect your repos and telemetry, agree the first goal and its quality requirements with your team, and deliver the first verified savings. Then your team runs it.</p>
+          <p class="pay">Most of our fee depends on verified savings.</p></div>
       </div>
     </section>
 
     <section class="lp-sec" id="faq" aria-labelledby="h-faq">
       <div class="wrap-in lp-split">
-        <div class="intro"><p class="t-label">Questions</p><h2 class="t-display" id="h-faq">Questions engineering leaders ask first.</h2></div>
+        <div class="intro"><h2 class="t-display" id="h-faq">Questions engineering leaders ask first.</h2></div>
         <div class="lp-faq"><details open><summary>Will it break production?<i class="ic i-chev" aria-hidden="true"></i></summary><p>No change ships without your developers' review, and every change must hold the quality requirements you set before you ever see it.</p></details><details><summary>How is a saving measured?<i class="ic i-chev" aria-hidden="true"></i></summary><p>The judge runs the new code and the code it started from side by side, repeatedly, on your code, and only counts a difference bigger than the noise. It is confirmed on data the agent never saw, measured offline, and watched after merge.</p></details><details><summary>What does it cost to run?<i class="ic i-chev" aria-hidden="true"></i></summary><p>Experiments spend tokens and compute inside the budget you set, and every experiment's cost is shown next to its result.</p></details><details><summary>Which AI models does it use?<i class="ic i-chev" aria-hidden="true"></i></summary><p>Agents on five platforms. Antilog picks by measured cost per verified improvement on your code, and says why. We publish no vendor benchmarks.</p></details><details><summary>What do we need to start?<i class="ic i-chev" aria-hidden="true"></i></summary><p>A repo, read access to your telemetry, and a cost you want lower.</p></details></div>
       </div>
     </section>
