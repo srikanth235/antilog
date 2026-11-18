@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into approvals (id, organization_id, experiment_id, session_id, card, summary, payload, cost_cents, needs_owner, status, decided_by, created_at, decided_at) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, null, to_timestamp($11::bigint / 1000.0), to_timestamp($12::bigint / 1000.0))",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Bool",
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "24ce86373ae4d646ecea5dbc9f5e00ac60e3cb0ace651062f9da5d14869ee340"
+}

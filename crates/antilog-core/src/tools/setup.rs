@@ -1,4 +1,4 @@
-use antilog_types::{Approval, ApprovalStatus, CardKind, SessionStatus};
+use antilog_types::{Approval, ApprovalStatus, CardKind, CardPayload, RepoAccess, SessionStatus};
 use serde::Deserialize;
 use serde_json::json;
 
@@ -11,15 +11,27 @@ use crate::store::{SessionChange, SessionStore};
 
 /// A card in front of a person, or approved by policy when the experiment follows it.
 /// The agent gets the answer as a message either way.
+pub(super) struct Card {
+    pub kind: CardKind,
+    pub summary: String,
+    pub payload: CardPayload,
+    pub cost_cents: Option<i64>,
+    pub needs_owner: bool,
+}
+
 pub(super) async fn ask<D: Deps>(
     deps: &D,
     caller: &Caller,
     tool: &str,
-    card: CardKind,
-    summary: String,
-    cost_cents: Option<i64>,
-    needs_owner: bool,
+    card: Card,
 ) -> Result<Approval, ToolError> {
+    let Card {
+        kind,
+        summary,
+        payload,
+        cost_cents,
+        needs_owner,
+    } = card;
     let now = now_ms(deps);
     let experiment = deps
         .store()
@@ -34,8 +46,9 @@ pub(super) async fn ask<D: Deps>(
             organization: caller.organization,
             experiment: caller.experiment,
             session: Some(caller.session),
-            card,
+            card: kind,
             summary,
+            payload: Some(payload),
             cost_cents,
             needs_owner,
             follow_policy: experiment.follow_policy,
@@ -101,10 +114,17 @@ pub(super) async fn attach_repo<D: Deps>(
         deps,
         caller,
         "attach_repo",
-        CardKind::AttachRepo,
-        format!("Attach repo {repo}"),
-        None,
-        false,
+        Card {
+            kind: CardKind::AttachRepo,
+            summary: format!("Attach repo {repo}"),
+            payload: CardPayload::AttachRepo {
+                repo,
+                access: RepoAccess::Push,
+                branch: None,
+            },
+            cost_cents: None,
+            needs_owner: false,
+        },
     )
     .await?;
     Ok((waiting(&approval), None))
@@ -136,14 +156,22 @@ pub(super) async fn request_credential<D: Deps>(
         ));
     }
     let summary = format!("Add a read-only credential for {connector} ({scope}): {reason}");
+    let payload = CardPayload::AddCredential {
+        connector,
+        scope,
+        why: reason,
+    };
     let approval = ask(
         deps,
         caller,
         "request_credential",
-        CardKind::AddCredential,
-        summary,
-        None,
-        false,
+        Card {
+            kind: CardKind::AddCredential,
+            summary,
+            payload,
+            cost_cents: None,
+            needs_owner: false,
+        },
     )
     .await?;
     Ok((waiting(&approval), None))
@@ -164,6 +192,15 @@ pub(super) async fn set_environment<D: Deps>(
     value: serde_json::Value,
 ) -> Done {
     let env: Environment = input(value)?;
+    let payload = CardPayload::ChangeEnvironment {
+        image: env.image.clone(),
+        setup_script_lines: env
+            .setup_script
+            .as_ref()
+            .map(|script| u32::try_from(script.lines().count()).unwrap_or(u32::MAX)),
+        size: env.size.clone(),
+        network: env.network.clone(),
+    };
     let mut parts = Vec::new();
     if let Some(image) = env.image {
         parts.push(format!("image {image}"));
@@ -190,10 +227,13 @@ pub(super) async fn set_environment<D: Deps>(
         deps,
         caller,
         "set_environment",
-        CardKind::ChangeEnvironment,
-        summary,
-        None,
-        false,
+        Card {
+            kind: CardKind::ChangeEnvironment,
+            summary,
+            payload,
+            cost_cents: None,
+            needs_owner: false,
+        },
     )
     .await?;
     Ok((waiting(&approval), None))
@@ -218,19 +258,32 @@ pub(super) async fn request_budget<D: Deps>(
     if amount_cents <= 0 {
         return Err(ToolError::new("amount_cents must be more than zero"));
     }
+    let now_cents = deps
+        .store()
+        .experiment(caller.organization, caller.experiment)
+        .await?
+        .map_or(0, |row| row.budget_cap_cents);
     let summary = format!(
         "Raise the budget by ${}.{:02}: {reason}",
         amount_cents / 100,
         amount_cents % 100
     );
+    let payload = CardPayload::RaiseBudget {
+        now_cents,
+        requested_cents: amount_cents,
+        why: reason,
+    };
     let approval = ask(
         deps,
         caller,
         "request_budget",
-        CardKind::RaiseBudget,
-        summary,
-        Some(amount_cents),
-        false,
+        Card {
+            kind: CardKind::RaiseBudget,
+            summary,
+            payload,
+            cost_cents: Some(amount_cents),
+            needs_owner: false,
+        },
     )
     .await?;
     Ok((waiting(&approval), None))

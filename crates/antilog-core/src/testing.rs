@@ -647,6 +647,7 @@ async fn budgets_and_spend<S: Store>(store: &S) {
         amount_cents: cents,
         tokens,
         occurred_at: at,
+        trial_id: None,
     };
     for row in [
         spend(&lead, SpendKind::Tokens, 40, 900, T0 + 10),
@@ -1193,6 +1194,7 @@ async fn approvals<S: Store>(store: &S) {
         session_id: None,
         card: kind,
         summary: "Raise the budget by $5".into(),
+        payload: None,
         cost_cents: Some(500),
         needs_owner: false,
         status,

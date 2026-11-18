@@ -1,4 +1,4 @@
-use antilog_core::store::{BudgetStore, SpendLine, SpendScope, SpendTotal, StoreError};
+use antilog_core::store::{BudgetStore, SpendLine, SpendRow, SpendScope, SpendTotal, StoreError};
 use antilog_types::{
     AuditEntry, ExperimentId, OrganizationId, ProjectId, SessionId, Spend, SpendKind,
 };
@@ -86,7 +86,7 @@ impl BudgetStore for PgStore {
     async fn record_spend(&self, spend: &Spend) -> Result<(), StoreError> {
         let mut tx = self.scoped(spend.organization_id).await?;
         sqlx::query!(
-            "insert into spend (id, organization_id, session_id, kind, amount_cents, tokens, occurred_at) values ($1, $2, $3, $4, $5, $6, to_timestamp($7::bigint / 1000.0))",
+            "insert into spend (id, organization_id, session_id, kind, amount_cents, tokens, occurred_at, trial_id) values ($1, $2, $3, $4, $5, $6, to_timestamp($7::bigint / 1000.0), $8)",
             spend.id.as_uuid(),
             spend.organization_id.as_uuid(),
             spend.session_id.as_uuid(),
@@ -94,6 +94,7 @@ impl BudgetStore for PgStore {
             spend.amount_cents,
             spend.tokens,
             spend.occurred_at,
+            spend.trial_id.map(|trial| trial.as_uuid()),
         )
         .execute(&mut *tx)
         .await
@@ -152,6 +153,36 @@ impl BudgetStore for PgStore {
                 kind: SpendKind::parse(&row.kind).ok_or_else(|| corrupt("spend kind", &row.kind))?,
                 cents: row.cents,
                 tokens: row.tokens,
+            })
+        })
+        .collect()
+    }
+
+    async fn spend_rows_between(
+        &self,
+        organization: OrganizationId,
+        from: i64,
+        to: i64,
+    ) -> Result<Vec<SpendRow>, StoreError> {
+        let mut tx = self.scoped(organization).await?;
+        sqlx::query!(
+            "select n.experiment_id, s.session_id, s.kind, s.amount_cents, (extract(epoch from s.occurred_at) * 1000)::bigint as \"at!\", s.trial_id from spend s join sessions n on n.organization_id = s.organization_id and n.id = s.session_id where s.organization_id = $1 and s.occurred_at >= to_timestamp($2::bigint / 1000.0) and s.occurred_at < to_timestamp($3::bigint / 1000.0) order by s.occurred_at, s.id",
+            organization.as_uuid(),
+            from,
+            to,
+        )
+        .fetch_all(&mut *tx)
+        .await
+        .map_err(map)?
+        .into_iter()
+        .map(|row| {
+            Ok(SpendRow {
+                experiment: ExperimentId::from_uuid(row.experiment_id),
+                session: SessionId::from_uuid(row.session_id),
+                kind: SpendKind::parse(&row.kind).ok_or_else(|| corrupt("spend kind", &row.kind))?,
+                cents: row.amount_cents,
+                at: row.at,
+                trial: row.trial_id.map(antilog_types::judge::TrialId::from_uuid),
             })
         })
         .collect()

@@ -86,6 +86,15 @@ pub struct KindSpendLine {
     pub cents: i64,
 }
 
+/// What was spent on trials that ended one way, or on none.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct OutcomeSpendLine {
+    /// `null` is Not measured: agent work that never reached `measure`.
+    pub outcome: Option<super::Outcome>,
+    pub cents: i64,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct AgentRow {
@@ -134,6 +143,8 @@ pub struct Report {
     pub project_id: Option<ProjectId>,
     pub figures: ValueFigures,
     pub spend_by_kind: Vec<KindSpendLine>,
+    /// By what became of the trial each dollar paid for; Not measured is `outcome: null`.
+    pub spend_by_outcome: Vec<OutcomeSpendLine>,
     /// Spent on experiments that have a win.
     pub spent_with_win_cents: i64,
     /// Spent on sealed experiments with no win, stopped or still going.

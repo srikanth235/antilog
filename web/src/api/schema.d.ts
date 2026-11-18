@@ -843,6 +843,7 @@ export interface components {
             /** @description Only a project owner may decide it, and policy never does: a changed value model. */
             needsOwner: boolean;
             organizationId: components["schemas"]["OrganizationId"];
+            payload?: components["schemas"]["CardPayload"] | null;
             sessionId?: components["schemas"]["SessionId"] | null;
             status: components["schemas"]["ApprovalStatus"];
             /** @description What would happen; never a secret. */
@@ -891,6 +892,76 @@ export interface components {
         };
         /** @enum {string} */
         CardKind: "seal_experiment" | "raise_budget" | "add_credential" | "attach_repo" | "change_environment" | "open_pull_request" | "keep_going" | "continue_on_another_agent";
+        /**
+         * @description What each kind of card asks, as typed fields. A card shows these, never text parsed out of
+         *     its summary, and an action that follows an approval reads what to do from here.
+         */
+        CardPayload: {
+            /** Format: double */
+            baseline: number;
+            /** Format: int32 */
+            cheatsRejected: number;
+            /** @enum {string} */
+            kind: "seal_experiment";
+            metric: string;
+            /** Format: double */
+            noise: number;
+            unit: string;
+            /** @description "No value set", or what one unit is worth, measured offline. */
+            valueNote: string;
+            /** Format: int32 */
+            version: number;
+        } | {
+            /** @enum {string} */
+            kind: "raise_budget";
+            /**
+             * Format: int64
+             * @description The experiment's budget when the card was raised.
+             */
+            nowCents: number;
+            /**
+             * Format: int64
+             * @description How much more is asked.
+             */
+            requestedCents: number;
+            why: string;
+        } | {
+            connector: string;
+            /** @enum {string} */
+            kind: "add_credential";
+            scope: string;
+            why: string;
+        } | {
+            access: components["schemas"]["RepoAccess"];
+            /** @description `None`: the agent pushes to a branch of its own. */
+            branch?: string | null;
+            /** @enum {string} */
+            kind: "attach_repo";
+            repo: string;
+        } | {
+            image?: string | null;
+            /** @enum {string} */
+            kind: "change_environment";
+            network?: string | null;
+            /** Format: int32 */
+            setupScriptLines?: number | null;
+            size?: string | null;
+        } | {
+            hypothesis: string;
+            /** @enum {string} */
+            kind: "open_pull_request";
+            /** @description One pull request per repo changed. */
+            repos: string[];
+            trial: components["schemas"]["TrialId"];
+        } | {
+            /** @enum {string} */
+            kind: "keep_going";
+            /** Format: int32 */
+            tried: number;
+        } | {
+            /** @enum {string} */
+            kind: "continue_on_another_agent";
+        };
         /** Format: int64 */
         Cents: number;
         /** @enum {string} */
@@ -1203,6 +1274,14 @@ export interface components {
             id: components["schemas"]["OrganizationId"];
             name: string;
         };
+        /** @enum {string} */
+        Outcome: "measuring" | "kept" | "withinNoise" | "worse" | "guardrailFailed" | "failedHoldout" | "rejected" | "failed";
+        /** @description What was spent on trials that ended one way, or on none. */
+        OutcomeSpendLine: {
+            /** Format: int64 */
+            cents: number;
+            outcome?: components["schemas"]["Outcome"] | null;
+        };
         /** @description What policy does with one card kind. Add credential only ever asks. */
         Policy: {
             card: components["schemas"]["CardKind"];
@@ -1268,6 +1347,8 @@ export interface components {
         };
         /** Format: uuid */
         ReceiptId: string;
+        /** @enum {string} */
+        RepoAccess: "read" | "push";
         /** @description The monthly Report for the organization or one project. */
         Report: {
             agents: components["schemas"]["AgentRow"][];
@@ -1278,6 +1359,8 @@ export interface components {
             month: string;
             projectId?: components["schemas"]["ProjectId"] | null;
             spendByKind: components["schemas"]["KindSpendLine"][];
+            /** @description By what became of the trial each dollar paid for; Not measured is `outcome: null`. */
+            spendByOutcome: components["schemas"]["OutcomeSpendLine"][];
             /**
              * Format: int64
              * @description Spent on sealed experiments with no win, stopped or still going.

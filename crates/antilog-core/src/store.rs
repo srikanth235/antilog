@@ -4,12 +4,14 @@ use std::future::Future;
 
 mod approval;
 mod budget;
+mod code_host;
 mod organization;
 mod relay;
 mod session;
 
 pub use approval::ApprovalStore;
-pub use budget::{BudgetStore, SpendLine, SpendScope, SpendTotal};
+pub use budget::{BudgetStore, SpendLine, SpendRow, SpendScope, SpendTotal};
+pub use code_host::{CodeHostStore, PullRequestRow};
 pub use organization::{Membership, OrganizationStore, SignInRecord, TokenRecord};
 pub use relay::RelayStore;
 pub use session::{NewEvent, SessionChange, SessionStore};
@@ -43,7 +45,14 @@ pub enum StoreError {
 }
 
 pub trait Store:
-    OrganizationStore + SessionStore + BudgetStore + ApprovalStore + RelayStore + Send + Sync
+    OrganizationStore
+    + SessionStore
+    + BudgetStore
+    + ApprovalStore
+    + RelayStore
+    + CodeHostStore
+    + Send
+    + Sync
 {
     fn ping(&self) -> impl Future<Output = Result<(), StoreError>> + Send;
 }

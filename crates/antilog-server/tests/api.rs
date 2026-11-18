@@ -33,6 +33,7 @@ fn app(fake: bool, open: bool) -> Router {
             open_organizations: open,
             secure_cookies: true,
             wake_secret: None,
+            code_host_webhook_secret: None,
         },
     )
 }
@@ -888,6 +889,7 @@ async fn org_with_store() -> (Org, Arc<FakeDeps>) {
             open_organizations: true,
             secure_cookies: true,
             wake_secret: None,
+            code_host_webhook_secret: None,
         },
     );
     let created = create_organization(&app, "acme", "ada").await;
@@ -1011,6 +1013,7 @@ async fn pending_cards_the_transcript_and_spend_are_read_across_roles() {
             session: None,
             card: CardKind::RaiseBudget,
             summary: "Raise the budget by $5".into(),
+            payload: None,
             cost_cents: Some(500),
             needs_owner: false,
             follow_policy: false,
@@ -1138,6 +1141,7 @@ async fn pending_cards_the_transcript_and_spend_are_read_across_roles() {
                 amount_cents: cents,
                 tokens: 0,
                 occurred_at: 1_700_000_000_000,
+                trial_id: None,
             })
             .await
             .unwrap_or_else(|e| unreachable!("{e}"));

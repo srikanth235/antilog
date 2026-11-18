@@ -5,6 +5,7 @@ use sqlx::{PgConnection, PgPool, Postgres, Transaction};
 
 mod approval;
 mod budget;
+mod code_host;
 mod judge;
 mod organization;
 mod relay;

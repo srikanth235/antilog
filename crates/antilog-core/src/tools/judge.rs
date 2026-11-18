@@ -2,11 +2,13 @@ use antilog_types::judge::{
     AgentRun, Cents, CommitRef, ComputeSection, DataSection, Definition, Outcome, ProtectedFile,
     SealedExperiment, Trial, TrialId, TrialRecord,
 };
-use antilog_types::{Approval, ApprovalStatus, CardKind, ExperimentId, OrganizationId, SessionId};
+use antilog_types::{
+    Approval, ApprovalStatus, CardKind, CardPayload, ExperimentId, OrganizationId, SessionId,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
-use super::setup::{ask, waiting};
+use super::setup::{Card, ask, waiting};
 use super::{Caller, Done, Ticket, ToolError, input};
 use crate::code_host::CodeHost;
 use crate::deps::Deps;
@@ -197,10 +199,21 @@ pub(super) async fn seal<D: Deps>(deps: &D, caller: &Caller, value: Value) -> Do
         deps,
         caller,
         "seal",
-        CardKind::SealExperiment,
-        summary,
-        None,
-        needs_owner,
+        Card {
+            kind: CardKind::SealExperiment,
+            summary,
+            payload: CardPayload::SealExperiment {
+                version,
+                metric: metric.name.clone(),
+                unit: metric.unit.clone(),
+                baseline: checks.baseline(),
+                noise: checks.noise(),
+                cheats_rejected: u32::try_from(checks.cheats().len()).unwrap_or(u32::MAX),
+                value_note: worth,
+            },
+            cost_cents: None,
+            needs_owner,
+        },
     )
     .await?;
     let body = serde_json::to_string(&Stored { version, proposal })
@@ -318,6 +331,7 @@ pub(super) async fn measure<D: Deps>(deps: &D, caller: &Caller, value: Value) ->
         parent: m.parent,
         commits: m.commits,
         hypothesis: m.hypothesis,
+        at: crate::session::now_ms(deps),
     };
     let answer = json!({
         "ticket": trial.id,
@@ -558,10 +572,25 @@ pub(super) async fn deliver<D: Deps>(deps: &D, caller: &Caller, value: Value) ->
         deps,
         caller,
         "deliver",
-        CardKind::OpenPullRequest,
-        summary,
-        None,
-        false,
+        Card {
+            kind: CardKind::OpenPullRequest,
+            summary,
+            payload: CardPayload::OpenPullRequest {
+                trial,
+                hypothesis: record.trial.hypothesis.clone(),
+                repos: {
+                    let mut repos: Vec<String> = Vec::new();
+                    for commit in &record.trial.commits {
+                        if !repos.contains(&commit.repo) {
+                            repos.push(commit.repo.clone());
+                        }
+                    }
+                    repos
+                },
+            },
+            cost_cents: None,
+            needs_owner: false,
+        },
     )
     .await?;
     Ok((waiting(&approval), None))

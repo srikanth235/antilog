@@ -1,8 +1,8 @@
 //! Approval cards and policy: who may decide, and when policy decides for them.
 
 use antilog_types::{
-    Approval, ApprovalId, ApprovalStatus, AuditEntry, AuditOutcome, CardKind, Decision,
-    ExperimentId, MemberId, OrganizationId, Policy, PolicyMode, SessionId,
+    Approval, ApprovalId, ApprovalStatus, AuditEntry, AuditOutcome, CardKind, CardPayload,
+    Decision, ExperimentId, MemberId, OrganizationId, Policy, PolicyMode, SessionId,
 };
 
 use crate::organization::{Action, Principal, Refusal, entry, member_of, permit, project_of};
@@ -16,6 +16,8 @@ pub struct CardRequest {
     pub session: Option<SessionId>,
     pub card: CardKind,
     pub summary: String,
+    /// The card's typed fields; it must belong to `card`.
+    pub payload: Option<CardPayload>,
     pub cost_cents: Option<i64>,
     pub needs_owner: bool,
     pub follow_policy: bool,
@@ -63,6 +65,13 @@ pub async fn raise<S: Store>(
     if request.summary.chars().count() > 2000 {
         return Err(Refusal::Invalid("a summary is at most 2000 characters"));
     }
+    if request
+        .payload
+        .as_ref()
+        .is_some_and(|payload| payload.card() != request.card)
+    {
+        return Err(Refusal::Invalid("a card's fields belong to its kind"));
+    }
     if request.cost_cents.is_some_and(|cost| cost < 0) {
         return Err(Refusal::Invalid("a cost is not negative"));
     }
@@ -78,6 +87,7 @@ pub async fn raise<S: Store>(
         session_id: request.session,
         card: request.card,
         summary: request.summary,
+        payload: request.payload,
         cost_cents: request.cost_cents,
         needs_owner: request.needs_owner,
         status: if by_policy {

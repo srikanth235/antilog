@@ -15,6 +15,7 @@ use utoipa::OpenApi;
 pub mod auth;
 pub mod organization;
 pub mod value;
+pub mod webhook;
 
 #[derive(OpenApi)]
 #[openapi(
@@ -69,6 +70,11 @@ pub fn router_with<D: Deps + 'static>(app: Arc<auth::App<D>>) -> Router {
     } else {
         router
     };
+    let router = if app.settings.code_host_webhook_secret.is_some() {
+        router.merge(webhook::routes())
+    } else {
+        router
+    };
     router.with_state(app)
 }
 
@@ -103,6 +109,7 @@ mod tests {
                 open_organizations: false,
                 secure_cookies: true,
                 wake_secret: None,
+                code_host_webhook_secret: None,
             },
         );
         let response = app

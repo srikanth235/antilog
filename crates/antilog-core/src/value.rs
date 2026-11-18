@@ -5,9 +5,9 @@
 //! "measured offline": by the judge on the evaluation data, not in production.
 
 use antilog_types::judge::{
-    AgentRow, Cents, ExperimentValue, KindSpendLine, NewValueModel, ProjectValueModel, Report,
-    StoppedExperiment, TopWin, TrialId, TrialRecord, ValueBasis, ValueFigures, ValueModel,
-    ValueModelId, ValueModels, WinEvent, WinEventKind, WinState, WinView,
+    AgentRow, Cents, ExperimentValue, KindSpendLine, NewValueModel, OutcomeSpendLine,
+    ProjectValueModel, Report, StoppedExperiment, TopWin, TrialId, TrialRecord, ValueBasis,
+    ValueFigures, ValueModel, ValueModelId, ValueModels, WinEvent, WinEventKind, WinState, WinView,
 };
 use antilog_types::{
     AuditOutcome, Experiment, ExperimentId, OrganizationId, Project, ProjectId, SessionId,
@@ -18,7 +18,7 @@ use crate::judge::measure::best;
 use crate::judge::value::{Delivery, WinValue, figures};
 use crate::organization::{Action, Principal, Refusal, entry, member_of, permit};
 use crate::store::judge::{JudgeStore, JudgeStoreError};
-use crate::store::{SpendLine, SpendScope, Store};
+use crate::store::{SpendLine, SpendRow, SpendScope, Store};
 
 impl From<JudgeStoreError> for Refusal {
     fn from(error: JudgeStoreError) -> Self {
@@ -157,19 +157,21 @@ pub async fn set_value_model<S: Store, J: JudgeStore>(
         },
         set_by: who.member.as_uuid(),
     };
-    // The audit row goes first, so a change never lands without one: a failure in between
-    // leaves a row for a change that did not land, never the other way round. The judge's
-    // tables and the ledger are two stores, so the two writes cannot share a transaction.
-    store
-        .append_audit(&entry(
-            who,
-            "value_model.set",
-            format!("{project}:{}@{}", model.id, model.version),
-            AuditOutcome::Done,
+    // One transaction: the new version and its audit row land together or not at all.
+    judge
+        .put_value_model_audited(
+            project,
+            &model,
             now,
-        ))
+            &entry(
+                who,
+                "value_model.set",
+                format!("{project}:{}@{}", model.id, model.version),
+                AuditOutcome::Done,
+                now,
+            ),
+        )
         .await?;
-    judge.put_value_model(project, &model, now).await?;
     Ok(ProjectValueModel {
         project_id: project,
         model,
@@ -611,6 +613,58 @@ pub fn month_of(at: i64) -> Option<String> {
     Some(format!("{:04}-{:02}", date.year(), date.month()))
 }
 
+/// What became of the trial each spend row paid for. A row that names its trial goes to that
+/// trial; the rest go to the session's next trial by time ("the agent's spend since that
+/// session's previous trial"). A row with no trial after it is agent work that never reached
+/// `measure`: Not measured, `outcome: None`. Nothing is left out, so the lines add up to the spend.
+fn by_outcome(rows: &[SpendRow], trials: &[&TrialRecord]) -> Vec<OutcomeSpendLine> {
+    use antilog_types::judge::Outcome;
+    const ORDER: [Option<Outcome>; 9] = [
+        Some(Outcome::Kept),
+        Some(Outcome::WithinNoise),
+        Some(Outcome::Worse),
+        Some(Outcome::GuardrailFailed),
+        Some(Outcome::FailedHoldout),
+        Some(Outcome::Rejected),
+        Some(Outcome::Failed),
+        Some(Outcome::Measuring),
+        None,
+    ];
+    let outcome_of = |id: TrialId| {
+        trials
+            .iter()
+            .find(|record| record.trial.id == id)
+            .map(|record| record.outcome())
+    };
+    let mut cents = [0_i64; ORDER.len()];
+    for row in rows {
+        let paid_for = row.trial.or_else(|| {
+            trials
+                .iter()
+                .filter(|record| record.trial.session == row.session && record.trial.at >= row.at)
+                .min_by_key(|record| record.trial.at)
+                .map(|record| record.trial.id)
+        });
+        let outcome = paid_for.and_then(outcome_of);
+        if let Some(slot) = ORDER
+            .iter()
+            .position(|known| *known == outcome)
+            .and_then(|at| cents.get_mut(at))
+        {
+            *slot += row.cents;
+        }
+    }
+    ORDER
+        .iter()
+        .zip(cents)
+        .filter(|(_, cents)| *cents > 0)
+        .map(|(outcome, cents)| OutcomeSpendLine {
+            outcome: *outcome,
+            cents,
+        })
+        .collect()
+}
+
 fn total(lines: &[SpendLine], keep: impl Fn(&SpendLine) -> bool) -> i64 {
     lines
         .iter()
@@ -622,8 +676,7 @@ fn total(lines: &[SpendLine], keep: impl Fn(&SpendLine) -> bool) -> i64 {
 /// The month's report for the organization or one project: spent, Delivered, Pending, At risk and
 /// Return, where the spend went, the agent scoreboard, the top wins and the experiments stopped
 /// with no win. The organization's is read by owners and editors, a project's by every member; it carries numbers, titles and ids, never a diff or data.
-/// A trial has no time of its own, so the scoreboard counts the trials of the sessions that spent
-/// in the month.
+/// The scoreboard counts the trials that ran in the month.
 pub async fn report<S: Store, J: JudgeStore>(
     store: &S,
     judge: &J,
@@ -672,6 +725,20 @@ pub async fn report<S: Store, J: JudgeStore>(
         }
     }
     kinds.sort_by_key(|kind| kind.kind.as_str());
+
+    let spend_by_outcome = {
+        let rows: Vec<SpendRow> = store
+            .spend_rows_between(who.organization, range.from, range.to)
+            .await?
+            .into_iter()
+            .filter(|row| in_scope(row.experiment))
+            .collect();
+        let records: Vec<&TrialRecord> = scans
+            .iter()
+            .flat_map(|(_, scan)| scan.trials.iter())
+            .collect();
+        by_outcome(&rows, &records)
+    };
 
     let (mut with_win, mut no_win, mut not_sealed) = (0, 0, 0);
     let mut stopped = Vec::new();
@@ -729,10 +796,8 @@ pub async fn report<S: Store, J: JudgeStore>(
             delivered_cents: 0,
         });
     };
-    let mut active = std::collections::HashSet::new();
     for line in &lines {
         if let Some(name) = agent_of.get(&line.session) {
-            active.insert(line.session);
             row(&mut agents, name);
             if let Some(agent) = agents.get_mut(name) {
                 agent.spent_cents += line.cents;
@@ -741,7 +806,8 @@ pub async fn report<S: Store, J: JudgeStore>(
     }
     for (_, scan) in &scans {
         for record in &scan.trials {
-            if !active.contains(&record.trial.session) {
+            // A trial counts in the month it ran in.
+            if !(range.from..range.to).contains(&record.trial.at) {
                 continue;
             }
             let Some(name) = agent_of.get(&record.trial.session) else {
@@ -802,6 +868,7 @@ pub async fn report<S: Store, J: JudgeStore>(
         project_id: project,
         figures,
         spend_by_kind: kinds,
+        spend_by_outcome,
         spent_with_win_cents: with_win,
         spent_no_win_cents: no_win,
         spent_not_sealed_cents: not_sealed,

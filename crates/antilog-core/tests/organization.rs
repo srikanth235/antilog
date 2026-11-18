@@ -218,6 +218,7 @@ async fn raised(
             session: None,
             card,
             summary: "Raise the budget by $5".into(),
+            payload: None,
             cost_cents: Some(cost),
             needs_owner,
             follow_policy: follow,
@@ -615,6 +616,7 @@ async fn spend(world: &World, experiment: &Experiment, cents: i64, at: i64) {
             amount_cents: cents,
             tokens: 1,
             occurred_at: at,
+            trial_id: None,
         })
         .await
         .unwrap();

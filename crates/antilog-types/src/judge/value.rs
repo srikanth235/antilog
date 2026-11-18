@@ -104,6 +104,11 @@ text_enum!(
     }
 );
 
+text_enum!(
+    /// What the code host last said of one pull request.
+    PullRequestState { Open => "open", Merged => "merged", Closed => "closed" }
+);
+
 /// One append-only fact about a win. Whether a win is Delivered, Pending or At risk is read
 /// from the newest of these, never stored.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]

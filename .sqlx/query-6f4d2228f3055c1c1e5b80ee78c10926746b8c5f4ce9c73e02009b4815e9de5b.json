@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "update approvals set status = $3, decided_by = $4, decided_at = to_timestamp($5::bigint / 1000.0) where organization_id = $1 and id = $2 returning id, organization_id, experiment_id, session_id, card, summary, cost_cents, needs_owner, status, decided_by, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from decided_at) * 1000)::bigint as \"decided_at\"",
+  "query": "update approvals set status = $3, decided_by = $4, decided_at = to_timestamp($5::bigint / 1000.0) where organization_id = $1 and id = $2 returning id, organization_id, experiment_id, session_id, card, summary, payload, cost_cents, needs_owner, status, decided_by, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from decided_at) * 1000)::bigint as \"decided_at\"",
   "describe": {
     "columns": [
       {
@@ -71,6 +71,17 @@
       },
       {
         "ordinal": 6,
+        "name": "payload",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "approvals",
+            "name": "payload"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
         "name": "cost_cents",
         "type_info": "Int8",
         "origin": {
@@ -81,7 +92,7 @@
         }
       },
       {
-        "ordinal": 7,
+        "ordinal": 8,
         "name": "needs_owner",
         "type_info": "Bool",
         "origin": {
@@ -92,7 +103,7 @@
         }
       },
       {
-        "ordinal": 8,
+        "ordinal": 9,
         "name": "status",
         "type_info": "Text",
         "origin": {
@@ -103,7 +114,7 @@
         }
       },
       {
-        "ordinal": 9,
+        "ordinal": 10,
         "name": "decided_by",
         "type_info": "Uuid",
         "origin": {
@@ -114,13 +125,13 @@
         }
       },
       {
-        "ordinal": 10,
+        "ordinal": 11,
         "name": "created_at!",
         "type_info": "Int8",
         "origin": "Expression"
       },
       {
-        "ordinal": 11,
+        "ordinal": 12,
         "name": "decided_at",
         "type_info": "Int8",
         "origin": "Expression"
@@ -143,6 +154,7 @@
       false,
       false,
       true,
+      true,
       false,
       false,
       true,
@@ -150,5 +162,5 @@
       null
     ]
   },
-  "hash": "adf3a9369fc58a6521b3cbb6a734ebe7ea96ddf92ed994a344933ea964ae9a4e"
+  "hash": "6f4d2228f3055c1c1e5b80ee78c10926746b8c5f4ce9c73e02009b4815e9de5b"
 }

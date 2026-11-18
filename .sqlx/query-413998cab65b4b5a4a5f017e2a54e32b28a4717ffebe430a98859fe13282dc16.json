@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select id, organization_id, experiment_id, session_id, card, summary, cost_cents, needs_owner, status, decided_by, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from decided_at) * 1000)::bigint as \"decided_at\" from approvals where organization_id = $1 and status = 'pending' order by created_at, id",
+  "query": "select id, organization_id, experiment_id, session_id, card, summary, payload, cost_cents, needs_owner, status, decided_by, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from decided_at) * 1000)::bigint as \"decided_at\" from approvals where organization_id = $1 and status = 'pending' order by created_at, id",
   "describe": {
     "columns": [
       {
@@ -71,6 +71,17 @@
       },
       {
         "ordinal": 6,
+        "name": "payload",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "approvals",
+            "name": "payload"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
         "name": "cost_cents",
         "type_info": "Int8",
         "origin": {
@@ -81,7 +92,7 @@
         }
       },
       {
-        "ordinal": 7,
+        "ordinal": 8,
         "name": "needs_owner",
         "type_info": "Bool",
         "origin": {
@@ -92,7 +103,7 @@
         }
       },
       {
-        "ordinal": 8,
+        "ordinal": 9,
         "name": "status",
         "type_info": "Text",
         "origin": {
@@ -103,7 +114,7 @@
         }
       },
       {
-        "ordinal": 9,
+        "ordinal": 10,
         "name": "decided_by",
         "type_info": "Uuid",
         "origin": {
@@ -114,13 +125,13 @@
         }
       },
       {
-        "ordinal": 10,
+        "ordinal": 11,
         "name": "created_at!",
         "type_info": "Int8",
         "origin": "Expression"
       },
       {
-        "ordinal": 11,
+        "ordinal": 12,
         "name": "decided_at",
         "type_info": "Int8",
         "origin": "Expression"
@@ -139,6 +150,7 @@
       false,
       false,
       true,
+      true,
       false,
       false,
       true,
@@ -146,5 +158,5 @@
       null
     ]
   },
-  "hash": "c61d542de02e5a8c3483da7e4cf5e484024594043e5e26e156a3aebdee842959"
+  "hash": "413998cab65b4b5a4a5f017e2a54e32b28a4717ffebe430a98859fe13282dc16"
 }

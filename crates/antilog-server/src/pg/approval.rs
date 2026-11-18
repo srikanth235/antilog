@@ -14,6 +14,7 @@ struct ApprovalRow {
     session_id: Option<Uuid>,
     card: String,
     summary: String,
+    payload: Option<String>,
     cost_cents: Option<i64>,
     needs_owner: bool,
     status: String,
@@ -33,6 +34,12 @@ impl TryFrom<ApprovalRow> for Approval {
             session_id: row.session_id.map(SessionId::from_uuid),
             card: CardKind::parse(&row.card).ok_or_else(|| corrupt("card kind", &row.card))?,
             summary: row.summary,
+            payload: row
+                .payload
+                .as_deref()
+                .map(serde_json::from_str)
+                .transpose()
+                .map_err(|error| super::unavailable(sqlx::Error::Decode(Box::new(error))))?,
             cost_cents: row.cost_cents,
             needs_owner: row.needs_owner,
             status: ApprovalStatus::parse(&row.status)
@@ -101,13 +108,19 @@ impl ApprovalStore for PgStore {
         }
         let mut tx = self.scoped(approval.organization_id).await?;
         sqlx::query!(
-            "insert into approvals (id, organization_id, experiment_id, session_id, card, summary, cost_cents, needs_owner, status, decided_by, created_at, decided_at) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, null, to_timestamp($10::bigint / 1000.0), to_timestamp($11::bigint / 1000.0))",
+            "insert into approvals (id, organization_id, experiment_id, session_id, card, summary, payload, cost_cents, needs_owner, status, decided_by, created_at, decided_at) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, null, to_timestamp($11::bigint / 1000.0), to_timestamp($12::bigint / 1000.0))",
             approval.id.as_uuid(),
             approval.organization_id.as_uuid(),
             approval.experiment_id.as_uuid(),
             approval.session_id.map(|session| session.as_uuid()),
             approval.card.as_str(),
             approval.summary,
+            approval
+                .payload
+                .as_ref()
+                .map(serde_json::to_string)
+                .transpose()
+                .map_err(|error| super::unavailable(sqlx::Error::Encode(Box::new(error))))?,
             approval.cost_cents,
             approval.needs_owner,
             approval.status.as_str(),
@@ -137,7 +150,7 @@ impl ApprovalStore for PgStore {
         let mut tx = self.scoped(organization).await?;
         let row = sqlx::query_as!(
             ApprovalRow,
-            "update approvals set status = $3, decided_by = $4, decided_at = to_timestamp($5::bigint / 1000.0) where organization_id = $1 and id = $2 returning id, organization_id, experiment_id, session_id, card, summary, cost_cents, needs_owner, status, decided_by, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from decided_at) * 1000)::bigint as \"decided_at\"",
+            "update approvals set status = $3, decided_by = $4, decided_at = to_timestamp($5::bigint / 1000.0) where organization_id = $1 and id = $2 returning id, organization_id, experiment_id, session_id, card, summary, payload, cost_cents, needs_owner, status, decided_by, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from decided_at) * 1000)::bigint as \"decided_at\"",
             organization.as_uuid(),
             id.as_uuid(),
             status.as_str(),
@@ -161,7 +174,7 @@ impl ApprovalStore for PgStore {
         let mut tx = self.scoped(organization).await?;
         sqlx::query_as!(
             ApprovalRow,
-            "select id, organization_id, experiment_id, session_id, card, summary, cost_cents, needs_owner, status, decided_by, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from decided_at) * 1000)::bigint as \"decided_at\" from approvals where organization_id = $1 and id = $2",
+            "select id, organization_id, experiment_id, session_id, card, summary, payload, cost_cents, needs_owner, status, decided_by, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from decided_at) * 1000)::bigint as \"decided_at\" from approvals where organization_id = $1 and id = $2",
             organization.as_uuid(),
             id.as_uuid(),
         )
@@ -180,7 +193,7 @@ impl ApprovalStore for PgStore {
         let mut tx = self.scoped(organization).await?;
         sqlx::query_as!(
             ApprovalRow,
-            "select id, organization_id, experiment_id, session_id, card, summary, cost_cents, needs_owner, status, decided_by, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from decided_at) * 1000)::bigint as \"decided_at\" from approvals where organization_id = $1 and experiment_id = $2 order by created_at, id",
+            "select id, organization_id, experiment_id, session_id, card, summary, payload, cost_cents, needs_owner, status, decided_by, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from decided_at) * 1000)::bigint as \"decided_at\" from approvals where organization_id = $1 and experiment_id = $2 order by created_at, id",
             organization.as_uuid(),
             experiment.as_uuid(),
         )
@@ -199,7 +212,7 @@ impl ApprovalStore for PgStore {
         let mut tx = self.scoped(organization).await?;
         sqlx::query_as!(
             ApprovalRow,
-            "select id, organization_id, experiment_id, session_id, card, summary, cost_cents, needs_owner, status, decided_by, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from decided_at) * 1000)::bigint as \"decided_at\" from approvals where organization_id = $1 and status = 'pending' order by created_at, id",
+            "select id, organization_id, experiment_id, session_id, card, summary, payload, cost_cents, needs_owner, status, decided_by, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from decided_at) * 1000)::bigint as \"decided_at\" from approvals where organization_id = $1 and status = 'pending' order by created_at, id",
             organization.as_uuid(),
         )
         .fetch_all(&mut *tx)

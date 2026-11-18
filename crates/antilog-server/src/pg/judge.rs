@@ -240,6 +240,38 @@ impl JudgeStore for PgJudge {
         tx.commit().await.map_err(fail)
     }
 
+    async fn put_value_model_audited(
+        &self,
+        project: ProjectId,
+        model: &ValueModel,
+        at: i64,
+        entry: &antilog_types::AuditEntry,
+    ) -> Result<(), JudgeStoreError> {
+        let mut tx = self.tx().await?;
+        sqlx::query!(
+            "insert into value_models (id, version, organization_id, project_id, metric, set_at, doc) values ($1, $2, $3, $4, $5, $6, $7)",
+            model.id.as_uuid(),
+            version(model.version)?,
+            self.org(),
+            project.as_uuid(),
+            model.metric,
+            at,
+            text(model)?,
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(fail)?;
+        super::audit(&mut tx, entry)
+            .await
+            .map_err(|error| match error {
+                StoreError::Conflict => JudgeStoreError::Conflict,
+                StoreError::NotFound => JudgeStoreError::NotFound,
+                StoreError::Invariant(rule) => JudgeStoreError::Unavailable(Box::new(rule)),
+                StoreError::Unavailable(source) => JudgeStoreError::Unavailable(source),
+            })?;
+        tx.commit().await.map_err(fail)
+    }
+
     async fn value_model(
         &self,
         id: ValueModelId,
