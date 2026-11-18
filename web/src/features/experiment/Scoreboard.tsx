@@ -1,4 +1,4 @@
-import { useReceipt } from "../../api/queries";
+import { useExperimentSpend, useReceipt } from "../../api/queries";
 import { dollars, share } from "../../lib/format";
 import { type History, kept } from "../../lib/history";
 import { w } from "../../words";
@@ -6,6 +6,7 @@ import { w } from "../../words";
 /** Pinned once the experiment is sealed. It shows only the judge's numbers. */
 export function Scoreboard(props: {
   history: History;
+  experiment: string;
   budgetCents: number;
   metric: string | null;
 }) {
@@ -13,6 +14,7 @@ export function Scoreboard(props: {
   return history.best === null ? (
     <Strip
       history={history}
+      experiment={props.experiment}
       baseline={null}
       bestValue={null}
       budgetCents={props.budgetCents}
@@ -21,6 +23,7 @@ export function Scoreboard(props: {
   ) : (
     <WithBest
       history={history}
+      experiment={props.experiment}
       budgetCents={props.budgetCents}
       metric={props.metric}
       best={history.best}
@@ -30,6 +33,7 @@ export function Scoreboard(props: {
 
 function WithBest(props: {
   history: History;
+  experiment: string;
   budgetCents: number;
   metric: string | null;
   best: string;
@@ -39,6 +43,7 @@ function WithBest(props: {
   return (
     <Strip
       history={props.history}
+      experiment={props.experiment}
       baseline={body?.baseline ?? null}
       budgetCents={props.budgetCents}
       metric={props.metric}
@@ -49,12 +54,15 @@ function WithBest(props: {
 
 function Strip(props: {
   history: History;
+  experiment: string;
   baseline: number | null;
   bestValue: number | null;
   budgetCents: number;
   metric: string | null;
 }) {
   const { history } = props;
+  const spend = useExperimentSpend(props.experiment);
+  const spent = spend.data?.spentCents ?? 0;
   const unit = history.unit;
   const bestValue = props.bestValue;
   return (
@@ -83,10 +91,11 @@ function Strip(props: {
                 <b>{kept(history)}</b> {w.scoreboard.kept}
               </span>
               <span>
-                <b>{dollars(props.budgetCents)}</b> {w.scoreboard.budget}
+                <b>{dollars(spent)}</b> {w.scoreboard.of} {dollars(props.budgetCents)}{" "}
+                {w.scoreboard.budget}
               </span>
               <span className="bar" aria-hidden="true">
-                <span style={{ width: `${Math.round(share(0, props.budgetCents) * 100)}%` }} />
+                <span style={{ width: `${Math.round(share(spent, props.budgetCents) * 100)}%` }} />
               </span>
             </span>
           </div>

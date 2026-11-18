@@ -132,6 +132,33 @@ export function useExperimentApprovals(id: string) {
   });
 }
 
+/** The conversation of a session, oldest first: every page is read, and the list is asked for again while it works. */
+export function useTranscript(session: string) {
+  return useQuery({
+    queryKey: keys.transcript(session),
+    enabled: session !== "",
+    queryFn: async () => {
+      const events: Schemas["SessionEvent"][] = [];
+      let after: number | undefined;
+      for (let page = 0; page < 40; page += 1) {
+        const got = unwrap(
+          await api.GET("/sessions/{id}/events", {
+            params: {
+              path: { id: session },
+              query: { limit: 500, ...(after === undefined ? {} : { after }) },
+            },
+          }),
+        );
+        events.push(...got.events);
+        if (got.next === null) break;
+        after = got.next;
+      }
+      return events;
+    },
+    refetchInterval: LIVE_MS,
+  });
+}
+
 export function useReceipt(trial: string) {
   return useQuery({
     queryKey: keys.receipt(trial),

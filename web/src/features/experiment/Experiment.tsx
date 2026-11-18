@@ -13,6 +13,7 @@ import {
   useSendMessage,
   useStartSession,
   useStopSession,
+  useTranscript,
 } from "../../api/queries";
 import { Failed, Loading } from "../../components/state/State";
 import {
@@ -31,6 +32,7 @@ import { Composer } from "./Composer";
 import { Header, type Panel } from "./Header";
 import { DetailsPanel, PlatformPanel, TrialsPanel } from "./Panels";
 import { Scoreboard } from "./Scoreboard";
+import { Transcript } from "./Transcript";
 import { TrialCard } from "./TrialCard";
 import { Win } from "./Win";
 
@@ -53,12 +55,12 @@ export function Experiment(props: {
   const navigate = useNavigate();
   const [budgetOpen, setBudgetOpen] = useState(false);
   const [confirmStop, setConfirmStop] = useState(false);
-  const [sent, setSent] = useState<{ id: number; session: string; text: string }[]>([]);
 
   const list = sessions.data ?? [];
   const lead = leadSession(list);
   const active = list.find((session) => session.id === props.sessionId) ?? lead;
   const send = useSendMessage(experimentId, active?.id ?? "");
+  const transcript = useTranscript(active?.id ?? "");
   const start = useStartSession(experimentId);
   const stop = useStopSession(experimentId);
 
@@ -107,7 +109,12 @@ export function Experiment(props: {
       <div className="wsp">
         <div className="chat">
           {e.status === "sealed" ? (
-            <Scoreboard history={parsed} budgetCents={e.budgetCapCents} metric={null} />
+            <Scoreboard
+              history={parsed}
+              experiment={e.id}
+              budgetCents={e.budgetCapCents}
+              metric={null}
+            />
           ) : null}
           <div
             className="scroll"
@@ -119,9 +126,11 @@ export function Experiment(props: {
             }}
           >
             <div className="c760 thread" style={{ gap: 12, paddingTop: 12, paddingBottom: 8 }}>
-              <div className="bubble">
-                <span>{e.goal}</span>
-              </div>
+              {transcript.isSuccess && !transcript.data.some((event) => event.kind === "person") ? (
+                <div className="bubble">
+                  <span>{e.goal}</span>
+                </div>
+              ) : null}
               {e.status === "not_sealed" ? (
                 <div className="tl">{w.experiment.notSealedLine}</div>
               ) : (
@@ -174,13 +183,12 @@ export function Experiment(props: {
                   decidedBy={someone(approval.decidedBy)}
                 />
               ))}
-              {sent
-                .filter((message) => message.session === active?.id)
-                .map((message) => (
-                  <div key={message.id} className="bubble">
-                    <span>{message.text}</span>
-                  </div>
-                ))}
+              <Transcript
+                events={transcript.data ?? []}
+                agent={active?.agent ?? ""}
+                error={transcript.error}
+                onRetry={() => void transcript.refetch()}
+              />
               {active?.status === "failed" ? (
                 <div className="tl" role="alert">
                   {w.experiment.sessionFailed}
@@ -219,7 +227,6 @@ export function Experiment(props: {
                   </div>
                 </section>
               ) : null}
-              <p className="target-note">{w.experiment.transcriptTarget}</p>
             </div>
           </div>
           <Composer
@@ -231,7 +238,7 @@ export function Experiment(props: {
             onSend={async (text) => {
               if (active === undefined) return;
               await send.mutateAsync(text);
-              setSent((all) => [...all, { id: all.length, session: active.id, text }]);
+              await client.invalidateQueries({ queryKey: keys.transcript(active.id) });
             }}
             onContinue={async (text) => {
               const created = await start.mutateAsync({

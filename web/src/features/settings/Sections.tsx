@@ -14,6 +14,7 @@ import {
   useSetMemberRole,
   useSetOrganizationLimits,
   useSetPolicy,
+  useSpend,
   useTokens,
 } from "../../api/queries";
 import { Confirm } from "../../components/dialog/Dialog";
@@ -25,6 +26,7 @@ import { setAppearance, useAppearance } from "../../lib/appearance";
 import { isOwner } from "../../lib/domain";
 import { date, dateTime, dollars, initial, parseDollars, share } from "../../lib/format";
 import { w } from "../../words";
+import { SpendBreakdown } from "../experiment/SpendBreakdown";
 import { ReadOnly, Row, Table } from "./Table";
 
 export function Profile() {
@@ -534,6 +536,7 @@ function PolicyRow(props: {
 
 export function Budgets() {
   const budgets = useBudgets();
+  const spend = useSpend();
   const projects = useProjects();
   const b = w.settings.budgets;
   const cols = "minmax(0, 1.4fr) 120px 120px minmax(0, 1fr)";
@@ -581,9 +584,33 @@ export function Budgets() {
         </Table>
       )}
       <h4 className="sd-gh">{b.where}</h4>
-      <p className="target-note">{b.whereTarget}</p>
+      {spend.isError ? (
+        <Failed error={spend.error} retry={() => void spend.refetch()} />
+      ) : (
+        <SpendBreakdown
+          rows={kinds(spend.data ?? [])}
+          none={b.whereNone}
+          label={b.kind}
+          total={b.spent}
+        />
+      )}
     </div>
   );
+}
+
+/** Every experiment's spend, summed by what it bought. */
+function kinds(all: readonly Schemas["ExperimentSpend"][]): Schemas["KindSpend"][] {
+  const sums = new Map<Schemas["KindSpend"]["kind"], Schemas["KindSpend"]>();
+  for (const row of all.flatMap((experiment) => experiment.byKind)) {
+    const known = sums.get(row.kind);
+    sums.set(
+      row.kind,
+      known === undefined
+        ? row
+        : { kind: row.kind, cents: known.cents + row.cents, tokens: known.tokens + row.tokens },
+    );
+  }
+  return [...sums.values()];
 }
 
 /** An action this client has no label for still reads as words, never as a code. */

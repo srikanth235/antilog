@@ -222,8 +222,9 @@ export const w = {
     noRepos: "No repos attached.",
     noSessions: "No session has started.",
     judgeNote: "Measured by the judge. A number from the session never counts.",
-    transcriptTarget:
-      "The conversation arrives with the session's live events. Until then this page shows the experiment, its cards and what you send.",
+    antilog: "Antilog",
+    calledTool: (name: string) => `Called ${name}`,
+    transcriptFailed: "The conversation could not be loaded.",
     you: "You",
     sentLocal: "Sent",
     experimentStarted: (goal: string) => `Experiment started: ${goal}`,
@@ -261,7 +262,9 @@ export const w = {
     value: "Value",
     valueTarget: "The value model is not served yet. A receipt shows it for a win.",
     spend: "Where the spend went",
-    spendTarget: "Spend by outcome needs the spend records endpoint.",
+    spendNone: "Nothing has been spent yet.",
+    spendKind: "Spent on",
+    spendTotal: "Total",
     sessions: "Sessions",
     session: "Session",
     platform: "Platform",
@@ -292,9 +295,15 @@ export const w = {
     cost: (amount: string) => `The win cost ${amount}, including the trials that were not kept.`,
     from: (from: string, to: string) => `${from} to ${to}`,
   },
+  spendKinds: {
+    tokens: "Model tokens",
+    sandbox: "Sandbox time",
+    judge: "The judge",
+  },
   scoreboard: {
     trials: "trials",
     kept: "kept",
+    of: "of",
     budget: "budget",
   },
   trial: {
@@ -481,7 +490,8 @@ export const w = {
       cap: "Cap",
       noCap: "No cap",
       where: "Where the spend went",
-      whereTarget: "Spend by outcome needs the spend records endpoint.",
+      whereNone: "Nothing has been spent yet.",
+      kind: "Spent on",
     },
     audit: {
       lead: "Every action that changed something, and every refusal. Owners only.",

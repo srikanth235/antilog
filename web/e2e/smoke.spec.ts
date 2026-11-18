@@ -38,6 +38,8 @@ test("start an experiment, approve a card, read the settings", async ({ page }, 
     page.getByRole("heading", { name: "Cut checkout p95 latency", level: 1 }),
   ).toBeVisible();
   await expect(page.getByText("Started a session on the fake platform")).toBeVisible();
+  // The conversation comes from the server: the prompt is there once, not twice.
+  await expect(page.locator(".bubble", { hasText: "Cut checkout p95 latency" })).toHaveCount(1);
 
   // The agent asks for more budget: a card appears, and a person decides.
   const id = page.url().split("/experiments/")[1]?.split(/[?#]/)[0];
@@ -87,16 +89,12 @@ test("a viewer can read but not send", async ({ page, browser }) => {
   await page.getByRole("option", { name: "Viewer" }).click();
   await page.getByRole("button", { name: "Add member" }).click();
   await expect(page.getByText(viewer).first()).toBeVisible();
-  const stored = await page.evaluate(() => localStorage.getItem("antilog.organization.v1"));
-  const organization = typeof stored === "string" ? (JSON.parse(stored) as string) : "";
-  expect(organization).not.toBe("");
 
   const context = await browser.newContext({ baseURL: "http://127.0.0.1:4173" });
   const other = await context.newPage();
   await other.goto("/signin");
   const form = other.getByRole("form", { name: "Test sign-in" });
   await form.getByLabel("Account name").fill(viewer);
-  await form.getByLabel("Organization ID").fill(organization);
   await form.getByRole("button", { name: "Continue with a test account" }).click();
   await expect(other.getByRole("heading", { name: "What do you want to improve?" })).toBeVisible();
   await expect(other.getByLabel("New experiment")).toBeDisabled();

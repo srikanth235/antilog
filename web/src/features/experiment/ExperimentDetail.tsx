@@ -3,6 +3,7 @@ import { useState } from "react";
 import {
   useExperiment,
   useExperimentSessions,
+  useExperimentSpend,
   useHistory,
   useMember,
   useProjects,
@@ -14,6 +15,7 @@ import { dateTime, dollars } from "../../lib/format";
 import { kept, OUTCOME_WORDS, parseHistory } from "../../lib/history";
 import { w } from "../../words";
 import { BudgetDialog } from "./BudgetDialog";
+import { SpendBreakdown } from "./SpendBreakdown";
 
 const t = w.experimentDetail;
 
@@ -38,6 +40,7 @@ export function ExperimentDetail({ experimentId }: { experimentId: string }) {
   const experiment = useExperiment(experimentId);
   const sessions = useExperimentSessions(experimentId);
   const history = useHistory(experimentId);
+  const spend = useExperimentSpend(experimentId);
   const projects = useProjects();
   const me = useMember();
   const [budgetOpen, setBudgetOpen] = useState(false);
@@ -138,7 +141,18 @@ export function ExperimentDetail({ experimentId }: { experimentId: string }) {
         <Target text={t.valueTarget} />
       </Section>
       <Section title={t.spend}>
-        <Target text={t.spendTarget} />
+        {spend.isPending ? (
+          <Loading />
+        ) : spend.isError ? (
+          <Failed error={spend.error} retry={() => void spend.refetch()} />
+        ) : (
+          <SpendBreakdown
+            rows={spend.data.byKind}
+            none={t.spendNone}
+            label={t.spendKind}
+            total={t.spendTotal}
+          />
+        )}
       </Section>
       <Section title={t.sessions}>
         {list.length === 0 ? (
