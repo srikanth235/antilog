@@ -173,6 +173,7 @@ No passwords. Antilog cloud offers exactly two sign-ins, GitHub (OAuth with its 
 | 18 Nov 2026 | Only the receipt is signed; it carries a hash of each of its measurements. |
 | 18 Nov 2026 | The kill-switch runs under a role the owner creates and holds, outside `antilog-*`, so the agent's boundary cannot reach it. |
 | 18 Nov 2026 | antilog.tech's DNS and the landing page are on Cloudflare (free plan, Pages); the product stays on AWS at `app.antilog.tech`, through a DNS-only record to CloudFront. A narrow exception to "Cloudflare is dropped" (17 Nov). The owner sets the domain up by hand; OpenTofu takes the certificate ARN as an input and creates no DNS. |
+| 18 Nov 2026 | The antilog.tech landing page (`site/index.html`) speaks to CTOs and VPs of engineering as "your cloud bill, edited by autonomous agents": agents propose, a judge decides, people approve. It is a marketing page outside the design rules (its own fonts, no board), and its figures are invented examples labelled "Illustrative example". The product and its boards are unchanged. Contact is hello@antilog.tech. |
 
 Decided calls also appear on the Decisions board.
 
