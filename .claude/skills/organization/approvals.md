@@ -1,4 +1,6 @@
-# Approvals and budgets (target)
+# Approvals and budgets
+
+Built: raising a card, policy, deciding and who may decide (`antilog-core/src/approval.rs`), budgets, caps and `ensure_room` for the judge to refuse `measure` (`budget.rs`), and their endpoints. The cards' chat UI, Mode on the composer, the Settings pages and notifications are target.
 
 A person approves the tool calls that matter, in the chat, when they are needed. Settings pages list what was approved and revoke it ([rulings](../product/rulings.md)).
 

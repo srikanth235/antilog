@@ -11,7 +11,7 @@
 
 ## How each is checked
 
-Each check is (target).
+Built: the permission matrix and project override (`antilog-core/tests/organization.rs`), every route refusing a caller with no credential (walked from the OpenAPI document, `antilog-server/tests/api.rs`), approvals by role, policy and audit rows, budgets and nested caps, and no secret in a list or the audit log. Target: the route walk as every role, a test per card kind, and the no-surprise-calls test.
 
 **Permission.** A test per route that the role matrix is applied, driven from the route table in the OpenAPI document, so a new route without a check fails. A test that a project's role overrides the organization role for that project only, and that an experiment is never reachable through a project its caller has no role in.
 

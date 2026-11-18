@@ -1,9 +1,9 @@
 # Add an audited action
 
-Every write is a named action, and every action goes through one action layer in `antilog-server`. The audited actions are the tool calls that change something and the approvals ([approvals.md](approvals.md)). All of it is target.
+Every write is a named action, and every action goes through one action layer, the functions of `crates/antilog-core/src/organization.rs`, `approval.rs` and `budget.rs`. The audited actions are the tool calls that change something and the approvals ([approvals.md](approvals.md)). The layer and its audit entries are built for the organization floor's writes; live events and the other areas' writes are target.
 
 1. **A name.** Give the action one verb-object name, such as `session.stop` or `card.approve`. The name is what the audit log shows and what the permission matrix lists.
-2. **Declare it once.** Register the action in the action layer with its input, the roles that may run it, the audit fields it records, and the event it emits.
+2. **Declare it once.** Add the action to `Action` in `organization.rs` (its name and least role, the one matrix) and register it in the action layer with its input, the roles that may run it, the audit fields it records, and the event it emits.
 3. **Permission first.** The layer checks the actor's role in the organization before anything runs. A denied call writes an audit entry with the outcome and changes nothing.
 4. **Then the write.** The write and its audit entry happen in one Postgres transaction, or not at all. A write without an entry is a defect. See [../change/write-action.md](../change/write-action.md).
 5. **Then the event.** The layer publishes the live event after the commit ([../change/live-event.md](../change/live-event.md)). Events and audit entries carry no secret.

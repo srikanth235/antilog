@@ -6,7 +6,7 @@ description: >-
 
 # Organization
 
-The shared floor under sessions and the judge. It holds members, roles, projects, sign-in, approvals, budgets and the audit log. Organizations, roles, approvals and audit are target.
+The shared floor under sessions and the judge. It holds members, roles, projects, sign-in, approvals, budgets and the audit log. Built on this branch: the action layer, the permission matrix, sign-in, approvals, policy, budgets and caps, and the audit log reads (`antilog-core/src/organization.rs`, `auth.rs`, `approval.rs`, `budget.rs`; `antilog-server/src/api/auth.rs`, `api/organization.rs`, `signin.rs`). Group mappings, notifications, live events and the Settings pages are target.
 
 | If you are doing | Read |
 | --- | --- |

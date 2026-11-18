@@ -1,6 +1,6 @@
 # Organization: objects and words
 
-The access words below are not in [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md). Organizations, members, projects, project roles, access tokens, policy, approvals, budgets and the audit log are in the store ([../change/ledger-table.md](../change/ledger-table.md)); group mappings, sign-in sessions and the action layer are not built. Roles belong to the organization and, where a project sets one, to the project.
+The access words below are not in [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md). Organizations, members, projects, project roles, access tokens, policy, approvals, budgets and the audit log are in the store ([../change/ledger-table.md](../change/ledger-table.md)); sign-in sessions (a hashed random token in a cookie, twelve hours) and the action layer are built; group mappings are not. Roles belong to the organization and, where a project sets one, to the project.
 
 | Object | Means | Not |
 | --- | --- | --- |

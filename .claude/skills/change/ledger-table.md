@@ -1,6 +1,6 @@
 # A table, column or migration
 
-The ledger is the store, and the only state: Postgres 18, on Antilog cloud and self-hosted alike. The core sees one `Store` trait, so tests of other modules use an in-memory double. It holds ids, versions, numbers, states, the conversation's words (decided by the owner, see [product rulings](../product/rulings.md)), commit ids, spend and audit rows. It never holds a customer's data, a secret, tool output, a diff or a log. Built: the organization and session side (organizations, members, projects and project roles, access tokens, experiments' rows, sessions, spend, policy, approvals, audit log). Not built: the judge's tables and row-level security (target).
+The ledger is the store, and the only state: Postgres 18, on Antilog cloud and self-hosted alike. The core sees one `Store` trait, so tests of other modules use an in-memory double. It holds ids, versions, numbers, states, the conversation's words (decided by the owner, see [product rulings](../product/rulings.md)), commit ids, spend and audit rows. It never holds a customer's data, a secret, tool output, a diff or a log. Built: the organization and session side (organizations, members, projects and project roles, access tokens, sign-in sessions, experiments' rows, sessions, spend, policy, approvals, audit log) and row-level security on the organization's own tables (not yet on `experiments`, `sessions` and `spend`). Not built: the judge's tables (target).
 
 ## Rules (target)
 
@@ -23,5 +23,5 @@ The ledger is the store, and the only state: Postgres 18, on Antilog cloud and s
 
 ## Row-level security
 
-- Every table with an organization column has a row-level security policy on it, as a second guard behind the query filter. The server sets the organization for each transaction; a query that forgets the filter returns nothing instead of another organization's rows.
+- Every table with an organization column has a row-level security policy on it, as a second guard behind the query filter. The server sets the organization for each transaction; a query that forgets the filter returns nothing instead of another organization's rows. Built: `PgStore::scoped` sets `antilog.organization_id` for the transaction, the server connects as a role that owns no table and is no superuser, and the migration guards that look across rows are `security definer`. An audit row may be appended with no organization set; reading the log needs one. The tests run the storage suite as such a role.
 

@@ -1,6 +1,6 @@
 # A write
 
-Every write goes through one action layer, and nowhere else. A write that skips a step is a bug. A new write is an entry in the action layer, not a handler with its own checks. (target: the layer is not built yet.)
+Every write goes through one action layer, and nowhere else. A write that skips a step is a bug. A new write is an entry in the action layer, not a handler with its own checks. Built for the organization floor: the functions of `crates/antilog-core/src/organization.rs`, `approval.rs` and `budget.rs`; step 3 (events) is target.
 
 ## The three steps, in order (target)
 

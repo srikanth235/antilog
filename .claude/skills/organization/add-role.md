@@ -1,6 +1,6 @@
 # Add a role
 
-Roles are owner, editor and viewer. A member has an organization role, which is their default in every project, and a project can set a different role for a member in that project. Per-repo visibility is not offered ([../product/rulings.md](../product/rulings.md)). Organization owners manage organization settings. Project owners manage the project's members and budget. All of it is target.
+Roles are owner, editor and viewer. A member has an organization role, which is their default in every project, and a project can set a different role for a member in that project. Per-repo visibility is not offered ([../product/rulings.md](../product/rulings.md)). Organization owners manage organization settings. Project owners manage the project's members and budget. The roles and the one permission matrix (`Action::minimum` in `antilog-core/src/organization.rs`) are built; the route-walk test of step 8 and group mapping are target.
 
 1. **Name and one sentence.** State what the role may do in the words of [model.md](model.md). A role that needs more than one sentence is two roles.
 2. **A matrix row.** Add the role to the one permission table: for each action and each approval card kind (see [approvals.md](approvals.md)), allow or deny, at organization scope and at project scope. The table is the only place permission is decided.

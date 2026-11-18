@@ -19,7 +19,7 @@ cargo nextest run -p <crate>             # database tests, against Postgres in a
 - **The audit log is append-only.** Rows are inserted, never updated or deleted by the application. A job's state history, a verdict and a receipt are recorded, not overwritten. Tokens are stored as hashes. Receipts are signed ([libraries.md](../libraries.md)).
 - **Every row carries its organization.** Each table that belongs to an organization has `organization_id`, indexed (usually the first column of its composite indexes), and every query filters by it. A query that forgets the organization is a data leak between customers. Prefer a function or a typed repository per module that takes the organization as an argument so it cannot be forgotten.
 - **Each module owns its tables.** No joins across modules; a module asks another through its Rust API. Write SQL plain enough to move.
-- **Row-level security is not used for end users.** There is one database client, the server, which enforces access in code ([organization skill](../../organization/SKILL.md)). Do not give the database users that mirror Antilog's members. A policy on each organization table is an extra guard; the code never relies on it.
+- **Row-level security is not used for end users.** There is one database client, the server, which enforces access in code ([organization skill](../../organization/SKILL.md)). Do not give the database users that mirror Antilog's members. A policy on each organization table is an extra guard; the code never relies on it. The server connects as a role that owns no table (the migrations run as the owner) and sets `antilog.organization_id` in each transaction through `PgStore::scoped`.
 
 ## sqlx
 
