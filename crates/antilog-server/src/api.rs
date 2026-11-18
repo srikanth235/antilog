@@ -56,12 +56,18 @@ pub fn router<D: Deps + 'static>(deps: Arc<D>, settings: auth::Settings) -> Rout
 }
 
 pub fn router_with<D: Deps + 'static>(app: Arc<auth::App<D>>) -> Router {
-    Router::new()
+    let wake = app.settings.wake_secret.is_some();
+    let router = Router::new()
         .route("/health", get(health::<D>))
         .merge(auth::routes())
         .merge(organization::routes())
-        .merge(session::routes())
-        .with_state(app)
+        .merge(session::routes());
+    let router = if wake {
+        router.merge(session::wake_routes())
+    } else {
+        router
+    };
+    router.with_state(app)
 }
 
 pub fn openapi_json() -> String {

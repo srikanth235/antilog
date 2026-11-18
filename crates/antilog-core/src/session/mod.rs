@@ -56,6 +56,7 @@ pub(crate) fn now_ms<D: Deps>(deps: &D) -> i64 {
 
 pub(crate) async fn book<D: Deps>(
     deps: &D,
+    organization: OrganizationId,
     session: SessionId,
     after: Duration,
 ) -> Result<(), TimerError> {
@@ -66,7 +67,7 @@ pub(crate) async fn book<D: Deps>(
         .now()
         .checked_add(after)
         .unwrap_or_else(|_| deps.clock().now());
-    deps.timer().wake_at(job(session), at).await
+    deps.timer().wake_at(organization, job(session), at).await
 }
 
 pub(crate) fn audit<D: Deps>(
@@ -154,7 +155,7 @@ pub async fn start<D: Deps>(
         .update_session(organization, session.id, &change, now_ms(deps), None)
         .await?;
     if started {
-        book(deps, session.id, STEP).await?;
+        book(deps, organization, session.id, STEP).await?;
     }
     Ok(session)
 }
@@ -215,7 +216,7 @@ pub async fn message<D: Deps>(
             Some(&audit(deps, organization, actor, "session.message", id)),
         )
         .await?;
-    book(deps, id, Duration::ZERO).await?;
+    book(deps, organization, id, Duration::ZERO).await?;
     Ok(session)
 }
 

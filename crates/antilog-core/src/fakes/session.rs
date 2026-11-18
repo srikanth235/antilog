@@ -98,14 +98,6 @@ impl SessionStore for FakeStore {
         Ok(locked(&self.ledger).session(organization, id).cloned())
     }
 
-    async fn find_session(&self, id: SessionId) -> Result<Option<Session>, StoreError> {
-        Ok(locked(&self.ledger)
-            .sessions
-            .iter()
-            .find(|row| row.id == id)
-            .cloned())
-    }
-
     async fn sessions(
         &self,
         organization: OrganizationId,

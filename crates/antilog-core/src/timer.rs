@@ -1,5 +1,6 @@
 use std::future::Future;
 
+use antilog_types::OrganizationId;
 use jiff::Timestamp;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -14,9 +15,14 @@ pub enum TimerError {
 pub trait Timer: Send + Sync {
     fn wake_at(
         &self,
+        organization: OrganizationId,
         job: JobId,
         at: Timestamp,
     ) -> impl Future<Output = Result<(), TimerError>> + Send;
 
-    fn cancel(&self, job: JobId) -> impl Future<Output = Result<(), TimerError>> + Send;
+    fn cancel(
+        &self,
+        organization: OrganizationId,
+        job: JobId,
+    ) -> impl Future<Output = Result<(), TimerError>> + Send;
 }

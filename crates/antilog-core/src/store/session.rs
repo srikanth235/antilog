@@ -58,12 +58,6 @@ pub trait SessionStore {
         id: SessionId,
     ) -> impl Future<Output = Result<Option<Session>, StoreError>> + Send;
 
-    /// A session by its id alone, for a wake-up that carries no organization.
-    fn find_session(
-        &self,
-        id: SessionId,
-    ) -> impl Future<Output = Result<Option<Session>, StoreError>> + Send;
-
     fn sessions(
         &self,
         organization: OrganizationId,
