@@ -68,9 +68,11 @@ jobs:
           restore-keys: rust-
       - name: Tools at pinned versions
         run: |
-          cargo install --locked cargo-nextest@0.9.152
-          cargo install --locked cargo-deny@0.20.2
-          cargo install --locked sqlx-cli@0.9.0 --no-default-features --features postgres,rustls
+          # The cache restores ~/.cargo/bin without cargo's install records, so install only
+          # when the pinned version is missing, and overwrite whatever is there.
+          cargo nextest --version 2>/dev/null | grep -q ' 0\.9\.152' || cargo install --locked --force cargo-nextest@0.9.152
+          cargo deny --version 2>/dev/null | grep -q ' 0\.20\.2$' || cargo install --locked --force cargo-deny@0.20.2
+          cargo sqlx --version 2>/dev/null | grep -q ' 0\.9\.0$' || cargo install --locked --force sqlx-cli@0.9.0 --no-default-features --features postgres,rustls
       - run: cargo fmt --all --check
       - run: cargo clippy --workspace --all-targets -- -D warnings
       - name: Tests, with Postgres 18 in a container
@@ -170,7 +172,7 @@ jobs:
 
   lambda:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     env:
       CARGO_INCREMENTAL: "0"
       SQLX_OFFLINE: "true"
@@ -197,6 +199,9 @@ jobs:
           restore-keys: lambda-
       - run: pip install cargo-lambda==1.9.2
       - run: cargo lambda build --release --arm64 -p antilog-aws --locked
+      # Build the debug binary up front, so cargo lambda watch below starts it at once instead
+      # of compiling the workspace while the invokes wait.
+      - run: cargo build -p antilog-aws --bin antilog-lambda --locked
       - name: Invoke the health route locally, with no AWS
         env:
           DATABASE_URL: postgres://postgres:pw@127.0.0.1:5432/postgres
@@ -214,7 +219,7 @@ jobs:
           AWS_REGION: us-east-1
         run: |
           cargo lambda watch -A 127.0.0.1 -P 9000 -p antilog-aws --bin antilog-lambda > watch.log 2>&1 &
-          for i in $(seq 1 60); do
+          for i in $(seq 1 24); do
             out=$(timeout 30 cargo lambda invoke -A 127.0.0.1 -P 9000 antilog-lambda --data-file crates/antilog-aws/tests/events/health.json 2>/dev/null) && break
             sleep 5
           done
