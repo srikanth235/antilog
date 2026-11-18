@@ -1,6 +1,6 @@
 # Session: objects and words
 
-Experiment rows, sessions and spend records are in the store ([../change/ledger-table.md](../change/ledger-table.md)); the rest is target. [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md) defines the words for screens; here an agent is a worker: a model on an agent platform. What each screen shows is in [../design/behaviour.md](../design/behaviour.md), not here.
+Experiment rows, sessions and spend records are in the store ([../change/ledger-table.md](../change/ledger-table.md)); the relay, the tools and the budget stop are built on the fake platform; the rest is target. [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md) defines the words for screens; here an agent is a worker: a model on an agent platform. What each screen shows is in [../design/behaviour.md](../design/behaviour.md), not here.
 
 ## Where a session sits
 

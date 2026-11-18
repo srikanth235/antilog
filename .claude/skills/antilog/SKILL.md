@@ -1,6 +1,6 @@
 ---
 name: antilog
-description: Drive Antilog from the shell with the `antilog` command (target; not built on this branch). Use when the user asks about their experiments (list, show, history, receipt, spend), wants to start an experiment from the terminal (`antilog "cut checkout p95"`), sign in to an Antilog server, open a pull request for a win, or wants Antilog's tools as an MCP server (`antilog mcp`) for an agent on their own machine, or names Antilog.
+description: Drive Antilog from the shell with the `antilog` command (target; only `antilog mcp` is built on this branch). Use when the user asks about their experiments (list, show, history, receipt, spend), wants to start an experiment from the terminal (`antilog "cut checkout p95"`), sign in to an Antilog server, open a pull request for a win, or wants Antilog's tools as an MCP server (`antilog mcp`) for an agent on their own machine, or names Antilog.
 ---
 
 # Antilog

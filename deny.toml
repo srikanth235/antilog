@@ -4,6 +4,8 @@ all-features = true
 [advisories]
 version = 2
 ignore = [
+    { id = "RUSTSEC-2026-0543", reason = "owner-approved 18 Nov: chrono is unmaintained and reached only through rmcp (antilog mcp) and through oauth2 and openidconnect (sign-in); revisit when they move off it" },
+    { id = "RUSTSEC-2023-0071", reason = "owner-approved 18 Nov: rsa is reached only through openidconnect, which verifies ID-token signatures with the provider public key; Antilog never signs or decrypts with an RSA private key; no fixed rsa 0.9 exists; revisit when openidconnect updates" },
     { id = "RUSTSEC-2026-0440", reason = "astral-tokio-tar is reached only through testcontainers, a dev-dependency of antilog-server tests" },
 ]
 

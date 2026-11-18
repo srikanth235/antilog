@@ -244,6 +244,103 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/organizations/{organization}/experiments/{experiment}/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sessions"];
+        put?: never;
+        post: operations["start"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/organizations/{organization}/experiments/{experiment}/tools/{tool}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["call"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/organizations/{organization}/sessions/{session}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["read"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/organizations/{organization}/sessions/{session}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["message"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/organizations/{organization}/sessions/{session}/step": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** The timer's wake-up for a session. At least once, so safe to call again. */
+        post: operations["step"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/organizations/{organization}/sessions/{session}/stop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["stop"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/policies": {
         parameters: {
             query?: never;
@@ -356,6 +453,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tools": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["tools"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -433,6 +546,8 @@ export interface components {
         };
         /** @enum {string} */
         CardKind: "SealExperiment" | "RaiseBudget" | "AddCredential" | "AttachRepo" | "ChangeEnvironment" | "OpenPullRequest" | "KeepGoing" | "ContinueOnAnotherAgent";
+        /** @enum {string} */
+        Cleanup: "Removed" | "NotRemoved";
         Decide: {
             decision: components["schemas"]["Decision"];
         };
@@ -577,6 +692,27 @@ export interface components {
          * @enum {string}
          */
         Role: "Viewer" | "Editor" | "Owner";
+        SendMessage: {
+            text: string;
+        };
+        /** @description One agent's work inside an experiment. */
+        Session: {
+            agent: string;
+            cleanup?: components["schemas"]["Cleanup"] | null;
+            /** Format: int64 */
+            createdAt: number;
+            experimentId: components["schemas"]["ExperimentId"];
+            id: components["schemas"]["SessionId"];
+            /** @description Why it ended, such as "Stopped by Ada" or "Handed off to Codex". */
+            note?: string | null;
+            organizationId: components["schemas"]["OrganizationId"];
+            parent?: components["schemas"]["SessionId"] | null;
+            platform: string;
+            platformHandle?: string | null;
+            status: components["schemas"]["SessionStatus"];
+            /** Format: int64 */
+            updatedAt: number;
+        };
         /** Format: uuid */
         SessionId: string;
         /** @description A sign-in session; the secret is shown once and is also set as a cookie. */
@@ -586,6 +722,8 @@ export interface components {
             member: components["schemas"]["Member"];
             secret: string;
         };
+        /** @enum {string} */
+        SessionStatus: "Working" | "WaitingForYou" | "Done" | "Failed";
         /** @description `None` returns the member to their organization role in this project. */
         SetProjectRole: {
             role?: components["schemas"]["Role"] | null;
@@ -605,12 +743,47 @@ export interface components {
             authorizeUrl: string;
             state: string;
         };
+        /** @description What starts a session in an experiment. */
+        StartSession: {
+            agent: string;
+            environment?: string | null;
+            prompt: string;
+            repos?: string[];
+        };
+        /** @description The result of one relay step. */
+        StepResult: {
+            /** Format: int32 */
+            events: number;
+            status: components["schemas"]["SessionStatus"];
+        };
+        StopSession: {
+            /** @description Shown as "Stopped by NAME". */
+            by: string;
+        };
         /** Format: uuid */
         TokenId: string;
         /** @description An access token; the secret is shown once. */
         TokenIssued: {
             secret: string;
             token: components["schemas"]["AccessToken"];
+        };
+        /** @description A call of one Antilog tool from an agent that is not in a platform session, such as `antilog mcp`. */
+        ToolCall: {
+            /** @description Unique per call; sending a call again with the same id changes nothing twice. */
+            call?: string | null;
+            input: Record<string, never>;
+            session?: components["schemas"]["SessionId"] | null;
+        };
+        ToolDefinition: {
+            description: string;
+            inputSchema: Record<string, never>;
+            name: string;
+        };
+        ToolResult: {
+            answer: Record<string, never>;
+            /** @description A measurement that was accepted: how it ended, in words. Never a holdout value. */
+            followup?: string | null;
+            session: components["schemas"]["SessionId"];
         };
     };
     responses: never;
@@ -1105,6 +1278,233 @@ export interface operations {
             };
         };
     };
+    sessions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization: components["schemas"]["OrganizationId"];
+                experiment: components["schemas"]["ExperimentId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Session"][];
+                };
+            };
+        };
+    };
+    start: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization: components["schemas"]["OrganizationId"];
+                experiment: components["schemas"]["ExperimentId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartSession"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Session"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    call: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization: components["schemas"]["OrganizationId"];
+                experiment: components["schemas"]["ExperimentId"];
+                tool: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ToolCall"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ToolResult"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    read: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization: components["schemas"]["OrganizationId"];
+                session: components["schemas"]["SessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Session"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    message: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization: components["schemas"]["OrganizationId"];
+                session: components["schemas"]["SessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendMessage"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Session"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    step: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization: components["schemas"]["OrganizationId"];
+                session: components["schemas"]["SessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StepResult"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    stop: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization: components["schemas"]["OrganizationId"];
+                session: components["schemas"]["SessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StopSession"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Session"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
     policies: {
         parameters: {
             query?: never;
@@ -1367,6 +1767,25 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    tools: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ToolDefinition"][];
+                };
             };
         };
     };

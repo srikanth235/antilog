@@ -4,9 +4,9 @@ use antilog_types::judge::{
 };
 
 use super::run::{Env, Sides, evaluate};
-use super::sandbox::{Data, PairedRun, Sandbox, SandboxError};
 use super::stats::noise;
 use crate::clock::Clock;
+use crate::platform::{Data, PairedRun, Platform, PlatformError};
 use crate::store::judge::{JudgeStore, JudgeStoreError};
 
 /// Code the proposer plants to see whether the evaluation rejects it.
@@ -22,7 +22,7 @@ pub enum SealError {
     #[error(transparent)]
     Refused(#[from] SealRefused),
     #[error(transparent)]
-    Sandbox(#[from] SandboxError),
+    Sandbox(#[from] PlatformError),
     #[error("the baseline measured too few or unusable repeats")]
     Unusable,
     #[error(transparent)]
@@ -42,7 +42,7 @@ fn baseline(def: &Definition) -> Vec<CommitRef> {
 
 /// The baseline measurement, the noise check (the commit paired with itself) and the
 /// planted cheats. A definition that fails any of them gets no `SealChecks`.
-pub async fn run_checks<S: Sandbox>(
+pub async fn run_checks<S: Platform>(
     sandbox: &S,
     definition: &Definition,
     files: &[ProtectedFile],
@@ -54,7 +54,7 @@ pub async fn run_checks<S: Sandbox>(
     }
     let base = baseline(definition);
     let pairs = sandbox
-        .run(&PairedRun {
+        .run_paired(&PairedRun {
             seal: None,
             command: &definition.evaluation.command,
             files,
@@ -121,7 +121,7 @@ pub struct Proposal {
 
 /// Runs the seal checks, seals the definition as one new version and stores it.
 /// Call it only after a person approved the card.
-pub async fn seal<S: Sandbox, J: JudgeStore, C: Clock>(
+pub async fn seal<S: Platform, J: JudgeStore, C: Clock>(
     sandbox: &S,
     store: &J,
     clock: &C,

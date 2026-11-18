@@ -59,6 +59,13 @@ async fn postgres_store_passes_the_store_suite() -> anyhow::Result<()> {
 }
 
 #[tokio::test]
+async fn postgres_store_keeps_the_relay_state() -> anyhow::Result<()> {
+    let (store, _pool, _container) = migrated_store().await?;
+    antilog_core::seed::relay_suite(&store).await;
+    Ok(())
+}
+
+#[tokio::test]
 async fn migrations_apply_again_without_change() -> anyhow::Result<()> {
     let (store, _pool, _container) = migrated_store().await?;
     store.migrate().await?;
@@ -249,7 +256,14 @@ async fn concurrent_demotions_cannot_orphan_a_project() -> anyhow::Result<()> {
 }
 
 /// Pending row-level security: the session area's tables, owned by another track.
-const WITHOUT_ROW_LEVEL_SECURITY: [&str; 3] = ["experiments", "sessions", "spend"];
+const WITHOUT_ROW_LEVEL_SECURITY: [&str; 6] = [
+    "approvals_told",
+    "experiments",
+    "seal_proposals",
+    "session_relay",
+    "sessions",
+    "spend",
+];
 
 /// A pool that connects as a role that owns nothing and is no superuser, as the server does.
 async fn app_store() -> anyhow::Result<(PgStore, PgPool, ContainerAsync<GenericImage>)> {

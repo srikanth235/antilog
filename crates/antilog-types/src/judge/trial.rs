@@ -2,9 +2,9 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 use super::{ExperimentId, SealHash, id};
+use crate::SessionId;
 
 id!(TrialId);
-id!(SessionId);
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]

@@ -6,8 +6,8 @@ use antilog_types::judge::{
 };
 
 use super::acceptance::{Criteria, Evidence, Need, Verdict, decide};
-use super::sandbox::{Data, PairedRun, Pairs, Sandbox};
 use super::stats::{bar_confidence, confidence_95, stats};
+use crate::platform::{Data, PairedRun, Pairs, Platform};
 
 #[derive(Clone, Copy)]
 pub struct Env<'a> {
@@ -54,7 +54,7 @@ fn usable(pairs: &Pairs, repeats: u32) -> Result<(), String> {
 }
 
 /// Runs the stages `decide` asks for, one fresh sandbox each, until it is done.
-pub async fn evaluate<S: Sandbox>(
+pub async fn evaluate<S: Platform>(
     sandbox: &S,
     env: Env<'_>,
     k: NonZeroU32,
@@ -111,7 +111,7 @@ pub async fn evaluate<S: Sandbox>(
             ),
             Need::Holdout => (Data::Holdout(&def.data.holdout), sides.parent, def.repeats),
         };
-        let pairs = match sandbox.run(&run(data, base, repeats)).await {
+        let pairs = match sandbox.run_paired(&run(data, base, repeats)).await {
             Ok(pairs) => usable(&pairs, repeats).map(|()| pairs),
             Err(error) => Err(error.to_string()),
         };

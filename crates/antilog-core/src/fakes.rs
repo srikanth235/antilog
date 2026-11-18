@@ -8,16 +8,32 @@ mod approval;
 mod budget;
 mod ledger;
 mod organization;
+mod platform;
+mod relay;
 mod session;
+mod world;
+
+pub use platform::FakePlatform;
+pub use world::{FakeCodeHost, FakeDeps};
 
 use crate::clock::Clock;
-use crate::platform::{
-    JudgeRun, JudgeSpec, Platform, PlatformError, SessionEvents, SessionHandle, SessionSpec,
-};
 use crate::secrets::{Secret, Secrets, SecretsError};
 use crate::signer::{Signature, Signer};
 use crate::store::{Store, StoreError};
 use crate::timer::{JobId, Timer, TimerError};
+
+mod relay_state {
+    use std::collections::{HashMap, HashSet};
+
+    use antilog_types::{ApprovalId, OrganizationId, SessionId};
+
+    #[derive(Default)]
+    pub struct Relay {
+        pub cursors: HashMap<(OrganizationId, SessionId), String>,
+        pub proposals: HashMap<(OrganizationId, ApprovalId), String>,
+        pub told: HashSet<(OrganizationId, ApprovalId)>,
+    }
+}
 
 fn locked<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
     mutex.lock().unwrap_or_else(PoisonError::into_inner)
@@ -28,6 +44,14 @@ pub struct FakeClock(Mutex<Timestamp>);
 impl FakeClock {
     pub fn new(now: Timestamp) -> Self {
         Self(Mutex::new(now))
+    }
+
+    pub fn now_plus(&self, by: std::time::Duration) -> Timestamp {
+        let now = *locked(&self.0);
+        SignedDuration::try_from(by)
+            .ok()
+            .and_then(|d| now.checked_add(d).ok())
+            .unwrap_or(now)
     }
 
     pub fn advance(&self, by: SignedDuration) {
@@ -45,61 +69,12 @@ impl Clock for FakeClock {
 #[derive(Default)]
 pub struct FakeStore {
     ledger: Mutex<ledger::Ledger>,
+    relay: Mutex<relay_state::Relay>,
 }
 
 impl Store for FakeStore {
     async fn ping(&self) -> Result<(), StoreError> {
         Ok(())
-    }
-}
-
-#[derive(Default)]
-pub struct FakePlatform {
-    state: Mutex<FakePlatformState>,
-}
-
-#[derive(Default)]
-struct FakePlatformState {
-    sessions: HashMap<String, Vec<String>>,
-    next: u64,
-}
-
-impl Platform for FakePlatform {
-    async fn start_session(&self, spec: &SessionSpec) -> Result<SessionHandle, PlatformError> {
-        let mut state = locked(&self.state);
-        state.next += 1;
-        let handle = format!("fake-session-{}", state.next);
-        state.sessions.insert(
-            handle.clone(),
-            vec![format!("started {}: {}", spec.agent, spec.prompt)],
-        );
-        Ok(SessionHandle(handle))
-    }
-
-    async fn session_events(
-        &self,
-        session: &SessionHandle,
-        cursor: Option<&str>,
-    ) -> Result<SessionEvents, PlatformError> {
-        let state = locked(&self.state);
-        let all = state
-            .sessions
-            .get(&session.0)
-            .ok_or(PlatformError::UnknownSession)?;
-        let from = cursor
-            .and_then(|c| c.parse::<usize>().ok())
-            .unwrap_or(0)
-            .min(all.len());
-        Ok(SessionEvents {
-            events: all.get(from..).unwrap_or_default().to_vec(),
-            next_cursor: Some(all.len().to_string()),
-        })
-    }
-
-    async fn run_judge(&self, spec: &JudgeSpec) -> Result<JudgeRun, PlatformError> {
-        Ok(JudgeRun {
-            samples: (0..spec.repeats).map(|_| 1.0).collect(),
-        })
     }
 }
 
@@ -192,6 +167,11 @@ mod tests {
         store_suite(&FakeStore::default()).await;
     }
 
+    #[tokio::test]
+    async fn fake_store_keeps_the_relay_state() {
+        crate::seed::relay_suite(&FakeStore::default()).await;
+    }
+
     #[test]
     fn fake_clock_moves_only_when_advanced() {
         let start: Timestamp = "2026-11-18T00:00:00Z".parse().unwrap();
@@ -202,29 +182,6 @@ mod tests {
             clock.now(),
             start.checked_add(SignedDuration::from_secs(60)).unwrap()
         );
-    }
-
-    #[tokio::test]
-    async fn fake_platform_streams_events_from_a_cursor() {
-        let platform = FakePlatform::default();
-        let handle = platform
-            .start_session(&SessionSpec {
-                agent: "a".into(),
-                prompt: "go".into(),
-            })
-            .await
-            .unwrap();
-        let first = platform.session_events(&handle, None).await.unwrap();
-        assert_eq!(first.events.len(), 1);
-        let again = platform
-            .session_events(&handle, first.next_cursor.as_deref())
-            .await
-            .unwrap();
-        assert!(again.events.is_empty());
-        let unknown = platform
-            .session_events(&SessionHandle("x".into()), None)
-            .await;
-        assert!(matches!(unknown, Err(PlatformError::UnknownSession)));
     }
 
     #[tokio::test]

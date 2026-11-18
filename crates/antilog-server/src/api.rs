@@ -1,3 +1,5 @@
+pub mod session;
+
 use std::sync::Arc;
 
 use antilog_core::store::Store;
@@ -68,6 +70,7 @@ pub fn openapi_json() -> String {
     let mut doc = ApiDoc::openapi();
     doc.merge(auth::ApiDoc::openapi());
     doc.merge(organization::ApiDoc::openapi());
+    doc.merge(session::Doc::openapi());
     doc.to_pretty_json()
         .unwrap_or_else(|error| unreachable!("the document serializes: {error}"))
 }

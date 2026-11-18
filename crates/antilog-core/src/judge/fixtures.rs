@@ -4,6 +4,7 @@
     reason = "test support: a bad fixture fails the test"
 )]
 
+use antilog_types::SessionId;
 use antilog_types::judge::*;
 
 pub fn definition() -> Definition {
