@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the Ratchet mockup foundation from design/tokens.toml (standard library only).
+"""Generate the Antilog mockup foundation from design/tokens.toml (standard library only).
 
     python3 design/tools/tokens.py           write the generated files
     python3 design/tools/tokens.py --check   write nothing; exit 1 listing every problem

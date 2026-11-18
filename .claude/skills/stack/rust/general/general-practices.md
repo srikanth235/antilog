@@ -1,6 +1,6 @@
 # Rust design and implementation practices
 
-Detailed general Rust guidance distilled from the source guides. The Ratchet page [`../ratchet.md`](../ratchet.md) takes precedence where they differ.
+Detailed general Rust guidance distilled from the source guides. The Antilog page [`../antilog.md`](../antilog.md) takes precedence where they differ.
 
 ## 1. Mindset
 
@@ -11,7 +11,7 @@ Detailed general Rust guidance distilled from the source guides. The Ratchet pag
 
 ## 2. Before you hand back code
 
-Run the checks in [`../ratchet.md`](../ratchet.md); run targeted commands only when useful for diagnosis. Fix findings rather than silencing them.
+Run the checks in [`../antilog.md`](../antilog.md); run targeted commands only when useful for diagnosis. Fix findings rather than silencing them.
 
 - Fix a lint rather than silencing it. When a lint is genuinely wrong for one item, use `#[expect(clippy::name, reason = "...")]` on the narrowest item. `expect` warns when the lint stops firing, so stale suppressions get cleaned up. Use `#[allow]` only in generated code or macro output.
 - Never put `#![deny(warnings)]` in source: new toolchains add warnings and break the build. Enforce warnings-as-errors in CI instead, with `cargo clippy -- -D warnings`.
@@ -276,7 +276,7 @@ reproduce -> measure (optimized build) -> find the line -> fix -> measure again 
    | --- | --- |
    | A test or request is slow | `RUST_LOG=debug cargo test --release -p <crate> --test <name> -- --nocapture`, with `tracing` spans (`#[tracing::instrument]`, `tracing` is in [libraries](../../libraries.md)) around the suspects |
    | CPU hot spot, any function | `perf record -g` then `perf report` on the test binary, if installed (Linux); `cargo flamegraph` if installed; on macOS `xcrun xctrace record --template 'Time Profiler'` |
-   | A SQL read is slow | `EXPLAIN QUERY PLAN` (see [../../postgres/ratchet.md](../../postgres/ratchet.md)) |
+   | A SQL read is slow | `EXPLAIN QUERY PLAN` (see [../../postgres/antilog.md](../../postgres/antilog.md)) |
    | Allocation churn | count allocations with a counting `#[global_allocator]` in a test, or `heaptrack` if installed |
    | Slow incremental build | `cargo build --timings` |
    | Two implementations, which is faster | a `criterion` or `divan` bench with `std::hint::black_box`; adding one is a new dependency to justify |
@@ -292,7 +292,7 @@ Do not add a test that asserts on a duration: it flakes on loaded machines and b
 
 Before returning Rust code, confirm:
 
-- The checks in [`../ratchet.md`](../ratchet.md) are clean.
+- The checks in [`../antilog.md`](../antilog.md) are clean.
 - No `unwrap()` outside tests and `main`; every `expect`, `assert`, and `panic` has a message with the relevant values.
 - Public functions take `&str`, `&[T]`, `impl AsRef<_>`, or `impl IntoIterator`, not `&String` or `&Vec<T>`.
 - Every public type derives `Debug` and the applicable common traits; error types implement `Error + Display + Send + Sync + 'static`.

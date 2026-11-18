@@ -1,6 +1,6 @@
 # Composition patterns (digest)
 
-Source: [composition-patterns](https://github.com/vercel-labs/agent-skills/tree/main/skills/composition-patterns) in vercel-labs/agent-skills, by Vercel (version 1.0.0, MIT as declared in the skill header; see [`../licenses/vercel-labs-agent-skills-NOTICE.md`](../licenses/vercel-labs-agent-skills-NOTICE.md)). The original has 8 rules in 4 groups. This digest keeps what applies to a Vite single page app and drops the React Native examples. [`../ratchet.md`](../ratchet.md) wins where they differ, and Base UI components ([../../web/base-ui.md](../../web/base-ui.md)) already follow these patterns: use them before writing your own.
+Source: [composition-patterns](https://github.com/vercel-labs/agent-skills/tree/main/skills/composition-patterns) in vercel-labs/agent-skills, by Vercel (version 1.0.0, MIT as declared in the skill header; see [`../licenses/vercel-labs-agent-skills-NOTICE.md`](../licenses/vercel-labs-agent-skills-NOTICE.md)). The original has 8 rules in 4 groups. This digest keeps what applies to a Vite single page app and drops the React Native examples. [`../antilog.md`](../antilog.md) wins where they differ, and Base UI components ([../../web/base-ui.md](../../web/base-ui.md)) already follow these patterns: use them before writing your own.
 
 Apply these when a component grows a pile of boolean props, or when you build a part that several screens share.
 

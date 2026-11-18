@@ -1,6 +1,6 @@
 # TypeScript type patterns
 
-Rules for type design. Where this repo differs, [`../ratchet.md`](../ratchet.md) wins.
+Rules for type design. Where this repo differs, [`../antilog.md`](../antilog.md) wins.
 
 ## When to use
 

@@ -1,16 +1,16 @@
 ---
 name: product
 description: >-
-  What is Ratchet, what do we owe the customer, and what do we refuse to build? Use for any product, scope or trade-off question; "should we", "is this in scope", "which area owns this"; adding a feature, page, card, tool or integration; naming or wording anything a user reads; deciding what to refuse; and whenever a change touches sessions, the judge (experiments, measurements, the holdout, acceptance), approvals, budgets, or members, roles and the audit log. It states the target product as settled rulings, the governing principles, the non-goals, the owner's decisions, the open questions and when to stop and ask the owner.
+  What is Antilog, what do we owe the customer, and what do we refuse to build? Use for any product, scope or trade-off question; "should we", "is this in scope", "which area owns this"; adding a feature, page, card, tool or integration; naming or wording anything a user reads; deciding what to refuse; and whenever a change touches sessions, the judge (experiments, measurements, the holdout, acceptance), approvals, budgets, or members, roles and the audit log. It states the target product as settled rulings, the governing principles, the non-goals, the owner's decisions, the open questions and when to stop and ask the owner.
 ---
 
 # Product
 
-Ratchet is a chat and a judge. The chat works like Claude Code on the web: a person talks to a coding agent that works in a sandbox with repos attached. The judge is a set of tools every session gets. An agent asks the judge to measure a change, and only the judge's numbers count. Only a measured win becomes a pull request. There are no modes, no plan step and no orchestration loop on the server: the agent drives, and the server relays sessions, runs the judge and keeps a ledger.
+Antilog is a chat and a judge. The chat works like Claude Code on the web: a person talks to a coding agent that works in a sandbox with repos attached. The judge is a set of tools every session gets. An agent asks the judge to measure a change, and only the judge's numbers count. Only a measured win becomes a pull request. There are no modes, no plan step and no orchestration loop on the server: the agent drives, and the server relays sessions, runs the judge and keeps a ledger.
 
 Four things hold it together. A **project** groups the experiments for one area of the code, with roles per project. An **experiment** (the sealed goal and everything measured against it) belongs to one project. A **session** (one agent's work in one sandbox) belongs to an experiment. A **measurement** is the judge's signed result for one trial. Reusable setup (evaluations, skill packs, connectors, agents, plugins) lives in one Customize page. Everything else is a view over measurements. Settings are tools: setup happens in the chat as an approved tool call, and a settings page lists and revokes what was approved. The organization floor (members, roles, projects, sign-in, tokens, approvals, budgets, audit log, notifications) sits under all of it.
 
-The target is a server with a web app as the client of its API, run two ways: self-hosted (a Docker Compose service, server plus Postgres, using the agent platform accounts the customer already has) or Ratchet cloud (we host the server and run every session on Ratchet's platform accounts). Ratchet runs no sandboxes for agents: they run as sessions on agent platforms (Claude Managed Agents, AWS AgentCore, the OpenAI Agents API, Microsoft Foundry Agent Service, Google Agent Runtime) behind one trait. Nothing here is built (target).
+The target is a server with a web app as the client of its API, sold as services: our engineers deliver engagements on it, and client engineers take over. It runs two ways from one Helm chart on Kubernetes with Postgres: Antilog cloud (phase 1, on our AWS account and Antilog's platform accounts) and self-hosted (phase 2, in the client's own AWS, Azure or GCP account). See the business model and deployment in [rulings](rulings.md). Antilog runs no sandboxes for agents: they run as sessions on agent platforms (Claude Managed Agents, AWS AgentCore, the OpenAI Agents API, Microsoft Foundry Agent Service, Google Agent Runtime) behind one trait. Nothing here is built (target).
 
 ## The three aims
 
@@ -28,7 +28,7 @@ Use the governing principles and the non-goals below as settled. Apply them dire
 2. **The judge decides, never a person or an agent.** The moment a hand or a proposer can mark a win, no win means anything.
 3. **Settings are tools.** Setup happens in the chat as an approved tool call. A settings page lists and revokes.
 4. **The agent drives.** The server relays, measures and records. It runs no loop.
-5. **Ratchet never holds the data.** Ids, versions, numbers, states, the conversation's words and audit rows only. Data is read only inside a platform's sandbox.
+5. **Antilog never holds the data.** Ids, versions, numbers, states, the conversation's words and audit rows only. Data is read only inside a platform's sandbox.
 6. **Everything is governed.** Approvals by role, every change recorded.
 7. **Derive, do not store.** Value, Return, cost per trial and status come from measurements and spend records.
 8. **Failure is never shown as zero or empty, and nothing unchecked is shown as healthy.**
@@ -73,7 +73,7 @@ If a question survives all of these, it is a product call. Write the options wit
 - Anything that touches one of the open questions in [rulings.md](rulings.md).
 - A new card kind, or a card that could be pre-approved when it should always ask.
 - Anything that lets an agent set a value model, or that favours one agent's vendor.
-- The licence, pricing or what Ratchet cloud offers beyond the settled rulings.
+- The licence, pricing or what Antilog cloud offers beyond the settled rulings.
 
 ## Before you finish
 

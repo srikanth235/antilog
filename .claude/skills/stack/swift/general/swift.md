@@ -1,6 +1,6 @@
 # Swift
 
-Source: [SwiftUI Pro](https://github.com/twostraws/SwiftUI-Agent-Skill) by Paul Hudson (MIT, [`../licenses/twostraws-SwiftUI-Agent-Skill-LICENSE`](../licenses/twostraws-SwiftUI-Agent-Skill-LICENSE)), condensed and adapted for a macOS app. The app is macOS only, so iOS-only advice is dropped; macOS points are in [macos.md](macos.md). [`../ratchet.md`](../ratchet.md) wins where they differ.
+Source: [SwiftUI Pro](https://github.com/twostraws/SwiftUI-Agent-Skill) by Paul Hudson (MIT, [`../licenses/twostraws-SwiftUI-Agent-Skill-LICENSE`](../licenses/twostraws-SwiftUI-Agent-Skill-LICENSE)), condensed and adapted for a macOS app. The app is macOS only, so iOS-only advice is dropped; macOS points are in [macos.md](macos.md). [`../antilog.md`](../antilog.md) wins where they differ.
 
 - Prefer Swift-native string methods over Foundation equivalents: use `replacing("a", with: "b")` not `replacingOccurrences(of: "a", with: "b")`.
 - Prefer modern Foundation API: `URL.documentsDirectory` instead of `FileManager` directory lookups, `appending(path:)` to append strings to a URL.
@@ -16,7 +16,7 @@ Source: [SwiftUI Pro](https://github.com/twostraws/SwiftUI-Agent-Skill) by Paul 
 - If a given type of data is repeatedly sorted using an identical closure, e.g. `books.sorted { $0.author < $1.author }`, prefer to make the type in question conform to `Comparable` so the sort order is centralized.
 - Prefer modern date formatting over handwritten patterns. If user-visible dates require `DateFormatter`, configure it with `setLocalizedDateFormatFromTemplate()` rather than assigning `dateFormat`, so the locale determines component ordering. Use `y`, rather than `yyyy`, for years in the template. Fixed formats used for API exchange are outside this rule.
 - Format lists for display with `formatted()` rather than inserting comma separators yourself. For example, `destinations.formatted()` provides the locale's punctuation and conjunction; `.formatted(.list(type: .or))` uses the alternative conjunction, and `.list(memberStyle:type:)` formats non-string members. Keep `joined(separator:)` for storage or interchange where a fixed delimiter is intentional.
-- Outside SwiftUI, create localized strings with `String(localized:)` rather than `NSLocalizedString()`. Xcode cannot extract interpolated keys from the older function, leaving that text untranslated. In this app user-facing words come from one catalogue, see [`../ratchet.md`](../ratchet.md).
+- Outside SwiftUI, create localized strings with `String(localized:)` rather than `NSLocalizedString()`. Xcode cannot extract interpolated keys from the older function, leaving that text untranslated. In this app user-facing words come from one catalogue, see [`../antilog.md`](../antilog.md).
 - When trying to convert a string to a date, prefer the modern `Date` initializer API such as `try Date(myString, strategy: .iso8601)`.
 - Flag instances where errors triggered by a user action are swallowed silently, e.g. using `print(error.localizedDescription)` rather than showing an alert or similar.
 - Prefer `if let value {` shorthand over `if let value = value {`.
@@ -52,7 +52,7 @@ var tileColor: Color {
 - Never use Grand Central Dispatch (`DispatchQueue.main.async()`, `DispatchQueue.global()`, etc.). Always use modern Swift concurrency (`async`/`await`, actors, `Task`).
 - Never use `Task.sleep(nanoseconds:)`; use `Task.sleep(for:)` instead.
 - Flag any mutable shared state that isn't protected by an actor or `@MainActor`, unless the project is configured to use MainActor default actor isolation.
-- The app and its tests use Swift 6 language mode with complete concurrency checking. Fix `@Sendable` violations and data races through ownership and actor isolation. Validate with the `xcodebuild` command in [`../ratchet.md`](../ratchet.md); report Apple compilation and tests as unrun when the toolchain is unavailable.
+- The app and its tests use Swift 6 language mode with complete concurrency checking. Fix `@Sendable` violations and data races through ownership and actor isolation. Validate with the `xcodebuild` command in [`../antilog.md`](../antilog.md); report Apple compilation and tests as unrun when the toolchain is unavailable.
 - When evaluating `MainActor.run()`, check whether the project has its default actor isolation set to Main Actor first, because `MainActor.run()` might not be needed.
 - `Task.detached()` is often a bad idea. Wherever it is used, check that it is the best approach.
 

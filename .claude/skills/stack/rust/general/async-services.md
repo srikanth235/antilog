@@ -4,9 +4,9 @@ Sources, read on 14 Nov 2026:
 
 - The Tokio tutorial and topics: [Shared state](https://tokio.rs/tokio/tutorial/shared-state), [Channels](https://tokio.rs/tokio/tutorial/channels), [Select](https://tokio.rs/tokio/tutorial/select), [Graceful shutdown](https://tokio.rs/tokio/topics/shutdown), [Bridging with sync code](https://tokio.rs/tokio/topics/bridging), [Getting started with tracing](https://tokio.rs/tokio/topics/tracing). Tokio project, MIT ([`../licenses/tokio-LICENSE`](../licenses/tokio-LICENSE)).
 - The axum documentation: the [error handling](https://docs.rs/axum/latest/axum/error_handling/index.html) and middleware guides and the graceful-shutdown example, axum 0.8. axum project, MIT ([`../licenses/axum-LICENSE`](../licenses/axum-LICENSE)).
-- The sqlx documentation for `Transaction` and the pool (sqlx project, MIT or Apache-2.0, [`../licenses/sqlx-LICENSE-MIT`](../licenses/sqlx-LICENSE-MIT)). The pool-sizing and compile-time-checking notes below are Ratchet's own and not from a page above; see [../../postgres/ratchet.md](../../postgres/ratchet.md). Other points that are standard practice but not stated on those pages (timeouts, retries, error mapping, testing with paused time) are Ratchet's own too.
+- The sqlx documentation for `Transaction` and the pool (sqlx project, MIT or Apache-2.0, [`../licenses/sqlx-LICENSE-MIT`](../licenses/sqlx-LICENSE-MIT)). The pool-sizing and compile-time-checking notes below are Antilog's own and not from a page above; see [../../postgres/antilog.md](../../postgres/antilog.md). Other points that are standard practice but not stated on those pages (timeouts, retries, error mapping, testing with paused time) are Antilog's own too.
 
-Condensed in our own words. Versions are in [`../../libraries.md`](../../libraries.md); check an API against the version pinned there. [`../ratchet.md`](../ratchet.md) wins where they differ. Read this for a server that handles many requests and jobs at once: `ratchet-server`, and the runner's supervisor loops.
+Condensed in our own words. Versions are in [`../../libraries.md`](../../libraries.md); check an API against the version pinned there. [`../antilog.md`](../antilog.md) wins where they differ. Read this for a server that handles many requests and jobs at once: `antilog-server`, and the runner's supervisor loops.
 
 ## Model
 
@@ -51,7 +51,7 @@ Condensed in our own words. Versions are in [`../../libraries.md`](../../librari
 
 - `tokio::spawn` returns a `JoinHandle`; a panic in the task is reported only when you await it, and an un-awaited handle hides it. Keep handles, or spawn into a `tokio_util::task::TaskTracker` and `wait` on it. Do not spawn a detached task that can outlive what it borrows or that nobody supervises.
 - Graceful shutdown has three parts: decide when to stop (a signal: `ctrl_c`, and `SIGTERM` on Unix, which is what Kubernetes sends; or an internal request), tell every part (a `tokio_util::sync::CancellationToken` cloned into each task, which each task selects on and then runs its own wind-down such as flushing), and wait for them to finish (the `TaskTracker`, with an overall deadline shorter than the platform's grace period).
-- With axum: `axum::serve(listener, app).with_graceful_shutdown(signal_future)` stops accepting new connections and lets in-flight requests finish. Stop background workers with the same token. A worker holding a queue claim should finish or release it; with a Postgres queue, a lease that expires covers a worker that dies (see [../../postgres/ratchet.md](../../postgres/ratchet.md)).
+- With axum: `axum::serve(listener, app).with_graceful_shutdown(signal_future)` stops accepting new connections and lets in-flight requests finish. Stop background workers with the same token. A worker holding a queue claim should finish or release it; with a Postgres queue, a lease that expires covers a worker that dies (see [../../postgres/antilog.md](../../postgres/antilog.md)).
 - Start order matters: register the tracing subscriber first, then open the pool, run migrations, bind the listener, and only then report ready. A health endpoint should say "ready" only when the dependencies are.
 
 ## axum and tower
@@ -65,7 +65,7 @@ Condensed in our own words. Versions are in [`../../libraries.md`](../../librari
 
 ## sqlx in a server
 
-- One `PgPool` for the process, created at start-up, cloned into state. Configure `max_connections`, `acquire_timeout` (so a saturated pool returns an error instead of hanging every request), `idle_timeout` and `max_lifetime`. Size it from the database's limit divided by the replicas (see [../../postgres/ratchet.md](../../postgres/ratchet.md)).
+- One `PgPool` for the process, created at start-up, cloned into state. Configure `max_connections`, `acquire_timeout` (so a saturated pool returns an error instead of hanging every request), `idle_timeout` and `max_lifetime`. Size it from the database's limit divided by the replicas (see [../../postgres/antilog.md](../../postgres/antilog.md)).
 - Do not hold a pooled connection while doing slow non-database work: acquire late, release early. A transaction ends with `commit()` or `rollback()` explicitly; never hold one across a call to another service.
 - Prefer the checked macros (`query!`, `query_as!`) with the offline query data committed, so the build needs no database and a wrong column fails at compile time.
 - Map `sqlx::Error` into your own error type at the boundary: not found, unique violation (a conflict), serialization failure or deadlock (retry the whole transaction), pool timeout (overload), everything else (internal).

@@ -16,14 +16,15 @@ One job per layer, each running the commands in [checks.md](checks.md). A pull r
 | Job | Runs |
 | --- | --- |
 | rust | fmt, clippy with warnings denied, tests, `cargo deny`, on Linux and on macOS (the CLI builds for both) |
-| wasm | `ratchet-core` builds for `wasm32-unknown-unknown` as well as natively, on every commit, so a tokio, `sqlx` or Cloudflare import in the core fails at once |
 | api | the OpenAPI document and generated client are current |
-| storage | the one storage suite against Postgres (a container) and against SQLite; both dialects' migrations; the dialects agree on tables and columns |
+| storage | the storage suite against Postgres (a container); migrations from empty and from the last release |
+| deploy-config | `helm lint` and `helm template` per cloud, `tofu validate` per module, and an install of the chart on k3s with a smoke test |
+| lambda | `cargo lambda build --release --arm64`, then a local invoke with `cargo lambda watch` and `cargo lambda invoke` against a Postgres container |
 | web | typecheck, lint, tests |
 | macos-app | build and test the Swift app, on a macOS runner only |
 | platform | the platform test suite against the fake platform |
 | judge | the acceptance criteria tests, the seal checks against the fake judge sandbox, the protected-path test |
-| release | builds the programs (`ratchet-server`, `ratchet-cloud`, `ratchet`) and the container image; signs them |
+| release | builds the programs (`antilog-server`, `antilog`), the container image and the Helm chart; signs them and attaches an SBOM |
 
 Rules:
 

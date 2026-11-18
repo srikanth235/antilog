@@ -15,9 +15,9 @@ Nothing here exists yet.
 
 ## Order (target)
 
-1. The spike: one tiny experiment measured end to end on all five platforms (Claude Managed Agents, AgentCore, the OpenAI Agents API, Microsoft Foundry Agent Service and Google Agent Runtime), to prove the agent trait, the Ratchet tools served to a session over its event stream (asynchronous `measure` sidesteps the undocumented stream on Google and the 10-minute expiry on Foundry), and a judge sandbox that holds a credential no agent sees, with a tiny cap.
+1. The spike: one tiny experiment measured end to end on all five platforms (Claude Managed Agents, AgentCore, the OpenAI Agents API, Microsoft Foundry Agent Service and Google Agent Runtime), to prove the agent trait, the Antilog tools served to a session over its event stream (asynchronous `measure` sidesteps the undocumented stream on Google and the 10-minute expiry on Foundry), and a judge sandbox that holds a credential no agent sees, with a tiny cap.
 2. Fakes only: the platform test suite against the fake platform, and the server against it.
-3. One real platform in a dedicated account, in build order (Claude Managed Agents first), with a tiny cap, confirming tags, the budget stop (the judge refuses `measure`), that no route runs from an agent session to the judge sandbox, and clean-up.
+3. One real platform in a dedicated account, in build order (AgentCore first), with a tiny cap, confirming tags, the budget stop (the judge refuses `measure`), that no route runs from an agent session to the judge sandbox, and clean-up.
 4. A connector credential registered for a real connector: confirm it is read-only and cannot see the holdout; confirm the judge's credential can.
 5. A real agent on a real run, with a stated budget.
 6. A full session end to end: a sealed experiment, trials, a Kept win and its pull request.

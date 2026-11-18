@@ -1,6 +1,6 @@
 # Add an audited action
 
-Every write is a named action, and every action goes through one action layer in `ratchet-server`. The audited actions are the tool calls that change something and the approvals ([approvals.md](approvals.md)). All of it is target.
+Every write is a named action, and every action goes through one action layer in `antilog-server`. The audited actions are the tool calls that change something and the approvals ([approvals.md](approvals.md)). All of it is target.
 
 1. **A name.** Give the action one verb-object name, such as `session.stop` or `card.approve`. The name is what the audit log shows and what the permission matrix lists.
 2. **Declare it once.** Register the action in the action layer with its input, the roles that may run it, the audit fields it records, and the event it emits.

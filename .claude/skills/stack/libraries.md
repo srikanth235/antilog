@@ -1,18 +1,17 @@
 # Libraries
 
-Do not add a dependency for convenience. A new one is a product call: ask the owner. Prefer what is already here. Before proposing one, review it with the supply-chain skill ([security/ratchet.md](security/ratchet.md)) and run `cargo deny check`; the review goes in the proposal.
+Do not add a dependency for convenience. A new one is a product call: ask the owner. Prefer what is already here. Before proposing one, review it with the supply-chain skill ([security/antilog.md](security/antilog.md)) and run `cargo deny check`; the review goes in the proposal.
 
 ## Chosen for the target
 
 (target) None of this is in the repository yet. Versions are the latest stable releases on 2026-11-14, read from crates.io, npm and each project's release feed. Pin these when the code lands; raise them on purpose, never by accident.
 
-**Shape.** One Cargo workspace builds one core and two shells, with the CLI:
+**Shape.** One Cargo workspace builds one core and one server, with the CLI:
 
-- `ratchet-core`: all logic and the API routes as an axum `Router`, behind one `Store` trait. It never imports tokio's runtime, `sqlx` or a Cloudflare crate, and builds for `wasm32-unknown-unknown`. It never connects to data.
-- `ratchet-server`: the self-hosted shell around the core. The API, the embedded web app, Postgres. It talks out to the agent platforms over HTTPS.
-- `ratchet-cloud`: the Ratchet cloud shell around the core, a Cloudflare Worker with one Durable Object (SQLite) per organization.
-- The agent platform adapters (Claude Managed Agents, then AWS AgentCore, then the OpenAI Agents API, then Microsoft Foundry Agent Service, then Google Agent Runtime), one adapter each behind one platform trait, in their own crate or crates. They call the platforms over HTTPS from either shell. Ratchet runs no sandboxes and no runner. Which client crates the adapters use is not decided; a new dependency is a product call.
-- `ratchet`: the CLI and the MCP server, built on the API's types.
+- `antilog-core`: all logic and the API routes as an axum `Router`, behind one `Store` trait. It never imports `sqlx`, a cloud SDK or an adapter crate. It never connects to data.
+- `antilog-server`: the one server, for Antilog cloud and self-hosted. The API, the embedded web app, Postgres, object storage. It ships as a container image and a Helm chart, and talks out to the agent platforms over HTTPS.
+- The agent platform adapters (AWS AgentCore, then the Kubernetes sandbox adapter, then Microsoft Foundry Agent Service and Google Agent Runtime, then Claude Managed Agents and the OpenAI Agents API), one adapter each behind one platform trait, in their own crate or crates. They call the platforms over HTTPS. Antilog runs no sandboxes of its own outside the Kubernetes adapter, which runs them in the same cluster. Their client crates are in the table below.
+- `antilog`: the CLI and the MCP server, built on the API's types.
 
 
 **Toolchain**
@@ -21,7 +20,6 @@ Do not add a dependency for convenience. A new one is a product call: ask the ow
 | --- | --- |
 | Rust (stable) | 1.100.0 |
 | Postgres | 18.7 |
-| `wasm32-unknown-unknown` target (core build check, cloud shell) | the stable toolchain's |
 | Node.js (LTS, web app build only) | 26.13.1 |
 | pnpm | 12.18.0 |
 
@@ -33,18 +31,22 @@ Do not add a dependency for convenience. A new one is a product call: ask the ow
 | HTTP server, live events | `axum` | 0.8.9 |
 | Middleware | `tower` / `tower-http` | 0.5.3 / 0.7.1 |
 | HTTP | `hyper` | 1.12.0 |
-| TLS (self-hosted server only; its `aws-lc-rs` provider never enters the core) | `rustls` | 0.23.46 |
+| TLS | `rustls` | 0.23.46 |
 | HTTP client | `reqwest` | 0.13.5 |
 | Serialization | `serde` / `serde_json` | 1.0.229 / 1.0.154 |
-| Postgres, migrations (self-hosted store) | `sqlx` (+ `sqlx-cli`) | 0.9.0 |
-| Cloud shell (Cloudflare Worker, runs the axum router with the `http` feature) | `worker` (workers-rs) | 0.8.7 |
+| Postgres, migrations | `sqlx` (+ `sqlx-cli`) | 0.9.0 |
+| Object storage (S3, Azure Blob, GCS; backend chosen by configuration) | `object_store` | 0.14.2 |
 | OpenAPI from Rust types | `utoipa` / `utoipa-axum` | 6.0.0 / 0.3.0 |
-| Sign-in: OpenID Connect, and GitHub's OAuth (default features off; each shell supplies the HTTP client) | `openidconnect` / `oauth2` | 4.1.0 / 5.0.0 |
-| Receipt signing (ed25519), token and session hashes, constant-time compare (pure Rust, builds for wasm) | `ed25519-dalek` / `sha2` / `subtle` | 3.0.0 / 0.11.1 / 2.6.1 |
+| Sign-in: OpenID Connect, and GitHub's OAuth  | `openidconnect` / `oauth2` | 4.1.0 / 5.0.0 |
+| Receipt signing (ed25519), token and session hashes, constant-time compare (pure Rust) | `ed25519-dalek` / `sha2` / `subtle` | 3.0.0 / 0.11.1 / 2.6.1 |
 | Embedded web app | `rust-embed` | 8.14.0 |
-| AWS (see the note under the table) | `aws-config` | 1.13.2 |
-| | `aws-sdk-ec2` / `aws-sdk-s3` / `aws-sdk-sts` | 1.280.0 / 1.159.0 / 1.126.0 (not needed by the target) |
-| | `aws-sdk-dynamodb` / `aws-sdk-secretsmanager` | 1.139.0 / 1.128.0 (not needed by the target) |
+| AWS credentials (workload identity through the default chain) | `aws-config` | 1.13.2 |
+| Server on Lambda: serves the axum `Router` / runs the handler | `lambda_http` / `lambda_runtime` | 1.3.2 / 1.5.0 |
+| Timer adapter on AWS (one-off wake-ups) | `aws-sdk-scheduler` | 1.122.0 |
+| AgentCore adapter (data plane / control plane) | `aws-sdk-bedrockagentcore` / `aws-sdk-bedrockagentcorecontrol` | 1.86.0 / 1.101.0 |
+| Kubernetes sandbox adapter | `kube` / `k8s-openapi` | 5.1.0 / 0.29.0 |
+| Google Agent Runtime adapter (when a GCP client signs) | `google-cloud-aiplatform-v1` | 1.19.0 |
+| Foundry adapter sign-in (its REST API through `reqwest`; Azure has no Rust agents crate) | `azure_core` | 1.1.0 |
 | GitHub | `octocrab` | 0.54.9 |
 | Postgres connector (not needed by the target unless credential minting is ruled; the server never connects to data) | `tokio-postgres` | 0.7.18 |
 | Egress proxy, TLS interception (not needed by the target: no egress proxy) | `hudsucker` / `rcgen` | 0.25.0 / 0.14.10 |
@@ -58,15 +60,15 @@ Do not add a dependency for convenience. A new one is a product call: ask the ow
 | Postgres in tests | `testcontainers` / `testcontainers-modules` | 0.28.0 / 0.15.0 |
 | Test runner, licences | `cargo-nextest` / `cargo-deny` | 0.9.152 / 0.20.2 |
 
-Sessions and access tokens need no library: each is 32 random bytes shown once, stored as a SHA-256 hash through the `Store` and compared in constant time, so both stores behave the same. `tower-sessions` and `aws-lc-rs` were dropped (November 2026): the first ties sessions to a `sqlx` store the cloud cannot use, the second is C code that does not build for wasm. Better Auth was considered and refused: it is TypeScript and keeps its own user, session and organization tables beside ours.
+Sessions and access tokens need no library: each is 32 random bytes shown once, stored as a SHA-256 hash through the `Store` and compared in constant time. `tower-sessions` was dropped (November 2026): the hashed-token scheme is small and keeps sessions in our own tables. Better Auth was considered and refused: it is TypeScript and keeps its own user, session and organization tables beside ours.
 
-Snowflake, Databricks and BigQuery have no maintained Rust client we would ship; their connectors call each vendor's REST API through `reqwest`. Every connector sits behind one `Connector` trait, so its vocabulary stops there, and each says how to make a read-only, holdout-excluding credential for its system (whether Ratchet mints them per session is open). Agent platforms sit behind one agent trait, one adapter each; the judge is a separate trait. Platform crates stay inside each adapter.
+Snowflake, Databricks and BigQuery have no maintained Rust client we would ship; their connectors call each vendor's REST API through `reqwest`. Every connector sits behind one `Connector` trait, so its vocabulary stops there, and each says how to make a read-only, holdout-excluding credential for its system (whether Antilog mints them per session is open). Agent platforms sit behind one agent trait, one adapter each; the judge is a separate trait. Platform crates stay inside each adapter.
 
-AWS note: `aws-config` may serve the AgentCore adapter (request signing); the AWS SDK crate for AgentCore is not chosen, and that is a product call.
+Cloud SDKs stay inside their adapter crate. The server reads secrets from mounted files or the environment, so it needs no secrets-manager SDK on any cloud.
 
-Background jobs (platform jobs, see [change/platform-job.md](../change/platform-job.md)) use a small queue in the store: Postgres with `FOR UPDATE SKIP LOCKED` self-hosted, the organization's Durable Object in the cloud. No Redis, no message bus.
+Background jobs (platform jobs, see [change/platform-job.md](../change/platform-job.md)) use a small queue in the store: Postgres with `FOR UPDATE SKIP LOCKED`. No Redis, no message bus, no cloud queue.
 
-**Web app (TypeScript)**: see [typescript.md](typescript/ratchet.md).
+**Web app (TypeScript)**: see [typescript.md](typescript/antilog.md).
 
 | Package | Version |
 | --- | --- |
@@ -81,7 +83,7 @@ Background jobs (platform jobs, see [change/platform-job.md](../change/platform-
 
 **macOS app (target)**
 
-A proposal, not yet built. The app is SwiftUI and macOS only; Windows and Linux use the web app. See [swift.md](swift/ratchet.md).
+A proposal, not yet built. The app is SwiftUI and macOS only; Windows and Linux use the web app. See [swift.md](swift/antilog.md).
 
 | Tool | Version |
 | --- | --- |
@@ -101,10 +103,11 @@ A proposal, not yet built. The app is SwiftUI and macOS only; Windows and Linux 
 | Tool | Version |
 | --- | --- |
 | `cargo-chef` (Docker builds) | 0.1.78 |
-| `worker-build` (builds the cloud shell; downloads esbuild and `wasm-opt`, so CI caches or pins them) | 0.8.7 |
-| `cf` (the Cloudflare CLI, beta; agents use it) | 1.0.0-beta.32 |
-| Wrangler (run by `cf` to build the Rust Worker, and `wrangler tail`) | 4.161.0 |
+| `cargo-lambda` (builds and invokes the Lambda binary) | 1.9.2 |
+| Helm (the chart) | pinned when the chart lands (target) |
+| OpenTofu (one module per cloud) | pinned when the first module lands (target) |
+| k3s (the chart's install test in CI) | pinned when the chart lands (target) |
 | cosign | 3.1.4 |
 | syft | 1.57.1 |
 
-Rules for any addition: self-hosting must keep working (no call to a service the administrator did not configure), the licence must suit a product we ship, and the crate must be maintained. A new outside system also needs a trait with a real and a mock implementation (an agent platform has the fake platform); see [rust.md](rust/ratchet.md).
+Rules for any addition: self-hosting must keep working (no call to a service the administrator did not configure), the licence must suit a product we ship, and the crate must be maintained. A new outside system also needs a trait with a real and a mock implementation (an agent platform has the fake platform); see [rust.md](rust/antilog.md).

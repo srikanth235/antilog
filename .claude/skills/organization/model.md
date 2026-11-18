@@ -10,13 +10,13 @@ The access words below are not in [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md
 | role | What a member may do: owner, editor or viewer. The organization role is the default in every project | a job title |
 | project member | A member with a role for one project. The role is the organization role unless a project owner sets another for that project | a second sign-in, a team |
 | group mapping | A rule that maps a group claim from the identity provider to a role | a separate permission system |
-| sign-in session | A signed-in browser or app session, short-lived | a Ratchet session, which is one agent's work inside an experiment |
+| sign-in session | A signed-in browser or app session, short-lived | an Antilog session, which is one agent's work inside an experiment |
 | access token | A secret a program uses to act as a member; shown once, stored as a hash | a sign-in session |
 | service account | A non-human member with its own tokens and a role | a shared login |
 | approval card | A tool call a person approves in the chat | a settings form |
 | value model | A project owner's figure for a metric, sealed with an experiment and never set by an agent (see [../judge/model.md](../judge/model.md)) | a budget, a price |
 | report | A monthly page per organization and per project, exported as PDF and CSV and emailed to chosen members (contents in [notifications.md](notifications.md)) | a log, the audit log |
-| ideas | Experiments Ratchet suggests on a project page, ranked by expected value over cost. Ratchet proposes, a person starts | a backlog an agent starts by itself |
+| ideas | Experiments Antilog suggests on a project page, ranked by expected value over cost. Antilog proposes, a person starts | a backlog an agent starts by itself |
 | policy | Per card kind (eight): Always ask, Allow up to a limit, or Allow | a role |
 | budget | What one experiment may spend across all its sessions and their judge time. It sits inside its project's cap | a monthly cap |
 | project cap | An optional monthly limit on the spend of all of a project's experiments. It sits inside the organization's monthly cap | a budget |

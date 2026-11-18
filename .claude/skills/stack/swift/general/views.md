@@ -1,6 +1,6 @@
 # SwiftUI Views
 
-Source: [SwiftUI Pro](https://github.com/twostraws/SwiftUI-Agent-Skill) by Paul Hudson (MIT, [`../licenses/twostraws-SwiftUI-Agent-Skill-LICENSE`](../licenses/twostraws-SwiftUI-Agent-Skill-LICENSE)), condensed and adapted for a macOS app. The app is macOS only, so iOS-only advice is dropped; macOS points are in [macos.md](macos.md). [`../ratchet.md`](../ratchet.md) wins where they differ.
+Source: [SwiftUI Pro](https://github.com/twostraws/SwiftUI-Agent-Skill) by Paul Hudson (MIT, [`../licenses/twostraws-SwiftUI-Agent-Skill-LICENSE`](../licenses/twostraws-SwiftUI-Agent-Skill-LICENSE)), condensed and adapted for a macOS app. The app is macOS only, so iOS-only advice is dropped; macOS points are in [macos.md](macos.md). [`../antilog.md`](../antilog.md) wins where they differ.
 
 - Strongly prefer to avoid breaking up view bodies using computed properties or methods that return `some View`, even if `@ContentBuilder` is used. Extract them into separate `View` structs instead, placing each into its own file.
 - Flag `body` properties that are excessively long; they should be broken into extracted subviews.

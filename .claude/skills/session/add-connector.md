@@ -22,12 +22,12 @@ Connectors live in Customize, Connectors (Yours and Discover; boards `Connectors
    | MCP server | A token that may call only the read-only tools you list | A separate token that may also call the tools that reach the holdout |
 
 3. **The Add connector page.** The per-system fields (for example account and warehouse for Snowflake; the server address and the tools to allow for an MCP server), then the two credentials, each with its recipe, a secure field and a "What each one gets" block: agents read the views listed, holdout excluded; the judge reads those and the holdout. Values go straight to the platform's credential store.
-4. **A card in the chat.** A session asks with `request_credential` ([tools.md](tools.md)). The Add credential card shows the same recipe and "What each one gets", and a "Browse connectors" link to Customize, Connectors, Discover. The value is typed into the secure form, never the chat; Ratchet keeps only a credential reference.
-5. **Discover.** A grid of the connectors Ratchet can connect to (Snowflake, Databricks, BigQuery, Postgres, DynamoDB, Amazon S3, MCP server), reached from "Add connector" and from the Add credential card.
-6. **No secret in a response or log.** A credential lives only in the platform's credential store, is short-lived and is minted per session. Ratchet holds no connector admin secret.
+4. **A card in the chat.** A session asks with `request_credential` ([tools.md](tools.md)). The Add credential card shows the same recipe and "What each one gets", and a "Browse connectors" link to Customize, Connectors, Discover. The value is typed into the secure form, never the chat; Antilog keeps only a credential reference.
+5. **Discover.** A grid of the connectors Antilog can connect to (Snowflake, Databricks, BigQuery, Postgres, DynamoDB, Amazon S3, MCP server), reached from "Add connector" and from the Add credential card.
+6. **No secret in a response or log.** A credential lives only in the platform's credential store, is short-lived and is minted per session. Antilog holds no connector admin secret.
 7. **Check.** Adding a connector runs a check and reports Connected, Reconnect or Not checked; an unchecked connector is never shown as healthy. When a credential cannot be read, `ConnectorError` says "Can't read the credential for NAME.", shows its datasets as "Not checked" (never empty), names the experiments that cannot measure until it is fixed, and offers "Check again" and "Update credential".
 8. **Name the data, never read it.** An experiment names its data by dataset and version ([../judge/model.md](../judge/model.md)). The agent's code reads through the connector with its credential. The server never calls the connector and stores no rows.
-9. **Data stays put.** Reads run in a session's sandbox or a judge sandbox, never through the Ratchet server, and a session contacts only the endpoints its experiment and environment allow.
+9. **Data stays put.** Reads run in a session's sandbox or a judge sandbox, never through the Antilog server, and a session contacts only the endpoints its experiment and environment allow.
 10. **No transform.** The connector reads tables and files as they are; the customer prepares data in their own warehouse.
 11. **Datasets and the holdout.** The Datasets table on the connector's page shows name, version, size, marking, Agents ("Can read" or "No access") and Judge ("Can read"). The holdout row reads "Restricted to the judge" and has no grant control. See [model.md](model.md).
 12. **Row actions.** Check connection, Update credential and Remove. Remove deletes the values from the platform's credential store, after a confirm that names the experiments that can no longer measure.
@@ -37,3 +37,5 @@ Connectors live in Customize, Connectors (Yours and Discover; boards `Connectors
 ## Proving it
 
 Follow [../land/SKILL.md](../land/SKILL.md).
+
+An agent that reads a dataset can put what it read in its branch, its messages or an allowed endpoint. The Add connector card says so: grant an agent only data the customer would accept in a pull request ([threat-model.md](threat-model.md)).

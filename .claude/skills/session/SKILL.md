@@ -6,13 +6,14 @@ description: >-
 
 # Session
 
-A session is one agent's work inside an experiment: a chat with one agent in one sandbox on one agent platform, with any number of repos attached (target). It belongs to an experiment, which belongs to a project, and is named on screen by its agent ("Claude Code session"). The agent drives the work. The server relays the session, runs the judge and keeps a ledger, and runs no loop. Ratchet runs no sandboxes: each agent platform runs the agent's loop and its sandbox as one durable session, behind one trait, on the customer's own platform accounts when self-hosted and Ratchet's on Ratchet cloud. The judge, and what counts as a win, is in [../judge/SKILL.md](../judge/SKILL.md).
+A session is one agent's work inside an experiment: a chat with one agent in one sandbox on one agent platform, with any number of repos attached (target). It belongs to an experiment, which belongs to a project, and is named on screen by its agent ("Claude Code session"). The agent drives the work. The server relays the session, runs the judge and keeps a ledger, and runs no loop. Antilog runs no sandboxes: each agent platform runs the agent's loop and its sandbox as one durable session, behind one trait, on the customer's own platform accounts when self-hosted and Antilog's on Antilog cloud. The judge, and what counts as a win, is in [../judge/SKILL.md](../judge/SKILL.md).
 
 | If you are doing | Read |
 | --- | --- |
 | Deciding what this area promises | [owes.md](owes.md) |
 | Looking up a word (session, agent, agent platform, cost tier, Auto, hand off, failover, agent scoreboard, platform account, environment, attached repo, connector, skill pack, dataset, dataset version, marking, holdout, agent credential, judge credential, credential reference, spawned session, session event, clean-up state) | [model.md](model.md) |
 | Checking a change against the rules that never bend | [rules.md](rules.md) |
+| What a prompt-injected agent could do, and what stops it | [threat-model.md](threat-model.md) |
 | Changing `spawn`, `attach_repo`, `request_credential`, `set_environment` or `request_budget`, or how tools reach a session | [tools.md](tools.md) |
 | Changing what agents are told | [prompts.md](prompts.md) |
 | Supporting a new agent platform | [add-platform.md](add-platform.md) |
