@@ -6,7 +6,7 @@ description: >-
 
 # Judge
 
-Antilog is a chat and a judge. The judge is the part of the server that measures: an agent asks it to measure a change, and only its numbers count. Code decides which trials are Kept and which is the win (target). The judge depends on the session area by id only, and the session area calls the judge through five tools.
+Antilog is a chat and a judge. The judge is the part of the server that measures: an agent asks it to measure a change, and only its numbers count. Code decides which trials are Kept and which is the win: `antilog_core::judge::acceptance::decide`, one pure function. Types are in `crates/antilog-types/src/judge/`, logic in `crates/antilog-core/src/judge/`, and the `JudgeStore` trait with its fake in `crates/antilog-core/src/store/judge.rs`. Not built yet: the Postgres tables, the tools, the sandbox on a platform, delivery, watch and the second opinion. The judge depends on the session area by id only, and the session area calls the judge through five tools.
 
 | If you are doing | Read |
 | --- | --- |

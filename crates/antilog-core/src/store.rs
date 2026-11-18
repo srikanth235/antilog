@@ -1,3 +1,5 @@
+pub mod judge;
+
 use std::future::Future;
 
 mod approval;
