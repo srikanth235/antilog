@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update experiments set budget_cap_cents = $3 where organization_id = $1 and id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "52d8a58eeee47ca51f78b19580517988b3223a95dbceeee68708bf76a7925fb5"
+}

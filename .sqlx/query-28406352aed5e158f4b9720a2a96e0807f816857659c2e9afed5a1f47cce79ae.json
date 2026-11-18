@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into access_tokens (id, organization_id, member_id, name, hash, created_at) values ($1, $2, $3, $4, $5, to_timestamp($6::bigint / 1000.0))",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Bytea",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "28406352aed5e158f4b9720a2a96e0807f816857659c2e9afed5a1f47cce79ae"
+}

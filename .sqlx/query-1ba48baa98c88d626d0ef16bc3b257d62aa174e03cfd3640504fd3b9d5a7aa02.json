@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select card, mode, limit_cents from policies where organization_id = $1 order by card",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "card",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "policies",
+            "name": "card"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "mode",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "policies",
+            "name": "mode"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "limit_cents",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "policies",
+            "name": "limit_cents"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "1ba48baa98c88d626d0ef16bc3b257d62aa174e03cfd3640504fd3b9d5a7aa02"
+}

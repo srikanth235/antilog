@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into policies (organization_id, card, mode, limit_cents) values ($1, $2, $3, $4) on conflict (organization_id, card) do update set mode = excluded.mode, limit_cents = excluded.limit_cents",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "1da05bdeaa3d8702456b4db709986a7bd833104ee40abcc487f08032f71669aa"
+}
