@@ -1,9 +1,11 @@
 mod definition;
+mod figures;
 mod receipt;
 mod trial;
 mod value;
 
 pub use definition::*;
+pub use figures::*;
 pub use receipt::*;
 pub use trial::*;
 pub use value::*;

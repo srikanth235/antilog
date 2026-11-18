@@ -2,7 +2,8 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use super::id;
+use super::{ExperimentId, TrialId, id};
+use crate::id::text_enum;
 
 id!(ValueModelId);
 
@@ -41,6 +42,8 @@ pub struct ValueModel {
     pub id: ValueModelId,
     pub version: u32,
     pub metric: String,
+    /// What one unit of the metric is called, such as `ms`.
+    pub unit: String,
     /// Cents a year that one unit of the metric is worth.
     pub cents_per_unit: f64,
     pub source: ValueSource,
@@ -61,4 +64,58 @@ impl ValueModel {
         )]
         Some(Cents(cents as i64))
     }
+}
+
+/// What a project owner sets: the model without its id, version or who set it.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct NewValueModel {
+    pub metric: String,
+    pub unit: String,
+    /// Cents a year that one unit of the metric is worth; more than zero.
+    pub cents_per_unit: f64,
+    pub source: ValueSource,
+}
+
+/// A value model as a project holds it: one per metric, a new version on every change.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ProjectValueModel {
+    pub project_id: crate::ProjectId,
+    pub model: ValueModel,
+    pub set_at: i64,
+}
+
+/// The newest version of each metric's model in a project.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ValueModels {
+    pub models: Vec<ProjectValueModel>,
+}
+
+text_enum!(
+    /// What the code host or the watch told Antilog about a win's pull request.
+    WinEventKind {
+        Opened => "opened",
+        Merged => "merged",
+        Closed => "closed",
+        Regressed => "regressed",
+        Recovered => "recovered",
+    }
+);
+
+/// One append-only fact about a win. Whether a win is Delivered, Pending or At risk is read
+/// from the newest of these, never stored.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct WinEvent {
+    pub experiment: ExperimentId,
+    pub version: u32,
+    pub trial: TrialId,
+    pub kind: WinEventKind,
+    /// The metric value the watch read; only a regression carries one.
+    pub value: Option<f64>,
+    /// The pull request, when the code host gave one.
+    pub link: Option<String>,
+    pub at: i64,
 }

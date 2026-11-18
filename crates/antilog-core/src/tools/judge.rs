@@ -136,18 +136,57 @@ pub(super) async fn seal<D: Deps>(deps: &D, caller: &Caller, value: Value) -> Do
         ))
     })?;
     let metric = &proposal.definition.metric;
-    let previous = match version {
-        1 => None,
-        v => {
-            deps.judge(caller.organization)
-                .sealed(caller.experiment, v - 1)
-                .await?
+    // An agent may only point at a value model a project owner already set for this metric. A
+    // model that is not the project's newest for the metric needs a project owner's approval.
+    let org = caller.organization;
+    let project = deps
+        .store()
+        .experiment(org, caller.experiment)
+        .await?
+        .map(|row| row.project_id)
+        .ok_or_else(|| ToolError::new("this experiment is not in the ledger"))?;
+    let judge = deps.judge(org);
+    let newest = judge
+        .value_models(project)
+        .await?
+        .into_iter()
+        .find(|row| row.model.metric == metric.name);
+    if let Some(reference) = &proposal.definition.value_model {
+        let found = judge
+            .value_model(reference.id, reference.version)
+            .await?
+            .ok_or_else(|| {
+                ToolError::new(
+                    "no such value model: only a project owner sets one. Seal with the project's model for this metric, or with none",
+                )
+            })?;
+        if found.project_id != project || found.model.metric != metric.name {
+            return Err(ToolError::new(
+                "that value model belongs to another project or metric: use this project's model for the metric, or none",
+            ));
         }
+    }
+    let needs_owner = proposal
+        .definition
+        .value_model
+        .as_ref()
+        .map(|reference| (reference.id, reference.version))
+        != newest.map(|row| (row.model.id, row.model.version));
+    let worth = match &proposal.definition.value_model {
+        None => "No value set".to_owned(),
+        Some(reference) => judge
+            .value_model(reference.id, reference.version)
+            .await?
+            .map_or_else(String::new, |found| {
+                format!(
+                    "Value: each {} is worth ${:.2} a year, set by a project owner, measured offline",
+                    found.model.unit,
+                    found.model.cents_per_unit / 100.0
+                )
+            }),
     };
-    let needs_owner = proposal.definition.value_model
-        != previous.and_then(|sealed| sealed.definition().value_model.clone());
     let summary = format!(
-        "Seal {} (version {version}): baseline {:.2} {}, noise {:.2}, {} planted cheats rejected",
+        "Seal {} (version {version}): baseline {:.2} {}, noise {:.2}, {} planted cheats rejected. {worth}",
         metric.name,
         checks.baseline(),
         metric.unit,
@@ -352,7 +391,7 @@ async fn issue_receipt<D: Deps>(
     };
     let value_model = match &sealed.definition().value_model {
         Some(reference) => match judge.value_model(reference.id, reference.version).await {
-            Ok(Some(model)) => Some(model),
+            Ok(Some(found)) => Some(found.model),
             _ => return false,
         },
         None => None,

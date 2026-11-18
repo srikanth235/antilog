@@ -447,9 +447,20 @@ async fn the_session_area_and_the_judge_see_only_their_organization() -> anyhow:
         "trials",
         "receipts",
         "value_models",
+        "win_events",
     ];
-    judge_store_suite(&store.judge(a.organization.id), a.experiment.id).await;
-    judge_store_suite(&store.judge(b.organization.id), b.experiment.id).await;
+    judge_store_suite(
+        &store.judge(a.organization.id),
+        a.experiment.project_id,
+        a.experiment.id,
+    )
+    .await;
+    judge_store_suite(
+        &store.judge(b.organization.id),
+        b.experiment.project_id,
+        b.experiment.id,
+    )
+    .await;
     for table in tables {
         let unscoped: i64 =
             sqlx::query_scalar(sqlx::AssertSqlSafe(format!("select count(*) from {table}")))
@@ -495,7 +506,12 @@ async fn the_session_area_and_the_judge_see_only_their_organization() -> anyhow:
 async fn postgres_judge_store_passes_the_suite() -> anyhow::Result<()> {
     let (store, _pool, _container) = migrated_store().await?;
     let seed = antilog_core::seed::experiment(&store, 1_000).await;
-    judge_store_suite(&store.judge(seed.organization.id), seed.experiment.id).await;
+    judge_store_suite(
+        &store.judge(seed.organization.id),
+        seed.experiment.project_id,
+        seed.experiment.id,
+    )
+    .await;
     Ok(())
 }
 

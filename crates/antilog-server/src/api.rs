@@ -14,6 +14,7 @@ use utoipa::OpenApi;
 
 pub mod auth;
 pub mod organization;
+pub mod value;
 
 #[derive(OpenApi)]
 #[openapi(
@@ -61,7 +62,8 @@ pub fn router_with<D: Deps + 'static>(app: Arc<auth::App<D>>) -> Router {
         .route("/health", get(health::<D>))
         .merge(auth::routes())
         .merge(organization::routes())
-        .merge(session::routes());
+        .merge(session::routes())
+        .merge(value::routes());
     let router = if wake {
         router.merge(session::wake_routes())
     } else {
@@ -75,6 +77,7 @@ pub fn openapi_json() -> String {
     doc.merge(auth::ApiDoc::openapi());
     doc.merge(organization::ApiDoc::openapi());
     doc.merge(session::Doc::openapi());
+    doc.merge(value::Doc::openapi());
     doc.to_pretty_json()
         .unwrap_or_else(|error| unreachable!("the document serializes: {error}"))
 }

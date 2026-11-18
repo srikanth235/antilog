@@ -6,7 +6,7 @@ use antilog_core::judge::sandbox::Profile;
 use antilog_core::platform::{PlatformEvent, SessionHandle};
 use antilog_core::seed::{Seed, T0, experiment};
 use antilog_core::session::{self, NewSession, STEP};
-use antilog_core::store::{ApprovalStore, RelayStore, SessionStore};
+use antilog_core::store::{ApprovalStore, OrganizationStore, RelayStore, SessionStore};
 use antilog_core::tools::Toolbox;
 use antilog_types::{ApprovalStatus, Decision, SessionStatus};
 use serde_json::{Value, json};
@@ -590,5 +590,117 @@ async fn the_conversation_keeps_words_and_tool_names_and_never_what_a_tool_retur
         )
         .await
         .is_err()
+    );
+}
+
+#[tokio::test]
+async fn sealing_only_points_at_the_projects_value_model_and_says_so_on_the_card() {
+    use antilog_core::store::judge::JudgeStore;
+    use antilog_types::judge::{ValueModelId, ValueSource};
+
+    let (deps, seed) = world(100_000).await;
+    let (session, handle) = lead(&deps, &seed).await;
+    let org = seed.organization.id;
+    let host = Toolbox(&deps);
+    let project = seed.experiment.project_id;
+    let model = |metric: &str, version| antilog_types::judge::ValueModel {
+        id: ValueModelId::new(),
+        version,
+        metric: metric.into(),
+        unit: "ms".into(),
+        cents_per_unit: 360.0,
+        source: ValueSource {
+            text: "finance".into(),
+            link: None,
+        },
+        set_by: seed.owner.id.as_uuid(),
+    };
+    let p95 = model("p95", 1);
+    deps.judge.put_value_model(project, &p95, T0).await.unwrap();
+    let other_metric = model("bundle", 1);
+    deps.judge
+        .put_value_model(project, &other_metric, T0)
+        .await
+        .unwrap();
+    let other_project = {
+        let p = antilog_types::Project::new(org, "other", "x", T0);
+        deps.store
+            .create_project(
+                &p,
+                seed.owner.id,
+                &antilog_types::AuditEntry::new(
+                    org,
+                    Some(seed.owner.id),
+                    "project.create",
+                    p.id,
+                    antilog_types::AuditOutcome::Done,
+                    T0,
+                ),
+            )
+            .await
+            .unwrap();
+        p.id
+    };
+    let foreign = model("p95", 1);
+    deps.judge
+        .put_value_model(other_project, &foreign, T0)
+        .await
+        .unwrap();
+
+    let seal = |id: &str, reference: Value| {
+        let mut def = serde_json::to_value(definition()).unwrap();
+        def["valueModel"] = reference;
+        call(
+            &deps,
+            &handle,
+            id,
+            "seal",
+            json!({"definition": def, "cheats": cheats()}),
+        );
+    };
+    let reference =
+        |m: &antilog_types::judge::ValueModel| json!({"id": m.id, "version": m.version});
+
+    seal("nobody", json!({"id": ValueModelId::new(), "version": 1}));
+    seal("metric", reference(&other_metric));
+    seal("project", reference(&foreign));
+    session::step(&deps, &host, org, session.id).await.unwrap();
+    for id in ["nobody", "metric", "project"] {
+        assert!(answer(&deps, &handle, id)["error"].is_string(), "{id}");
+    }
+    assert!(
+        deps.store
+            .approvals(org, seed.experiment.id)
+            .await
+            .unwrap()
+            .is_empty(),
+        "a refused seal raises no card"
+    );
+
+    // The project's own model needs no owner; leaving it out or an old one does.
+    seal("ok", reference(&p95));
+    session::step(&deps, &host, org, session.id).await.unwrap();
+    assert_eq!(
+        answer(&deps, &handle, "ok")["status"],
+        "waiting for a person"
+    );
+    seal("dropped", Value::Null);
+    session::step(&deps, &host, org, session.id).await.unwrap();
+    let cards = deps.store.approvals(org, seed.experiment.id).await.unwrap();
+    assert_eq!(cards.len(), 2);
+    let value = cards.iter().find(|c| c.summary.contains("Value:")).unwrap();
+    assert!(
+        value.summary.contains("measured offline"),
+        "{}",
+        value.summary
+    );
+    assert!(!value.needs_owner);
+    let none = cards
+        .iter()
+        .find(|c| c.summary.contains("No value set"))
+        .unwrap();
+    assert!(
+        none.needs_owner,
+        "dropping the project's model needs an owner"
     );
 }

@@ -1,10 +1,10 @@
 use antilog_core::store::StoreError;
 use antilog_core::store::judge::{JudgeStore, JudgeStoreError};
-use antilog_types::OrganizationId;
 use antilog_types::judge::{
-    ExperimentId, Finished, Receipt, SealedExperiment, Trial, TrialId, TrialRecord, ValueModel,
-    ValueModelId,
+    ExperimentId, Finished, ProjectValueModel, Receipt, SealedExperiment, Trial, TrialId,
+    TrialRecord, ValueModel, ValueModelId, WinEvent, WinEventKind,
 };
+use antilog_types::{OrganizationId, ProjectId};
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 
@@ -217,13 +217,21 @@ impl JudgeStore for PgJudge {
         .transpose()
     }
 
-    async fn put_value_model(&self, model: &ValueModel) -> Result<(), JudgeStoreError> {
+    async fn put_value_model(
+        &self,
+        project: ProjectId,
+        model: &ValueModel,
+        at: i64,
+    ) -> Result<(), JudgeStoreError> {
         let mut tx = self.tx().await?;
         sqlx::query!(
-            "insert into value_models (id, version, organization_id, doc) values ($1, $2, $3, $4)",
+            "insert into value_models (id, version, organization_id, project_id, metric, set_at, doc) values ($1, $2, $3, $4, $5, $6, $7)",
             model.id.as_uuid(),
             version(model.version)?,
             self.org(),
+            project.as_uuid(),
+            model.metric,
+            at,
             text(model)?,
         )
         .execute(&mut *tx)
@@ -236,10 +244,10 @@ impl JudgeStore for PgJudge {
         &self,
         id: ValueModelId,
         number: u32,
-    ) -> Result<Option<ValueModel>, JudgeStoreError> {
+    ) -> Result<Option<ProjectValueModel>, JudgeStoreError> {
         let mut tx = self.tx().await?;
-        sqlx::query_scalar!(
-            "select doc from value_models where organization_id = $1 and id = $2 and version = $3",
+        sqlx::query!(
+            "select project_id, set_at, doc from value_models where organization_id = $1 and id = $2 and version = $3",
             self.org(),
             id.as_uuid(),
             version(number)?,
@@ -247,7 +255,85 @@ impl JudgeStore for PgJudge {
         .fetch_optional(&mut *tx)
         .await
         .map_err(fail)?
-        .map(|doc| parse(&doc))
+        .map(|row| model(row.project_id, row.set_at, &row.doc))
         .transpose()
     }
+
+    async fn value_models(
+        &self,
+        project: ProjectId,
+    ) -> Result<Vec<ProjectValueModel>, JudgeStoreError> {
+        let mut tx = self.tx().await?;
+        sqlx::query!(
+            "select distinct on (metric) project_id, set_at, doc from value_models where organization_id = $1 and project_id = $2 order by metric, version desc",
+            self.org(),
+            project.as_uuid(),
+        )
+        .fetch_all(&mut *tx)
+        .await
+        .map_err(fail)?
+        .iter()
+        .map(|row| model(row.project_id, row.set_at, &row.doc))
+        .collect()
+    }
+
+    async fn put_win_event(&self, event: &WinEvent) -> Result<(), JudgeStoreError> {
+        let mut tx = self.tx().await?;
+        sqlx::query!(
+            "insert into win_events (id, organization_id, experiment_id, version, trial_id, kind, value, link, at) values ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+            uuid::Uuid::now_v7(),
+            self.org(),
+            event.experiment.as_uuid(),
+            version(event.version)?,
+            event.trial.as_uuid(),
+            event.kind.as_str(),
+            event.value,
+            event.link,
+            event.at,
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(fail)?;
+        tx.commit().await.map_err(fail)
+    }
+
+    async fn win_events(&self, experiment: ExperimentId) -> Result<Vec<WinEvent>, JudgeStoreError> {
+        let mut tx = self.tx().await?;
+        sqlx::query!(
+            "select experiment_id, version, trial_id, kind, value, link, at from win_events where organization_id = $1 and experiment_id = $2 order by seq",
+            self.org(),
+            experiment.as_uuid(),
+        )
+        .fetch_all(&mut *tx)
+        .await
+        .map_err(fail)?
+        .into_iter()
+        .map(|row| {
+            Ok(WinEvent {
+                experiment: ExperimentId::from_uuid(row.experiment_id),
+                version: u32::try_from(row.version)
+                    .map_err(|error| JudgeStoreError::Unavailable(Box::new(error)))?,
+                trial: TrialId::from_uuid(row.trial_id),
+                kind: WinEventKind::parse(&row.kind).ok_or_else(|| {
+                    JudgeStoreError::Unavailable(format!("win event kind {}", row.kind).into())
+                })?,
+                value: row.value,
+                link: row.link,
+                at: row.at,
+            })
+        })
+        .collect()
+    }
+}
+
+fn model(
+    project: uuid::Uuid,
+    set_at: i64,
+    doc: &str,
+) -> Result<ProjectValueModel, JudgeStoreError> {
+    Ok(ProjectValueModel {
+        project_id: ProjectId::from_uuid(project),
+        model: parse(doc)?,
+        set_at,
+    })
 }
