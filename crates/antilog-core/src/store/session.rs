@@ -101,6 +101,29 @@ pub trait SessionStore {
         limit: u32,
     ) -> impl Future<Output = Result<Vec<SessionEvent>, StoreError>> + Send;
 
+    /// The live stream's view of the whole organization: the `seq` and session of each
+    /// conversation item after `after`, oldest first. No words, only where something changed.
+    fn event_marks(
+        &self,
+        organization: OrganizationId,
+        after: i64,
+        limit: u32,
+    ) -> impl Future<Output = Result<Vec<(i64, SessionId)>, StoreError>> + Send;
+
+    /// The newest conversation `seq` in the organization, 0 when there is none.
+    fn latest_event_seq(
+        &self,
+        organization: OrganizationId,
+    ) -> impl Future<Output = Result<i64, StoreError>> + Send;
+
+    /// Sessions changed at or after `since` (milliseconds), oldest change first.
+    fn sessions_changed(
+        &self,
+        organization: OrganizationId,
+        since: i64,
+        limit: u32,
+    ) -> impl Future<Output = Result<Vec<Session>, StoreError>> + Send;
+
     /// Adds or replaces one of the organization's agents, with its audit entry. Making it the
     /// default clears the previous default; a default must be enabled.
     fn put_agent(

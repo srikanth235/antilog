@@ -986,6 +986,51 @@ async fn experiments_and_sessions<S: Store>(store: &S) {
             .expect("another organization")
             .is_empty()
     );
+    // The live stream's marks: seq and session, only this organization's, oldest first.
+    let marks = store.event_marks(org, 0, 10).await.expect("marks");
+    assert_eq!(
+        marks.iter().map(|(seq, _)| *seq).collect::<Vec<_>>(),
+        seqs,
+        "one mark per conversation item"
+    );
+    assert!(marks.iter().all(|(_, session)| *session == lead.id));
+    let after_first = store
+        .event_marks(org, seqs.first().copied().expect("one"), 1)
+        .await
+        .expect("a page of marks");
+    assert_eq!(after_first.len(), 1);
+    assert_eq!(
+        store.latest_event_seq(org).await.expect("latest"),
+        seqs.last().copied().expect("one")
+    );
+    let stranger = world_org(store).await;
+    assert!(
+        store
+            .event_marks(stranger, 0, 10)
+            .await
+            .expect("another organization")
+            .is_empty()
+    );
+    assert_eq!(store.latest_event_seq(stranger).await.expect("none"), 0);
+    let changed = store
+        .sessions_changed(org, T0, 10)
+        .await
+        .expect("changed sessions");
+    assert!(changed.iter().any(|row| row.id == lead.id));
+    assert!(
+        store
+            .sessions_changed(org, T0 + 1_000_000, 10)
+            .await
+            .expect("none changed since")
+            .is_empty()
+    );
+    assert!(
+        store
+            .sessions_changed(stranger, 0, 10)
+            .await
+            .expect("another organization")
+            .is_empty()
+    );
     not_found(
         store
             .append_event(&NewEvent {

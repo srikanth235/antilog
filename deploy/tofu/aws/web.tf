@@ -1,8 +1,10 @@
 # The web app: static files in a private S3 bucket behind CloudFront. The API is on the
 # same host under /api, so cookies stay same-origin: a viewer-request function strips the
-# prefix and CloudFront sends the request to the function URL. CloudFront cuts a response
-# that is silent for 30 seconds, so the server ends event streams earlier and the browser
-# reconnects with Last-Event-ID.
+# prefix and CloudFront sends the request to the function URL. The live-update stream
+# (/api/events/stream, server-sent events) has its own behavior: never cached, never
+# compressed, and the origin read timeout (60 seconds of silence) is never reached because the
+# server sends a comment every 10 seconds and ends each stream after 4 minutes, well inside
+# the function's own limit; the browser reconnects with Last-Event-ID.
 
 resource "aws_s3_bucket" "web" {
   bucket = "${local.prefix}-web-${var.account_id}"
@@ -108,6 +110,24 @@ resource "aws_cloudfront_distribution" "web" {
     cached_methods         = ["GET", "HEAD"]
     compress               = true
     cache_policy_id        = local.caching_optimized
+  }
+
+  # Server-sent events: no cache, no compression, nothing buffered; the viewer's Accept,
+  # Last-Event-ID and cookies are forwarded (all viewer headers except Host).
+  ordered_cache_behavior {
+    path_pattern             = "/api/events/*"
+    target_origin_id         = "api"
+    viewer_protocol_policy   = "https-only"
+    allowed_methods          = ["GET", "HEAD", "OPTIONS"]
+    cached_methods           = ["GET", "HEAD"]
+    compress                 = false
+    cache_policy_id          = local.caching_disabled
+    origin_request_policy_id = local.all_viewer_except_host
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.strip_api_prefix.arn
+    }
   }
 
   ordered_cache_behavior {

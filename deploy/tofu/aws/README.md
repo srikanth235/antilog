@@ -53,3 +53,7 @@ Only `deploy-aws.yml` applies; run these as inputs to that workflow, not from a 
 ### Checking it
 
 `curl -i https://<function url>/health` answers 403, and `curl -i https://<app host>/api/health` answers 200. The `lambda` CI job calls the function with the header in `crates/antilog-aws/tests/events/health.json` and the placeholder `ANTILOG_ORIGIN_SECRET=local-origin-secret`.
+
+## Live updates
+
+`GET /api/events/stream` is a server-sent event stream (hints that something changed, never data). CloudFront has its own behavior for `/api/events/*`: the managed `CachingDisabled` policy, no compression, and every viewer header but `Host` forwarded, so `Last-Event-ID` and the cookie reach the function. The function URL is in `RESPONSE_STREAM` mode, so chunks flow as the server writes them. The server writes a comment line every 10 seconds (the origin read timeout is 60 seconds of silence) and ends each stream after 4 minutes, far inside the function's 14-minute limit; the browser reconnects by itself with `Last-Event-ID` and the new stream replays from `session_events`. Nothing here needs the owner. What is not checked until the first deploy: that CloudFront and Lambda really deliver the first event before the stream ends (`curl -N` with a session cookie against `https://<app>/api/events/stream` should print `event: hello` at once).

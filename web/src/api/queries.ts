@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-query";
 import { agentLabel } from "../lib/domain";
 import { api, type Schemas, unwrap } from "./client";
+import { useStreamLive } from "./liveStatus";
 
 export const keys = {
   providers: () => ["providers"] as const,
@@ -43,8 +44,14 @@ export const keys = {
   report: (month: string, project: string | null) => ["report", month, project] as const,
 };
 
-/** Sessions and approvals change while an agent works; the page asks again every few seconds. */
+/** Sessions and approvals change while an agent works. The server's event stream says when (`live.ts`);
+ * until it delivers, and whenever it fails, the page asks again every few seconds. */
 const LIVE_MS = 4000;
+
+/** The poll for what the event stream covers: off while the stream delivers. */
+function usePoll(): number | false {
+  return useStreamLive() ? false : LIVE_MS;
+}
 
 export function useProviders() {
   return useQuery({
@@ -71,10 +78,11 @@ export function useMember() {
 
 /** Every card across experiments the person may decide; Home and the sidebar read this one list. */
 export function usePendingApprovals() {
+  const poll = usePoll();
   return useQuery({
     queryKey: keys.pending(),
     queryFn: async () => unwrap(await api.GET("/approvals/pending")),
-    refetchInterval: LIVE_MS,
+    refetchInterval: poll,
   });
 }
 
@@ -125,25 +133,28 @@ export function useExperiment(id: string) {
 }
 
 export function useExperimentSessions(id: string) {
+  const poll = usePoll();
   return useQuery({
     queryKey: keys.sessions(id),
     queryFn: async () =>
       unwrap(await api.GET("/experiments/{id}/sessions", { params: { path: { id } } })),
-    refetchInterval: LIVE_MS,
+    refetchInterval: poll,
   });
 }
 
 export function useExperimentApprovals(id: string) {
+  const poll = usePoll();
   return useQuery({
     queryKey: keys.approvals(id),
     queryFn: async () =>
       unwrap(await api.GET("/experiments/{id}/approvals", { params: { path: { id } } })),
-    refetchInterval: LIVE_MS,
+    refetchInterval: poll,
   });
 }
 
 /** The conversation of a session, oldest first: every page is read, and the list is asked for again while it works. */
 export function useTranscript(session: string, status: Schemas["SessionStatus"] | undefined) {
+  const poll = usePoll();
   return useQuery({
     queryKey: keys.transcript(session),
     enabled: session !== "",
@@ -165,8 +176,9 @@ export function useTranscript(session: string, status: Schemas["SessionStatus"] 
       }
       return events;
     },
-    // The poll pauses in a hidden tab (the default) and ends once the session is Done or Failed.
-    refetchInterval: status === "done" || status === "failed" ? false : LIVE_MS,
+    // The poll pauses in a hidden tab (the default), is off while the event stream delivers, and
+    // ends once the session is Done or Failed.
+    refetchInterval: status === "done" || status === "failed" ? false : poll,
   });
 }
 

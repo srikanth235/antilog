@@ -73,5 +73,5 @@ CI runs the same in the `lambda` and `tofu` jobs of `checks.yml` ([../../land/ci
 - **A pool sized for a long-lived server** exhausts Aurora when Lambda scales out. Count instances times pool size.
 - **A schedule left behind** fires again, or fills the account's quota. Delete it after it fires.
 - **A handler that is not idempotent** double-charges a budget or starts two sessions on the second wake-up.
-- **A stream held to the cap** is cut mid-event. End it earlier and let the browser reconnect with `Last-Event-ID`.
+- **A stream held to the cap** is cut mid-event. End it earlier and let the browser reconnect with `Last-Event-ID`. The live-update stream (`GET /api/events/stream`) ends after 4 minutes and sends a comment every 10; CloudFront has its own `/api/events/*` behavior with caching and compression off. Not yet proven end to end on a real Lambda and CloudFront: the first deploy checks that `curl -N` prints `event: hello` at once.
 - **NAT gateways, load balancers and RDS Proxy cost by the hour** whether or not anyone uses them. Leave them out of the pay-per-use setup.

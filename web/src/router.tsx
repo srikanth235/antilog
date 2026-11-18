@@ -1,4 +1,4 @@
-import type { QueryClient } from "@tanstack/react-query";
+import { type QueryClient, useQueryClient } from "@tanstack/react-query";
 import {
   createRootRouteWithContext,
   createRoute,
@@ -8,6 +8,7 @@ import {
   redirect,
 } from "@tanstack/react-router";
 import { ApiFailure, api, unwrap } from "./api/client";
+import { useLiveUpdates } from "./api/live";
 import { keys, useMe } from "./api/queries";
 import { TipProvider } from "./components/tooltip/Tooltip";
 import { AddEvaluation } from "./features/customize/AddEvaluation";
@@ -95,6 +96,7 @@ const app = createRoute({
   },
   component: function Shell() {
     useMe();
+    useLiveUpdates(useQueryClient());
     return (
       <div className="board app shell">
         <Sidebar />
