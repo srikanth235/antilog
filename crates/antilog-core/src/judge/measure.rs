@@ -6,7 +6,7 @@ use antilog_types::judge::{
 };
 
 use super::run::{Env, Sides, evaluate};
-use super::sandbox::Sandbox;
+use crate::platform::Platform;
 use crate::store::judge::{JudgeStore, JudgeStoreError};
 
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
@@ -102,7 +102,7 @@ fn trailing_unkept(records: &[TrialRecord]) -> u32 {
 
 /// Measures one trial against a sealed version and writes its outcome once.
 /// `changed` is `(repo, path)` for every file the trial's commits change.
-pub async fn measure<S: Sandbox, J: JudgeStore>(
+pub async fn measure<S: Platform, J: JudgeStore>(
     sandbox: &S,
     store: &J,
     sealed: &SealedExperiment,

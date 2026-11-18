@@ -8,12 +8,12 @@ mod approval;
 mod budget;
 mod ledger;
 mod organization;
+mod platform;
 mod session;
 
+pub use platform::FakePlatform;
+
 use crate::clock::Clock;
-use crate::platform::{
-    JudgeRun, JudgeSpec, Platform, PlatformError, SessionEvents, SessionHandle, SessionSpec,
-};
 use crate::secrets::{Secret, Secrets, SecretsError};
 use crate::signer::{Signature, Signer};
 use crate::store::{Store, StoreError};
@@ -50,56 +50,6 @@ pub struct FakeStore {
 impl Store for FakeStore {
     async fn ping(&self) -> Result<(), StoreError> {
         Ok(())
-    }
-}
-
-#[derive(Default)]
-pub struct FakePlatform {
-    state: Mutex<FakePlatformState>,
-}
-
-#[derive(Default)]
-struct FakePlatformState {
-    sessions: HashMap<String, Vec<String>>,
-    next: u64,
-}
-
-impl Platform for FakePlatform {
-    async fn start_session(&self, spec: &SessionSpec) -> Result<SessionHandle, PlatformError> {
-        let mut state = locked(&self.state);
-        state.next += 1;
-        let handle = format!("fake-session-{}", state.next);
-        state.sessions.insert(
-            handle.clone(),
-            vec![format!("started {}: {}", spec.agent, spec.prompt)],
-        );
-        Ok(SessionHandle(handle))
-    }
-
-    async fn session_events(
-        &self,
-        session: &SessionHandle,
-        cursor: Option<&str>,
-    ) -> Result<SessionEvents, PlatformError> {
-        let state = locked(&self.state);
-        let all = state
-            .sessions
-            .get(&session.0)
-            .ok_or(PlatformError::UnknownSession)?;
-        let from = cursor
-            .and_then(|c| c.parse::<usize>().ok())
-            .unwrap_or(0)
-            .min(all.len());
-        Ok(SessionEvents {
-            events: all.get(from..).unwrap_or_default().to_vec(),
-            next_cursor: Some(all.len().to_string()),
-        })
-    }
-
-    async fn run_judge(&self, spec: &JudgeSpec) -> Result<JudgeRun, PlatformError> {
-        Ok(JudgeRun {
-            samples: (0..spec.repeats).map(|_| 1.0).collect(),
-        })
     }
 }
 
@@ -202,29 +152,6 @@ mod tests {
             clock.now(),
             start.checked_add(SignedDuration::from_secs(60)).unwrap()
         );
-    }
-
-    #[tokio::test]
-    async fn fake_platform_streams_events_from_a_cursor() {
-        let platform = FakePlatform::default();
-        let handle = platform
-            .start_session(&SessionSpec {
-                agent: "a".into(),
-                prompt: "go".into(),
-            })
-            .await
-            .unwrap();
-        let first = platform.session_events(&handle, None).await.unwrap();
-        assert_eq!(first.events.len(), 1);
-        let again = platform
-            .session_events(&handle, first.next_cursor.as_deref())
-            .await
-            .unwrap();
-        assert!(again.events.is_empty());
-        let unknown = platform
-            .session_events(&SessionHandle("x".into()), None)
-            .await;
-        assert!(matches!(unknown, Err(PlatformError::UnknownSession)));
     }
 
     #[tokio::test]
