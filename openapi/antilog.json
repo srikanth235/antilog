@@ -10,6 +10,445 @@
     "version": "0.0.0"
   },
   "paths": {
+    "/approvals/{id}/decision": {
+      "post": {
+        "tags": [],
+        "operationId": "decide",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The card",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ApprovalId"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Decide"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Decided",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Approval"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Editors and owners of its project decide; a changed value model needs a project owner",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "It was already decided",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/audit": {
+      "get": {
+        "tags": [],
+        "operationId": "audit",
+        "parameters": [
+          {
+            "name": "beforeAt",
+            "in": "path",
+            "description": "The cursor of the previous page: its `at` and `id`, together.",
+            "required": true,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            }
+          },
+          {
+            "name": "beforeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/AuditId"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "path",
+            "description": "1 to 200; default 50.",
+            "required": true,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Newest first; organization owners only",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditPage"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/auth/providers": {
+      "get": {
+        "tags": [],
+        "operationId": "providers",
+        "responses": {
+          "200": {
+            "description": "The sign-in providers this server offers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignInProviders"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/sign-out": {
+      "post": {
+        "tags": [],
+        "operationId": "sign_out",
+        "responses": {
+          "204": {
+            "description": "The session ended"
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/auth/{provider}/callback": {
+      "post": {
+        "tags": [],
+        "operationId": "callback",
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "description": "A provider from /auth/providers",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignInCallback"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Signed in; the session is also set as a cookie",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionIssued"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The provider did not accept the sign-in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not a member of that organization",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/{provider}/organization": {
+      "post": {
+        "tags": [],
+        "operationId": "create_organization",
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "description": "A provider from /auth/providers",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewOrganization"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "The organization, and its first owner signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationCreated"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "This server does not let people create organizations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The name is taken",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/{provider}/start": {
+      "get": {
+        "tags": [],
+        "operationId": "start",
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "description": "A provider from /auth/providers",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Where to send the person; the state is also kept in a cookie",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignInStart"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such provider",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/budgets": {
+      "get": {
+        "tags": [],
+        "operationId": "budgets",
+        "responses": {
+          "200": {
+            "description": "This month's spend against the caps",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BudgetSummary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/experiments/{id}/approvals": {
+      "get": {
+        "tags": [],
+        "operationId": "approvals",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The experiment",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ExperimentId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Its cards, oldest first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Approval"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/experiments/{id}/budget": {
+      "put": {
+        "tags": [],
+        "operationId": "set_experiment_budget",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The experiment",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ExperimentId"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExperimentBudget"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Set; editors and owners of its project"
+          },
+          "409": {
+            "description": "The budget would pass the project's cap",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/health": {
       "get": {
         "tags": [],
@@ -37,10 +476,589 @@
           }
         }
       }
+    },
+    "/members": {
+      "get": {
+        "tags": [],
+        "operationId": "members",
+        "responses": {
+          "200": {
+            "description": "The organization's members",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Member"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [],
+        "operationId": "add_member",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewMember"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Added; organization owners only",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Member"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "That identity is already a member",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/members/{id}/role": {
+      "put": {
+        "tags": [],
+        "operationId": "set_member_role",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The member",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/MemberId"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetRole"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Set; organization owners only"
+          },
+          "409": {
+            "description": "The organization or a project would be left without an owner",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/organization": {
+      "get": {
+        "tags": [],
+        "operationId": "organization",
+        "responses": {
+          "200": {
+            "description": "The caller's organization",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Organization"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/organization/limits": {
+      "put": {
+        "tags": [],
+        "operationId": "set_organization_limits",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Limits"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Set; organization owners only"
+          },
+          "409": {
+            "description": "The cap would pass a limit inside it",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/policies": {
+      "get": {
+        "tags": [],
+        "operationId": "policies",
+        "responses": {
+          "200": {
+            "description": "One policy per card kind; what was never set always asks",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Policy"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [],
+        "operationId": "set_policy",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Policy"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Set; organization owners only"
+          },
+          "409": {
+            "description": "Add credential only ever asks",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/projects": {
+      "get": {
+        "tags": [],
+        "operationId": "projects",
+        "responses": {
+          "200": {
+            "description": "The organization's projects",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Project"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [],
+        "operationId": "create_project",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewProject"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created; the caller is its first owner",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The name is taken",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/projects/{id}/limits": {
+      "put": {
+        "tags": [],
+        "operationId": "set_project_limits",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The project",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ProjectId"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Limits"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Set; project owners only"
+          },
+          "409": {
+            "description": "The cap would pass the organization's, or a budget inside it",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/projects/{id}/roles": {
+      "get": {
+        "tags": [],
+        "operationId": "project_roles",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The project",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ProjectId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Roles set for this project; the rest have their organization role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProjectRole"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/projects/{id}/roles/{member}": {
+      "put": {
+        "tags": [],
+        "operationId": "set_project_role",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The project",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ProjectId"
+            }
+          },
+          {
+            "name": "member",
+            "in": "path",
+            "description": "The member",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/MemberId"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetProjectRole"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Set; project owners only"
+          },
+          "409": {
+            "description": "The project would be left without an owner",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/tokens": {
+      "get": {
+        "tags": [],
+        "operationId": "tokens",
+        "parameters": [
+          {
+            "name": "memberId",
+            "in": "path",
+            "description": "Whose tokens (owners only); omitted: the caller's.",
+            "required": true,
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/MemberId"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tokens without their secrets",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AccessToken"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [],
+        "operationId": "create_token",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewToken"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created; the secret is shown only now",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenIssued"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/tokens/{id}": {
+      "delete": {
+        "tags": [],
+        "operationId": "revoke_token",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The token",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/TokenId"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Revoked; your own, or any if an organization owner"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
     }
   },
   "components": {
     "schemas": {
+      "AccessToken": {
+        "type": "object",
+        "description": "What may be shown of an access token; the secret is shown once, at creation.",
+        "required": [
+          "id",
+          "organizationId",
+          "memberId",
+          "name",
+          "createdAt"
+        ],
+        "properties": {
+          "createdAt": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "id": {
+            "$ref": "#/components/schemas/TokenId"
+          },
+          "memberId": {
+            "$ref": "#/components/schemas/MemberId"
+          },
+          "name": {
+            "type": "string"
+          },
+          "organizationId": {
+            "$ref": "#/components/schemas/OrganizationId"
+          },
+          "revokedAt": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false
+      },
       "ApiError": {
         "type": "object",
         "required": [
@@ -63,6 +1081,269 @@
           }
         },
         "additionalProperties": false
+      },
+      "Approval": {
+        "type": "object",
+        "required": [
+          "id",
+          "organizationId",
+          "experimentId",
+          "card",
+          "summary",
+          "needsOwner",
+          "status",
+          "createdAt"
+        ],
+        "properties": {
+          "card": {
+            "$ref": "#/components/schemas/CardKind"
+          },
+          "costCents": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "createdAt": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "decidedAt": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "decidedBy": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/MemberId"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "experimentId": {
+            "$ref": "#/components/schemas/ExperimentId"
+          },
+          "id": {
+            "$ref": "#/components/schemas/ApprovalId"
+          },
+          "needsOwner": {
+            "type": "boolean",
+            "description": "Only a project owner may decide it, and policy never does: a changed value model."
+          },
+          "organizationId": {
+            "$ref": "#/components/schemas/OrganizationId"
+          },
+          "sessionId": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SessionId"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/ApprovalStatus"
+          },
+          "summary": {
+            "type": "string",
+            "description": "What would happen; never a secret."
+          }
+        },
+        "additionalProperties": false
+      },
+      "ApprovalId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "ApprovalStatus": {
+        "type": "string",
+        "enum": [
+          "Pending",
+          "Approved",
+          "Declined",
+          "ApprovedByPolicy"
+        ]
+      },
+      "AuditCursor": {
+        "type": "object",
+        "required": [
+          "at",
+          "id"
+        ],
+        "properties": {
+          "at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "id": {
+            "$ref": "#/components/schemas/AuditId"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AuditEntry": {
+        "type": "object",
+        "description": "An append-only record of a write or an approval. Holds no secret.",
+        "required": [
+          "id",
+          "organizationId",
+          "action",
+          "target",
+          "outcome",
+          "at"
+        ],
+        "properties": {
+          "action": {
+            "type": "string",
+            "description": "A registered action name, such as `project.create`."
+          },
+          "actor": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/MemberId",
+                "description": "`None`: Antilog itself."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "id": {
+            "$ref": "#/components/schemas/AuditId"
+          },
+          "organizationId": {
+            "$ref": "#/components/schemas/OrganizationId"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/AuditOutcome"
+          },
+          "target": {
+            "type": "string",
+            "description": "The id of what it touched."
+          }
+        },
+        "additionalProperties": false
+      },
+      "AuditId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "AuditOutcome": {
+        "type": "string",
+        "enum": [
+          "Done",
+          "Denied",
+          "Approved",
+          "Declined",
+          "ApprovedByPolicy"
+        ]
+      },
+      "AuditPage": {
+        "type": "object",
+        "description": "Newest first; `next` is the cursor for the page after this one.",
+        "required": [
+          "entries"
+        ],
+        "properties": {
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditEntry"
+            }
+          },
+          "next": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AuditCursor"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "BudgetSummary": {
+        "type": "object",
+        "description": "This month's spend against the caps.",
+        "required": [
+          "organization",
+          "projects"
+        ],
+        "properties": {
+          "organization": {
+            "$ref": "#/components/schemas/LimitSpend"
+          },
+          "projects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProjectSpend"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "CardKind": {
+        "type": "string",
+        "enum": [
+          "SealExperiment",
+          "RaiseBudget",
+          "AddCredential",
+          "AttachRepo",
+          "ChangeEnvironment",
+          "OpenPullRequest",
+          "KeepGoing",
+          "ContinueOnAnotherAgent"
+        ]
+      },
+      "Decide": {
+        "type": "object",
+        "required": [
+          "decision"
+        ],
+        "properties": {
+          "decision": {
+            "$ref": "#/components/schemas/Decision"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Decision": {
+        "type": "string",
+        "enum": [
+          "Approve",
+          "Decline"
+        ]
+      },
+      "ExperimentBudget": {
+        "type": "object",
+        "required": [
+          "budgetCapCents"
+        ],
+        "properties": {
+          "budgetCapCents": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ExperimentId": {
+        "type": "string",
+        "format": "uuid"
       },
       "FieldError": {
         "type": "object",
@@ -97,6 +1378,528 @@
         "enum": [
           "ok"
         ]
+      },
+      "Identity": {
+        "type": "object",
+        "description": "A person's identity at a sign-in provider.",
+        "required": [
+          "provider",
+          "subject"
+        ],
+        "properties": {
+          "provider": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "LimitSpend": {
+        "type": "object",
+        "required": [
+          "spentCents"
+        ],
+        "properties": {
+          "capCents": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "spentCents": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Limits": {
+        "type": "object",
+        "properties": {
+          "defaultBudgetCents": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "monthlyCapCents": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Member": {
+        "type": "object",
+        "required": [
+          "id",
+          "organizationId",
+          "kind",
+          "name",
+          "role",
+          "createdAt"
+        ],
+        "properties": {
+          "createdAt": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "id": {
+            "$ref": "#/components/schemas/MemberId"
+          },
+          "identity": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Identity",
+                "description": "A person has one; a service account has none."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "kind": {
+            "$ref": "#/components/schemas/MemberKind"
+          },
+          "name": {
+            "type": "string"
+          },
+          "organizationId": {
+            "$ref": "#/components/schemas/OrganizationId"
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role",
+            "description": "The organization role, the default in every project."
+          }
+        },
+        "additionalProperties": false
+      },
+      "MemberId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "MemberKind": {
+        "type": "string",
+        "enum": [
+          "Person",
+          "Service"
+        ]
+      },
+      "NewMember": {
+        "type": "object",
+        "required": [
+          "name",
+          "role"
+        ],
+        "properties": {
+          "identity": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Identity",
+                "description": "A person's identity at a sign-in provider; none makes a service account."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          }
+        },
+        "additionalProperties": false
+      },
+      "NewOrganization": {
+        "type": "object",
+        "required": [
+          "name",
+          "code",
+          "state"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "NewProject": {
+        "type": "object",
+        "required": [
+          "name",
+          "description"
+        ],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "NewToken": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "memberId": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/MemberId",
+                "description": "A service account to issue it for (owners only); omitted: the caller."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Organization": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "createdAt"
+        ],
+        "properties": {
+          "createdAt": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Epoch milliseconds."
+          },
+          "defaultBudgetCents": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Default budget per experiment, in US cents."
+          },
+          "id": {
+            "$ref": "#/components/schemas/OrganizationId"
+          },
+          "monthlyCapCents": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Monthly cap on all spend, in US cents. `None`: no cap."
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "OrganizationCreated": {
+        "type": "object",
+        "required": [
+          "organization",
+          "session"
+        ],
+        "properties": {
+          "organization": {
+            "$ref": "#/components/schemas/Organization"
+          },
+          "session": {
+            "$ref": "#/components/schemas/SessionIssued"
+          }
+        },
+        "additionalProperties": false
+      },
+      "OrganizationId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "Policy": {
+        "type": "object",
+        "description": "What policy does with one card kind. Add credential only ever asks.",
+        "required": [
+          "card",
+          "mode"
+        ],
+        "properties": {
+          "card": {
+            "$ref": "#/components/schemas/CardKind"
+          },
+          "limitCents": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Required for `allow_up_to`, in US cents."
+          },
+          "mode": {
+            "$ref": "#/components/schemas/PolicyMode"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PolicyMode": {
+        "type": "string",
+        "enum": [
+          "AlwaysAsk",
+          "AllowUpTo",
+          "Allow"
+        ]
+      },
+      "Project": {
+        "type": "object",
+        "required": [
+          "id",
+          "organizationId",
+          "name",
+          "description",
+          "createdAt"
+        ],
+        "properties": {
+          "createdAt": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "defaultBudgetCents": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Default budget per experiment, in US cents."
+          },
+          "description": {
+            "type": "string"
+          },
+          "id": {
+            "$ref": "#/components/schemas/ProjectId"
+          },
+          "monthlyCapCents": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Monthly cap on the spend of its experiments, in US cents."
+          },
+          "name": {
+            "type": "string"
+          },
+          "organizationId": {
+            "$ref": "#/components/schemas/OrganizationId"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProjectId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "ProjectRole": {
+        "type": "object",
+        "description": "A member's role in one project when it differs from the organization role.",
+        "required": [
+          "memberId",
+          "role"
+        ],
+        "properties": {
+          "memberId": {
+            "$ref": "#/components/schemas/MemberId"
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProjectSpend": {
+        "type": "object",
+        "required": [
+          "projectId",
+          "spentCents"
+        ],
+        "properties": {
+          "capCents": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "projectId": {
+            "$ref": "#/components/schemas/ProjectId"
+          },
+          "spentCents": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Role": {
+        "type": "string",
+        "description": "Ordered: a higher role may do what a lower one may.",
+        "enum": [
+          "Viewer",
+          "Editor",
+          "Owner"
+        ]
+      },
+      "SessionId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "SessionIssued": {
+        "type": "object",
+        "description": "A sign-in session; the secret is shown once and is also set as a cookie.",
+        "required": [
+          "member",
+          "secret",
+          "expiresAt"
+        ],
+        "properties": {
+          "expiresAt": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "member": {
+            "$ref": "#/components/schemas/Member"
+          },
+          "secret": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SetProjectRole": {
+        "type": "object",
+        "description": "`None` returns the member to their organization role in this project.",
+        "properties": {
+          "role": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Role"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "SetRole": {
+        "type": "object",
+        "required": [
+          "role"
+        ],
+        "properties": {
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SignInCallback": {
+        "type": "object",
+        "required": [
+          "organization",
+          "code",
+          "state"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "organization": {
+            "$ref": "#/components/schemas/OrganizationId"
+          },
+          "state": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SignInProviders": {
+        "type": "object",
+        "required": [
+          "providers"
+        ],
+        "properties": {
+          "providers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "SignInStart": {
+        "type": "object",
+        "required": [
+          "authorizeUrl",
+          "state"
+        ],
+        "properties": {
+          "authorizeUrl": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "TokenId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "TokenIssued": {
+        "type": "object",
+        "description": "An access token; the secret is shown once.",
+        "required": [
+          "token",
+          "secret"
+        ],
+        "properties": {
+          "secret": {
+            "type": "string"
+          },
+          "token": {
+            "$ref": "#/components/schemas/AccessToken"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
       }
     }
   }

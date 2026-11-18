@@ -9,6 +9,9 @@ use axum::http::StatusCode;
 use axum::routing::get;
 use utoipa::OpenApi;
 
+pub mod auth;
+pub mod organization;
+
 #[derive(OpenApi)]
 #[openapi(
     info(title = "Antilog API", version = env!("CARGO_PKG_VERSION")),
@@ -46,14 +49,26 @@ async fn health<S: Store + 'static>(
 }
 
 pub fn router<S: Store + 'static>(store: Arc<S>) -> Router {
+    let app = Arc::new(auth::App {
+        store: store.clone(),
+        clock: Arc::new(antilog_core::clock::SystemClock),
+        settings: auth::Settings::from_env(),
+    });
+    router_with(store, app)
+}
+
+pub fn router_with<S: Store + 'static>(store: Arc<S>, app: Arc<auth::App<S>>) -> Router {
     Router::new()
         .route("/health", get(health::<S>))
         .with_state(store)
+        .merge(auth::routes().merge(organization::routes()).with_state(app))
 }
 
 pub fn openapi_json() -> String {
-    ApiDoc::openapi()
-        .to_pretty_json()
+    let mut doc = ApiDoc::openapi();
+    doc.merge(auth::ApiDoc::openapi());
+    doc.merge(organization::ApiDoc::openapi());
+    doc.to_pretty_json()
         .unwrap_or_else(|error| unreachable!("the document serializes: {error}"))
 }
 
