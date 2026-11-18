@@ -170,6 +170,7 @@ jobs:
 
   lambda:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     env:
       CARGO_INCREMENTAL: "0"
       SQLX_OFFLINE: "true"
@@ -199,6 +200,9 @@ jobs:
       - name: Invoke the health route locally, with no AWS
         env:
           DATABASE_URL: postgres://postgres:pw@127.0.0.1:5432/postgres
+          # Compile from the committed .sqlx/: the database here has no migrations, and an online
+          # check against it fails the build, which left the invoke below waiting forever.
+          SQLX_OFFLINE: "true"
           # Placeholders: the clients are built but nothing calls AWS on /health.
           ANTILOG_AGENTCORE_AGENT_RUNTIME: arn:aws:bedrock-agentcore:us-east-1:000000000000:runtime/local_agent
           ANTILOG_AGENTCORE_JUDGE_RUNTIME: arn:aws:bedrock-agentcore:us-east-1:000000000000:runtime/local_judge
@@ -211,7 +215,7 @@ jobs:
         run: |
           cargo lambda watch -A 127.0.0.1 -P 9000 -p antilog-aws --bin antilog-lambda > watch.log 2>&1 &
           for i in $(seq 1 60); do
-            out=$(cargo lambda invoke -A 127.0.0.1 -P 9000 antilog-lambda --data-file crates/antilog-aws/tests/events/health.json 2>/dev/null) && break
+            out=$(timeout 30 cargo lambda invoke -A 127.0.0.1 -P 9000 antilog-lambda --data-file crates/antilog-aws/tests/events/health.json 2>/dev/null) && break
             sleep 5
           done
           echo "$out"
