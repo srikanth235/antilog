@@ -1716,10 +1716,10 @@
       "ApprovalStatus": {
         "type": "string",
         "enum": [
-          "Pending",
-          "Approved",
-          "Declined",
-          "ApprovedByPolicy"
+          "pending",
+          "approved",
+          "declined",
+          "approved_by_policy"
         ]
       },
       "AuditCursor": {
@@ -1793,11 +1793,11 @@
       "AuditOutcome": {
         "type": "string",
         "enum": [
-          "Done",
-          "Denied",
-          "Approved",
-          "Declined",
-          "ApprovedByPolicy"
+          "done",
+          "denied",
+          "approved",
+          "declined",
+          "approved_by_policy"
         ]
       },
       "AuditPage": {
@@ -1849,14 +1849,14 @@
       "CardKind": {
         "type": "string",
         "enum": [
-          "SealExperiment",
-          "RaiseBudget",
-          "AddCredential",
-          "AttachRepo",
-          "ChangeEnvironment",
-          "OpenPullRequest",
-          "KeepGoing",
-          "ContinueOnAnotherAgent"
+          "seal_experiment",
+          "raise_budget",
+          "add_credential",
+          "attach_repo",
+          "change_environment",
+          "open_pull_request",
+          "keep_going",
+          "continue_on_another_agent"
         ]
       },
       "Cents": {
@@ -1866,8 +1866,8 @@
       "Cleanup": {
         "type": "string",
         "enum": [
-          "Removed",
-          "NotRemoved"
+          "removed",
+          "not_removed"
         ]
       },
       "CommitRef": {
@@ -2009,8 +2009,8 @@
       "Decision": {
         "type": "string",
         "enum": [
-          "Approve",
-          "Decline"
+          "approve",
+          "decline"
         ]
       },
       "Experiment": {
@@ -2175,8 +2175,8 @@
         "type": "string",
         "description": "Sealing is the judge's; Watching and Regressed are derived, never stored.",
         "enum": [
-          "NotSealed",
-          "Sealed"
+          "not_sealed",
+          "sealed"
         ]
       },
       "FieldError": {
@@ -2329,8 +2329,8 @@
       "MemberKind": {
         "type": "string",
         "enum": [
-          "Person",
-          "Service"
+          "person",
+          "service"
         ]
       },
       "NewExperiment": {
@@ -2528,9 +2528,9 @@
       "PolicyMode": {
         "type": "string",
         "enum": [
-          "AlwaysAsk",
-          "AllowUpTo",
-          "Allow"
+          "always_ask",
+          "allow_up_to",
+          "allow"
         ]
       },
       "Project": {
@@ -2681,9 +2681,9 @@
         "type": "string",
         "description": "Ordered: a higher role may do what a lower one may.",
         "enum": [
-          "Viewer",
-          "Editor",
-          "Owner"
+          "viewer",
+          "editor",
+          "owner"
         ]
       },
       "SealHash": {
@@ -2826,10 +2826,10 @@
       "SessionStatus": {
         "type": "string",
         "enum": [
-          "Working",
-          "WaitingForYou",
-          "Done",
-          "Failed"
+          "working",
+          "waiting_for_you",
+          "done",
+          "failed"
         ]
       },
       "SetProjectRole": {
