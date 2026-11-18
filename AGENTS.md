@@ -4,7 +4,7 @@ Antilog is a chat and a judge. A person states a goal and talks to a coding agen
 
 ## This branch starts fresh
 
-`main` holds the agreed design: these skills, the design boards and tokens in `design/` (`mockups/`, `tokens.toml`, `tools/`), the logo in `design/icon/` and the glossary. This branch adds the Foundation: the Cargo workspace in `crates/` (`antilog-types`, `antilog-core` with its traits and fakes, `antilog-server` with the Postgres `Store`, `antilog-agentcore` and `antilog`, the last two empty), `openapi/antilog.json` and the generated client in `web/`. Nothing else is built yet.
+`main` holds the agreed design: these skills, the design boards and tokens in `design/` (`mockups/`, `tokens.toml`, `tools/`), the logo in `design/icon/` and the glossary. This branch adds the Foundation: the Cargo workspace in `crates/` (`antilog-types`, `antilog-core` with its traits and fakes and the judge in `judge/` (seal, paired measurement, the acceptance function, receipts, value; fakes only, no Postgres tables yet), `antilog-server` with the Postgres `Store`, `antilog-agentcore` and `antilog`, the last two empty), `openapi/antilog.json` and the generated client in `web/`. Nothing else is built yet.
 
 Every skill describes the target. A path or command that does not exist on this branch yet is marked "(target)".
 
