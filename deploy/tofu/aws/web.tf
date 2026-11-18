@@ -47,6 +47,13 @@ resource "aws_cloudfront_function" "block_internal" {
   EOT
 }
 
+resource "aws_cloudfront_function" "spa_fallback" {
+  name    = "${local.prefix}-spa-fallback"
+  runtime = "cloudfront-js-2.0"
+  publish = true
+  code    = file("${path.module}/functions/spa-fallback.js")
+}
+
 resource "aws_cloudfront_function" "strip_api_prefix" {
   name    = "${local.prefix}-strip-api-prefix"
   runtime = "cloudfront-js-2.0"
@@ -110,6 +117,14 @@ resource "aws_cloudfront_distribution" "web" {
     cached_methods         = ["GET", "HEAD"]
     compress               = true
     cache_policy_id        = local.caching_optimized
+
+    # A reload on a screen of the app gets the app. Only this behavior: /api/* and /internal/*
+    # keep their real status codes (a distribution-wide error page would turn an API refusal
+    # into HTML with status 200).
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.spa_fallback.arn
+    }
   }
 
   # Server-sent events: no cache, no compression, nothing buffered; the viewer's Accept,
@@ -161,21 +176,6 @@ resource "aws_cloudfront_distribution" "web" {
   }
 
   aliases = var.domain_name == "" ? [] : [var.domain_name]
-
-  # A path the app owns in the browser is answered with the app, so a reload keeps working.
-  custom_error_response {
-    error_code            = 403
-    response_code         = 200
-    response_page_path    = "/index.html"
-    error_caching_min_ttl = 0
-  }
-
-  custom_error_response {
-    error_code            = 404
-    response_code         = 200
-    response_page_path    = "/index.html"
-    error_caching_min_ttl = 0
-  }
 
   restrictions {
     geo_restriction {

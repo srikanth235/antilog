@@ -112,7 +112,7 @@ resource "aws_lambda_function" "server" {
       },
       var.github_client_id == "" || var.public_url == "" ? {} : {
         ANTILOG_GITHUB_CLIENT_ID = var.github_client_id
-        ANTILOG_GITHUB_REDIRECT  = "${var.public_url}/api/auth/github/callback"
+        ANTILOG_GITHUB_REDIRECT  = "${var.public_url}/auth/github/callback"
       },
       length(data.aws_secretsmanager_secret_version.github_client_secret) == 0 ? {} : {
         ANTILOG_GITHUB_CLIENT_SECRET = data.aws_secretsmanager_secret_version.github_client_secret[0].secret_string

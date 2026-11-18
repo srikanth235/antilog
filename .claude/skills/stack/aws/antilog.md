@@ -52,6 +52,7 @@ CI runs the same in the `lambda` and `tofu` jobs of `checks.yml` ([../../land/ci
 - **The kill switch runs as the owner's role** `kill-switch-executor`, outside `antilog-*`, read as data. It is Python (stdlib and the `boto3` Lambda already ships), to avoid adding `aws-sdk-iam` and `aws-sdk-lambda` for forty lines. Rewrite it in Rust if the owner prefers one language.
 - **"Stop AgentCore runtimes"** is a deny-all on the runtimes' roles plus no new invocations: AgentCore has no call that lists a runtime's running sessions, and they end at their idle timeout.
 - **The alarms call the kill switch directly** (CloudWatch can invoke a function), because the CI policy has no SNS or EventBridge rules. Limits: $5 an hour and $15 a day of model spend, in `variables.tf`.
+- **A reload on a screen of the app** is answered by a viewer-request CloudFront Function on the web (S3) behavior only (`deploy/tofu/aws/functions/spa-fallback.js`: a path with no file extension becomes `/index.html`; test: `node --test deploy/tofu/aws/functions`). There is no distribution-wide error page, because that would turn an API 403 or 404 into HTML with status 200.
 - **The web app is served under `/api`** on the CloudFront host with the prefix stripped, because the API's routes have no common prefix and share paths with the app's screens. The web client's base URL must be `/api`.
 - **A pull request is checked without AWS** and planned only with a role that trusts pull requests; `antilog-ci` trusts the `aws-dev` environment alone.
 - **A runtime that loses its microVM loses its event log.** The agent image keeps the log in memory; the spike measures how often that matters.
@@ -62,7 +63,7 @@ CI runs the same in the `lambda` and `tofu` jobs of `checks.yml` ([../../land/ci
 2. Create the GitHub environment `aws-dev` with required reviewers, and the repository variable `AWS_PLAN_ROLE_ARN` only if a pull-request role is made.
 3. Run `bootstrap/` once with owner credentials to create the state bucket `antilog-tfstate-987432215914`.
 4. Create the ACM certificate in `us-east-1` for the app's name, set `domain_name` and `certificate_arn`, and add a DNS-only CNAME at Cloudflare to the `web_domain` output (no DNS resources are in the module).
-5. Put the GitHub OAuth app's client secret in Secrets Manager (`antilog/github-client-secret`) after the first apply, set `github_client_id` and `signin_secrets_populated`, then set `public_url` to the `web_url` output and apply again.
+5. Put the GitHub OAuth app's client secret in Secrets Manager (`antilog/github-client-secret`) after the first apply, set `github_client_id` and `signin_secrets_populated`, then set `public_url` to the `web_url` output and apply again. The OAuth app's callback URL is `https://<domain>/auth/github/callback`: the web app's own route, which POSTs the code to the API's `POST /auth/github/callback` (never `/api/...`, which only accepts the POST).
 6. Ask AWS for a Lambda concurrency quota increase, then set `server_reserved_concurrency`.
 7. Build and push the agent and judge images, then set `agent_image_uri` and `judge_image_uri`.
 8. Run `deploy-aws` by hand: plan, review, then apply. The workflow migrates the database after the apply.

@@ -57,3 +57,7 @@ Only `deploy-aws.yml` applies; run these as inputs to that workflow, not from a 
 ## Live updates
 
 `GET /api/events/stream` is a server-sent event stream (hints that something changed, never data). CloudFront has its own behavior for `/api/events/*`: the managed `CachingDisabled` policy, no compression, and every viewer header but `Host` forwarded, so `Last-Event-ID` and the cookie reach the function. The function URL is in `RESPONSE_STREAM` mode, so chunks flow as the server writes them. The server writes a comment line every 10 seconds (the origin read timeout is 60 seconds of silence) and ends each stream after 4 minutes, far inside the function's 14-minute limit; the browser reconnects by itself with `Last-Event-ID` and the new stream replays from `session_events`. Nothing here needs the owner. What is not checked until the first deploy: that CloudFront and Lambda really deliver the first event before the stream ends (`curl -N` with a session cookie against `https://<app>/api/events/stream` should print `event: hello` at once).
+
+## Sign-in callback and the app's own pages
+
+The GitHub OAuth app's callback URL is `https://<domain>/auth/github/callback` (the web app's route, which then POSTs the code to the API). `ANTILOG_GITHUB_REDIRECT` is set to the same. A reload on an app screen is answered by the `spa-fallback` CloudFront Function on the S3 behavior only; `/api/*` and `/internal/*` keep their real status codes. Test the function with `node --test deploy/tofu/aws/functions`.
