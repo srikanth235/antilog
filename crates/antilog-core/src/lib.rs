@@ -11,6 +11,7 @@ pub mod ids;
 pub mod judge;
 pub mod organization;
 pub mod platform;
+pub mod platform_suite;
 pub mod secrets;
 pub mod seed;
 pub mod session;

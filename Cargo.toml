@@ -12,12 +12,19 @@ publish = false
 [workspace.dependencies]
 antilog-types = { path = "crates/antilog-types" }
 antilog-core = { path = "crates/antilog-core" }
+antilog-agentcore = { path = "crates/antilog-agentcore" }
+antilog-server = { path = "crates/antilog-server" }
 anyhow = "1.0.104"
+aws-config = "1.13.2"
+aws-sdk-bedrockagentcore = { version = "1.86.0", default-features = false, features = ["default-https-client", "rt-tokio"] }
+aws-sdk-bedrockagentcorecontrol = { version = "1.101.0", default-features = false, features = ["default-https-client", "rt-tokio"] }
+aws-sdk-scheduler = { version = "1.122.0", default-features = false, features = ["default-https-client", "rt-tokio"] }
 axum = "0.8.9"
 clap = { version = "4.6.7", features = ["derive"] }
 ed25519-dalek = "3.0.0"
 getrandom = "0.4.3"
 jiff = "0.2.43"
+lambda_http = { version = "1.3.2", default-features = false, features = ["apigw_http"] }
 oauth2 = "5.0.0"
 openidconnect = "4.1.0"
 proptest = "1.12.0"
