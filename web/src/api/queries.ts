@@ -6,7 +6,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { api, type Schemas, unwrap, withQuery } from "./client";
+import { api, type Schemas, unwrap } from "./client";
 
 export const keys = {
   providers: () => ["providers"] as const,
@@ -130,8 +130,7 @@ export function usePolicies() {
 export function useTokens() {
   return useQuery({
     queryKey: keys.tokens(),
-    queryFn: async () =>
-      unwrap(await api.GET("/tokens", { params: withQuery({ memberId: null }) })),
+    queryFn: async () => unwrap(await api.GET("/tokens", { params: { query: {} } })),
   });
 }
 
@@ -142,11 +141,12 @@ export function useAudit() {
     queryFn: async ({ pageParam }) =>
       unwrap(
         await api.GET("/audit", {
-          params: withQuery({
-            limit: 50,
-            beforeAt: pageParam?.at ?? null,
-            beforeId: pageParam?.id ?? null,
-          }),
+          params: {
+            query: {
+              limit: 50,
+              ...(pageParam === null ? {} : { beforeAt: pageParam.at, beforeId: pageParam.id }),
+            },
+          },
         }),
       ),
     getNextPageParam: (page) => page.next ?? null,

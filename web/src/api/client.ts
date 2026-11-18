@@ -1,13 +1,12 @@
 import createClient from "openapi-fetch";
-import type { ApiPaths } from "./overrides";
-import type { components } from "./schema";
+import type { components, paths } from "./schema";
 
 export type Schemas = components["schemas"];
 
 /** What the app calls: its own origin, `/api/*`. The server routes sit at the root behind a proxy. */
 export const API_BASE = "/api";
 
-export const api = createClient<ApiPaths>({ baseUrl: API_BASE, credentials: "include" });
+export const api = createClient<paths>({ baseUrl: API_BASE, credentials: "include" });
 
 /** A refused or failed call: the status and the server's own words. */
 export class ApiFailure extends Error {
@@ -40,15 +39,4 @@ export function unwrap<T>(result: Settled<T>): T {
     throw failure(result.response.status, result.error);
   }
   return result.data;
-}
-
-/**
- * `GET /audit` and `GET /tokens` take query parameters, but the committed schema files them as path
- * parameters, so the generated types cannot express them. This one cast hands them over as a query;
- * remove it when the schema says `in: query`.
- */
-export function withQuery(query: Record<string, string | number | null>): never {
-  const clean: Record<string, string | number> = {};
-  for (const [key, value] of Object.entries(query)) if (value !== null) clean[key] = value;
-  return { query: clean, path: {} } as never;
 }
