@@ -1,6 +1,6 @@
 use antilog_types::{
-    AuditEntry, Experiment, ExperimentId, ExperimentStatus, OrganizationId, ProjectId, Session,
-    SessionEvent, SessionId,
+    Agent, AuditEntry, Experiment, ExperimentId, ExperimentStatus, OrganizationId, ProjectId,
+    Session, SessionEvent, SessionId,
 };
 
 use super::{FakeStore, ledger::not_found, locked};
@@ -186,5 +186,47 @@ impl SessionStore for FakeStore {
             .take(limit as usize)
             .cloned()
             .collect())
+    }
+
+    async fn put_agent(
+        &self,
+        organization: OrganizationId,
+        agent: &Agent,
+        _at: i64,
+        audit: &AuditEntry,
+    ) -> Result<(), StoreError> {
+        let mut ledger = locked(&self.ledger);
+        not_found(ledger.organization(organization))?;
+        if agent.is_default && !agent.enabled {
+            return Err(Invariant::IllegalTransition.into());
+        }
+        if agent.is_default {
+            for (id, row) in &mut ledger.agents {
+                if *id == organization {
+                    row.is_default = false;
+                }
+            }
+        }
+        match ledger
+            .agents
+            .iter_mut()
+            .find(|(id, row)| *id == organization && row.id == agent.id)
+        {
+            Some((_, row)) => *row = agent.clone(),
+            None => ledger.agents.push((organization, agent.clone())),
+        }
+        ledger.audit.push(audit.clone());
+        Ok(())
+    }
+
+    async fn agents(&self, organization: OrganizationId) -> Result<Vec<Agent>, StoreError> {
+        let mut agents: Vec<Agent> = locked(&self.ledger)
+            .agents
+            .iter()
+            .filter(|(id, _)| *id == organization)
+            .map(|(_, agent)| agent.clone())
+            .collect();
+        agents.sort_by(|a, b| a.id.cmp(&b.id));
+        Ok(agents)
     }
 }

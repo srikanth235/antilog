@@ -1,7 +1,7 @@
-use antilog_core::store::{NewEvent, SessionChange, SessionStore, StoreError};
+use antilog_core::store::{Invariant, NewEvent, SessionChange, SessionStore, StoreError};
 use antilog_types::{
-    AuditEntry, Cleanup, EventKind, Experiment, ExperimentId, ExperimentStatus, MemberId,
-    OrganizationId, ProjectId, Session, SessionEvent, SessionId, SessionStatus,
+    Agent, AuditEntry, Cleanup, CostTier, EventKind, Experiment, ExperimentId, ExperimentStatus,
+    MemberId, OrganizationId, ProjectId, Session, SessionEvent, SessionId, SessionStatus,
 };
 use uuid::Uuid;
 
@@ -311,6 +311,70 @@ impl SessionStore for PgStore {
                 member_id: row.member_id.map(MemberId::from_uuid),
                 text: row.text,
                 at: row.at,
+            })
+        })
+        .collect()
+    }
+
+    async fn put_agent(
+        &self,
+        organization: OrganizationId,
+        agent: &Agent,
+        at: i64,
+        entry: &AuditEntry,
+    ) -> Result<(), StoreError> {
+        if agent.is_default && !agent.enabled {
+            return Err(Invariant::IllegalTransition.into());
+        }
+        let mut tx = self.scoped(organization).await?;
+        if agent.is_default {
+            sqlx::query!(
+                "update agents set is_default = false where organization_id = $1 and id <> $2",
+                organization.as_uuid(),
+                agent.id,
+            )
+            .execute(&mut *tx)
+            .await
+            .map_err(map)?;
+        }
+        sqlx::query!(
+            "insert into agents (organization_id, id, name, platform, enabled, is_default, cost_tier, created_at) values ($1, $2, $3, $4, $5, $6, $7, to_timestamp($8::bigint / 1000.0)) on conflict (organization_id, id) do update set name = excluded.name, platform = excluded.platform, enabled = excluded.enabled, is_default = excluded.is_default, cost_tier = excluded.cost_tier",
+            organization.as_uuid(),
+            agent.id,
+            agent.name,
+            agent.platform,
+            agent.enabled,
+            agent.is_default,
+            agent.cost_tier.as_str(),
+            at,
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(map)?;
+        audit(&mut tx, entry).await?;
+        tx.commit().await.map_err(map)
+    }
+
+    async fn agents(&self, organization: OrganizationId) -> Result<Vec<Agent>, StoreError> {
+        let mut tx = self.scoped(organization).await?;
+        sqlx::query!(
+            "select id, name, platform, enabled, is_default, cost_tier from agents where organization_id = $1 order by id",
+            organization.as_uuid(),
+        )
+        .fetch_all(&mut *tx)
+        .await
+        .map_err(map)?
+        .into_iter()
+        .map(|row| {
+            Ok(Agent {
+                id: row.id,
+                name: row.name,
+                platform: row.platform,
+                enabled: row.enabled,
+                is_default: row.is_default,
+                cost_tier: CostTier::parse(&row.cost_tier)
+                    .ok_or_else(|| corrupt("cost tier", &row.cost_tier))?,
+                built_in: false,
             })
         })
         .collect()

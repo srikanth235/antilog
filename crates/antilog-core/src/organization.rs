@@ -61,6 +61,7 @@ pub enum Action {
     ProjectLimitsSet,
     OrganizationLimitsSet,
     PolicySet,
+    AgentSet,
     ExperimentBudgetSet,
     ExperimentCreate,
     SessionStart,
@@ -85,6 +86,7 @@ impl Action {
         Self::ProjectLimitsSet,
         Self::OrganizationLimitsSet,
         Self::PolicySet,
+        Self::AgentSet,
         Self::ExperimentBudgetSet,
         Self::ExperimentCreate,
         Self::SessionStart,
@@ -109,6 +111,7 @@ impl Action {
             Self::ProjectLimitsSet => "project.set_limits",
             Self::OrganizationLimitsSet => "organization.set_limits",
             Self::PolicySet => "policy.set",
+            Self::AgentSet => "agent.set",
             Self::ExperimentBudgetSet => "experiment.set_budget",
             Self::ExperimentCreate => "experiment.create",
             Self::SessionStart => "session.start",
@@ -143,6 +146,7 @@ impl Action {
             | Self::ProjectLimitsSet
             | Self::OrganizationLimitsSet
             | Self::PolicySet
+            | Self::AgentSet
             | Self::ApprovalDecideValueModel
             | Self::TokenCreateForOther
             | Self::TokenRevokeOther

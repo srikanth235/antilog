@@ -4,10 +4,10 @@
 )]
 
 use antilog_types::{
-    Approval, ApprovalId, ApprovalStatus, AuditEntry, AuditId, AuditOutcome, CardKind, Cleanup,
-    Decision, EventKind, Experiment, ExperimentStatus, Identity, Member, MemberId, Organization,
-    OrganizationId, Policy, PolicyMode, Project, ProjectRole, Role, Session, SessionStatus, Spend,
-    SpendId, SpendKind,
+    Agent, Approval, ApprovalId, ApprovalStatus, AuditEntry, AuditId, AuditOutcome, CardKind,
+    Cleanup, CostTier, Decision, EventKind, Experiment, ExperimentStatus, Identity, Member,
+    MemberId, Organization, OrganizationId, Policy, PolicyMode, Project, ProjectRole, Role,
+    Session, SessionStatus, Spend, SpendId, SpendKind,
 };
 
 use crate::store::{Invariant, NewEvent, SessionChange, SpendScope, SpendTotal, Store, StoreError};
@@ -143,6 +143,7 @@ pub async fn store_suite<S: Store>(store: &S) {
     owners_and_sign_ins(store).await;
     budgets_and_spend(store).await;
     experiments_and_sessions(store).await;
+    agents(store).await;
     approvals(store).await;
     audit_log(store).await;
 }
@@ -971,6 +972,85 @@ async fn experiments_and_sessions<S: Store>(store: &S) {
                 ..say("x", EventKind::Agent, None, "x", T0)
             })
             .await,
+    );
+}
+
+async fn agents<S: Store>(store: &S) {
+    let world = world(store).await;
+    let org = world.id();
+    let agent = |id: &str, enabled, is_default| Agent {
+        id: id.to_owned(),
+        name: id.to_owned(),
+        platform: "agentcore".into(),
+        enabled,
+        is_default,
+        cost_tier: CostTier::Medium,
+        built_in: false,
+    };
+    assert!(store.agents(org).await.expect("none yet").is_empty());
+    for (row, default) in [("claude-code", true), ("codex", false)] {
+        store
+            .put_agent(org, &agent(row, true, default), T0, &world.log("agent.set"))
+            .await
+            .expect("put");
+    }
+    let listed = store.agents(org).await.expect("listed");
+    assert_eq!(
+        listed
+            .iter()
+            .map(|a| (a.id.as_str(), a.is_default))
+            .collect::<Vec<_>>(),
+        vec![("claude-code", true), ("codex", false)]
+    );
+    // A new default clears the old one; a replaced agent changes in place.
+    store
+        .put_agent(
+            org,
+            &agent("codex", true, true),
+            T0 + 1,
+            &world.log("agent.set"),
+        )
+        .await
+        .expect("put");
+    store
+        .put_agent(
+            org,
+            &agent("claude-code", false, false),
+            T0 + 2,
+            &world.log("agent.set"),
+        )
+        .await
+        .expect("put");
+    let listed = store.agents(org).await.expect("listed");
+    assert_eq!(
+        listed
+            .iter()
+            .map(|a| (a.id.as_str(), a.enabled, a.is_default))
+            .collect::<Vec<_>>(),
+        vec![("claude-code", false, false), ("codex", true, true)]
+    );
+    refused(
+        store
+            .put_agent(org, &agent("x", false, true), T0, &world.log("agent.set"))
+            .await,
+        Invariant::IllegalTransition,
+    );
+    not_found(
+        store
+            .put_agent(
+                OrganizationId::new(),
+                &agent("x", true, false),
+                T0,
+                &world.log("agent.set"),
+            )
+            .await,
+    );
+    assert!(
+        store
+            .agents(world_org(store).await)
+            .await
+            .expect("another organization")
+            .is_empty()
     );
 }
 

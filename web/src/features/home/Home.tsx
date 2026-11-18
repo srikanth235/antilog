@@ -2,7 +2,15 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { type FormEvent, useState } from "react";
 import { api, unwrap } from "../../api/client";
-import { keys, useMember, useOrganization, useProjects } from "../../api/queries";
+import {
+  keys,
+  useAgents,
+  useAutoAgent,
+  useEnvironments,
+  useMember,
+  useOrganization,
+  useProjects,
+} from "../../api/queries";
 import { Glyph, Icon } from "../../components/icon/Icon";
 import { Select } from "../../components/select/Select";
 import { reason } from "../../components/state/State";
@@ -29,6 +37,11 @@ export function Home({ project: preferred }: { project: string | undefined }) {
   const [busy, setBusy] = useState(false);
   const [amount, setAmount] = useState("");
   const [creating, setCreating] = useState(false);
+  const agents = useAgents();
+  const auto = useAutoAgent();
+  const environments = useEnvironments();
+  const [agent, setAgent] = useState("auto");
+  const [environment, setEnvironment] = useState<string | null>(null);
 
   const list = projects.data ?? [];
   const selectedId =
@@ -57,11 +70,16 @@ export function Home({ project: preferred }: { project: string | undefined }) {
           },
         }),
       );
-      // "auto" names the agent choice; the server resolves it. (target)
+      // "auto" names the agent choice; the server resolves it and refuses when it cannot choose.
       unwrap(
         await api.POST("/experiments/{id}/sessions", {
           params: { path: { id: experiment.id } },
-          body: { agent: "auto", prompt: text.trim(), repos: parseRepos(repos) },
+          body: {
+            agent,
+            prompt: text.trim(),
+            repos: parseRepos(repos),
+            ...(environment === null ? {} : { environment }),
+          },
         }),
       );
       await client.invalidateQueries({ queryKey: keys.projectExperiments(project.id) });
@@ -138,16 +156,35 @@ export function Home({ project: preferred }: { project: string | undefined }) {
               onChange={(event) => setRepos(event.target.value)}
             />
           </label>
-          <button
-            type="button"
-            className="opt"
-            aria-label={w.home.agent}
-            title={w.home.autoHint}
-            disabled
-          >
-            <Glyph name="spark" />
-            <span>{w.home.auto}</span>
-          </button>
+          <Select
+            label={w.home.agent}
+            value={agent}
+            options={[
+              {
+                value: "auto",
+                label:
+                  auto.data === undefined ? w.home.auto : `${w.home.auto}: ${auto.data.agent.name}`,
+              },
+              ...(agents.data ?? [])
+                .filter((item) => item.enabled)
+                .map((item) => ({ value: item.id, label: item.name })),
+            ]}
+            onChange={setAgent}
+          />
+          {agent === "auto" ? (
+            <span className="xs mut" role="status">
+              {auto.data?.reason ?? (auto.isError ? reason(auto.error) : "")}
+            </span>
+          ) : null}
+          <Select
+            label={w.home.environment}
+            value={environment ?? environments.data?.[0]?.id ?? null}
+            options={(environments.data ?? []).map((item) => ({
+              value: item.id,
+              label: item.name,
+            }))}
+            onChange={setEnvironment}
+          />
           <Select
             label={w.home.mode}
             value={follow}

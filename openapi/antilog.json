@@ -10,6 +10,109 @@
     "version": "0.0.0"
   },
   "paths": {
+    "/agents": {
+      "get": {
+        "tags": [],
+        "operationId": "agents",
+        "responses": {
+          "200": {
+            "description": "The agents the organization turned on; its own list, or the built-in one until it sets up any",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Agent"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/agents/auto": {
+      "get": {
+        "tags": [],
+        "operationId": "auto_agent",
+        "responses": {
+          "200": {
+            "description": "The agent Auto would start, and why",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutoChoice"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "No agent is turned on, or several are and none is the default",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/agents/{id}": {
+      "put": {
+        "tags": [],
+        "operationId": "set_agent",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "A lower-case slug such as claude-code",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewAgent"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Set; organization owners only",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Agent"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/approvals/pending": {
       "get": {
         "tags": [],
@@ -366,6 +469,32 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BudgetSummary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/environments": {
+      "get": {
+        "tags": [],
+        "operationId": "environments",
+        "responses": {
+          "200": {
+            "description": "Where a session may run",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Environment"
+                  }
                 }
               }
             }
@@ -1761,6 +1890,47 @@
         },
         "additionalProperties": false
       },
+      "Agent": {
+        "type": "object",
+        "description": "An agent an organization may run: a model on an agent platform.",
+        "required": [
+          "id",
+          "name",
+          "platform",
+          "enabled",
+          "isDefault",
+          "costTier",
+          "builtIn"
+        ],
+        "properties": {
+          "builtIn": {
+            "type": "boolean",
+            "description": "Offered because the organization has set none up yet; an owner's own list replaces it."
+          },
+          "costTier": {
+            "$ref": "#/components/schemas/CostTier"
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Auto chooses only among the agents that are turned on."
+          },
+          "id": {
+            "type": "string",
+            "description": "A lower-case slug such as `claude-code`; sessions name it."
+          },
+          "isDefault": {
+            "type": "boolean",
+            "description": "What Auto uses before it has data; an owner sets it, and it is never set by brand."
+          },
+          "name": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "AgentRun": {
         "type": "object",
         "required": [
@@ -1998,6 +2168,23 @@
         },
         "additionalProperties": false
       },
+      "AutoChoice": {
+        "type": "object",
+        "description": "The agent Auto would start, and why in one line.",
+        "required": [
+          "agent",
+          "reason"
+        ],
+        "properties": {
+          "agent": {
+            "$ref": "#/components/schemas/Agent"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "BudgetSummary": {
         "type": "object",
         "description": "This month's spend against the caps.",
@@ -2088,6 +2275,15 @@
           }
         },
         "additionalProperties": false
+      },
+      "CostTier": {
+        "type": "string",
+        "description": "\"$\", \"$$\" or \"$$$\", set from the agent's price.",
+        "enum": [
+          "low",
+          "medium",
+          "high"
+        ]
       },
       "CredentialHolder": {
         "type": "string",
@@ -2184,6 +2380,32 @@
           "approve",
           "decline"
         ]
+      },
+      "Environment": {
+        "type": "object",
+        "description": "Where an experiment's session may run.",
+        "required": [
+          "id",
+          "name",
+          "platform",
+          "builtIn"
+        ],
+        "properties": {
+          "builtIn": {
+            "type": "boolean",
+            "description": "Offered by the platform until environments can be registered."
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
       },
       "EventKind": {
         "type": "string",
@@ -2634,6 +2856,35 @@
           "person",
           "service"
         ]
+      },
+      "NewAgent": {
+        "type": "object",
+        "description": "What an owner sets for an agent.",
+        "required": [
+          "name",
+          "platform",
+          "enabled",
+          "isDefault",
+          "costTier"
+        ],
+        "properties": {
+          "costTier": {
+            "$ref": "#/components/schemas/CostTier"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "isDefault": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
       },
       "NewExperiment": {
         "type": "object",

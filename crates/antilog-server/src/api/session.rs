@@ -3,22 +3,24 @@
 
 use std::sync::Arc;
 
+use antilog_core::agents;
 use antilog_core::deps::Deps;
 use antilog_core::organization::{self as floor, Action, Refusal};
+use antilog_core::platform::Platform;
 use antilog_core::session::{self, NewSession, SessionError};
 use antilog_core::store::judge::JudgeStore;
 use antilog_core::store::{OrganizationStore, SessionStore};
 use antilog_core::tools::{Caller, ToolHost, Toolbox, definitions};
 use antilog_types::judge::{Receipt, TrialId};
 use antilog_types::{
-    ApiError, EventPage, Experiment, ExperimentId, NewExperiment, OrganizationId, ProjectId,
-    SendMessage, Session, SessionId, StartSession, StepResult, ToolCall, ToolDefinition,
-    ToolResult,
+    Agent, ApiError, AutoChoice, Environment, EventPage, Experiment, ExperimentId, NewAgent,
+    NewExperiment, OrganizationId, ProjectId, SendMessage, Session, SessionId, StartSession,
+    StepResult, ToolCall, ToolDefinition, ToolResult,
 };
 use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use axum::routing::{get, post};
+use axum::routing::{get, post, put};
 use axum::{Json, Router};
 use utoipa::OpenApi;
 
@@ -35,6 +37,10 @@ use super::auth::{App, Authed, Fail};
     message,
     stop,
     events,
+    agents,
+    auto_agent,
+    set_agent,
+    environments,
     step,
     tools,
     call,
@@ -164,8 +170,15 @@ async fn start<D: Deps + 'static>(
     Json(body): Json<StartSession>,
 ) -> Result<(StatusCode, Json<Session>), Fail> {
     permit(&app, &authed, Action::SessionStart, experiment).await?;
+    let agent = agents::resolve(
+        app.store(),
+        authed.who.organization,
+        app.deps.platform().name(),
+        &body.agent,
+    )
+    .await?;
     let new = NewSession {
-        agent: body.agent,
+        agent,
         prompt: body.prompt,
         repos: body.repos,
         environment: body.environment,
@@ -263,6 +276,70 @@ async fn stop<D: Deps + 'static>(
     .await
     .map(Json)
     .map_err(Fail::Session)
+}
+
+#[utoipa::path(
+    get, path = "/agents", security(("bearer" = [])),
+    responses((status = 200, description = "The agents the organization turned on; its own list, or the built-in one until it sets up any", body = Vec<Agent>))
+)]
+async fn agents<D: Deps + 'static>(
+    State(app): Shared<D>,
+    authed: Authed,
+) -> Result<Json<Vec<Agent>>, Fail> {
+    Ok(Json(
+        agents::list(app.store(), &authed.who, app.deps.platform().name()).await?,
+    ))
+}
+
+#[utoipa::path(
+    get, path = "/agents/auto", security(("bearer" = [])),
+    responses(
+        (status = 200, description = "The agent Auto would start, and why", body = AutoChoice),
+        (status = 422, description = "No agent is turned on, or several are and none is the default", body = ApiError),
+    )
+)]
+async fn auto_agent<D: Deps + 'static>(
+    State(app): Shared<D>,
+    authed: Authed,
+) -> Result<Json<AutoChoice>, Fail> {
+    floor::member_of(app.store(), &authed.who).await?;
+    let (agent, reason) = agents::auto(
+        app.store(),
+        authed.who.organization,
+        app.deps.platform().name(),
+    )
+    .await?;
+    Ok(Json(AutoChoice { agent, reason }))
+}
+
+#[utoipa::path(
+    put, path = "/agents/{id}", operation_id = "set_agent", security(("bearer" = [])),
+    params(("id" = String, Path, description = "A lower-case slug such as claude-code")),
+    request_body = NewAgent,
+    responses((status = 200, description = "Set; organization owners only", body = Agent))
+)]
+async fn set_agent<D: Deps + 'static>(
+    State(app): Shared<D>,
+    authed: Authed,
+    Path(id): Path<String>,
+    Json(new): Json<NewAgent>,
+) -> Result<Json<Agent>, Fail> {
+    Ok(Json(
+        agents::set(app.store(), &authed.who, app.now(), &id, new).await?,
+    ))
+}
+
+#[utoipa::path(
+    get, path = "/environments", security(("bearer" = [])),
+    responses((status = 200, description = "Where a session may run", body = Vec<Environment>))
+)]
+async fn environments<D: Deps + 'static>(
+    State(app): Shared<D>,
+    authed: Authed,
+) -> Result<Json<Vec<Environment>>, Fail> {
+    Ok(Json(
+        agents::environments(app.store(), &authed.who, app.deps.platform().name()).await?,
+    ))
 }
 
 #[derive(serde::Deserialize, utoipa::IntoParams)]
@@ -468,6 +545,10 @@ pub fn routes<D: Deps + 'static>() -> Router<Arc<App<D>>> {
         .route("/experiments/{id}/tools/{tool}", post(call::<D>))
         .route("/sessions/{id}", get(read::<D>))
         .route("/sessions/{id}/messages", post(message::<D>))
+        .route("/agents", get(agents::<D>))
+        .route("/agents/auto", get(auto_agent::<D>))
+        .route("/agents/{id}", put(set_agent::<D>))
+        .route("/environments", get(environments::<D>))
         .route("/sessions/{id}/events", get(events::<D>))
         .route("/sessions/{id}/stop", post(stop::<D>))
         .route("/sessions/{id}/step", post(step::<D>))

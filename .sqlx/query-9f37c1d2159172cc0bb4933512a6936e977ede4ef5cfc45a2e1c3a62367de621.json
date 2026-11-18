@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update agents set is_default = false where organization_id = $1 and id <> $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "9f37c1d2159172cc0bb4933512a6936e977ede4ef5cfc45a2e1c3a62367de621"
+}

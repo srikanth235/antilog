@@ -919,3 +919,93 @@ fn no_password_exists_anywhere_in_the_types() {
 
 #[allow(dead_code)]
 fn store_is_used<S: Store>(_: &S) {}
+
+#[tokio::test]
+async fn auto_picks_the_default_the_only_agent_or_asks_and_only_an_owner_sets_agents() {
+    use antilog_core::agents;
+    use antilog_types::{CostTier, NewAgent};
+
+    let world = World::new().await;
+    let org = world.organization.id;
+    let new = |enabled, is_default| NewAgent {
+        name: "Agent".into(),
+        platform: "agentcore".into(),
+        enabled,
+        is_default,
+        cost_tier: CostTier::Low,
+    };
+    let (editor, _) = world.member("ed", Role::Editor).await;
+
+    // Nothing set up: the built-in agent keeps a first experiment from waiting on a settings visit.
+    let (agent, reason) = agents::auto(&world.store, org, "fake").await.unwrap();
+    assert_eq!((agent.id.as_str(), agent.built_in), ("claude-code", true));
+    assert!(reason.contains("No agent is set up yet"));
+    assert_eq!(
+        agents::resolve(&world.store, org, "fake", "auto")
+            .await
+            .unwrap(),
+        "claude-code"
+    );
+    assert_eq!(
+        agents::resolve(&world.store, org, "fake", "codex")
+            .await
+            .unwrap(),
+        "codex"
+    );
+
+    assert!(matches!(
+        agents::set(&world.store, &editor, T0, "codex", new(true, false)).await,
+        Err(Refusal::Denied)
+    ));
+    assert_eq!(world.audited("agent.set", AuditOutcome::Denied).await, 1);
+    for bad in ["auto", "Codex", "-x", ""] {
+        assert!(matches!(
+            agents::set(&world.store, &world.owner, T0, bad, new(true, false)).await,
+            Err(Refusal::Invalid(_))
+        ));
+    }
+    assert!(matches!(
+        agents::set(&world.store, &world.owner, T0, "codex", new(false, true)).await,
+        Err(Refusal::Invalid(_))
+    ));
+
+    agents::set(&world.store, &world.owner, T0, "codex", new(true, false))
+        .await
+        .unwrap();
+    let (only, reason) = agents::auto(&world.store, org, "fake").await.unwrap();
+    assert_eq!(
+        (only.id.as_str(), reason.as_str()),
+        ("codex", "The only agent turned on.")
+    );
+    agents::set(&world.store, &world.owner, T0, "gemini", new(true, false))
+        .await
+        .unwrap();
+    assert!(matches!(
+        agents::auto(&world.store, org, "fake").await,
+        Err(Refusal::Invalid(_))
+    ));
+    agents::set(&world.store, &world.owner, T0, "gemini", new(true, true))
+        .await
+        .unwrap();
+    let (chosen, reason) = agents::auto(&world.store, org, "fake").await.unwrap();
+    assert_eq!(chosen.id, "gemini");
+    assert!(reason.contains("default"));
+    agents::set(&world.store, &world.owner, T0, "gemini", new(false, false))
+        .await
+        .unwrap();
+    agents::set(&world.store, &world.owner, T0, "codex", new(false, false))
+        .await
+        .unwrap();
+    assert!(matches!(
+        agents::auto(&world.store, org, "fake").await,
+        Err(Refusal::Invalid(_))
+    ));
+    assert_eq!(
+        agents::list(&world.store, &editor, "fake")
+            .await
+            .unwrap()
+            .len(),
+        2
+    );
+    assert_eq!(world.audited("agent.set", AuditOutcome::Done).await, 5);
+}

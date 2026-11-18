@@ -1,7 +1,7 @@
 use std::future::Future;
 
 use antilog_types::{
-    AuditEntry, Cleanup, EventKind, Experiment, ExperimentId, ExperimentStatus, MemberId,
+    Agent, AuditEntry, Cleanup, EventKind, Experiment, ExperimentId, ExperimentStatus, MemberId,
     OrganizationId, ProjectId, Session, SessionEvent, SessionId, SessionStatus,
 };
 
@@ -99,4 +99,20 @@ pub trait SessionStore {
         after: i64,
         limit: u32,
     ) -> impl Future<Output = Result<Vec<SessionEvent>, StoreError>> + Send;
+
+    /// Adds or replaces one of the organization's agents, with its audit entry. Making it the
+    /// default clears the previous default; a default must be enabled.
+    fn put_agent(
+        &self,
+        organization: OrganizationId,
+        agent: &Agent,
+        at: i64,
+        audit: &AuditEntry,
+    ) -> impl Future<Output = Result<(), StoreError>> + Send;
+
+    /// The agents an owner set, by id.
+    fn agents(
+        &self,
+        organization: OrganizationId,
+    ) -> impl Future<Output = Result<Vec<Agent>, StoreError>> + Send;
 }

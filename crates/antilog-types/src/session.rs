@@ -139,6 +139,58 @@ pub struct EventPage {
     pub next: Option<i64>,
 }
 
+text_enum!(
+    /// "$", "$$" or "$$$", set from the agent's price.
+    CostTier { Low => "low", Medium => "medium", High => "high" }
+);
+
+/// An agent an organization may run: a model on an agent platform.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Agent {
+    /// A lower-case slug such as `claude-code`; sessions name it.
+    pub id: String,
+    pub name: String,
+    pub platform: String,
+    /// Auto chooses only among the agents that are turned on.
+    pub enabled: bool,
+    /// What Auto uses before it has data; an owner sets it, and it is never set by brand.
+    pub is_default: bool,
+    pub cost_tier: CostTier,
+    /// Offered because the organization has set none up yet; an owner's own list replaces it.
+    pub built_in: bool,
+}
+
+/// What an owner sets for an agent.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct NewAgent {
+    pub name: String,
+    pub platform: String,
+    pub enabled: bool,
+    pub is_default: bool,
+    pub cost_tier: CostTier,
+}
+
+/// The agent Auto would start, and why in one line.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct AutoChoice {
+    pub agent: Agent,
+    pub reason: String,
+}
+
+/// Where an experiment's session may run.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Environment {
+    pub id: String,
+    pub name: String,
+    pub platform: String,
+    /// Offered by the platform until environments can be registered.
+    pub built_in: bool,
+}
+
 /// What starts an experiment in a project. The budget defaults to the project's, then the organization's.
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]

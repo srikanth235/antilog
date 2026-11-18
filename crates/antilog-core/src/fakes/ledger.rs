@@ -1,6 +1,7 @@
 use antilog_types::{
-    Approval, AuditEntry, Experiment, ExperimentId, Member, MemberId, Organization, OrganizationId,
-    Policy, Project, ProjectId, ProjectRole, Role, Session, SessionEvent, SessionId, Spend,
+    Agent, Approval, AuditEntry, Experiment, ExperimentId, Member, MemberId, Organization,
+    OrganizationId, Policy, Project, ProjectId, ProjectRole, Role, Session, SessionEvent,
+    SessionId, Spend,
 };
 
 use crate::store::{Invariant, SignInRecord, StoreError, TokenRecord};
@@ -20,6 +21,7 @@ pub(super) struct Ledger {
     pub approvals: Vec<Approval>,
     pub audit: Vec<AuditEntry>,
     pub events: Vec<(String, SessionEvent)>,
+    pub agents: Vec<(OrganizationId, Agent)>,
 }
 
 pub(super) fn least(a: Option<i64>, b: Option<i64>) -> Option<i64> {

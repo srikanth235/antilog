@@ -1161,3 +1161,95 @@ async fn pending_cards_the_transcript_and_spend_are_read_across_roles() {
     let all = org.call(Method::GET, "/spend", &viewer, None).await;
     assert_eq!(all.body[0]["spentCents"], 65);
 }
+
+#[tokio::test]
+async fn agents_auto_and_environments_are_read_by_members_and_set_by_owners() {
+    let org = org().await;
+    let (_, viewer) = org.member("vi", "viewer").await;
+    let (_, editor) = org.member("ed", "editor").await;
+    let project = org
+        .call(
+            Method::POST,
+            "/projects",
+            &org.owner,
+            Some(json!({"name": "checkout", "description": ""})),
+        )
+        .await;
+    let project_id = project.body["id"].as_str().unwrap_or_default().to_owned();
+    let experiment = org
+        .call(
+            Method::POST,
+            &format!("/projects/{project_id}/experiments"),
+            &editor,
+            Some(json!({"goal": "cut p95", "budgetCapCents": 500})),
+        )
+        .await;
+    let experiment_id = experiment.body["id"]
+        .as_str()
+        .unwrap_or_default()
+        .to_owned();
+
+    let listed = org.call(Method::GET, "/agents", &viewer, None).await;
+    assert_eq!(listed.body[0]["id"], "claude-code");
+    assert_eq!(listed.body[0]["builtIn"], true);
+    let auto = org.call(Method::GET, "/agents/auto", &viewer, None).await;
+    assert_eq!(auto.body["agent"]["id"], "claude-code");
+    let environments = org.call(Method::GET, "/environments", &viewer, None).await;
+    assert_eq!(environments.body[0]["id"], "default");
+
+    // "auto" in a new session is resolved by the server to a named agent.
+    let started = org
+        .call(
+            Method::POST,
+            &format!("/experiments/{experiment_id}/sessions"),
+            &editor,
+            Some(json!({"agent": "auto", "prompt": "go", "repos": []})),
+        )
+        .await;
+    assert_eq!(
+        (started.status, &started.body["agent"]),
+        (StatusCode::CREATED, &json!("claude-code"))
+    );
+
+    let body = json!({"name": "Codex", "platform": "agentcore", "enabled": true, "isDefault": false, "costTier": "high"});
+    let denied = org
+        .call(Method::PUT, "/agents/codex", &editor, Some(body.clone()))
+        .await;
+    assert_eq!(denied.status, StatusCode::FORBIDDEN);
+    let set = org
+        .call(Method::PUT, "/agents/codex", &org.owner, Some(body))
+        .await;
+    assert_eq!(
+        (set.status, &set.body["builtIn"]),
+        (StatusCode::OK, &json!(false))
+    );
+    let two = org
+        .call(Method::PUT, "/agents/gemini", &org.owner, Some(json!({"name": "Gemini", "platform": "agentcore", "enabled": true, "isDefault": false, "costTier": "low"})))
+        .await;
+    assert_eq!(two.status, StatusCode::OK);
+    let asks = org.call(Method::GET, "/agents/auto", &viewer, None).await;
+    assert_eq!(
+        (asks.status, &asks.body["code"]),
+        (StatusCode::UNPROCESSABLE_ENTITY, &json!("invalid"))
+    );
+    let refused = org
+        .call(
+            Method::POST,
+            &format!("/experiments/{experiment_id}/sessions"),
+            &editor,
+            Some(json!({"agent": "auto", "prompt": "go", "repos": []})),
+        )
+        .await;
+    assert_eq!(refused.status, StatusCode::UNPROCESSABLE_ENTITY);
+    let named = org
+        .call(
+            Method::POST,
+            &format!("/experiments/{experiment_id}/sessions"),
+            &editor,
+            Some(json!({"agent": "gemini", "prompt": "go", "repos": []})),
+        )
+        .await;
+    assert_eq!(named.status, StatusCode::CREATED);
+    let bad = org.call(Method::PUT, "/agents/auto", &org.owner, Some(json!({"name": "x", "platform": "p", "enabled": true, "isDefault": false, "costTier": "low"}))).await;
+    assert_eq!(bad.status, StatusCode::UNPROCESSABLE_ENTITY);
+}

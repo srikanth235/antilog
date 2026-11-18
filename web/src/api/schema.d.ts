@@ -4,6 +4,54 @@
  */
 
 export interface paths {
+    "/agents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["agents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/agents/auto": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["auto_agent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/agents/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["set_agent"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/approvals/pending": {
         parameters: {
             query?: never;
@@ -140,6 +188,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["budgets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/environments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["environments"];
         put?: never;
         post?: never;
         delete?: never;
@@ -612,6 +676,20 @@ export interface components {
             /** Format: int64 */
             revokedAt?: number | null;
         };
+        /** @description An agent an organization may run: a model on an agent platform. */
+        Agent: {
+            /** @description Offered because the organization has set none up yet; an owner's own list replaces it. */
+            builtIn: boolean;
+            costTier: components["schemas"]["CostTier"];
+            /** @description Auto chooses only among the agents that are turned on. */
+            enabled: boolean;
+            /** @description A lower-case slug such as `claude-code`; sessions name it. */
+            id: string;
+            /** @description What Auto uses before it has data; an owner sets it, and it is never set by brand. */
+            isDefault: boolean;
+            name: string;
+            platform: string;
+        };
         AgentRun: {
             agent: string;
             platform: string;
@@ -672,6 +750,11 @@ export interface components {
             entries: components["schemas"]["AuditEntry"][];
             next?: components["schemas"]["AuditCursor"] | null;
         };
+        /** @description The agent Auto would start, and why in one line. */
+        AutoChoice: {
+            agent: components["schemas"]["Agent"];
+            reason: string;
+        };
         /** @description This month's spend against the caps. */
         BudgetSummary: {
             organization: components["schemas"]["LimitSpend"];
@@ -694,6 +777,11 @@ export interface components {
             judgeImage: string;
             platform: string;
         };
+        /**
+         * @description "$", "$$" or "$$$", set from the agent's price.
+         * @enum {string}
+         */
+        CostTier: "low" | "medium" | "high";
         /** @enum {string} */
         CredentialHolder: "agent" | "judge";
         CredentialScope: {
@@ -716,6 +804,14 @@ export interface components {
         };
         /** @enum {string} */
         Decision: "approve" | "decline";
+        /** @description Where an experiment's session may run. */
+        Environment: {
+            /** @description Offered by the platform until environments can be registered. */
+            builtIn: boolean;
+            id: string;
+            name: string;
+            platform: string;
+        };
         /**
          * @description Who spoke: a person, an agent, or the name of a tool an agent called.
          * @enum {string}
@@ -858,6 +954,14 @@ export interface components {
         MemberId: string;
         /** @enum {string} */
         MemberKind: "person" | "service";
+        /** @description What an owner sets for an agent. */
+        NewAgent: {
+            costTier: components["schemas"]["CostTier"];
+            enabled: boolean;
+            isDefault: boolean;
+            name: string;
+            platform: string;
+        };
         /** @description What starts an experiment in a project. The budget defaults to the project's, then the organization's. */
         NewExperiment: {
             /** Format: int64 */
@@ -1141,6 +1245,82 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    agents: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The agents the organization turned on; its own list, or the built-in one until it sets up any */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Agent"][];
+                };
+            };
+        };
+    };
+    auto_agent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The agent Auto would start, and why */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AutoChoice"];
+                };
+            };
+            /** @description No agent is turned on, or several are and none is the default */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    set_agent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A lower-case slug such as claude-code */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewAgent"];
+            };
+        };
+        responses: {
+            /** @description Set; organization owners only */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Agent"];
+                };
+            };
+        };
+    };
     pending: {
         parameters: {
             query?: never;
@@ -1417,6 +1597,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BudgetSummary"];
+                };
+            };
+        };
+    };
+    environments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Where a session may run */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Environment"][];
                 };
             };
         };

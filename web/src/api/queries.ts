@@ -23,6 +23,9 @@ export const keys = {
   session: (id: string) => ["sessions", id] as const,
   receipt: (trial: string) => ["trials", trial, "receipt"] as const,
   history: (id: string) => ["experiments", id, "history"] as const,
+  agents: () => ["agents"] as const,
+  autoAgent: () => ["agents", "auto"] as const,
+  environments: () => ["environments"] as const,
   budgets: () => ["budgets"] as const,
   spend: () => ["spend"] as const,
   experimentSpend: (id: string) => ["experiments", id, "spend"] as const,
@@ -165,6 +168,30 @@ export function useReceipt(trial: string) {
     queryFn: async () =>
       unwrap(await api.GET("/trials/{id}/receipt", { params: { path: { id: trial } } })),
     retry: false,
+  });
+}
+
+/** The agents an organization turned on, for the composer's Agent chip. */
+export function useAgents() {
+  return useQuery({
+    queryKey: keys.agents(),
+    queryFn: async () => unwrap(await api.GET("/agents")),
+  });
+}
+
+/** What Auto would start and why; a refusal says to pick one. */
+export function useAutoAgent() {
+  return useQuery({
+    queryKey: keys.autoAgent(),
+    queryFn: async () => unwrap(await api.GET("/agents/auto")),
+    retry: false,
+  });
+}
+
+export function useEnvironments() {
+  return useQuery({
+    queryKey: keys.environments(),
+    queryFn: async () => unwrap(await api.GET("/environments")),
   });
 }
 
