@@ -377,20 +377,19 @@ async fn receipt<D: Deps + 'static>(
 }
 
 /// The scheduler's wake-up for a job, which is a session id. No sign-in: the platform in front
-/// blocks `/internal` for the internet, and `ANTILOG_WAKE_SECRET`, when set, is also required.
+/// blocks `/internal` for the internet, and `ANTILOG_WAKE_SECRET` is required in `x-antilog-wake`.
 /// A job that no longer exists is answered 204 so the scheduler stops retrying it.
 async fn wake<D: Deps + 'static>(
     State(app): Shared<D>,
     headers: axum::http::HeaderMap,
     Path(job): Path<uuid::Uuid>,
 ) -> Result<Response, Fail> {
-    if let Some(secret) = &app.settings.wake_secret {
-        let given = headers
-            .get("x-antilog-wake")
-            .map_or(&[][..], |value| value.as_bytes());
-        if !bool::from(subtle::ConstantTimeEq::ct_eq(given, secret.as_bytes())) {
-            return Err(Fail::Unauthenticated);
-        }
+    let secret = app.settings.wake_secret.as_deref().unwrap_or_default();
+    let given = headers
+        .get("x-antilog-wake")
+        .map_or(&[][..], |value| value.as_bytes());
+    if secret.is_empty() || !bool::from(subtle::ConstantTimeEq::ct_eq(given, secret.as_bytes())) {
+        return Err(Fail::Unauthenticated);
     }
     let Some(found) = app.store().find_session(SessionId::from_uuid(job)).await? else {
         return Ok(StatusCode::NO_CONTENT.into_response());
@@ -410,6 +409,11 @@ async fn wake<D: Deps + 'static>(
     .into_response())
 }
 
+/// Mounted only when `ANTILOG_WAKE_SECRET` is set, so it never exists open; not in OpenAPI.
+pub fn wake_routes<D: Deps + 'static>() -> Router<Arc<App<D>>> {
+    Router::new().route("/internal/wake/{job}", post(wake::<D>))
+}
+
 pub fn routes<D: Deps + 'static>() -> Router<Arc<App<D>>> {
     Router::new()
         .route("/tools", get(tools))
@@ -427,6 +431,5 @@ pub fn routes<D: Deps + 'static>() -> Router<Arc<App<D>>> {
         .route("/sessions/{id}/messages", post(message::<D>))
         .route("/sessions/{id}/stop", post(stop::<D>))
         .route("/sessions/{id}/step", post(step::<D>))
-        .route("/internal/wake/{job}", post(wake::<D>))
         .route("/trials/{id}/receipt", get(receipt::<D>))
 }
