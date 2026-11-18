@@ -11,10 +11,10 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap">
 <style>
 :root{
-  --night:#0A0D14; --night2:#11151F; --nightLine:rgba(236,232,220,.10);
-  --ivory:#F6F3EC; --paper:#FBFAF6; --ink:#12151C; --ink2:#4B5262; --ink3:#7A8090;
-  --onNight:#ECE8DC; --onNight2:#A3A7B3; --onNight3:#6F7584;
-  --brass:#D9B26F; --brassDeep:#9A6B1E; --rule:#E2DDD0;
+  --night:#0A0D14; --nightLine:rgba(236,232,220,.10);
+  --ivory:#F6F3EC; --paper:#FBFAF6; --ink:#12151C; --ink2:#4B5262; --ink3:#5F6573;
+  --onNight:#ECE8DC; --onNight2:#A3A7B3; --onNight3:#8A8F9C;
+  --brass:#D9B26F; --brassDeep:#8F6216; --rule:#E2DDD0;
   --serif:'Instrument Serif', 'Iowan Old Style', Georgia, serif;
   --sans:'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --gut:clamp(20px, 5vw, 72px); --max:1240px;
@@ -29,66 +29,65 @@ a{color:inherit}
 .wrap{max-width:var(--max);margin:0 auto;padding-inline:var(--gut)}
 .skip{position:absolute;left:16px;top:-80px;z-index:10;padding:12px 16px;border-radius:8px;background:var(--brass);color:var(--night);font-weight:600;text-decoration:none}
 .skip:focus{top:16px}
-.serif{font-family:var(--serif);font-weight:400;letter-spacing:-.01em}
 h1,h2,h3{margin:0;text-wrap:balance}
 p{margin:0}
+.h3{font:600 18px/1.35 var(--sans);letter-spacing:-.01em}
 
-/* buttons */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;padding:0 26px;border-radius:999px;font:500 15px/1 var(--sans);text-decoration:none;transition:background .25s,color .25s,border-color .25s,transform .25s}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;padding:0 26px;border-radius:999px;font:500 15px/1 var(--sans);text-decoration:none;transition:background .25s,color .25s,border-color .25s}
 .btn-gold{background:var(--brass);color:var(--night)}
 .btn-gold:hover{background:#E8C68A}
 .btn-line{border:1px solid rgba(236,232,220,.28);color:var(--onNight)}
 .btn-line:hover{border-color:var(--onNight)}
-.btn-dark{background:var(--night);color:var(--onNight)}
-.btn-dark:hover{background:#1E2430}
 .btn .arr{transition:transform .25s}
 .btn:hover .arr{transform:translateX(3px)}
+.mail{color:var(--onNight2);text-decoration:underline;text-decoration-color:rgba(236,232,220,.25);text-underline-offset:6px;min-height:44px;display:inline-flex;align-items:center;transition:color .2s,text-decoration-color .2s}
+.mail:hover{color:var(--onNight);text-decoration-color:var(--brass)}
 
 /* nav */
-.nav{position:absolute;inset:0 0 auto 0;z-index:5;padding-top:env(safe-area-inset-top,0px)}
+.nav{position:absolute;inset:0 0 auto 0;z-index:5;padding-top:env(safe-area-inset-top,0px);color:var(--onNight)}
 .nav .wrap{display:flex;align-items:center;gap:32px;min-height:84px}
-.brand{display:inline-flex;align-items:center;gap:12px;color:var(--onNight);text-decoration:none;font:600 18px/1 var(--sans);letter-spacing:-.01em}
+.brand{display:inline-flex;align-items:center;gap:12px;min-height:44px;color:var(--onNight);text-decoration:none;font:600 18px/1 var(--sans);letter-spacing:-.01em}
 .nav .links{display:flex;align-items:center;gap:32px;margin-left:auto}
 .nav .links a.q{color:var(--onNight2);text-decoration:none;font-size:14.5px;min-height:44px;display:inline-flex;align-items:center;transition:color .2s}
 .nav .links a.q:hover{color:var(--onNight)}
-.nav .btn{min-height:40px;padding:0 20px;font-size:14px}
+.nav .btn{min-height:44px;padding:0 20px;font-size:14px}
 
 /* hero */
 .hero{position:relative;background:var(--night);color:var(--onNight);overflow:hidden;isolation:isolate}
-.hero::before{content:"";position:absolute;inset:-20% -10% auto auto;width:70vw;height:70vw;max-width:1100px;max-height:1100px;background:radial-gradient(closest-side,rgba(217,178,111,.14),transparent 70%);z-index:-1}
-.hero::after{content:"";position:absolute;inset:0;background-image:linear-gradient(var(--nightLine) 1px,transparent 1px);background-size:100% 96px;mask-image:linear-gradient(to bottom,transparent,black 30%,black 70%,transparent);opacity:.35;z-index:-1}
-.hero .wrap{padding-top:clamp(132px,14vw,176px)}
-.hero h1{font-family:var(--serif);font-weight:400;font-size:clamp(50px,7.6vw,116px);line-height:.98;letter-spacing:-.025em;max-width:none}
+.hero::before{content:"";position:absolute;right:-10%;bottom:-30%;width:70vw;height:70vw;max-width:1000px;max-height:1000px;background:radial-gradient(closest-side,rgba(217,178,111,.08),transparent 70%);z-index:-1}
+.hero .wrap{padding-top:clamp(120px,11vw,150px)}
+.hero h1{font-family:var(--serif);font-weight:400;font-size:clamp(50px,7.6vw,116px);line-height:.98;letter-spacing:-.025em}
 .hero h1 .l{display:block}
-.hero .row{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:32px 64px;margin-top:40px}
-.hero .row .sub{margin-top:0}
-.hero .row .ctas{margin-top:0}
 .hero h1 em{font-style:italic;color:var(--brass)}
-.hero .sub{margin-top:36px;max-width:560px;font-size:clamp(17px,1.5vw,20px);line-height:1.55;color:var(--onNight2)}
-.hero .ctas{display:flex;flex-wrap:wrap;gap:14px;margin-top:44px}
+.hero .sub{margin-top:32px;max-width:580px;font-size:clamp(17px,1.5vw,20px);line-height:1.55;color:var(--onNight2)}
+.hero .ctas{display:flex;flex-wrap:wrap;align-items:center;gap:14px 28px;margin-top:36px}
 
 /* chart */
-.chart{margin-top:clamp(48px,5vw,72px);position:relative}
-.chart svg{display:block;width:100%;height:auto;overflow:visible}
-.chart .legend{display:flex;flex-wrap:wrap;gap:10px 32px;padding:22px 0 clamp(48px,6vw,72px);border-top:1px solid var(--nightLine);font-size:13.5px;color:var(--onNight2)}
+.chart{position:relative;margin:clamp(48px,6vw,80px) 0 0}
+.chart .plot{position:relative;height:clamp(240px,26vw,360px)}
+.chart svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.chart .lbl{position:absolute;font-size:13.5px;line-height:1.3;color:var(--onNight2);white-space:nowrap}
+.chart .lbl.start{left:50%;top:0;padding-left:12px}
+.chart .lbl.avoid{left:76%;top:34%;color:var(--brass);font-weight:500}
+.chart .lbl.ill{right:0;top:0;color:var(--onNight3)}
+.chart .legend{display:flex;flex-wrap:wrap;gap:10px 32px;margin-top:20px;padding:20px 0 clamp(48px,6vw,72px);border-top:1px solid var(--nightLine);font-size:13.5px;color:var(--onNight2)}
 .chart .legend span{display:inline-flex;align-items:center;gap:10px}
-.chart .legend i{display:inline-block;width:22px;height:2px;border-radius:2px}
-.chart .legend .u{background:var(--onNight3)}
-.chart .legend .s{background:var(--brass)}
-.chart .legend .d{width:8px;height:8px;border-radius:50%;background:var(--night);box-shadow:inset 0 0 0 2px var(--brass)}
-.chart .legend .note{margin-left:auto;color:var(--onNight3)}
+.chart .legend i{display:inline-block;width:22px;height:0;border-top:2px solid}
+.chart .legend .u{border-top:2px dashed var(--onNight3)}
+.chart .legend .s{border-color:var(--brass)}
+.chart .legend .a{width:14px;height:14px;border:0;border-radius:3px;background:rgba(217,178,111,.28)}
 .draw{stroke-dasharray:1;stroke-dashoffset:0}
 @media (prefers-reduced-motion:no-preference){
-  .draw{stroke-dashoffset:1;animation:draw 2.4s cubic-bezier(.16,1,.3,1) .3s forwards}
-  .fade{opacity:0;animation:fade 1s ease-out 1.8s forwards}
+  .draw{stroke-dashoffset:1;animation:draw 2.2s cubic-bezier(.16,1,.3,1) .2s forwards}
+  .fade{opacity:0;animation:fade 1s ease-out 1.2s forwards}
   @keyframes draw{to{stroke-dashoffset:0}}
   @keyframes fade{to{opacity:1}}
 }
 
 /* statement */
-.statement{padding-block:clamp(96px,13vw,180px)}
-.statement p{font-family:var(--serif);font-size:clamp(30px,3.9vw,56px);line-height:1.14;letter-spacing:-.015em;max-width:22ch;color:var(--ink)}
-.statement p span{color:var(--ink3)}
+.statement{padding-block:clamp(96px,13vw,176px)}
+.statement p{font-family:var(--serif);font-size:clamp(30px,3.9vw,56px);line-height:1.14;letter-spacing:-.015em;max-width:28ch;color:var(--ink)}
+.statement p span{color:var(--ink2)}
 
 /* outcomes */
 .outcomes{padding-bottom:clamp(96px,12vw,160px)}
@@ -99,25 +98,35 @@ p{margin:0}
 
 /* how */
 .how{background:var(--ivory);padding-block:clamp(96px,12vw,160px);border-block:1px solid var(--rule)}
-.how .head{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:24px 64px;margin-bottom:clamp(56px,7vw,88px)}
-.how h2{font-family:var(--serif);font-weight:400;font-size:clamp(40px,5vw,72px);line-height:1;letter-spacing:-.02em;max-width:14ch}
+.how .head{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:24px 64px;margin-bottom:clamp(56px,7vw,80px)}
+.how h2{font-family:var(--serif);font-weight:400;font-size:clamp(40px,5vw,72px);line-height:1;letter-spacing:-.02em;max-width:15ch}
 .how .head p{max-width:400px;color:var(--ink2)}
-.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;counter-reset:s;list-style:none;margin:0;padding:0}
-.steps li{position:relative;padding:0 40px 0 0}
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));list-style:none;margin:0;padding:0}
+.steps li{padding:0 40px 0 0}
 .steps li+li{padding-left:40px;border-left:1px solid var(--rule)}
-.steps .n{font-family:var(--serif);font-size:88px;line-height:1;color:var(--brassDeep);font-variant-numeric:lining-nums}
-.steps h3{margin-top:28px;font:600 19px/1.3 var(--sans);letter-spacing:-.01em}
+.steps .who{display:flex;align-items:baseline;gap:14px;font-size:14px;color:var(--ink3)}
+.steps .n{font-family:var(--serif);font-size:44px;line-height:1;color:var(--brassDeep)}
+.steps h3{margin-top:20px}
 .steps p{margin-top:10px;color:var(--ink2);font-size:16px;max-width:32ch}
 
-/* verify band */
-.verify{background:var(--night);color:var(--onNight);padding-block:clamp(110px,14vw,200px);position:relative;overflow:hidden;isolation:isolate}
-.verify::before{content:"";position:absolute;left:50%;top:100%;width:1400px;height:900px;transform:translate(-50%,-55%);background:radial-gradient(closest-side,rgba(217,178,111,.16),transparent 70%);z-index:-1}
-.verify h2{font-family:var(--serif);font-weight:400;font-size:clamp(44px,6.6vw,96px);line-height:1;letter-spacing:-.025em;max-width:16ch}
-.verify h2 em{color:var(--brass)}
-.verify .cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:48px;margin-top:clamp(64px,8vw,104px)}
-.verify .cols div{padding-top:24px;border-top:1px solid var(--nightLine)}
-.verify .cols h3{font:500 17px/1.35 var(--sans);color:var(--onNight)}
-.verify .cols p{margin-top:10px;color:var(--onNight2);font-size:15.5px;max-width:34ch}
+/* verify */
+.verify{background:var(--night);color:var(--onNight);padding-block:clamp(104px,13vw,184px)}
+.verify .layout{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:clamp(48px,7vw,112px);align-items:center}
+.verify h2{font-family:var(--serif);font-weight:400;font-size:clamp(44px,5.6vw,84px);line-height:1;letter-spacing:-.025em}
+.verify .lead{margin-top:28px;color:var(--onNight2);max-width:42ch}
+.record{border:1px solid rgba(236,232,220,.16);border-radius:16px;background:linear-gradient(180deg,rgba(236,232,220,.045),rgba(236,232,220,.015));box-shadow:0 30px 80px -30px rgba(0,0,0,.7)}
+.record header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:22px 28px;border-bottom:1px solid var(--nightLine)}
+.record header b{font-weight:600;font-size:15px}
+.record header span{font-size:13px;color:var(--onNight3)}
+.record dl{margin:0;padding:6px 28px}
+.record dl div{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,3fr);gap:20px;padding:15px 0;border-top:1px solid var(--nightLine);font-size:15px}
+.record dl div:first-child{border-top:0}
+.record dt{color:var(--onNight3)}
+.record dd{margin:0;color:var(--onNight)}
+.record dd.num{font-variant-numeric:tabular-nums;color:var(--onNight2)}
+.record footer{display:flex;align-items:center;gap:12px;padding:18px 28px;border-top:1px solid var(--nightLine);color:var(--brass);font-size:14px;font-weight:500}
+.record footer svg{flex:none}
+.verify .cap{margin-top:14px;font-size:13.5px;color:var(--onNight3)}
 
 /* enterprise */
 .ent{padding-block:clamp(96px,12vw,160px)}
@@ -126,38 +135,46 @@ p{margin:0}
 .ent .lead{margin-top:24px;color:var(--ink2);max-width:36ch}
 .ent dl{margin:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 48px}
 .ent dl div{padding-block:26px;border-top:1px solid var(--rule)}
-.ent dt{font-weight:600;font-size:16.5px;letter-spacing:-.005em}
+.ent dl div.key{border-top-color:var(--ink)}
 .ent dd{margin:8px 0 0;color:var(--ink2);font-size:15.5px}
 
 /* close */
 .close{background:var(--night);color:var(--onNight);text-align:center;padding-block:clamp(110px,14vw,200px) clamp(80px,9vw,120px);position:relative;overflow:hidden;isolation:isolate}
-.close::before{content:"";position:absolute;left:50%;top:0;width:1200px;height:800px;transform:translate(-50%,-50%);background:radial-gradient(closest-side,rgba(217,178,111,.18),transparent 70%);z-index:-1}
+.close::before{content:"";position:absolute;left:50%;top:0;width:1200px;height:800px;transform:translate(-50%,-50%);background:radial-gradient(closest-side,rgba(217,178,111,.16),transparent 70%);z-index:-1}
 .close h2{font-family:var(--serif);font-weight:400;font-size:clamp(46px,7vw,104px);line-height:.98;letter-spacing:-.025em;max-width:13ch;margin-inline:auto}
 .close p{margin:28px auto 0;max-width:46ch;color:var(--onNight2);font-size:18px}
 .close .ctas{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:14px 28px;margin-top:44px}
-.close .mail{color:var(--onNight);font-size:16px;text-decoration:underline;text-decoration-color:rgba(236,232,220,.3);text-underline-offset:6px;min-height:44px;display:inline-flex;align-items:center}
-.close .mail:hover{text-decoration-color:var(--brass)}
-footer{background:var(--night);color:var(--onNight3);font-size:14px;padding-bottom:env(safe-area-inset-bottom,0px)}
-footer .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:16px 32px;min-height:96px;border-top:1px solid var(--nightLine)}
-footer nav{display:flex;flex-wrap:wrap;gap:4px 28px;margin-left:auto}
-footer a{color:var(--onNight2);text-decoration:none;min-height:44px;display:inline-flex;align-items:center}
-footer a:hover{color:var(--onNight)}
+footer.site{background:var(--night);color:var(--onNight3);font-size:14px;padding-bottom:env(safe-area-inset-bottom,0px)}
+footer.site .in{display:flex;flex-wrap:wrap;align-items:center;gap:8px 32px;min-height:96px;border-top:1px solid var(--nightLine)}
+footer.site nav{display:flex;flex-wrap:wrap;gap:0 28px;margin-left:auto}
+footer.site a{color:var(--onNight2);text-decoration:none;min-height:44px;display:inline-flex;align-items:center}
+footer.site a:hover{color:var(--onNight)}
 
 @media (max-width:960px){
-  .outcomes .grid,.verify .cols{grid-template-columns:minmax(0,1fr);gap:40px}
-  .steps{grid-template-columns:minmax(0,1fr);gap:48px}
+  .outcomes .grid{grid-template-columns:minmax(0,1fr);gap:40px}
+  .steps{grid-template-columns:minmax(0,1fr);gap:0}
   .steps li,.steps li+li{padding:0;border:0}
-  .steps li+li{padding-top:48px;border-top:1px solid var(--rule)}
-  .ent .layout{grid-template-columns:minmax(0,1fr)}
+  .steps li+li{margin-top:40px;padding-top:40px;border-top:1px solid var(--rule)}
+  .verify .layout,.ent .layout{grid-template-columns:minmax(0,1fr)}
   .nav .links a.hide{display:none}
+  .chart .lbl.avoid{left:68%}
 }
 @media (max-width:640px){
   body{font-size:16px}
-  .nav .links{gap:16px}
+  .nav .links{gap:12px}
   .ent dl{grid-template-columns:minmax(0,1fr)}
-  .chart .legend .note{margin-left:0;width:100%}
-  .steps .n{font-size:64px}
-  .hero .ctas .btn,.close .ctas .btn{flex:1 1 auto}
+  .hero .ctas .btn{flex:1 1 auto}
+  .hero .ctas .mail{width:100%;justify-content:center}
+  .chart{margin-inline:calc(var(--gut) * -1)}
+  .chart .plot{height:260px}
+  .chart .lbl.start{top:2px}
+  .chart .lbl.avoid{left:auto;right:var(--gut);top:30%}
+  .chart .lbl.ill{right:var(--gut);top:auto;bottom:6px}
+  .chart .legend{margin-inline:var(--gut)}
+  .record header,.record dl,.record footer{padding-inline:20px}
+  .record dl div{grid-template-columns:minmax(0,1fr);gap:4px}
+  .close .ctas{flex-direction:column;align-items:stretch}
+  footer.site nav{margin-left:0;width:100%}
 }
 </style>
 </head>
@@ -172,9 +189,10 @@ footer a:hover{color:var(--onNight)}
     </a>
     <nav class="links" aria-label="Main">
       <a class="q hide" href="#approach">Approach</a>
+      <a class="q hide" href="#proof">Proof</a>
       <a class="q hide" href="#enterprise">Enterprise</a>
       <a class="q" href="https://app.antilog.tech">Sign in</a>
-      <a class="btn btn-gold" href="mailto:hello@antilog.tech">Talk to us</a>
+      <a class="btn btn-line" href="mailto:hello@antilog.tech">Talk to us</a>
     </nav>
   </div>
 </header>
@@ -183,40 +201,35 @@ footer a:hover{color:var(--onNight)}
   <section class="hero" id="top" aria-labelledby="h1">
     <div class="wrap">
       <h1 id="h1"><span class="l">Grow your business,</span> <em class="l">not your cloud&nbsp;bill.</em></h1>
-      <div class="row">
-      <p class="sub">Antilog continuously finds and removes the inefficiencies that inflate cloud spend as you grow. Every saving is independently verified before it reaches your team.</p>
+      <p class="sub">Antilog continuously finds and removes the inefficiencies in your applications that inflate cloud spend as you grow. Every saving is independently verified before it reaches your team.</p>
       <div class="ctas">
         <a class="btn btn-gold" href="mailto:hello@antilog.tech">Talk to us <span class="arr" aria-hidden="true">→</span></a>
-        <a class="btn btn-line" href="#approach">How it works</a>
-      </div>
+        <a class="mail" href="mailto:hello@antilog.tech">hello@antilog.tech</a>
       </div>
 
-      <figure class="chart" style="margin-inline:0;margin-bottom:0">
-        <svg viewBox="0 0 1200 380" role="img" aria-labelledby="chart-t">
-          <title id="chart-t">Illustration: usage keeps rising while cloud spend levels off after Antilog starts.</title>
-          <defs>
-            <linearGradient id="area" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D9B26F" stop-opacity=".22"/><stop offset="1" stop-color="#D9B26F" stop-opacity="0"/></linearGradient>
-          </defs>
-          <!-- usage -->
-          <path class="draw" pathLength="1" d="M0 352 C 180 336, 320 300, 470 252 S 760 150, 900 112 S 1110 52, 1200 30" fill="none" stroke="#6F7584" stroke-width="2" stroke-linecap="round" stroke-dasharray="1"/>
-          <!-- spend area -->
-          <path class="fade" d="M0 356 C 180 340, 320 306, 470 258 C 540 236, 580 222, 620 214 C 720 196, 820 204, 920 210 S 1110 214, 1200 216 L1200 380 L0 380 Z" fill="url(#area)"/>
-          <!-- spend -->
-          <path class="draw" pathLength="1" d="M0 356 C 180 340, 320 306, 470 258 C 540 236, 580 222, 620 214 C 720 196, 820 204, 920 210 S 1110 214, 1200 216" fill="none" stroke="#D9B26F" stroke-width="3" stroke-linecap="round" stroke-dasharray="1"/>
-          <!-- start marker -->
-          <g class="fade">
-            <line x1="600" y1="20" x2="600" y2="380" stroke="#ECE8DC" stroke-opacity=".22" stroke-dasharray="3 6"/>
-            <text x="612" y="34" fill="#A3A7B3" font-family="Inter, system-ui, sans-serif" font-size="15">Antilog starts</text>
-            <g fill="#0A0D14" stroke="#D9B26F" stroke-width="2.5">
-              <circle cx="700" cy="203" r="6"/><circle cx="820" cy="205" r="6"/><circle cx="950" cy="211" r="6"/><circle cx="1080" cy="214" r="6"/>
+      <figure class="chart">
+        <div class="plot">
+          <svg viewBox="0 0 1200 360" preserveAspectRatio="none" role="img" aria-labelledby="chart-t">
+            <title id="chart-t">Illustration: usage keeps rising. Cloud spend rises with it until Antilog starts, then levels off. The gap between them is spend avoided.</title>
+            <defs>
+              <clipPath id="after"><rect x="600" y="0" width="600" height="360"/></clipPath>
+            </defs>
+            <g class="fade" clip-path="url(#after)">
+              <path d="M0 340 C 180 326, 320 290, 470 244 S 760 140, 900 102 S 1110 42, 1200 20 L1200 360 L0 360 Z" fill="#D9B26F" fill-opacity=".2"/>
+              <path d="M0 340 C 180 326, 320 290, 470 244 C 540 222, 580 210, 620 202 C 720 184, 820 190, 920 196 S 1110 200, 1200 202 L1200 360 L0 360 Z" fill="#0A0D14"/>
             </g>
-          </g>
-        </svg>
+            <line class="fade" x1="600" y1="0" x2="600" y2="360" stroke="#ECE8DC" stroke-opacity=".25" stroke-dasharray="3 6" vector-effect="non-scaling-stroke"/>
+            <path class="draw" pathLength="1" d="M0 340 C 180 326, 320 290, 470 244 S 760 140, 900 102 S 1110 42, 1200 20" fill="none" stroke="#8A8F9C" stroke-width="1.5" stroke-dasharray="1" vector-effect="non-scaling-stroke"/>
+            <path class="draw" pathLength="1" d="M0 340 C 180 326, 320 290, 470 244 C 540 222, 580 210, 620 202 C 720 184, 820 190, 920 196 S 1110 200, 1200 202" fill="none" stroke="#D9B26F" stroke-width="3" stroke-linecap="round" stroke-dasharray="1" vector-effect="non-scaling-stroke"/>
+          </svg>
+          <span class="lbl start fade" aria-hidden="true">Antilog starts</span>
+          <span class="lbl avoid fade" aria-hidden="true">Spend avoided</span>
+          <span class="lbl ill" aria-hidden="true">Illustrative</span>
+        </div>
         <figcaption class="legend">
           <span><i class="u"></i>Usage</span>
           <span><i class="s"></i>Cloud spend</span>
-          <span><i class="d"></i>Verified saving</span>
-          <span class="note">Illustrative</span>
+          <span><i class="a"></i>Spend avoided, verified</span>
         </figcaption>
       </figure>
     </div>
@@ -232,32 +245,45 @@ footer a:hover{color:var(--onNight)}
     <div class="wrap grid">
       <div class="outcome"><h3>Savings you can report.</h3><p>Only what has been measured independently on your own systems is counted. No projections, no estimates.</p></div>
       <div class="outcome"><h3>Engineers on the roadmap.</h3><p>The investigation, the experiments and the dead ends happen without them. They review the result.</p></div>
-      <div class="outcome"><h3>Spend on your terms.</h3><p>You set the target, the quality bar and the budget. Nothing ships without your team’s approval.</p></div>
+      <div class="outcome"><h3>Every dollar accounted for.</h3><p>You set the budget up front. You see what each saving cost to find, and work stops when the budget is reached.</p></div>
     </div>
   </section>
 
   <section class="how" id="approach" aria-labelledby="h-how">
     <div class="wrap">
       <div class="head">
-        <h2 id="h-how">Three decisions. Antilog does the rest.</h2>
+        <h2 id="h-how">Two decisions are yours. The rest is Antilog’s.</h2>
         <p>Your leaders decide what matters. Your engineers decide what ships. Everything in between is Antilog’s job.</p>
       </div>
       <ol class="steps">
-        <li><div class="n" aria-hidden="true">1</div><h3>Set the target</h3><p>Choose what should cost less, the standard it must keep, and what you are willing to spend to get there.</p></li>
-        <li><div class="n" aria-hidden="true">2</div><h3>Antilog does the work</h3><p>It finds where the money goes, tries fixes and discards everything that does not hold up.</p></li>
-        <li><div class="n" aria-hidden="true">3</div><h3>Your team approves</h3><p>Only verified improvements arrive, each with its measured result and what it cost to find.</p></li>
+        <li><div class="who"><span class="n" aria-hidden="true">1</span>You decide</div><h3 class="h3">Set the target</h3><p>Choose what should cost less, the quality standards it must keep, and the budget for finding it.</p></li>
+        <li><div class="who"><span class="n" aria-hidden="true">2</span>Antilog works</div><h3 class="h3">Find, try, verify</h3><p>Antilog finds where the money goes, tries fixes, and discards everything that does not hold up.</p></li>
+        <li><div class="who"><span class="n" aria-hidden="true">3</span>You decide</div><h3 class="h3">Approve what ships</h3><p>Verified changes arrive in your own repositories, each with its measured result, for your engineers to review.</p></li>
       </ol>
     </div>
   </section>
 
-  <section class="verify" aria-labelledby="h-verify">
-    <div class="wrap">
-      <h2 id="h-verify">We don’t estimate savings. <em>We measure them.</em></h2>
-      <div class="cols">
-        <div><h3>Independent</h3><p>The system that proposes a change never judges it. A separate judge measures every result.</p></div>
-        <div><h3>On your terms</h3><p>Your quality standards are fixed before work begins. A change that breaks one is never delivered.</p></div>
-        <div><h3>Accountable</h3><p>Every delivered saving carries a signed record of how it was measured and what it cost.</p></div>
+  <section class="verify" id="proof" aria-labelledby="h-verify">
+    <div class="wrap layout">
+      <div>
+        <h2 id="h-verify">We don’t estimate savings. We measure them.</h2>
+        <p class="lead">Every saving Antilog reports comes with a record like this. The system that proposes a change never judges it. Your quality standards are fixed before work begins. Anything that does not hold up is discarded before you hear about it.</p>
       </div>
+      <figure style="margin:0">
+        <article class="record" aria-label="Example of a verified saving record">
+          <header><b>Verified saving</b><span>Ready for review</span></header>
+          <dl>
+            <div><dt>Change</dt><dd>Cache product lookups in checkout</dd></div>
+            <div><dt>Measured against</dt><dd>The code it replaces, under the same load</dd></div>
+            <div><dt>Quality standards</dt><dd>All held</dd></div>
+            <div><dt>Monthly saving</dt><dd class="num">Your measured figure</dd></div>
+            <div><dt>Cost to find it</dt><dd class="num">Drawn from your budget</dd></div>
+            <div><dt>Measured by</dt><dd>An independent judge, never the system that made the change</dd></div>
+          </dl>
+          <footer><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M5 8.2l2 2 4-4.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Signed and kept on record</footer>
+        </article>
+        <figcaption class="cap">An example. A real record carries your measured numbers.</figcaption>
+      </figure>
     </div>
   </section>
 
@@ -265,15 +291,15 @@ footer a:hover{color:var(--onNight)}
     <div class="wrap layout">
       <div>
         <h2 id="h-ent">Built for the way enterprises buy.</h2>
-        <p class="lead">Controls your security, finance and engineering leaders will each recognise.</p>
+        <p class="lead">Controls your security, finance and engineering leaders will each recognize.</p>
       </div>
       <dl>
-        <div><dt>Your data stays yours</dt><dd>Antilog never stores your code or your data.</dd></div>
-        <div><dt>A budget that holds</dt><dd>Hard spending limits. When one is reached, work stops.</dd></div>
-        <div><dt>Every action on record</dt><dd>Approvals and a full audit trail, under your own sign-in.</dd></div>
-        <div><dt>No single AI vendor</dt><dd>Works across the leading AI platforms. Switch freely.</dd></div>
-        <div><dt>Your cloud, your choice</dt><dd>Hosted by us, or in your own AWS, Azure or Google Cloud account.</dd></div>
-        <div><dt>Engineers alongside yours</dt><dd>Our team sets Antilog up with you. Yours runs it from there.</dd></div>
+        <div class="key"><dt class="h3">Your data stays yours</dt><dd>Your code and data stay in your systems. Antilog keeps the results, not the contents.</dd></div>
+        <div class="key"><dt class="h3">Your cloud, your choice</dt><dd>Hosted by us today. In your own AWS, Azure or Google Cloud account next.</dd></div>
+        <div><dt class="h3">Nothing ships unreviewed</dt><dd>Every change arrives in your own repositories for your engineers to approve.</dd></div>
+        <div><dt class="h3">Every action on record</dt><dd>Approvals and a full audit trail, under your own sign-in.</dd></div>
+        <div><dt class="h3">No single AI vendor</dt><dd>Works across the leading AI platforms. Switch freely.</dd></div>
+        <div><dt class="h3">Experts alongside your team</dt><dd>Our engineers set Antilog up with you. Your team runs it from there.</dd></div>
       </dl>
     </div>
   </section>
@@ -290,11 +316,11 @@ footer a:hover{color:var(--onNight)}
   </section>
 </main>
 
-<footer>
-  <div class="wrap">
+<footer class="site">
+  <div class="wrap"><div class="in">
     <span>© 2026 Antilog</span>
-    <nav aria-label="Footer"><a href="#approach">Approach</a><a href="#enterprise">Enterprise</a><a href="https://app.antilog.tech">Sign in</a><a href="mailto:hello@antilog.tech">Contact</a></nav>
-  </div>
+    <nav aria-label="Footer"><a href="#approach">Approach</a><a href="#proof">Proof</a><a href="#enterprise">Enterprise</a><a href="https://app.antilog.tech">Sign in</a><a href="mailto:hello@antilog.tech">Contact</a></nav>
+  </div></div>
 </footer>
 </body>
 </html>
