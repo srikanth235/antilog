@@ -31,7 +31,6 @@ Every light board, by canvas row (each has a generated `XDark` twin except the r
 | 8 Agent platforms, approvals, budgets, connections | `SettingsPlatforms`, `SettingsPlatformsEmpty`, `SettingsPlatformsManaged`, `PlatformError`, `AddPlatform`, `SettingsBudgets`, `SettingsApprovals`, `SettingsConnections` |
 | 9 Organization | `SettingsProfile`, `SettingsAppearance`, `SettingsTokens`, `SettingsTokensEmpty`, `SettingsDevice`, `SettingsGeneral`, `SettingsMembers`, `SettingsSso`, `SettingsAudit`, `SettingsReadOnly` |
 | 10 Installed web app | `WebInstalled`, `WebNotification`, `WebOffline` |
-| 11 Landing (antilog.tech) | `Landing`: the page for engineering leaders (VP of engineering, CTO); a responsive page, 1440 wide and never wider than the screen, with its height set by its content; it works at 400px. Its styles are the `lp-` block at the end of `components.css`. |
 
 ## Naming
 
