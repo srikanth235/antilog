@@ -35,6 +35,11 @@ export const keys = {
   tokens: () => ["tokens"] as const,
   audit: () => ["audit"] as const,
   tools: () => ["tools"] as const,
+  valueModels: (project: string) => ["projects", project, "value-models"] as const,
+  projectValue: (project: string) => ["projects", project, "value"] as const,
+  organizationValue: () => ["value"] as const,
+  experimentValue: (id: string) => ["experiments", id, "value"] as const,
+  report: (month: string, project: string | null) => ["report", month, project] as const,
 };
 
 /** Sessions and approvals change while an agent works; the page asks again every few seconds. */
@@ -304,6 +309,55 @@ export function useHistory(experiment: string) {
   });
 }
 
+/** The newest value model of each metric in a project. */
+export function useValueModels(project: string) {
+  return useQuery({
+    queryKey: keys.valueModels(project),
+    queryFn: async () =>
+      unwrap(await api.GET("/projects/{id}/value-models", { params: { path: { id: project } } }))
+        .models,
+  });
+}
+
+/** Delivered, Pending, At risk and Return for a project, all time. */
+export function useProjectValue(project: string) {
+  return useQuery({
+    queryKey: keys.projectValue(project),
+    queryFn: async () =>
+      unwrap(await api.GET("/projects/{id}/value", { params: { path: { id: project } } })),
+  });
+}
+
+export function useOrganizationValue() {
+  return useQuery({
+    queryKey: keys.organizationValue(),
+    queryFn: async () => unwrap(await api.GET("/value")),
+  });
+}
+
+/** An experiment's value model, its wins with their state, and what they add up to. */
+export function useExperimentValue(experiment: string) {
+  return useQuery({
+    queryKey: keys.experimentValue(experiment),
+    enabled: experiment !== "",
+    queryFn: async () =>
+      unwrap(await api.GET("/experiments/{id}/value", { params: { path: { id: experiment } } })),
+  });
+}
+
+/** The monthly Report; `month` is `YYYY-MM` in UTC, `project` is one project or null for all. */
+export function useReport(month: string, project: string | null) {
+  return useQuery({
+    queryKey: keys.report(month, project),
+    queryFn: async () =>
+      unwrap(
+        await api.GET("/report", {
+          params: { query: { month, ...(project === null ? {} : { project }) } },
+        }),
+      ),
+  });
+}
+
 function useWrite<V, R>(
   write: (variables: V) => Promise<R>,
   invalidate: (client: QueryClient, variables: V, result: R) => Promise<unknown> | undefined,
@@ -468,5 +522,20 @@ export function useSetProjectRole(project: string) {
         }),
       ),
     (client) => client.invalidateQueries({ queryKey: keys.projectRoles(project) }),
+  );
+}
+
+export function useSetValueModel(project: string) {
+  return useWrite(
+    async (body: Schemas["NewValueModel"]) =>
+      unwrap(
+        await api.POST("/projects/{id}/value-models", { params: { path: { id: project } }, body }),
+      ),
+    async (client) => {
+      await client.invalidateQueries({ queryKey: keys.valueModels(project) });
+      await client.invalidateQueries({ queryKey: keys.projectValue(project) });
+      await client.invalidateQueries({ queryKey: keys.organizationValue() });
+      await client.invalidateQueries({ queryKey: ["report"] });
+    },
   );
 }

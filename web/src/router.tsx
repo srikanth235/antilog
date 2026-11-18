@@ -20,6 +20,7 @@ import { Receipt } from "./features/experiment/Receipt";
 import { Home } from "./features/home/Home";
 import { Project } from "./features/projects/Project";
 import { Projects } from "./features/projects/Projects";
+import { Report } from "./features/report/Report";
 import { SECTIONS, type Section, SettingsDialog } from "./features/settings/SettingsDialog";
 import { Sidebar } from "./features/shell/Sidebar";
 import { Callback } from "./features/signin/Callback";
@@ -144,6 +145,27 @@ const project = createRoute({
     return (
       <Scroll>
         <Project projectId={projectId} />
+      </Scroll>
+    );
+  },
+});
+
+const report = createRoute({
+  getParentRoute: () => app,
+  path: "/report",
+  validateSearch: (search: Record<string, unknown>): { month?: string; project?: string } => {
+    const month = typeof search.month === "string" && /^\d{4}-(0[1-9]|1[0-2])$/.test(search.month);
+    const project = str(search.project);
+    return {
+      ...(month ? { month: search.month as string } : {}),
+      ...(project === undefined ? {} : { project }),
+    };
+  },
+  component: function ReportPage() {
+    const { month, project: chosen } = report.useSearch();
+    return (
+      <Scroll>
+        <Report month={month} project={chosen} />
       </Scroll>
     );
   },
@@ -274,6 +296,7 @@ const tree = root.addChildren([
     home,
     projects,
     project,
+    report,
     experiment,
     experimentDetail,
     receipt,

@@ -47,11 +47,13 @@ describe("value model conversion", () => {
     expect(valueSentence("x", "ms", 0, 10)).toBeNull();
   });
   it("reads a stored model back as a round sentence", () => {
-    expect(readableUnitSize(3600)).toBe(10);
-    expect(readableUnitSize(35000)).toBe(1);
-    expect(modelLine({ unit: "ms", centsPerUnit: 3600 })).toBe("Each 10 ms is worth $360 a year");
-    expect(modelLine({ unit: "minute", centsPerUnit: 35000 })).toBe(
-      "Each minute is worth $350 a year",
+    expect(readableUnitSize(3600)).toBe(100);
+    expect(readableUnitSize(120_000)).toBe(1);
+    expect(modelLine({ unit: "ms", centsPerUnit: 3600 })).toBe(
+      "Each 100 ms is worth $3,600 a year",
+    );
+    expect(modelLine({ unit: "minute", centsPerUnit: 120_000 })).toBe(
+      "Each minute is worth $1,200 a year",
     );
   });
 });

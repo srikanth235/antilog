@@ -1,6 +1,6 @@
 // Pure helpers for value models, Return and the Report. Dollar math lives here, never in a component.
 import type { Schemas } from "../api/client";
-import { dollars, parseDollars, plural } from "./format";
+import { dollars, parseDollars } from "./format";
 
 /** Cents a year that one unit is worth, from "one unit is N" and "worth D dollars a year". */
 export function centsPerUnit(unitSize: number, dollarsPerYear: number): number | null {
@@ -32,10 +32,10 @@ export function valueSentence(
   return `Each ${unitWord(unitSize, unit)}${of} is worth ${dollars(whole(dollarsPerYear * 100))} a year. A win of ${unitWord(win, unit)} would be worth ${dollars(whole(per * win))} a year.`;
 }
 
-/** The smallest power of ten whose worth reads as at least $100 a year: "Each 100 ms is worth $3,600 a year". */
+/** The smallest power of ten whose worth reads as at least $1,000 a year: "Each 100 ms is worth $3,600 a year". */
 export function readableUnitSize(perUnitCents: number): number {
   let size = 1;
-  while (size < 1e9 && perUnitCents * size < 10_000) size *= 10;
+  while (size < 1e9 && perUnitCents * size < 100_000) size *= 10;
   return size;
 }
 
@@ -170,19 +170,6 @@ export function agentTotals(rows: readonly Schemas["AgentRow"][]): AgentTotals {
     total.deliveredCents += row.deliveredCents;
   }
   return total;
-}
-
-/** "N merged, M open" for a project's wins. */
-export function winsLine(figures: Pick<Schemas["ValueFigures"], "mergedWins" | "pendingWins">): string {
-  return `${figures.mergedWins} merged, ${figures.pendingWins} open`;
-}
-
-/** "2 merged wins" / "1 pull request open". */
-export function mergedWinsText(count: number): string {
-  return plural(count, "merged win");
-}
-export function openPullRequestsText(count: number): string {
-  return `${plural(count, "pull request")} open`;
 }
 
 /** The baseline-to-best change of a win, as a share of the baseline, signed: "-15.9%". */

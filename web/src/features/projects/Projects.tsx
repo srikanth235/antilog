@@ -33,6 +33,13 @@ export function Projects() {
         unwrap(await api.GET("/projects/{id}/roles", { params: { path: { id: project.id } } })),
     })),
   });
+  const values = useQueries({
+    queries: list.map((project) => ({
+      queryKey: keys.projectValue(project.id),
+      queryFn: async () =>
+        unwrap(await api.GET("/projects/{id}/value", { params: { path: { id: project.id } } })),
+    })),
+  });
   const visible = list.filter((project) =>
     project.name.toLowerCase().includes(query.toLowerCase()),
   );
@@ -58,6 +65,9 @@ export function Projects() {
               onChange={(event) => setQuery(event.target.value)}
             />
           </label>
+          <Link className="btn" to="/report">
+            {w.report.open}
+          </Link>
           <button
             type="button"
             className="btn primary"
@@ -126,7 +136,14 @@ export function Projects() {
                   {role === undefined ? null : <span className="tag">{w.roles[role]}</span>}
                 </span>
                 <span className="mono">{counts[index]?.data?.length ?? ""}</span>
-                <span className="mono">{/* (target) wins need the receipts list */ w.noData}</span>
+                <span className="mono">
+                  {values[index]?.data === undefined
+                    ? ""
+                    : w.projects.winsOf(
+                        values[index].data.mergedWins,
+                        values[index].data.pendingWins,
+                      )}
+                </span>
                 <span className="mono">{spend === undefined ? "" : dollars(spend)}</span>
                 <Icon name="chev" size="s" />
               </Link>

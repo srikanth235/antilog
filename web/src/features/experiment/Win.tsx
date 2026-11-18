@@ -8,6 +8,7 @@ import { useToast } from "../../components/toast/Toast";
 import { dollars } from "../../lib/format";
 import type { History } from "../../lib/history";
 import { w } from "../../words";
+import { useWinValue, WinState } from "../value/WinState";
 
 /** The best Kept trial: the receipt in short, and "Open pull request", which raises a card. */
 export function Win(props: {
@@ -22,6 +23,7 @@ export function Win(props: {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const row = props.history.trials.find((t) => t.trial === props.trial);
+  const winValue = useWinValue(props.experiment, props.trial);
   const body = receipt.data?.body;
   const unit = props.history.unit;
   if (row === undefined) return null;
@@ -77,13 +79,14 @@ export function Win(props: {
             )}
           </p>
           <p className="ac-vl">
-            {body.experiment.valueModel == null ? (
+            {winValue?.yearlyCents == null ? (
               <span>{w.receipt.noValue}</span>
             ) : (
               <span>
                 <b>
-                  {w.receipt.worth}: {dollars(Math.round(body.experiment.value * 100))}
-                </b>
+                  {w.receipt.worth}: {w.value.yearly(dollars(winValue.yearlyCents))}
+                </b>{" "}
+                <WinState state={winValue.state} /> {w.value.measuredOffline}
               </span>
             )}
             <span>{w.win.cost(dollars(body.experiment.costOfWin))}</span>
