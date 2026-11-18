@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Antilog: grow your business, not your cloud bill</title>
-<meta name="description" content="Antilog continuously finds and removes the inefficiencies that inflate your cloud spend. Every saving is independently verified before it reaches your team.">
+<meta name="description" content="Antilog is a team of autonomous AI agents that continuously removes the inefficiencies inflating your cloud spend. Every saving is independently verified, and your engineers approve what ships.">
 <meta name="theme-color" content="#0A0D14">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -54,26 +54,25 @@ p{margin:0}
 
 /* hero */
 .hero{position:relative;background:var(--night);color:var(--onNight);overflow:hidden;isolation:isolate}
-.hero::before{content:"";position:absolute;right:-10%;bottom:-30%;width:70vw;height:70vw;max-width:1000px;max-height:1000px;background:radial-gradient(closest-side,rgba(217,178,111,.08),transparent 70%);z-index:-1}
 .hero .wrap{padding-top:clamp(120px,11vw,150px)}
-.hero h1{font-family:var(--serif);font-weight:400;font-size:clamp(50px,7.6vw,116px);line-height:.98;letter-spacing:-.025em}
+.hero h1{font-family:var(--serif);font-weight:400;font-size:clamp(50px,7.4vw,112px);line-height:1;letter-spacing:-.018em}
 .hero h1 .l{display:block}
 .hero h1 em{font-style:italic;color:var(--brass)}
-.hero .sub{margin-top:32px;max-width:580px;font-size:clamp(17px,1.5vw,20px);line-height:1.55;color:var(--onNight2)}
+.hero .sub{margin-top:32px;max-width:34em;text-wrap:pretty;font-size:clamp(17px,1.5vw,20px);line-height:1.55;color:var(--onNight2)}
 .hero .ctas{display:flex;flex-wrap:wrap;align-items:center;gap:14px 28px;margin-top:36px}
 
 /* chart */
-.chart{position:relative;margin:clamp(48px,6vw,80px) 0 0}
+.chart{position:relative;margin:clamp(44px,5vw,64px) 0 0}
 .chart .plot{position:relative;height:clamp(240px,26vw,360px)}
 .chart svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
 .chart .lbl{position:absolute;font-size:13.5px;line-height:1.3;color:var(--onNight2);white-space:nowrap}
-.chart .lbl.start{left:50%;top:0;padding-left:12px}
+.chart .lbl.start{left:50%;top:0;padding-left:12px;color:var(--onNight)}
 .chart .lbl.avoid{left:76%;top:34%;color:var(--brass);font-weight:500}
 .chart .lbl.ill{right:0;top:0;color:var(--onNight3)}
 .chart .legend{display:flex;flex-wrap:wrap;gap:10px 32px;margin-top:20px;padding:20px 0 clamp(48px,6vw,72px);border-top:1px solid var(--nightLine);font-size:13.5px;color:var(--onNight2)}
 .chart .legend span{display:inline-flex;align-items:center;gap:10px}
 .chart .legend i{display:inline-block;width:22px;height:0;border-top:2px solid}
-.chart .legend .u{border-top:2px dashed var(--onNight3)}
+.chart .legend .u{border-top:1.5px solid var(--onNight3)}
 .chart .legend .s{border-color:var(--brass)}
 .chart .legend .a{width:14px;height:14px;border:0;border-radius:3px;background:rgba(217,178,111,.28)}
 .draw{stroke-dasharray:1;stroke-dashoffset:0}
@@ -86,8 +85,8 @@ p{margin:0}
 
 /* statement */
 .statement{padding-block:clamp(96px,13vw,176px)}
-.statement p{font-family:var(--serif);font-size:clamp(30px,3.9vw,56px);line-height:1.14;letter-spacing:-.015em;max-width:28ch;color:var(--ink)}
-.statement p span{color:var(--ink2)}
+.statement p{font-family:var(--serif);font-size:clamp(30px,3.9vw,56px);line-height:1.14;letter-spacing:-.008em;max-width:30ch;color:var(--ink)}
+.statement p em{font-style:italic}
 
 /* outcomes */
 .outcomes{padding-bottom:clamp(96px,12vw,160px)}
@@ -98,50 +97,55 @@ p{margin:0}
 
 /* how */
 .how{background:var(--ivory);padding-block:clamp(96px,12vw,160px);border-block:1px solid var(--rule)}
-.how .head{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:24px 64px;margin-bottom:clamp(56px,7vw,80px)}
-.how h2{font-family:var(--serif);font-weight:400;font-size:clamp(40px,5vw,72px);line-height:1;letter-spacing:-.02em;max-width:15ch}
-.how .head p{max-width:400px;color:var(--ink2)}
-.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));list-style:none;margin:0;padding:0}
-.steps li{padding:0 40px 0 0}
-.steps li+li{padding-left:40px;border-left:1px solid var(--rule)}
-.steps .who{display:flex;align-items:baseline;gap:14px;font-size:14px;color:var(--ink3)}
-.steps .n{font-family:var(--serif);font-size:44px;line-height:1;color:var(--brassDeep)}
-.steps h3{margin-top:20px}
-.steps p{margin-top:10px;color:var(--ink2);font-size:16px;max-width:32ch}
+.how .head{margin-bottom:clamp(56px,7vw,88px)}
+.how h2{font-family:var(--serif);font-weight:400;font-size:clamp(40px,5vw,72px);line-height:1.02;letter-spacing:-.012em}
+.how h2 span{display:block}
+.how .head p{margin-top:28px;max-width:46ch;color:var(--ink2)}
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 48px;list-style:none;margin:0;padding:0}
+.steps li{padding-top:28px;border-top:2px solid var(--ink)}
+.steps li.agents{border-top-color:var(--brassDeep)}
+.steps .n{display:block;font-family:var(--serif);font-size:44px;line-height:1;color:var(--ink)}
+.steps .agents .n{color:var(--brassDeep)}
+.steps h3{margin-top:18px}
+.steps p{margin-top:10px;color:var(--ink2);font-size:16px;max-width:34ch}
 
 /* verify */
 .verify{background:var(--night);color:var(--onNight);padding-block:clamp(104px,13vw,184px)}
 .verify .layout{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:clamp(48px,7vw,112px);align-items:center}
-.verify h2{font-family:var(--serif);font-weight:400;font-size:clamp(44px,5.6vw,84px);line-height:1;letter-spacing:-.025em}
-.verify .lead{margin-top:28px;color:var(--onNight2);max-width:42ch}
-.record{border:1px solid rgba(236,232,220,.16);border-radius:16px;background:linear-gradient(180deg,rgba(236,232,220,.045),rgba(236,232,220,.015));box-shadow:0 30px 80px -30px rgba(0,0,0,.7)}
-.record header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:22px 28px;border-bottom:1px solid var(--nightLine)}
-.record header b{font-weight:600;font-size:15px}
-.record header span{font-size:13px;color:var(--onNight3)}
-.record dl{margin:0;padding:6px 28px}
-.record dl div{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,3fr);gap:20px;padding:15px 0;border-top:1px solid var(--nightLine);font-size:15px}
+.verify h2{font-family:var(--serif);font-weight:400;font-size:clamp(42px,5.2vw,78px);line-height:1.02;letter-spacing:-.015em}
+.verify h2 span{display:block}
+.verify h2 span+span{color:var(--brass);font-style:italic}
+.verify .lead{margin-top:28px;color:var(--onNight2);max-width:40ch}
+.rules{list-style:none;margin:32px 0 0;padding:0;max-width:44ch}
+.rules li{padding:14px 0;border-top:1px solid var(--nightLine);color:var(--onNight);font-size:16px}
+.rules li:last-child{border-bottom:1px solid var(--nightLine)}
+.record{border-radius:6px;background:var(--paper);color:var(--ink);box-shadow:0 40px 80px -36px rgba(0,0,0,.8)}
+.record header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:24px 32px;border-bottom:2px solid var(--ink)}
+.record header b{font:400 26px/1.1 var(--serif);letter-spacing:-.005em}
+.record header span{font-size:13px;color:var(--ink3);text-align:right}
+.record dl{margin:0;padding:4px 32px}
+.record dl div{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,3fr);gap:20px;padding:15px 0;border-top:1px solid var(--rule);font-size:15px}
 .record dl div:first-child{border-top:0}
-.record dt{color:var(--onNight3)}
-.record dd{margin:0;color:var(--onNight)}
-.record dd.num{font-variant-numeric:tabular-nums;color:var(--onNight2)}
-.record footer{display:flex;align-items:center;gap:12px;padding:18px 28px;border-top:1px solid var(--nightLine);color:var(--brass);font-size:14px;font-weight:500}
+.record dt{color:var(--ink3)}
+.record dd{margin:0;color:var(--ink)}
+.record dd.num{font:italic 400 20px/1.25 var(--serif);color:var(--brassDeep)}
+.record footer{display:flex;align-items:center;gap:12px;padding:18px 32px;border-top:1px solid var(--rule);background:var(--ivory);border-radius:0 0 6px 6px;color:var(--brassDeep);font-size:14px;font-weight:500}
 .record footer svg{flex:none}
 .verify .cap{margin-top:14px;font-size:13.5px;color:var(--onNight3)}
 
 /* enterprise */
 .ent{padding-block:clamp(96px,12vw,160px)}
-.ent .layout{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(40px,7vw,120px)}
+.ent .layout{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,8fr);gap:clamp(40px,7vw,112px)}
 .ent h2{font-family:var(--serif);font-weight:400;font-size:clamp(40px,4.6vw,64px);line-height:1.02;letter-spacing:-.02em}
 .ent .lead{margin-top:24px;color:var(--ink2);max-width:36ch}
-.ent dl{margin:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 48px}
-.ent dl div{padding-block:26px;border-top:1px solid var(--rule)}
-.ent dl div.key{border-top-color:var(--ink)}
-.ent dd{margin:8px 0 0;color:var(--ink2);font-size:15.5px}
+.ent dl{margin:0}
+.ent dl div{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:6px 32px;padding-block:24px;border-top:1px solid var(--rule)}
+.ent dl div:first-child{border-top-color:var(--ink)}
+.ent dd{margin:0;color:var(--ink2);font-size:16px}
 
 /* close */
 .close{background:var(--night);color:var(--onNight);text-align:center;padding-block:clamp(110px,14vw,200px) clamp(80px,9vw,120px);position:relative;overflow:hidden;isolation:isolate}
-.close::before{content:"";position:absolute;left:50%;top:0;width:1200px;height:800px;transform:translate(-50%,-50%);background:radial-gradient(closest-side,rgba(217,178,111,.16),transparent 70%);z-index:-1}
-.close h2{font-family:var(--serif);font-weight:400;font-size:clamp(46px,7vw,104px);line-height:.98;letter-spacing:-.025em;max-width:13ch;margin-inline:auto}
+.close h2{font-family:var(--serif);font-weight:400;font-size:clamp(46px,6.6vw,96px);line-height:1;letter-spacing:-.015em;max-width:14ch;margin-inline:auto}
 .close p{margin:28px auto 0;max-width:46ch;color:var(--onNight2);font-size:18px}
 .close .ctas{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:14px 28px;margin-top:44px}
 footer.site{background:var(--night);color:var(--onNight3);font-size:14px;padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -152,9 +156,7 @@ footer.site a:hover{color:var(--onNight)}
 
 @media (max-width:960px){
   .outcomes .grid{grid-template-columns:minmax(0,1fr);gap:40px}
-  .steps{grid-template-columns:minmax(0,1fr);gap:0}
-  .steps li,.steps li+li{padding:0;border:0}
-  .steps li+li{margin-top:40px;padding-top:40px;border-top:1px solid var(--rule)}
+  .steps{grid-template-columns:minmax(0,1fr);gap:40px}
   .verify .layout,.ent .layout{grid-template-columns:minmax(0,1fr)}
   .nav .links a.hide{display:none}
   .chart .lbl.avoid{left:68%}
@@ -162,7 +164,8 @@ footer.site a:hover{color:var(--onNight)}
 @media (max-width:640px){
   body{font-size:16px}
   .nav .links{gap:12px}
-  .ent dl{grid-template-columns:minmax(0,1fr)}
+  .ent dl div{grid-template-columns:minmax(0,1fr)}
+  .record header{padding-inline:20px}
   .hero .ctas .btn{flex:1 1 auto}
   .hero .ctas .mail{width:100%;justify-content:center}
   .chart{margin-inline:calc(var(--gut) * -1)}
@@ -171,7 +174,9 @@ footer.site a:hover{color:var(--onNight)}
   .chart .lbl.avoid{left:auto;right:var(--gut);top:30%}
   .chart .lbl.ill{right:var(--gut);top:auto;bottom:6px}
   .chart .legend{margin-inline:var(--gut)}
-  .record header,.record dl,.record footer{padding-inline:20px}
+  .record dl,.record footer{padding-inline:20px}
+  .record header b{font-size:22px;white-space:nowrap}
+  .record header span{font-size:12.5px}
   .record dl div{grid-template-columns:minmax(0,1fr);gap:4px}
   .close .ctas{flex-direction:column;align-items:stretch}
   footer.site nav{margin-left:0;width:100%}
@@ -201,7 +206,7 @@ footer.site a:hover{color:var(--onNight)}
   <section class="hero" id="top" aria-labelledby="h1">
     <div class="wrap">
       <h1 id="h1"><span class="l">Grow your business,</span> <em class="l">not your cloud&nbsp;bill.</em></h1>
-      <p class="sub">Antilog continuously finds and removes the inefficiencies in your applications that inflate cloud spend as you grow. Every saving is independently verified before it reaches your team.</p>
+      <p class="sub">Antilog is a team of autonomous AI agents that works on your applications around the clock, removing the inefficiencies that inflate your cloud spend as you grow. Every saving is independently verified before it reaches your team.</p>
       <div class="ctas">
         <a class="btn btn-gold" href="mailto:hello@antilog.tech">Talk to us <span class="arr" aria-hidden="true">→</span></a>
         <a class="mail" href="mailto:hello@antilog.tech">hello@antilog.tech</a>
@@ -210,19 +215,21 @@ footer.site a:hover{color:var(--onNight)}
       <figure class="chart">
         <div class="plot">
           <svg viewBox="0 0 1200 360" preserveAspectRatio="none" role="img" aria-labelledby="chart-t">
-            <title id="chart-t">Illustration: usage keeps rising. Cloud spend rises with it until Antilog starts, then levels off. The gap between them is spend avoided.</title>
+            <title id="chart-t">Illustration: usage keeps rising. Cloud spend rises with it until Antilog’s agents start work, then levels off. The gap between them is spend avoided.</title>
             <defs>
               <clipPath id="after"><rect x="600" y="0" width="600" height="360"/></clipPath>
             </defs>
+            <g stroke="#ECE8DC" stroke-opacity=".07" stroke-width="1" vector-effect="non-scaling-stroke" aria-hidden="true">
+              <path d="M0 250H1200M0 197H1200M0 159H1200M0 130H1200M0 107H1200M0 87H1200M0 69H1200M0 54H1200M0 40H1200" vector-effect="non-scaling-stroke" fill="none"/>
+            </g>
             <g class="fade" clip-path="url(#after)">
-              <path d="M0 340 C 180 326, 320 290, 470 244 S 760 140, 900 102 S 1110 42, 1200 20 L1200 360 L0 360 Z" fill="#D9B26F" fill-opacity=".2"/>
-              <path d="M0 340 C 180 326, 320 290, 470 244 C 540 222, 580 210, 620 202 C 720 184, 820 190, 920 196 S 1110 200, 1200 202 L1200 360 L0 360 Z" fill="#0A0D14"/>
+              <path d="M470 244 C 620 198, 760 140, 900 102 C 1040 64, 1110 42, 1200 20 L1200 202 C 1110 200, 1020 202, 920 196 C 820 190, 720 184, 620 202 C 580 210, 540 222, 470 244 Z" fill="#D9B26F" fill-opacity=".2"/>
             </g>
             <line class="fade" x1="600" y1="0" x2="600" y2="360" stroke="#ECE8DC" stroke-opacity=".25" stroke-dasharray="3 6" vector-effect="non-scaling-stroke"/>
             <path class="draw" pathLength="1" d="M0 340 C 180 326, 320 290, 470 244 S 760 140, 900 102 S 1110 42, 1200 20" fill="none" stroke="#8A8F9C" stroke-width="1.5" stroke-dasharray="1" vector-effect="non-scaling-stroke"/>
             <path class="draw" pathLength="1" d="M0 340 C 180 326, 320 290, 470 244 C 540 222, 580 210, 620 202 C 720 184, 820 190, 920 196 S 1110 200, 1200 202" fill="none" stroke="#D9B26F" stroke-width="3" stroke-linecap="round" stroke-dasharray="1" vector-effect="non-scaling-stroke"/>
           </svg>
-          <span class="lbl start fade" aria-hidden="true">Antilog starts</span>
+          <span class="lbl start fade" aria-hidden="true">Agents start work</span>
           <span class="lbl avoid fade" aria-hidden="true">Spend avoided</span>
           <span class="lbl ill" aria-hidden="true">Illustrative</span>
         </div>
@@ -237,14 +244,14 @@ footer.site a:hover{color:var(--onNight)}
 
   <section class="statement" aria-label="Why it matters">
     <div class="wrap">
-      <p>Most cloud waste isn’t in your infrastructure. It’s in your applications<span>, in the queries, calls and code paths that quietly multiply cost with every new customer.</span> Finding it takes your best engineers. Antilog does it for them.</p>
+      <p>Most cloud waste isn’t in your infrastructure. It’s in your applications, in the queries, calls and code paths that quietly multiply cost with every new customer. Finding it takes your best engineers. <em>Antilog’s autonomous agents do it for them.</em></p>
     </div>
   </section>
 
   <section class="outcomes" aria-label="Outcomes">
     <div class="wrap grid">
       <div class="outcome"><h3>Savings you can report.</h3><p>Only what has been measured independently on your own systems is counted. No projections, no estimates.</p></div>
-      <div class="outcome"><h3>Engineers on the roadmap.</h3><p>The investigation, the experiments and the dead ends happen without them. They review the result.</p></div>
+      <div class="outcome"><h3>Engineers on the roadmap.</h3><p>The investigation, the experiments and the dead ends belong to the agents. Your engineers review the result.</p></div>
       <div class="outcome"><h3>Every dollar accounted for.</h3><p>You set the budget up front. You see what each saving cost to find, and work stops when the budget is reached.</p></div>
     </div>
   </section>
@@ -252,13 +259,13 @@ footer.site a:hover{color:var(--onNight)}
   <section class="how" id="approach" aria-labelledby="h-how">
     <div class="wrap">
       <div class="head">
-        <h2 id="h-how">Two decisions are yours. The rest is Antilog’s.</h2>
-        <p>Your leaders decide what matters. Your engineers decide what ships. Everything in between is Antilog’s job.</p>
+        <h2 id="h-how"><span>Two decisions are yours.</span> <span>The agents do the rest.</span></h2>
+        <p>Your leaders decide what matters. Your engineers decide what ships. Autonomous agents do everything in between.</p>
       </div>
       <ol class="steps">
-        <li><div class="who"><span class="n" aria-hidden="true">1</span>You decide</div><h3 class="h3">Set the target</h3><p>Choose what should cost less, the quality standards it must keep, and the budget for finding it.</p></li>
-        <li><div class="who"><span class="n" aria-hidden="true">2</span>Antilog works</div><h3 class="h3">Find, try, verify</h3><p>Antilog finds where the money goes, tries fixes, and discards everything that does not hold up.</p></li>
-        <li><div class="who"><span class="n" aria-hidden="true">3</span>You decide</div><h3 class="h3">Approve what ships</h3><p>Verified changes arrive in your own repositories, each with its measured result, for your engineers to review.</p></li>
+        <li class="you"><span class="n" aria-hidden="true">1</span><h3 class="h3">You set the target</h3><p>Choose what should cost less, the quality standards it must keep, and the budget for finding it.</p></li>
+        <li class="agents"><span class="n" aria-hidden="true">2</span><h3 class="h3">Agents investigate, test and fix</h3><p>Autonomous agents find where the money goes, run experiments and discard whatever does not hold up. They work around the clock and ask nothing of you until a saving is proven.</p></li>
+        <li class="you"><span class="n" aria-hidden="true">3</span><h3 class="h3">You approve what ships</h3><p>Verified changes arrive in your own repositories, each with its measured result, for your engineers to review.</p></li>
       </ol>
     </div>
   </section>
@@ -266,19 +273,25 @@ footer.site a:hover{color:var(--onNight)}
   <section class="verify" id="proof" aria-labelledby="h-verify">
     <div class="wrap layout">
       <div>
-        <h2 id="h-verify">We don’t estimate savings. We measure them.</h2>
-        <p class="lead">Every saving Antilog reports comes with a record like this. The system that proposes a change never judges it. Your quality standards are fixed before work begins. Anything that does not hold up is discarded before you hear about it.</p>
+        <h2 id="h-verify"><span>Agents propose.</span> <span>An independent judge decides.</span></h2>
+        <p class="lead">Autonomous agents are only as trustworthy as the check on their work. So we don’t estimate savings. We measure them, and every saving comes with a record like this.</p>
+        <ul class="rules">
+          <li>The agents that propose a change never judge it.</li>
+          <li>Your quality standards are fixed before work begins.</li>
+          <li>Anything that does not hold up is discarded before you hear about it.</li>
+          <li>Your engineers approve what ships.</li>
+        </ul>
       </div>
       <figure style="margin:0">
         <article class="record" aria-label="Example of a verified saving record">
-          <header><b>Verified saving</b><span>Ready for review</span></header>
+          <header><b>Verified saving</b><span>Awaiting your engineers’ approval</span></header>
           <dl>
             <div><dt>Change</dt><dd>Cache product lookups in checkout</dd></div>
             <div><dt>Measured against</dt><dd>The code it replaces, under the same load</dd></div>
             <div><dt>Quality standards</dt><dd>All held</dd></div>
             <div><dt>Monthly saving</dt><dd class="num">Your measured figure</dd></div>
             <div><dt>Cost to find it</dt><dd class="num">Drawn from your budget</dd></div>
-            <div><dt>Measured by</dt><dd>An independent judge, never the system that made the change</dd></div>
+            <div><dt>Measured by</dt><dd>An independent judge, never the agents that made the change</dd></div>
           </dl>
           <footer><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M5 8.2l2 2 4-4.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Signed and kept on record</footer>
         </article>
@@ -294,11 +307,11 @@ footer.site a:hover{color:var(--onNight)}
         <p class="lead">Controls your security, finance and engineering leaders will each recognize.</p>
       </div>
       <dl>
-        <div class="key"><dt class="h3">Your data stays yours</dt><dd>Your code and data stay in your systems. Antilog keeps the results, not the contents.</dd></div>
-        <div class="key"><dt class="h3">Your cloud, your choice</dt><dd>Hosted by us today. In your own AWS, Azure or Google Cloud account next.</dd></div>
+        <div><dt class="h3">Your data stays yours</dt><dd>Your code and data stay in your systems. Antilog keeps the results, not the contents.</dd></div>
+        <div><dt class="h3">Your cloud, your choice</dt><dd>Hosted by us today. In your own AWS, Azure or Google Cloud account next.</dd></div>
         <div><dt class="h3">Nothing ships unreviewed</dt><dd>Every change arrives in your own repositories for your engineers to approve.</dd></div>
         <div><dt class="h3">Every action on record</dt><dd>Approvals and a full audit trail, under your own sign-in.</dd></div>
-        <div><dt class="h3">No single AI vendor</dt><dd>Works across the leading AI platforms. Switch freely.</dd></div>
+        <div><dt class="h3">No single AI vendor</dt><dd>The agents run on the leading AI platforms you choose. Switch freely.</dd></div>
         <div><dt class="h3">Experts alongside your team</dt><dd>Our engineers set Antilog up with you. Your team runs it from there.</dd></div>
       </dl>
     </div>
@@ -307,9 +320,9 @@ footer.site a:hover{color:var(--onNight)}
   <section class="close" aria-labelledby="h-close">
     <div class="wrap">
       <h2 id="h-close">See what your applications are really costing you.</h2>
-      <p>Tell us about one service. We’ll show you where Antilog would look first.</p>
+      <p>Tell us about one service. We’ll show you where our agents would look first.</p>
       <div class="ctas">
-        <a class="btn btn-gold" href="mailto:hello@antilog.tech">Talk to us <span class="arr" aria-hidden="true">→</span></a>
+        <a class="btn btn-gold" href="mailto:hello@antilog.tech?subject=A%20conversation%20about%20our%20cloud%20costs&amp;body=Hello%2C%0D%0A%0D%0AOne%20service%20we%20would%20like%20you%20to%20look%20at%3A%0D%0A%0D%0AWho%20runs%20it%20today%3A%0D%0A">Talk to us <span class="arr" aria-hidden="true">→</span></a>
         <a class="mail" href="mailto:hello@antilog.tech">hello@antilog.tech</a>
       </div>
     </div>
