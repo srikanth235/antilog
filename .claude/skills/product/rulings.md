@@ -167,6 +167,10 @@ No passwords. Antilog cloud offers exactly two sign-ins, GitHub (OAuth with its 
 | 17 Nov 2026 | Antilog cloud runs in AWS region us-east-1. |
 | 18 Nov 2026 | Agents on AgentCore use GLM 4.7 Flash on Bedrock, with Qwen3 Coder 30B as the fallback; the test account allows only those two models. |
 | 18 Nov 2026 | No username and password, not even for testing. Agents and tests sign in through fakes: access tokens and a fake sign-in provider. |
+| 18 Nov 2026 | An organization always keeps at least one owner, as a project does. |
+| 18 Nov 2026 | Done and Failed sessions are final; resuming means a new session. |
+| 18 Nov 2026 | The seal is refused when the smallest gain the setup can detect is above 10% of the baseline; tuned after the spike. |
+| 18 Nov 2026 | Only the receipt is signed; it carries a hash of each of its measurements. |
 
 Decided calls also appear on the Decisions board.
 
