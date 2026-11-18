@@ -38,6 +38,7 @@ Do not add a dependency for convenience. A new one is a product call: ask the ow
 | Object storage (S3, Azure Blob, GCS; backend chosen by configuration) | `object_store` | 0.14.2 |
 | OpenAPI from Rust types (paths listed in `ApiDoc`; `utoipa-axum` dropped: its `routes!` refuses generic handlers) | `utoipa` | 6.0.0 |
 | Sign-in: OpenID Connect, and GitHub's OAuth  | `openidconnect` / `oauth2` | 4.1.0 / 5.0.0 |
+| Webhook signature (HMAC-SHA256, `X-Hub-Signature-256`) checked with `verify_slice`, which compares in constant time; chosen over a hand-written HMAC, and already in the lockfile | `hmac` | 0.13.0 (matches `sha2` 0.11) |
 | Receipt signing (ed25519), token and session hashes, constant-time compare (pure Rust) | `ed25519-dalek` / `sha2` / `subtle` | 3.0.0 / 0.11.1 / 2.6.1 |
 | Embedded web app | `rust-embed` | 8.14.0 |
 | AWS credentials (workload identity through the default chain) | `aws-config` | 1.13.2 |

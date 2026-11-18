@@ -1,31 +1,19 @@
 //! The GitHub-style webhook signature: `sha256=` and the hex of HMAC-SHA256 over the raw body.
 
-use sha2::{Digest, Sha256};
-use subtle::ConstantTimeEq;
+use hmac::{Hmac, KeyInit, Mac};
+use sha2::Sha256;
 
-const BLOCK: usize = 64;
-
-/// HMAC-SHA256 (RFC 2104), written out because the workspace has `sha2` and no `hmac`.
+/// HMAC-SHA256 (RFC 2104), from the RustCrypto `hmac` crate.
 pub fn hmac_sha256(key: &[u8], message: &[u8]) -> [u8; 32] {
-    let hashed;
-    let key = if key.len() > BLOCK {
-        hashed = Sha256::digest(key);
-        hashed.as_slice()
-    } else {
-        key
-    };
-    let mut block = [0_u8; BLOCK];
-    for (slot, byte) in block.iter_mut().zip(key) {
-        *slot = *byte;
-    }
-    let pad = |byte: u8| block.map(|k| k ^ byte);
-    let mut inner = Sha256::new();
-    inner.update(pad(0x36));
-    inner.update(message);
-    let mut outer = Sha256::new();
-    outer.update(pad(0x5c));
-    outer.update(inner.finalize());
-    outer.finalize().into()
+    let mut mac = mac(key);
+    mac.update(message);
+    mac.finalize().into_bytes().into()
+}
+
+fn mac(key: &[u8]) -> Hmac<Sha256> {
+    // HMAC takes a key of any length, so this cannot fail.
+    <Hmac<Sha256> as KeyInit>::new_from_slice(key)
+        .unwrap_or_else(|_| unreachable!("any key length"))
 }
 
 fn nibble(byte: u8) -> Option<u8> {
@@ -58,15 +46,13 @@ pub fn verify(secret: &[u8], body: &[u8], header: &str) -> bool {
     if secret.is_empty() {
         return false;
     }
-    let expected = hmac_sha256(secret, body);
-    let given = header.strip_prefix("sha256=").and_then(unhex);
-    // A header that cannot be read is compared against zeros and always refused, so its
-    // malformed shape costs the same time as a wrong signature.
-    let (given, readable) = match given {
-        Some(given) => (given, true),
-        None => ([0_u8; 32], false),
+    let Some(given) = header.strip_prefix("sha256=").and_then(unhex) else {
+        return false;
     };
-    bool::from(expected.ct_eq(&given)) & readable
+    let mut mac = mac(secret);
+    mac.update(body);
+    // `verify_slice` compares in constant time.
+    mac.verify_slice(&given).is_ok()
 }
 
 /// The header value for `body`, as a code host (or a test) sends it.

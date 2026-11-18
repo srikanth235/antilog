@@ -57,7 +57,7 @@ An experiment may span several repos. A trial is a set of commits, one per repo 
 
 Stored: experiment and version ids, value models (one id per project and metric, a new version on each change, never edited), win events (a pull request opened, merged or closed, a regression read by the watch or its recovery; append-only, written only by Antilog, never by an agent or a person), the quick check and patience settings, project id, seal hashes, dataset ids and versions, skill pack ids and versions read, the evaluation template id and version it started from, trial ids, commit ids per repo, the hypothesis, the outcome, measured values, repeats, noise, receipt ids and signatures, watch settings, spend rows. Never diffs, file contents, tool output or data.
 
-Derived from measurements, win events and spend records, never stored on their own (`antilog-core/src/value.rs`): the best, the baseline-to-best movement, the scoreboard, cost per trial, where the spend went ([../session/model.md](../session/model.md)), an experiment's state (Not sealed, Sealed, Watching, Regressed) and its activity (from its sessions), delivered, pending, at risk and Return.
+Derived from measurements, win events and spend records, never stored on their own (`antilog-core/src/value.rs`): the best, the baseline-to-best movement, the scoreboard, cost per trial, where the spend went ([../session/model.md](../session/model.md); per outcome, a spend row that names its trial goes to that trial, else to the session's next trial by time, else it is Not measured), an experiment's state (Not sealed, Sealed, Watching, Regressed) and its activity (from its sessions), delivered, pending, at risk and Return.
 
 ## How this area refers to the others
 
