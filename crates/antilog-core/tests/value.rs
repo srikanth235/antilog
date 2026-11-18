@@ -30,8 +30,8 @@ impl World {
                 member: seed.owner.id,
             },
             experiment: seed.experiment,
+            judge: store.judge_store(),
             store,
-            judge: FakeJudgeStore::default(),
         }
     }
 
@@ -115,6 +115,7 @@ impl World {
                 amount_cents: cents,
                 tokens: 10,
                 occurred_at: at,
+                trial_id: None,
             })
             .await
             .unwrap();
@@ -128,6 +129,17 @@ impl World {
         session: &Session,
         value: f64,
     ) -> TrialId {
+        self.win_at(experiment, model, session, value, 0).await
+    }
+
+    async fn win_at(
+        &self,
+        experiment: &Experiment,
+        model: Option<&ProjectValueModel>,
+        session: &Session,
+        value: f64,
+        at: i64,
+    ) -> TrialId {
         let mut definition = fixtures::definition();
         definition.value_model = model.map(|row| ValueModelRef {
             id: row.model.id,
@@ -139,6 +151,7 @@ impl World {
         self.judge.put_sealed(&sealed).await.unwrap();
         let mut trial = fixtures::trial(&sealed, None, "a");
         trial.session = session.id;
+        trial.at = at;
         self.judge.begin_trial(&trial).await.unwrap();
         self.judge
             .finish_trial(
@@ -574,4 +587,119 @@ async fn the_report_adds_up_the_month_and_names_what_found_nothing() {
         value::report(&w.store, &w.judge, &w.owner, T0, "2027-13", None).await,
         Err(Refusal::Invalid(_))
     ));
+}
+
+#[tokio::test]
+async fn the_report_sorts_the_spend_by_what_became_of_each_trial_and_counts_trials_by_when_they_ran()
+ {
+    let w = World::new().await;
+    let model = w.set(&w.owner, 360.0).await.unwrap();
+    let session = w.session("Claude Code", &w.experiment).await;
+    let month = value::month_range("2027-01").unwrap();
+    // The Kept trial ran 500 ms into the month; a Worse one ran the month before.
+    let kept = w
+        .win_at(
+            &w.experiment,
+            Some(&model),
+            &session,
+            90.0,
+            month.from + 500,
+        )
+        .await;
+    let sealed = w.judge.sealed(w.experiment.id, 1).await.unwrap().unwrap();
+    let mut worse = fixtures::trial(&sealed, None, "w");
+    worse.session = session.id;
+    worse.at = month.from - 10;
+    w.judge.begin_trial(&worse).await.unwrap();
+    w.judge
+        .finish_trial(
+            worse.id,
+            &Finished {
+                measurement: None,
+                decision: Decision {
+                    outcome: Outcome::Worse,
+                    reasons: vec![],
+                    criteria: 1,
+                },
+            },
+        )
+        .await
+        .unwrap();
+    // Before the Kept trial: it paid for that trial. After it: agent work that never reached measure.
+    w.spend(&session, 100, month.from + 100).await;
+    w.spend(&session, 300, month.from + 900).await;
+    // A row that names its trial goes to that trial wherever it sits in time.
+    w.store
+        .record_spend(&Spend {
+            id: SpendId::new(),
+            organization_id: w.owner.organization,
+            session_id: session.id,
+            kind: SpendKind::Judge,
+            amount_cents: 40,
+            tokens: 0,
+            occurred_at: month.from + 950,
+            trial_id: Some(kept),
+        })
+        .await
+        .unwrap();
+    let report = value::report(&w.store, &w.judge, &w.owner, T0, "2027-01", None)
+        .await
+        .unwrap();
+    assert_eq!(report.figures.spent_cents, 440);
+    assert_eq!(
+        report
+            .spend_by_outcome
+            .iter()
+            .map(|line| (line.outcome, line.cents))
+            .collect::<Vec<_>>(),
+        vec![(Some(Outcome::Kept), 140), (None, 300)]
+    );
+    assert_eq!(
+        report
+            .spend_by_outcome
+            .iter()
+            .map(|line| line.cents)
+            .sum::<i64>(),
+        report.figures.spent_cents,
+        "every dollar is accounted for"
+    );
+    // One trial ran in the month, so the scoreboard counts one, and one of them was Kept.
+    assert_eq!(
+        report
+            .agents
+            .iter()
+            .map(|row| (row.trials, row.kept))
+            .collect::<Vec<_>>(),
+        vec![(1, 1)]
+    );
+}
+
+#[tokio::test]
+async fn a_value_model_and_its_audit_row_land_together() {
+    let w = World::new().await;
+    let count = || async {
+        w.store
+            .audit_log(w.owner.organization, None, 100)
+            .await
+            .unwrap()
+            .iter()
+            .filter(|entry| {
+                entry.action == "value_model.set" && entry.outcome == AuditOutcome::Done
+            })
+            .count()
+    };
+    w.set(&w.owner, 360.0).await.unwrap();
+    assert_eq!(count().await, 1);
+    // A refused change (an editor may not set one) leaves no model and no row that says it was done.
+    let editor = w.editor().await;
+    assert!(matches!(w.set(&editor, 1.0).await, Err(Refusal::Denied)));
+    assert_eq!(
+        w.judge
+            .value_models(w.experiment.project_id)
+            .await
+            .unwrap()
+            .len(),
+        1
+    );
+    assert_eq!(count().await, 1);
 }

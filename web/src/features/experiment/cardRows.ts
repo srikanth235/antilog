@@ -10,70 +10,103 @@ export interface CardRow {
   mono?: boolean;
 }
 
-/** What the card is asked, as the API words it: the summary before its first ": ", and the reason after it. */
-export function splitSummary(summary: string): { lead: string; reason: string | null } {
-  const at = summary.indexOf(": ");
-  return at < 0
-    ? { lead: summary, reason: null }
-    : { lead: summary.slice(0, at), reason: summary.slice(at + 2) };
-}
-
 interface Context {
   budgetCapCents: number;
   spentCents: number | undefined;
   history: History;
 }
 
+const r = w.card.rows;
+
+function why(reason: string): CardRow {
+  return { key: "why", label: r.why, lines: [reason] };
+}
+
 /**
- * The detail rows the boards show above the buttons, filled from what the API serves: the experiment's budget
- * and spend, the card's own cost and summary, and the judge's history. A row whose data is not served is left out.
+ * What the card is asked, built from its typed payload. A card raised before payloads existed has none and
+ * shows its summary as the API worded it; nothing is read out of that text.
+ */
+export function cardLead(approval: Schemas["Approval"]): string {
+  const p = approval.payload;
+  switch (p?.kind) {
+    case "raise_budget":
+      return w.card.lead.raiseBudget(dollars(p.requestedCents));
+    case "attach_repo":
+      return w.card.lead.attachRepo(p.repo);
+    case "add_credential":
+      return w.card.lead.addCredential(p.connector, p.scope);
+    case "change_environment":
+      return w.card.lead.changeEnvironment;
+    case "open_pull_request":
+      return w.card.lead.openPullRequest(p.hypothesis);
+    default:
+      return approval.summary;
+  }
+}
+
+/**
+ * The detail rows the boards show above the buttons, filled from the card's payload, the experiment's budget
+ * and spend, and the judge's history. A row whose data is not served is left out.
  */
 export function cardRows(approval: Schemas["Approval"], ctx: Context): CardRow[] {
-  const { lead, reason } = splitSummary(approval.summary);
-  switch (approval.card) {
+  const p = approval.payload;
+  switch (p?.kind) {
     case "raise_budget": {
       const rows: CardRow[] = [];
-      const cap = ctx.budgetCapCents;
-      if (ctx.spentCents !== undefined && approval.status === "pending")
-        rows.push({
-          key: "now",
-          label: w.card.rows.now,
-          lines: [
-            ctx.spentCents >= cap
-              ? w.card.rows.allSpent(dollars(cap))
-              : w.card.rows.ofCap(dollars(ctx.spentCents), dollars(cap)),
-          ],
-        });
-      if (approval.costCents != null && approval.status === "pending")
+      if (approval.status === "pending") {
+        const cap = p.nowCents;
+        if (ctx.spentCents !== undefined)
+          rows.push({
+            key: "now",
+            label: r.now,
+            lines: [
+              ctx.spentCents >= ctx.budgetCapCents
+                ? r.allSpent(dollars(ctx.budgetCapCents))
+                : r.ofCap(dollars(ctx.spentCents), dollars(ctx.budgetCapCents)),
+            ],
+          });
         rows.push({
           key: "requested",
-          label: w.card.rows.requested,
-          lines: [dollars(cap + approval.costCents)],
+          label: r.requested,
+          lines: [dollars(cap + p.requestedCents)],
         });
-      return [...rows, ...(reason === null ? [] : [why(reason)])];
+      }
+      return [...rows, ...(p.why === "" ? [] : [why(p.why)])];
     }
-    case "attach_repo": {
-      const repo = lead.replace(/^Attach repo\s+/, "");
+    case "attach_repo":
       return [
-        { key: "repo", label: w.card.rows.repo, lines: [repo], mono: true },
-        { key: "access", label: w.card.rows.access, lines: [w.card.rows.pushesOwnBranch] },
-      ];
-    }
-    case "add_credential": {
-      const match = /^Add a read-only credential for (.+?) \((.+)\)$/.exec(lead);
-      return match === null
-        ? reason === null
+        { key: "repo", label: r.repo, lines: [p.repo], mono: true },
+        {
+          key: "access",
+          label: r.access,
+          lines: [p.access === "read" ? r.readsOnly : r.pushesOwnBranch],
+        },
+        ...(p.branch == null
           ? []
-          : [why(reason)]
-        : [
-            { key: "connector", label: w.card.rows.connector, lines: [match[1] ?? ""] },
-            ...(reason === null ? [] : [why(reason)]),
-          ];
-    }
+          : [{ key: "branch", label: r.branch, lines: [p.branch], mono: true }]),
+      ];
+    case "add_credential":
+      return [
+        { key: "connector", label: r.connector, lines: [p.connector] },
+        { key: "scope", label: r.scope, lines: [p.scope] },
+        ...(p.why === "" ? [] : [why(p.why)]),
+      ];
     case "change_environment": {
-      const changes = lead.replace(/^Change environment:?\s*/, "");
-      return changes === "" ? [] : [{ key: "change", label: w.card.rows.change, lines: [changes] }];
+      const rows: CardRow[] = [];
+      if (p.image != null)
+        rows.push({ key: "image", label: r.image, lines: [p.image], mono: true });
+      if (p.setupScriptLines != null)
+        rows.push({
+          key: "setup",
+          label: r.setupScript,
+          lines: [r.setupScriptLines(p.setupScriptLines)],
+        });
+      if (p.size != null) rows.push({ key: "size", label: r.size, lines: [p.size] });
+      if (p.network != null) rows.push({ key: "network", label: r.network, lines: [p.network] });
+      return rows;
     }
+    case "open_pull_request":
+      return [{ key: "repos", label: r.repos, lines: p.repos, mono: true }];
     case "keep_going": {
       const tried = ctx.history.trials.slice(-6).reverse();
       return tried.length === 0
@@ -81,7 +114,7 @@ export function cardRows(approval: Schemas["Approval"], ctx: Context): CardRow[]
         : [
             {
               key: "tried",
-              label: w.card.rows.tried,
+              label: r.tried,
               lines: tried.map((row) => `${row.hypothesis} · ${OUTCOME_WORDS[row.outcome]}`),
             },
           ];
@@ -89,8 +122,4 @@ export function cardRows(approval: Schemas["Approval"], ctx: Context): CardRow[]
     default:
       return [];
   }
-}
-
-function why(reason: string): CardRow {
-  return { key: "why", label: w.card.rows.why, lines: [reason] };
 }

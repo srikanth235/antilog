@@ -6,6 +6,7 @@ import { Icon } from "../../components/icon/Icon";
 import { Select } from "../../components/select/Select";
 import { Empty, Failed, Loading } from "../../components/state/State";
 import { dollars } from "../../lib/format";
+import { OUTCOME_WORDS } from "../../lib/history";
 import { agentTotals, costPerWin, fromTo, monthOptions, percent } from "../../lib/value";
 import { w } from "../../words";
 import { ValueTiles } from "../value/ValueTiles";
@@ -196,6 +197,23 @@ function Spend({ report }: { report: Schemas["Report"] }) {
           <span className="mono r">{dollars(total)}</span>
           <span className="mono r">{total === 0 ? "" : "100%"}</span>
         </div>
+      </div>
+      <div className="tb tb-sp" style={{ marginTop: 20 }}>
+        <div className="tb-r th">
+          <span>{t.byOutcome}</span>
+          <span className="r">{t.spentCol}</span>
+          <span className="r">{t.shareCol}</span>
+        </div>
+        {report.spendByOutcome.map((row) => {
+          const label = row.outcome == null ? t.notMeasured : OUTCOME_WORDS[row.outcome];
+          return (
+            <div key={row.outcome ?? "not-measured"} className="tb-r">
+              <span>{label}</span>
+              <span className="mono r">{dollars(row.cents)}</span>
+              <span className="mono r ink2">{percent(row.cents, total)}%</span>
+            </div>
+          );
+        })}
       </div>
       <div className="tb tb-sp" style={{ marginTop: 20 }}>
         <div className="tb-r th">

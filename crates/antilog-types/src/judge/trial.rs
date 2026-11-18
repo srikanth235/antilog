@@ -24,6 +24,9 @@ pub struct Trial {
     pub parent: Option<TrialId>,
     pub commits: Vec<CommitRef>,
     pub hypothesis: String,
+    /// When `measure` was called, in epoch milliseconds; 0 for a trial recorded before this was kept.
+    #[serde(default)]
+    pub at: i64,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToSchema)]

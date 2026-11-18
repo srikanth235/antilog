@@ -7,7 +7,7 @@ use antilog_types::{
 use crate::store::{Invariant, SignInRecord, StoreError, TokenRecord};
 
 #[derive(Default)]
-pub(super) struct Ledger {
+pub(crate) struct Ledger {
     pub organizations: Vec<Organization>,
     pub members: Vec<Member>,
     pub projects: Vec<Project>,

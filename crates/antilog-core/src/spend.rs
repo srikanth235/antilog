@@ -23,6 +23,7 @@ pub async fn record_usage<B: BudgetStore>(
         amount_cents: cents.max(0),
         tokens: tokens.max(0),
         occurred_at: at,
+        trial_id: None,
     };
     match store.record_spend(&spend).await {
         Err(StoreError::Conflict) => Ok(()),

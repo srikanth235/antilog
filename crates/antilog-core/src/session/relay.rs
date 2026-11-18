@@ -4,6 +4,7 @@ use antilog_types::{
 };
 
 use super::{STEP, SessionError, audit, book, job, now_ms, record};
+use crate::delivery::open_approved;
 use crate::deps::Deps;
 use crate::platform::{Platform, PlatformError, PlatformEvent, SessionHandle};
 use crate::spend::record_usage;
@@ -229,6 +230,10 @@ async fn outcome_text<D: Deps>(deps: &D, approval: &Approval) -> String {
         CardKind::SealExperiment => match seal_approved(deps, approval).await {
             Ok(version) => format!("Sealed as version {version}. Measure trials with measure."),
             Err(error) => format!("Approved, but sealing failed: {error}"),
+        },
+        CardKind::OpenPullRequest => match open_approved(deps, approval).await {
+            Ok(text) => text,
+            Err(error) => format!("Approved, but opening the pull request failed: {error}"),
         },
         _ => "Done.".to_owned(),
     };

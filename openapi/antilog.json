@@ -2540,6 +2540,17 @@
           "organizationId": {
             "$ref": "#/components/schemas/OrganizationId"
           },
+          "payload": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/CardPayload",
+                "description": "The card's own fields. `None` only for a card raised before payloads existed."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "sessionId": {
             "oneOf": [
               {
@@ -2726,6 +2737,249 @@
           "keep_going",
           "continue_on_another_agent"
         ]
+      },
+      "CardPayload": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "version",
+              "metric",
+              "unit",
+              "baseline",
+              "noise",
+              "cheatsRejected",
+              "valueNote",
+              "kind"
+            ],
+            "properties": {
+              "baseline": {
+                "type": "number",
+                "format": "double"
+              },
+              "cheatsRejected": {
+                "type": "integer",
+                "format": "int32",
+                "minimum": 0
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "seal_experiment"
+                ]
+              },
+              "metric": {
+                "type": "string"
+              },
+              "noise": {
+                "type": "number",
+                "format": "double"
+              },
+              "unit": {
+                "type": "string"
+              },
+              "valueNote": {
+                "type": "string",
+                "description": "\"No value set\", or what one unit is worth, measured offline."
+              },
+              "version": {
+                "type": "integer",
+                "format": "int32",
+                "minimum": 0
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "nowCents",
+              "requestedCents",
+              "why",
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "raise_budget"
+                ]
+              },
+              "nowCents": {
+                "type": "integer",
+                "format": "int64",
+                "description": "The experiment's budget when the card was raised."
+              },
+              "requestedCents": {
+                "type": "integer",
+                "format": "int64",
+                "description": "How much more is asked."
+              },
+              "why": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "connector",
+              "scope",
+              "why",
+              "kind"
+            ],
+            "properties": {
+              "connector": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "add_credential"
+                ]
+              },
+              "scope": {
+                "type": "string"
+              },
+              "why": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "repo",
+              "access",
+              "kind"
+            ],
+            "properties": {
+              "access": {
+                "$ref": "#/components/schemas/RepoAccess"
+              },
+              "branch": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "`None`: the agent pushes to a branch of its own."
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "attach_repo"
+                ]
+              },
+              "repo": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "image": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "change_environment"
+                ]
+              },
+              "network": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "setupScriptLines": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "format": "int32",
+                "minimum": 0
+              },
+              "size": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "trial",
+              "hypothesis",
+              "repos",
+              "kind"
+            ],
+            "properties": {
+              "hypothesis": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "open_pull_request"
+                ]
+              },
+              "repos": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "One pull request per repo changed."
+              },
+              "trial": {
+                "$ref": "#/components/schemas/TrialId"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "tried",
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "keep_going"
+                ]
+              },
+              "tried": {
+                "type": "integer",
+                "format": "int32",
+                "minimum": 0
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "continue_on_another_agent"
+                ]
+              }
+            }
+          }
+        ],
+        "description": "What each kind of card asks, as typed fields. A card shows these, never text parsed out of\nits summary, and an action that follows an approval reads what to do from here."
       },
       "Cents": {
         "type": "integer",
@@ -3766,6 +4020,44 @@
         },
         "additionalProperties": false
       },
+      "Outcome": {
+        "type": "string",
+        "enum": [
+          "measuring",
+          "kept",
+          "withinNoise",
+          "worse",
+          "guardrailFailed",
+          "failedHoldout",
+          "rejected",
+          "failed"
+        ]
+      },
+      "OutcomeSpendLine": {
+        "type": "object",
+        "description": "What was spent on trials that ended one way, or on none.",
+        "required": [
+          "cents"
+        ],
+        "properties": {
+          "cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "outcome": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Outcome",
+                "description": "`null` is Not measured: agent work that never reached `measure`."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
       "Policy": {
         "type": "object",
         "description": "What policy does with one card kind. Add credential only ever asks.",
@@ -3965,6 +4257,13 @@
         "type": "string",
         "format": "uuid"
       },
+      "RepoAccess": {
+        "type": "string",
+        "enum": [
+          "read",
+          "push"
+        ]
+      },
       "Report": {
         "type": "object",
         "description": "The monthly Report for the organization or one project.",
@@ -3974,6 +4273,7 @@
           "to",
           "figures",
           "spendByKind",
+          "spendByOutcome",
           "spentWithWinCents",
           "spentNoWinCents",
           "spentNotSealedCents",
@@ -4014,6 +4314,13 @@
             "items": {
               "$ref": "#/components/schemas/KindSpendLine"
             }
+          },
+          "spendByOutcome": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OutcomeSpendLine"
+            },
+            "description": "By what became of the trial each dollar paid for; Not measured is `outcome: null`."
           },
           "spentNoWinCents": {
             "type": "integer",

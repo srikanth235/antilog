@@ -135,5 +135,6 @@ pub fn trial(sealed: &SealedExperiment, parent: Option<TrialId>, sha: &str) -> T
             sha: sha.into(),
         }],
         hypothesis: format!("try {sha}"),
+        at: 0,
     }
 }

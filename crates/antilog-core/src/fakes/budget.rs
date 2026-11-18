@@ -1,7 +1,7 @@
 use antilog_types::{AuditEntry, ExperimentId, OrganizationId, ProjectId, Spend};
 
 use super::{FakeStore, ledger::not_found, locked};
-use crate::store::{BudgetStore, SpendLine, SpendScope, SpendTotal, StoreError};
+use crate::store::{BudgetStore, SpendLine, SpendRow, SpendScope, SpendTotal, StoreError};
 
 impl BudgetStore for FakeStore {
     async fn set_organization_limits(
@@ -99,6 +99,35 @@ impl BudgetStore for FakeStore {
         to: i64,
     ) -> Result<Vec<SpendLine>, StoreError> {
         Ok(lines(&locked(&self.ledger), organization, None, from..to))
+    }
+
+    async fn spend_rows_between(
+        &self,
+        organization: OrganizationId,
+        from: i64,
+        to: i64,
+    ) -> Result<Vec<SpendRow>, StoreError> {
+        let ledger = locked(&self.ledger);
+        let mut rows: Vec<SpendRow> = ledger
+            .spend
+            .iter()
+            .filter(|row| {
+                row.organization_id == organization && (from..to).contains(&row.occurred_at)
+            })
+            .filter_map(|row| {
+                let session = ledger.session(organization, row.session_id)?;
+                Some(SpendRow {
+                    experiment: session.experiment_id,
+                    session: row.session_id,
+                    kind: row.kind,
+                    cents: row.amount_cents,
+                    at: row.occurred_at,
+                    trial: row.trial_id,
+                })
+            })
+            .collect();
+        rows.sort_by_key(|row| row.at);
+        Ok(rows)
     }
 
     async fn spend(

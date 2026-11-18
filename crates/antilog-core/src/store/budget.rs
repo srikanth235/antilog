@@ -1,5 +1,6 @@
 use std::future::Future;
 
+use antilog_types::judge::TrialId;
 use antilog_types::{
     AuditEntry, ExperimentId, OrganizationId, ProjectId, SessionId, Spend, SpendKind,
 };
@@ -27,6 +28,17 @@ pub struct SpendLine {
     pub kind: SpendKind,
     pub cents: i64,
     pub tokens: i64,
+}
+
+/// One spend row with the experiment its session belongs to.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SpendRow {
+    pub experiment: ExperimentId,
+    pub session: SessionId,
+    pub kind: SpendKind,
+    pub cents: i64,
+    pub at: i64,
+    pub trial: Option<TrialId>,
 }
 
 /// Caps nest: an experiment's budget sits inside its project's cap, which sits
@@ -74,6 +86,14 @@ pub trait BudgetStore {
         from: i64,
         to: i64,
     ) -> impl Future<Output = Result<Vec<SpendLine>, StoreError>> + Send;
+
+    /// Every spend row that occurred in `from..to`, oldest first.
+    fn spend_rows_between(
+        &self,
+        organization: OrganizationId,
+        from: i64,
+        to: i64,
+    ) -> impl Future<Output = Result<Vec<SpendRow>, StoreError>> + Send;
 
     /// Spend that occurred in `from..to` (epoch milliseconds).
     fn spend(

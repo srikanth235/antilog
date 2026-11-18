@@ -2,11 +2,11 @@ use std::collections::HashMap;
 use std::future::Future;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
-use antilog_types::ProjectId;
 use antilog_types::judge::{
     ExperimentId, Finished, ProjectValueModel, Receipt, SealedExperiment, Trial, TrialId,
     TrialRecord, ValueModel, ValueModelId, WinEvent,
 };
+use antilog_types::{AuditEntry, ProjectId};
 
 #[derive(Debug, thiserror::Error)]
 pub enum JudgeStoreError {
@@ -74,6 +74,15 @@ pub trait JudgeStore: Send + Sync {
         at: i64,
     ) -> impl Future<Output = Result<(), JudgeStoreError>> + Send;
 
+    /// The same, with the audit entry for it: both land or neither does, in one transaction.
+    fn put_value_model_audited(
+        &self,
+        project: ProjectId,
+        model: &ValueModel,
+        at: i64,
+        audit: &AuditEntry,
+    ) -> impl Future<Output = Result<(), JudgeStoreError>> + Send;
+
     fn value_model(
         &self,
         id: ValueModelId,
@@ -113,8 +122,44 @@ struct State {
     win_events: Vec<WinEvent>,
 }
 
+/// Where a fake judge store puts the audit entries of its audited writes.
+type Audit = Arc<Mutex<crate::fakes::ledger::Ledger>>;
+
 #[derive(Default, Clone)]
-pub struct FakeJudgeStore(Arc<Mutex<State>>);
+pub struct FakeJudgeStore(Arc<Mutex<State>>, Option<Audit>);
+
+impl FakeJudgeStore {
+    pub(crate) fn linked(ledger: Audit) -> Self {
+        Self(Arc::default(), Some(ledger))
+    }
+
+    fn insert_model(
+        &self,
+        project: ProjectId,
+        model: &ValueModel,
+        at: i64,
+    ) -> Result<(), JudgeStoreError> {
+        let mut state = locked(&self.0);
+        let key = (model.id, model.version);
+        let metric_taken = state.models.values().any(|row| {
+            row.project_id == project
+                && row.model.metric == model.metric
+                && row.model.version == model.version
+        });
+        if state.models.contains_key(&key) || metric_taken {
+            return Err(JudgeStoreError::Conflict);
+        }
+        state.models.insert(
+            key,
+            ProjectValueModel {
+                project_id: project,
+                model: model.clone(),
+                set_at: at,
+            },
+        );
+        Ok(())
+    }
+}
 
 impl JudgeStore for FakeJudgeStore {
     async fn put_sealed(&self, sealed: &SealedExperiment) -> Result<(), JudgeStoreError> {
@@ -206,24 +251,28 @@ impl JudgeStore for FakeJudgeStore {
         model: &ValueModel,
         at: i64,
     ) -> Result<(), JudgeStoreError> {
-        let mut state = locked(&self.0);
-        let key = (model.id, model.version);
-        let metric_taken = state.models.values().any(|row| {
-            row.project_id == project
-                && row.model.metric == model.metric
-                && row.model.version == model.version
-        });
-        if state.models.contains_key(&key) || metric_taken {
+        self.insert_model(project, model, at)
+    }
+
+    async fn put_value_model_audited(
+        &self,
+        project: ProjectId,
+        model: &ValueModel,
+        at: i64,
+        audit: &AuditEntry,
+    ) -> Result<(), JudgeStoreError> {
+        // The audit log is checked before anything is written, and both locks are held to the end.
+        let mut ledger = self.1.as_ref().map(|ledger| locked(ledger));
+        if let Some(ledger) = &ledger
+            && (ledger.organization(audit.organization_id).is_none()
+                || ledger.audit.iter().any(|row| row.id == audit.id))
+        {
             return Err(JudgeStoreError::Conflict);
         }
-        state.models.insert(
-            key,
-            ProjectValueModel {
-                project_id: project,
-                model: model.clone(),
-                set_at: at,
-            },
-        );
+        self.insert_model(project, model, at)?;
+        if let Some(ledger) = &mut ledger {
+            ledger.audit.push(audit.clone());
+        }
         Ok(())
     }
 

@@ -11,6 +11,7 @@ use crate::deps::Deps;
 use crate::platform::ToolDef;
 use crate::store::StoreError;
 
+pub(crate) use judge::issue_receipt;
 pub use judge::seal_approved;
 
 /// Who calls: a session of an experiment, and the person behind it when there is one.

@@ -67,6 +67,64 @@ async fn postgres_store_keeps_the_relay_state() -> anyhow::Result<()> {
 }
 
 #[tokio::test]
+async fn postgres_keeps_pull_requests_spend_cards_and_audited_models() -> anyhow::Result<()> {
+    // As the role the server runs as, so row-level security is in force.
+    let (store, _pool, _container) = app_store().await?;
+    antilog_core::seed::wins_suite(&store, |organization| store.judge(organization)).await;
+    Ok(())
+}
+
+#[tokio::test]
+async fn a_pull_request_two_organizations_share_belongs_to_neither() -> anyhow::Result<()> {
+    use antilog_core::judge::fixtures;
+    use antilog_core::store::judge::JudgeStore;
+    use antilog_core::store::{CodeHostStore, PullRequestRow};
+    use antilog_types::judge::{PullRequestState, SealedExperiment};
+
+    let (store, _pool, _container) = app_store().await?;
+    let mut owners = Vec::new();
+    for _ in 0..2 {
+        let seed = antilog_core::seed::experiment(&store, 1_000).await;
+        let judge = store.judge(seed.organization.id);
+        let sealed = SealedExperiment::seal(
+            seed.experiment.id,
+            1,
+            fixtures::definition(),
+            vec![],
+            fixtures::checks(),
+            0,
+        )
+        .map_err(|e| anyhow::anyhow!("{e:?}"))?;
+        judge.put_sealed(&sealed).await?;
+        let trial = fixtures::trial(&sealed, None, "a");
+        judge.begin_trial(&trial).await?;
+        owners.push((seed, trial));
+    }
+    let row =
+        |seed: &antilog_core::seed::Seed, trial: &antilog_types::judge::Trial| PullRequestRow {
+            organization: seed.organization.id,
+            repo: "acme/shared".into(),
+            number: 5,
+            experiment: seed.experiment.id,
+            version: 1,
+            trial: trial.id,
+            url: "https://code.example/acme/shared/pull/5".into(),
+            state: PullRequestState::Open,
+        };
+    let (first, trial) = &owners[0];
+    store
+        .put_pull_requests(first.organization.id, &[row(first, trial)])
+        .await?;
+    assert!(store.pull_request("acme/shared", 5).await?.is_some());
+    let (second, trial) = &owners[1];
+    store
+        .put_pull_requests(second.organization.id, &[row(second, trial)])
+        .await?;
+    assert_eq!(store.pull_request("acme/shared", 5).await?, None);
+    Ok(())
+}
+
+#[tokio::test]
 async fn migrations_apply_again_without_change() -> anyhow::Result<()> {
     let (store, _pool, _container) = migrated_store().await?;
     store.migrate().await?;

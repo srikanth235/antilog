@@ -6,7 +6,8 @@ use sha2::{Digest, Sha256};
 
 mod approval;
 mod budget;
-mod ledger;
+mod code_host;
+pub(crate) mod ledger;
 mod organization;
 mod platform;
 mod relay;
@@ -68,8 +69,17 @@ impl Clock for FakeClock {
 
 #[derive(Default)]
 pub struct FakeStore {
-    ledger: Mutex<ledger::Ledger>,
+    ledger: std::sync::Arc<Mutex<ledger::Ledger>>,
     relay: Mutex<relay_state::Relay>,
+    code_host: Mutex<code_host::State>,
+}
+
+impl FakeStore {
+    /// A judge store whose audited writes land in this store's audit log, in one step: either
+    /// the row and its audit entry both land or neither does, as in Postgres.
+    pub fn judge_store(&self) -> crate::store::judge::FakeJudgeStore {
+        crate::store::judge::FakeJudgeStore::linked(self.ledger.clone())
+    }
 }
 
 impl Store for FakeStore {
@@ -175,6 +185,12 @@ mod tests {
     #[tokio::test]
     async fn fake_store_keeps_the_relay_state() {
         crate::seed::relay_suite(&FakeStore::default()).await;
+    }
+
+    #[tokio::test]
+    async fn fake_store_keeps_pull_requests_spend_cards_and_audited_models() {
+        let store = FakeStore::default();
+        crate::seed::wins_suite(&store, |_| store.judge_store()).await;
     }
 
     #[test]

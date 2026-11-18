@@ -13,8 +13,10 @@ use axum::routing::get;
 use utoipa::OpenApi;
 
 pub mod auth;
+pub mod e2e;
 pub mod organization;
 pub mod value;
+pub mod webhook;
 
 #[derive(OpenApi)]
 #[openapi(
@@ -69,6 +71,16 @@ pub fn router_with<D: Deps + 'static>(app: Arc<auth::App<D>>) -> Router {
     } else {
         router
     };
+    let router = if app.settings.e2e_seed {
+        router.merge(e2e::routes())
+    } else {
+        router
+    };
+    let router = if app.settings.code_host_webhook_secret.is_some() {
+        router.merge(webhook::routes())
+    } else {
+        router
+    };
     router.with_state(app)
 }
 
@@ -103,6 +115,8 @@ mod tests {
                 open_organizations: false,
                 secure_cookies: true,
                 wake_secret: None,
+                code_host_webhook_secret: None,
+                e2e_seed: false,
             },
         );
         let response = app
