@@ -95,9 +95,11 @@ dependencies = [
  "ed25519-dalek",
  "jiff",
  "proptest",
+ "serde_json",
  "sha2",
  "thiserror",
  "tokio",
+ "uuid",
 ]
 
 [[package]]
