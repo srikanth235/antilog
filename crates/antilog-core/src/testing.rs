@@ -688,6 +688,26 @@ async fn budgets_and_spend<S: Store>(store: &S) {
         total(SpendScope::Organization, T0 + 31, T0 + 100).await,
         sum(0, 0)
     );
+    let between = store
+        .spend_lines_between(org, T0 + 15, T0 + 25)
+        .await
+        .expect("read");
+    assert_eq!(
+        between
+            .iter()
+            .map(|line| (line.session, line.kind, line.cents))
+            .collect::<Vec<_>>()
+            .len(),
+        2
+    );
+    assert_eq!(between.iter().map(|line| line.cents).sum::<i64>(), 32);
+    assert!(
+        store
+            .spend_lines_between(org, T0 + 31, T0 + 100)
+            .await
+            .expect("read")
+            .is_empty()
+    );
     assert_eq!(
         store
             .spend(

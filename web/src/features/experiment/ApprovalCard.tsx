@@ -73,6 +73,14 @@ export function ApprovalCard(props: {
             <span>{cost == null || cost === 0 ? w.card.costsNothing : w.card.mayCost(cost)}</span>
           </span>
         </div>
+        {approval.needsOwner ? (
+          <div className="ap-r">
+            <span className="k">{w.value.sealValue}</span>
+            <span className="v">
+              <span>{w.value.needsOwner}</span>
+            </span>
+          </div>
+        ) : null}
         {credential ? (
           <div className="ap-r">
             <span className="k">{w.card.titles.add_credential}</span>

@@ -1,10 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import { ApiFailure } from "../../api/client";
-import { useReceipt } from "../../api/queries";
+import { useMembers, useReceipt } from "../../api/queries";
 import { Icon } from "../../components/icon/Icon";
 import { Empty, Failed, Loading } from "../../components/state/State";
 import { dollars } from "../../lib/format";
+import { fromTo, modelLine, returnLabel } from "../../lib/value";
 import { w } from "../../words";
+import { SourceText } from "../projects/ProjectValue";
+import { useWinValue, WinState } from "../value/WinState";
 
 function Rows({ rows }: { rows: [string, React.ReactNode][] }) {
   return (
@@ -35,6 +38,8 @@ function Section(props: { title: string; children: React.ReactNode }) {
 /** One win, as the judge signed it. */
 export function Receipt({ trialId }: { trialId: string }) {
   const receipt = useReceipt(trialId);
+  const members = useMembers();
+  const win = useWinValue(receipt.data?.body.experiment.experiment ?? "", trialId);
   const r = w.receipt;
   if (receipt.isPending)
     return (
@@ -108,9 +113,58 @@ export function Receipt({ trialId }: { trialId: string }) {
                 {e.seal}
               </span>,
             ],
-            [r.worth, e.valueModel == null ? r.noValue : dollars(Math.round(e.value * 100))],
+            [
+              r.valueModel,
+              e.valueModel == null ? (
+                r.noValue
+              ) : (
+                <>
+                  {modelLine(e.valueModel)}
+                  <span className="m">
+                    {w.value.sourceLabel}: <SourceText source={e.valueModel.source} /> ·{" "}
+                    {w.value.setBy}{" "}
+                    {members.data?.find((member) => member.id === e.valueModel?.setBy)?.name ??
+                      w.value.unknown}
+                    , {w.value.projectOwner} · {w.value.sealedWith(e.version)}
+                  </span>
+                </>
+              ),
+            ],
+            [
+              r.worth,
+              win?.yearlyCents == null ? (
+                r.noValue
+              ) : (
+                <>
+                  <span className="mono">{w.value.yearly(dollars(win.yearlyCents))}</span>{" "}
+                  <WinState state={win.state} />
+                  <span className="m">
+                    {fromTo({
+                      baseline: e.baseline,
+                      best: e.value,
+                      unit: e.valueModel?.unit ?? "",
+                    })}
+                    , {w.value.measuredOffline}
+                  </span>
+                </>
+              ),
+            ],
             [r.cost, dollars(e.costOfWin)],
-            [r.return, e.winReturn == null ? r.noValue : `${e.winReturn}×`],
+            [
+              r.return,
+              e.winReturn == null ? (
+                r.noValue
+              ) : (
+                <>
+                  <span className="mono">{returnLabel(e.winReturn)}</span>
+                  {win?.yearlyCents == null ? null : (
+                    <span className="m">
+                      {w.value.overSpent(dollars(win.yearlyCents), dollars(e.costOfWin))}
+                    </span>
+                  )}
+                </>
+              ),
+            ],
           ]}
         />
       </Section>

@@ -1,6 +1,6 @@
 # A table, column or migration
 
-The ledger is the store, and the only state: Postgres 18, on Antilog cloud and self-hosted alike. The core sees one `Store` trait, so tests of other modules use an in-memory double. It holds ids, versions, numbers, states, the conversation's words (decided by the owner, see [product rulings](../product/rulings.md)), commit ids, spend and audit rows. It never holds a customer's data, a secret, tool output, a diff or a log. Built: the organization and session side (organizations, members, projects and project roles, access tokens, sign-in sessions, experiments' rows, sessions, spend, policy, approvals, audit log) and the judge's tables (sealed versions, trials, receipts, value models), all behind row-level security.
+The ledger is the store, and the only state: Postgres 18, on Antilog cloud and self-hosted alike. The core sees one `Store` trait, so tests of other modules use an in-memory double. It holds ids, versions, numbers, states, the conversation's words (decided by the owner, see [product rulings](../product/rulings.md)), commit ids, spend and audit rows. It never holds a customer's data, a secret, tool output, a diff or a log. Built: the organization and session side (organizations, members, projects and project roles, access tokens, sign-in sessions, experiments' rows, sessions, spend, policy, approvals, audit log) and the judge's tables (sealed versions, trials, receipts, value models by project and metric, win events), all behind row-level security.
 
 ## Rules (target)
 

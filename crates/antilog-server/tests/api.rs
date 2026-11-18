@@ -1299,3 +1299,234 @@ async fn evaluations_are_listed_read_and_added_by_role() {
         .collect();
     assert_eq!(actions.len(), 2);
 }
+
+#[tokio::test]
+async fn value_models_are_set_by_project_owners_and_value_and_return_are_read_by_all() {
+    use antilog_core::judge::fixtures;
+    use antilog_core::store::judge::JudgeStore;
+    use antilog_core::value::record_win_event;
+    use antilog_types::judge::*;
+
+    let (org, deps) = org_with_store().await;
+    let (_, editor) = org.member("ed", "editor").await;
+    let (_, viewer) = org.member("vi", "viewer").await;
+    let project = org
+        .call(
+            Method::POST,
+            "/projects",
+            &org.owner,
+            Some(json!({"name": "Checkout", "description": "the path"})),
+        )
+        .await;
+    let project = project.body["id"].as_str().unwrap_or_default().to_owned();
+    let model = json!({"metric": "p95", "unit": "ms", "centsPerUnit": 360.0, "source": {"text": "Finance study, Q3", "link": "https://example.com/q3"}});
+
+    // Only a project owner sets one; the refusal is audited.
+    let uri = format!("/projects/{project}/value-models");
+    for who in [&editor, &viewer] {
+        let denied = org.call(Method::POST, &uri, who, Some(model.clone())).await;
+        assert_eq!(denied.status, StatusCode::FORBIDDEN);
+    }
+    let set = org
+        .call(Method::POST, &uri, &org.owner, Some(model.clone()))
+        .await;
+    assert_eq!(set.status, StatusCode::CREATED);
+    assert_eq!(set.body["model"]["version"], 1);
+    assert_eq!(set.body["model"]["centsPerUnit"], 360.0);
+    let again = org
+        .call(Method::POST, &uri, &org.owner, Some(json!({"metric": "p95", "unit": "ms", "centsPerUnit": 720.0, "source": {"text": "Re-estimated", "link": null}})))
+        .await;
+    assert_eq!(
+        (
+            again.body["model"]["version"].clone(),
+            again.body["model"]["id"].clone()
+        ),
+        (json!(2), set.body["model"]["id"].clone())
+    );
+    for bad in [
+        json!({"metric": "p95", "unit": "ms", "centsPerUnit": 0, "source": {"text": "x", "link": null}}),
+        json!({"metric": "", "unit": "ms", "centsPerUnit": 1, "source": {"text": "x", "link": null}}),
+        json!({"metric": "p95", "unit": "ms", "centsPerUnit": 1, "source": {"text": "", "link": null}}),
+        json!({"metric": "p95", "unit": "ms", "centsPerUnit": 1, "source": {"text": "x", "link": "javascript:1"}}),
+    ] {
+        let reply = org.call(Method::POST, &uri, &org.owner, Some(bad)).await;
+        assert_eq!(reply.status, StatusCode::UNPROCESSABLE_ENTITY);
+    }
+    let listed = org.call(Method::GET, &uri, &viewer, None).await;
+    assert_eq!(listed.body["models"].as_array().map(Vec::len), Some(1));
+    assert_eq!(listed.body["models"][0]["model"]["version"], 2);
+    let log = org.call(Method::GET, "/audit", &org.owner, None).await;
+    let actions: Vec<_> = log.body["entries"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|entry| entry["action"] == "value_model.set")
+        .map(|entry| entry["outcome"].clone())
+        .collect();
+    assert_eq!(
+        actions.len(),
+        4,
+        "two refusals and two versions: {actions:?}"
+    );
+
+    // With no win there is nothing delivered, and every figure says it is measured offline.
+    let none = org
+        .call(
+            Method::GET,
+            &format!("/projects/{project}/value"),
+            &viewer,
+            None,
+        )
+        .await;
+    assert_eq!(none.status, StatusCode::OK);
+    assert_eq!(
+        (
+            none.body["basis"].clone(),
+            none.body["deliveredCents"].clone(),
+            none.body["returnX"].clone()
+        ),
+        (json!("measuredOffline"), json!(0), Value::Null)
+    );
+
+    // An experiment, sealed with the owner's model and one Kept trial.
+    let made = org
+        .call(
+            Method::POST,
+            &format!("/projects/{project}/experiments"),
+            &editor,
+            Some(json!({"goal": "cut p95", "budgetCapCents": 100_000})),
+        )
+        .await;
+    assert_eq!(made.status, StatusCode::CREATED, "{:?}", made.body);
+    let experiment: antilog_types::ExperimentId =
+        serde_json::from_value(made.body["id"].clone()).unwrap_or_else(|e| unreachable!("{e}"));
+    let organization: antilog_types::OrganizationId =
+        serde_json::from_value(json!(org.organization)).unwrap_or_else(|e| unreachable!("{e}"));
+    let judge = deps.judge.clone();
+    let mut definition = fixtures::definition();
+    definition.value_model = Some(ValueModelRef {
+        id: serde_json::from_value(set.body["model"]["id"].clone())
+            .unwrap_or_else(|e| unreachable!("{e}")),
+        version: 2,
+    });
+    let sealed = SealedExperiment::seal(experiment, 1, definition, vec![], fixtures::checks(), 1)
+        .unwrap_or_else(|e| unreachable!("{e}"));
+    judge
+        .put_sealed(&sealed)
+        .await
+        .unwrap_or_else(|e| unreachable!("{e}"));
+    let trial = fixtures::trial(&sealed, None, "a");
+    judge
+        .begin_trial(&trial)
+        .await
+        .unwrap_or_else(|e| unreachable!("{e}"));
+    judge
+        .finish_trial(
+            trial.id,
+            &Finished {
+                measurement: Some(Measurement {
+                    trial: trial.id,
+                    experiment,
+                    version: 1,
+                    seal: sealed.seal_hash().clone(),
+                    stage: Stage::Full,
+                    k: 1,
+                    noise: 2.0,
+                    parent_value: 100.0,
+                    value: 90.0,
+                    gain: None,
+                    confirmation: None,
+                    guardrails: vec![],
+                    holdout: Some(HoldoutResult::Passed),
+                }),
+                decision: Decision {
+                    outcome: Outcome::Kept,
+                    reasons: vec![],
+                    criteria: 1,
+                },
+            },
+        )
+        .await
+        .unwrap_or_else(|e| unreachable!("{e}"));
+    let now = 1_000;
+    for kind in [WinEventKind::Opened, WinEventKind::Merged] {
+        record_win_event(
+            &deps.store,
+            &judge,
+            organization,
+            WinEvent {
+                experiment,
+                version: 1,
+                trial: trial.id,
+                kind,
+                value: None,
+                link: None,
+                at: now,
+            },
+        )
+        .await
+        .unwrap_or_else(|e| unreachable!("{e:?}"));
+    }
+
+    let seen = org
+        .call(
+            Method::GET,
+            &format!("/experiments/{experiment}/value"),
+            &viewer,
+            None,
+        )
+        .await;
+    assert_eq!(seen.status, StatusCode::OK, "{:?}", seen.body);
+    assert_eq!(seen.body["valueModel"]["model"]["version"], 2);
+    assert_eq!(seen.body["wins"][0]["state"], "delivered");
+    // 10 ms at 720 cents a year per ms.
+    assert_eq!(seen.body["wins"][0]["yearlyCents"], 7_200);
+    assert_eq!(seen.body["figures"]["deliveredCents"], 7_200);
+    // The organization's figures and report are for owners and editors; a viewer reads a project's.
+    for uri in ["/value", "/report?month=2026-11"] {
+        let denied = org.call(Method::GET, uri, &viewer, None).await;
+        assert_eq!(denied.status, StatusCode::FORBIDDEN, "{uri}");
+    }
+    let everything = org.call(Method::GET, "/value", &editor, None).await;
+    assert_eq!(everything.body["deliveredCents"], 7_200);
+    let outside = org
+        .call(Method::GET, "/value?from=5000&to=9000", &editor, None)
+        .await;
+    assert_eq!(outside.body["deliveredCents"], 0);
+    let backwards = org
+        .call(Method::GET, "/value?from=9&to=3", &editor, None)
+        .await;
+    assert_eq!(backwards.status, StatusCode::UNPROCESSABLE_ENTITY);
+
+    let report = org
+        .call(Method::GET, "/report?month=2026-11", &editor, None)
+        .await;
+    assert_eq!(report.status, StatusCode::OK, "{:?}", report.body);
+    assert_eq!(report.body["month"], "2026-11");
+    let current = org.call(Method::GET, "/report", &editor, None).await;
+    assert_eq!(current.status, StatusCode::OK);
+    let scoped = org
+        .call(
+            Method::GET,
+            &format!("/report?month=2026-11&project={project}"),
+            &viewer,
+            None,
+        )
+        .await;
+    assert_eq!(scoped.body["projectId"], json!(project));
+    for bad in ["2026-13", "nov", "2026-1"] {
+        let reply = org
+            .call(Method::GET, &format!("/report?month={bad}"), &editor, None)
+            .await;
+        assert_eq!(reply.status, StatusCode::UNPROCESSABLE_ENTITY, "{bad}");
+    }
+    let missing = org
+        .call(
+            Method::GET,
+            "/projects/018f3b1e-0000-7000-8000-000000000000/value",
+            &viewer,
+            None,
+        )
+        .await;
+    assert_eq!(missing.status, StatusCode::NOT_FOUND);
+}

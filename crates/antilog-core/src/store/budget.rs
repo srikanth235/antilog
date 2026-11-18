@@ -67,6 +67,14 @@ pub trait BudgetStore {
         experiment: Option<ExperimentId>,
     ) -> impl Future<Output = Result<Vec<SpendLine>, StoreError>> + Send;
 
+    /// The organization's spend that occurred in `from..to`, summed per experiment, session and kind.
+    fn spend_lines_between(
+        &self,
+        organization: OrganizationId,
+        from: i64,
+        to: i64,
+    ) -> impl Future<Output = Result<Vec<SpendLine>, StoreError>> + Send;
+
     /// Spend that occurred in `from..to` (epoch milliseconds).
     fn spend(
         &self,

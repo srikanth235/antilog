@@ -76,6 +76,7 @@ pub fn value_model(version: u32) -> ValueModel {
         id: ValueModelId::new(),
         version,
         metric: "p95".into(),
+        unit: "ms".into(),
         cents_per_unit: 360.0,
         source: ValueSource {
             text: "finance estimate".into(),

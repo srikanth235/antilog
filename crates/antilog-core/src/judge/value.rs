@@ -44,7 +44,8 @@ impl WinValue {
         self.value_model.as_ref()?.yearly(self.gained())
     }
 
-    fn lost(&self) -> Option<Cents> {
+    /// What a regression took out of a merged win's yearly value; at most all of it.
+    pub fn lost(&self) -> Option<Cents> {
         let model = self.value_model.as_ref()?;
         let back = self
             .regressed_to
@@ -110,6 +111,7 @@ mod tests {
             id: ValueModelId::new(),
             version: 1,
             metric: "p95".into(),
+            unit: "ms".into(),
             cents_per_unit,
             source: ValueSource {
                 text: "finance".into(),

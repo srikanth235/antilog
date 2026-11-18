@@ -1,7 +1,7 @@
 import { useQueries } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { api, unwrap } from "../../api/client";
+import { api, type Schemas, unwrap } from "../../api/client";
 import {
   keys,
   useBudgets,
@@ -21,8 +21,38 @@ import { Select } from "../../components/select/Select";
 import { Empty, Failed, Loading } from "../../components/state/State";
 import { activityOf, defaultBudgetCents, isOwner, pendingCards } from "../../lib/domain";
 import { dollars, initial, plural, share } from "../../lib/format";
+import { fromTo, winChange } from "../../lib/value";
 import { w } from "../../words";
 import { ProjectBudget } from "./ProjectBudget";
+import { ProjectValue } from "./ProjectValue";
+
+/** The best win of an experiment, baseline to best, or the plain words when it has none. */
+function BestCell({ value }: { value: Schemas["ExperimentValue"] | undefined }) {
+  if (value === undefined)
+    return (
+      <span className="vv">
+        <span className="mono">{w.noData}</span>
+      </span>
+    );
+  const win = [...value.wins].sort((a, b) => b.version - a.version)[0];
+  if (win === undefined)
+    return (
+      <span className="vv">
+        <span className="m">{w.projects.noWinYet}</span>
+      </span>
+    );
+  const change = winChange(win.baseline, win.best);
+  return (
+    <span className="vv">
+      <span className="mono">{fromTo(win)}</span>
+      {change === null ? null : (
+        <span className="m">
+          <span className="dlt">{change}</span>
+        </span>
+      )}
+    </span>
+  );
+}
 
 export function Project({ projectId }: { projectId: string }) {
   const projects = useProjects();
@@ -42,6 +72,15 @@ export function Project({ projectId }: { projectId: string }) {
       queryFn: async () =>
         unwrap(
           await api.GET("/experiments/{id}/sessions", { params: { path: { id: experiment.id } } }),
+        ),
+    })),
+  });
+  const values = useQueries({
+    queries: list.map((experiment) => ({
+      queryKey: keys.experimentValue(experiment.id),
+      queryFn: async () =>
+        unwrap(
+          await api.GET("/experiments/{id}/value", { params: { path: { id: experiment.id } } }),
         ),
     })),
   });
@@ -68,6 +107,7 @@ export function Project({ projectId }: { projectId: string }) {
     budgets.data?.projects.find((entry) => entry.projectId === projectId)?.spentCents ?? 0;
   const cap = project.monthlyCapCents ?? null;
   const defaultBudget = defaultBudgetCents(project, organization.data);
+  const winCount = values.reduce((sum, query) => sum + (query.data?.wins.length ?? 0), 0);
   const working = sessions.filter((query) =>
     query.data?.some((session) => session.status === "working"),
   ).length;
@@ -83,7 +123,7 @@ export function Project({ projectId }: { projectId: string }) {
           <div className="rw">
             <h1 className="t-title">{project.name}</h1>
             {role === undefined ? null : <span className="tag">{w.roles[role]}</span>}
-            <span className="tag">{w.projects.counts(list.length, 0)}</span>
+            <span className="tag">{w.projects.counts(list.length, winCount)}</span>
           </div>
           <span className="ink2">{project.description}</span>
         </div>
@@ -167,11 +207,7 @@ export function Project({ projectId }: { projectId: string }) {
                   <span className="n">
                     <span>{experiment.goal}</span>
                   </span>
-                  <span className="vv">
-                    <span className="mono">
-                      {/* (target) the best value needs the judge's history */ w.noData}
-                    </span>
-                  </span>
+                  <BestCell value={values[index]?.data} />
                   <span className="spill" style={{ ["--c" as string]: "var(--ink3)" }}>
                     {w.state[experiment.status]}
                   </span>
@@ -206,15 +242,7 @@ export function Project({ projectId }: { projectId: string }) {
         <p className="target-note">{w.projects.ideasNone}</p>
       </section>
 
-      <section className="ds" aria-labelledby="h-value">
-        <div className="ds-h">
-          <h2 className="t-section" id="h-value">
-            {w.projects.value}
-          </h2>
-        </div>
-        <p className="ds-n">{w.projects.valueLead}</p>
-        <p className="target-note">{w.projects.valueNone}</p>
-      </section>
+      <ProjectValue project={project} owner={owner} />
 
       <section className="ds" aria-labelledby="h-connectors">
         <div className="ds-h">

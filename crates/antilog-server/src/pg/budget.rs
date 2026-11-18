@@ -128,6 +128,35 @@ impl BudgetStore for PgStore {
         .collect()
     }
 
+    async fn spend_lines_between(
+        &self,
+        organization: OrganizationId,
+        from: i64,
+        to: i64,
+    ) -> Result<Vec<SpendLine>, StoreError> {
+        let mut tx = self.scoped(organization).await?;
+        sqlx::query!(
+            "select n.experiment_id, s.session_id, s.kind, coalesce(sum(s.amount_cents), 0)::bigint as \"cents!\", coalesce(sum(s.tokens), 0)::bigint as \"tokens!\" from spend s join sessions n on n.organization_id = s.organization_id and n.id = s.session_id where s.organization_id = $1 and s.occurred_at >= to_timestamp($2::bigint / 1000.0) and s.occurred_at < to_timestamp($3::bigint / 1000.0) group by n.experiment_id, s.session_id, s.kind order by n.experiment_id, s.session_id, s.kind",
+            organization.as_uuid(),
+            from,
+            to,
+        )
+        .fetch_all(&mut *tx)
+        .await
+        .map_err(map)?
+        .into_iter()
+        .map(|row| {
+            Ok(SpendLine {
+                experiment: ExperimentId::from_uuid(row.experiment_id),
+                session: SessionId::from_uuid(row.session_id),
+                kind: SpendKind::parse(&row.kind).ok_or_else(|| corrupt("spend kind", &row.kind))?,
+                cents: row.cents,
+                tokens: row.tokens,
+            })
+        })
+        .collect()
+    }
+
     async fn spend(
         &self,
         organization: OrganizationId,

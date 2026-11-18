@@ -340,6 +340,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/experiments/{id}/value": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["experiment_value"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -532,6 +548,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/projects/{id}/value": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["project_value"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{id}/value-models": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["value_models"];
+        put?: never;
+        post: operations["set_value_model"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["report"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sessions/{id}": {
         parameters: {
             query?: never;
@@ -693,6 +757,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/value": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["organization_value"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -721,6 +801,23 @@ export interface components {
             isDefault: boolean;
             name: string;
             platform: string;
+        };
+        AgentRow: {
+            agent: string;
+            /** Format: int64 */
+            deliveredCents: number;
+            /** Format: int32 */
+            kept: number;
+            /** Format: int64 */
+            pendingCents: number;
+            /** Format: int64 */
+            spentCents: number;
+            /** Format: int32 */
+            trials: number;
+            /** Format: int32 */
+            winsDelivered: number;
+            /** Format: int32 */
+            winsPending: number;
         };
         AgentRun: {
             agent: string;
@@ -836,6 +933,8 @@ export interface components {
         };
         /** @enum {string} */
         Decision: "approve" | "decline";
+        /** @enum {string} */
+        Direction: "minimize" | "maximize";
         /** @description Where an experiment's session may run. */
         Environment: {
             /** @description Offered by the platform until environments can be registered. */
@@ -948,6 +1047,13 @@ export interface components {
          * @enum {string}
          */
         ExperimentStatus: "not_sealed" | "sealed";
+        /** @description An experiment's value: the model it was sealed with, its wins and what they add up to. */
+        ExperimentValue: {
+            experimentId: components["schemas"]["ExperimentId"];
+            figures: components["schemas"]["ValueFigures"];
+            valueModel?: components["schemas"]["ProjectValueModel"] | null;
+            wins: components["schemas"]["WinView"][];
+        };
         FieldError: {
             field: string;
             message: string;
@@ -971,6 +1077,11 @@ export interface components {
             kind: components["schemas"]["SpendKind"];
             /** Format: int64 */
             tokens: number;
+        };
+        KindSpendLine: {
+            /** Format: int64 */
+            cents: number;
+            kind: components["schemas"]["SpendKind"];
         };
         LimitSpend: {
             /** Format: int64 */
@@ -1052,6 +1163,17 @@ export interface components {
             memberId?: components["schemas"]["MemberId"] | null;
             name: string;
         };
+        /** @description What a project owner sets: the model without its id, version or who set it. */
+        NewValueModel: {
+            /**
+             * Format: double
+             * @description Cents a year that one unit of the metric is worth; more than zero.
+             */
+            centsPerUnit: number;
+            metric: string;
+            source: components["schemas"]["ValueSource"];
+            unit: string;
+        };
         Organization: {
             /**
              * Format: int64
@@ -1125,6 +1247,13 @@ export interface components {
             /** Format: int64 */
             spentCents: number;
         };
+        /** @description A value model as a project holds it: one per metric, a new version on every change. */
+        ProjectValueModel: {
+            model: components["schemas"]["ValueModel"];
+            projectId: components["schemas"]["ProjectId"];
+            /** Format: int64 */
+            setAt: number;
+        };
         /** @description A body and the judge's signature over it. There is no unsigned receipt. */
         Receipt: {
             body: components["schemas"]["ReceiptBody"];
@@ -1139,6 +1268,36 @@ export interface components {
         };
         /** Format: uuid */
         ReceiptId: string;
+        /** @description The monthly Report for the organization or one project. */
+        Report: {
+            agents: components["schemas"]["AgentRow"][];
+            figures: components["schemas"]["ValueFigures"];
+            /** Format: int64 */
+            from: number;
+            /** @description `YYYY-MM`, in UTC. */
+            month: string;
+            projectId?: components["schemas"]["ProjectId"] | null;
+            spendByKind: components["schemas"]["KindSpendLine"][];
+            /**
+             * Format: int64
+             * @description Spent on sealed experiments with no win, stopped or still going.
+             */
+            spentNoWinCents: number;
+            /**
+             * Format: int64
+             * @description Spent on experiments that are not sealed yet.
+             */
+            spentNotSealedCents: number;
+            /**
+             * Format: int64
+             * @description Spent on experiments that have a win.
+             */
+            spentWithWinCents: number;
+            stopped: components["schemas"]["StoppedExperiment"][];
+            /** Format: int64 */
+            to: number;
+            topWins: components["schemas"]["TopWin"][];
+        };
         /**
          * @description Ordered: a higher role may do what a lower one may.
          * @enum {string}
@@ -1245,6 +1404,17 @@ export interface components {
             events: number;
             status: components["schemas"]["SessionStatus"];
         };
+        StoppedExperiment: {
+            /** @description True when the experiment spent all of its budget. */
+            budgetSpent: boolean;
+            experimentId: components["schemas"]["ExperimentId"];
+            goal: string;
+            projectId: components["schemas"]["ProjectId"];
+            /** Format: int64 */
+            spentCents: number;
+            /** Format: int32 */
+            trials: number;
+        };
         /** Format: uuid */
         TokenId: string;
         /** @description An access token; the secret is shown once. */
@@ -1276,8 +1446,60 @@ export interface components {
             followup?: string | null;
             session: components["schemas"]["SessionId"];
         };
+        TopWin: {
+            agent?: string | null;
+            goal: string;
+            projectId: components["schemas"]["ProjectId"];
+            sessionId?: components["schemas"]["SessionId"] | null;
+            /**
+             * Format: int64
+             * @description What the experiment spent in the range.
+             */
+            spentCents: number;
+            win: components["schemas"]["WinView"];
+        };
         /** Format: uuid */
         TrialId: string;
+        /**
+         * @description How a dollar figure was measured, said wherever one is shown.
+         * @enum {string}
+         */
+        ValueBasis: "measuredOffline";
+        /** @description Delivered, Pending, At risk and Return for one scope and time range, in US cents a year. */
+        ValueFigures: {
+            /** Format: int64 */
+            atRiskCents: number;
+            basis: components["schemas"]["ValueBasis"];
+            /** Format: int64 */
+            deliveredCents: number;
+            /**
+             * Format: int32
+             * @description Wins whose pull request is merged and that count in Delivered or At risk.
+             */
+            mergedWins: number;
+            /** Format: int64 */
+            pendingCents: number;
+            /**
+             * Format: int32
+             * @description Wins in an open pull request.
+             */
+            pendingWins: number;
+            /**
+             * Format: double
+             * @description Delivered over spent; `null` when nothing was spent.
+             */
+            returnX?: number | null;
+            /**
+             * Format: int64
+             * @description Everything spent in the scope and range, experiments with no win included.
+             */
+            spentCents: number;
+            /**
+             * Format: int32
+             * @description Wins with no value model: they count in no dollar figure.
+             */
+            unvaluedWins: number;
+        };
         ValueModel: {
             /**
              * Format: double
@@ -1292,14 +1514,52 @@ export interface components {
              */
             setBy: string;
             source: components["schemas"]["ValueSource"];
+            /** @description What one unit of the metric is called, such as `ms`. */
+            unit: string;
             /** Format: int32 */
             version: number;
         };
         /** Format: uuid */
         ValueModelId: string;
+        /** @description The newest version of each metric's model in a project. */
+        ValueModels: {
+            models: components["schemas"]["ProjectValueModel"][];
+        };
         ValueSource: {
             link?: string | null;
             text: string;
+        };
+        /** @enum {string} */
+        WinState: "notOpened" | "pending" | "delivered" | "atRisk";
+        /** @description One win of one experiment version: its best Kept trial. */
+        WinView: {
+            /** Format: int64 */
+            atRiskCents?: number | null;
+            /** Format: double */
+            baseline: number;
+            /** Format: double */
+            best: number;
+            /** Format: int64 */
+            deliveredCents?: number | null;
+            direction: components["schemas"]["Direction"];
+            experimentId: components["schemas"]["ExperimentId"];
+            /**
+             * Format: int64
+             * @description When its pull request was merged.
+             */
+            mergedAt?: number | null;
+            metric: string;
+            pullRequest?: string | null;
+            state: components["schemas"]["WinState"];
+            trialId: components["schemas"]["TrialId"];
+            unit: string;
+            /** Format: int32 */
+            version: number;
+            /**
+             * Format: int64
+             * @description What the whole win is worth a year; `null` with no value model.
+             */
+            yearlyCents?: number | null;
         };
     };
     responses: never;
@@ -1987,6 +2247,40 @@ export interface operations {
             };
         };
     };
+    experiment_value: {
+        parameters: {
+            query?: {
+                from?: number;
+                to?: number;
+            };
+            header?: never;
+            path: {
+                /** @description The experiment */
+                id: components["schemas"]["ExperimentId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Its value model, its wins and what they are worth, measured offline */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExperimentValue"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
     health: {
         parameters: {
             query?: never;
@@ -2439,6 +2733,165 @@ export interface operations {
             };
         };
     };
+    project_value: {
+        parameters: {
+            query?: {
+                from?: number;
+                to?: number;
+            };
+            header?: never;
+            path: {
+                /** @description The project */
+                id: components["schemas"]["ProjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Delivered, Pending, At risk and Return of the project, measured offline */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValueFigures"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    value_models: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The project */
+                id: components["schemas"]["ProjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The newest version of each metric's value model */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValueModels"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    set_value_model: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The project */
+                id: components["schemas"]["ProjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewValueModel"];
+            };
+        };
+        responses: {
+            /** @description Set: a project owner only, a new version when the metric had one */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectValueModel"];
+                };
+            };
+            /** @description Not a project owner */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    report: {
+        parameters: {
+            query?: {
+                /** @description The month as `YYYY-MM`, in UTC; the current month when left out. */
+                month?: string;
+                /** @description One project; left out, the organization. */
+                project?: components["schemas"]["ProjectId"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The month's report: spent, Delivered, Pending, At risk, Return, where the spend went, the agent scoreboard, top wins and experiments stopped with no win */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Report"];
+                };
+            };
+            /** @description The organization report is for owners and editors */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
     read: {
         parameters: {
             query?: never;
@@ -2729,6 +3182,37 @@ export interface operations {
                 };
             };
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    organization_value: {
+        parameters: {
+            query?: {
+                from?: number;
+                to?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Delivered, Pending, At risk and Return of the organization, measured offline; organization owners and editors */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValueFigures"];
+                };
+            };
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

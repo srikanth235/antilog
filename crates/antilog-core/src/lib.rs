@@ -24,3 +24,4 @@ pub mod testing;
 pub mod timer;
 pub mod token;
 pub mod tools;
+pub mod value;

@@ -84,37 +84,21 @@ impl BudgetStore for FakeStore {
         organization: OrganizationId,
         experiment: Option<ExperimentId>,
     ) -> Result<Vec<SpendLine>, StoreError> {
-        let ledger = locked(&self.ledger);
-        let mut lines: Vec<SpendLine> = Vec::new();
-        for row in ledger
-            .spend
-            .iter()
-            .filter(|row| row.organization_id == organization)
-        {
-            let Some(session) = ledger.session(organization, row.session_id) else {
-                continue;
-            };
-            if experiment.is_some_and(|wanted| wanted != session.experiment_id) {
-                continue;
-            }
-            match lines
-                .iter_mut()
-                .find(|line| line.session == row.session_id && line.kind == row.kind)
-            {
-                Some(line) => {
-                    line.cents += row.amount_cents;
-                    line.tokens += row.tokens;
-                }
-                None => lines.push(SpendLine {
-                    experiment: session.experiment_id,
-                    session: row.session_id,
-                    kind: row.kind,
-                    cents: row.amount_cents,
-                    tokens: row.tokens,
-                }),
-            }
-        }
-        Ok(lines)
+        Ok(lines(
+            &locked(&self.ledger),
+            organization,
+            experiment,
+            0..i64::MAX,
+        ))
+    }
+
+    async fn spend_lines_between(
+        &self,
+        organization: OrganizationId,
+        from: i64,
+        to: i64,
+    ) -> Result<Vec<SpendLine>, StoreError> {
+        Ok(lines(&locked(&self.ledger), organization, None, from..to))
     }
 
     async fn spend(
@@ -146,4 +130,42 @@ impl BudgetStore for FakeStore {
         }
         Ok(total)
     }
+}
+
+fn lines(
+    ledger: &super::ledger::Ledger,
+    organization: OrganizationId,
+    experiment: Option<ExperimentId>,
+    within: std::ops::Range<i64>,
+) -> Vec<SpendLine> {
+    let mut lines: Vec<SpendLine> = Vec::new();
+    for row in ledger
+        .spend
+        .iter()
+        .filter(|row| row.organization_id == organization && within.contains(&row.occurred_at))
+    {
+        let Some(session) = ledger.session(organization, row.session_id) else {
+            continue;
+        };
+        if experiment.is_some_and(|wanted| wanted != session.experiment_id) {
+            continue;
+        }
+        match lines
+            .iter_mut()
+            .find(|line| line.session == row.session_id && line.kind == row.kind)
+        {
+            Some(line) => {
+                line.cents += row.amount_cents;
+                line.tokens += row.tokens;
+            }
+            None => lines.push(SpendLine {
+                experiment: session.experiment_id,
+                session: row.session_id,
+                kind: row.kind,
+                cents: row.amount_cents,
+                tokens: row.tokens,
+            }),
+        }
+    }
+    lines
 }

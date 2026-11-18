@@ -134,7 +134,7 @@ A project groups the experiments for one area of the code; every experiment belo
 
 A viewer sees the same page with controls disabled and a one-line reason.
 
-**Report** (`Report`, from "Report"). The monthly report for the organization or, with the project picker, one project: month picker, who it is emailed to, "Export PDF", "Export CSV", "Email this monthly". A strip (Spent, Delivered, Pending, At risk, Return), then "Where the spend went", the month's "Agent scoreboard", "Top wins" with "View receipt", and "Experiments stopped with no win" (their spend counts in Return). Owners and editors read it; a project's viewers read that project's.
+**Report** (`Report`, from "Report"). The monthly report for the organization or, with the project picker, one project: month picker, who it is emailed to, "Export PDF", "Export CSV", "Email this monthly" (the three buttons and the recipients are target; the page is built). Where the spend went is by kind and by what became of each experiment (with a win, sealed with no win, not sealed): spend has no trial yet, so the per-outcome table of the board is target. A strip (Spent, Delivered, Pending, At risk, Return), then "Where the spend went", the month's "Agent scoreboard", "Top wins" with "View receipt", and "Experiments stopped with no win" (their spend counts in Return). Owners and editors read it; a project's viewers read that project's.
 
 ## Customize
 

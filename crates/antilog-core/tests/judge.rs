@@ -440,6 +440,7 @@ async fn a_receipt_must_use_the_sealed_value_model() {
         id: ValueModelId::new(),
         version: 1,
         metric: "p95".into(),
+        unit: "ms".into(),
         cents_per_unit: 1.0,
         source: ValueSource {
             text: "x".into(),

@@ -941,6 +941,67 @@
         ]
       }
     },
+    "/experiments/{id}/value": {
+      "get": {
+        "tags": [],
+        "operationId": "experiment_value",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The experiment",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ExperimentId"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Its value model, its wins and what they are worth, measured offline",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExperimentValue"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/health": {
       "get": {
         "tags": [],
@@ -1531,6 +1592,242 @@
         ]
       }
     },
+    "/projects/{id}/value": {
+      "get": {
+        "tags": [],
+        "operationId": "project_value",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The project",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ProjectId"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Delivered, Pending, At risk and Return of the project, measured offline",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValueFigures"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/projects/{id}/value-models": {
+      "get": {
+        "tags": [],
+        "operationId": "value_models",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The project",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ProjectId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The newest version of each metric's value model",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValueModels"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [],
+        "operationId": "set_value_model",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The project",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ProjectId"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewValueModel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Set: a project owner only, a new version when the metric had one",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectValueModel"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not a project owner",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/report": {
+      "get": {
+        "tags": [],
+        "operationId": "report",
+        "parameters": [
+          {
+            "name": "month",
+            "in": "query",
+            "description": "The month as `YYYY-MM`, in UTC; the current month when left out.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "project",
+            "in": "query",
+            "description": "One project; left out, the organization.",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/ProjectId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The month's report: spent, Delivered, Pending, At risk, Return, where the spend went, the agent scoreboard, top wins and experiments stopped with no win",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Report"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The organization report is for owners and editors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/sessions/{id}": {
       "get": {
         "tags": [],
@@ -1958,6 +2255,58 @@
           }
         ]
       }
+    },
+    "/value": {
+      "get": {
+        "tags": [],
+        "operationId": "organization_value",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Delivered, Pending, At risk and Return of the organization, measured offline; organization owners and editors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValueFigures"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -2036,6 +2385,57 @@
           },
           "platform": {
             "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AgentRow": {
+        "type": "object",
+        "required": [
+          "agent",
+          "trials",
+          "kept",
+          "winsDelivered",
+          "winsPending",
+          "pendingCents",
+          "spentCents",
+          "deliveredCents"
+        ],
+        "properties": {
+          "agent": {
+            "type": "string"
+          },
+          "deliveredCents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "kept": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "pendingCents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "spentCents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "trials": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "winsDelivered": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "winsPending": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
           }
         },
         "additionalProperties": false
@@ -2490,6 +2890,13 @@
           "decline"
         ]
       },
+      "Direction": {
+        "type": "string",
+        "enum": [
+          "minimize",
+          "maximize"
+        ]
+      },
       "Environment": {
         "type": "object",
         "description": "Where an experiment's session may run.",
@@ -2825,6 +3232,41 @@
           "sealed"
         ]
       },
+      "ExperimentValue": {
+        "type": "object",
+        "description": "An experiment's value: the model it was sealed with, its wins and what they add up to.",
+        "required": [
+          "experimentId",
+          "wins",
+          "figures"
+        ],
+        "properties": {
+          "experimentId": {
+            "$ref": "#/components/schemas/ExperimentId"
+          },
+          "figures": {
+            "$ref": "#/components/schemas/ValueFigures"
+          },
+          "valueModel": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ProjectValueModel",
+                "description": "The model of the newest sealed version; `null` is \"No value set\"."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "wins": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WinView"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
       "FieldError": {
         "type": "object",
         "required": [
@@ -2902,6 +3344,23 @@
           "tokens": {
             "type": "integer",
             "format": "int64"
+          }
+        },
+        "additionalProperties": false
+      },
+      "KindSpendLine": {
+        "type": "object",
+        "required": [
+          "kind",
+          "cents"
+        ],
+        "properties": {
+          "cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/SpendKind"
           }
         },
         "additionalProperties": false
@@ -3206,6 +3665,33 @@
         },
         "additionalProperties": false
       },
+      "NewValueModel": {
+        "type": "object",
+        "description": "What a project owner sets: the model without its id, version or who set it.",
+        "required": [
+          "metric",
+          "unit",
+          "centsPerUnit",
+          "source"
+        ],
+        "properties": {
+          "centsPerUnit": {
+            "type": "number",
+            "format": "double",
+            "description": "Cents a year that one unit of the metric is worth; more than zero."
+          },
+          "metric": {
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/components/schemas/ValueSource"
+          },
+          "unit": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "Organization": {
         "type": "object",
         "required": [
@@ -3403,6 +3889,28 @@
         },
         "additionalProperties": false
       },
+      "ProjectValueModel": {
+        "type": "object",
+        "description": "A value model as a project holds it: one per metric, a new version on every change.",
+        "required": [
+          "projectId",
+          "model",
+          "setAt"
+        ],
+        "properties": {
+          "model": {
+            "$ref": "#/components/schemas/ValueModel"
+          },
+          "projectId": {
+            "$ref": "#/components/schemas/ProjectId"
+          },
+          "setAt": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false
+      },
       "Receipt": {
         "type": "object",
         "description": "A body and the judge's signature over it. There is no unsigned receipt.",
@@ -3456,6 +3964,90 @@
       "ReceiptId": {
         "type": "string",
         "format": "uuid"
+      },
+      "Report": {
+        "type": "object",
+        "description": "The monthly Report for the organization or one project.",
+        "required": [
+          "month",
+          "from",
+          "to",
+          "figures",
+          "spendByKind",
+          "spentWithWinCents",
+          "spentNoWinCents",
+          "spentNotSealedCents",
+          "agents",
+          "topWins",
+          "stopped"
+        ],
+        "properties": {
+          "agents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AgentRow"
+            }
+          },
+          "figures": {
+            "$ref": "#/components/schemas/ValueFigures"
+          },
+          "from": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "month": {
+            "type": "string",
+            "description": "`YYYY-MM`, in UTC."
+          },
+          "projectId": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ProjectId"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "spendByKind": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/KindSpendLine"
+            }
+          },
+          "spentNoWinCents": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Spent on sealed experiments with no win, stopped or still going."
+          },
+          "spentNotSealedCents": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Spent on experiments that are not sealed yet."
+          },
+          "spentWithWinCents": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Spent on experiments that have a win."
+          },
+          "stopped": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StoppedExperiment"
+            }
+          },
+          "to": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "topWins": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TopWin"
+            }
+          }
+        },
+        "additionalProperties": false
       },
       "Role": {
         "type": "string",
@@ -3839,6 +4431,42 @@
         },
         "additionalProperties": false
       },
+      "StoppedExperiment": {
+        "type": "object",
+        "required": [
+          "experimentId",
+          "projectId",
+          "goal",
+          "trials",
+          "spentCents",
+          "budgetSpent"
+        ],
+        "properties": {
+          "budgetSpent": {
+            "type": "boolean",
+            "description": "True when the experiment spent all of its budget."
+          },
+          "experimentId": {
+            "$ref": "#/components/schemas/ExperimentId"
+          },
+          "goal": {
+            "type": "string"
+          },
+          "projectId": {
+            "$ref": "#/components/schemas/ProjectId"
+          },
+          "spentCents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "trials": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      },
       "TokenId": {
         "type": "string",
         "format": "uuid"
@@ -3946,9 +4574,121 @@
         },
         "additionalProperties": false
       },
+      "TopWin": {
+        "type": "object",
+        "required": [
+          "win",
+          "projectId",
+          "goal",
+          "spentCents"
+        ],
+        "properties": {
+          "agent": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "goal": {
+            "type": "string"
+          },
+          "projectId": {
+            "$ref": "#/components/schemas/ProjectId"
+          },
+          "sessionId": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SessionId"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "spentCents": {
+            "type": "integer",
+            "format": "int64",
+            "description": "What the experiment spent in the range."
+          },
+          "win": {
+            "$ref": "#/components/schemas/WinView"
+          }
+        },
+        "additionalProperties": false
+      },
       "TrialId": {
         "type": "string",
         "format": "uuid"
+      },
+      "ValueBasis": {
+        "type": "string",
+        "description": "How a dollar figure was measured, said wherever one is shown.",
+        "enum": [
+          "measuredOffline"
+        ]
+      },
+      "ValueFigures": {
+        "type": "object",
+        "description": "Delivered, Pending, At risk and Return for one scope and time range, in US cents a year.",
+        "required": [
+          "basis",
+          "deliveredCents",
+          "pendingCents",
+          "atRiskCents",
+          "spentCents",
+          "mergedWins",
+          "pendingWins",
+          "unvaluedWins"
+        ],
+        "properties": {
+          "atRiskCents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "basis": {
+            "$ref": "#/components/schemas/ValueBasis"
+          },
+          "deliveredCents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "mergedWins": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Wins whose pull request is merged and that count in Delivered or At risk.",
+            "minimum": 0
+          },
+          "pendingCents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "pendingWins": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Wins in an open pull request.",
+            "minimum": 0
+          },
+          "returnX": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "Delivered over spent; `null` when nothing was spent."
+          },
+          "spentCents": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Everything spent in the scope and range, experiments with no win included."
+          },
+          "unvaluedWins": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Wins with no value model: they count in no dollar figure.",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
       },
       "ValueModel": {
         "type": "object",
@@ -3956,6 +4696,7 @@
           "id",
           "version",
           "metric",
+          "unit",
           "centsPerUnit",
           "source",
           "setBy"
@@ -3980,6 +4721,10 @@
           "source": {
             "$ref": "#/components/schemas/ValueSource"
           },
+          "unit": {
+            "type": "string",
+            "description": "What one unit of the metric is called, such as `ms`."
+          },
           "version": {
             "type": "integer",
             "format": "int32",
@@ -3991,6 +4736,22 @@
       "ValueModelId": {
         "type": "string",
         "format": "uuid"
+      },
+      "ValueModels": {
+        "type": "object",
+        "description": "The newest version of each metric's model in a project.",
+        "required": [
+          "models"
+        ],
+        "properties": {
+          "models": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProjectValueModel"
+            }
+          }
+        },
+        "additionalProperties": false
       },
       "ValueSource": {
         "type": "object",
@@ -4006,6 +4767,100 @@
           },
           "text": {
             "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "WinState": {
+        "type": "string",
+        "enum": [
+          "notOpened",
+          "pending",
+          "delivered",
+          "atRisk"
+        ]
+      },
+      "WinView": {
+        "type": "object",
+        "description": "One win of one experiment version: its best Kept trial.",
+        "required": [
+          "experimentId",
+          "version",
+          "trialId",
+          "metric",
+          "unit",
+          "direction",
+          "baseline",
+          "best",
+          "state"
+        ],
+        "properties": {
+          "atRiskCents": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "baseline": {
+            "type": "number",
+            "format": "double"
+          },
+          "best": {
+            "type": "number",
+            "format": "double"
+          },
+          "deliveredCents": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "direction": {
+            "$ref": "#/components/schemas/Direction"
+          },
+          "experimentId": {
+            "$ref": "#/components/schemas/ExperimentId"
+          },
+          "mergedAt": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "When its pull request was merged."
+          },
+          "metric": {
+            "type": "string"
+          },
+          "pullRequest": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "state": {
+            "$ref": "#/components/schemas/WinState"
+          },
+          "trialId": {
+            "$ref": "#/components/schemas/TrialId"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "yearlyCents": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "What the whole win is worth a year; `null` with no value model."
           }
         },
         "additionalProperties": false

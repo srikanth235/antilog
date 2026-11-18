@@ -72,6 +72,8 @@ pub enum Action {
     ToolCall,
     ApprovalDecide,
     ApprovalDecideValueModel,
+    ValueModelSet,
+    ReportRead,
     TokenCreateOwn,
     TokenCreateForOther,
     TokenRevokeOther,
@@ -98,6 +100,8 @@ impl Action {
         Self::ToolCall,
         Self::ApprovalDecide,
         Self::ApprovalDecideValueModel,
+        Self::ValueModelSet,
+        Self::ReportRead,
         Self::TokenCreateOwn,
         Self::TokenCreateForOther,
         Self::TokenRevokeOther,
@@ -123,6 +127,8 @@ impl Action {
             Self::SessionStep => "session.step",
             Self::ToolCall => "tool.call",
             Self::ApprovalDecide | Self::ApprovalDecideValueModel => "approval.decide",
+            Self::ValueModelSet => "value_model.set",
+            Self::ReportRead => "report.read",
             Self::TokenCreateOwn | Self::TokenCreateForOther => "token.create",
             Self::TokenRevokeOther => "token.revoke",
             Self::AuditRead => "audit.read",
@@ -142,7 +148,8 @@ impl Action {
             | Self::SessionStop
             | Self::SessionStep
             | Self::ToolCall
-            | Self::ApprovalDecide => Role::Editor,
+            | Self::ApprovalDecide
+            | Self::ReportRead => Role::Editor,
             Self::MemberAdd
             | Self::MemberSetRole
             | Self::ProjectCreate
@@ -152,6 +159,7 @@ impl Action {
             | Self::PolicySet
             | Self::AgentSet
             | Self::ApprovalDecideValueModel
+            | Self::ValueModelSet
             | Self::TokenCreateForOther
             | Self::TokenRevokeOther
             | Self::AuditRead => Role::Owner,
@@ -172,6 +180,7 @@ impl Action {
                 | Self::ToolCall
                 | Self::ApprovalDecide
                 | Self::ApprovalDecideValueModel
+                | Self::ValueModelSet
         )
     }
 }
