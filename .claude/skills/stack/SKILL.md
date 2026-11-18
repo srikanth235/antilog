@@ -17,11 +17,11 @@ Read the repo page for the file type first: it holds this repo's constraints, it
 | HTML, CSS and browser APIs, in the web client or a board | [web/antilog.md](web/antilog.md), then the guide for the job in [web/general/INDEX.md](web/general/INDEX.md); for a Base UI component also [web/base-ui.md](web/base-ui.md) | the check of the file type; `python3 .claude/skills/stack/web/sync.py --check` after a sync |
 | `.swift`, the macOS app (boards owed) | [swift/antilog.md](swift/antilog.md) | `xcodebuild ... test` on macOS (target); report it unrun elsewhere |
 | SQL, migrations, `sqlx` queries, the job queue | [postgres/antilog.md](postgres/antilog.md) | `cargo sqlx prepare --workspace --check` and the storage tests |
-| The container image, the Helm chart, an OpenTofu module, the Kubernetes sandbox adapter's pods | [kubernetes/antilog.md](kubernetes/antilog.md) | `helm lint`, `helm template` per cloud, `tofu validate` per module (target) |
+| The container image, the Helm chart, an OpenTofu module, the Kubernetes sandbox adapter's pods | [kubernetes/antilog.md](kubernetes/antilog.md) | `helm lint`, `helm template` per cloud, `tofu validate` per module |
 | A security review: a Rust change at the trust boundary, a new dependency, an API or config design, `.github/workflows/`, a property test | [security/antilog.md](security/antilog.md), then the skill for the job in [security/general/INDEX.md](security/general/INDEX.md) | the check of the language; `python3 .claude/skills/stack/security/sync.py --check` after a sync |
 | The MCP server (`antilog mcp`), the Antilog tools it serves and their descriptions | [mcp/antilog.md](mcp/antilog.md), then [mcp/general/INDEX.md](mcp/general/INDEX.md) | the Rust check; `python3 .claude/skills/stack/mcp/sync.py --check` after a sync |
 | Driving the web app or a board in a browser while you work | [playwright/antilog.md](playwright/antilog.md), then [playwright/general/INDEX.md](playwright/general/INDEX.md) | `python3 .claude/skills/stack/playwright/sync.py --check` after a sync |
-| The Lambda entry point, the timer adapter, Aurora, the AgentCore adapter, AWS IAM and secrets | [aws/antilog.md](aws/antilog.md), with the AWS agent skills for the rest | `cargo lambda build`, a local invoke, `tofu validate` (target) |
+| The Lambda entry point, the timer adapter, Aurora, the AgentCore adapter, AWS IAM and secrets | [aws/antilog.md](aws/antilog.md), with the AWS agent skills for the rest | `cargo lambda build`, a local invoke, `tofu validate` |
 | Adding or changing a dependency | [libraries.md](libraries.md) | the check of the language |
 
 ## Every language

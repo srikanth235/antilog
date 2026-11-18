@@ -29,7 +29,7 @@ export const OUTCOME_WORDS: Record<OutcomeKey, string> = {
   guardrailFailed: "Guardrail failed",
   failedHoldout: "Failed holdout",
   rejected: "Rejected",
-  failed: "Failed",
+  failed: "failed",
 };
 
 export const OUTCOME_COLOR: Record<OutcomeKey, string> = {

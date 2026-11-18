@@ -1,6 +1,6 @@
 # Rust in Antilog
 
-The Foundation is on this branch: `crates/antilog-types`, `antilog-core` (the traits `Store` (with one supertrait per area: organization, session, budget, approval), `Platform`, `Timer`, `Clock`, `Signer`, `Secrets` with fakes in `antilog_core::fakes`, and the storage suite in `antilog_core::testing`), `antilog-server` (the health route, the OpenAPI document and the Postgres `Store`), and empty `antilog-agentcore` and `antilog`. Toolchain 1.100.0 is pinned in `rust-toolchain.toml`; `deny.toml` holds the licence and advisory policy. Everything else on this page is still how the code is written when it lands.
+The Foundation is on this branch: `crates/antilog-types`, `antilog-core` (the traits `Store` (with one supertrait per area: organization, session, budget, approval), `Platform`, `Timer`, `Clock`, `Signer`, `Secrets` with fakes in `antilog_core::fakes`, and the storage suite in `antilog_core::testing`), `antilog-server` (the health route, the OpenAPI document and the Postgres `Store`), `antilog-agentcore` (the AgentCore `Platform`), `antilog-aws` (the Lambda entry and the Scheduler `Timer`) and `antilog` (the CLI and `antilog mcp`). `EnvSecrets` is the `Secrets` adapter and `antilog_core::platform_suite` the platform contract. Toolchain 1.100.0 is pinned in `rust-toolchain.toml`; `deny.toml` holds the licence and advisory policy. Everything else on this page is still how the code is written when it lands.
 
 ## Workflow and done criteria
 

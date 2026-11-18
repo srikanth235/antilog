@@ -75,7 +75,7 @@ export function Project({ projectId }: { projectId: string }) {
   const cap = project.monthlyCapCents ?? null;
   const defaultBudget = defaultBudgetCents(project, organization.data);
   const working = sessions.filter((query) =>
-    query.data?.some((session) => session.status === "Working"),
+    query.data?.some((session) => session.status === "working"),
   ).length;
 
   return (
@@ -120,9 +120,13 @@ export function Project({ projectId }: { projectId: string }) {
         </div>
         <div>
           <span className="k">{w.projects.defaultPer}</span>
-          <span className="v">{dollars(defaultBudget)}</span>
+          <span className="v">
+            {defaultBudget === null ? w.projects.noDefault : dollars(defaultBudget)}
+          </span>
           <span className="s">
-            {project.defaultBudgetCents == null ? "organization default" : "set for this project"}
+            {project.defaultBudgetCents == null
+              ? w.projectStrip.orgDefault
+              : w.projectStrip.projectDefault}
           </span>
         </div>
       </div>
@@ -260,7 +264,9 @@ export function Project({ projectId }: { projectId: string }) {
           <div className="dr">
             <span className="k">{w.projects.defaultPer}</span>
             <span className="v">
-              <span className="mono">{dollars(defaultBudget)}</span>
+              <span className="mono">
+                {defaultBudget === null ? w.projects.noDefault : dollars(defaultBudget)}
+              </span>
             </span>
           </div>
         </div>

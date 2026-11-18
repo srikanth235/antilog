@@ -29,7 +29,7 @@ export function Waiting({ data }: { data: ReturnType<typeof useSidebarData> }) {
           to="/experiments/$experimentId"
           params={{ experimentId: experiment.id }}
         >
-          <StatusIcon activity="WaitingForYou" />
+          <StatusIcon activity="waiting_for_you" />
           <span className="t">{experiment.goal}</span>
           <span className="w">{w.card.titles[approval.card]}</span>
           <span className="a">{ago(approval.createdAt, now)}</span>

@@ -323,7 +323,7 @@ export function Members() {
   const [name, setName] = useState("");
   const [subject, setSubject] = useState("");
   const [provider, setProvider] = useState("github");
-  const [role, setNewRole] = useState<Schemas["Role"]>("Editor");
+  const [role, setNewRole] = useState<Schemas["Role"]>("editor");
   const cols = "minmax(0, 1.6fr) minmax(0, 1.2fr) 130px";
 
   return (
@@ -353,7 +353,7 @@ export function Members() {
                     {member.id === me?.id ? ` (${m.you})` : ""}
                   </span>
                   <span className="xs mut ell">
-                    {member.kind === "Service" ? m.service : m.person}
+                    {member.kind === "service" ? m.service : m.person}
                   </span>
                 </span>
               </span>
@@ -449,7 +449,7 @@ export function Approvals() {
   const owner = isOwner(me?.role);
   const a = w.settings.approvals;
   const cols = "minmax(0, 1.4fr) 160px 120px";
-  const modes = (["AlwaysAsk", "AllowUpTo", "Allow"] as const).map((value) => ({
+  const modes = (["always_ask", "allow_up_to", "allow"] as const).map((value) => ({
     value,
     label: a.modes[value],
   }));
@@ -474,7 +474,7 @@ export function Approvals() {
               policy={policy}
               cols={cols}
               modes={modes}
-              disabled={!owner || policy.card === "AddCredential"}
+              disabled={!owner || policy.card === "add_credential"}
               onChange={(next) => set.mutate(next)}
             />
           ))}
@@ -513,11 +513,11 @@ function PolicyRow(props: {
           props.onChange({
             card: policy.card,
             mode,
-            limitCents: mode === "AllowUpTo" ? (parseDollars(limit) ?? 0) : null,
+            limitCents: mode === "allow_up_to" ? (parseDollars(limit) ?? 0) : null,
           })
         }
       />
-      {policy.mode === "AllowUpTo" ? (
+      {policy.mode === "allow_up_to" ? (
         <input
           className="input"
           inputMode="decimal"

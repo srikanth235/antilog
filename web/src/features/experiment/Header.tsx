@@ -23,7 +23,7 @@ export function Header(props: {
   project: { id: string; name: string } | undefined;
   title: string;
   experimentId: string;
-  state: "NotSealed" | "Sealed";
+  state: "not_sealed" | "sealed";
   activity: Activity | null;
   panel: Panel | undefined;
   onPanel: (panel: Panel | undefined) => void;

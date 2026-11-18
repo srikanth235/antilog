@@ -7,6 +7,7 @@ import { Glyph, Icon } from "../../components/icon/Icon";
 import { Select } from "../../components/select/Select";
 import { reason } from "../../components/state/State";
 import { canEdit, defaultBudgetCents, parseRepos } from "../../lib/domain";
+import { parseDollars } from "../../lib/format";
 import { useIdentity } from "../../lib/identity";
 import { w } from "../../words";
 import { NewProject } from "../projects/NewProject";
@@ -28,6 +29,7 @@ export function Home({ project: preferred }: { project: string | undefined }) {
   const [follow, setFollow] = useState<"ask" | "follow">("ask");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [amount, setAmount] = useState("");
   const [creating, setCreating] = useState(false);
 
   const list = projects.data ?? [];
@@ -35,19 +37,27 @@ export function Home({ project: preferred }: { project: string | undefined }) {
   const selectedId =
     chosen ?? (list.some((p) => p.id === preferred) ? (preferred ?? null) : (list[0]?.id ?? null));
   const project = list.find((p) => p.id === selectedId);
-  const budget = defaultBudgetCents(project, organization.data);
+  const fallback = defaultBudgetCents(project, organization.data);
+  // What the person sees is what is sent: their own amount, else the default the server will apply.
+  const typed = amount.trim() === "" ? null : parseDollars(amount);
+  const budget = typed ?? fallback;
+  const needsAmount = budget === null || (amount.trim() !== "" && typed === null);
   const allowed = canEdit(me?.role);
 
   const send = async (event: FormEvent) => {
     event.preventDefault();
-    if (project === undefined || text.trim() === "") return;
+    if (project === undefined || text.trim() === "" || needsAmount) return;
     setBusy(true);
     setError(null);
     try {
       const experiment = unwrap(
         await api.POST("/projects/{id}/experiments", {
           params: { path: { id: project.id } },
-          body: { goal: text.trim(), budgetCapCents: budget, followPolicy: follow === "follow" },
+          body: {
+            goal: text.trim(),
+            ...(typed === null ? {} : { budgetCapCents: typed }),
+            followPolicy: follow === "follow",
+          },
         }),
       );
       // "auto" names the agent choice; the server resolves it. (target)
@@ -100,7 +110,7 @@ export function Home({ project: preferred }: { project: string | undefined }) {
                 type="submit"
                 className="ib send"
                 aria-label={w.home.send}
-                disabled={busy || text.trim() === "" || project === undefined}
+                disabled={busy || text.trim() === "" || project === undefined || needsAmount}
               >
                 <Icon name="return" />
               </button>
@@ -150,10 +160,18 @@ export function Home({ project: preferred }: { project: string | undefined }) {
             ]}
             onChange={setFollow}
           />
-          <span className="opt" role="img" aria-label={w.home.budget}>
+          <label className="opt">
             <span className="ring" style={{ ["--p" as string]: 0 }} />
-            <span>{w.home.budgetOf(0, budget)}</span>
-          </span>
+            <span className="sr-only">{w.home.budgetAmount}</span>
+            <input
+              className="sr-input"
+              inputMode="decimal"
+              aria-label={w.home.budgetAmount}
+              placeholder={fallback === null ? w.home.noBudget : w.home.budgetOf(0, fallback)}
+              value={amount}
+              onChange={(event) => setAmount(event.target.value)}
+            />
+          </label>
         </div>
         {error === null ? null : (
           <p className="error-line" role="alert">

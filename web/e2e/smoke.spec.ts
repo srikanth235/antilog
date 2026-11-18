@@ -29,6 +29,10 @@ test("start an experiment, approve a card, read the settings", async ({ page }, 
   // Home: the composer is the page.
   await page.getByRole("link", { name: "New experiment" }).first().click();
   await page.getByLabel("New experiment").fill("Cut checkout p95 latency");
+  // No default budget anywhere: the person must enter one, and sees it.
+  await expect(page.getByRole("button", { name: "Send" })).toBeDisabled();
+  await expect(page.getByPlaceholder("No budget is set. Enter an amount to send.")).toBeVisible();
+  await page.getByLabel("Budget ($)").fill("10");
   await page.getByRole("button", { name: "Send" }).click();
   await expect(
     page.getByRole("heading", { name: "Cut checkout p95 latency", level: 1 }),

@@ -18,28 +18,28 @@ const session = (
 
 describe("domain", () => {
   it("puts what needs a person first", () => {
-    expect(activityOf([session("Working")], 1)).toBe("WaitingForYou");
-    expect(activityOf([session("Done"), session("Working", 2)], 0)).toBe("Working");
-    expect(activityOf([session("Failed")], 0)).toBe("Failed");
+    expect(activityOf([session("working")], 1)).toBe("waiting_for_you");
+    expect(activityOf([session("done"), session("working", 2)], 0)).toBe("working");
+    expect(activityOf([session("failed")], 0)).toBe("failed");
     expect(activityOf([], 0)).toBeNull();
   });
   it("finds the lead session", () => {
-    expect(leadSession([session("Done", 5), session("Done", 2), session("Done", 1, "x")])?.id).toBe(
+    expect(leadSession([session("done", 5), session("done", 2), session("done", 1, "x")])?.id).toBe(
       "s2",
     );
   });
   it("lets only viewers read", () => {
-    expect(canEdit("Viewer")).toBe(false);
-    expect(canEdit("Editor")).toBe(true);
+    expect(canEdit("viewer")).toBe(false);
+    expect(canEdit("editor")).toBe(true);
   });
-  it("falls back from project to organization to ten dollars", () => {
+  it("falls back from project to organization, and never invents one", () => {
     expect(defaultBudgetCents({ defaultBudgetCents: 5000 }, { defaultBudgetCents: 100 })).toBe(
       5000,
     );
     expect(defaultBudgetCents({ defaultBudgetCents: null }, { defaultBudgetCents: 2000 })).toBe(
       2000,
     );
-    expect(defaultBudgetCents(undefined, undefined)).toBe(1000);
+    expect(defaultBudgetCents(undefined, undefined)).toBeNull();
   });
   it("keeps only owner/name repos", () => {
     expect(parseRepos("acme/checkout, nope,acme/pricing")).toEqual([

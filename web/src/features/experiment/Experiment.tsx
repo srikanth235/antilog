@@ -84,7 +84,7 @@ export function Experiment(props: {
     members.data?.find((member) => member.id === id)?.name ?? w.card.allowedByPolicy;
   const someone = (id: string | null | undefined) =>
     id == null ? w.card.allowedByPolicy : nameOf(id);
-  const stopped = active?.status === "Done" && active.note?.toLowerCase().includes("stopped");
+  const stopped = active?.status === "done" && active.note?.toLowerCase().includes("stopped");
 
   const refresh = async () => {
     await client.invalidateQueries({ queryKey: keys.approvals(experimentId) });
@@ -101,13 +101,13 @@ export function Experiment(props: {
         activity={activity}
         panel={props.panel}
         onPanel={props.onPanel}
-        canStop={active?.status === "Working" || active?.status === "WaitingForYou"}
+        canStop={active?.status === "working" || active?.status === "waiting_for_you"}
         onStop={() => setConfirmStop(true)}
         readOnly={!editor && me !== undefined}
       />
       <div className="wsp">
         <div className="chat">
-          {e.status === "Sealed" ? (
+          {e.status === "sealed" ? (
             <Scoreboard history={parsed} budgetCents={e.budgetCapCents} metric={null} />
           ) : null}
           <div
@@ -123,7 +123,7 @@ export function Experiment(props: {
               <div className="bubble">
                 <span>{e.goal}</span>
               </div>
-              {e.status === "NotSealed" ? (
+              {e.status === "not_sealed" ? (
                 <div className="tl">{w.experiment.notSealedLine}</div>
               ) : (
                 <div className="tl">{w.experiment.sealedLine}</div>
@@ -182,17 +182,17 @@ export function Experiment(props: {
                     <span>{message.text}</span>
                   </div>
                 ))}
-              {active?.status === "Failed" ? (
+              {active?.status === "failed" ? (
                 <div className="tl" role="alert">
                   {w.experiment.sessionFailed}
                 </div>
               ) : null}
-              {active?.status === "Done" && parsed.trials.length === 0 && waiting.length === 0 ? (
+              {active?.status === "done" && parsed.trials.length === 0 && waiting.length === 0 ? (
                 <div className="tl">
                   {stopped ? w.experiment.stoppedBy(w.you) : w.experiment.sessionDone}
                 </div>
               ) : null}
-              {active?.status === "Done" && parsed.trials.length > 0 && parsed.best === null ? (
+              {active?.status === "done" && parsed.trials.length > 0 && parsed.best === null ? (
                 <div className="tl">
                   <b>{w.experiment.noWinTitle}.</b> {w.experiment.noWin}
                 </div>

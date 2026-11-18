@@ -564,7 +564,7 @@ export interface components {
         /** Format: uuid */
         ApprovalId: string;
         /** @enum {string} */
-        ApprovalStatus: "Pending" | "Approved" | "Declined" | "ApprovedByPolicy";
+        ApprovalStatus: "pending" | "approved" | "declined" | "approved_by_policy";
         AuditCursor: {
             /** Format: int64 */
             at: number;
@@ -586,7 +586,7 @@ export interface components {
         /** Format: uuid */
         AuditId: string;
         /** @enum {string} */
-        AuditOutcome: "Done" | "Denied" | "Approved" | "Declined" | "ApprovedByPolicy";
+        AuditOutcome: "done" | "denied" | "approved" | "declined" | "approved_by_policy";
         /** @description Newest first; `next` is the cursor for the page after this one. */
         AuditPage: {
             entries: components["schemas"]["AuditEntry"][];
@@ -598,11 +598,11 @@ export interface components {
             projects: components["schemas"]["ProjectSpend"][];
         };
         /** @enum {string} */
-        CardKind: "SealExperiment" | "RaiseBudget" | "AddCredential" | "AttachRepo" | "ChangeEnvironment" | "OpenPullRequest" | "KeepGoing" | "ContinueOnAnotherAgent";
+        CardKind: "seal_experiment" | "raise_budget" | "add_credential" | "attach_repo" | "change_environment" | "open_pull_request" | "keep_going" | "continue_on_another_agent";
         /** Format: int64 */
         Cents: number;
         /** @enum {string} */
-        Cleanup: "Removed" | "NotRemoved";
+        Cleanup: "removed" | "not_removed";
         CommitRef: {
             repo: string;
             sha: string;
@@ -635,7 +635,7 @@ export interface components {
             decision: components["schemas"]["Decision"];
         };
         /** @enum {string} */
-        Decision: "Approve" | "Decline";
+        Decision: "approve" | "decline";
         /** @description The row of an experiment; its sealed definition belongs to the judge. */
         Experiment: {
             /**
@@ -688,7 +688,7 @@ export interface components {
          * @description Sealing is the judge's; Watching and Regressed are derived, never stored.
          * @enum {string}
          */
-        ExperimentStatus: "NotSealed" | "Sealed";
+        ExperimentStatus: "not_sealed" | "sealed";
         FieldError: {
             field: string;
             message: string;
@@ -731,7 +731,7 @@ export interface components {
         /** Format: uuid */
         MemberId: string;
         /** @enum {string} */
-        MemberKind: "Person" | "Service";
+        MemberKind: "person" | "service";
         /** @description What starts an experiment in a project. The budget defaults to the project's, then the organization's. */
         NewExperiment: {
             /** Format: int64 */
@@ -793,7 +793,7 @@ export interface components {
             mode: components["schemas"]["PolicyMode"];
         };
         /** @enum {string} */
-        PolicyMode: "AlwaysAsk" | "AllowUpTo" | "Allow";
+        PolicyMode: "always_ask" | "allow_up_to" | "allow";
         Project: {
             /** Format: int64 */
             createdAt: number;
@@ -844,7 +844,7 @@ export interface components {
          * @description Ordered: a higher role may do what a lower one may.
          * @enum {string}
          */
-        Role: "Viewer" | "Editor" | "Owner";
+        Role: "viewer" | "editor" | "owner";
         SealHash: string;
         SecondOpinion: {
             flags: string[];
@@ -881,7 +881,7 @@ export interface components {
             secret: string;
         };
         /** @enum {string} */
-        SessionStatus: "Working" | "WaitingForYou" | "Done" | "Failed";
+        SessionStatus: "working" | "waiting_for_you" | "done" | "failed";
         /** @description `None` returns the member to their organization role in this project. */
         SetProjectRole: {
             role?: components["schemas"]["Role"] | null;

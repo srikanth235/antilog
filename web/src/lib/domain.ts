@@ -4,10 +4,10 @@ import type { Activity } from "../components/icon/Icon";
 export type Role = Schemas["Role"];
 
 export function canEdit(role: Role | undefined): boolean {
-  return role !== "Viewer";
+  return role !== "viewer";
 }
 export function isOwner(role: Role | undefined): boolean {
-  return role === "Owner";
+  return role === "owner";
 }
 
 /** What needs a person comes first: Waiting for you, then Working, then Failed, then Done. */
@@ -15,13 +15,13 @@ export function activityOf(
   sessions: readonly Schemas["Session"][],
   pendingCards: number,
 ): Activity | null {
-  if (pendingCards > 0) return "WaitingForYou";
+  if (pendingCards > 0) return "waiting_for_you";
   if (sessions.length === 0) return null;
   const status = new Set(sessions.map((session) => session.status));
-  if (status.has("WaitingForYou")) return "WaitingForYou";
-  if (status.has("Working")) return "Working";
-  if (status.has("Failed") && !status.has("Done")) return "Failed";
-  return "Done";
+  if (status.has("waiting_for_you")) return "waiting_for_you";
+  if (status.has("working")) return "working";
+  if (status.has("failed") && !status.has("done")) return "failed";
+  return "done";
 }
 
 /** The lead session is the first one started and has no parent. */
@@ -34,7 +34,7 @@ export function leadSession(
 }
 
 export function pendingCards(approvals: readonly Schemas["Approval"][]): Schemas["Approval"][] {
-  return approvals.filter((approval) => approval.status === "Pending");
+  return approvals.filter((approval) => approval.status === "pending");
 }
 
 /** "claude-code" reads as "Claude Code". */
@@ -58,12 +58,12 @@ export function platformName(platform: string): string {
   return PLATFORMS[platform] ?? agentName(platform);
 }
 
-/** The budget a new experiment starts with: the project's default, else the organization's, else $10. */
+/** The default budget the server applies to a new experiment: the project's, else the organization's, else none. */
 export function defaultBudgetCents(
   project: Pick<Schemas["Project"], "defaultBudgetCents"> | undefined,
   organization: Pick<Schemas["Organization"], "defaultBudgetCents"> | undefined,
-): number {
-  return project?.defaultBudgetCents ?? organization?.defaultBudgetCents ?? 1000;
+): number | null {
+  return project?.defaultBudgetCents ?? organization?.defaultBudgetCents ?? null;
 }
 
 /** Repos typed as "owner/name, owner/name". Anything that is not owner/name is dropped. */

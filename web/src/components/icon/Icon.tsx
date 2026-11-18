@@ -66,13 +66,13 @@ export function Glyph({ name, size }: { name: GlyphName; size?: "s" | "l" }) {
   return <i aria-hidden="true" className={`ic ${size ?? ""} g-${name}`.replace("  ", " ")} />;
 }
 
-export type Activity = "Working" | "WaitingForYou" | "Done" | "Failed";
+export type Activity = "working" | "waiting_for_you" | "done" | "failed";
 
 const STATUS: Record<Activity, { cls: string; color: string; label: string }> = {
-  Working: { cls: "st-work run", color: "var(--accent)", label: "Working" },
-  WaitingForYou: { cls: "st-wait", color: "var(--warn)", label: "Waiting for you" },
-  Done: { cls: "st-done", color: "var(--good)", label: "Done" },
-  Failed: { cls: "st-fail", color: "var(--bad)", label: "Failed" },
+  working: { cls: "st-work run", color: "var(--accent)", label: "working" },
+  waiting_for_you: { cls: "st-wait", color: "var(--warn)", label: "Waiting for you" },
+  done: { cls: "st-done", color: "var(--good)", label: "done" },
+  failed: { cls: "st-fail", color: "var(--bad)", label: "failed" },
 };
 
 /** An activity as a shape and a word, never colour alone. */

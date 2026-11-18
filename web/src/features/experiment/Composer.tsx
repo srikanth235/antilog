@@ -19,7 +19,7 @@ export function Composer(props: {
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const ended = props.status === "Done" || props.status === "Failed" || props.status === "none";
+  const ended = props.status === "done" || props.status === "failed" || props.status === "none";
   const placeholder = props.canSend
     ? w.experiment.composerPlaceholder[props.status === "none" ? "none" : props.status]
     : w.readOnly.viewersRead;
@@ -40,7 +40,7 @@ export function Composer(props: {
     }
   };
 
-  const working = props.status === "Working" && text.trim() === "";
+  const working = props.status === "working" && text.trim() === "";
   return (
     <div className="dock ac-dock">
       <div className="c760">

@@ -1,36 +1,13 @@
-import createClient, { type Middleware } from "openapi-fetch";
+import createClient from "openapi-fetch";
 import type { ApiPaths } from "./overrides";
 import type { components } from "./schema";
-import { fromWire, toWire } from "./wire";
 
 export type Schemas = components["schemas"];
 
 /** What the app calls: its own origin, `/api/*`. The server routes sit at the root behind a proxy. */
 export const API_BASE = "/api";
 
-const wire: Middleware = {
-  async onRequest({ request }) {
-    const type = request.headers.get("content-type") ?? "";
-    if (!type.includes("json")) return request;
-    const text = await request.clone().text();
-    if (text === "") return request;
-    return new Request(request, { body: JSON.stringify(toWire(JSON.parse(text) as unknown)) });
-  },
-  async onResponse({ response }) {
-    const type = response.headers.get("content-type") ?? "";
-    if (!type.includes("json")) return response;
-    const text = await response.clone().text();
-    if (text === "") return response;
-    return new Response(JSON.stringify(fromWire(JSON.parse(text) as unknown)), {
-      status: response.status,
-      statusText: response.statusText,
-      headers: response.headers,
-    });
-  },
-};
-
 export const api = createClient<ApiPaths>({ baseUrl: API_BASE, credentials: "include" });
-api.use(wire);
 
 /** A refused or failed call: the status and the server's own words. */
 export class ApiFailure extends Error {

@@ -169,7 +169,7 @@ export function ExperimentDetail({ experimentId }: { experimentId: string }) {
                 <span className="ink2">{dateTime(s.createdAt)}</span>
                 <span>
                   {w.activity[s.status]}
-                  {s.cleanup === "NotRemoved" ? ` · ${t.notRemoved}` : ""}
+                  {s.cleanup === "not_removed" ? ` · ${t.notRemoved}` : ""}
                 </span>
               </Link>
             ))}

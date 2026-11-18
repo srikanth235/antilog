@@ -16,32 +16,32 @@ export function ApprovalCard(props: {
   const decide = useDecide(props.experiment);
   const title = w.card.titles[approval.card];
 
-  if (approval.status !== "Pending") {
+  if (approval.status !== "pending") {
     const line =
-      approval.status === "Approved"
-        ? w.card.collapsed.Approved(title, props.decidedBy)
-        : approval.status === "Declined"
-          ? w.card.collapsed.Declined(title, props.decidedBy)
-          : w.card.collapsed.ApprovedByPolicy(title);
+      approval.status === "approved"
+        ? w.card.collapsed.approved(title, props.decidedBy)
+        : approval.status === "declined"
+          ? w.card.collapsed.declined(title, props.decidedBy)
+          : w.card.collapsed.approved_by_policy(title);
     const at = approval.decidedAt ?? approval.createdAt;
     return (
       <div className="apc" data-card={approval.card}>
-        <Icon name={approval.status === "Declined" ? "close" : "check"} size="s" />
+        <Icon name={approval.status === "declined" ? "close" : "check"} size="s" />
         {line} · {time(at)}
       </div>
     );
   }
 
-  const credential = approval.card === "AddCredential";
-  const keepGoing = approval.card === "KeepGoing";
+  const credential = approval.card === "add_credential";
+  const keepGoing = approval.card === "keep_going";
   const cost = approval.costCents;
   return (
     <section className="cd ap wait" aria-label={title} data-card={approval.card}>
       <div className="ap-h">
         <h3>{title}</h3>
         <span className="spill" style={{ ["--c" as string]: "var(--warn)" }}>
-          <StatusIcon activity="WaitingForYou" />
-          {w.activity.WaitingForYou}
+          <StatusIcon activity="waiting_for_you" />
+          {w.activity.waiting_for_you}
         </span>
       </div>
       <p className="ap-lead">{approval.summary}</p>
@@ -54,7 +54,7 @@ export function ApprovalCard(props: {
         </div>
         {credential ? (
           <div className="ap-r">
-            <span className="k">{w.card.titles.AddCredential}</span>
+            <span className="k">{w.card.titles.add_credential}</span>
             <span className="v">
               <span>{w.card.credentialNote}</span>
               <span className="target-note">{w.card.credentialTarget}</span>
@@ -85,7 +85,7 @@ export function ApprovalCard(props: {
             type="button"
             className="btn primary"
             disabled={!props.canDecide || decide.isPending || credential}
-            onClick={() => decide.mutate({ id: approval.id, decision: "Approve" })}
+            onClick={() => decide.mutate({ id: approval.id, decision: "approve" })}
           >
             {w.card.approve[approval.card]}
           </button>
@@ -93,7 +93,7 @@ export function ApprovalCard(props: {
             type="button"
             className="btn"
             disabled={!props.canDecide || decide.isPending}
-            onClick={() => decide.mutate({ id: approval.id, decision: "Decline" })}
+            onClick={() => decide.mutate({ id: approval.id, decision: "decline" })}
           >
             {keepGoing ? w.card.declineKeepGoing : w.card.decline}
           </button>

@@ -548,6 +548,24 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "Landing.dc.html": {
+      "x": 0,
+      "y": 12880,
+      "w": 1440,
+      "h": 3880,
+      "title": "11 \u00b7 Landing, antilog.tech",
+      "page": "web-light",
+      "expand": "fill"
+    },
+    "LandingDark.dc.html": {
+      "x": 0,
+      "y": 12880,
+      "w": 1440,
+      "h": 3880,
+      "title": "11 \u00b7 Landing, antilog.tech \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill"
+    },
     "PlatformError.dc.html": {
       "x": 4560,
       "y": 9450,
@@ -2080,6 +2098,24 @@
       "y": 8220,
       "w": 240,
       "maxW": 2960
+    },
+    "web-light11": {
+      "kind": "title1",
+      "page": "web-light",
+      "text": "11 \u00b7 Landing",
+      "x": 0,
+      "y": 12750,
+      "w": 240,
+      "maxW": 2960
+    },
+    "web-dark11": {
+      "kind": "title1",
+      "page": "web-dark",
+      "text": "11 \u00b7 Landing",
+      "x": 0,
+      "y": 12750,
+      "w": 240,
+      "maxW": 2960
     }
   },
   "noteOrder": [
@@ -2104,7 +2140,9 @@
     "web-light10",
     "web-dark10",
     "web-light6b",
-    "web-dark6b"
+    "web-dark6b",
+    "web-light11",
+    "web-dark11"
   ],
   "attachments": {},
   "designSystems": [],
@@ -2161,6 +2199,8 @@
     "HomeDark.dc.html",
     "HomeEmpty.dc.html",
     "HomeEmptyDark.dc.html",
+    "Landing.dc.html",
+    "LandingDark.dc.html",
     "PlatformError.dc.html",
     "PlatformErrorDark.dc.html",
     "PluginDetail.dc.html",
