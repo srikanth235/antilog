@@ -66,8 +66,14 @@ pub async fn handle(
     request: Request<Body>,
 ) -> Result<Response<axum::body::Body>, Error> {
     if request.uri().path().starts_with(INTERNAL_PREFIX) && !from_scheduler(&request) {
-        let mut refused = Response::new(axum::body::Body::empty());
+        let mut refused = Response::new(axum::body::Body::from(
+            r#"{"code":"not_found","message":"No such route.","fields":[]}"#,
+        ));
         *refused.status_mut() = StatusCode::NOT_FOUND;
+        refused.headers_mut().insert(
+            lambda_http::http::header::CONTENT_TYPE,
+            lambda_http::http::HeaderValue::from_static("application/json"),
+        );
         return Ok(refused);
     }
     let (parts, body) = request.into_parts();
@@ -165,6 +171,8 @@ mod tests {
         let response = handle(router(), url_request("/internal/wake/00ff", "POST"))
             .await
             .unwrap_or_else(|e| unreachable!("{e}"));
-        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+        let (status, body) = text(response).await;
+        assert_eq!(status, StatusCode::NOT_FOUND);
+        assert!(body.contains("not_found"));
     }
 }
