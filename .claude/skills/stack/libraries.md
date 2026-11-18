@@ -36,7 +36,7 @@ Do not add a dependency for convenience. A new one is a product call: ask the ow
 | Serialization | `serde` / `serde_json` | 1.0.229 / 1.0.154 |
 | Postgres, migrations | `sqlx` (+ `sqlx-cli`) | 0.9.0 |
 | Object storage (S3, Azure Blob, GCS; backend chosen by configuration) | `object_store` | 0.14.2 |
-| OpenAPI from Rust types | `utoipa` / `utoipa-axum` | 6.0.0 / 0.3.0 |
+| OpenAPI from Rust types (paths listed in `ApiDoc`; `utoipa-axum` dropped: its `routes!` refuses generic handlers) | `utoipa` | 6.0.0 |
 | Sign-in: OpenID Connect, and GitHub's OAuth  | `openidconnect` / `oauth2` | 4.1.0 / 5.0.0 |
 | Receipt signing (ed25519), token and session hashes, constant-time compare (pure Rust) | `ed25519-dalek` / `sha2` / `subtle` | 3.0.0 / 0.11.1 / 2.6.1 |
 | Embedded web app | `rust-embed` | 8.14.0 |
@@ -57,7 +57,7 @@ Do not add a dependency for convenience. A new one is a product call: ask the ow
 | Logs | `tracing` / `tracing-subscriber` | 0.1.44 / 0.3.23 |
 | Telemetry | `opentelemetry` / `opentelemetry-otlp` / `tracing-opentelemetry` | 0.33.1 / 0.33.1 / 0.34.0 |
 | Tests | `insta` / `proptest` | 1.49.0 / 1.12.0 |
-| Postgres in tests | `testcontainers` / `testcontainers-modules` | 0.28.0 / 0.15.0 |
+| Postgres in tests (`GenericImage`; `testcontainers-modules` 0.15.0 needs `testcontainers` 0.27, so it is dropped) | `testcontainers` | 0.28.0 |
 | Test runner, licences | `cargo-nextest` / `cargo-deny` | 0.9.152 / 0.20.2 |
 
 Sessions and access tokens need no library: each is 32 random bytes shown once, stored as a SHA-256 hash through the `Store` and compared in constant time. `tower-sessions` was dropped (November 2026): the hashed-token scheme is small and keeps sessions in our own tables. Better Auth was considered and refused: it is TypeScript and keeps its own user, session and organization tables beside ours.

@@ -165,6 +165,8 @@ No passwords. Antilog cloud offers exactly two sign-ins, GitHub (OAuth with its 
 | 17 Nov 2026 | The product is renamed Antilog; it is hosted at antilog.tech. |
 | 17 Nov 2026 | Antilog cloud sign-in is GitHub and Google only, with no per-organization single sign-on. Self-hosted keeps the client's own OpenID Connect provider. |
 | 17 Nov 2026 | Antilog cloud runs in AWS region us-east-1. |
+| 18 Nov 2026 | Agents on AgentCore use GLM 4.7 Flash on Bedrock, with Qwen3 Coder 30B as the fallback; the test account allows only those two models. |
+| 18 Nov 2026 | No username and password, not even for testing. Agents and tests sign in through fakes: access tokens and a fake sign-in provider. |
 
 Decided calls also appear on the Decisions board.
 
