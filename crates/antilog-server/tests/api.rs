@@ -845,3 +845,32 @@ async fn unknown_ids_are_not_found_and_leak_nothing() {
         Some(1)
     );
 }
+
+/// Generated clients key operations by id and read parameters by where they sit, so both must
+/// be right in the document: ids unique, and every path parameter named in its path.
+#[test]
+fn openapi_operation_ids_are_unique_and_path_parameters_are_in_the_path() {
+    let doc: serde_json::Value =
+        serde_json::from_str(&antilog_server::api::openapi_json()).expect("the document is JSON");
+    let mut ids = std::collections::BTreeSet::new();
+    for (path, item) in doc["paths"].as_object().expect("paths") {
+        for (method, op) in item.as_object().expect("a path item") {
+            let id = op["operationId"]
+                .as_str()
+                .expect("every operation has an id");
+            assert!(
+                ids.insert(id.to_owned()),
+                "operationId {id} is used twice ({method} {path})"
+            );
+            for param in op["parameters"].as_array().into_iter().flatten() {
+                if param["in"] == "path" {
+                    let name = param["name"].as_str().expect("a parameter name");
+                    assert!(
+                        path.contains(&format!("{{{name}}}")),
+                        "{method} {path}: path parameter {name} is not in the path"
+                    );
+                }
+            }
+        }
+    }
+}

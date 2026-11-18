@@ -334,7 +334,7 @@ async fn providers<D: Deps + 'static>(State(app): State<Arc<App<D>>>) -> Json<Si
 }
 
 #[utoipa::path(
-    get, path = "/auth/{provider}/start",
+    get, path = "/auth/{provider}/start", operation_id = "start_sign_in",
     params(("provider" = String, Path, description = "A provider from /auth/providers")),
     responses(
         (status = 200, description = "Where to send the person; the state is also kept in a cookie", body = SignInStart),

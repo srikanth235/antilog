@@ -107,7 +107,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["start"];
+        get: operations["start_sign_in"];
         put?: never;
         post?: never;
         delete?: never;
@@ -189,7 +189,7 @@ export interface paths {
         };
         get: operations["sessions"];
         put?: never;
-        post: operations["start"];
+        post: operations["start_session"];
         delete?: never;
         options?: never;
         head?: never;
@@ -930,16 +930,22 @@ export interface components {
         ToolCall: {
             /** @description Unique per call; sending a call again with the same id changes nothing twice. */
             call?: string | null;
-            input: Record<string, never>;
+            input: {
+                [key: string]: unknown;
+            };
             session?: components["schemas"]["SessionId"] | null;
         };
         ToolDefinition: {
             description: string;
-            inputSchema: Record<string, never>;
+            inputSchema: {
+                [key: string]: unknown;
+            };
             name: string;
         };
         ToolResult: {
-            answer: Record<string, never>;
+            answer: {
+                [key: string]: unknown;
+            };
             /** @description A measurement that was accepted: how it ended, in words. Never a holdout value. */
             followup?: string | null;
             session: components["schemas"]["SessionId"];
@@ -1025,15 +1031,15 @@ export interface operations {
     };
     audit: {
         parameters: {
-            query?: never;
-            header?: never;
-            path: {
+            query?: {
                 /** @description The cursor of the previous page: its `at` and `id`, together. */
-                beforeAt: number | null;
-                beforeId: components["schemas"]["AuditId"] | null;
+                beforeAt?: number;
+                beforeId?: components["schemas"]["AuditId"];
                 /** @description 1 to 200; default 50. */
-                limit: number | null;
+                limit?: number;
             };
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
@@ -1186,7 +1192,7 @@ export interface operations {
             };
         };
     };
-    start: {
+    start_sign_in: {
         parameters: {
             query?: never;
             header?: never;
@@ -1347,7 +1353,7 @@ export interface operations {
             };
         };
     };
-    start: {
+    start_session: {
         parameters: {
             query?: never;
             header?: never;
@@ -1975,12 +1981,12 @@ export interface operations {
     };
     tokens: {
         parameters: {
-            query?: never;
-            header?: never;
-            path: {
+            query?: {
                 /** @description Whose tokens (owners only); omitted: the caller's. */
-                memberId: components["schemas"]["MemberId"] | null;
+                memberId?: components["schemas"]["MemberId"];
             };
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;

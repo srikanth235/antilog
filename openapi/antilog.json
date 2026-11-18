@@ -81,42 +81,29 @@
         "parameters": [
           {
             "name": "beforeAt",
-            "in": "path",
+            "in": "query",
             "description": "The cursor of the previous page: its `at` and `id`, together.",
-            "required": true,
+            "required": false,
             "schema": {
-              "type": [
-                "integer",
-                "null"
-              ],
+              "type": "integer",
               "format": "int64"
             }
           },
           {
             "name": "beforeId",
-            "in": "path",
-            "required": true,
+            "in": "query",
+            "required": false,
             "schema": {
-              "oneOf": [
-                {
-                  "$ref": "#/components/schemas/AuditId"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/AuditId"
             }
           },
           {
             "name": "limit",
-            "in": "path",
+            "in": "query",
             "description": "1 to 200; default 50.",
-            "required": true,
+            "required": false,
             "schema": {
-              "type": [
-                "integer",
-                "null"
-              ],
+              "type": "integer",
               "format": "int32",
               "minimum": 0
             }
@@ -306,7 +293,7 @@
     "/auth/{provider}/start": {
       "get": {
         "tags": [],
-        "operationId": "start",
+        "operationId": "start_sign_in",
         "parameters": [
           {
             "name": "provider",
@@ -528,7 +515,7 @@
       },
       "post": {
         "tags": [],
-        "operationId": "start",
+        "operationId": "start_session",
         "parameters": [
           {
             "name": "id",
@@ -1391,18 +1378,11 @@
         "parameters": [
           {
             "name": "memberId",
-            "in": "path",
+            "in": "query",
             "description": "Whose tokens (owners only); omitted: the caller's.",
-            "required": true,
+            "required": false,
             "schema": {
-              "oneOf": [
-                {
-                  "$ref": "#/components/schemas/MemberId"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/MemberId"
             }
           }
         ],
@@ -3014,7 +2994,11 @@
             "description": "Unique per call; sending a call again with the same id changes nothing twice."
           },
           "input": {
-            "type": "object"
+            "type": "object",
+            "additionalProperties": {},
+            "propertyNames": {
+              "type": "string"
+            }
           },
           "session": {
             "oneOf": [
@@ -3042,7 +3026,11 @@
             "type": "string"
           },
           "inputSchema": {
-            "type": "object"
+            "type": "object",
+            "additionalProperties": {},
+            "propertyNames": {
+              "type": "string"
+            }
           },
           "name": {
             "type": "string"
@@ -3058,7 +3046,11 @@
         ],
         "properties": {
           "answer": {
-            "type": "object"
+            "type": "object",
+            "additionalProperties": {},
+            "propertyNames": {
+              "type": "string"
+            }
           },
           "followup": {
             "type": [

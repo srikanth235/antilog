@@ -151,7 +151,7 @@ pub struct StepResult {
 pub struct ToolDefinition {
     pub name: String,
     pub description: String,
-    #[schema(value_type = Object)]
+    #[schema(value_type = std::collections::HashMap<String, serde_json::Value>)]
     pub input_schema: serde_json::Value,
 }
 
@@ -163,7 +163,7 @@ pub struct ToolCall {
     pub session: Option<SessionId>,
     /// Unique per call; sending a call again with the same id changes nothing twice.
     pub call: Option<String>,
-    #[schema(value_type = Object)]
+    #[schema(value_type = std::collections::HashMap<String, serde_json::Value>)]
     pub input: serde_json::Value,
 }
 
@@ -171,7 +171,7 @@ pub struct ToolCall {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ToolResult {
     pub session: SessionId,
-    #[schema(value_type = Object)]
+    #[schema(value_type = std::collections::HashMap<String, serde_json::Value>)]
     pub answer: serde_json::Value,
     /// A measurement that was accepted: how it ended, in words. Never a holdout value.
     pub followup: Option<String>,

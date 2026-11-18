@@ -150,7 +150,7 @@ async fn experiment<D: Deps + 'static>(
 }
 
 #[utoipa::path(
-    post, path = "/experiments/{id}/sessions", security(("bearer" = [])),
+    post, path = "/experiments/{id}/sessions", operation_id = "start_session", security(("bearer" = [])),
     params(("id" = ExperimentId, Path, description = "The experiment")),
     request_body = StartSession,
     responses((status = 201, body = Session), (status = 404, body = ApiError), (status = 409, body = ApiError))
