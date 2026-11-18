@@ -20,7 +20,7 @@ Do not add a dependency for convenience. A new one is a product call: ask the ow
 | --- | --- |
 | Rust (stable) | 1.100.0 |
 | Postgres | 18.7 |
-| Node.js (LTS, web app build only) | 26.13.1 |
+| Node.js (LTS, web app build only; owner moved it from 26 on 18 Nov) | 22.23.5 |
 | pnpm | 12.18.0 |
 
 **Rust crates**
