@@ -1,10 +1,12 @@
 #![forbid(unsafe_code)]
 
+mod floor;
 mod id;
 mod ledger;
 mod organization;
 mod session;
 
+pub use floor::*;
 pub use id::*;
 pub use ledger::*;
 pub use organization::*;

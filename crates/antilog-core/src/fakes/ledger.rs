@@ -3,7 +3,7 @@ use antilog_types::{
     Policy, Project, ProjectId, ProjectRole, Role, Session, SessionId, Spend,
 };
 
-use crate::store::{Invariant, StoreError, TokenRecord};
+use crate::store::{Invariant, SignInRecord, StoreError, TokenRecord};
 
 #[derive(Default)]
 pub(super) struct Ledger {
@@ -12,6 +12,7 @@ pub(super) struct Ledger {
     pub projects: Vec<Project>,
     pub project_roles: Vec<(ProjectId, ProjectRole)>,
     pub tokens: Vec<TokenRecord>,
+    pub sign_ins: Vec<SignInRecord>,
     pub experiments: Vec<Experiment>,
     pub sessions: Vec<Session>,
     pub spend: Vec<Spend>,
@@ -85,6 +86,14 @@ impl Ledger {
     }
 
     pub fn keeps_owners(&self, organization: OrganizationId) -> Result<(), StoreError> {
+        let members = || {
+            self.members
+                .iter()
+                .filter(|member| member.organization_id == organization)
+        };
+        if members().next().is_some() && !members().any(|member| member.role == Role::Owner) {
+            return Err(Invariant::LastOwner.into());
+        }
         let orphan = self
             .projects
             .iter()

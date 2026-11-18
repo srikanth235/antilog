@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update sign_in_sessions set ended_at = coalesce(ended_at, to_timestamp($3::bigint / 1000.0)) where organization_id = $1 and id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8eb83a7664392b14e1d7554b726e65834fa1337ee9a163acfb84282cd13cde58"
+}

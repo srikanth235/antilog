@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select id, organization_id, experiment_id, session_id, card, summary, cost_cents, status, decided_by, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from decided_at) * 1000)::bigint as \"decided_at\" from approvals where organization_id = $1 and id = $2",
+  "query": "select id, organization_id, experiment_id, session_id, card, summary, cost_cents, needs_owner, status, decided_by, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from decided_at) * 1000)::bigint as \"decided_at\" from approvals where organization_id = $1 and id = $2",
   "describe": {
     "columns": [
       {
@@ -82,6 +82,17 @@
       },
       {
         "ordinal": 7,
+        "name": "needs_owner",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "approvals",
+            "name": "needs_owner"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
         "name": "status",
         "type_info": "Text",
         "origin": {
@@ -92,7 +103,7 @@
         }
       },
       {
-        "ordinal": 8,
+        "ordinal": 9,
         "name": "decided_by",
         "type_info": "Uuid",
         "origin": {
@@ -103,13 +114,13 @@
         }
       },
       {
-        "ordinal": 9,
+        "ordinal": 10,
         "name": "created_at!",
         "type_info": "Int8",
         "origin": "Expression"
       },
       {
-        "ordinal": 10,
+        "ordinal": 11,
         "name": "decided_at",
         "type_info": "Int8",
         "origin": "Expression"
@@ -130,10 +141,11 @@
       false,
       true,
       false,
+      false,
       true,
       null,
       null
     ]
   },
-  "hash": "dcac0adb91d17070b9b2a4a874461062df046d8e2bcf12b5909f624223643811"
+  "hash": "16164a02bd55cb1dbc7dff3dc3db5c4f18e37e65ef4621e7d5b0aa2839aeb6b8"
 }

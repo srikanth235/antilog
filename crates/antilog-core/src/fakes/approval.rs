@@ -55,7 +55,7 @@ impl ApprovalStore for FakeStore {
             not_found(ledger.session(approval.organization_id, session))?;
         }
         let by_policy = approval.status == ApprovalStatus::ApprovedByPolicy;
-        if by_policy && approval.card == CardKind::AddCredential {
+        if by_policy && (approval.card == CardKind::AddCredential || approval.needs_owner) {
             return Err(Invariant::AlwaysAsk.into());
         }
         if !(by_policy || approval.status == ApprovalStatus::Pending)

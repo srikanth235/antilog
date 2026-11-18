@@ -43,6 +43,7 @@ ids!(
     MemberId,
     ProjectId,
     TokenId,
+    SignInId,
     ExperimentId,
     SessionId,
     SpendId,

@@ -11,7 +11,7 @@ impl BudgetStore for PgStore {
         default_budget_cents: Option<i64>,
         entry: &AuditEntry,
     ) -> Result<(), StoreError> {
-        let mut tx = self.pool.begin().await.map_err(map)?;
+        let mut tx = self.scoped(organization).await?;
         let changed = sqlx::query!(
             "update organizations set monthly_cap_cents = $2, default_budget_cents = $3 where id = $1",
             organization.as_uuid(),
@@ -37,7 +37,7 @@ impl BudgetStore for PgStore {
         default_budget_cents: Option<i64>,
         entry: &AuditEntry,
     ) -> Result<(), StoreError> {
-        let mut tx = self.pool.begin().await.map_err(map)?;
+        let mut tx = self.scoped(organization).await?;
         let changed = sqlx::query!(
             "update projects set monthly_cap_cents = $3, default_budget_cents = $4 where organization_id = $1 and id = $2",
             organization.as_uuid(),
@@ -63,7 +63,7 @@ impl BudgetStore for PgStore {
         budget_cap_cents: i64,
         entry: &AuditEntry,
     ) -> Result<(), StoreError> {
-        let mut tx = self.pool.begin().await.map_err(map)?;
+        let mut tx = self.scoped(organization).await?;
         let changed = sqlx::query!(
             "update experiments set budget_cap_cents = $3 where organization_id = $1 and id = $2",
             organization.as_uuid(),

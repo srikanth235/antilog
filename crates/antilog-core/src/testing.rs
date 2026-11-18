@@ -139,6 +139,7 @@ pub async fn store_suite<S: Store>(store: &S) {
     organizations(store).await;
     members_and_roles(store).await;
     tokens(store).await;
+    owners_and_sign_ins(store).await;
     budgets_and_spend(store).await;
     experiments_and_sessions(store).await;
     approvals(store).await;
@@ -225,7 +226,7 @@ async fn members_and_roles<S: Store>(store: &S) {
             .await,
     );
     let other = world_org(store).await;
-    let elsewhere = Member::person(other, "Ada elsewhere", identity.clone(), Role::Viewer, T0);
+    let elsewhere = Member::person(other, "Ada elsewhere", identity.clone(), Role::Owner, T0);
     store
         .add_member(&elsewhere, &entry(other, elsewhere.id, "member.add"))
         .await
@@ -268,18 +269,43 @@ async fn members_and_roles<S: Store>(store: &S) {
         None
     );
 
+    let backup = person(store, org, Role::Owner).await;
+    store
+        .set_project_role(
+            org,
+            project,
+            backup.id,
+            Some(Role::Viewer),
+            &world.log("project.role"),
+        )
+        .await
+        .expect("a second organization owner who is a viewer here");
+    refused(
+        store
+            .set_member_role(org, backup.id, Role::Viewer, &world.log("member.role"))
+            .await
+            .and(
+                store
+                    .set_member_role(org, owner, Role::Viewer, &world.log("member.role"))
+                    .await,
+            ),
+        Invariant::LastOwner,
+    );
+    store
+        .set_member_role(org, backup.id, Role::Owner, &world.log("member.role"))
+        .await
+        .expect("unchanged");
     store
         .set_member_role(org, owner, Role::Viewer, &world.log("member.role"))
         .await
         .expect("the creator stays the project's owner by its own role");
     assert_eq!(role(owner).await.expect("read"), Some(Role::Owner));
-    assert_eq!(
-        store.project_roles(org, project).await.expect("read"),
-        vec![ProjectRole {
-            member_id: owner,
-            role: Role::Owner
-        }]
-    );
+    let roles = store.project_roles(org, project).await.expect("read");
+    assert_eq!(roles.len(), 2);
+    assert!(roles.contains(&ProjectRole {
+        member_id: owner,
+        role: Role::Owner
+    }));
 
     let refused_entry = world.log("project.role");
     refused(
@@ -386,7 +412,7 @@ async fn world_org<S: Store>(store: &S) -> OrganizationId {
 async fn tokens<S: Store>(store: &S) {
     let world = world(store).await;
     let org = world.id();
-    let issued = token::issue(org, world.owner.id, "laptop", T0);
+    let issued = token::issue(org, world.owner.id, "laptop", T0).expect("random");
     assert!(!format!("{issued:?}").contains(&issued.secret));
     assert!(!issued.secret.contains(&format!("{:?}", issued.record.hash)));
     store
@@ -409,7 +435,7 @@ async fn tokens<S: Store>(store: &S) {
     for bad in [wrong.as_str(), "", "alt_", "alt_x_y", "nonsense"] {
         assert_eq!(token::authenticate(store, bad).await.expect("read"), None);
     }
-    let other = token::issue(org, world.owner.id, "other", T0);
+    let other = token::issue(org, world.owner.id, "other", T0).expect("random");
     let forged = other.secret.replacen(
         &other.record.token.id.as_uuid().simple().to_string(),
         &issued.record.token.id.as_uuid().simple().to_string(),
@@ -423,7 +449,9 @@ async fn tokens<S: Store>(store: &S) {
     not_found(
         store
             .create_access_token(
-                &token::issue(org, MemberId::new(), "ghost", T0).record,
+                &token::issue(org, MemberId::new(), "ghost", T0)
+                    .expect("random")
+                    .record,
                 &world.log("token.create"),
             )
             .await,
@@ -866,6 +894,7 @@ async fn approvals<S: Store>(store: &S) {
         card: kind,
         summary: "Raise the budget by $5".into(),
         cost_cents: Some(500),
+        needs_owner: false,
         status,
         decided_by: None,
         created_at: T0,
@@ -1050,4 +1079,147 @@ async fn audit_log<S: Store>(store: &S) {
         seen.extend(page);
     }
     assert_eq!(seen, all);
+}
+
+async fn owners_and_sign_ins<S: Store>(store: &S) {
+    let organization = Organization::new(format!("owners-{}", unique()), T0);
+    store
+        .create_organization(&organization)
+        .await
+        .expect("created");
+    let id = organization.id;
+    let member = |role| {
+        Member::person(
+            id,
+            "Ada",
+            Identity {
+                provider: "fake".into(),
+                subject: unique(),
+            },
+            role,
+            T0,
+        )
+    };
+    let viewer = member(Role::Viewer);
+    refused(
+        store
+            .add_member(&viewer, &entry(id, viewer.id, "member.add"))
+            .await,
+        Invariant::LastOwner,
+    );
+    assert!(store.members(id).await.expect("read").is_empty());
+
+    let first = member(Role::Owner);
+    store
+        .add_member(&first, &entry(id, first.id, "member.add"))
+        .await
+        .expect("an owner first");
+    store
+        .add_member(&viewer, &entry(id, first.id, "member.add"))
+        .await
+        .expect("then anyone");
+    refused(
+        store
+            .set_member_role(
+                id,
+                first.id,
+                Role::Editor,
+                &entry(id, first.id, "member.set_role"),
+            )
+            .await,
+        Invariant::LastOwner,
+    );
+    let second = member(Role::Owner);
+    store
+        .add_member(&second, &entry(id, first.id, "member.add"))
+        .await
+        .expect("a second owner");
+    store
+        .set_member_role(
+            id,
+            first.id,
+            Role::Editor,
+            &entry(id, first.id, "member.set_role"),
+        )
+        .await
+        .expect("one of two owners steps down");
+    refused(
+        store
+            .set_member_role(
+                id,
+                second.id,
+                Role::Viewer,
+                &entry(id, first.id, "member.set_role"),
+            )
+            .await,
+        Invariant::LastOwner,
+    );
+
+    let issued = token::issue_session(id, viewer.id, T0).expect("random");
+    let log = entry(id, viewer.id, "sign_in");
+    store
+        .create_sign_in_session(&issued.record, &log)
+        .await
+        .expect("a session is stored");
+    conflict(store.create_sign_in_session(&issued.record, &log).await);
+    assert!(logged(store, id, log.id).await);
+    let live = token::authenticate_session(store, &issued.secret, T0 + 1)
+        .await
+        .expect("read")
+        .expect("a live session");
+    assert_eq!((live.organization_id, live.member_id), (id, viewer.id));
+    let forged = format!("{}x", issued.secret);
+    let other = token::issue_session(id, viewer.id, T0).expect("random");
+    let spliced = format!(
+        "als_{}_{}",
+        issued.record.session.id.as_uuid().simple(),
+        other.secret.rsplit('_').next().unwrap_or_default()
+    );
+    for bad in [forged.as_str(), spliced.as_str(), "als_x_y", "alt_x_y", ""] {
+        assert_eq!(
+            token::authenticate_session(store, bad, T0 + 1)
+                .await
+                .expect("read"),
+            None,
+            "{bad}"
+        );
+    }
+    assert_eq!(
+        token::authenticate_session(store, &issued.secret, issued.record.session.expires_at)
+            .await
+            .expect("read"),
+        None,
+        "an expired session"
+    );
+    not_found(
+        store
+            .create_sign_in_session(
+                &token::issue_session(id, MemberId::new(), T0)
+                    .expect("random")
+                    .record,
+                &log,
+            )
+            .await,
+    );
+    store
+        .end_sign_in_session(id, live.id, T0 + 2, &entry(id, viewer.id, "sign_out"))
+        .await
+        .expect("ended");
+    assert_eq!(
+        token::authenticate_session(store, &issued.secret, T0 + 3)
+            .await
+            .expect("read"),
+        None,
+        "a signed-out session"
+    );
+    not_found(
+        store
+            .end_sign_in_session(
+                OrganizationId::new(),
+                live.id,
+                T0,
+                &entry(id, viewer.id, "sign_out"),
+            )
+            .await,
+    );
 }

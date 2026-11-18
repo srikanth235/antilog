@@ -53,7 +53,7 @@ Do not add a dependency for convenience. A new one is a product call: ask the ow
 | MCP server | `rmcp` | 3.10.0 |
 | Command line | `clap` | 4.6.7 |
 | Ids, time | `uuid` / `jiff` | 1.29.2 / 0.2.43 |
-| Randomness for tokens and keys (owner, 18 Nov) | `getrandom` | pinned when added |
+| Randomness for tokens and keys (owner, 18 Nov) | `getrandom` | 0.4.3 |
 | Errors | `thiserror` / `anyhow` | 2.0.21 / 1.0.104 |
 | Logs | `tracing` / `tracing-subscriber` | 0.1.44 / 0.3.23 |
 | Telemetry | `opentelemetry` / `opentelemetry-otlp` / `tracing-opentelemetry` | 0.33.1 / 0.33.1 / 0.34.0 |

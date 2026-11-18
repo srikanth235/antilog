@@ -1,10 +1,10 @@
 use antilog_types::{
     AccessToken, AuditEntry, Identity, Member, MemberId, Organization, OrganizationId, Project,
-    ProjectId, ProjectRole, Role, TokenId,
+    ProjectId, ProjectRole, Role, SignInId, TokenId,
 };
 
 use super::{FakeStore, ledger::not_found, locked};
-use crate::store::{OrganizationStore, StoreError, TokenRecord};
+use crate::store::{OrganizationStore, SignInRecord, StoreError, TokenRecord};
 
 impl OrganizationStore for FakeStore {
     async fn create_organization(&self, organization: &Organization) -> Result<(), StoreError> {
@@ -37,6 +37,10 @@ impl OrganizationStore for FakeStore {
             return Err(StoreError::Conflict);
         }
         ledger.members.push(member.clone());
+        if let Err(error) = ledger.keeps_owners(member.organization_id) {
+            ledger.members.pop();
+            return Err(error);
+        }
         ledger.audit.push(audit.clone());
         Ok(())
     }
@@ -260,6 +264,52 @@ impl OrganizationStore for FakeStore {
                 .find(|row| row.token.organization_id == organization && row.token.id == id),
         )?;
         row.token.revoked_at.get_or_insert(at);
+        ledger.audit.push(audit.clone());
+        Ok(())
+    }
+
+    async fn create_sign_in_session(
+        &self,
+        record: &SignInRecord,
+        audit: &AuditEntry,
+    ) -> Result<(), StoreError> {
+        let mut ledger = locked(&self.ledger);
+        not_found(ledger.member(record.session.organization_id, record.session.member_id))?;
+        let taken = ledger
+            .sign_ins
+            .iter()
+            .any(|row| row.session.id == record.session.id || row.hash == record.hash);
+        if taken {
+            return Err(StoreError::Conflict);
+        }
+        ledger.sign_ins.push(record.clone());
+        ledger.audit.push(audit.clone());
+        Ok(())
+    }
+
+    async fn sign_in_session(&self, id: SignInId) -> Result<Option<SignInRecord>, StoreError> {
+        Ok(locked(&self.ledger)
+            .sign_ins
+            .iter()
+            .find(|row| row.session.id == id)
+            .cloned())
+    }
+
+    async fn end_sign_in_session(
+        &self,
+        organization: OrganizationId,
+        id: SignInId,
+        at: i64,
+        audit: &AuditEntry,
+    ) -> Result<(), StoreError> {
+        let mut ledger = locked(&self.ledger);
+        let row = not_found(
+            ledger
+                .sign_ins
+                .iter_mut()
+                .find(|row| row.session.organization_id == organization && row.session.id == id),
+        )?;
+        row.session.ended_at.get_or_insert(at);
         ledger.audit.push(audit.clone());
         Ok(())
     }

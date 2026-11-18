@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 use crate::id::text_enum;
-use crate::{MemberId, OrganizationId, ProjectId, TokenId};
+use crate::{MemberId, OrganizationId, ProjectId, SignInId, TokenId};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -147,4 +147,16 @@ pub struct AccessToken {
     pub name: String,
     pub created_at: i64,
     pub revoked_at: Option<i64>,
+}
+
+/// A signed-in browser or app session. Its secret is shown once and stored as a hash.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SignInSession {
+    pub id: SignInId,
+    pub organization_id: OrganizationId,
+    pub member_id: MemberId,
+    pub created_at: i64,
+    pub expires_at: i64,
+    pub ended_at: Option<i64>,
 }

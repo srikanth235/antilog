@@ -66,6 +66,8 @@ pub struct Approval {
     /// What would happen; never a secret.
     pub summary: String,
     pub cost_cents: Option<i64>,
+    /// Only a project owner may decide it, and policy never does: a changed value model.
+    pub needs_owner: bool,
     pub status: ApprovalStatus,
     pub decided_by: Option<MemberId>,
     pub created_at: i64,

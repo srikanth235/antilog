@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "update approvals set status = $3, decided_by = $4, decided_at = to_timestamp($5::bigint / 1000.0) where organization_id = $1 and id = $2 returning id, organization_id, experiment_id, session_id, card, summary, cost_cents, status, decided_by, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from decided_at) * 1000)::bigint as \"decided_at\"",
+  "query": "select id, organization_id, experiment_id, session_id, card, summary, cost_cents, needs_owner, status, decided_by, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from decided_at) * 1000)::bigint as \"decided_at\" from approvals where organization_id = $1 and experiment_id = $2 order by created_at, id",
   "describe": {
     "columns": [
       {
@@ -82,6 +82,17 @@
       },
       {
         "ordinal": 7,
+        "name": "needs_owner",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "approvals",
+            "name": "needs_owner"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
         "name": "status",
         "type_info": "Text",
         "origin": {
@@ -92,7 +103,7 @@
         }
       },
       {
-        "ordinal": 8,
+        "ordinal": 9,
         "name": "decided_by",
         "type_info": "Uuid",
         "origin": {
@@ -103,13 +114,13 @@
         }
       },
       {
-        "ordinal": 9,
+        "ordinal": 10,
         "name": "created_at!",
         "type_info": "Int8",
         "origin": "Expression"
       },
       {
-        "ordinal": 10,
+        "ordinal": 11,
         "name": "decided_at",
         "type_info": "Int8",
         "origin": "Expression"
@@ -118,10 +129,7 @@
     "parameters": {
       "Left": [
         "Uuid",
-        "Uuid",
-        "Text",
-        "Uuid",
-        "Int8"
+        "Uuid"
       ]
     },
     "nullable": [
@@ -133,10 +141,11 @@
       false,
       true,
       false,
+      false,
       true,
       null,
       null
     ]
   },
-  "hash": "3a804fb927068801676dc1bb995103fd4b5d9f9b18e96e6f2e6fd6617048a267"
+  "hash": "24a734105cdd36a15c68b08ffc476746c1b97de8ec9d76346e46923ba79b4859"
 }

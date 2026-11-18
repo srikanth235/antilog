@@ -2,7 +2,7 @@ use std::future::Future;
 
 use antilog_types::{
     AccessToken, AuditEntry, Identity, Member, MemberId, Organization, OrganizationId, Project,
-    ProjectId, ProjectRole, Role, TokenId,
+    ProjectId, ProjectRole, Role, SignInId, SignInSession, TokenId,
 };
 
 use super::StoreError;
@@ -11,6 +11,13 @@ use super::StoreError;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TokenRecord {
     pub token: AccessToken,
+    pub hash: [u8; 32],
+}
+
+/// A sign-in session as stored: only the hash of its secret.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SignInRecord {
+    pub session: SignInSession,
     pub hash: [u8; 32],
 }
 
@@ -27,6 +34,7 @@ pub trait OrganizationStore {
         id: OrganizationId,
     ) -> impl Future<Output = Result<Option<Organization>, StoreError>> + Send;
 
+    /// Refused with `LastOwner` unless the organization keeps an owner, so its first member is one.
     fn add_member(
         &self,
         member: &Member,
@@ -50,7 +58,7 @@ pub trait OrganizationStore {
         organization: OrganizationId,
     ) -> impl Future<Output = Result<Vec<Member>, StoreError>> + Send;
 
-    /// Refused with `LastOwner` when a project would be left without an owner.
+    /// Refused with `LastOwner` when the organization or a project would be left without an owner.
     fn set_member_role(
         &self,
         organization: OrganizationId,
@@ -126,6 +134,26 @@ pub trait OrganizationStore {
         &self,
         organization: OrganizationId,
         id: TokenId,
+        at: i64,
+        audit: &AuditEntry,
+    ) -> impl Future<Output = Result<(), StoreError>> + Send;
+
+    fn create_sign_in_session(
+        &self,
+        record: &SignInRecord,
+        audit: &AuditEntry,
+    ) -> impl Future<Output = Result<(), StoreError>> + Send;
+
+    /// By id alone, because the organization is learned from the session.
+    fn sign_in_session(
+        &self,
+        id: SignInId,
+    ) -> impl Future<Output = Result<Option<SignInRecord>, StoreError>> + Send;
+
+    fn end_sign_in_session(
+        &self,
+        organization: OrganizationId,
+        id: SignInId,
         at: i64,
         audit: &AuditEntry,
     ) -> impl Future<Output = Result<(), StoreError>> + Send;

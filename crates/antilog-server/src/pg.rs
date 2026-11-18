@@ -1,7 +1,7 @@
 use antilog_core::store::{Invariant, Store, StoreError};
-use antilog_types::AuditEntry;
+use antilog_types::{AuditEntry, OrganizationId};
 use sqlx::migrate::Migrator;
-use sqlx::{PgConnection, PgPool};
+use sqlx::{PgConnection, PgPool, Postgres, Transaction};
 
 mod approval;
 mod budget;
@@ -18,6 +18,36 @@ pub struct PgStore {
 impl PgStore {
     pub fn new(pool: PgPool) -> Self {
         Self { pool }
+    }
+
+    /// A transaction that sees only this organization's rows: the second guard
+    /// behind each query's own filter.
+    async fn scoped(
+        &self,
+        organization: OrganizationId,
+    ) -> Result<Transaction<'static, Postgres>, StoreError> {
+        self.within("antilog.organization_id", organization.as_uuid())
+            .await
+    }
+
+    /// A transaction that sees one token or sign-in session whose organization is not yet known.
+    async fn found(&self, id: uuid::Uuid) -> Result<Transaction<'static, Postgres>, StoreError> {
+        self.within("antilog.token_id", id).await
+    }
+
+    async fn within(
+        &self,
+        setting: &str,
+        value: uuid::Uuid,
+    ) -> Result<Transaction<'static, Postgres>, StoreError> {
+        let mut tx = self.pool.begin().await.map_err(map)?;
+        sqlx::query("select set_config($1, $2, true)")
+            .bind(setting)
+            .bind(value.to_string())
+            .execute(&mut *tx)
+            .await
+            .map_err(map)?;
+        Ok(tx)
     }
 
     pub async fn migrate(&self) -> Result<(), sqlx::migrate::MigrateError> {
@@ -56,7 +86,11 @@ fn map(error: sqlx::Error) -> StoreError {
             Some("23514")
                 if matches!(
                     db.constraint(),
-                    Some("policies_add_credential_asks" | "approvals_credential_asks")
+                    Some(
+                        "policies_add_credential_asks"
+                            | "approvals_credential_asks"
+                            | "approvals_owner_asks"
+                    )
                 ) =>
             {
                 Some(Invariant::AlwaysAsk)
