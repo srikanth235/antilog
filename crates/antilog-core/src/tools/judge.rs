@@ -482,16 +482,26 @@ struct HistoryIn {
 }
 
 pub(super) async fn history<D: Deps>(deps: &D, caller: &Caller, value: Value) -> Done {
+    read_history(deps, caller.organization, caller.experiment, value).await
+}
+
+/// The history answer. A read: it opens no session, so a person's web app can call it freely.
+pub(super) async fn read_history<D: Deps>(
+    deps: &D,
+    organization: antilog_types::OrganizationId,
+    experiment: antilog_types::ExperimentId,
+    value: Value,
+) -> Done {
     let h: HistoryIn = if value.is_null() {
         HistoryIn::default()
     } else {
         input(value)?
     };
-    let Some(sealed) = latest(deps, caller.organization, caller.experiment).await? else {
+    let Some(sealed) = latest(deps, organization, experiment).await? else {
         return Ok((json!({"trials": [], "note": NOT_SEALED}), None));
     };
     let all = deps
-        .judge(caller.organization)
+        .judge(organization)
         .trials(sealed.experiment(), sealed.version())
         .await?;
     let win = best(&all, sealed.definition().metric.direction).map(|r| r.trial.id);

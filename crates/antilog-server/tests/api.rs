@@ -1730,6 +1730,104 @@ mod live {
     }
 
     #[tokio::test]
+    async fn a_stream_ends_soon_after_its_token_is_revoked() {
+        let world = world().await;
+        let created = world
+            .org
+            .call(
+                Method::POST,
+                "/tokens",
+                &world.org.owner,
+                Some(json!({"memberId": null, "name": "tab"})),
+            )
+            .await;
+        let secret = created.body["secret"]
+            .as_str()
+            .unwrap_or_default()
+            .to_owned();
+        let id = created.body["token"]["id"]
+            .as_str()
+            .unwrap_or_default()
+            .to_owned();
+        let me = world.org.call(Method::GET, "/me", &secret, None).await;
+        let who = antilog_core::organization::Principal {
+            organization: world.organization,
+            member: antilog_types::MemberId::from_uuid(
+                me.body["member"]["id"]
+                    .as_str()
+                    .unwrap_or_default()
+                    .parse()
+                    .unwrap_or_default(),
+            ),
+        };
+        let app = Arc::new(App {
+            deps: world.deps.clone(),
+            settings: Settings {
+                providers: Vec::new(),
+                open_organizations: false,
+                secure_cookies: true,
+                wake_secret: None,
+                code_host_webhook_secret: None,
+                e2e_seed: false,
+            },
+        });
+        let options = Options {
+            poll: Duration::from_millis(5),
+            recheck: Duration::from_millis(50),
+            max_age: Duration::from_secs(60),
+            ..Options::default()
+        };
+        let mut events = live::open(app, who, secret, None, options);
+        assert!(matches!(events.recv().await, Some(LiveEvent::Hello { .. })));
+        let quiet = tokio::time::timeout(Duration::from_millis(300), events.recv()).await;
+        assert!(quiet.is_err(), "a valid credential keeps the stream open");
+        assert_eq!(
+            world
+                .org
+                .call(
+                    Method::DELETE,
+                    &format!("/tokens/{id}"),
+                    &world.org.owner,
+                    None
+                )
+                .await
+                .status,
+            StatusCode::NO_CONTENT
+        );
+        let ended = tokio::time::timeout(Duration::from_secs(5), async {
+            while events.recv().await.is_some() {}
+        })
+        .await;
+        assert!(ended.is_ok(), "the stream outlived its revoked token");
+    }
+
+    #[tokio::test]
+    async fn reading_history_opens_no_session() {
+        let world = world().await;
+        let path = format!("/experiments/{}/history", world.experiment);
+        for _ in 0..5 {
+            let read = world
+                .org
+                .call(Method::GET, &path, &world.org.owner, None)
+                .await;
+            assert_eq!(read.status, StatusCode::OK);
+            assert_eq!(read.body["trials"], json!([]));
+        }
+        let sessions = world
+            .org
+            .call(
+                Method::GET,
+                &format!("/experiments/{}/sessions", world.experiment),
+                &world.org.owner,
+                None,
+            )
+            .await;
+        assert_eq!(sessions.body, json!([]), "no session from a read");
+        let nobody = send(&world.org.app, Method::GET, &path, None, None, None).await;
+        assert_eq!(nobody.status, StatusCode::UNAUTHORIZED);
+    }
+
+    #[tokio::test]
     async fn a_stream_needs_sign_in_and_is_an_uncached_event_stream() {
         let world = world().await;
         let unauthenticated = send(
@@ -1927,7 +2025,7 @@ mod live {
             max_age: Duration::from_millis(60),
             ..Options::default()
         };
-        let mut events = live::open(app, who, None, options);
+        let mut events = live::open(app, who, String::new(), None, options);
         let first = events.recv().await;
         assert_eq!(first, Some(LiveEvent::Hello { cursor: 0 }));
         let ended = tokio::time::timeout(Duration::from_secs(10), async {

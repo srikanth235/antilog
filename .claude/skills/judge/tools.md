@@ -27,6 +27,8 @@ Five tools every session gets. `seal`, `measure`, `history` and `deliver` are bu
 
 ## history
 
+- **From the web app:** `GET /experiments/{id}/history` (same filters as query parameters) is a plain authenticated read. It opens no session; only a tool call made without a session id opens an "mcp" session, and that is for an agent.
+
 - **In:** an experiment, and optionally a filter by session, outcome or lineage.
 - **Back:** every trial for the experiment across all its sessions: hypothesis, outcome, values, commit ids, what it started from. Failures included. A hypothesis that closely matches an earlier failed one is flagged ("Tried in trial 6 by Codex: Worse"). Never a holdout value, never a diff (the agent reads diffs from git by commit id).
 - **Asks:** no. **Refuses:** nothing beyond role and organization checks. This is the notebook: there is no separate notes feature.

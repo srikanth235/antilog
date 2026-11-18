@@ -260,6 +260,15 @@ impl IntoResponse for Fail {
     }
 }
 
+/// The secret a caller presented: a bearer token, else the session cookie.
+pub(super) fn presented(headers: &HeaderMap) -> Option<&str> {
+    headers
+        .get(AUTHORIZATION)
+        .and_then(|value| value.to_str().ok())
+        .and_then(|value| value.strip_prefix("Bearer "))
+        .or_else(|| cookie(headers, SESSION_COOKIE))
+}
+
 fn cookie<'a>(headers: &'a HeaderMap, name: &str) -> Option<&'a str> {
     headers
         .get_all(COOKIE)
@@ -283,14 +292,7 @@ impl<D: Deps + 'static> FromRequestParts<Arc<App<D>>> for Authed {
         parts: &mut Parts,
         app: &Arc<App<D>>,
     ) -> Result<Self, Self::Rejection> {
-        let bearer = parts
-            .headers
-            .get(AUTHORIZATION)
-            .and_then(|value| value.to_str().ok())
-            .and_then(|value| value.strip_prefix("Bearer "));
-        let presented = bearer
-            .or_else(|| cookie(&parts.headers, SESSION_COOKIE))
-            .ok_or(Fail::Unauthenticated)?;
+        let presented = presented(&parts.headers).ok_or(Fail::Unauthenticated)?;
         let (who, credential) = auth::authenticate(app.store(), presented, app.now())
             .await?
             .ok_or(Fail::Unauthenticated)?;

@@ -14,6 +14,18 @@ use crate::store::StoreError;
 pub(crate) use judge::issue_receipt;
 pub use judge::seal_approved;
 
+/// `history` as a plain read for a person, with no session behind it.
+pub async fn read_history<D: Deps>(
+    deps: &D,
+    organization: OrganizationId,
+    experiment: antilog_types::ExperimentId,
+    value: Value,
+) -> Result<Value, ToolError> {
+    judge::read_history(deps, organization, experiment, value)
+        .await
+        .map(|(answer, _)| answer)
+}
+
 /// Who calls: a session of an experiment, and the person behind it when there is one.
 #[derive(Debug, Clone)]
 pub struct Caller {

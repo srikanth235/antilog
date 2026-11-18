@@ -23,7 +23,7 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post, put};
 use axum::{Json, Router};
-use utoipa::OpenApi;
+use utoipa::{IntoParams, OpenApi};
 
 use super::auth::{App, Authed, Fail};
 
@@ -48,6 +48,7 @@ use super::auth::{App, Authed, Fail};
     step,
     tools,
     call,
+    history,
     receipt
 ))]
 pub struct Doc;
@@ -517,6 +518,42 @@ async fn call<D: Deps + 'static>(
     }))
 }
 
+#[derive(serde::Deserialize, IntoParams)]
+#[into_params(parameter_in = Query)]
+struct HistoryQuery {
+    /// Only this session's trials.
+    session: Option<SessionId>,
+    /// Only this outcome, by word.
+    outcome: Option<String>,
+    /// At most this many (1 to 50, default 20).
+    limit: Option<usize>,
+    offset: Option<usize>,
+}
+
+#[utoipa::path(
+    get, path = "/experiments/{id}/history", security(("bearer" = [])),
+    params(("id" = ExperimentId, Path, description = "The experiment"), HistoryQuery),
+    responses((status = 200, description = "What the `history` tool answers; a read that opens no session", body = serde_json::Value), (status = 404, body = ApiError))
+)]
+async fn history<D: Deps + 'static>(
+    State(app): Shared<D>,
+    authed: Authed,
+    Path(experiment): Path<ExperimentId>,
+    Query(query): Query<HistoryQuery>,
+) -> Result<Json<serde_json::Value>, Fail> {
+    floor::experiment(app.store(), &authed.who, experiment).await?;
+    let input = serde_json::json!({
+        "session": query.session, "outcome": query.outcome,
+        "limit": query.limit, "offset": query.offset,
+    });
+    antilog_core::tools::read_history(&*app.deps, authed.who.organization, experiment, input)
+        .await
+        .map(Json)
+        .map_err(|error| {
+            Refusal::Unavailable(Box::new(std::io::Error::other(error.to_string()))).into()
+        })
+}
+
 #[utoipa::path(
     get, path = "/trials/{id}/receipt", security(("bearer" = [])),
     params(("id" = TrialId, Path, description = "A Kept trial that was the win when it ran")),
@@ -602,5 +639,6 @@ pub fn routes<D: Deps + 'static>() -> Router<Arc<App<D>>> {
         .route("/sessions/{id}/events", get(events::<D>))
         .route("/sessions/{id}/stop", post(stop::<D>))
         .route("/sessions/{id}/step", post(step::<D>))
+        .route("/experiments/{id}/history", get(history::<D>))
         .route("/trials/{id}/receipt", get(receipt::<D>))
 }

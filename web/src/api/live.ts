@@ -31,14 +31,6 @@ export function staleBy(event: LiveEvent): QueryKey[] {
   }
 }
 
-/**
- * `history` is a tool call, and a tool call made without a session opens one (an "mcp" session), which
- * is itself an event: refetching it on events would loop. It keeps its own slow poll.
- */
-export function refetchable(query: { queryKey: QueryKey }): boolean {
-  return query.queryKey.at(-1) !== "history";
-}
-
 export function parse(data: string): LiveEvent | null {
   try {
     const value: unknown = JSON.parse(data);
@@ -75,8 +67,7 @@ export function startLive(client: QueryClient): () => void {
         const event = parse((message as MessageEvent<string>).data);
         if (event === null) return;
         if (event.type === "hello" || event.type === "resync") setLive(true);
-        for (const queryKey of staleBy(event))
-          void client.invalidateQueries({ queryKey, predicate: refetchable });
+        for (const queryKey of staleBy(event)) void client.invalidateQueries({ queryKey });
       });
     }
     next.onerror = () => {

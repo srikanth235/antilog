@@ -312,17 +312,16 @@ export function useTools() {
   });
 }
 
-/** `history`, the judge's list of every trial. Its answer is free-form; the page narrows it. */
+/** `history`, the judge's list of every trial: a plain read that opens no session. Its answer is free-form; the page narrows it. */
 export function useHistory(experiment: string) {
   return useQuery({
     queryKey: keys.history(experiment),
     queryFn: async () =>
       unwrap(
-        await api.POST("/experiments/{id}/tools/{tool}", {
-          params: { path: { id: experiment, tool: "history" } },
-          body: { input: { limit: 100 } },
+        await api.GET("/experiments/{id}/history", {
+          params: { path: { id: experiment }, query: { limit: 50 } },
         }),
-      ).answer as unknown,
+      ) as unknown,
     retry: false,
     refetchInterval: LIVE_MS * 2,
   });

@@ -789,6 +789,84 @@
         ]
       }
     },
+    "/experiments/{id}/history": {
+      "get": {
+        "tags": [],
+        "operationId": "history",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The experiment",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ExperimentId"
+            }
+          },
+          {
+            "name": "session",
+            "in": "query",
+            "description": "Only this session's trials.",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/SessionId"
+            }
+          },
+          {
+            "name": "outcome",
+            "in": "query",
+            "description": "Only this outcome, by word.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "At most this many (1 to 50, default 20).",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "What the `history` tool answers; a read that opens no session",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/experiments/{id}/sessions": {
       "get": {
         "tags": [],

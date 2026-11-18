@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { parse, refetchable, staleBy } from "./live";
+import { parse, staleBy } from "./live";
 import { keys } from "./queries";
 
 test("a message refetches its conversation and nothing else", () => {
@@ -27,9 +27,4 @@ test("a half message is ignored", () => {
   expect(parse('{"type":"hello","cursor":1}')).toEqual({ type: "hello", cursor: 1 });
   expect(parse('{"type":"hel')).toBeNull();
   expect(parse("7")).toBeNull();
-});
-
-test("the history tool call is never refetched by an event, or it would open a session each time", () => {
-  expect(refetchable({ queryKey: keys.history("e1") })).toBe(false);
-  expect(refetchable({ queryKey: keys.sessions("e1") })).toBe(true);
 });

@@ -4,10 +4,6 @@ import { createProject, signUp, unique } from "./helpers";
 test("a card appears without a reload, and nothing polls while the stream delivers", async ({
   page,
 }) => {
-  // `history` is a tool call that opens a session, and a session is an event: keep it out of the count.
-  await page.route("**/api/experiments/*/tools/history", (route) =>
-    route.fulfill({ json: { answer: [] } }),
-  );
   await signUp(page);
   await createProject(page, unique("Checkout"));
   await page.getByRole("link", { name: "New experiment" }).first().click();
@@ -44,9 +40,6 @@ test("a card appears without a reload, and nothing polls while the stream delive
 
 test("when the stream fails the page polls as before", async ({ page }) => {
   await page.route("**/api/events/stream", (route) => route.abort());
-  await page.route("**/api/experiments/*/tools/history", (route) =>
-    route.fulfill({ json: { answer: [] } }),
-  );
   await signUp(page);
   await createProject(page, unique("Checkout"));
   await page.getByRole("link", { name: "New experiment" }).first().click();
@@ -60,4 +53,27 @@ test("when the stream fails the page polls as before", async ({ page }) => {
   });
   expect(asked.ok()).toBe(true);
   await expect(page.getByRole("region", { name: "Raise budget" })).toBeVisible({ timeout: 15_000 });
+});
+
+test("an experiment page left open reads history without opening sessions", async ({ page }) => {
+  await signUp(page);
+  await createProject(page, unique("Checkout"));
+  await page.getByRole("link", { name: "New experiment" }).first().click();
+  await page.getByLabel("New experiment").fill("Cut checkout p95 latency");
+  await page.getByLabel("Budget ($)").fill("10");
+  await page.getByRole("button", { name: "Send" }).click();
+  await expect(page.getByText("Started a session on the fake platform")).toBeVisible();
+  const id = page.url().split("/experiments/")[1]?.split(/[?#]/)[0];
+  const sessions = async () =>
+    ((await (await page.request.get(`/api/experiments/${id}/sessions`)).json()) as unknown[])
+      .length;
+  const before = await sessions();
+  let reads = 0;
+  page.on("request", (request) => {
+    if (request.url().includes(`/api/experiments/${id}/history`)) reads += 1;
+  });
+  // The history poll asks every 8 seconds: 20 seconds is at least two reads.
+  await page.waitForTimeout(20_000);
+  expect(reads).toBeGreaterThanOrEqual(2);
+  expect(await sessions()).toBe(before);
 });

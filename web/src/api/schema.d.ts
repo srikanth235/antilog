@@ -308,6 +308,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/experiments/{id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["history"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/experiments/{id}/sessions": {
         parameters: {
             query?: never;
@@ -2273,6 +2289,45 @@ export interface operations {
             };
             /** @description The budget would pass the project's cap */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    history: {
+        parameters: {
+            query?: {
+                /** @description Only this session's trials. */
+                session?: components["schemas"]["SessionId"];
+                /** @description Only this outcome, by word. */
+                outcome?: string;
+                /** @description At most this many (1 to 50, default 20). */
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                /** @description The experiment */
+                id: components["schemas"]["ExperimentId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description What the `history` tool answers; a read that opens no session */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

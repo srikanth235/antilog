@@ -18,6 +18,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use antilog_core::approval;
+use antilog_core::auth;
 use antilog_core::deps::Deps;
 use antilog_core::organization::{self as floor, Principal};
 use antilog_core::store::SessionStore;
@@ -45,6 +46,9 @@ pub struct Options {
     pub poll: Duration,
     /// Every this many polls, look at sessions and cards too.
     pub slow_every: u32,
+    /// The caller's credential and membership are checked again this often; the stream ends
+    /// when they no longer hold.
+    pub recheck: Duration,
     /// The stream ends after this long and the browser reconnects.
     pub max_age: Duration,
     /// A client further behind than this many items gets `resync`.
@@ -58,6 +62,7 @@ impl Default for Options {
         Self {
             poll: Duration::from_secs(1),
             slow_every: 2,
+            recheck: Duration::from_secs(30),
             max_age: Duration::from_secs(240),
             max_replay: 2000,
             keep_alive: Duration::from_secs(10),
@@ -181,6 +186,7 @@ impl Watch {
 pub fn open<D: Deps + 'static>(
     app: Arc<App<D>>,
     who: Principal,
+    secret: String,
     last: Option<i64>,
     options: Options,
 ) -> mpsc::Receiver<LiveEvent> {
@@ -216,11 +222,18 @@ pub fn open<D: Deps + 'static>(
         }
         let deadline = tokio::time::Instant::now() + options.max_age;
         let mut tick = 0u32;
+        let mut checked = tokio::time::Instant::now();
         loop {
             tokio::select! {
                 () = tx.closed() => return,
                 () = tokio::time::sleep_until(deadline) => return,
                 () = tokio::time::sleep(options.poll) => {}
+            }
+            if checked.elapsed() >= options.recheck {
+                checked = tokio::time::Instant::now();
+                if !still_holds(&app, &watch.who, &secret).await {
+                    return;
+                }
             }
             tick = tick.wrapping_add(1);
             let mut events = watch.messages(&app).await;
@@ -236,6 +249,17 @@ pub fn open<D: Deps + 'static>(
         }
     });
     rx
+}
+
+/// Whether the credential that opened the stream still names the same member, and that member
+/// is still in the organization. A store that cannot answer ends the stream too: the browser
+/// reconnects and is checked afresh.
+async fn still_holds<D: Deps + 'static>(app: &App<D>, who: &Principal, secret: &str) -> bool {
+    match auth::authenticate(app.store(), secret, app.now()).await {
+        Ok(Some((found, _))) if found == *who => {}
+        _ => return false,
+    }
+    floor::member_of(app.store(), who).await.is_ok()
 }
 
 fn last_event_id(headers: &HeaderMap) -> Option<i64> {
@@ -269,7 +293,10 @@ async fn stream<D: Deps + 'static>(
 ) -> Result<Sse<impl Stream<Item = Frame>>, Fail> {
     floor::member_of(app.store(), &authed.who).await?;
     let options = Options::default();
-    let rx = open(app, authed.who, last_event_id(&headers), options);
+    let secret = super::auth::presented(&headers)
+        .ok_or(Fail::Unauthenticated)?
+        .to_owned();
+    let rx = open(app, authed.who, secret, last_event_id(&headers), options);
     Ok(response(rx, options.keep_alive))
 }
 
