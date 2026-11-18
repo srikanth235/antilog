@@ -26,12 +26,23 @@ pub struct SessionHandle(pub String);
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum PlatformEvent {
-    Message { text: String },
-    ToolCall { id: String, name: String, input: Value },
-    Usage { cents: i64, tokens: i64 },
+    Message {
+        text: String,
+    },
+    ToolCall {
+        id: String,
+        name: String,
+        input: Value,
+    },
+    Usage {
+        cents: i64,
+        tokens: i64,
+    },
     /// The agent waits for a person.
     Idle,
-    Ended { failed: Option<String> },
+    Ended {
+        failed: Option<String>,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -81,6 +92,9 @@ pub enum PlatformError {
 /// The one trait every agent platform adapter implements. It runs the agent's loop
 /// and the judge's sandboxes; the server relays, it runs no loop.
 pub trait Platform: Send + Sync {
+    /// The platform's name as a session records it, such as `agentcore`.
+    fn name(&self) -> &str;
+
     fn start_session(
         &self,
         spec: &SessionSpec,
@@ -108,8 +122,10 @@ pub trait Platform: Send + Sync {
         result: &Value,
     ) -> impl Future<Output = Result<(), PlatformError>> + Send;
 
-    fn stop(&self, session: &SessionHandle)
-    -> impl Future<Output = Result<(), PlatformError>> + Send;
+    fn stop(
+        &self,
+        session: &SessionHandle,
+    ) -> impl Future<Output = Result<(), PlatformError>> + Send;
 
     /// Removes the session and its sandbox; deleting twice is fine.
     fn delete(

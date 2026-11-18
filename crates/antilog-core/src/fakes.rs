@@ -9,15 +9,31 @@ mod budget;
 mod ledger;
 mod organization;
 mod platform;
+mod relay;
 mod session;
+mod world;
 
 pub use platform::FakePlatform;
+pub use world::{FakeCodeHost, FakeDeps};
 
 use crate::clock::Clock;
 use crate::secrets::{Secret, Secrets, SecretsError};
 use crate::signer::{Signature, Signer};
 use crate::store::{Store, StoreError};
 use crate::timer::{JobId, Timer, TimerError};
+
+mod relay_state {
+    use std::collections::{HashMap, HashSet};
+
+    use antilog_types::{ApprovalId, OrganizationId, SessionId};
+
+    #[derive(Default)]
+    pub struct Relay {
+        pub cursors: HashMap<(OrganizationId, SessionId), String>,
+        pub proposals: HashMap<(OrganizationId, ApprovalId), String>,
+        pub told: HashSet<(OrganizationId, ApprovalId)>,
+    }
+}
 
 fn locked<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
     mutex.lock().unwrap_or_else(PoisonError::into_inner)
@@ -28,6 +44,14 @@ pub struct FakeClock(Mutex<Timestamp>);
 impl FakeClock {
     pub fn new(now: Timestamp) -> Self {
         Self(Mutex::new(now))
+    }
+
+    pub fn now_plus(&self, by: std::time::Duration) -> Timestamp {
+        let now = *locked(&self.0);
+        SignedDuration::try_from(by)
+            .ok()
+            .and_then(|d| now.checked_add(d).ok())
+            .unwrap_or(now)
     }
 
     pub fn advance(&self, by: SignedDuration) {
@@ -45,6 +69,7 @@ impl Clock for FakeClock {
 #[derive(Default)]
 pub struct FakeStore {
     ledger: Mutex<ledger::Ledger>,
+    relay: Mutex<relay_state::Relay>,
 }
 
 impl Store for FakeStore {
@@ -140,6 +165,11 @@ mod tests {
     #[tokio::test]
     async fn fake_store_passes_the_store_suite() {
         store_suite(&FakeStore::default()).await;
+    }
+
+    #[tokio::test]
+    async fn fake_store_keeps_the_relay_state() {
+        crate::seed::relay_suite(&FakeStore::default()).await;
     }
 
     #[test]

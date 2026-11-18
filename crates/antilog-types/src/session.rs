@@ -107,3 +107,66 @@ impl Session {
         }
     }
 }
+
+/// What starts a session in an experiment.
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct StartSession {
+    pub agent: String,
+    pub prompt: String,
+    #[serde(default)]
+    pub repos: Vec<String>,
+    pub environment: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SendMessage {
+    pub text: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct StopSession {
+    /// Shown as "Stopped by NAME".
+    pub by: String,
+}
+
+/// The result of one relay step.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct StepResult {
+    pub status: SessionStatus,
+    pub events: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ToolDefinition {
+    pub name: String,
+    pub description: String,
+    #[schema(value_type = Object)]
+    pub input_schema: serde_json::Value,
+}
+
+/// A call of one Antilog tool from an agent that is not in a platform session, such as `antilog mcp`.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ToolCall {
+    /// The session the calls belong to; the first call without one opens it.
+    pub session: Option<SessionId>,
+    /// Unique per call; sending a call again with the same id changes nothing twice.
+    pub call: Option<String>,
+    #[schema(value_type = Object)]
+    pub input: serde_json::Value,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ToolResult {
+    pub session: SessionId,
+    #[schema(value_type = Object)]
+    pub answer: serde_json::Value,
+    /// A measurement that was accepted: how it ended, in words. Never a holdout value.
+    pub followup: Option<String>,
+}

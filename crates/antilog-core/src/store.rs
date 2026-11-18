@@ -5,11 +5,13 @@ use std::future::Future;
 mod approval;
 mod budget;
 mod organization;
+mod relay;
 mod session;
 
 pub use approval::ApprovalStore;
 pub use budget::{BudgetStore, SpendScope, SpendTotal};
 pub use organization::{OrganizationStore, TokenRecord};
+pub use relay::RelayStore;
 pub use session::{SessionChange, SessionStore};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
@@ -41,7 +43,7 @@ pub enum StoreError {
 }
 
 pub trait Store:
-    OrganizationStore + SessionStore + BudgetStore + ApprovalStore + Send + Sync
+    OrganizationStore + SessionStore + BudgetStore + ApprovalStore + RelayStore + Send + Sync
 {
     fn ping(&self) -> impl Future<Output = Result<(), StoreError>> + Send;
 }

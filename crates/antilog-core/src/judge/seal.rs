@@ -4,9 +4,9 @@ use antilog_types::judge::{
 };
 
 use super::run::{Env, Sides, evaluate};
-use crate::platform::{Data, PairedRun, Platform, PlatformError};
 use super::stats::noise;
 use crate::clock::Clock;
+use crate::platform::{Data, PairedRun, Platform, PlatformError};
 use crate::store::judge::{JudgeStore, JudgeStoreError};
 
 /// Code the proposer plants to see whether the evaluation rejects it.

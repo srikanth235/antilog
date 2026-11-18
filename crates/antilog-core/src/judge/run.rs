@@ -6,8 +6,8 @@ use antilog_types::judge::{
 };
 
 use super::acceptance::{Criteria, Evidence, Need, Verdict, decide};
-use crate::platform::{Data, PairedRun, Pairs, Platform};
 use super::stats::{bar_confidence, confidence_95, stats};
+use crate::platform::{Data, PairedRun, Pairs, Platform};
 
 #[derive(Clone, Copy)]
 pub struct Env<'a> {

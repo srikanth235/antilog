@@ -6,6 +6,7 @@ use sqlx::{PgConnection, PgPool};
 mod approval;
 mod budget;
 mod organization;
+mod relay;
 mod session;
 
 pub static MIGRATOR: Migrator = sqlx::migrate!("./migrations");

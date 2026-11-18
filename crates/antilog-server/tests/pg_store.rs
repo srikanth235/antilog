@@ -54,6 +54,13 @@ async fn postgres_store_passes_the_store_suite() -> anyhow::Result<()> {
 }
 
 #[tokio::test]
+async fn postgres_store_keeps_the_relay_state() -> anyhow::Result<()> {
+    let (store, _pool, _container) = migrated_store().await?;
+    antilog_core::seed::relay_suite(&store).await;
+    Ok(())
+}
+
+#[tokio::test]
 async fn migrations_apply_again_without_change() -> anyhow::Result<()> {
     let (store, _pool, _container) = migrated_store().await?;
     store.migrate().await?;

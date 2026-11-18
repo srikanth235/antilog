@@ -4,6 +4,7 @@ all-features = true
 [advisories]
 version = 2
 ignore = [
+    { id = "RUSTSEC-2026-0543", reason = "chrono is unmaintained and reached only through rmcp (and its schemars), in `antilog mcp`; the server does not link it, and rmcp has no feature without it" },
     { id = "RUSTSEC-2026-0440", reason = "astral-tokio-tar is reached only through testcontainers, a dev-dependency of antilog-server tests" },
 ]
 

@@ -1,6 +1,6 @@
 # Session: spawn and the setup tools
 
-All target. Every session gets the Antilog tools. This page covers `spawn` and the four setup tools. The work tools `seal`, `measure`, `history`, `deliver` and `watch` are in [../judge/tools.md](../judge/tools.md). Cards, policy and who may approve are in [../organization/approvals.md](../organization/approvals.md).
+Built on the fake platform in `antilog-core/src/tools/` and `session/`: `spawn`, the four setup tools (each creates an approval; the relay tells the session how it ended and applies a raised budget) and the relay. What an approved `attach_repo`, `request_credential` or `set_environment` does on a real platform, and the Continue on another agent? card, are target. Every session gets the Antilog tools. This page covers `spawn` and the four setup tools. The work tools `seal`, `measure`, `history`, `deliver` and `watch` are in [../judge/tools.md](../judge/tools.md). Cards, policy and who may approve are in [../organization/approvals.md](../organization/approvals.md).
 
 ## How the tools reach a session
 

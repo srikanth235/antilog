@@ -2,8 +2,8 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 use super::{
-    Cents, CommitRef, DatasetRef, ExperimentId, HoldoutResult, SealHash, TrialId,
-    ValueModel, canonical_json, id,
+    Cents, CommitRef, DatasetRef, ExperimentId, HoldoutResult, SealHash, TrialId, ValueModel,
+    canonical_json, id,
 };
 use crate::SessionId;
 

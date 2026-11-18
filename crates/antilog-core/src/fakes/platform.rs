@@ -90,7 +90,9 @@ impl FakePlatform {
     ) -> Result<T, PlatformError> {
         let mut state = locked(&self.state);
         if state.down {
-            return Err(PlatformError::Unavailable("the fake platform is down".into()));
+            return Err(PlatformError::Unavailable(
+                "the fake platform is down".into(),
+            ));
         }
         match state.sessions.get_mut(&session.0) {
             Some(live) if !live.deleted => Ok(f(live)),
@@ -100,10 +102,16 @@ impl FakePlatform {
 }
 
 impl Platform for FakePlatform {
+    fn name(&self) -> &str {
+        "fake"
+    }
+
     async fn start_session(&self, spec: &SessionSpec) -> Result<SessionHandle, PlatformError> {
         let mut state = locked(&self.state);
         if state.down {
-            return Err(PlatformError::Unavailable("the fake platform is down".into()));
+            return Err(PlatformError::Unavailable(
+                "the fake platform is down".into(),
+            ));
         }
         state.next += 1;
         let handle = format!("fake-session-{}", state.next);
