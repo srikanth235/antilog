@@ -1,6 +1,6 @@
 # A live event
 
-Events tell a client that something changed so it can refetch. An event is not the data and never carries a secret or customer data. (target: nothing here is built yet.)
+Events tell a client that something changed so it can refetch. An event is not the data and never carries a secret or customer data. (target: nothing here is built yet; the web app polls, for example the conversation every few seconds.)
 
 ## How events work (target)
 

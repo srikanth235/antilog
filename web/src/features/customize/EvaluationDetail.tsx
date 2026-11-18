@@ -1,11 +1,13 @@
 import { Link } from "@tanstack/react-router";
+import { ApiFailure } from "../../api/client";
+import { useEvaluation } from "../../api/queries";
 import { Icon } from "../../components/icon/Icon";
-import { Empty } from "../../components/state/State";
+import { Empty, Failed, Loading } from "../../components/state/State";
 import { w } from "../../words";
-import { evaluation } from "./stub";
 
 export function EvaluationDetail({ id }: { id: string }) {
-  const item = evaluation(id);
+  const found = useEvaluation(id);
+  const item = found.data;
   if (item === undefined) {
     return (
       <section className="page">
@@ -13,7 +15,13 @@ export function EvaluationDetail({ id }: { id: string }) {
           <Icon name="back" size="s" />
           {w.customize.back}
         </Link>
-        <Empty title={w.customize.empty} />
+        {found.isPending ? (
+          <Loading />
+        ) : found.isError && found.error instanceof ApiFailure && found.error.status !== 404 ? (
+          <Failed error={found.error} retry={() => void found.refetch()} />
+        ) : (
+          <Empty title={w.customize.empty} />
+        )}
       </section>
     );
   }
@@ -31,25 +39,10 @@ export function EvaluationDetail({ id }: { id: string }) {
           <div className="col g4" style={{ minWidth: 0 }}>
             <h1 className="t-title">{item.name}</h1>
             <span className="ink2">{item.summary}.</span>
-            <span
-              className="rw g8 sm"
-              style={{ color: item.sealChecksPassed ? "var(--good)" : "var(--warn)" }}
-            >
-              <i
-                className="dot"
-                style={{ background: item.sealChecksPassed ? "var(--good)" : "var(--warn)" }}
-              />
-              {item.sealChecksPassed ? w.customize.sealPassed : w.trial.notChecked}
-            </span>
           </div>
         </div>
-        <div className="rw g8 wrap">
-          <button type="button" className="btn primary" disabled title={w.customize.target}>
-            {w.customize.checkAgain}
-          </button>
-        </div>
       </div>
-      <p className="target-note">{w.customize.target}</p>
+      <p className="sm mut">{w.customize.sealChecksLater}</p>
       <h2 className="sech">{w.customize.theTemplate}</h2>
       <div className="card" style={{ padding: "4px 20px" }}>
         <div className="kv">
@@ -58,7 +51,9 @@ export function EvaluationDetail({ id }: { id: string }) {
         </div>
         <div className="kv">
           <span>{w.trial.metric}</span>
-          <span>{item.metric}</span>
+          <span>
+            {item.metric}, {item.lowerIsBetter ? w.customize.lower : w.customize.higher}
+          </span>
         </div>
         <div className="kv">
           <span>{w.customize.addCommand}</span>
@@ -73,8 +68,6 @@ export function EvaluationDetail({ id }: { id: string }) {
           </span>
         </div>
       </div>
-      <h2 className="sech">{w.customize.usedBy}</h2>
-      <Empty title={w.customize.notUsed} />
     </section>
   );
 }

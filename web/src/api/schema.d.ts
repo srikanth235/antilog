@@ -212,6 +212,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/evaluations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["evaluations"];
+        put?: never;
+        post: operations["add_evaluation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/evaluations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["evaluation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/experiments/{id}": {
         parameters: {
             query?: never;
@@ -813,6 +845,30 @@ export interface components {
             platform: string;
         };
         /**
+         * @description What an evaluation measures.
+         * @enum {string}
+         */
+        EvaluationKind: "speed" | "quality" | "size" | "cost";
+        /**
+         * @description A starting point for an experiment's evaluation in Customize, Evaluations. An experiment starts
+         *     from a copy; the template holds a command and paths, never a credential or data.
+         */
+        EvaluationTemplate: {
+            command: string;
+            /** Format: int64 */
+            createdAt: number;
+            createdBy: components["schemas"]["MemberId"];
+            id: string;
+            kind: components["schemas"]["EvaluationKind"];
+            lowerIsBetter: boolean;
+            /** @description What is measured, as a dotted path in the command's JSON output. */
+            metric: string;
+            name: string;
+            /** @description Files an agent may never change, each as `repo:path`. */
+            protectedPaths: string[];
+            summary: string;
+        };
+        /**
          * @description Who spoke: a person, an agent, or the name of a tool an agent called.
          * @enum {string}
          */
@@ -961,6 +1017,15 @@ export interface components {
             isDefault: boolean;
             name: string;
             platform: string;
+        };
+        NewEvaluationTemplate: {
+            command: string;
+            kind: components["schemas"]["EvaluationKind"];
+            lowerIsBetter: boolean;
+            metric: string;
+            name: string;
+            protectedPaths?: string[];
+            summary?: string;
         };
         /** @description What starts an experiment in a project. The budget defaults to the project's, then the organization's. */
         NewExperiment: {
@@ -1617,6 +1682,89 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Environment"][];
+                };
+            };
+        };
+    };
+    evaluations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The organization's evaluation templates, oldest first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvaluationTemplate"][];
+                };
+            };
+        };
+    };
+    add_evaluation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewEvaluationTemplate"];
+            };
+        };
+        responses: {
+            /** @description Added; editors and owners */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvaluationTemplate"];
+                };
+            };
+            /** @description A template with that name exists */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    evaluation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The template's id */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvaluationTemplate"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
                 };
             };
         };

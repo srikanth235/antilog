@@ -507,6 +507,115 @@
         ]
       }
     },
+    "/evaluations": {
+      "get": {
+        "tags": [],
+        "operationId": "evaluations",
+        "responses": {
+          "200": {
+            "description": "The organization's evaluation templates, oldest first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EvaluationTemplate"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [],
+        "operationId": "add_evaluation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewEvaluationTemplate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Added; editors and owners",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvaluationTemplate"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A template with that name exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/evaluations/{id}": {
+      "get": {
+        "tags": [],
+        "operationId": "evaluation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The template's id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvaluationTemplate"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/experiments/{id}": {
       "get": {
         "tags": [],
@@ -2407,6 +2516,71 @@
         },
         "additionalProperties": false
       },
+      "EvaluationKind": {
+        "type": "string",
+        "description": "What an evaluation measures.",
+        "enum": [
+          "speed",
+          "quality",
+          "size",
+          "cost"
+        ]
+      },
+      "EvaluationTemplate": {
+        "type": "object",
+        "description": "A starting point for an experiment's evaluation in Customize, Evaluations. An experiment starts\nfrom a copy; the template holds a command and paths, never a credential or data.",
+        "required": [
+          "id",
+          "name",
+          "summary",
+          "kind",
+          "metric",
+          "lowerIsBetter",
+          "command",
+          "protectedPaths",
+          "createdBy",
+          "createdAt"
+        ],
+        "properties": {
+          "command": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "createdBy": {
+            "$ref": "#/components/schemas/MemberId"
+          },
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/EvaluationKind"
+          },
+          "lowerIsBetter": {
+            "type": "boolean"
+          },
+          "metric": {
+            "type": "string",
+            "description": "What is measured, as a dotted path in the command's JSON output."
+          },
+          "name": {
+            "type": "string"
+          },
+          "protectedPaths": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Files an agent may never change, each as `repo:path`."
+          },
+          "summary": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "EventKind": {
         "type": "string",
         "description": "Who spoke: a person, an agent, or the name of a tool an agent called.",
@@ -2881,6 +3055,43 @@
             "type": "string"
           },
           "platform": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "NewEvaluationTemplate": {
+        "type": "object",
+        "required": [
+          "name",
+          "kind",
+          "metric",
+          "lowerIsBetter",
+          "command"
+        ],
+        "properties": {
+          "command": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/EvaluationKind"
+          },
+          "lowerIsBetter": {
+            "type": "boolean"
+          },
+          "metric": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "protectedPaths": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "summary": {
             "type": "string"
           }
         },

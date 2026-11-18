@@ -256,3 +256,41 @@ pub struct ToolResult {
     /// A measurement that was accepted: how it ended, in words. Never a holdout value.
     pub followup: Option<String>,
 }
+
+text_enum!(
+    /// What an evaluation measures.
+    EvaluationKind { Speed => "speed", Quality => "quality", Size => "size", Cost => "cost" }
+);
+
+/// A starting point for an experiment's evaluation in Customize, Evaluations. An experiment starts
+/// from a copy; the template holds a command and paths, never a credential or data.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct EvaluationTemplate {
+    pub id: String,
+    pub name: String,
+    pub summary: String,
+    pub kind: EvaluationKind,
+    /// What is measured, as a dotted path in the command's JSON output.
+    pub metric: String,
+    pub lower_is_better: bool,
+    pub command: String,
+    /// Files an agent may never change, each as `repo:path`.
+    pub protected_paths: Vec<String>,
+    pub created_by: MemberId,
+    pub created_at: i64,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct NewEvaluationTemplate {
+    pub name: String,
+    #[serde(default)]
+    pub summary: String,
+    pub kind: EvaluationKind,
+    pub metric: String,
+    pub lower_is_better: bool,
+    pub command: String,
+    #[serde(default)]
+    pub protected_paths: Vec<String>,
+}

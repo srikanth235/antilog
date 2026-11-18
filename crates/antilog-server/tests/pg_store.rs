@@ -114,6 +114,8 @@ async fn audit_log_and_spend_refuse_every_change() -> anyhow::Result<()> {
         "update session_events set text = 'x'",
         "delete from session_events",
         "truncate session_events",
+        "update evaluation_templates set name = 'x'",
+        "delete from evaluation_templates",
     ] {
         let error = sqlx::query(statement).execute(&pool).await.err();
         let code = error.and_then(|error| {

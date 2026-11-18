@@ -1250,6 +1250,52 @@ async fn agents_auto_and_environments_are_read_by_members_and_set_by_owners() {
         )
         .await;
     assert_eq!(named.status, StatusCode::CREATED);
-    let bad = org.call(Method::PUT, "/agents/auto", &org.owner, Some(json!({"name": "x", "platform": "p", "enabled": true, "isDefault": false, "costTier": "low"}))).await;
+    let bad = org.call(Method::PUT, "/agents/Bad", &org.owner, Some(json!({"name": "x", "platform": "p", "enabled": true, "isDefault": false, "costTier": "low"}))).await;
     assert_eq!(bad.status, StatusCode::UNPROCESSABLE_ENTITY);
+}
+
+#[tokio::test]
+async fn evaluations_are_listed_read_and_added_by_role() {
+    let org = org().await;
+    let (_, viewer) = org.member("vi", "viewer").await;
+    let (_, editor) = org.member("ed", "editor").await;
+    let body = json!({"name": "Load test", "summary": "Replays traffic", "kind": "speed", "metric": "p95", "lowerIsBetter": true, "command": "k6 run bench/load.js", "protectedPaths": ["app:bench/"]});
+
+    let empty = org.call(Method::GET, "/evaluations", &viewer, None).await;
+    assert_eq!(
+        (empty.status, empty.body.as_array().map(Vec::len)),
+        (StatusCode::OK, Some(0))
+    );
+    let denied = org
+        .call(Method::POST, "/evaluations", &viewer, Some(body.clone()))
+        .await;
+    assert_eq!(denied.status, StatusCode::FORBIDDEN);
+    let added = org
+        .call(Method::POST, "/evaluations", &editor, Some(body.clone()))
+        .await;
+    assert_eq!(
+        (added.status, &added.body["id"]),
+        (StatusCode::CREATED, &json!("load-test"))
+    );
+    let again = org
+        .call(Method::POST, "/evaluations", &editor, Some(body))
+        .await;
+    assert_eq!(again.status, StatusCode::CONFLICT);
+    let one = org
+        .call(Method::GET, "/evaluations/load-test", &viewer, None)
+        .await;
+    assert_eq!(one.body["protectedPaths"][0], "app:bench/");
+    let missing = org
+        .call(Method::GET, "/evaluations/nope", &viewer, None)
+        .await;
+    assert_eq!(missing.status, StatusCode::NOT_FOUND);
+    let log = org.call(Method::GET, "/audit", &org.owner, None).await;
+    let actions: Vec<_> = log.body["entries"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|e| e["action"] == "evaluation.add")
+        .map(|e| e["outcome"].clone())
+        .collect();
+    assert_eq!(actions.len(), 2);
 }

@@ -1,8 +1,9 @@
 use std::future::Future;
 
 use antilog_types::{
-    Agent, AuditEntry, Cleanup, EventKind, Experiment, ExperimentId, ExperimentStatus, MemberId,
-    OrganizationId, ProjectId, Session, SessionEvent, SessionId, SessionStatus,
+    Agent, AuditEntry, Cleanup, EvaluationTemplate, EventKind, Experiment, ExperimentId,
+    ExperimentStatus, MemberId, OrganizationId, ProjectId, Session, SessionEvent, SessionId,
+    SessionStatus,
 };
 
 use super::StoreError;
@@ -115,4 +116,18 @@ pub trait SessionStore {
         &self,
         organization: OrganizationId,
     ) -> impl Future<Output = Result<Vec<Agent>, StoreError>> + Send;
+
+    /// A new template with its audit entry; the id is taken (`Conflict`) when the organization has it.
+    fn add_evaluation(
+        &self,
+        template: &EvaluationTemplate,
+        organization: OrganizationId,
+        audit: &AuditEntry,
+    ) -> impl Future<Output = Result<(), StoreError>> + Send;
+
+    /// The organization's templates, oldest first.
+    fn evaluations(
+        &self,
+        organization: OrganizationId,
+    ) -> impl Future<Output = Result<Vec<EvaluationTemplate>, StoreError>> + Send;
 }

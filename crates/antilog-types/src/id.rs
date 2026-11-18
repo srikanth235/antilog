@@ -111,6 +111,7 @@ mod text_enum_schema {
         schema_matches_wire(Cleanup::ALL);
         schema_matches_wire(CostTier::ALL);
         schema_matches_wire(Decision::ALL);
+        schema_matches_wire(EvaluationKind::ALL);
         schema_matches_wire(EventKind::ALL);
         schema_matches_wire(ExperimentStatus::ALL);
         schema_matches_wire(MemberKind::ALL);

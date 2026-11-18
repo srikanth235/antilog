@@ -79,8 +79,8 @@ The server relays a session and keeps a ledger. It runs no loop. A person can ta
 
 | Stores | Never stores |
 | --- | --- |
-| The conversation: what people and agents said ([../product/rulings.md](../product/rulings.md)) | Tool output |
-| Tool call names and card states | File contents, diffs |
+| The conversation: what people and agents said ([../product/rulings.md](../product/rulings.md)); built as `session_events`, read by `GET /sessions/{id}/events` | Tool output |
+| Tool call names (built, in the conversation) and card states | File contents, diffs |
 | Commit ids, dataset ids and versions, connector status | Data |
 | Measurements | Raw logs |
 | Spend and audit rows | |

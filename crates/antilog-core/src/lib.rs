@@ -7,6 +7,7 @@ pub mod budget;
 pub mod clock;
 pub mod code_host;
 pub mod deps;
+pub mod evaluations;
 pub mod fakes;
 pub mod ids;
 pub mod judge;

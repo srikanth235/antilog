@@ -1,16 +1,19 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { useEvaluations } from "../../api/queries";
 import { Glyph, Icon } from "../../components/icon/Icon";
-import { Empty } from "../../components/state/State";
+import { Empty, Failed, Loading } from "../../components/state/State";
 import { w } from "../../words";
 import { Row, Table } from "../settings/Table";
-import { EVALUATIONS } from "./stub";
 import { Tabs } from "./Tabs";
 
 export function Evaluations() {
   const [query, setQuery] = useState("");
-  const rows = EVALUATIONS.filter((item) => item.name.toLowerCase().includes(query.toLowerCase()));
-  const cols = "44px minmax(0, 2.3fr) 80px 190px 120px 100px";
+  const evaluations = useEvaluations();
+  const rows = (evaluations.data ?? []).filter((item) =>
+    item.name.toLowerCase().includes(query.toLowerCase()),
+  );
+  const cols = "44px minmax(0, 2.3fr) 80px minmax(0, 1.4fr) 100px";
   return (
     <section className="page cust">
       <div className="hd">
@@ -40,8 +43,11 @@ export function Evaluations() {
           </Link>
         </div>
       </div>
-      <p className="target-note">{w.customize.target}</p>
-      {rows.length === 0 ? (
+      {evaluations.isPending ? (
+        <Loading />
+      ) : evaluations.isError ? (
+        <Failed error={evaluations.error} retry={() => void evaluations.refetch()} />
+      ) : rows.length === 0 ? (
         <Empty title={w.customize.empty} hint={w.customize.emptyHint}>
           <Link className="btn primary" to="/customize/evaluations/new">
             {w.customize.add}
@@ -56,8 +62,7 @@ export function Evaluations() {
             "",
             w.customize.columns.evaluation,
             w.customize.columns.kind,
-            w.customize.columns.seal,
-            w.customize.columns.used,
+            w.customize.columns.metric,
             "",
           ]}
         >
@@ -71,15 +76,8 @@ export function Evaluations() {
                 <span className="xs mut ell">{item.summary}</span>
               </span>
               <span className="sm ink2">{w.customize.kinds[item.kind]}</span>
-              <span className="rw g8 sm">
-                <i
-                  className="dot"
-                  style={{ background: item.sealChecksPassed ? "var(--good)" : "var(--warn)" }}
-                />
-                {item.sealChecksPassed ? w.customize.sealPassed : w.trial.notChecked}
-              </span>
-              <span className="sm ink2">
-                {item.usedIn.length === 0 ? w.customize.notUsed : `${item.usedIn.length}`}
+              <span className="sm ink2 ell">
+                {item.metric}, {item.lowerIsBetter ? w.customize.lower : w.customize.higher}
               </span>
               <Link
                 className="btn sm"

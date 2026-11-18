@@ -26,6 +26,7 @@ export const keys = {
   agents: () => ["agents"] as const,
   autoAgent: () => ["agents", "auto"] as const,
   environments: () => ["environments"] as const,
+  evaluations: () => ["evaluations"] as const,
   budgets: () => ["budgets"] as const,
   spend: () => ["spend"] as const,
   experimentSpend: (id: string) => ["experiments", id, "spend"] as const,
@@ -193,6 +194,29 @@ export function useEnvironments() {
     queryKey: keys.environments(),
     queryFn: async () => unwrap(await api.GET("/environments")),
   });
+}
+
+export function useEvaluations() {
+  return useQuery({
+    queryKey: keys.evaluations(),
+    queryFn: async () => unwrap(await api.GET("/evaluations")),
+  });
+}
+
+export function useEvaluation(id: string) {
+  return useQuery({
+    queryKey: [...keys.evaluations(), id] as const,
+    queryFn: async () => unwrap(await api.GET("/evaluations/{id}", { params: { path: { id } } })),
+    retry: false,
+  });
+}
+
+export function useAddEvaluation() {
+  return useWrite(
+    async (body: Schemas["NewEvaluationTemplate"]) =>
+      unwrap(await api.POST("/evaluations", { body })),
+    (client) => client.invalidateQueries({ queryKey: keys.evaluations() }),
+  );
 }
 
 export function useBudgets() {

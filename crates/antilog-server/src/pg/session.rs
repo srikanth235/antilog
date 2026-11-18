@@ -1,7 +1,8 @@
 use antilog_core::store::{Invariant, NewEvent, SessionChange, SessionStore, StoreError};
 use antilog_types::{
-    Agent, AuditEntry, Cleanup, CostTier, EventKind, Experiment, ExperimentId, ExperimentStatus,
-    MemberId, OrganizationId, ProjectId, Session, SessionEvent, SessionId, SessionStatus,
+    Agent, AuditEntry, Cleanup, CostTier, EvaluationKind, EvaluationTemplate, EventKind,
+    Experiment, ExperimentId, ExperimentStatus, MemberId, OrganizationId, ProjectId, Session,
+    SessionEvent, SessionId, SessionStatus,
 };
 use uuid::Uuid;
 
@@ -375,6 +376,68 @@ impl SessionStore for PgStore {
                 cost_tier: CostTier::parse(&row.cost_tier)
                     .ok_or_else(|| corrupt("cost tier", &row.cost_tier))?,
                 built_in: false,
+            })
+        })
+        .collect()
+    }
+
+    async fn add_evaluation(
+        &self,
+        template: &EvaluationTemplate,
+        organization: OrganizationId,
+        entry: &AuditEntry,
+    ) -> Result<(), StoreError> {
+        let paths = serde_json::to_string(&template.protected_paths)
+            .map_err(|error| StoreError::Unavailable(Box::new(error)))?;
+        let mut tx = self.scoped(organization).await?;
+        sqlx::query!(
+            "insert into evaluation_templates (organization_id, id, name, summary, kind, metric, lower_is_better, command, protected_paths, created_by, created_at) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, to_timestamp($11::bigint / 1000.0))",
+            organization.as_uuid(),
+            template.id,
+            template.name,
+            template.summary,
+            template.kind.as_str(),
+            template.metric,
+            template.lower_is_better,
+            template.command,
+            paths,
+            template.created_by.as_uuid(),
+            template.created_at,
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(map)?;
+        audit(&mut tx, entry).await?;
+        tx.commit().await.map_err(map)
+    }
+
+    async fn evaluations(
+        &self,
+        organization: OrganizationId,
+    ) -> Result<Vec<EvaluationTemplate>, StoreError> {
+        let mut tx = self.scoped(organization).await?;
+        sqlx::query!(
+            "select id, name, summary, kind, metric, lower_is_better, command, protected_paths, created_by, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\" from evaluation_templates where organization_id = $1 order by created_at, id",
+            organization.as_uuid(),
+        )
+        .fetch_all(&mut *tx)
+        .await
+        .map_err(map)?
+        .into_iter()
+        .map(|row| {
+            Ok(EvaluationTemplate {
+                id: row.id,
+                name: row.name,
+                summary: row.summary,
+                kind: EvaluationKind::parse(&row.kind)
+                    .ok_or_else(|| corrupt("evaluation kind", &row.kind))?,
+                metric: row.metric,
+                lower_is_better: row.lower_is_better,
+                command: row.command,
+                protected_paths: serde_json::from_str(&row.protected_paths)
+                    .map_err(|_| corrupt("protected paths", "not a list"))?,
+                created_by: MemberId::from_uuid(row.created_by),
+                created_at: row.created_at,
             })
         })
         .collect()

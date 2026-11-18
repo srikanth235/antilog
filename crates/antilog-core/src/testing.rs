@@ -5,9 +5,9 @@
 
 use antilog_types::{
     Agent, Approval, ApprovalId, ApprovalStatus, AuditEntry, AuditId, AuditOutcome, CardKind,
-    Cleanup, CostTier, Decision, EventKind, Experiment, ExperimentStatus, Identity, Member,
-    MemberId, Organization, OrganizationId, Policy, PolicyMode, Project, ProjectRole, Role,
-    Session, SessionStatus, Spend, SpendId, SpendKind,
+    Cleanup, CostTier, Decision, EvaluationKind, EvaluationTemplate, EventKind, Experiment,
+    ExperimentStatus, Identity, Member, MemberId, Organization, OrganizationId, Policy, PolicyMode,
+    Project, ProjectRole, Role, Session, SessionStatus, Spend, SpendId, SpendKind,
 };
 
 use crate::store::{Invariant, NewEvent, SessionChange, SpendScope, SpendTotal, Store, StoreError};
@@ -144,6 +144,7 @@ pub async fn store_suite<S: Store>(store: &S) {
     budgets_and_spend(store).await;
     experiments_and_sessions(store).await;
     agents(store).await;
+    evaluations(store).await;
     approvals(store).await;
     audit_log(store).await;
 }
@@ -1048,6 +1049,58 @@ async fn agents<S: Store>(store: &S) {
     assert!(
         store
             .agents(world_org(store).await)
+            .await
+            .expect("another organization")
+            .is_empty()
+    );
+}
+
+async fn evaluations<S: Store>(store: &S) {
+    let world = world(store).await;
+    let org = world.id();
+    let template = |id: &str, at| EvaluationTemplate {
+        id: id.to_owned(),
+        name: id.to_owned(),
+        summary: String::new(),
+        kind: EvaluationKind::Speed,
+        metric: "p95".into(),
+        lower_is_better: true,
+        command: "make bench".into(),
+        protected_paths: vec!["app:bench/".into(), "app:fixtures/".into()],
+        created_by: world.owner.id,
+        created_at: at,
+    };
+    let first = template("load-test", T0);
+    store
+        .add_evaluation(&first, org, &world.log("evaluation.add"))
+        .await
+        .expect("added");
+    store
+        .add_evaluation(
+            &template("bundle", T0 + 1),
+            org,
+            &world.log("evaluation.add"),
+        )
+        .await
+        .expect("added");
+    conflict(
+        store
+            .add_evaluation(&first, org, &world.log("evaluation.add"))
+            .await,
+    );
+    let mut stray = template("x", T0);
+    stray.created_by = MemberId::new();
+    not_found(
+        store
+            .add_evaluation(&stray, org, &world.log("evaluation.add"))
+            .await,
+    );
+    let listed = store.evaluations(org).await.expect("listed");
+    assert_eq!(listed.first(), Some(&first));
+    assert_eq!(listed.len(), 2);
+    assert!(
+        store
+            .evaluations(world_org(store).await)
             .await
             .expect("another organization")
             .is_empty()

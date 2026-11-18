@@ -67,13 +67,20 @@ test("start an experiment, approve a card, read the settings", async ({ page }, 
   await page.screenshot({ path: `test-results/settings-${info.project.name}.png` });
 });
 
-test("customize shows evaluations, marked as a sample", async ({ page }) => {
+test("customize adds an evaluation and shows it", async ({ page }) => {
   await signUp(page);
+  const name = unique("Load test");
   await page.getByRole("link", { name: "Customize" }).click();
   await expect(page.getByRole("heading", { name: "Customize" })).toBeVisible();
-  await expect(page.getByText("This list is a sample.")).toBeVisible();
-  await page.getByRole("link", { name: "Configure Load test" }).click();
-  await expect(page.getByRole("heading", { name: "Load test" })).toBeVisible();
+  await expect(page.getByText("No evaluations yet.")).toBeVisible();
+  await page.getByRole("link", { name: "Add evaluation" }).first().click();
+  await page.getByLabel("Name", { exact: true }).fill(name);
+  await page.getByLabel(/^Metric/).fill("p95");
+  await page.getByLabel("Evaluation command").fill("k6 run bench/load.js");
+  await page.getByLabel("Protected paths").fill("app:bench/");
+  await page.getByRole("button", { name: "Add evaluation" }).click();
+  await expect(page.getByRole("heading", { name, level: 1 })).toBeVisible();
+  await expect(page.getByText("k6 run bench/load.js")).toBeVisible();
 });
 
 test("a viewer can read but not send", async ({ page, browser }) => {

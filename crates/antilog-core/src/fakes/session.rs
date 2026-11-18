@@ -1,6 +1,6 @@
 use antilog_types::{
-    Agent, AuditEntry, Experiment, ExperimentId, ExperimentStatus, OrganizationId, ProjectId,
-    Session, SessionEvent, SessionId,
+    Agent, AuditEntry, EvaluationTemplate, Experiment, ExperimentId, ExperimentStatus,
+    OrganizationId, ProjectId, Session, SessionEvent, SessionId,
 };
 
 use super::{FakeStore, ledger::not_found, locked};
@@ -228,5 +228,37 @@ impl SessionStore for FakeStore {
             .collect();
         agents.sort_by(|a, b| a.id.cmp(&b.id));
         Ok(agents)
+    }
+
+    async fn add_evaluation(
+        &self,
+        template: &EvaluationTemplate,
+        organization: OrganizationId,
+        audit: &AuditEntry,
+    ) -> Result<(), StoreError> {
+        let mut ledger = locked(&self.ledger);
+        not_found(ledger.member(organization, template.created_by))?;
+        if ledger
+            .evaluations
+            .iter()
+            .any(|(id, row)| *id == organization && row.id == template.id)
+        {
+            return Err(StoreError::Conflict);
+        }
+        ledger.evaluations.push((organization, template.clone()));
+        ledger.audit.push(audit.clone());
+        Ok(())
+    }
+
+    async fn evaluations(
+        &self,
+        organization: OrganizationId,
+    ) -> Result<Vec<EvaluationTemplate>, StoreError> {
+        Ok(locked(&self.ledger)
+            .evaluations
+            .iter()
+            .filter(|(id, _)| *id == organization)
+            .map(|(_, row)| row.clone())
+            .collect())
     }
 }

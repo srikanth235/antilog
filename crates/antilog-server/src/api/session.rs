@@ -3,7 +3,6 @@
 
 use std::sync::Arc;
 
-use antilog_core::agents;
 use antilog_core::deps::Deps;
 use antilog_core::organization::{self as floor, Action, Refusal};
 use antilog_core::platform::Platform;
@@ -11,11 +10,13 @@ use antilog_core::session::{self, NewSession, SessionError};
 use antilog_core::store::judge::JudgeStore;
 use antilog_core::store::{OrganizationStore, SessionStore};
 use antilog_core::tools::{Caller, ToolHost, Toolbox, definitions};
+use antilog_core::{agents, evaluations as evals};
 use antilog_types::judge::{Receipt, TrialId};
 use antilog_types::{
-    Agent, ApiError, AutoChoice, Environment, EventPage, Experiment, ExperimentId, NewAgent,
-    NewExperiment, OrganizationId, ProjectId, SendMessage, Session, SessionId, StartSession,
-    StepResult, ToolCall, ToolDefinition, ToolResult,
+    Agent, ApiError, AutoChoice, Environment, EvaluationTemplate, EventPage, Experiment,
+    ExperimentId, NewAgent, NewEvaluationTemplate, NewExperiment, OrganizationId, ProjectId,
+    SendMessage, Session, SessionId, StartSession, StepResult, ToolCall, ToolDefinition,
+    ToolResult,
 };
 use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
@@ -41,6 +42,9 @@ use super::auth::{App, Authed, Fail};
     auto_agent,
     set_agent,
     environments,
+    evaluations,
+    evaluation,
+    add_evaluation,
     step,
     tools,
     call,
@@ -330,6 +334,47 @@ async fn set_agent<D: Deps + 'static>(
 }
 
 #[utoipa::path(
+    get, path = "/evaluations", security(("bearer" = [])),
+    responses((status = 200, description = "The organization's evaluation templates, oldest first", body = Vec<EvaluationTemplate>))
+)]
+async fn evaluations<D: Deps + 'static>(
+    State(app): Shared<D>,
+    authed: Authed,
+) -> Result<Json<Vec<EvaluationTemplate>>, Fail> {
+    Ok(Json(evals::list(app.store(), &authed.who).await?))
+}
+
+#[utoipa::path(
+    get, path = "/evaluations/{id}", security(("bearer" = [])),
+    params(("id" = String, Path, description = "The template's id")),
+    responses((status = 200, body = EvaluationTemplate), (status = 404, body = ApiError))
+)]
+async fn evaluation<D: Deps + 'static>(
+    State(app): Shared<D>,
+    authed: Authed,
+    Path(id): Path<String>,
+) -> Result<Json<EvaluationTemplate>, Fail> {
+    Ok(Json(evals::get(app.store(), &authed.who, &id).await?))
+}
+
+#[utoipa::path(
+    post, path = "/evaluations", security(("bearer" = [])),
+    request_body = NewEvaluationTemplate,
+    responses(
+        (status = 201, description = "Added; editors and owners", body = EvaluationTemplate),
+        (status = 409, description = "A template with that name exists", body = ApiError),
+    )
+)]
+async fn add_evaluation<D: Deps + 'static>(
+    State(app): Shared<D>,
+    authed: Authed,
+    Json(new): Json<NewEvaluationTemplate>,
+) -> Result<(StatusCode, Json<EvaluationTemplate>), Fail> {
+    let made = evals::add(app.store(), &authed.who, app.now(), new).await?;
+    Ok((StatusCode::CREATED, Json(made)))
+}
+
+#[utoipa::path(
     get, path = "/environments", security(("bearer" = [])),
     responses((status = 200, description = "Where a session may run", body = Vec<Environment>))
 )]
@@ -549,6 +594,11 @@ pub fn routes<D: Deps + 'static>() -> Router<Arc<App<D>>> {
         .route("/agents/auto", get(auto_agent::<D>))
         .route("/agents/{id}", put(set_agent::<D>))
         .route("/environments", get(environments::<D>))
+        .route(
+            "/evaluations",
+            get(evaluations::<D>).post(add_evaluation::<D>),
+        )
+        .route("/evaluations/{id}", get(evaluation::<D>))
         .route("/sessions/{id}/events", get(events::<D>))
         .route("/sessions/{id}/stop", post(stop::<D>))
         .route("/sessions/{id}/step", post(step::<D>))
