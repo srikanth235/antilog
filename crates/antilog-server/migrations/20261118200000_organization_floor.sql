@@ -82,10 +82,13 @@ create policy approvals_scope on approvals
     using (organization_id = current_organization())
     with check (organization_id = current_organization());
 
+-- An audit row may be appended with no organization set, as the session area's writes
+-- do; reading the log always needs the organization.
 alter table audit_log enable row level security;
-create policy audit_log_scope on audit_log
-    using (organization_id = current_organization())
-    with check (organization_id = current_organization());
+create policy audit_log_read on audit_log for select
+    using (organization_id = current_organization());
+create policy audit_log_append on audit_log for insert
+    with check (current_organization() is null or organization_id = current_organization());
 
 alter table access_tokens enable row level security;
 create policy access_tokens_scope on access_tokens

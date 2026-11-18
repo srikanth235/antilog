@@ -14,6 +14,11 @@ use testcontainers::runners::AsyncRunner;
 use testcontainers::{ContainerAsync, GenericImage, ImageExt};
 
 async fn database() -> anyhow::Result<(PgPool, ContainerAsync<GenericImage>)> {
+    let (pool, container, _url) = database_at().await?;
+    Ok((pool, container))
+}
+
+async fn database_at() -> anyhow::Result<(PgPool, ContainerAsync<GenericImage>, String)> {
     let container = GenericImage::new("postgres", "18")
         .with_exposed_port(5432.tcp())
         .with_wait_for(WaitFor::message_on_stderr(
@@ -36,7 +41,7 @@ async fn database() -> anyhow::Result<(PgPool, ContainerAsync<GenericImage>)> {
             Err(error) => return Err(error.into()),
         }
     };
-    Ok((pool, container))
+    Ok((pool, container, url))
 }
 
 async fn migrated_store() -> anyhow::Result<(PgStore, PgPool, ContainerAsync<GenericImage>)> {
@@ -240,5 +245,183 @@ async fn concurrent_demotions_cannot_orphan_a_project() -> anyhow::Result<()> {
             .iter()
             .any(|result| matches!(result, Err(StoreError::Invariant(Invariant::LastOwner))))
     );
+    Ok(())
+}
+
+/// Pending row-level security: the session area's tables, owned by another track.
+const WITHOUT_ROW_LEVEL_SECURITY: [&str; 3] = ["experiments", "sessions", "spend"];
+
+/// A pool that connects as a role that owns nothing and is no superuser, as the server does.
+async fn app_store() -> anyhow::Result<(PgStore, PgPool, ContainerAsync<GenericImage>)> {
+    let (admin, container, url) = database_at().await?;
+    PgStore::new(admin.clone()).migrate().await?;
+    for statement in [
+        "create role antilog_app login password 'app' nosuperuser nobypassrls",
+        "grant usage on schema public to antilog_app",
+        "grant select, insert, update, delete, truncate on all tables in schema public to antilog_app",
+    ] {
+        sqlx::query(statement).execute(&admin).await?;
+    }
+    let app_url = url.replace("postgres:pw@", "antilog_app:app@");
+    let pool = PgPoolOptions::new()
+        .max_connections(4)
+        .connect(&app_url)
+        .await?;
+    Ok((PgStore::new(pool.clone()), pool, container))
+}
+
+#[tokio::test]
+async fn the_store_suite_passes_as_a_role_without_bypass() -> anyhow::Result<()> {
+    let (store, _pool, _container) = app_store().await?;
+    store_suite(&store).await;
+    Ok(())
+}
+
+#[tokio::test]
+async fn a_query_that_forgets_its_organization_sees_nothing() -> anyhow::Result<()> {
+    let (store, pool, _container) = app_store().await?;
+    let a = Organization::new("a", 0);
+    let b = Organization::new("b", 0);
+    for organization in [&a, &b] {
+        store.create_organization(organization).await?;
+        let owner = Member::person(
+            organization.id,
+            "owner",
+            antilog_types::Identity {
+                provider: "fake".into(),
+                subject: organization.name.clone(),
+            },
+            Role::Owner,
+            0,
+        );
+        let entry = AuditEntry::new(
+            organization.id,
+            Some(owner.id),
+            "member.add",
+            owner.id,
+            AuditOutcome::Done,
+            0,
+        );
+        store.add_member(&owner, &entry).await?;
+    }
+    for table in [
+        "organizations",
+        "members",
+        "audit_log",
+        "projects",
+        "policies",
+        "access_tokens",
+        "sign_in_sessions",
+    ] {
+        let unscoped: i64 =
+            sqlx::query_scalar(sqlx::AssertSqlSafe(format!("select count(*) from {table}")))
+                .fetch_one(&pool)
+                .await?;
+        assert_eq!(unscoped, 0, "{table} without an organization set");
+    }
+
+    let mut tx = pool.begin().await?;
+    sqlx::query("select set_config('antilog.organization_id', $1, true)")
+        .bind(a.id.to_string())
+        .execute(&mut *tx)
+        .await?;
+    let seen: Vec<String> = sqlx::query_scalar("select name from members")
+        .fetch_all(&mut *tx)
+        .await?;
+    assert_eq!(seen, ["owner"], "only organization a's member");
+    let audit: i64 =
+        sqlx::query_scalar("select count(*) from audit_log where organization_id = $1")
+            .bind(b.id.as_uuid())
+            .fetch_one(&mut *tx)
+            .await?;
+    assert_eq!(audit, 0, "b's rows are invisible even when asked for by id");
+    let forged = sqlx::query("insert into audit_log (id, organization_id, action, target, outcome, at) values (gen_random_uuid(), $1, 'x', 'y', 'done', now())")
+        .bind(b.id.as_uuid())
+        .execute(&mut *tx)
+        .await;
+    let code = forged.err().and_then(|e| {
+        e.as_database_error()
+            .and_then(|d| d.code().map(String::from))
+    });
+    assert_eq!(
+        code.as_deref(),
+        Some("42501"),
+        "a write into another organization is refused"
+    );
+    drop(tx);
+
+    let moved: u64 = {
+        let mut tx = pool.begin().await?;
+        sqlx::query("select set_config('antilog.organization_id', $1, true)")
+            .bind(a.id.to_string())
+            .execute(&mut *tx)
+            .await?;
+        sqlx::query("update members set organization_id = $1")
+            .bind(b.id.as_uuid())
+            .execute(&mut *tx)
+            .await
+            .map(|r| r.rows_affected())
+            .unwrap_or(0)
+    };
+    assert_eq!(moved, 0, "a row cannot be handed to another organization");
+    Ok(())
+}
+
+#[tokio::test]
+async fn every_table_with_an_organization_has_row_level_security() -> anyhow::Result<()> {
+    let (_store, pool, _container) = migrated_store().await?;
+    let mut without: Vec<String> = sqlx::query_scalar(
+        "select c.relname::text from pg_class c join pg_namespace n on n.oid = c.relnamespace
+         where n.nspname = 'public' and c.relkind = 'r' and not c.relrowsecurity
+           and c.relname <> '_sqlx_migrations'
+         order by 1",
+    )
+    .fetch_all(&pool)
+    .await?;
+    without.retain(|table| !WITHOUT_ROW_LEVEL_SECURITY.contains(&table.as_str()));
+    assert!(without.is_empty(), "no row-level security: {without:?}");
+    Ok(())
+}
+
+#[tokio::test]
+async fn access_tokens_and_sign_in_sessions_are_found_by_id_alone() -> anyhow::Result<()> {
+    let (store, _pool, _container) = app_store().await?;
+    let organization = Organization::new("acme", 0);
+    store.create_organization(&organization).await?;
+    let owner = Member::person(
+        organization.id,
+        "ada",
+        antilog_types::Identity {
+            provider: "fake".into(),
+            subject: "ada".into(),
+        },
+        Role::Owner,
+        0,
+    );
+    let entry = |action: &str| {
+        AuditEntry::new(
+            organization.id,
+            Some(owner.id),
+            action,
+            owner.id,
+            AuditOutcome::Done,
+            0,
+        )
+    };
+    store.add_member(&owner, &entry("member.add")).await?;
+    let issued = antilog_core::token::issue(organization.id, owner.id, "laptop", 0)
+        .map_err(|e| anyhow::anyhow!("{e}"))?;
+    store
+        .create_access_token(&issued.record, &entry("token.create"))
+        .await?;
+    let found = antilog_core::token::authenticate(&store, &issued.secret).await?;
+    assert_eq!(found.map(|token| token.member_id), Some(owner.id));
+    let session = antilog_core::token::issue_session(organization.id, owner.id, 0)
+        .map_err(|e| anyhow::anyhow!("{e}"))?;
+    store
+        .create_sign_in_session(&session.record, &entry("sign_in"))
+        .await?;
+    let live = antilog_core::token::authenticate_session(&store, &session.secret, 1).await?;
+    assert_eq!(live.map(|row| row.organization_id), Some(organization.id));
     Ok(())
 }

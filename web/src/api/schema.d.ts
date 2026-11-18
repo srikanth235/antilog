@@ -4,6 +4,166 @@
  */
 
 export interface paths {
+    "/approvals/{id}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["decide"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["audit"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/providers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["providers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/sign-out": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sign_out"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/{provider}/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["callback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/{provider}/organization": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["create_organization"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/{provider}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["start"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/budgets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["budgets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/experiments/{id}/approvals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["approvals"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/experiments/{id}/budget": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["set_experiment_budget"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -20,15 +180,270 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["members"];
+        put?: never;
+        post: operations["add_member"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/members/{id}/role": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["set_member_role"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/organization": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["organization"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/organization/limits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["set_organization_limits"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/policies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["policies"];
+        put: operations["set_policy"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["projects"];
+        put?: never;
+        post: operations["create_project"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{id}/limits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["set_project_limits"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{id}/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["project_roles"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{id}/roles/{member}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["set_project_role"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tokens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["tokens"];
+        put?: never;
+        post: operations["create_token"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tokens/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["revoke_token"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @description What may be shown of an access token; the secret is shown once, at creation. */
+        AccessToken: {
+            /** Format: int64 */
+            createdAt: number;
+            id: components["schemas"]["TokenId"];
+            memberId: components["schemas"]["MemberId"];
+            name: string;
+            organizationId: components["schemas"]["OrganizationId"];
+            /** Format: int64 */
+            revokedAt?: number | null;
+        };
         ApiError: {
             code: string;
             fields: components["schemas"]["FieldError"][];
             message: string;
         };
+        Approval: {
+            card: components["schemas"]["CardKind"];
+            /** Format: int64 */
+            costCents?: number | null;
+            /** Format: int64 */
+            createdAt: number;
+            /** Format: int64 */
+            decidedAt?: number | null;
+            decidedBy?: components["schemas"]["MemberId"] | null;
+            experimentId: components["schemas"]["ExperimentId"];
+            id: components["schemas"]["ApprovalId"];
+            /** @description Only a project owner may decide it, and policy never does: a changed value model. */
+            needsOwner: boolean;
+            organizationId: components["schemas"]["OrganizationId"];
+            sessionId?: components["schemas"]["SessionId"] | null;
+            status: components["schemas"]["ApprovalStatus"];
+            /** @description What would happen; never a secret. */
+            summary: string;
+        };
+        /** Format: uuid */
+        ApprovalId: string;
+        /** @enum {string} */
+        ApprovalStatus: "Pending" | "Approved" | "Declined" | "ApprovedByPolicy";
+        AuditCursor: {
+            /** Format: int64 */
+            at: number;
+            id: components["schemas"]["AuditId"];
+        };
+        /** @description An append-only record of a write or an approval. Holds no secret. */
+        AuditEntry: {
+            /** @description A registered action name, such as `project.create`. */
+            action: string;
+            actor?: components["schemas"]["MemberId"] | null;
+            /** Format: int64 */
+            at: number;
+            id: components["schemas"]["AuditId"];
+            organizationId: components["schemas"]["OrganizationId"];
+            outcome: components["schemas"]["AuditOutcome"];
+            /** @description The id of what it touched. */
+            target: string;
+        };
+        /** Format: uuid */
+        AuditId: string;
+        /** @enum {string} */
+        AuditOutcome: "Done" | "Denied" | "Approved" | "Declined" | "ApprovedByPolicy";
+        /** @description Newest first; `next` is the cursor for the page after this one. */
+        AuditPage: {
+            entries: components["schemas"]["AuditEntry"][];
+            next?: components["schemas"]["AuditCursor"] | null;
+        };
+        /** @description This month's spend against the caps. */
+        BudgetSummary: {
+            organization: components["schemas"]["LimitSpend"];
+            projects: components["schemas"]["ProjectSpend"][];
+        };
+        /** @enum {string} */
+        CardKind: "SealExperiment" | "RaiseBudget" | "AddCredential" | "AttachRepo" | "ChangeEnvironment" | "OpenPullRequest" | "KeepGoing" | "ContinueOnAnotherAgent";
+        Decide: {
+            decision: components["schemas"]["Decision"];
+        };
+        /** @enum {string} */
+        Decision: "Approve" | "Decline";
+        ExperimentBudget: {
+            /** Format: int64 */
+            budgetCapCents: number;
+        };
+        /** Format: uuid */
+        ExperimentId: string;
         FieldError: {
             field: string;
             message: string;
@@ -38,6 +453,165 @@ export interface components {
         };
         /** @enum {string} */
         HealthStatus: "ok";
+        /** @description A person's identity at a sign-in provider. */
+        Identity: {
+            provider: string;
+            subject: string;
+        };
+        LimitSpend: {
+            /** Format: int64 */
+            capCents?: number | null;
+            /** Format: int64 */
+            spentCents: number;
+        };
+        Limits: {
+            /** Format: int64 */
+            defaultBudgetCents?: number | null;
+            /** Format: int64 */
+            monthlyCapCents?: number | null;
+        };
+        Member: {
+            /** Format: int64 */
+            createdAt: number;
+            id: components["schemas"]["MemberId"];
+            identity?: components["schemas"]["Identity"] | null;
+            kind: components["schemas"]["MemberKind"];
+            name: string;
+            organizationId: components["schemas"]["OrganizationId"];
+            /** @description The organization role, the default in every project. */
+            role: components["schemas"]["Role"];
+        };
+        /** Format: uuid */
+        MemberId: string;
+        /** @enum {string} */
+        MemberKind: "Person" | "Service";
+        NewMember: {
+            identity?: components["schemas"]["Identity"] | null;
+            name: string;
+            role: components["schemas"]["Role"];
+        };
+        NewOrganization: {
+            code: string;
+            name: string;
+            state: string;
+        };
+        NewProject: {
+            description: string;
+            name: string;
+        };
+        NewToken: {
+            memberId?: components["schemas"]["MemberId"] | null;
+            name: string;
+        };
+        Organization: {
+            /**
+             * Format: int64
+             * @description Epoch milliseconds.
+             */
+            createdAt: number;
+            /**
+             * Format: int64
+             * @description Default budget per experiment, in US cents.
+             */
+            defaultBudgetCents?: number | null;
+            id: components["schemas"]["OrganizationId"];
+            /**
+             * Format: int64
+             * @description Monthly cap on all spend, in US cents. `None`: no cap.
+             */
+            monthlyCapCents?: number | null;
+            name: string;
+        };
+        OrganizationCreated: {
+            organization: components["schemas"]["Organization"];
+            session: components["schemas"]["SessionIssued"];
+        };
+        /** Format: uuid */
+        OrganizationId: string;
+        /** @description What policy does with one card kind. Add credential only ever asks. */
+        Policy: {
+            card: components["schemas"]["CardKind"];
+            /**
+             * Format: int64
+             * @description Required for `allow_up_to`, in US cents.
+             */
+            limitCents?: number | null;
+            mode: components["schemas"]["PolicyMode"];
+        };
+        /** @enum {string} */
+        PolicyMode: "AlwaysAsk" | "AllowUpTo" | "Allow";
+        Project: {
+            /** Format: int64 */
+            createdAt: number;
+            /**
+             * Format: int64
+             * @description Default budget per experiment, in US cents.
+             */
+            defaultBudgetCents?: number | null;
+            description: string;
+            id: components["schemas"]["ProjectId"];
+            /**
+             * Format: int64
+             * @description Monthly cap on the spend of its experiments, in US cents.
+             */
+            monthlyCapCents?: number | null;
+            name: string;
+            organizationId: components["schemas"]["OrganizationId"];
+        };
+        /** Format: uuid */
+        ProjectId: string;
+        /** @description A member's role in one project when it differs from the organization role. */
+        ProjectRole: {
+            memberId: components["schemas"]["MemberId"];
+            role: components["schemas"]["Role"];
+        };
+        ProjectSpend: {
+            /** Format: int64 */
+            capCents?: number | null;
+            projectId: components["schemas"]["ProjectId"];
+            /** Format: int64 */
+            spentCents: number;
+        };
+        /**
+         * @description Ordered: a higher role may do what a lower one may.
+         * @enum {string}
+         */
+        Role: "Viewer" | "Editor" | "Owner";
+        /** Format: uuid */
+        SessionId: string;
+        /** @description A sign-in session; the secret is shown once and is also set as a cookie. */
+        SessionIssued: {
+            /** Format: int64 */
+            expiresAt: number;
+            member: components["schemas"]["Member"];
+            secret: string;
+        };
+        /** @description `None` returns the member to their organization role in this project. */
+        SetProjectRole: {
+            role?: components["schemas"]["Role"] | null;
+        };
+        SetRole: {
+            role: components["schemas"]["Role"];
+        };
+        SignInCallback: {
+            code: string;
+            organization: components["schemas"]["OrganizationId"];
+            state: string;
+        };
+        SignInProviders: {
+            providers: string[];
+        };
+        SignInStart: {
+            authorizeUrl: string;
+            state: string;
+        };
+        /** Format: uuid */
+        TokenId: string;
+        /** @description An access token; the secret is shown once. */
+        TokenIssued: {
+            secret: string;
+            token: components["schemas"]["AccessToken"];
+        };
     };
     responses: never;
     parameters: never;
@@ -47,6 +621,323 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    decide: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The card */
+                id: components["schemas"]["ApprovalId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Decide"];
+            };
+        };
+        responses: {
+            /** @description Decided */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Approval"];
+                };
+            };
+            /** @description Editors and owners of its project decide; a changed value model needs a project owner */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description It was already decided */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    audit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The cursor of the previous page: its `at` and `id`, together. */
+                beforeAt: number | null;
+                beforeId: components["schemas"]["AuditId"] | null;
+                /** @description 1 to 200; default 50. */
+                limit: number | null;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Newest first; organization owners only */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditPage"];
+                };
+            };
+        };
+    };
+    providers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The sign-in providers this server offers */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SignInProviders"];
+                };
+            };
+        };
+    };
+    sign_out: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The session ended */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    callback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A provider from /auth/providers */
+                provider: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SignInCallback"];
+            };
+        };
+        responses: {
+            /** @description Signed in; the session is also set as a cookie */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionIssued"];
+                };
+            };
+            /** @description The provider did not accept the sign-in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not a member of that organization */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    create_organization: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A provider from /auth/providers */
+                provider: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewOrganization"];
+            };
+        };
+        responses: {
+            /** @description The organization, and its first owner signed in */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizationCreated"];
+                };
+            };
+            /** @description This server does not let people create organizations */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description The name is taken */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    start: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A provider from /auth/providers */
+                provider: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Where to send the person; the state is also kept in a cookie */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SignInStart"];
+                };
+            };
+            /** @description No such provider */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    budgets: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description This month's spend against the caps */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BudgetSummary"];
+                };
+            };
+        };
+    };
+    approvals: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The experiment */
+                id: components["schemas"]["ExperimentId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Its cards, oldest first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Approval"][];
+                };
+            };
+        };
+    };
+    set_experiment_budget: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The experiment */
+                id: components["schemas"]["ExperimentId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExperimentBudget"];
+            };
+        };
+        responses: {
+            /** @description Set; editors and owners of its project */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The budget would pass the project's cap */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
     health: {
         parameters: {
             query?: never;
@@ -73,6 +964,409 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ApiError"];
                 };
+            };
+        };
+    };
+    members: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The organization's members */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Member"][];
+                };
+            };
+        };
+    };
+    add_member: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewMember"];
+            };
+        };
+        responses: {
+            /** @description Added; organization owners only */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Member"];
+                };
+            };
+            /** @description That identity is already a member */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    set_member_role: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The member */
+                id: components["schemas"]["MemberId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetRole"];
+            };
+        };
+        responses: {
+            /** @description Set; organization owners only */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The organization or a project would be left without an owner */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    organization: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The caller's organization */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Organization"];
+                };
+            };
+        };
+    };
+    set_organization_limits: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Limits"];
+            };
+        };
+        responses: {
+            /** @description Set; organization owners only */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The cap would pass a limit inside it */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    policies: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description One policy per card kind; what was never set always asks */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Policy"][];
+                };
+            };
+        };
+    };
+    set_policy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Policy"];
+            };
+        };
+        responses: {
+            /** @description Set; organization owners only */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Add credential only ever asks */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    projects: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The organization's projects */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Project"][];
+                };
+            };
+        };
+    };
+    create_project: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewProject"];
+            };
+        };
+        responses: {
+            /** @description Created; the caller is its first owner */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Project"];
+                };
+            };
+            /** @description The name is taken */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    set_project_limits: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The project */
+                id: components["schemas"]["ProjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Limits"];
+            };
+        };
+        responses: {
+            /** @description Set; project owners only */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The cap would pass the organization's, or a budget inside it */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    project_roles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The project */
+                id: components["schemas"]["ProjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Roles set for this project; the rest have their organization role */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectRole"][];
+                };
+            };
+        };
+    };
+    set_project_role: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The project */
+                id: components["schemas"]["ProjectId"];
+                /** @description The member */
+                member: components["schemas"]["MemberId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetProjectRole"];
+            };
+        };
+        responses: {
+            /** @description Set; project owners only */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The project would be left without an owner */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    tokens: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Whose tokens (owners only); omitted: the caller's. */
+                memberId: components["schemas"]["MemberId"] | null;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Tokens without their secrets */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessToken"][];
+                };
+            };
+        };
+    };
+    create_token: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewToken"];
+            };
+        };
+        responses: {
+            /** @description Created; the secret is shown only now */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenIssued"];
+                };
+            };
+        };
+    };
+    revoke_token: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The token */
+                id: components["schemas"]["TokenId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Revoked; your own, or any if an organization owner */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
