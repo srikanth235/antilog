@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::future::Future;
-use std::sync::{Mutex, MutexGuard, PoisonError};
+use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
 use antilog_types::judge::{
     ExperimentId, Finished, Receipt, SealedExperiment, Trial, TrialId, TrialRecord, ValueModel,
@@ -89,8 +89,8 @@ struct State {
     models: HashMap<(ValueModelId, u32), ValueModel>,
 }
 
-#[derive(Default)]
-pub struct FakeJudgeStore(Mutex<State>);
+#[derive(Default, Clone)]
+pub struct FakeJudgeStore(Arc<Mutex<State>>);
 
 impl JudgeStore for FakeJudgeStore {
     async fn put_sealed(&self, sealed: &SealedExperiment) -> Result<(), JudgeStoreError> {
@@ -200,11 +200,11 @@ impl JudgeStore for FakeJudgeStore {
     clippy::expect_used,
     reason = "test support: a failed call fails the suite"
 )]
-pub async fn judge_store_suite<S: JudgeStore>(store: &S) {
+pub async fn judge_store_suite<S: JudgeStore>(store: &S, experiment: antilog_types::ExperimentId) {
     use crate::judge::fixtures;
     use antilog_types::judge::{Decision, Outcome};
 
-    let sealed = fixtures::sealed();
+    let sealed = fixtures::sealed_for(experiment);
     store.put_sealed(&sealed).await.expect("seal is stored");
     assert!(matches!(
         store.put_sealed(&sealed).await,
@@ -274,6 +274,27 @@ pub async fn judge_store_suite<S: JudgeStore>(store: &S) {
         store.trials(sealed.experiment(), 2).await.expect("list"),
         vec![]
     );
+
+    let receipt = fixtures::receipt(&sealed, first.id);
+    assert_eq!(store.receipt(first.id).await.expect("read"), None);
+    store.put_receipt(&receipt).await.expect("receipt");
+    assert!(matches!(
+        store.put_receipt(&receipt).await,
+        Err(JudgeStoreError::Conflict)
+    ));
+    assert_eq!(store.receipt(first.id).await.expect("read"), Some(receipt));
+
+    let model = fixtures::value_model(1);
+    store.put_value_model(&model).await.expect("model");
+    assert!(matches!(
+        store.put_value_model(&model).await,
+        Err(JudgeStoreError::Conflict)
+    ));
+    assert_eq!(
+        store.value_model(model.id, 1).await.expect("read"),
+        Some(model.clone())
+    );
+    assert_eq!(store.value_model(model.id, 2).await.expect("read"), None);
 }
 
 #[cfg(test)]
@@ -282,6 +303,10 @@ mod tests {
 
     #[tokio::test]
     async fn fake_judge_store_passes_the_suite() {
-        judge_store_suite(&FakeJudgeStore::default()).await;
+        judge_store_suite(
+            &FakeJudgeStore::default(),
+            antilog_types::ExperimentId::new(),
+        )
+        .await;
     }
 }

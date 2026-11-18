@@ -1,15 +1,16 @@
-use antilog_types::{
-    Approval, ApprovalId, ApprovalStatus, AuditEntry, AuditOutcome, CardKind, SessionStatus,
-};
+use antilog_types::{Approval, ApprovalStatus, CardKind, SessionStatus};
 use serde::Deserialize;
 use serde_json::json;
 
 use super::{Caller, Done, ToolError, input};
+use crate::approval::{self, CardRequest};
 use crate::deps::Deps;
+use crate::organization::Refusal;
 use crate::session::{NewSession, now_ms};
-use crate::store::{ApprovalStore, SessionChange, SessionStore};
+use crate::store::{SessionChange, SessionStore};
 
-/// A card in front of a person; the agent waits for the answer as a message.
+/// A card in front of a person, or approved by policy when the experiment follows it.
+/// The agent gets the answer as a message either way.
 pub(super) async fn ask<D: Deps>(
     deps: &D,
     caller: &Caller,
@@ -17,47 +18,62 @@ pub(super) async fn ask<D: Deps>(
     card: CardKind,
     summary: String,
     cost_cents: Option<i64>,
+    needs_owner: bool,
 ) -> Result<Approval, ToolError> {
     let now = now_ms(deps);
-    let approval = Approval {
-        id: ApprovalId::new(),
-        organization_id: caller.organization,
-        experiment_id: caller.experiment,
-        session_id: Some(caller.session),
-        card,
-        summary,
-        cost_cents,
-        needs_owner: false,
-        status: ApprovalStatus::Pending,
-        decided_by: None,
-        created_at: now,
-        decided_at: None,
-    };
-    let audit = AuditEntry::new(
-        caller.organization,
-        caller.actor,
-        format!("tool.{tool}"),
-        approval.id,
-        AuditOutcome::Done,
+    let experiment = deps
+        .store()
+        .experiment(caller.organization, caller.experiment)
+        .await?
+        .ok_or_else(|| ToolError::new("this experiment is unknown"))?;
+    let approval = approval::raise(
+        deps.store(),
         now,
-    );
-    deps.store().request_approval(&approval, &audit).await?;
-    let waiting = SessionChange {
-        status: Some(SessionStatus::WaitingForYou),
-        ..SessionChange::default()
-    };
-    deps.store()
-        .update_session(caller.organization, caller.session, &waiting, now, None)
-        .await?;
+        caller.actor,
+        CardRequest {
+            organization: caller.organization,
+            experiment: caller.experiment,
+            session: Some(caller.session),
+            card,
+            summary,
+            cost_cents,
+            needs_owner,
+            follow_policy: experiment.follow_policy,
+        },
+    )
+    .await
+    .map_err(|refusal| match refusal {
+        Refusal::Invalid(message) => ToolError::new(message),
+        _ => ToolError::new(format!(
+            "{tool} failed: the store is unavailable, retry in a minute"
+        )),
+    })?;
+    if approval.status == ApprovalStatus::Pending {
+        let waiting = SessionChange {
+            status: Some(SessionStatus::WaitingForYou),
+            ..SessionChange::default()
+        };
+        deps.store()
+            .update_session(caller.organization, caller.session, &waiting, now, None)
+            .await?;
+    }
     Ok(approval)
 }
 
 pub(super) fn waiting(approval: &Approval) -> serde_json::Value {
-    json!({
-        "approval": approval.id,
-        "status": "waiting for a person",
-        "note": "A card is in front of a person. The answer arrives as a message; do not call this tool again for it."
-    })
+    if approval.status == ApprovalStatus::Pending {
+        json!({
+            "approval": approval.id,
+            "status": "waiting for a person",
+            "note": "A card is in front of a person. The answer arrives as a message; do not call this tool again for it."
+        })
+    } else {
+        json!({
+            "approval": approval.id,
+            "status": "approved by policy",
+            "note": "Policy approved it. What follows arrives as a message; do not call this tool again for it."
+        })
+    }
 }
 
 #[derive(Deserialize)]
@@ -88,6 +104,7 @@ pub(super) async fn attach_repo<D: Deps>(
         CardKind::AttachRepo,
         format!("Attach repo {repo}"),
         None,
+        false,
     )
     .await?;
     Ok((waiting(&approval), None))
@@ -126,6 +143,7 @@ pub(super) async fn request_credential<D: Deps>(
         CardKind::AddCredential,
         summary,
         None,
+        false,
     )
     .await?;
     Ok((waiting(&approval), None))
@@ -175,6 +193,7 @@ pub(super) async fn set_environment<D: Deps>(
         CardKind::ChangeEnvironment,
         summary,
         None,
+        false,
     )
     .await?;
     Ok((waiting(&approval), None))
@@ -211,6 +230,7 @@ pub(super) async fn request_budget<D: Deps>(
         CardKind::RaiseBudget,
         summary,
         Some(amount_cents),
+        false,
     )
     .await?;
     Ok((waiting(&approval), None))

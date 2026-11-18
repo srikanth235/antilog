@@ -162,7 +162,7 @@ async fn idle_waits_a_message_resumes_and_stop_is_final() {
         .await
         .unwrap();
     assert_eq!(step.status, SessionStatus::WaitingForYou);
-    let resumed = session::message(&deps, org, session.id, "try caching")
+    let resumed = session::message(&deps, org, session.id, None, "try caching")
         .await
         .unwrap();
     assert_eq!(resumed.status, SessionStatus::Working);
@@ -179,7 +179,7 @@ async fn idle_waits_a_message_resumes_and_stop_is_final() {
     assert!(deps.platform.is_deleted(&handle));
     assert!(deps.timer.booked().is_empty());
     assert!(
-        session::message(&deps, org, session.id, "again")
+        session::message(&deps, org, session.id, None, "again")
             .await
             .is_err()
     );

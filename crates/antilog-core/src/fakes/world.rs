@@ -71,8 +71,8 @@ impl Deps for FakeDeps {
     fn store(&self) -> &FakeStore {
         &self.store
     }
-    fn judge(&self) -> &FakeJudgeStore {
-        &self.judge
+    fn judge(&self, _: antilog_types::OrganizationId) -> FakeJudgeStore {
+        self.judge.clone()
     }
     fn platform(&self) -> &FakePlatform {
         &self.platform

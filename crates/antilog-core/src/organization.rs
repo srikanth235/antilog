@@ -1,8 +1,9 @@
 //! The organization floor's action layer: one permission check, one audit entry per write.
 
 use antilog_types::{
-    AccessToken, AuditEntry, AuditId, AuditOutcome, ExperimentId, Identity, Member, MemberId,
-    Organization, OrganizationId, Project, ProjectId, ProjectRole, Role, TokenId,
+    AccessToken, AuditEntry, AuditId, AuditOutcome, Experiment, ExperimentId, Identity, Member,
+    MemberId, NewExperiment, Organization, OrganizationId, Project, ProjectId, ProjectRole, Role,
+    TokenId,
 };
 
 use crate::store::{Invariant, Store, StoreError};
@@ -61,6 +62,12 @@ pub enum Action {
     OrganizationLimitsSet,
     PolicySet,
     ExperimentBudgetSet,
+    ExperimentCreate,
+    SessionStart,
+    SessionMessage,
+    SessionStop,
+    SessionStep,
+    ToolCall,
     ApprovalDecide,
     ApprovalDecideValueModel,
     TokenCreateOwn,
@@ -79,6 +86,12 @@ impl Action {
         Self::OrganizationLimitsSet,
         Self::PolicySet,
         Self::ExperimentBudgetSet,
+        Self::ExperimentCreate,
+        Self::SessionStart,
+        Self::SessionMessage,
+        Self::SessionStop,
+        Self::SessionStep,
+        Self::ToolCall,
         Self::ApprovalDecide,
         Self::ApprovalDecideValueModel,
         Self::TokenCreateOwn,
@@ -97,6 +110,12 @@ impl Action {
             Self::OrganizationLimitsSet => "organization.set_limits",
             Self::PolicySet => "policy.set",
             Self::ExperimentBudgetSet => "experiment.set_budget",
+            Self::ExperimentCreate => "experiment.create",
+            Self::SessionStart => "session.start",
+            Self::SessionMessage => "session.message",
+            Self::SessionStop => "session.stop",
+            Self::SessionStep => "session.step",
+            Self::ToolCall => "tool.call",
             Self::ApprovalDecide | Self::ApprovalDecideValueModel => "approval.decide",
             Self::TokenCreateOwn | Self::TokenCreateForOther => "token.create",
             Self::TokenRevokeOther => "token.revoke",
@@ -109,7 +128,14 @@ impl Action {
     pub const fn minimum(self) -> Role {
         match self {
             Self::TokenCreateOwn => Role::Viewer,
-            Self::ExperimentBudgetSet | Self::ApprovalDecide => Role::Editor,
+            Self::ExperimentBudgetSet
+            | Self::ExperimentCreate
+            | Self::SessionStart
+            | Self::SessionMessage
+            | Self::SessionStop
+            | Self::SessionStep
+            | Self::ToolCall
+            | Self::ApprovalDecide => Role::Editor,
             Self::MemberAdd
             | Self::MemberSetRole
             | Self::ProjectCreate
@@ -130,6 +156,12 @@ impl Action {
             Self::ProjectRoleSet
                 | Self::ProjectLimitsSet
                 | Self::ExperimentBudgetSet
+                | Self::ExperimentCreate
+                | Self::SessionStart
+                | Self::SessionMessage
+                | Self::SessionStop
+                | Self::SessionStep
+                | Self::ToolCall
                 | Self::ApprovalDecide
                 | Self::ApprovalDecideValueModel
         )
@@ -427,4 +459,102 @@ pub async fn project_of<S: Store>(
         .await?
         .map(|experiment| experiment.project_id)
         .ok_or(Refusal::NotFound)
+}
+
+/// Starts an experiment in a project: editors and owners of the project. The budget defaults
+/// to the project's, then the organization's; the store refuses one above the caps.
+pub async fn create_experiment<S: Store>(
+    store: &S,
+    who: &Principal,
+    now: i64,
+    project: ProjectId,
+    new: NewExperiment,
+) -> Result<Experiment, Refusal> {
+    if !(1..=4000).contains(&new.goal.trim().chars().count()) {
+        return Err(Refusal::Invalid("a goal is 1 to 4000 characters"));
+    }
+    if new.budget_cap_cents.is_some_and(|cents| cents < 0) {
+        return Err(Refusal::Invalid("a budget is not negative"));
+    }
+    permit(
+        store,
+        who,
+        Action::ExperimentCreate,
+        Some(project),
+        new.goal.as_str(),
+        now,
+    )
+    .await?;
+    let row = store
+        .project(who.organization, project)
+        .await?
+        .ok_or(Refusal::NotFound)?;
+    let default = match row.default_budget_cents {
+        Some(cents) => Some(cents),
+        None => store
+            .organization(who.organization)
+            .await?
+            .and_then(|organization| organization.default_budget_cents),
+    };
+    let mut experiment = Experiment::new(
+        who.organization,
+        project,
+        new.goal.trim(),
+        new.budget_cap_cents.or(default).unwrap_or(0),
+        who.member,
+        now,
+    );
+    experiment.follow_policy = new.follow_policy;
+    store
+        .create_experiment(
+            &experiment,
+            &entry(
+                who,
+                "experiment.create",
+                experiment.id,
+                AuditOutcome::Done,
+                now,
+            ),
+        )
+        .await?;
+    Ok(experiment)
+}
+
+pub async fn experiments<S: Store>(
+    store: &S,
+    who: &Principal,
+    project: ProjectId,
+) -> Result<Vec<Experiment>, Refusal> {
+    member_of(store, who).await?;
+    store
+        .project(who.organization, project)
+        .await?
+        .ok_or(Refusal::NotFound)?;
+    Ok(store.experiments(who.organization, project).await?)
+}
+
+pub async fn experiment<S: Store>(
+    store: &S,
+    who: &Principal,
+    id: ExperimentId,
+) -> Result<Experiment, Refusal> {
+    member_of(store, who).await?;
+    store
+        .experiment(who.organization, id)
+        .await?
+        .ok_or(Refusal::NotFound)
+}
+
+/// A write on an experiment's sessions: the role in its project decides.
+pub async fn permit_session<S: Store>(
+    store: &S,
+    who: &Principal,
+    now: i64,
+    action: Action,
+    experiment: ExperimentId,
+    target: impl ToString,
+) -> Result<(), Refusal> {
+    let project = project_of(store, who, experiment).await?;
+    permit(store, who, action, Some(project), target, now).await?;
+    Ok(())
 }

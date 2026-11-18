@@ -164,9 +164,10 @@ pub async fn open_external<D: Deps>(
     deps: &D,
     organization: OrganizationId,
     experiment: ExperimentId,
+    actor: Option<MemberId>,
 ) -> Result<Session, SessionError> {
     let session = Session::new(organization, experiment, "mcp", "external", now_ms(deps));
-    let entry = audit(deps, organization, None, "session.start", session.id);
+    let entry = audit(deps, organization, actor, "session.start", session.id);
     deps.store().create_session(&session, &entry).await?;
     Ok(session)
 }
@@ -195,6 +196,7 @@ pub async fn message<D: Deps>(
     deps: &D,
     organization: OrganizationId,
     id: SessionId,
+    actor: Option<MemberId>,
     text: &str,
 ) -> Result<Session, SessionError> {
     let (_, handle) = active(deps, organization, id).await?;
@@ -205,7 +207,13 @@ pub async fn message<D: Deps>(
     };
     let session = deps
         .store()
-        .update_session(organization, id, &change, now_ms(deps), None)
+        .update_session(
+            organization,
+            id,
+            &change,
+            now_ms(deps),
+            Some(&audit(deps, organization, actor, "session.message", id)),
+        )
         .await?;
     book(deps, id, Duration::ZERO).await?;
     Ok(session)
