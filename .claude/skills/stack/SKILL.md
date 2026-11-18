@@ -13,7 +13,7 @@ Read the repo page for the file type first: it holds this repo's constraints, it
 | File type | Read | Check |
 | --- | --- | --- |
 | `.rs`, `Cargo.toml` | [rust/antilog.md](rust/antilog.md) | `cargo fmt --all --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo nextest run`, `cargo deny check` |
-| `.ts`, `.tsx`, `.css` in the web client | [typescript/antilog.md](typescript/antilog.md) | `pnpm build && pnpm typecheck && pnpm test` (target) |
+| `.ts`, `.tsx`, `.css` in the web client | [typescript/antilog.md](typescript/antilog.md) | `pnpm build && pnpm typecheck && pnpm lint && pnpm test`, and `pnpm e2e` |
 | HTML, CSS and browser APIs, in the web client or a board | [web/antilog.md](web/antilog.md), then the guide for the job in [web/general/INDEX.md](web/general/INDEX.md); for a Base UI component also [web/base-ui.md](web/base-ui.md) | the check of the file type; `python3 .claude/skills/stack/web/sync.py --check` after a sync |
 | `.swift`, the macOS app (boards owed) | [swift/antilog.md](swift/antilog.md) | `xcodebuild ... test` on macOS (target); report it unrun elsewhere |
 | SQL, migrations, `sqlx` queries, the job queue | [postgres/antilog.md](postgres/antilog.md) | `cargo sqlx prepare --workspace --check` and the storage tests |

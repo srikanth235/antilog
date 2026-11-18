@@ -1,14 +1,14 @@
 # TypeScript and React in Antilog
 
-(target) The web client does not exist on this branch; the owner-approved boards are in `design/mockups/`. This page says how the client is written when it lands.
+The web client is in `web/`; the owner-approved boards are in `design/mockups/`. This page says how the client is written.
 
 ## Workflow and done criteria
 
 ```bash
 pnpm install --frozen-lockfile
-pnpm build && pnpm typecheck && pnpm test      # (target) the check
-pnpm lint                                       # (target) Biome: format and lint, no warnings
-pnpm e2e                                        # (target) Playwright, against a built client and a test server
+pnpm build && pnpm typecheck && pnpm test      # the check
+pnpm lint                                       # Biome: format and lint
+pnpm e2e                                        # Playwright, against a built client and the server on its fakes
 ```
 
 **Done** when build, typecheck, lint and tests are green and the generated files are up to date (see below). Fix the code, not the check: do not add `// @ts-ignore`, `any`, a lint suppression or a snapshot update to get green.
@@ -36,7 +36,7 @@ Versions are in [libraries.md](../libraries.md). A library outside this list is 
 - **Generated files are outputs; never edit them.** There are three: the API client types (from the OpenAPI document), the tokens CSS (from `design/tokens.toml`) and the words module (from the one catalogue, target). Change the source, run the generator, commit the result, and let CI fail on drift. A hand edit to a generated file is a finding.
 - **The client calls the API only through the generated client** (`openapi-fetch`) wrapped in TanStack Query hooks. No hand-written `fetch` to the server, no copied response types. A response is typed by the generated schema, and a change to the API shows as a type error here.
 - **Tokens, not values.** Colours, type, spacing, radius and motion come from the generated tokens CSS (`var(--...)`) and its type classes, in light and dark. No hex or `rgb()` in a stylesheet or a style prop, no parallel variable table, no font-family override, no second dark theme. The themes are `light` and `dark`, keyed on `[data-theme="dark"]`; with no attribute the page follows the system. A value that is missing is added to `design/tokens.toml` by the owner of the design, not invented in a component. See [design mockups](../../design/mockups.md).
-- **Words come from one catalogue (target).** No user-facing string literal in a component: look it up by key. This keeps the web app and the Mac app saying the same thing, and keeps the vocabulary right ("experiment", "session", "Return"; see `docs/GLOSSARY.md`). A literal string in JSX is a finding. Test ids and ARIA names follow the element ids shared with the Mac app ([../swift/antilog.md](../swift/antilog.md)).
+- **Words come from one catalogue** (`web/src/words.ts`, one typed module; the shared catalogue with the Mac app is target). No user-facing string literal in a component: look it up by key. This keeps the web app and the Mac app saying the same thing, and keeps the vocabulary right ("experiment", "session", "Return"; see `docs/GLOSSARY.md`). A literal string in JSX is a finding. Test ids and ARIA names follow the element ids shared with the Mac app ([../swift/antilog.md](../swift/antilog.md)).
 - **CSS modules, no Tailwind.** One `.module.css` per component, class names local, styles written against tokens. Base UI gives behaviour and accessibility (dialog, alert dialog, menu, context menu, popover, tooltip, tabs, select, combobox and autocomplete, checkbox, radio, switch, slider, number field, meter, progress, toast, field and fieldset, scroll area, and a drawer where a board needs one); style it, do not re-implement it. Features import our wrappers, not `@base-ui/react` ([../web/base-ui.md](../web/base-ui.md)). Do not import a second component kit. For HTML, CSS and browser APIs, and for what to build natively where Base UI has no component, read [../web/antilog.md](../web/antilog.md).
 - **No `useEffect`.** It is banned in the client, with `useLayoutEffect`, by a Biome `noRestrictedImports` rule (target). Each job it is used for has a better home: server data is a query, a value from props or state is derived in render, work caused by a click or submit runs in the handler, a live-event subscription is TanStack Query's or `useSyncExternalStore`, start-up runs once at the entry module, and resetting state on a new id is a `key`. A third-party widget that needs a DOM node uses a ref callback. If none fits, ask; do not add an exception.
 - **Server state belongs to TanStack Query**, not to `useState` plus an effect. One `queryKey` per resource, built by a function, so many components share a request. Writes use `useMutation` and then invalidate the keys they change. Live events (server-sent) update the query cache; they do not create a parallel store. Local UI state (open panel, draft text) is `useState` or the URL.

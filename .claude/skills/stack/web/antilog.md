@@ -1,6 +1,6 @@
 # The web platform in Antilog
 
-Read this before writing HTML, CSS or browser-side TypeScript in the web client (target) or a design board. Then find the guide for the job in [general/INDEX.md](general/INDEX.md) and read it **before** writing the code: models default to older patterns, and these guides say what the platform does natively now.
+Read this before writing HTML, CSS or browser-side TypeScript in the web client (`web/`) or a design board. Then find the guide for the job in [general/INDEX.md](general/INDEX.md) and read it **before** writing the code: models default to older patterns, and these guides say what the platform does natively now.
 
 `general/` is a copy of 111 guides from [Modern Web Guidance](https://github.com/GoogleChrome/modern-web-guidance) (Chrome, Edge, Firefox and MDN teams; Apache-2.0, [licence](licenses/modern-web-guidance-LICENSE)). It is the subset a desktop web app for engineers needs; the list and the reasons for what is left out are in [sync.py](sync.py). Each guide ends with the browser support of the features it uses.
 

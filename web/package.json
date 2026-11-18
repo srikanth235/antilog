@@ -3,9 +3,33 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "generate:api": "openapi-typescript ../openapi/antilog.json -o src/api/schema.d.ts"
+    "generate:api": "openapi-typescript ../openapi/antilog.json -o src/api/schema.d.ts",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "test": "vitest run",
+    "e2e": "playwright test --trace off"
+  },
+  "dependencies": {
+    "@base-ui/react": "1.9.0",
+    "@tanstack/react-query": "5.107.1",
+    "@tanstack/react-router": "1.170.46",
+    "openapi-fetch": "0.17.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
   },
   "devDependencies": {
-    "openapi-typescript": "7.13.0"
+    "@biomejs/biome": "2.6.7",
+    "@playwright/test": "1.65.1",
+    "@types/node": "22.19.1",
+    "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.3.0",
+    "openapi-typescript": "7.13.0",
+    "typescript": "7.0.2",
+    "vite": "8.3.8",
+    "vitest": "5.1.0"
   }
 }

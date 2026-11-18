@@ -1,0 +1,67 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--scrim);
+  opacity: 1;
+  transition: opacity 0.14s ease;
+}
+.backdrop[data-starting-style],
+.backdrop[data-ending-style] {
+  opacity: 0;
+}
+.popup {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(480px, calc(100% - 32px));
+  height: fit-content;
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+  padding: var(--s5);
+  background: var(--raised);
+  color: var(--ink);
+  border: 1px solid var(--line2);
+  border-radius: var(--r3);
+  box-shadow: var(--shadow);
+  transition:
+    opacity 0.14s ease,
+    transform 0.14s ease;
+}
+.popup[data-starting-style],
+.popup[data-ending-style],
+.settings[data-starting-style],
+.settings[data-ending-style] {
+  opacity: 0;
+  transform: scale(0.98);
+}
+.settings {
+  position: fixed;
+  transition:
+    opacity 0.14s ease,
+    transform 0.14s ease;
+}
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+}
+.description {
+  margin: 0;
+  color: var(--ink2);
+}
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--s2);
+}
+@media (prefers-reduced-motion: reduce) {
+  .popup,
+  .backdrop,
+  .settings {
+    transition: none;
+  }
+}

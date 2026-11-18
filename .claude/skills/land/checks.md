@@ -9,6 +9,8 @@ python3 design/tools/tokens.py
 python3 design/tools/tokens.py --check
 ```
 
+The web app has its own checks, from `web/`: `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm build` and `pnpm e2e` (Playwright against the server on its fakes; CI jobs `web-client` and `web-e2e`).
+
 A doc-only change has no command: read the links and fix every statement the change made false. The rows marked (target) have no command yet. Say so in the report; never call an unrun layer verified.
 
 ## Target
@@ -20,7 +22,7 @@ One gate command with profiles (local, pull request, nightly, release) is the ta
 | Rust (`antilog-core`, `antilog-server`, `antilog`) | `cargo fmt --all --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo nextest run --workspace` (`cargo test --doc` for doctests), `cargo deny check` (all four exist; CI job `rust`) | [stack/rust/antilog.md](../stack/rust/antilog.md) |
 | An API type, route or event | the Rust checks, `cargo run -q -p antilog-server -- openapi | diff - openapi/antilog.json`, then `pnpm generate:api` in `web/` leaves no diff (CI jobs `rust` and `web-client`); see [change/api-endpoint.md](../change/api-endpoint.md) | [stack/rust/antilog.md](../stack/rust/antilog.md) |
 | The CLI, an Antilog tool or `antilog mcp` | the Rust checks, then the CLI test script against a built `antilog` and a test server | [stack/rust/antilog.md](../stack/rust/antilog.md), [stack/mcp/antilog.md](../stack/mcp/antilog.md) |
-| TypeScript (the web app, the generated client) | `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm lint`, `pnpm test` (the browser tests are `@playwright/test`; never run `playwright install`, see [stack/playwright/antilog.md](../stack/playwright/antilog.md)) | [stack/typescript/antilog.md](../stack/typescript/antilog.md) |
+| TypeScript (the web app, the generated client) | `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm build`, `pnpm e2e` (all exist) (the browser tests are `@playwright/test`; never run `playwright install`, see [stack/playwright/antilog.md](../stack/playwright/antilog.md)) | [stack/typescript/antilog.md](../stack/typescript/antilog.md) |
 | Swift (the macOS app) | `xcodebuild -project Antilog.xcodeproj -scheme Antilog -destination 'platform=macOS' test`, on macOS only | [stack/swift/antilog.md](../stack/swift/antilog.md) |
 | The Helm chart or an OpenTofu module (target) | `helm lint`, `helm template` against each cloud's values, `tofu fmt -check` and `tofu validate`; an install on a local k3s cluster in CI | [stack/kubernetes/antilog.md](../stack/kubernetes/antilog.md) |
 | The Lambda build or a timer adapter (target) | `cargo lambda build --release --arm64`, then a local invoke with `cargo lambda watch` and `cargo lambda invoke`, beside the k3s chart install; a test that no work runs after the response and that a re-delivered wake-up leaves one outcome | [stack/rust/antilog.md](../stack/rust/antilog.md) |

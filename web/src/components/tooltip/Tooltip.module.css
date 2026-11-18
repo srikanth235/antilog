@@ -1,0 +1,17 @@
+.popup {
+  padding: var(--s1) var(--s2);
+  background: var(--fill);
+  color: var(--onFill);
+  border-radius: var(--r1);
+  font-size: 12px;
+  transition: opacity 0.12s ease;
+}
+.popup[data-starting-style],
+.popup[data-ending-style] {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .popup {
+    transition: none;
+  }
+}

@@ -104,3 +104,54 @@ jobs:
         run: |
           pnpm generate:api
           git diff --exit-code -- src/api/schema.d.ts
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm build
+
+  web-e2e:
+    # Playwright smoke tests: the built client against the server on its fakes, in light and dark.
+    runs-on: ubuntu-latest
+    env:
+      CARGO_INCREMENTAL: "0"
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      SQLX_OFFLINE: "true"
+      DATABASE_URL: postgres://postgres:pw@localhost:5432/antilog
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_PASSWORD: pw
+          POSTGRES_DB: antilog
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v5
+      - name: Toolchain from rust-toolchain.toml
+        run: rustup show active-toolchain || rustup toolchain install
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: web-e2e-${{ hashFiles('rust-toolchain.toml', 'Cargo.lock') }}
+          restore-keys: web-e2e-
+      - run: cargo build -p antilog-server
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 26.13.1
+      - run: npm install --global pnpm@12.18.0
+      - run: pnpm install --frozen-lockfile
+        working-directory: web
+      - name: Playwright smoke tests (the runner's own Chrome; no browser download)
+        working-directory: web
+        env:
+          ANTILOG_SERVER_BIN: ${{ github.workspace }}/target/debug/antilog-server
+          PLAYWRIGHT_CHROMIUM: /usr/bin/google-chrome
+        run: pnpm e2e
