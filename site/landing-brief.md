@@ -1,67 +1,67 @@
-# Antilog landing page: design brief
+# Antilog landing page brief
 
-For a coding agent redesigning `site/index.html` from scratch. Everything below was settled with the owner on 19 Nov 2026. Do not reopen the positioning; the design is yours.
+Design and build the landing page for antilog.tech. This brief gives you the facts and the limits. The design is entirely yours: layout, structure, visuals, type, colour, motion and tone of the page. Make it stellar.
 
-## Goal
+## What Antilog is
 
-A single page at antilog.tech that makes a business reader understand Antilog in ten seconds and ask for access. It is also the "live product on a .tech domain" evidence for the No Excuses Fund (deadline 15 Dec 2026), so it must be fast, polished and never broken.
+Antilog is an autonomous agent platform for business outcomes. A team says what should improve and how it is measured: lower cost, more revenue, fewer errors, less risk. AI agents then run experiments on their own to improve it. An independent judge measures every change, and every result arrives with its value in dollars. The team always knows what its AI returned.
 
-## What Antilog is (one sentence)
+## Who it is for
 
-Antilog is an autonomous agent platform for business outcomes. You set the outcome, agents do the work, and every result is independently measured and valued in dollars, so you always know what your AI returned.
+Business and technology leaders who are buying or running AI agents and can't yet say what that spend returned. Write for them, not only for engineers.
 
-## Audience
+## The idea to land
 
-Business and technology leaders who are buying or running AI agents and want to know what the spend returned. Not only engineers. Plain words; no jargon in headlines.
+Agents have made work cheap and plentiful. Activity is easy to count, but whether the business actually got better is not. Antilog starts from the business outcome and shows the return.
 
-## Positioning (settled)
+The settled lines (use them, or improve the wording without changing the meaning):
 
-- Antilog is a platform. Cloud cost is one example outcome, not the pitch.
-- Outcomes that can be quantified: cost down, revenue up, errors down, risk down.
-- Spine: **You set the outcome. Agents do the work. Antilog shows the return.**
+- One line: **You set the outcome. Agents do the work. Antilog shows the return.**
 - Headline: **Autonomous agents, measured by business outcomes.**
-- The single idea running through the page: "what did our AI return?". The product's own word for it is **Return** = value delivered divided by everything spent finding it, including experiments that found nothing.
-- Trust, said once and in plain words: agents don't grade their own work. An independent judge measures every change against a test the agents can't see or alter. People approve what ships, every action is logged, and spending stops at the cap.
 
-## Page outline (keep the order, restyle freely)
+## What is true (you may say these)
 
-1. **Hero.** Headline above. Subhead: "Tell Antilog what should improve: lower cost, more revenue, fewer errors, less risk. Agents do the work. Every result is independently measured and valued in dollars, so you always know what your AI returned." Primary button **Request access**, secondary **Sign in**. A hero visual: an invented "Monthly report" (four improvements, one per outcome, value delivered, everything spent, Return) stamped "Illustrative example".
-2. **The problem.** "Everyone has agents now. Few can say what they returned." Activity is easy to count; whether the business got better is not.
-3. **How it works.** Three steps: Set the outcome (what should improve, how it is measured, what each unit is worth, how much you will spend). Agents do the work (experiments on your code and data, unattended, inside the budget). See the return (each improvement measured independently, arrives for approval with its value in dollars).
-4. **What you can point it at.** Four outcome groups: Cost down (cloud bill, data pipeline cost), Revenue up (conversion, recommendations), Errors down (forecast error, response time), Risk down (fraud loss, stock-outs). Label as illustrative examples and add: "The first experiments on Antilog are on cost and speed in code."
-5. **Why you can trust the figure.** Agents / the judge / your people, plus an illustrative receipt (marked "measured offline").
-6. **The scoreboard.** "One figure, every month: Return." The formula, and three controls: a hard budget, approvals and audit, your data stays yours.
-7. **Close.** "Put your agents on outcomes." Request access. "Antilog is open by invitation."
+- **Outcomes, not activity.** A team names a business outcome, how it is measured, what one unit of improvement is worth, and a budget.
+- **Agents work unattended.** Several agents can run experiments in parallel, inside the budget. Antilog is not tied to one AI model provider.
+- **An independent judge decides.** Agents never grade their own work. The test is fixed before the work starts, and agents can't see or change the data held back for the final check. Only changes that measurably beat what was there before count.
+- **Every win has a receipt and a dollar value.** It is signed by the judge and shows what improved, by how much, what that is worth in dollars a year, and what it cost to find. It ships as a pull request for people to approve.
+- **Return** is one figure, every month: the value delivered divided by everything spent to find it, including the experiments that found nothing.
+- **Control.** A hard budget (agents stop when it runs out). Nothing ships without approval. Every action is logged. Antilog keeps results, never the customer's code or data.
 
-## Hard rules
+## What is not true yet (don't imply it)
 
-- **Every claim must match what is built.** Built: the judge (seal, holdout, protected paths, signed receipts), value models with Delivered, Pending, At risk and Return, the monthly Report, budgets and caps, approvals and audit log, agents on agent platforms with no tie to one model provider. Phase 1 is AWS only, with one evaluation kind (speed/cost in code) and no data connectors, so outcomes beyond that are examples.
-- **Any figure must be labelled "Illustrative example".** No customer names, logos, quotes, funding figures, benchmarks or statistics we cannot back up. Invent nothing that reads as a real result.
-- **Never mention services** (engagements, consulting, "we set it up with you"). Optional services exist but are not on this page.
-- **Words not to use:** RSI, AutoML, self-improving AI, multi-cloud, ROI (say Return), leaderboard, "contract", "automation". Say "experiment", "judge", "Return", "win", "receipt".
-- **No names of AI vendors** as a lineup; only one agent platform is built.
-- **Contact** is hello@antilog.tech only. Request access is a mailto link to it (subject "Request access to Antilog"). Never put any personal email in any file.
-- **Sign in** links to https://app.antilog.tech (owner's call; leave it).
+- Today, experiments run on code: cost and speed. Outcomes like conversion, forecast error or fraud loss are where the platform is going. You may show them only as clearly labelled examples.
+- It runs on AWS only. Don't claim multi-cloud or name a lineup of AI vendors.
+- There are no customers, logos, testimonials, benchmarks or statistics to show. Don't invent any. Any figure on the page must be visibly labelled **"Illustrative example"**.
 
-## Technical constraints
+## Words
 
-- One static file, `site/index.html`, no build step. Inline CSS and SVG; web fonts only from Google Fonts. No tracking scripts.
-- Light and dark, following `prefers-color-scheme`, both designed (tokens on `:root`, dark overrides).
-- Accessible: semantic landmarks, skip link, visible focus, text alternatives for every illustration, contrast AA, honours `prefers-reduced-motion`.
-- Works at 400px wide with no horizontal scroll; at least 16px side gutters; tap targets at least 44px.
-- Published by the owner to Cloudflare Pages. Do not attempt to publish.
+- Prefer: outcome, experiment, judge, win, receipt, Return (with a capital R, never "ROI").
+- Never: RSI, AutoML, self-improving AI, multi-cloud, ROI, leaderboard.
+- Never mention services, consulting or "we set it up with you".
 
-## Look and feel (current direction, change what you like)
+## Actions and links
 
-Warm paper and ink with one brass accent (light), a deep navy with the same brass (dark). Serif display headlines (Newsreader) with italic brass emphasis, a clean sans for body (Instrument Sans), mono for small labels (JetBrains Mono), a handwritten face (Caveat) for margin notes and stamps. The owner liked Greptile's blueprint structure and asked for it in Antilog's own style: thin rails with corner dots, bracketed mono labels like `[ THE PROBLEM ]`, numbered cells, framed illustration panels, a dark band mid-page, hatched spacer bands, chamfered buttons. The owner also liked illustrations on every section. Do not copy Greptile's colours, fonts, artwork or copy.
+- Primary action: **Request access**. Antilog is invitation-only. Use `mailto:hello@antilog.tech?subject=Request%20access%20to%20Antilog`.
+- Secondary: **Sign in**, linking to `https://app.antilog.tech`.
+- The only contact is hello@antilog.tech. Put no other email address anywhere.
 
-The logo is the inline SVG mark in the current file's header (reuse it). Brand tokens for the product itself are in `design/tokens.toml`, but this page is a marketing page outside the product's design rules, so it may use its own fonts.
+## Brand asset
 
-## Where to look
+The Antilog logo mark is below. Keep the mark itself; how you use it is up to you.
 
-- Current page: `site/index.html` (commit `803f481` on branch `claude/dreamy-ptolemy-vg7uga-messaging`).
-- Product truth: `AGENTS.md`, `.claude/skills/product/rulings.md` (see the 19 Nov row), `docs/GLOSSARY.md`.
+```html
+<svg viewBox="218 338 600 369" width="38" height="24" aria-hidden="true"><defs><linearGradient id="brass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F8E4B8"/><stop offset=".6" stop-color="#E2BE7C"/><stop offset="1" stop-color="#BE8F49"/></linearGradient></defs><g fill="#5C6676"><path d="M397.8 434.8L397.8 466.2A31.5 31.5 0 0 1 366.4 434.8Z" fill-opacity=".12"/><path d="M407.7 434.8L407.7 466.2A31.5 31.5 0 0 0 439.2 434.8Z" fill-opacity=".18"/><path d="M361.6 424.9L439.2 424.9A77.6 77.6 0 0 0 361.6 347.3Z" fill-opacity=".28"/><path d="M351.7 471.0L227.9 471.0A123.8 123.8 0 0 1 351.7 347.3Z" fill-opacity=".42"/><path d="M444.0 480.9L444.0 697.0A216.1 216.1 0 0 1 227.9 480.9Z" fill-opacity=".6"/></g><path d="M453.9 342.5L453.9 697.0A354.5 354.5 0 0 0 808.4 342.5Z" fill="url(#brass)"/></svg>
+```
 
-## Done means
+## Must work
 
-Screenshots checked at 1440px and 400px in light and dark, no horizontal overflow, every claim traceable to the list above, and a commit on the messaging branch only (subject at most 72 characters, `type(scope): summary`, no pull request).
+- **One static HTML file** with no build step. CSS, SVG and images go inline. Web fonts from Google Fonts are fine. No tracking.
+- **Light and dark**, following the visitor's system setting.
+- **Accessible:** real headings and landmarks, a visible keyboard focus, text alternatives for visuals, readable contrast, and respect for reduced motion.
+- **Works on a phone** about 400px wide, with no sideways scrolling.
+- **Fast and never broken.** It is the public face of the product, and it is the live-site evidence in a grant application due 15 Dec 2026.
+
+## Deliverable
+
+`index.html`, plus screenshots at desktop and phone width in light and dark. You don't publish it; the owner does.
