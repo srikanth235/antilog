@@ -52,7 +52,7 @@ The settled lines (use them, or improve the wording without changing the meaning
 
 ## Brand asset
 
-The Antilog logo mark is below. Keep the mark itself; how you use it is up to you.
+The Antilog logo mark is below: five grey quarter-circles of rising strength and one brass quarter-circle. Keep the mark itself; how you use it is up to you. On a dark background, lighten the grey (`#8E9BB2` works) and keep the brass. The wordmark is the word "Antilog" set beside it.
 
 ```html
 <svg viewBox="218 338 600 369" width="38" height="24" aria-hidden="true"><defs><linearGradient id="brass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F8E4B8"/><stop offset=".6" stop-color="#E2BE7C"/><stop offset="1" stop-color="#BE8F49"/></linearGradient></defs><g fill="#5C6676"><path d="M397.8 434.8L397.8 466.2A31.5 31.5 0 0 1 366.4 434.8Z" fill-opacity=".12"/><path d="M407.7 434.8L407.7 466.2A31.5 31.5 0 0 0 439.2 434.8Z" fill-opacity=".18"/><path d="M361.6 424.9L439.2 424.9A77.6 77.6 0 0 0 361.6 347.3Z" fill-opacity=".28"/><path d="M351.7 471.0L227.9 471.0A123.8 123.8 0 0 1 351.7 347.3Z" fill-opacity=".42"/><path d="M444.0 480.9L444.0 697.0A216.1 216.1 0 0 1 227.9 480.9Z" fill-opacity=".6"/></g><path d="M453.9 342.5L453.9 697.0A354.5 354.5 0 0 0 808.4 342.5Z" fill="url(#brass)"/></svg>
