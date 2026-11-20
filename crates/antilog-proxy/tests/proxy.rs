@@ -76,6 +76,7 @@ const O_TOKENS: Tokens = Tokens {
 
 const ANTHROPIC_KEY: &str = "sk-ant-real-org-key-0001";
 const OPENAI_KEY: &str = "sk-oai-real-org-key-0002";
+const ZEN_KEY: &str = "zen-real-org-key-0003";
 
 // ---- the fake providers -------------------------------------------------------------------
 
@@ -302,6 +303,7 @@ impl Rig {
             for (provider, key) in [
                 (ModelProvider::Anthropic, ANTHROPIC_KEY),
                 (ModelProvider::Openai, OPENAI_KEY),
+                (ModelProvider::Opencode, ZEN_KEY),
             ] {
                 store
                     .put_model_key(
@@ -365,7 +367,8 @@ impl Rig {
             networks: SessionNetworks::default(),
             upstreams: Upstreams {
                 anthropic: upstream.clone(),
-                openai: upstream,
+                openai: upstream.clone(),
+                opencode: upstream,
             },
             http: reqwest::Client::new(),
             platform_hosts: options.platform_hosts.clone(),
@@ -494,6 +497,36 @@ async fn an_anthropic_stream_is_relayed_whole_and_books_its_final_usage() {
         rig.booked().await,
         (cost(ModelProvider::Anthropic, &am(), A_TOKENS), 1500)
     );
+}
+
+#[tokio::test]
+async fn an_opencode_call_carries_the_zen_key_and_its_headers_and_a_free_model_books_nothing() {
+    let rig = Rig::start(Options::default()).await;
+    let call = |model: &str| {
+        rig.http
+            .post(rig.url("/opencode/v1/chat/completions"))
+            .bearer_auth(&rig.token)
+            .header("x-opencode-session", "ses_1")
+            .header("x-opencode-project", "prj_1")
+            .json(&json!({"model":model,"messages":[]}))
+            .send()
+    };
+    assert_eq!(call("big-pickle").await.unwrap().status(), StatusCode::OK);
+    let seen = &rig.calls()[0];
+    assert_eq!(seen.path, "/v1/chat/completions");
+    assert_eq!(seen.headers["authorization"], format!("Bearer {ZEN_KEY}"));
+    assert_eq!(seen.headers["x-opencode-session"], "ses_1");
+    assert_eq!(seen.headers["x-opencode-project"], "prj_1");
+    assert_eq!(rig.booked().await, (0, 2800));
+
+    // A paid Zen model the table does not know is booked at the highest known price.
+    assert_eq!(
+        call("some-paid-model").await.unwrap().status(),
+        StatusCode::OK
+    );
+    let (cents, tokens) = rig.booked().await;
+    assert!(cents > 0);
+    assert_eq!(tokens, 5600);
 }
 
 #[tokio::test]

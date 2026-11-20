@@ -98,6 +98,10 @@ pub fn opencode_config(
                 "baseURL": format!("{}/openai/v1", settings.proxy_url),
                 "apiKey": model_token,
             }},
+            "opencode": {"options": {
+                "baseURL": format!("{}/opencode/v1", settings.proxy_url),
+                "apiKey": model_token,
+            }},
         },
         "mcp": {"antilog": {
             "type": "remote",

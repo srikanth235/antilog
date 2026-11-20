@@ -22,6 +22,8 @@ pub use egress::{NetworkAccess, SessionNetworks};
 pub struct Upstreams {
     pub anthropic: String,
     pub openai: String,
+    /// OpenCode Zen: chat completions, Responses or Messages, by the path called.
+    pub opencode: String,
 }
 
 impl Default for Upstreams {
@@ -29,6 +31,7 @@ impl Default for Upstreams {
         Self {
             anthropic: "https://api.anthropic.com".to_owned(),
             openai: "https://api.openai.com".to_owned(),
+            opencode: "https://opencode.ai/zen".to_owned(),
         }
     }
 }

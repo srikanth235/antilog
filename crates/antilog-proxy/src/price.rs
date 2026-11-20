@@ -112,8 +112,23 @@ pub fn highest() -> Price {
         .unwrap_or(FALLBACK)
 }
 
+const FREE: Price = Price {
+    input: 0,
+    output: 0,
+    cache_read: 0,
+    cache_write: 0,
+};
+
+/// OpenCode Zen's free models: an id ending in `-free`, and `big-pickle`. They cost nothing.
+fn is_free_zen(model: &str) -> bool {
+    model.ends_with("-free") || model == "big-pickle"
+}
+
 /// The price of a model, and whether the table knew it.
 pub fn lookup(provider: ModelProvider, model: Option<&str>) -> (Price, bool) {
+    if provider == ModelProvider::Opencode && model.is_some_and(is_free_zen) {
+        return (FREE, true);
+    }
     let found = |name: &str| {
         table()
             .get(name)
@@ -175,7 +190,8 @@ mod tests {
 
     #[test]
     fn a_known_model_has_its_price_and_a_dated_snapshot_has_the_same() {
-        for provider in ModelProvider::ALL {
+        // OpenCode Zen has no rows of its own: its models are priced by rule.
+        for provider in [ModelProvider::Anthropic, ModelProvider::Openai] {
             let model = models(provider)[0];
             let (price, known) = lookup(provider, Some(model));
             assert!(known, "{model}");
@@ -207,6 +223,18 @@ mod tests {
             table()
                 .values()
                 .all(|(_, p)| p.output <= price.output && p.input <= price.input)
+        );
+    }
+
+    #[test]
+    fn zen_free_models_cost_nothing_and_other_zen_models_the_most() {
+        for model in ["grok-code-free", "big-pickle"] {
+            assert_eq!(lookup(ModelProvider::Opencode, Some(model)), (FREE, true));
+        }
+        assert_eq!(lookup(ModelProvider::Openai, Some("x-free")).0, highest());
+        assert_eq!(
+            lookup(ModelProvider::Opencode, Some("some-paid-model")),
+            (highest(), false)
         );
     }
 

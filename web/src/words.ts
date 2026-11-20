@@ -678,6 +678,10 @@ export const w = {
         name: "Anthropic",
         hint: "Claude models. Needed for any session that runs a Claude model.",
       },
+      opencode: {
+        name: "OpenCode Zen",
+        hint: "OpenCode's own models, some free. Needed for any session that runs an opencode model.",
+      },
       openai: { name: "OpenAI", hint: "GPT models. Needed for any session that runs a GPT model." },
       set: "Key set",
       none: "No key",
