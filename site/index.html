@@ -208,6 +208,7 @@ section.s>.wrap::after,.strip>.wrap::after,.band>.wrap::after{right:-4px}
 .strip i{font-style:normal;color:var(--mark);margin-inline:.5em}
 .tagline{font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;background:var(--pen);color:var(--page);padding:3px 8px}
 .cells{list-style:none;padding:0;display:grid;margin:clamp(36px,5vw,64px) calc(-1*var(--gutter)) calc(-1*clamp(56px,8vw,112px));border-top:1px dashed var(--rule)}
+.cells.c2{grid-template-columns:repeat(2,minmax(0,1fr))}
 .cells.c3{grid-template-columns:repeat(3,minmax(0,1fr))}
 .cells.c4{grid-template-columns:repeat(4,minmax(0,1fr))}
 .cells>*{padding:var(--gutter);padding-bottom:calc(var(--gutter) + 8px);border-right:1px dashed var(--rule)}
@@ -257,9 +258,9 @@ section.s>.wrap::after,.strip>.wrap::after,.band>.wrap::after{right:-4px}
   .cells.c4>*:nth-child(-n+2){border-bottom:1px dashed var(--rule)}
 }
 @media (max-width:860px){
-  .cells.c3{grid-template-columns:minmax(0,1fr)}
-  .cells.c3>*{border-right:0;border-bottom:1px dashed var(--rule)}
-  .cells.c3>*:last-child{border-bottom:0}
+  .cells.c2,.cells.c3{grid-template-columns:minmax(0,1fr)}
+  .cells.c2>*,.cells.c3>*{border-right:0;border-bottom:1px dashed var(--rule)}
+  .cells.c2>*:last-child,.cells.c3>*:last-child{border-bottom:0}
   .panel{aspect-ratio:16/8}
 }
 @media (max-width:560px){
@@ -460,10 +461,9 @@ section.s>.wrap::after,.strip>.wrap::after,.band>.wrap::after{right:-4px}
       <text x="294" y="110">Return 20×</text>
       <path class="pn" d="M296 120c-6 14-8 28-14 38M282 158l2-11M282 158l10-5"/>
     </svg></div></div>
-    <div class="cells c3 plain">
+    <div class="cells c2 plain">
       <div><span class="num">01</span><h3>A hard budget</h3><p>You set the spend. When it runs out, the agents stop and wait.</p></div>
       <div><span class="num">02</span><h3>Approvals and audit</h3><p>Nothing ships on its own. Every approval and action is logged.</p></div>
-      <div><span class="num">03</span><h3>Your data stays yours</h3><p>Antilog keeps results, never your code or your data.</p></div>
     </div>
   </div>
 </section>
