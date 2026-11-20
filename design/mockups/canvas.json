@@ -868,6 +868,26 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "SessionConnectorTool.dc.html": {
+      "x": 38000,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, use a connector tool",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionConnectorToolDark.dc.html": {
+      "x": 38000,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, use a connector tool \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "SessionCredential.dc.html": {
       "x": 22800,
       "y": 3370,
@@ -2153,6 +2173,8 @@
     "SessionChangesDark.dc.html",
     "SessionComposerExpanded.dc.html",
     "SessionComposerExpandedDark.dc.html",
+    "SessionConnectorTool.dc.html",
+    "SessionConnectorToolDark.dc.html",
     "SessionCredential.dc.html",
     "SessionCredentialDark.dc.html",
     "SessionDelivered.dc.html",

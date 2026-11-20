@@ -74,23 +74,42 @@ pub fn check_url(url: &str, allow_private: bool) -> Result<(), &'static str> {
         || host.ends_with(".local")
         || host.ends_with(".internal")
         || host.ends_with(".localdomain")
-        || !host.contains('.') && host.parse::<IpAddr>().is_err()
-        || host.parse::<IpAddr>().is_ok_and(|ip| match ip {
-            IpAddr::V4(ip) => {
-                let o = ip.octets();
-                ip.is_loopback()
-                    || ip.is_private()
-                    || ip.is_link_local()
-                    || ip.is_unspecified()
-                    || ip.is_broadcast()
-                    || (o[0] == 100 && (64..128).contains(&o[1]))
-            }
-            IpAddr::V6(_) => true,
-        });
+        || (!host.contains('.') && host.parse::<IpAddr>().is_err())
+        || host.parse::<IpAddr>().is_ok_and(|ip| !is_public(ip));
     match (scheme, private, allow_private) {
         ("https", false, _) => Ok(()),
         ("http" | "https", _, true) => Ok(()),
         _ => Err(bad),
+    }
+}
+
+/// Whether an address is one a connector may sit on: not loopback, private, link-local (which
+/// holds the cloud metadata address), unique-local, shared (CGNAT), multicast or unspecified.
+/// An IPv4 address written inside IPv6 is judged as the IPv4 address.
+pub fn is_public(ip: IpAddr) -> bool {
+    match ip {
+        IpAddr::V4(ip) => {
+            let o = ip.octets();
+            !(ip.is_loopback()
+                || ip.is_private()
+                || ip.is_link_local()
+                || ip.is_unspecified()
+                || ip.is_broadcast()
+                || ip.is_multicast()
+                || (o[0] == 100 && (64..128).contains(&o[1]))
+                || o[0] == 0)
+        }
+        IpAddr::V6(ip) => match ip.to_ipv4_mapped() {
+            Some(mapped) => is_public(IpAddr::V4(mapped)),
+            None => {
+                let first = ip.segments()[0];
+                !(ip.is_loopback()
+                    || ip.is_unspecified()
+                    || ip.is_multicast()
+                    || (first & 0xfe00) == 0xfc00
+                    || (first & 0xffc0) == 0xfe80)
+            }
+        },
     }
 }
 

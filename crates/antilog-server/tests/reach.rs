@@ -464,3 +464,63 @@ async fn a_plugin_is_unpacked_and_removed_by_part() {
     let (_, connectors) = w.api(reqwest::Method::GET, "/connectors", None).await;
     assert!(connectors.as_array().unwrap().is_empty());
 }
+
+/// Answers every name with the addresses it was given.
+struct Scripted(Vec<std::net::IpAddr>);
+
+impl antilog_server::connectors::Resolver for Scripted {
+    fn resolve<'a>(
+        &'a self,
+        _: &'a str,
+        _: u16,
+    ) -> std::pin::Pin<
+        Box<dyn std::future::Future<Output = std::io::Result<Vec<std::net::IpAddr>>> + Send + 'a>,
+    > {
+        Box::pin(async move { Ok(self.0.clone()) })
+    }
+}
+
+#[tokio::test]
+async fn a_name_that_resolves_to_a_private_address_is_never_connected_to() {
+    use antilog_core::customize::ConnectorClient;
+    let seen = Seen::default();
+    let mock_url = serve(
+        Router::new()
+            .route("/mcp", post(mock))
+            .with_state(seen.clone()),
+    )
+    .await;
+    let port = mock_url.rsplit(':').next().unwrap().to_owned();
+    let url = format!("http://rebind.example.com:{port}/mcp");
+    let ip = |text: &str| text.parse::<std::net::IpAddr>().unwrap();
+    for answers in [
+        vec![ip("169.254.169.254")],
+        vec![ip("127.0.0.1")],
+        vec![ip("10.1.2.3")],
+        vec![ip("fd00:ec2::254")],
+        vec![ip("::ffff:127.0.0.1")],
+        // One public address does not excuse a private one beside it.
+        vec![ip("8.8.8.8"), ip("127.0.0.1")],
+    ] {
+        let client = HttpConnectors::with_resolver(false, Arc::new(Scripted(answers.clone())));
+        let refused = client.list_tools(&url, Some("s3cret")).await;
+        assert!(
+            matches!(&refused, Err(error) if error.to_string().contains("private")),
+            "{answers:?}: {refused:?}"
+        );
+        let called = client
+            .call_tool(&url, Some("s3cret"), "lookup", json!({}))
+            .await;
+        assert!(called.is_err(), "{answers:?}");
+    }
+    assert!(
+        seen.lock().unwrap().is_empty(),
+        "nothing was sent to the private address"
+    );
+
+    // Where private addresses are allowed (development), the connection goes to the checked address.
+    let client = HttpConnectors::with_resolver(true, Arc::new(Scripted(vec![ip("127.0.0.1")])));
+    let tools = client.list_tools(&url, Some("s3cret")).await.unwrap();
+    assert_eq!(tools.len(), 2);
+    assert!(!seen.lock().unwrap().is_empty());
+}

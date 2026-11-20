@@ -2,29 +2,105 @@
 //! (initialize, initialized, then the request). Redirects are not followed, so a connector cannot
 //! send the server somewhere its address check did not allow.
 
+use std::future::Future;
+use std::net::{IpAddr, SocketAddr};
+use std::pin::Pin;
+use std::sync::Arc;
 use std::time::Duration;
 
+use antilog_core::customize::connectors::is_public;
 use antilog_core::customize::{ClientError, ConnectorClient, RemoteTool};
 use serde_json::{Value, json};
 
 const MAX_BODY: usize = 4 * 1024 * 1024;
 const PROTOCOL: &str = "2025-03-26";
 
+/// Turns a host name into addresses. A test scripts one; the real one asks the system.
+pub trait Resolver: Send + Sync {
+    fn resolve<'a>(
+        &'a self,
+        host: &'a str,
+        port: u16,
+    ) -> Pin<Box<dyn Future<Output = std::io::Result<Vec<IpAddr>>> + Send + 'a>>;
+}
+
+pub struct SystemResolver;
+
+impl Resolver for SystemResolver {
+    fn resolve<'a>(
+        &'a self,
+        host: &'a str,
+        port: u16,
+    ) -> Pin<Box<dyn Future<Output = std::io::Result<Vec<IpAddr>>> + Send + 'a>> {
+        Box::pin(async move {
+            Ok(tokio::net::lookup_host((host, port))
+                .await?
+                .map(|addr| addr.ip())
+                .collect())
+        })
+    }
+}
+
+/// Every request resolves the host itself, refuses the request if any address is not public,
+/// and connects to exactly the addresses it checked, so a name cannot answer differently to the
+/// check and to the connection (DNS rebinding), and the cloud metadata address is never reached.
 pub struct HttpConnectors {
-    client: reqwest::Client,
     allow_private: bool,
+    resolver: Arc<dyn Resolver>,
 }
 
 impl HttpConnectors {
     pub fn new(allow_private: bool) -> Result<Self, reqwest::Error> {
-        Ok(Self {
-            client: reqwest::Client::builder()
-                .redirect(reqwest::redirect::Policy::none())
-                .connect_timeout(Duration::from_secs(10))
-                .timeout(Duration::from_secs(60))
-                .build()?,
+        Ok(Self::with_resolver(allow_private, Arc::new(SystemResolver)))
+    }
+
+    pub fn with_resolver(allow_private: bool, resolver: Arc<dyn Resolver>) -> Self {
+        Self {
             allow_private,
-        })
+            resolver,
+        }
+    }
+
+    /// A client for one request, pinned to the addresses checked now.
+    async fn client_for(&self, url: &str) -> Result<reqwest::Client, ClientError> {
+        let unreachable = |why: &str| ClientError::Unreachable(why.to_owned());
+        let parsed =
+            reqwest::Url::parse(url).map_err(|_| unreachable("its address is not a URL"))?;
+        let host = parsed
+            .host_str()
+            .ok_or_else(|| unreachable("its address has no host"))?;
+        let port = parsed
+            .port_or_known_default()
+            .ok_or_else(|| unreachable("its address has no port"))?;
+        let literal = host.trim_matches(['[', ']']).parse::<IpAddr>().ok();
+        let addrs = match literal {
+            Some(ip) => vec![ip],
+            None => self
+                .resolver
+                .resolve(host, port)
+                .await
+                .map_err(|_| unreachable("its name did not resolve"))?,
+        };
+        if addrs.is_empty() {
+            return Err(unreachable("its name did not resolve"));
+        }
+        if !self.allow_private && addrs.iter().any(|ip| !is_public(*ip)) {
+            return Err(unreachable(
+                "its name points at a private address, which is refused",
+            ));
+        }
+        let mut builder = reqwest::Client::builder()
+            .redirect(reqwest::redirect::Policy::none())
+            .connect_timeout(Duration::from_secs(10))
+            .timeout(Duration::from_secs(60));
+        if literal.is_none() {
+            let sockets: Vec<SocketAddr> =
+                addrs.iter().map(|ip| SocketAddr::new(*ip, port)).collect();
+            builder = builder.resolve_to_addrs(host, &sockets);
+        }
+        builder
+            .build()
+            .map_err(|error| ClientError::Unreachable(error.without_url().to_string()))
     }
 
     /// Local development only: `ANTILOG_CONNECTORS_ALLOW_PRIVATE=1`.
@@ -47,7 +123,8 @@ impl HttpConnectors {
             None => json!({"jsonrpc": "2.0", "method": method, "params": params}),
         };
         let mut request = self
-            .client
+            .client_for(url)
+            .await?
             .post(url)
             .header("accept", "application/json, text/event-stream")
             .header("mcp-protocol-version", PROTOCOL)

@@ -137,8 +137,7 @@ pub async fn reach_suite<D: Deps>(deps: &D) {
                 content: format!(
                     "---\nname: ok\ndescription: d\n---\n-----BEGIN RSA {}-----",
                     "PRIVATE KEY"
-                )
-                .into(),
+                ),
             }],
         },
     ] {
