@@ -75,7 +75,7 @@ Base and trial runs are interleaved by the judge (`judge/paired.rs`). The number
 
 ## Stored secrets (B and C)
 
-Customer model keys and connector credentials are encrypted in Postgres with `chacha20poly1305` (XChaCha20-Poly1305 with a random nonce for each value). The master key comes from the existing `Secrets` store, never from the database. B adds the crate and a small `Sealed` helper in `antilog-core/src/sealed.rs`. C uses that helper once B has landed; until then C builds against an identical copy behind the same API, and the orchestrator reconciles the two at merge (owner, 20 Nov).
+Customer model keys and connector credentials are encrypted in Postgres with `chacha20poly1305` (XChaCha20-Poly1305 with a random nonce for each value). The master key comes from the existing `Secrets` store, never from the database. Built: `Sealer` in `antilog-core/src/sealed.rs` (`seal(plain, row)` and `open(stored, row)`; `row` is associated data that binds a value to its row, such as `model_key:<org>:anthropic`). B and C both use it (owner, 20 Nov).
 
 ## MCP transport (C)
 
