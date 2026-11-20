@@ -134,6 +134,7 @@ async fn main() -> anyhow::Result<()> {
                 },
             );
             sandbox.probe_disk().await;
+            sandbox.sweep().await;
             runner::run(
                 config,
                 runner::Opencode {

@@ -260,6 +260,9 @@ async fn relay(bind: IpAddr, upstream: String) -> Result<(u16, JoinHandle<()>)> 
     Ok((port, task))
 }
 
+/// Marks a fresh machine started for one holdout run.
+const RUN_LABEL: &str = "antilog.run";
+
 pub struct ContainerSandbox<C: Cli> {
     cli: Arc<C>,
     config: ContainerConfig,
@@ -361,13 +364,41 @@ impl<C: Cli> ContainerSandbox<C> {
         images.save(&self.config.state_dir.join("setup-images.json"));
     }
 
-    async fn docker<const N: usize>(&self, args: [&str; N]) -> Result<Output> {
+    async fn docker(&self, args: impl AsRef<[&str]>) -> Result<Output> {
         self.cli
             .run(Call {
-                args: args.iter().map(|arg| (*arg).to_owned()).collect(),
+                args: args.as_ref().iter().map(|arg| (*arg).to_owned()).collect(),
                 ..Call::default()
             })
             .await
+    }
+
+    /// Removes what a holdout run left behind when the runner stopped during it: those machines
+    /// are never resumed, so at start every container and network carrying the run label goes.
+    /// One runner per host, so nothing found here belongs to another runner.
+    pub async fn sweep(&self) {
+        let label = format!("label={RUN_LABEL}");
+        for (list, remove) in [
+            (
+                vec!["ps", "-aq", "--filter", &label],
+                vec!["rm", "-f", "-v"],
+            ),
+            (
+                vec!["network", "ls", "-q", "--filter", &label],
+                vec!["network", "rm"],
+            ),
+        ] {
+            let Ok(out) = self.docker(list).await else {
+                continue;
+            };
+            for id in String::from_utf8_lossy(&out.stdout).split_whitespace() {
+                let mut args = remove.clone();
+                args.push(id);
+                if self.docker(args).await.is_ok_and(|out| out.status == 0) {
+                    tracing::info!(%id, "removed a holdout machine left from an earlier run");
+                }
+            }
+        }
     }
 
     /// Removes the setup images nobody has used for seven days.
@@ -394,8 +425,22 @@ impl<C: Cli> ContainerSandbox<C> {
     /// The session's own internal network, and the relay on its gateway.
     async fn network(&self, spec: &SandboxSpec) -> Result<Net> {
         let name = format!("antilog-{}", spec.name());
-        let label = format!("antilog.session={}", spec.session);
-        self.docker(["network", "create", "--internal", "--label", &label, &name])
+        let mut args = vec![
+            "network".to_owned(),
+            "create".to_owned(),
+            "--internal".to_owned(),
+            "--label".to_owned(),
+            format!("antilog.session={}", spec.session),
+        ];
+        if let Some(run) = spec.run {
+            args.extend(["--label".to_owned(), format!("{RUN_LABEL}={run}")]);
+        }
+        args.push(name.clone());
+        self.cli
+            .run(Call {
+                args,
+                ..Call::default()
+            })
             .await?
             .ok("creating the network")?;
         let found = async {
@@ -540,6 +585,9 @@ impl<C: Cli> ContainerSandbox<C> {
         .map(|arg| (*arg).to_owned())
         .collect();
         args.push(format!("antilog.session={}", spec.session));
+        if let Some(run) = spec.run {
+            args.extend(["--label".to_owned(), format!("{RUN_LABEL}={run}")]);
+        }
         args.extend(Self::limits(spec));
         if sysbox {
             args.push(format!("--runtime={SYSBOX}"));
@@ -1110,7 +1158,7 @@ mod tests {
         let lines = recorder.lines()[before..].to_vec();
         assert!(
             lines.iter().any(|l| l.starts_with(&format!(
-                "network create --internal --label antilog.session={} {name}",
+                "network create --internal --label antilog.session={} --label antilog.run={run} {name}",
                 live.session
             ))),
             "{lines:?}"
@@ -1118,6 +1166,10 @@ mod tests {
         let started = lines.iter().find(|l| l.starts_with("run -d")).unwrap();
         assert!(
             started.contains(&format!("--name {name} --network {name}")),
+            "{started}"
+        );
+        assert!(
+            started.contains(&format!("--label antilog.run={run}")),
             "{started}"
         );
         assert!(
@@ -1253,6 +1305,26 @@ mod tests {
                 .any(|l| l.starts_with("rm -f -v antilog-setup-"))
         );
         assert!(!sandbox.images().used.contains_key("antilog-env:default-v1"));
+        std::fs::remove_dir_all(&state).ok();
+    }
+
+    #[tokio::test]
+    async fn at_start_the_runner_removes_holdout_machines_an_earlier_run_left() {
+        let state = temp();
+        let recorder = Arc::new(Recorder::default());
+        recorder.answer("ps -aq", 0, "c1\nc2\n", "");
+        recorder.answer("network ls", 0, "n1\n", "");
+        sandbox(&recorder, &state).sweep().await;
+        assert_eq!(
+            recorder.lines(),
+            [
+                "ps -aq --filter label=antilog.run",
+                "rm -f -v c1",
+                "rm -f -v c2",
+                "network ls -q --filter label=antilog.run",
+                "network rm n1",
+            ]
+        );
         std::fs::remove_dir_all(&state).ok();
     }
 
