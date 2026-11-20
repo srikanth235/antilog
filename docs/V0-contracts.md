@@ -54,6 +54,7 @@ Built: `crates/antilog-proxy`, one binary on one listener (`ANTILOG_PROXY_LISTEN
 ```json
 {
   "autoupdate": false,
+  "small_model": "<the session's model>",
   "provider": {
     "anthropic": {"options": {"baseURL": "<proxy>/anthropic/v1", "apiKey": "<model token>"}},
     "openai":    {"options": {"baseURL": "<proxy>/openai/v1",    "apiKey": "<model token>"}},

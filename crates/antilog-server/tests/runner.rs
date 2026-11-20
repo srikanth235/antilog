@@ -211,6 +211,7 @@ async fn a_claim_carries_the_spec_the_contract_lists() {
         spec["opencodeConfig"],
         json!({
             "autoupdate": false,
+            "small_model": "vendor/model-1",
             "provider": {
                 "anthropic": {"options": {"baseURL": "https://proxy.example/anthropic/v1", "apiKey": model}},
                 "openai": {"options": {"baseURL": "https://proxy.example/openai/v1", "apiKey": model}},

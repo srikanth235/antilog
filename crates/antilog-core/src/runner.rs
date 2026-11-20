@@ -89,6 +89,9 @@ pub fn opencode_config(
 ) -> Value {
     json!({
         "autoupdate": false,
+        // Titles and summaries use the session's own model, so a key that pays for one model
+        // (or a free one) covers the whole session.
+        "small_model": settings.model,
         "provider": {
             "anthropic": {"options": {
                 "baseURL": format!("{}/anthropic/v1", settings.proxy_url),
