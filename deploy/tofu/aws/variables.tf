@@ -62,7 +62,7 @@ variable "server_reserved_concurrency" {
     Reserved concurrency for the server function, or null for none. A new account's quota
     is 10 and Lambda keeps 10 unreserved, so any positive number fails until the quota is
     raised. Set it (to about 5 instances times one connection each, under the database's
-    limit) after the increase. The kill switch sets it to 0 regardless.
+    limit) after the increase.
   EOT
   type        = number
   default     = null
@@ -131,20 +131,6 @@ variable "signin_secrets_populated" {
   default     = false
 }
 
-# Spend guards -----------------------------------------------------------------
-
-variable "bedrock_hourly_limit_usd" {
-  description = "Model spend in one hour that trips the kill switch."
-  type        = number
-  default     = 5
-}
-
-variable "bedrock_daily_limit_usd" {
-  description = "Model spend in one day that trips the kill switch."
-  type        = number
-  default     = 15
-}
-
 variable "public_url" {
   description = <<-EOT
     The https address people reach the web app at, without a trailing slash (the CloudFront
@@ -154,16 +140,6 @@ variable "public_url" {
   EOT
   type        = string
   default     = ""
-}
-
-variable "killswitch_role_name" {
-  description = <<-EOT
-    The role the kill-switch function runs as. The owner creates it OUTSIDE antilog-* (like
-    budget-stop-executor), so the permissions boundary does not cap it and the deny-all it
-    writes cannot lock it. Its policy is listed in deploy/tofu/aws/README.md.
-  EOT
-  type        = string
-  default     = "kill-switch-executor"
 }
 
 variable "domain_name" {

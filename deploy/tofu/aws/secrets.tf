@@ -48,13 +48,6 @@ data "aws_secretsmanager_secret_version" "github_client_secret" {
   secret_id = aws_secretsmanager_secret.github_client_secret.id
 }
 
-# The judge's own credential for the holdout, which no agent role can read.
-resource "aws_secretsmanager_secret" "judge_credential" {
-  name                    = "${local.prefix}/judge-credential"
-  description             = "Read access to the holdout, for the judge runtime only (set by the owner)"
-  recovery_window_in_days = 7
-}
-
 # CloudFront adds one of these to every /api request in `x-antilog-origin`, and the server
 # refuses a request without one of them, so the Lambda function URL (public by design) is no
 # way around CloudFront. Two values exist so one can be rotated while the other still works:

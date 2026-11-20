@@ -26,10 +26,6 @@ output "database_endpoint" {
   value = aws_rds_cluster.database.endpoint
 }
 
-output "killswitch_function" {
-  value = aws_lambda_function.killswitch.function_name
-}
-
 output "budget_limit_usd" {
   description = "The existing monthly budget this stack sits under"
   value       = data.aws_budgets_budget.dev.budget_limit[0].amount

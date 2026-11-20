@@ -14,7 +14,7 @@ For everything else about AWS, use the AWS agent skills (the Agent Toolkit for A
 - **Aurora Serverless v2 (PostgreSQL)** (`deploy/tofu/aws/database.tf`) with a minimum of 0 ACUs and auto-pause, engine 18.x (read from the account: 17.9 and later support 0 ACUs). Idle cost is storage only. It is publicly reachable over forced TLS because a function outside a VPC has no fixed address and a NAT gateway costs by the hour; narrow `database_ingress_cidrs` if the function ever moves into a VPC.
 - **Only CloudFront reaches the server.** The function URL is public, so the server refuses any request without the secret header `x-antilog-origin` (`antilog_server::origin::OriginGuard`, checked in `antilog_aws::lambda::handle` before the router), in constant time, with 403. CloudFront adds it to `/api/*` (a custom origin header). OpenTofu generates two values and keeps them in Secrets Manager (`antilog/origin-secret`); the function accepts both (`ANTILOG_ORIGIN_SECRET`, `ANTILOG_ORIGIN_SECRET_NEXT`) so one can be rotated while the other works (steps in `deploy/tofu/aws/README.md`). The check is always on in the Lambda binary and fails closed: with no secret set it refuses everything except the the deploy's direct invokes, and there is no `/health` exception (a local `cargo lambda invoke` sends the header from `tests/events/health.json` and sets `ANTILOG_ORIGIN_SECRET=local-origin-secret`). The local server (`antilog-server`) checks only when `ANTILOG_ORIGIN_SECRET` is set; tests build `OriginGuard::off()` explicitly.
 - **Secrets** need no adapter: `antilog_core::secrets::EnvSecrets` reads `ANTILOG_SECRET_<NAME>` or a file in `ANTILOG_SECRETS_DIR`.
-- **The infrastructure** is OpenTofu in `deploy/tofu/aws/` (state in S3 with a lock file, created once by `bootstrap/`), deployed only by `.github/workflows/deploy-aws.yml`. It holds the function and its URL, Aurora, S3 and CloudFront (the API is under `/api` on the same host), Secrets Manager entries, one role per function named `antilog-*` with the permissions boundary, and the spend guards: the existing `antilog-dev` budget as data, CloudWatch alarms that price Bedrock token counts for the two allowed models, and a kill-switch function the alarms invoke (it denies the server role and sets its concurrency to 0).
+- **The infrastructure** is OpenTofu in `deploy/tofu/aws/` (state in S3 with a lock file, created once by `bootstrap/`), deployed only by `.github/workflows/deploy-aws.yml`. It holds the function and its URL, Aurora, S3 and CloudFront (the API is under `/api` on the same host), Secrets Manager entries, one role per function named `antilog-*` with the permissions boundary, and the existing `antilog-dev` budget as data. Customers bring their own model keys and the proxy meters spend, so there are no model-spend alarms.
 
 
 ## Rules
@@ -43,10 +43,8 @@ CI runs the same in the `lambda` and `tofu` jobs of `checks.yml` ([../../land/ci
 
 ## Decisions to review
 
-- **No reserved concurrency yet.** The account's Lambda quota is 10 and Lambda keeps 10 unreserved, so `server_reserved_concurrency` stays null until the quota is raised. The kill switch sets it to 0, which is allowed.
+- **No reserved concurrency yet.** The account's Lambda quota is 10 and Lambda keeps 10 unreserved, so `server_reserved_concurrency` stays null until the quota is raised.
 - **Aurora is public** (see above) because of the no-NAT rule. The protection is the generated password and forced TLS.
-- **The kill switch runs as the owner's role** `kill-switch-executor`, outside `antilog-*`, read as data. It is Python (stdlib and the `boto3` Lambda already ships), to avoid adding `aws-sdk-iam` and `aws-sdk-lambda` for forty lines. Rewrite it in Rust if the owner prefers one language.
-- **The alarms call the kill switch directly** (CloudWatch can invoke a function), because the CI policy has no SNS or EventBridge rules. Limits: $5 an hour and $15 a day of model spend, in `variables.tf`.
 - **A reload on a screen of the app** is answered by a viewer-request CloudFront Function on the web (S3) behavior only (`deploy/tofu/aws/functions/spa-fallback.js`: a path with no file extension becomes `/index.html`; test: `node --test deploy/tofu/aws/functions`). There is no distribution-wide error page, because that would turn an API 403 or 404 into HTML with status 200.
 - **The web app is served under `/api`** on the CloudFront host with the prefix stripped, because the API's routes have no common prefix and share paths with the app's screens. The web client's base URL must be `/api`.
 - **A pull request is checked without AWS** and planned only with a role that trusts pull requests; `antilog-ci` trusts the `aws-dev` environment alone.
@@ -54,14 +52,13 @@ CI runs the same in the `lambda` and `tofu` jobs of `checks.yml` ([../../land/ci
 
 ## Before the first deploy (the owner)
 
-1. Create the role `kill-switch-executor` (outside `antilog-*`; trust Lambda; the policy is in `deploy/tofu/aws/README.md`), and let the CI role pass it (`iam:PassRole` on it, added to `antilog-dev`). The kill switch is not under the boundary, so the boundary stays as it is.
-2. Create the GitHub environment `aws-dev` with required reviewers, and the repository variable `AWS_PLAN_ROLE_ARN` only if a pull-request role is made.
-3. Run `bootstrap/` once with owner credentials to create the state bucket `antilog-tfstate-987432215914`.
-4. Create the ACM certificate in `us-east-1` for the app's name, set `domain_name` and `certificate_arn`, and add a DNS-only CNAME at Cloudflare to the `web_domain` output (no DNS resources are in the module).
-5. Put the GitHub OAuth app's client secret in Secrets Manager (`antilog/github-client-secret`) after the first apply, set `github_client_id` and `signin_secrets_populated`, then set `public_url` to the `web_url` output and apply again. The OAuth app's callback URL is `https://<domain>/auth/github/callback`: the web app's own route, which POSTs the code to the API's `POST /auth/github/callback` (never `/api/...`, which only accepts the POST).
-6. Ask AWS for a Lambda concurrency quota increase, then set `server_reserved_concurrency`.
-7. Build and push the agent and judge images, then set `agent_image_uri` and `judge_image_uri`.
-8. Run `deploy-aws` by hand: plan, review, then apply. The workflow migrates the database after the apply.
+1. Create the GitHub environment `aws-dev` with required reviewers, and the repository variable `AWS_PLAN_ROLE_ARN` only if a pull-request role is made.
+2. Run `bootstrap/` once with owner credentials to create the state bucket `antilog-tfstate-987432215914`.
+3. Create the ACM certificate in `us-east-1` for the app's name, set `domain_name` and `certificate_arn`, and add a DNS-only CNAME at Cloudflare to the `web_domain` output (no DNS resources are in the module).
+4. Put the GitHub OAuth app's client secret in Secrets Manager (`antilog/github-client-secret`) after the first apply, set `github_client_id` and `signin_secrets_populated`, then set `public_url` to the `web_url` output and apply again. The OAuth app's callback URL is `https://<domain>/auth/github/callback`: the web app's own route, which POSTs the code to the API's `POST /auth/github/callback` (never `/api/...`, which only accepts the POST).
+5. Ask AWS for a Lambda concurrency quota increase, then set `server_reserved_concurrency`.
+6. Build and push the agent and judge images, then set `agent_image_uri` and `judge_image_uri`.
+7. Run `deploy-aws` by hand: plan, review, then apply. The workflow migrates the database after the apply.
 
 ## Pitfalls
 
