@@ -86,10 +86,10 @@ The terminal, Changes, Preview and Files panels read from the agent's own sandbo
 
 ## Lifecycle
 
-1. **Start.** One message in the composer with the chips (Project, Repos, Agent, Environment, Budget), each defaulted. Antilog starts a new experiment in the project and its lead session on the agent's platform.
+1. **Start.** One message in the composer with the chips (Project, Repos, Agent, Environment, Budget), each defaulted. Antilog starts a new experiment in the project and its lead session, queued for a runner ([runner.md](runner.md)).
 2. **Work.** The agent drives and sets up through cards when needed. Until a person seals it the experiment is Not sealed: the agent explores, measures the baseline and proposes a definition with `seal`. It may stay Not sealed and end there.
-3. **Idle or stopped.** The sandbox ends; the conversation does not. A person stopping a session makes it Done.
-4. **Resume.** A new sandbox starts from the session's branches. Whatever was not pushed is gone.
+3. **Idle or stopped.** The machine is released with an export; the conversation does not end. A person stopping a session makes it Done.
+4. **Resume.** A message queues the session again. The next machine clones the repos and imports the export, so the agent has its history. Whatever was not pushed is gone if it lands on a new machine.
 
 Git is the hand-off: a trial is a set of commits, one per repo changed. Antilog stores commit ids, never diffs; another session or the judge reads the code from git.
 

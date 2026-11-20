@@ -17,7 +17,7 @@ The access words below are not in [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md
 | value model | A project owner's figure for a metric, sealed with an experiment and never set by an agent (see [../judge/model.md](../judge/model.md)) | a budget, a price |
 | report | A monthly page per organization and per project, exported as PDF and CSV and emailed to chosen members (contents in [notifications.md](notifications.md)) | a log, the audit log |
 | ideas | Experiments Antilog suggests on a project page, ranked by expected value over cost. Antilog proposes, a person starts | a backlog an agent starts by itself |
-| policy | Per card kind (eight): Always ask, Allow up to a limit, or Allow | a role |
+| policy | Per card kind (nine): Always ask, Allow up to a limit, or Allow | a role |
 | budget | What one experiment may spend across all its sessions and their judge time. It sits inside its project's cap | a monthly cap |
 | project cap | An optional monthly limit on the spend of all of a project's experiments. It sits inside the organization's monthly cap | a budget |
 | monthly cap | The most an organization may spend in a month | a budget |

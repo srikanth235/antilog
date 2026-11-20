@@ -1,0 +1,637 @@
+//! OpenCode, driven over its HTTP API. `Harness` is how one is started, so a test can put a fake
+//! HTTP server in its place; `Api` is what it speaks once running.
+
+use std::collections::{HashMap, HashSet};
+use std::future::Future;
+use std::path::{Path, PathBuf};
+use std::time::Duration;
+
+use antilog_types::{Item, ItemKind, Reply};
+use anyhow::{Context, Result, bail};
+use serde_json::{Value, json};
+use tokio::process::{Child, Command};
+
+/// What a harness needs to start one OpenCode.
+pub struct Launch {
+    /// Where it works: a clone, or the folder holding several.
+    pub dir: PathBuf,
+    /// A random password for this server, which listens on 127.0.0.1 only.
+    pub password: String,
+    /// Variables from the session's environment.
+    pub env: Vec<(String, String)>,
+}
+
+/// A started OpenCode. The child is killed when this is dropped.
+pub struct Started {
+    pub base: String,
+    pub child: Option<Child>,
+}
+
+pub trait Harness: Send + Sync + 'static {
+    fn launch(&self, launch: &Launch) -> impl Future<Output = Result<Started>> + Send;
+
+    /// `opencode export`: the session as JSON, for a later claim to import.
+    fn export(&self, launch: &Launch, session: &str)
+    -> impl Future<Output = Result<String>> + Send;
+
+    /// `opencode import`: puts an export back and returns the id of the session it made.
+    fn import(&self, launch: &Launch, file: &Path) -> impl Future<Output = Result<String>> + Send;
+}
+
+/// The real thing, pinned by the session image to one version.
+pub struct Opencode {
+    pub binary: String,
+    /// `--pure`: no external plugins.
+    pub pure: bool,
+    /// Sets `OPENCODE_DISABLE_PROJECT_CONFIG`.
+    pub disable_project_config: bool,
+}
+
+impl Opencode {
+    fn command(&self, launch: &Launch, args: &[&str]) -> Command {
+        let mut command = Command::new(&self.binary);
+        command.args(args);
+        if self.pure {
+            command.arg("--pure");
+        }
+        command
+            .current_dir(&launch.dir)
+            .env("OPENCODE_SERVER_PASSWORD", &launch.password)
+            .env_remove("ANTILOG_RUNNER_KEY")
+            .env("OPENCODE_DISABLE_MODELS_FETCH", "1")
+            .envs(launch.env.iter().map(|(k, v)| (k, v)))
+            .kill_on_drop(true);
+        if self.disable_project_config {
+            command.env("OPENCODE_DISABLE_PROJECT_CONFIG", "1");
+        }
+        command
+    }
+}
+
+async fn free_port() -> Result<u16> {
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
+    Ok(listener.local_addr()?.port())
+}
+
+impl Harness for Opencode {
+    async fn launch(&self, launch: &Launch) -> Result<Started> {
+        let port = free_port().await?.to_string();
+        let child = self
+            .command(
+                launch,
+                &["serve", "--hostname", "127.0.0.1", "--port", &port],
+            )
+            .stdin(std::process::Stdio::null())
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .spawn()
+            .with_context(|| format!("starting {}", self.binary))?;
+        Ok(Started {
+            base: format!("http://127.0.0.1:{port}"),
+            child: Some(child),
+        })
+    }
+
+    async fn export(&self, launch: &Launch, session: &str) -> Result<String> {
+        let output = self
+            .command(launch, &["export", session])
+            .output()
+            .await
+            .context("running opencode export")?;
+        if !output.status.success() {
+            bail!("opencode export failed: {}", output.status);
+        }
+        let text = String::from_utf8(output.stdout).context("the export is not text")?;
+        // The export is JSON; anything the CLI printed before it is dropped.
+        match text.find('{') {
+            Some(start) => Ok(text.get(start..).unwrap_or_default().to_owned()),
+            None => bail!("opencode export printed no JSON"),
+        }
+    }
+
+    async fn import(&self, launch: &Launch, file: &Path) -> Result<String> {
+        let file = file.to_string_lossy().into_owned();
+        let output = self
+            .command(launch, &["import", &file])
+            .output()
+            .await
+            .context("running opencode import")?;
+        if !output.status.success() {
+            bail!("opencode import failed: {}", output.status);
+        }
+        let text = String::from_utf8_lossy(&output.stdout);
+        text.split(|c: char| !c.is_ascii_alphanumeric() && c != '_')
+            .find(|word| word.starts_with("ses_"))
+            .map(str::to_owned)
+            .context("opencode import did not say which session it made")
+    }
+}
+
+/// OpenCode's HTTP API, for the calls the runner makes.
+#[derive(Clone)]
+pub struct Api {
+    http: reqwest::Client,
+    base: String,
+    password: String,
+}
+
+impl Api {
+    pub fn new(base: &str, password: &str) -> Self {
+        Self {
+            // It is on this machine: never through a proxy.
+            http: reqwest::Client::builder()
+                .no_proxy()
+                .build()
+                .unwrap_or_default(),
+            base: base.trim_end_matches('/').to_owned(),
+            password: password.to_owned(),
+        }
+    }
+
+    fn get(&self, path: &str) -> reqwest::RequestBuilder {
+        self.http
+            .get(format!("{}{path}", self.base))
+            .basic_auth("opencode", Some(&self.password))
+    }
+
+    fn post(&self, path: &str) -> reqwest::RequestBuilder {
+        self.http
+            .post(format!("{}{path}", self.base))
+            .basic_auth("opencode", Some(&self.password))
+    }
+
+    /// Waits until the server answers.
+    pub async fn wait_healthy(&self, within: Duration) -> Result<()> {
+        let deadline = tokio::time::Instant::now() + within;
+        loop {
+            // A request sent while it is still starting can stall: ask again.
+            let got = self
+                .get("/global/health")
+                .timeout(Duration::from_secs(2))
+                .send()
+                .await;
+            if let Ok(response) = got
+                && response.status().is_success()
+            {
+                return Ok(());
+            }
+            if tokio::time::Instant::now() >= deadline {
+                bail!("OpenCode did not come up");
+            }
+            tokio::time::sleep(Duration::from_millis(100)).await;
+        }
+    }
+
+    pub async fn create_session(&self) -> Result<String> {
+        let made: Value = self
+            .post("/session")
+            .json(&json!({}))
+            .send()
+            .await?
+            .error_for_status()?
+            .json()
+            .await?;
+        made.get("id")
+            .and_then(Value::as_str)
+            .map(str::to_owned)
+            .context("OpenCode made a session without an id")
+    }
+
+    /// A person's words for the agent. `model` is `provider/model`.
+    pub async fn prompt(&self, session: &str, text: &str, model: &str) -> Result<()> {
+        let mut body = json!({"parts": [{"type": "text", "text": text}]});
+        if let (Some((provider, id)), Some(object)) = (model.split_once('/'), body.as_object_mut())
+        {
+            object.insert(
+                "model".into(),
+                json!({"providerID": provider, "modelID": id}),
+            );
+        }
+        self.post(&format!("/session/{session}/prompt_async"))
+            .json(&body)
+            .send()
+            .await?
+            .error_for_status()?;
+        Ok(())
+    }
+
+    pub async fn abort(&self, session: &str) -> Result<()> {
+        self.post(&format!("/session/{session}/abort"))
+            .send()
+            .await?
+            .error_for_status()?;
+        Ok(())
+    }
+
+    pub async fn reply(&self, permission: &str, reply: Reply) -> Result<()> {
+        let reply = match reply {
+            Reply::Once => "once",
+            Reply::Reject => "reject",
+        };
+        self.post(&format!("/permission/{permission}/reply"))
+            .json(&json!({"reply": reply}))
+            .send()
+            .await?
+            .error_for_status()?;
+        Ok(())
+    }
+
+    pub async fn pending_permissions(&self) -> Result<Vec<Value>> {
+        Ok(self
+            .get("/permission")
+            .send()
+            .await?
+            .error_for_status()?
+            .json()
+            .await?)
+    }
+
+    /// Each session's status, by id.
+    pub async fn statuses(&self) -> Result<Value> {
+        Ok(self
+            .get("/session/status")
+            .send()
+            .await?
+            .error_for_status()?
+            .json()
+            .await?)
+    }
+
+    /// The whole conversation, following `x-next-cursor` back through the pages.
+    pub async fn messages(&self, session: &str) -> Result<Vec<Value>> {
+        let mut all = Vec::new();
+        let mut before: Option<String> = None;
+        for _ in 0..1_000 {
+            let mut path = format!("/session/{session}/message?limit=100");
+            if let Some(cursor) = &before {
+                path.push_str("&before=");
+                path.push_str(&percent(cursor));
+            }
+            let request = self.get(&path);
+            let response = request.send().await?.error_for_status()?;
+            let next = response
+                .headers()
+                .get("x-next-cursor")
+                .and_then(|value| value.to_str().ok())
+                .map(str::to_owned);
+            let page: Vec<Value> = response.json().await?;
+            all.extend(page);
+            match next {
+                Some(cursor) => before = Some(cursor),
+                None => return Ok(all),
+            }
+        }
+        bail!("the conversation has more pages than the runner will read")
+    }
+
+    /// Opens the live stream. It has no replay: rebuild from `messages` after each connect.
+    pub async fn events(&self) -> Result<Events> {
+        let response = self.get("/event").send().await?.error_for_status()?;
+        Ok(Events {
+            response,
+            buffer: String::new(),
+        })
+    }
+}
+
+fn percent(text: &str) -> String {
+    text.bytes()
+        .map(|byte| {
+            if byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'.' | b'~') {
+                char::from(byte).to_string()
+            } else {
+                format!("%{byte:02X}")
+            }
+        })
+        .collect()
+}
+
+/// The server-sent events of an open stream.
+pub struct Events {
+    response: reqwest::Response,
+    buffer: String,
+}
+
+impl Events {
+    /// The next batch of events; `None` when the stream has closed.
+    pub async fn next(&mut self) -> Result<Option<Vec<Value>>> {
+        let Some(chunk) = self.response.chunk().await? else {
+            return Ok(None);
+        };
+        self.buffer.push_str(&String::from_utf8_lossy(&chunk));
+        Ok(Some(drain(&mut self.buffer)))
+    }
+}
+
+/// The complete events at the front of `buffer`, removed from it.
+fn drain(buffer: &mut String) -> Vec<Value> {
+    let normalized = buffer.replace("\r\n", "\n");
+    *buffer = normalized;
+    let mut events = Vec::new();
+    while let Some(end) = buffer.find("\n\n") {
+        let block: String = buffer.drain(..end + 2).collect();
+        let data: Vec<&str> = block
+            .lines()
+            .filter_map(|line| line.strip_prefix("data:"))
+            .map(str::trim_start)
+            .collect();
+        if let Ok(event) = serde_json::from_str::<Value>(&data.join("\n")) {
+            events.push(event);
+        }
+    }
+    events
+}
+
+/// What has been said and what has been sent, so that an event seen twice, or again after a
+/// reconnect, is sent to the server once. The server also ignores a key it has.
+pub struct Tracker {
+    session: String,
+    roles: HashMap<String, String>,
+    sent: HashSet<String>,
+}
+
+impl Tracker {
+    pub fn new(session: &str) -> Self {
+        Self {
+            session: session.to_owned(),
+            roles: HashMap::new(),
+            sent: HashSet::new(),
+        }
+    }
+
+    fn mine(&self, properties: &Value) -> bool {
+        properties.get("sessionID").and_then(Value::as_str) == Some(&self.session)
+    }
+
+    /// What one live event comes to.
+    pub fn event(&mut self, event: &Value) -> Vec<Item> {
+        let Some(properties) = event.get("properties") else {
+            return Vec::new();
+        };
+        match event.get("type").and_then(Value::as_str) {
+            Some("message.updated") if self.mine(properties) => {
+                if let Some(info) = properties.get("info") {
+                    self.know(info);
+                }
+                Vec::new()
+            }
+            Some("message.part.updated") if self.mine(properties) => properties
+                .get("part")
+                .map(|part| self.part(part))
+                .unwrap_or_default(),
+            Some("permission.asked") if self.mine(properties) => {
+                permission(properties).into_iter().collect()
+            }
+            Some("session.status") if self.mine(properties) => {
+                let kind = properties
+                    .pointer("/status/type")
+                    .and_then(Value::as_str)
+                    .unwrap_or_default();
+                vec![Item::Status {
+                    busy: kind != "idle",
+                }]
+            }
+            Some("session.idle") if self.mine(properties) => vec![Item::Status { busy: false }],
+            // A failed turn, such as a model the proxy refused: the person reads why.
+            Some("session.error") if self.mine(properties) => {
+                let key = event.get("id").and_then(Value::as_str);
+                let why = properties
+                    .pointer("/error/data/message")
+                    .and_then(Value::as_str)
+                    .unwrap_or("the turn failed");
+                key.map(|key| Item::Words {
+                    key: format!("error:{key}"),
+                    kind: ItemKind::Agent,
+                    text: format!("Error: {why}").chars().take(2000).collect(),
+                })
+                .into_iter()
+                .collect()
+            }
+            _ => Vec::new(),
+        }
+    }
+
+    /// What a message read back from `GET /session/{id}/message` comes to.
+    pub fn message(&mut self, message: &Value) -> Vec<Item> {
+        if let Some(info) = message.get("info") {
+            self.know(info);
+        }
+        message
+            .get("parts")
+            .and_then(Value::as_array)
+            .map(|parts| parts.iter().flat_map(|part| self.part(part)).collect())
+            .unwrap_or_default()
+    }
+
+    fn know(&mut self, info: &Value) {
+        if let (Some(id), Some(role)) = (
+            info.get("id").and_then(Value::as_str),
+            info.get("role").and_then(Value::as_str),
+        ) {
+            self.roles.insert(id.to_owned(), role.to_owned());
+        }
+    }
+
+    /// Only what an agent said or called is sent: a person's words are kept by the server when
+    /// they are written, and a part still being written is sent when it is finished.
+    fn part(&mut self, part: &Value) -> Vec<Item> {
+        let text = |name: &str| part.get(name).and_then(Value::as_str);
+        let (Some(message), Some(id)) = (text("messageID"), text("id")) else {
+            return Vec::new();
+        };
+        if self.roles.get(message).map(String::as_str) != Some("assistant") {
+            return Vec::new();
+        }
+        let key = format!("{message}:{id}");
+        if self.sent.contains(&key) {
+            return Vec::new();
+        }
+        let item = match text("type") {
+            Some("text")
+                if !flag(part, "synthetic")
+                    && !flag(part, "ignored")
+                    && part.pointer("/time/end").is_some() =>
+            {
+                text("text")
+                    .filter(|words| !words.trim().is_empty())
+                    .map(|words| (ItemKind::Agent, words.to_owned()))
+            }
+            Some("tool") => matches!(
+                part.pointer("/state/status").and_then(Value::as_str),
+                Some("completed" | "error")
+            )
+            .then(|| text("tool").map(|name| (ItemKind::Tool, name.to_owned())))
+            .flatten(),
+            _ => None,
+        };
+        match item {
+            Some((kind, text)) => {
+                self.sent.insert(key.clone());
+                vec![Item::Words { key, kind, text }]
+            }
+            None => Vec::new(),
+        }
+    }
+}
+
+fn flag(part: &Value, name: &str) -> bool {
+    part.get(name).and_then(Value::as_bool).unwrap_or(false)
+}
+
+/// A permission the agent asked for, as an ask-first card needs it.
+pub fn permission(request: &Value) -> Option<Item> {
+    let id = request.get("id").and_then(Value::as_str)?;
+    let tool = request
+        .get("permission")
+        .and_then(Value::as_str)
+        .unwrap_or("a tool");
+    let patterns: Vec<&str> = request
+        .get("patterns")
+        .and_then(Value::as_array)
+        .map(|all| all.iter().filter_map(Value::as_str).collect())
+        .unwrap_or_default();
+    Some(Item::Permission {
+        id: id.to_owned(),
+        tool: tool.to_owned(),
+        detail: patterns.join(", "),
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn assistant(tracker: &mut Tracker, id: &str) {
+        let none = tracker.event(&json!({
+            "type": "message.updated",
+            "properties": {"sessionID": "ses_1", "info": {"id": id, "role": "assistant"}}
+        }));
+        assert!(none.is_empty());
+    }
+
+    #[test]
+    fn a_stream_is_cut_into_events_wherever_the_chunks_fall() {
+        let mut buffer = String::from("data: {\"type\":\"a\"}\n\ndata: {\"ty");
+        assert_eq!(drain(&mut buffer), vec![json!({"type": "a"})]);
+        buffer.push_str("pe\":\"b\"}\r\n\r\n: keep-alive\n\n");
+        assert_eq!(drain(&mut buffer), vec![json!({"type": "b"})]);
+        assert!(buffer.is_empty());
+    }
+
+    #[test]
+    fn only_what_the_agent_finished_is_sent_and_only_once() {
+        let mut tracker = Tracker::new("ses_1");
+        assistant(&mut tracker, "msg_a");
+        let part = |id: &str, kind: &str, extra: Value| {
+            let mut part =
+                json!({"id": id, "messageID": "msg_a", "sessionID": "ses_1", "type": kind});
+            if let (Some(base), Some(extra)) = (part.as_object_mut(), extra.as_object()) {
+                base.extend(extra.clone());
+            }
+            json!({"type": "message.part.updated", "properties": {"sessionID": "ses_1", "part": part}})
+        };
+        // Still being written: nothing yet.
+        assert!(
+            tracker
+                .event(&part(
+                    "prt_1",
+                    "text",
+                    json!({"text": "Hel", "time": {"start": 1}})
+                ))
+                .is_empty()
+        );
+        let done = part(
+            "prt_1",
+            "text",
+            json!({"text": "Hello", "time": {"start": 1, "end": 2}}),
+        );
+        assert_eq!(
+            tracker.event(&done),
+            vec![Item::Words {
+                key: "msg_a:prt_1".into(),
+                kind: ItemKind::Agent,
+                text: "Hello".into()
+            }]
+        );
+        assert!(
+            tracker.event(&done).is_empty(),
+            "the same part is not sent twice"
+        );
+        let tool = |status: &str| {
+            part(
+                "prt_2",
+                "tool",
+                json!({"tool": "bash", "callID": "c", "state": {"status": status}}),
+            )
+        };
+        assert!(tracker.event(&tool("running")).is_empty());
+        assert_eq!(
+            tracker.event(&tool("completed")),
+            vec![Item::Words {
+                key: "msg_a:prt_2".into(),
+                kind: ItemKind::Tool,
+                text: "bash".into()
+            }]
+        );
+    }
+
+    #[test]
+    fn a_persons_words_and_other_sessions_are_not_sent() {
+        let mut tracker = Tracker::new("ses_1");
+        tracker.event(&json!({"type": "message.updated", "properties": {"sessionID": "ses_1", "info": {"id": "msg_u", "role": "user"}}}));
+        let person = json!({"type": "message.part.updated", "properties": {"sessionID": "ses_1", "part": {"id": "prt_9", "messageID": "msg_u", "type": "text", "text": "hi", "time": {"start": 1, "end": 2}}}});
+        assert!(tracker.event(&person).is_empty());
+        let elsewhere = json!({"type": "session.status", "properties": {"sessionID": "ses_2", "status": {"type": "busy"}}});
+        assert!(tracker.event(&elsewhere).is_empty());
+    }
+
+    #[test]
+    fn a_rebuild_from_the_messages_sends_what_a_dropped_stream_missed() {
+        let mut tracker = Tracker::new("ses_1");
+        let listed = json!({"info": {"id": "msg_a", "role": "assistant"}, "parts": [
+            {"id": "prt_1", "messageID": "msg_a", "type": "text", "text": "Done", "time": {"start": 1, "end": 2}},
+        ]});
+        assert_eq!(tracker.message(&listed).len(), 1);
+        assert!(
+            tracker.message(&listed).is_empty(),
+            "a second rebuild adds nothing"
+        );
+    }
+
+    #[test]
+    fn a_failed_turn_says_why() {
+        let mut tracker = Tracker::new("ses_1");
+        let failed = json!({"id": "evt_9", "type": "session.error", "properties": {"sessionID": "ses_1", "error": {"name": "UnknownError", "data": {"message": "budget spent"}}}});
+        assert_eq!(
+            tracker.event(&failed),
+            vec![Item::Words {
+                key: "error:evt_9".into(),
+                kind: ItemKind::Agent,
+                text: "Error: budget spent".into()
+            }]
+        );
+    }
+
+    #[test]
+    fn a_permission_and_the_status_become_items() {
+        let mut tracker = Tracker::new("ses_1");
+        let asked = json!({"type": "permission.asked", "properties": {"id": "per_1", "sessionID": "ses_1", "permission": "bash", "patterns": ["cargo test", "cargo fmt"], "metadata": {}, "always": []}});
+        assert_eq!(
+            tracker.event(&asked),
+            vec![Item::Permission {
+                id: "per_1".into(),
+                tool: "bash".into(),
+                detail: "cargo test, cargo fmt".into()
+            }]
+        );
+        let status = |kind: &str| json!({"type": "session.status", "properties": {"sessionID": "ses_1", "status": {"type": kind}}});
+        assert_eq!(
+            tracker.event(&status("busy")),
+            vec![Item::Status { busy: true }]
+        );
+        assert_eq!(
+            tracker.event(&status("idle")),
+            vec![Item::Status { busy: false }]
+        );
+    }
+}

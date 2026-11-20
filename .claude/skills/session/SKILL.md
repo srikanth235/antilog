@@ -8,7 +8,7 @@ description: >-
 
 > v0 replaces agent platforms, the stepping relay and the judge sandbox with a runner and one machine per session: see [docs/V0.md](../../../docs/V0.md).
 
-A session is one agent's work inside an experiment: a chat with one agent in one machine, with any number of repos attached (target). It belongs to an experiment, which belongs to a project, and is named on screen by its agent ("Claude Code session"). The agent drives the work. The server keeps a ledger of the session and runs the judge, and runs no loop. A runner polls the server's queue and runs the agent's harness in one machine per session ([docs/V0.md](../../../docs/V0.md)); the runner is not built yet. The judge, and what counts as a win, is in [../judge/SKILL.md](../judge/SKILL.md).
+A session is one agent's work inside an experiment: a chat with one agent in one machine, with any number of repos attached. It belongs to an experiment, which belongs to a project, and is named on screen by its agent ("Claude Code session"). The agent drives the work. The server keeps a ledger of the session and runs the judge, and runs no loop. A runner polls the server's queue and runs the agent's harness in one machine per session ([docs/V0.md](../../../docs/V0.md)); how it works is in [runner.md](runner.md). The judge, and what counts as a win, is in [../judge/SKILL.md](../judge/SKILL.md).
 
 | If you are doing | Read |
 | --- | --- |
@@ -16,6 +16,7 @@ A session is one agent's work inside an experiment: a chat with one agent in one
 | Looking up a word (session, agent, cost tier, Auto, hand off, failover, agent scoreboard, environment, attached repo, connector, skill pack, dataset, dataset version, marking, holdout, agent credential, judge credential, credential reference, session event) | [model.md](model.md) |
 | Checking a change against the rules that never bend | [rules.md](rules.md) |
 | What a prompt-injected agent could do, and what stops it | [threat-model.md](threat-model.md) |
+| Changing the queue, the leases, `/runner/*`, `antilog runner` or how OpenCode is driven | [runner.md](runner.md) |
 | Changing `attach_repo`, `request_credential`, `set_environment` or `request_budget`, or how tools reach a session | [tools.md](tools.md) |
 | Changing what agents are told | [prompts.md](prompts.md) |
 | Supporting a new agent (a model run by a harness) | [add-agent.md](add-agent.md) |

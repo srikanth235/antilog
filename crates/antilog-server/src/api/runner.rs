@@ -63,6 +63,27 @@ fn bearer(headers: &HeaderMap) -> Option<&str> {
         .strip_prefix("Bearer ")
 }
 
+/// Why a runner's call was turned away.
+enum Fail {
+    Unauthenticated,
+    Runner(RunnerError),
+}
+
+impl<E: Into<RunnerError>> From<E> for Fail {
+    fn from(error: E) -> Self {
+        Self::Runner(error.into())
+    }
+}
+
+impl IntoResponse for Fail {
+    fn into_response(self) -> Response {
+        match self {
+            Self::Unauthenticated => unauthenticated(),
+            Self::Runner(error) => failed(error),
+        }
+    }
+}
+
 fn unauthenticated() -> Response {
     refuse(
         StatusCode::UNAUTHORIZED,
@@ -91,13 +112,13 @@ fn failed(error: RunnerError) -> Response {
 }
 
 /// The runner key, compared in constant time.
-fn keyed<D: Deps>(app: &App<D>, headers: &HeaderMap) -> Result<(), Response> {
-    let settings = app.settings.runner.as_ref().ok_or_else(unauthenticated)?;
-    let given = bearer(headers).ok_or_else(unauthenticated)?;
+fn keyed<D: Deps>(app: &App<D>, headers: &HeaderMap) -> Result<(), Fail> {
+    let settings = app.settings.runner.as_ref().ok_or(Fail::Unauthenticated)?;
+    let given = bearer(headers).ok_or(Fail::Unauthenticated)?;
     if bool::from(given.as_bytes().ct_eq(settings.key.as_bytes())) {
         Ok(())
     } else {
-        Err(unauthenticated())
+        Err(Fail::Unauthenticated)
     }
 }
 
@@ -106,48 +127,39 @@ async fn holder<D: Deps>(
     app: &App<D>,
     headers: &HeaderMap,
     session: SessionId,
-) -> Result<String, Response> {
-    let token = bearer(headers).ok_or_else(unauthenticated)?;
+) -> Result<String, Fail> {
+    let token = bearer(headers).ok_or(Fail::Unauthenticated)?;
     let proved = app
         .deps
         .credentials()
         .verify(token, Purpose::Runner)
         .await
-        .map_err(|error| failed(error.into()))?;
+        .map_err(RunnerError::from)?;
     if proved != Some(session) {
-        return Err(unauthenticated());
+        return Err(Fail::Unauthenticated);
     }
     let machine = app
         .store()
         .machine(session)
         .await
-        .map_err(|error| failed(error.into()))?
-        .ok_or_else(|| failed(RunnerError::NotFound))?;
-    machine.holder.ok_or_else(|| failed(RunnerError::NotHeld))
+        .map_err(RunnerError::from)?
+        .ok_or(RunnerError::NotFound)?;
+    Ok(machine.holder.ok_or(RunnerError::NotHeld)?)
 }
 
 async fn poll<D: Deps + 'static>(
     State(app): Shared<D>,
     headers: HeaderMap,
     Json(request): Json<PollRequest>,
-) -> Response {
-    if let Err(response) = keyed(&app, &headers) {
-        return response;
-    }
-    let Some(settings) = app.settings.runner.as_ref() else {
-        return unauthenticated();
-    };
+) -> Result<Json<PollResponse>, Fail> {
+    keyed(&app, &headers)?;
+    let settings = app.settings.runner.as_ref().ok_or(Fail::Unauthenticated)?;
     if request.runner.is_empty() || request.runner.len() > 200 {
-        return refuse(
-            StatusCode::UNPROCESSABLE_ENTITY,
-            "invalid",
-            "A runner has a name of up to 200 characters.",
-        );
+        return Err(Fail::Unauthenticated);
     }
-    match runner::poll(&*app.deps, &settings.core, &request).await {
-        Ok(response) => Json::<PollResponse>(response).into_response(),
-        Err(error) => failed(error),
-    }
+    Ok(Json(
+        runner::poll(&*app.deps, &settings.core, &request).await?,
+    ))
 }
 
 async fn events<D: Deps + 'static>(
@@ -155,15 +167,10 @@ async fn events<D: Deps + 'static>(
     headers: HeaderMap,
     Path(session): Path<SessionId>,
     Json(items): Json<Items>,
-) -> Response {
-    let holder = match holder(&app, &headers, session).await {
-        Ok(holder) => holder,
-        Err(response) => return response,
-    };
-    match runner::ingest(&*app.deps, session, &holder, &items.items).await {
-        Ok(()) => StatusCode::NO_CONTENT.into_response(),
-        Err(error) => failed(error),
-    }
+) -> Result<StatusCode, Fail> {
+    let holder = holder(&app, &headers, session).await?;
+    runner::ingest(&*app.deps, session, &holder, &items.items).await?;
+    Ok(StatusCode::NO_CONTENT)
 }
 
 async fn results<D: Deps + 'static>(
@@ -171,15 +178,10 @@ async fn results<D: Deps + 'static>(
     headers: HeaderMap,
     Path(session): Path<SessionId>,
     Json(result): Json<RunResult>,
-) -> Response {
-    let holder = match holder(&app, &headers, session).await {
-        Ok(holder) => holder,
-        Err(response) => return response,
-    };
-    match runner::result(&*app.deps, session, &holder, &result).await {
-        Ok(()) => StatusCode::NO_CONTENT.into_response(),
-        Err(error) => failed(error),
-    }
+) -> Result<StatusCode, Fail> {
+    let holder = holder(&app, &headers, session).await?;
+    runner::result(&*app.deps, session, &holder, &result).await?;
+    Ok(StatusCode::NO_CONTENT)
 }
 
 async fn release<D: Deps + 'static>(
@@ -187,15 +189,10 @@ async fn release<D: Deps + 'static>(
     headers: HeaderMap,
     Path(session): Path<SessionId>,
     Json(release): Json<Release>,
-) -> Response {
-    let holder = match holder(&app, &headers, session).await {
-        Ok(holder) => holder,
-        Err(response) => return response,
-    };
-    match runner::release(&*app.deps, session, &holder, &release).await {
-        Ok(()) => StatusCode::NO_CONTENT.into_response(),
-        Err(error) => failed(error),
-    }
+) -> Result<StatusCode, Fail> {
+    let holder = holder(&app, &headers, session).await?;
+    runner::release(&*app.deps, session, &holder, &release).await?;
+    Ok(StatusCode::NO_CONTENT)
 }
 
 /// The export of an earlier run, for `opencode import`.
@@ -203,15 +200,14 @@ async fn export<D: Deps + 'static>(
     State(app): Shared<D>,
     headers: HeaderMap,
     Path(session): Path<SessionId>,
-) -> Response {
-    if let Err(response) = holder(&app, &headers, session).await {
-        return response;
-    }
-    match app.store().export(session).await {
-        Ok(Some(body)) => (StatusCode::OK, body).into_response(),
-        Ok(None) => failed(RunnerError::NotFound),
-        Err(error) => failed(error.into()),
-    }
+) -> Result<String, Fail> {
+    holder(&app, &headers, session).await?;
+    Ok(app
+        .store()
+        .export(session)
+        .await
+        .map_err(RunnerError::from)?
+        .ok_or(RunnerError::NotFound)?)
 }
 
 /// A skill pack at one version. The content is the skill packs' own (Customize); until it is
@@ -220,15 +216,13 @@ async fn skill<D: Deps + 'static>(
     State(app): Shared<D>,
     headers: HeaderMap,
     Path((session, _name, _version)): Path<(SessionId, String, String)>,
-) -> Response {
-    if let Err(response) = holder(&app, &headers, session).await {
-        return response;
-    }
-    refuse(
+) -> Result<Response, Fail> {
+    holder(&app, &headers, session).await?;
+    Ok(refuse(
         StatusCode::NOT_FOUND,
         "skill_unavailable",
         "This skill pack version is not available.",
-    )
+    ))
 }
 
 impl RunnerSettings {

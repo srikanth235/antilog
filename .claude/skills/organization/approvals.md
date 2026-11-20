@@ -6,7 +6,7 @@ A person approves the tool calls that matter, in the chat, when they are needed.
 
 ## The cards
 
-An approval card has a title, what would happen, what it may cost, and Approve and Decline. The eight kinds:
+An approval card has a title, what would happen, what it may cost, and Approve and Decline. The nine kinds:
 
 | Card | Raised by | Shows | Default policy |
 | --- | --- | --- | --- |
@@ -18,6 +18,7 @@ An approval card has a title, what would happen, what it may cost, and Approve a
 | Open pull request | `deliver` | One pull request per repo changed, and the receipt | Always ask |
 | Keep going? | Patience reached (sealed, default 6 trials in a row not Kept) | "The last 6 trials did not beat 1,102 ms. $48 of $100 is left." Actions: Keep going, Stop here, and a note of what was tried | Always ask. Allow means never pause |
 | Continue on another agent? | An agent that is unavailable or rate-limited | The agent Auto would choose and why, and what has been done so far | Always ask. Allow continues without asking and records a timeline line |
+| Allow this tool? (`ask_first`) | The harness asked to use a tool that is set to ask first, such as `bash` | The tool and what it would do, as the harness described it. Actions: Allow once, Decline | Always ask. The answer goes back to the machine that asked; the session is Working again |
 
 The tools are in [../session/tools.md](../session/tools.md) and [../judge/tools.md](../judge/tools.md).
 

@@ -72,3 +72,12 @@ The judge runs the sealed command through `SessionMachine::run` in the session's
 ```
 
 Base and trial runs are interleaved by the judge (`judge/paired.rs`). The number comes from this line, never from the agent's report.
+
+## As built (session A)
+
+- A machine row is its own table (`machines`), not columns on `sessions`. Commands wait in `machine_commands` until a runner takes them; a run's outcome is stored on its command; an export is replaced on each release (`machine_exports`).
+- `POST /runner/poll` also takes `held` (the sessions the runner runs now, answered by `lost`) and `done` (command ids it finished). Release outcomes `idle`, `done` and `failed` leave the machine `released`, `done` and `failed`.
+- `GET /runner/sessions/{id}/export` serves the last export for `opencode import`. `GET /runner/sessions/{id}/skills/{name}/{version}` is mounted and answers 404 until session C supplies the content; a pack is a gzip tar with `<name>/SKILL.md` at its root.
+- An OpenCode permission ask becomes an Ask first card (`ask_first`), added to the card kinds.
+- The judge's data (`ANTILOG_DATA_KIND`, `ANTILOG_DATASET_ID`, `ANTILOG_DATASET_VERSION`) is named to the command; delivering the rows is not built.
+- `--pure` stops a repo's plugin code from running; `OPENCODE_DISABLE_PROJECT_CONFIG` also stops its MCP servers, skills and agents. Neither is needed to keep a repo from overriding the provider, permissions or autoupdate: the managed config wins. See [../.claude/skills/session/runner.md](../.claude/skills/session/runner.md).
