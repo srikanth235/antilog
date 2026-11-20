@@ -23,6 +23,8 @@ pub use egress::{NetworkAccess, SessionNetworks};
 pub struct Upstreams {
     pub anthropic: String,
     pub openai: String,
+    /// OpenCode Zen: chat completions, Responses or Messages, by the path called.
+    pub opencode: String,
     /// The Antilog server, where `/mcp/*` is passed on to; none turns the pass-through off.
     pub server: Option<String>,
 }
@@ -32,6 +34,7 @@ impl Default for Upstreams {
         Self {
             anthropic: "https://api.anthropic.com".to_owned(),
             openai: "https://api.openai.com".to_owned(),
+            opencode: "https://opencode.ai/zen".to_owned(),
             server: None,
         }
     }

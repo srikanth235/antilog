@@ -31,6 +31,8 @@ async fn main() -> anyhow::Result<()> {
         anthropic: setting("ANTILOG_PROXY_ANTHROPIC_URL")
             .unwrap_or_else(|| Upstreams::default().anthropic),
         openai: setting("ANTILOG_PROXY_OPENAI_URL").unwrap_or_else(|| Upstreams::default().openai),
+        opencode: setting("ANTILOG_PROXY_OPENCODE_URL")
+            .unwrap_or_else(|| Upstreams::default().opencode),
         server: setting("ANTILOG_PROXY_SERVER_URL"),
     };
     let proxy = Arc::new(Proxy {

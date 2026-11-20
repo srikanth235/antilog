@@ -5241,7 +5241,8 @@
         "description": "A model provider whose key an organization brings. The proxy forwards to it unchanged.",
         "enum": [
           "anthropic",
-          "openai"
+          "openai",
+          "opencode"
         ]
       },
       "NetworkLevel": {

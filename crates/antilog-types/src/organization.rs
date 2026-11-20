@@ -175,15 +175,17 @@ pub struct SignInSession {
 pub enum ModelProvider {
     Anthropic,
     Openai,
+    Opencode,
 }
 
 impl ModelProvider {
-    pub const ALL: [Self; 2] = [Self::Anthropic, Self::Openai];
+    pub const ALL: [Self; 3] = [Self::Anthropic, Self::Openai, Self::Opencode];
 
     pub const fn as_str(self) -> &'static str {
         match self {
             Self::Anthropic => "anthropic",
             Self::Openai => "openai",
+            Self::Opencode => "opencode",
         }
     }
 

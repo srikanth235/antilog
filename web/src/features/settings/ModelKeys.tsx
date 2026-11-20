@@ -11,7 +11,7 @@ import { w } from "../../words";
 
 type Provider = Schemas["ModelProvider"];
 
-const PROVIDERS: readonly Provider[] = ["anthropic", "openai"];
+const PROVIDERS: readonly Provider[] = ["anthropic", "openai", "opencode"];
 
 /** The organization's own keys for the model providers. A key goes in and is never shown again:
  * the list says which providers have one and when it was set. */
@@ -66,7 +66,9 @@ export function ModelKeys() {
               >
                 <div className="tx" style={{ flex: 1 }}>
                   <span className="t-item rw g8">
-                    <span className={`lg lg-${provider}`} role="img" aria-label={label} />
+                    {provider !== "opencode" && (
+                      <span className={`lg lg-${provider}`} role="img" aria-label={label} />
+                    )}
                     {t.formTitle(label)}
                   </span>
                   <span className="dd">{t.formHint(label)}</span>
@@ -107,7 +109,9 @@ export function ModelKeys() {
             <div key={provider} className="stg">
               <div className="tx">
                 <span className="t-item rw g8">
-                  <span className={`lg lg-${provider}`} role="img" aria-label={label} />
+                  {provider !== "opencode" && (
+                    <span className={`lg lg-${provider}`} role="img" aria-label={label} />
+                  )}
                   {label}
                 </span>
                 <span className="dd">{t[provider].hint}</span>
