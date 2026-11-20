@@ -368,6 +368,7 @@ export const w = {
     composerPlaceholder: {
       working: "Steer, @ a session, or / for commands",
       waiting_for_you: "Answer, or approve the card above",
+      waiting_no_card: "Answer",
       done: "Continue this session",
       failed: "Continue this session",
       none: "Start a session",

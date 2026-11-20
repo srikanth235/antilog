@@ -1,6 +1,7 @@
 import type { Schemas } from "../../api/client";
 import { Mark } from "../../components/brand/Brand";
 import { Failed } from "../../components/state/State";
+import { Markdown } from "../../lib/markdown";
 import { w } from "../../words";
 
 /** One thing said in a session: a person's words, the agent's, or the name of a tool it called. Never a tool's output. */
@@ -23,7 +24,9 @@ export function Message(props: { event: Schemas["SessionEvent"]; agent: string }
             <b>{w.experiment.antilog}</b>
             <span className="via">{props.agent}</span>
           </span>
-          <p className="tx">{event.text}</p>
+          <div className="tx md">
+            <Markdown text={event.text} />
+          </div>
         </div>
       </div>
     );

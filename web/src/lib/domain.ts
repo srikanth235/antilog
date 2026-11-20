@@ -64,3 +64,11 @@ export function parseRepos(text: string): string[] {
     .map((repo) => repo.trim())
     .filter((repo) => /^[\w.-]+\/[\w.-]+$/.test(repo));
 }
+
+/** Which composer placeholder to show: "approve the card above" only while a card is showing. */
+export function composerPlaceholderKey(
+  status: Schemas["SessionStatus"] | "none",
+  hasCard: boolean,
+): "working" | "waiting_for_you" | "waiting_no_card" | "done" | "failed" | "none" {
+  return status === "waiting_for_you" && !hasCard ? "waiting_no_card" : status;
+}

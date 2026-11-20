@@ -2,6 +2,7 @@ import { type FormEvent, useState } from "react";
 import type { Schemas } from "../../api/client";
 import { Icon } from "../../components/icon/Icon";
 import { reason } from "../../components/state/State";
+import { composerPlaceholderKey } from "../../lib/domain";
 import { dollars } from "../../lib/format";
 import { w } from "../../words";
 
@@ -9,6 +10,8 @@ type Status = Schemas["SessionStatus"] | "none";
 
 export function Composer(props: {
   status: Status;
+  /** An approval card is showing in the thread. */
+  hasCard: boolean;
   canSend: boolean;
   agent: string;
   budgetCents: number;
@@ -21,7 +24,7 @@ export function Composer(props: {
   const [busy, setBusy] = useState(false);
   const ended = props.status === "done" || props.status === "failed" || props.status === "none";
   const placeholder = props.canSend
-    ? w.experiment.composerPlaceholder[props.status === "none" ? "none" : props.status]
+    ? w.experiment.composerPlaceholder[composerPlaceholderKey(props.status, props.hasCard)]
     : w.readOnly.viewersRead;
 
   const submit = async (event: FormEvent) => {

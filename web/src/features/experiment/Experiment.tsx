@@ -294,6 +294,7 @@ export function Experiment(props: {
           </div>
           <Composer
             status={active?.status ?? "none"}
+            hasCard={waiting.length > 0}
             canSend={editor}
             agent={active === undefined ? w.home.auto : agentLabel(active.agent)}
             budgetCents={e.budgetCapCents}
