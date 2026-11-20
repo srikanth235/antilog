@@ -1,7 +1,7 @@
 ---
 name: session
 description: >-
-  How does the chat work, and where does an agent run? Use for sessions and their status (Working, Waiting for you, Done, Failed), the conversation and what the server stores of it, agents, attaching repos, environments, connectors and credentials, sessions inside an experiment and its project, spawned sessions, skill packs, the setup tools (attach_repo, request_credential, set_environment, request_budget), what agents are told, spend, cost tier, Auto, hand off, failover, compaction and clean-up, and adding an agent, an environment, a connector or a skill pack.
+  How does the chat work, and where does an agent run? Use for sessions and their status (Working, Waiting for you, Done, Failed), the conversation and what the server stores of it, agents, attaching repos, environments, connectors and credentials, sessions inside an experiment and its project, skill packs, the setup tools (attach_repo, request_credential, set_environment, request_budget), what agents are told, spend, cost tier, Auto, hand off, failover, compaction and clean-up, and adding an agent, an environment, a connector or a skill pack.
 ---
 
 # Session
@@ -13,10 +13,10 @@ A session is one agent's work inside an experiment: a chat with one agent in one
 | If you are doing | Read |
 | --- | --- |
 | Deciding what this area promises | [owes.md](owes.md) |
-| Looking up a word (session, agent, cost tier, Auto, hand off, failover, agent scoreboard, environment, attached repo, connector, skill pack, dataset, dataset version, marking, holdout, agent credential, judge credential, credential reference, spawned session, session event) | [model.md](model.md) |
+| Looking up a word (session, agent, cost tier, Auto, hand off, failover, agent scoreboard, environment, attached repo, connector, skill pack, dataset, dataset version, marking, holdout, agent credential, judge credential, credential reference, session event) | [model.md](model.md) |
 | Checking a change against the rules that never bend | [rules.md](rules.md) |
 | What a prompt-injected agent could do, and what stops it | [threat-model.md](threat-model.md) |
-| Changing `spawn`, `attach_repo`, `request_credential`, `set_environment` or `request_budget`, or how tools reach a session | [tools.md](tools.md) |
+| Changing `attach_repo`, `request_credential`, `set_environment` or `request_budget`, or how tools reach a session | [tools.md](tools.md) |
 | Changing what agents are told | [prompts.md](prompts.md) |
 | Supporting a new agent (a model run by a harness) | [add-agent.md](add-agent.md) |
 | Adding an environment (image, setup script, size, network) | [add-environment.md](add-environment.md) |

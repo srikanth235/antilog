@@ -46,33 +46,6 @@ async fn latest<D: Deps>(
     Ok(found)
 }
 
-async fn records<D: Deps>(
-    deps: &D,
-    organization: OrganizationId,
-    experiment: ExperimentId,
-) -> Result<Vec<TrialRecord>, ToolError> {
-    match latest(deps, organization, experiment).await? {
-        Some(sealed) => Ok(deps
-            .judge(organization)
-            .trials(sealed.experiment(), sealed.version())
-            .await?),
-        None => Ok(vec![]),
-    }
-}
-
-/// One line per trial for a session that starts from what others tried.
-pub(super) async fn tried<D: Deps>(deps: &D, caller: &Caller) -> String {
-    let rows = records(deps, caller.organization, caller.experiment)
-        .await
-        .unwrap_or_default();
-    rows.iter()
-        .rev()
-        .take(10)
-        .map(|r| format!("- {}: {}", r.trial.hypothesis, word(r.outcome())))
-        .collect::<Vec<_>>()
-        .join("\n")
-}
-
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct CheatIn {

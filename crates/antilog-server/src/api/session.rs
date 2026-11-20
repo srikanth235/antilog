@@ -179,7 +179,6 @@ async fn start<D: Deps + 'static>(
         repos: body.repos,
         environment: body.environment,
         actor: Some(authed.who.member),
-        ..NewSession::default()
     };
     let session = session::start(&*app.deps, authed.who.organization, experiment, new)
         .await
@@ -410,7 +409,7 @@ async fn events<D: Deps + 'static>(
 #[utoipa::path(get, path = "/tools", responses((status = 200, body = Vec<ToolDefinition>)))]
 async fn tools() -> Json<Vec<ToolDefinition>> {
     Json(
-        definitions(false)
+        definitions()
             .into_iter()
             .map(|t| ToolDefinition {
                 name: t.name,

@@ -24,8 +24,6 @@ pub enum Invariant {
     OverCap,
     #[error("that state change is not allowed")]
     IllegalTransition,
-    #[error("a spawned session cannot spawn")]
-    SpawnedCannotSpawn,
     #[error("add credential is never pre-approved")]
     AlwaysAsk,
     #[error("the audit log and the spend ledger are append-only")]

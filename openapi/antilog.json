@@ -4611,17 +4611,6 @@
           "organizationId": {
             "$ref": "#/components/schemas/OrganizationId"
           },
-          "parent": {
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/SessionId",
-                "description": "Set on a spawned session; a spawned session cannot spawn."
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
           "status": {
             "$ref": "#/components/schemas/SessionStatus"
           },
@@ -4842,7 +4831,7 @@
         "type": "string",
         "enum": [
           "tokens",
-          "sandbox",
+          "machine",
           "judge"
         ]
       },

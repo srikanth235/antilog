@@ -243,7 +243,6 @@ mod tests {
             "measure",
             "history",
             "deliver",
-            "spawn",
             "attach_repo",
             "request_credential",
             "set_environment",

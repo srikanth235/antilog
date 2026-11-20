@@ -1,6 +1,6 @@
-# Session: spawn and the setup tools
+# Session: the setup tools
 
-Built in `antilog-core/src/tools/` and `session/`: `spawn`, the four setup tools (each creates an approval; settling a decided card applies a raised budget). What an approved `attach_repo`, `request_credential` or `set_environment` does in a real session machine, and the Continue on another agent? card, are target. Every session gets the Antilog tools. This page covers `spawn` and the four setup tools. The work tools `seal`, `measure`, `history`, `deliver` and `watch` are in [../judge/tools.md](../judge/tools.md). Cards, policy and who may approve are in [../organization/approvals.md](../organization/approvals.md).
+Built in `antilog-core/src/tools/` and `session/`: the four setup tools (each creates an approval; settling a decided card applies a raised budget). What an approved `attach_repo`, `request_credential` or `set_environment` does in a real session machine, and the Continue on another agent? card, are target. Every session gets the Antilog tools. This page covers the four setup tools. The work tools `seal`, `measure`, `history`, `deliver` and `watch` are in [../judge/tools.md](../judge/tools.md). Cards, policy and who may approve are in [../organization/approvals.md](../organization/approvals.md).
 
 ## How the tools reach a session
 
@@ -9,17 +9,6 @@ The runner reaches the server over outbound HTTPS only ([docs/V0.md](../../../do
 `measure` is asynchronous: it returns a ticket at once and the measurement arrives later as a session event, which sidesteps both limits.
 
 `antilog mcp` serves the same tools to an agent on a person's own machine (Claude Code, Codex), so a change can be proposed anywhere and is measured only by the judge.
-
-## spawn
-
-| | |
-| --- | --- |
-| Inputs | An agent (a model on a platform), an environment, a first message. The new session is in the same experiment. The call hands over a summary of what was tried (from `history`) so the new session does not repeat a dead end. With no agent named it defaults to the organization's chosen lower-cost agent; naming a costlier one needs a reason |
-| Card | Spawned session: agent with its cost tier, status, its best; opens that session as its own chat inside the experiment |
-| Who approves | Nobody, inside the budget. The spawned session spends the experiment's budget |
-| Refuses | A call from a spawned session; a budget that is spent |
-
-The parent is told when a spawned session finishes. A person can open any spawned session and talk to it, and can start sibling sessions from the composer.
 
 ## The setup tools
 

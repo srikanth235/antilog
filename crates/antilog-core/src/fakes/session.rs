@@ -73,15 +73,6 @@ impl SessionStore for FakeStore {
     ) -> Result<(), StoreError> {
         let mut ledger = locked(&self.ledger);
         not_found(ledger.experiment(session.organization_id, session.experiment_id))?;
-        if let Some(parent) = session.parent {
-            let parent = not_found(ledger.session(session.organization_id, parent))?;
-            if parent.experiment_id != session.experiment_id {
-                return Err(StoreError::NotFound);
-            }
-            if parent.parent.is_some() {
-                return Err(Invariant::SpawnedCannotSpawn.into());
-            }
-        }
         if ledger.sessions.iter().any(|row| row.id == session.id) {
             return Err(StoreError::Conflict);
         }

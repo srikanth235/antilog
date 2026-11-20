@@ -14,7 +14,7 @@ import { WinState } from "../value/WinState";
 
 const t = w.report;
 const ALL = "all";
-const KIND_CLASS = { tokens: "ap-k1", sandbox: "ap-k2", judge: "ap-k3" } as const;
+const KIND_CLASS = { tokens: "ap-k1", machine: "ap-k2", judge: "ap-k3" } as const;
 
 export function Report(props: { month: string | undefined; project: string | undefined }) {
   const navigate = useNavigate();

@@ -9,12 +9,8 @@ import {
   parseRepos,
 } from "./domain";
 
-const session = (
-  status: Schemas["SessionStatus"],
-  createdAt = 1,
-  parent?: string,
-): Schemas["Session"] =>
-  ({ status, createdAt, parent: parent ?? null, id: `s${createdAt}` }) as Schemas["Session"];
+const session = (status: Schemas["SessionStatus"], createdAt = 1): Schemas["Session"] =>
+  ({ status, createdAt, id: `s${createdAt}` }) as Schemas["Session"];
 
 describe("domain", () => {
   it("puts what needs a person first", () => {
@@ -24,8 +20,8 @@ describe("domain", () => {
     expect(activityOf([], 0)).toBeNull();
   });
   it("finds the lead session", () => {
-    expect(leadSession([session("done", 5), session("done", 2), session("done", 1, "x")])?.id).toBe(
-      "s2",
+    expect(leadSession([session("done", 5), session("done", 2), session("done", 1)])?.id).toBe(
+      "s1",
     );
   });
   it("lets only viewers read", () => {

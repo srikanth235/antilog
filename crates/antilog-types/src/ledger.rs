@@ -4,7 +4,7 @@ use utoipa::ToSchema;
 use crate::id::text_enum;
 use crate::{ApprovalId, AuditId, ExperimentId, MemberId, OrganizationId, SessionId, SpendId};
 
-text_enum!(SpendKind { Tokens => "tokens", Sandbox => "sandbox", Judge => "judge" });
+text_enum!(SpendKind { Tokens => "tokens", Machine => "machine", Judge => "judge" });
 
 /// One append-only row of spend, in US cents.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]

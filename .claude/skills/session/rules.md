@@ -20,11 +20,10 @@ All target.
 - Open a terminal, a file or a preview only in the agent's own sandbox, for a person with edit access (read-only for a viewer), and record that it was opened in the audit log, because a shell in a sandbox is a way into it. Store none of what passes through it.
 - Store no tool output, file contents, diffs or data. Store the conversation's words, tool call names, card states, commit ids, measurements, spend and audit rows, because the rest can carry customer data.
 - Give each agent its own session and branch, because a shared session leaks one agent's state into another's.
-- Never let a spawned session spawn, because an unbounded tree is unbounded spend.
 - Privilege no agent's vendor: every agent works in the same experiment on the same budget. Preselect none by brand. Auto picks by measured cost per win among the agents turned on and says why, and a person can always pick a named one, because a default that favours a vendor ties the customer to it.
 - Show agent figures only as measured by the judge on this organization's code, never as a vendor benchmark, because an outside number is a claim nobody here can check.
 - Fail over only to an agent the organization turned on, and record it as a timeline line and an audit row, because a session that moves silently moves spend and code access silently.
-- Hand a spawned or handed-off session a summary and the history, never tool output or diffs, because the server stores neither.
+- Hand a handed-off session a summary and the history, never tool output or diffs, because the server stores neither.
 - Never give Antilog access to the customer's cloud: no cross-account role, no stored cloud keys. Antilog holds only platform credentials, because access we hold is access that can be stolen. On Antilog cloud they sit in AWS Secrets Manager, read by the server through workload identity.
 - Record spend from the platform's usage, and make the judge refuse `measure` when the budget is spent, because a cap that is only advice is not a cap. Use the platform's own limits (turns, time, tokens) as a second stop where it has them.
 - Attribute every spend record to its session and agent, because one session must not spend another's money unseen.

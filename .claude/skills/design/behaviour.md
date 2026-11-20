@@ -17,7 +17,7 @@ A fixed 256px sidebar and a main area.
 
 An experiment has a **state** (Not sealed, Sealed, Watching, Regressed) and an **activity** that comes from its sessions: Working (an open arc), Waiting for you (a half-filled circle), Done (a check in a circle), Failed (a cross in a circle). Each has a word and its own icon shape, never colour alone. The sidebar row shows the activity; the experiment page shows both. A session a person stopped is Done, with "Stopped by NAME".
 
-An agent's message carries the Antilog mark and "Antilog", with the agent as a quiet second label. Agent logos appear only where an agent is the subject: spawned session cards, the agent menu, Customize rows, receipts and lineage.
+An agent's message carries the Antilog mark and "Antilog", with the agent as a quiet second label. Agent logos appear only where an agent is the subject: the agent menu, Customize rows, receipts and lineage.
 
 ## Page types
 
@@ -34,7 +34,7 @@ Every screen is one of six types. A new kind of thing under Customize does not m
 
 ## The session page
 
-The experiment page is the chat of its lead session: one agent in one sandbox on one agent platform, any number of repos attached. Spawned sessions appear as cards in the conversation and open as their own chat inside it (`SessionSpawned`), with the breadcrumb "Project / Experiment title / Codex session". A session has an activity and nothing else; the experiment owns the state, scoreboard and budget.
+The experiment page is the chat of its lead session: one agent in one sandbox on one agent platform, any number of repos attached. Another session of the experiment appears as a card in the conversation and opens as its own chat inside it (`SessionSpawned`). A session has an activity and nothing else; the experiment owns the state, scoreboard and budget.
 
 ### Header and panels
 

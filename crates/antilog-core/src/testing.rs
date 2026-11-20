@@ -652,7 +652,7 @@ async fn budgets_and_spend<S: Store>(store: &S) {
     for row in [
         spend(&lead, SpendKind::Tokens, 40, 900, T0 + 10),
         spend(&lead, SpendKind::Judge, 25, 0, T0 + 20),
-        spend(&elsewhere, SpendKind::Sandbox, 7, 0, T0 + 20),
+        spend(&elsewhere, SpendKind::Machine, 7, 0, T0 + 20),
     ] {
         store.record_spend(&row).await.expect("recorded");
     }
@@ -738,7 +738,7 @@ async fn budgets_and_spend<S: Store>(store: &S) {
     assert_eq!(
         store.spend_lines(org, None).await.expect("all").len(),
         3,
-        "the other experiment's sandbox spend joins the rest"
+        "the other experiment's machine spend joins the rest"
     );
     assert!(
         store
@@ -816,18 +816,8 @@ async fn experiments_and_sessions<S: Store>(store: &S) {
             .await
     };
     create(&lead).await.expect("created");
-    let mut child = Session::new(org, experiment.id, "codex", T0 + 1);
-    child.parent = Some(lead.id);
-    create(&child).await.expect("a spawned session");
-    let mut grandchild = Session::new(org, experiment.id, "codex", T0 + 2);
-    grandchild.parent = Some(child.id);
-    refused(create(&grandchild).await, Invariant::SpawnedCannotSpawn);
-    let other = self::experiment(store, &world, 1_000)
-        .await
-        .expect("created");
-    let mut stray = Session::new(org, other.id, "codex", T0);
-    stray.parent = Some(lead.id);
-    not_found(create(&stray).await);
+    let child = Session::new(org, experiment.id, "codex", T0 + 1);
+    create(&child).await.expect("a second session");
     conflict(create(&lead).await);
     assert_eq!(
         store.sessions(org, experiment.id).await.expect("read"),

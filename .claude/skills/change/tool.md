@@ -1,6 +1,6 @@
 # A tool
 
-A tool is one of the Antilog tools: `seal`, `measure`, `history`, `spawn`, `deliver`, `watch`, and the setup tools `attach_repo`, `request_credential`, `set_environment` and `request_budget`. Every session gets them. `antilog mcp` serves the same tools to an agent on the person's own machine. A change proposed anywhere is measured only by the judge. The tools are listed in [session/tools.md](../session/tools.md) and [judge/tools.md](../judge/tools.md). (target: nothing here is built yet.)
+A tool is one of the Antilog tools: `seal`, `measure`, `history`, `deliver`, `watch`, and the setup tools `attach_repo`, `request_credential`, `set_environment` and `request_budget`. Every session gets them. `antilog mcp` serves the same tools to an agent on the person's own machine. A change proposed anywhere is measured only by the judge. The tools are listed in [session/tools.md](../session/tools.md) and [judge/tools.md](../judge/tools.md). (target: nothing here is built yet.)
 
 ## Steps (target)
 

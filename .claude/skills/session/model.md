@@ -11,7 +11,6 @@ Experiment rows, sessions and spend records are in the store ([../change/ledger-
 | project | A group of experiments for one area of the code, with members and roles per project (see [../organization/model.md](../organization/model.md)) | a repo, a folder |
 | experiment | The sealed goal and everything measured against it; it owns the budget and holds one or more sessions (see [../judge/model.md](../judge/model.md)). Its activity comes from its sessions: Working, Waiting for you, Done, Failed | a session |
 | session | One agent's work inside an experiment: a chat with one agent in one machine, with any number of repos attached. Status: Working, Waiting for you, Done, Failed. A session a person stops is Done, "Stopped by NAME". Named on screen by its agent ("Claude Code session"); never a top-level noun | a thread, a task, a step machine |
-| spawned session | A session another session started with `spawn`: same experiment, same budget, any agent. It cannot spawn. A person can open it and talk to it | a sub-task |
 | session event | One item in a session's stream: a message, tool call, card, measurement arriving or status change | a log line |
 
 ## Agents

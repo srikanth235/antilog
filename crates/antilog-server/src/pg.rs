@@ -78,7 +78,6 @@ fn map(error: sqlx::Error) -> StoreError {
             Some("AL001") => Some(Invariant::LastOwner),
             Some("AL002") => Some(Invariant::OverCap),
             Some("AL003") => Some(Invariant::IllegalTransition),
-            Some("AL004") => Some(Invariant::SpawnedCannotSpawn),
             Some("AL005") => Some(Invariant::AppendOnly),
             Some("23514")
                 if matches!(

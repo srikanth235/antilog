@@ -83,7 +83,6 @@ pub struct NewSession {
     pub prompt: String,
     pub repos: Vec<String>,
     pub environment: Option<String>,
-    pub parent: Option<SessionId>,
     pub actor: Option<MemberId>,
 }
 
@@ -108,8 +107,7 @@ pub async fn start<D: Deps>(
         row.budget_cap_cents,
     )
     .await?;
-    let mut session = Session::new(organization, experiment, &new.agent, now_ms(deps));
-    session.parent = new.parent;
+    let session = Session::new(organization, experiment, &new.agent, now_ms(deps));
     let entry = audit(deps, organization, new.actor, "session.start", session.id);
     deps.store().create_session(&session, &entry).await?;
     if !new.prompt.trim().is_empty() {

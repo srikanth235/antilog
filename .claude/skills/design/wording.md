@@ -35,7 +35,6 @@ The vocabulary source is [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md), includ
 | Agent | connection |
 | Auto (the agent choice only) | Auto as the approval mode |
 | Ask, Follow policy (the approval mode) | Auto, automatic |
-| Spawned session | child, sub-agent, worker |
 | Approve, Decline | Accept, Reject, Deny |
 | Policy (which cards are pre-approved) | rules |
 | Watch, Watching, Regression | monitor, alert |
@@ -62,7 +61,7 @@ Add each new term to the glossary in the same change that introduces it. Prefer 
 | --- | --- |
 | Sidebar | "New experiment", "Search" (hint ⌘K), "Projects", "Customize", "Pinned"; sessions "Claude Code session", "Codex session" |
 | States, activities | Not sealed, Sealed, Watching, Regressed; Working, Waiting for you, Done, Failed |
-| Header | breadcrumb "Project / Experiment title" (spawned: "... / Codex session"), "More", "Share" |
+| Header | breadcrumb "Project / Experiment title", "More", "Share" |
 | An agent's message | the Antilog mark and "Antilog", then the agent as a quiet label: "Antilog · Claude Code" |
 | Stopped session | Done, with "Stopped by NAME" |
 | Title menu (button "Session menu") | "Rename", "Pin" or "Unpin", "Experiment details", "Copy link", "Hand off to...", "Stop session" (inline confirm: "Stop session", "Keep working"), "Archive" |
@@ -146,7 +145,7 @@ Every title is the card's name. A declined card reads "Declined by NAME · 14:02
 | Evaluation kinds | "Speed", "Quality", "Size", "Cost"; templates "Load test", "Query latency", "Test suite duration", "Bundle size", "Forecast error", "Your own"; "Planted cheats": "Skip the work", "Hard-code the answer", "Return early" |
 | Value section | "Worth", "Cost so far", "Return", "How At risk works." |
 | Where the spend went | "Kept trials", "Within noise", "Worse", "Guardrail failed", "Rejected", "Failed", "Not measured"; columns "Outcome", "Spent", "Share" |
-| Sessions table | "Session", "Platform", "Started", "Ended", "Spend", "State", "Clean-up"; "Lead session", "Spawned session"; Removed, Not removed; "Running", "When it ends" |
+| Sessions table | "Session", "Platform", "Started", "Ended", "Spend", "State", "Clean-up"; "Lead session"; Removed, Not removed; "Running", "When it ends" |
 | Session not removed | "The Gemini session was not removed. Antilog retries, and its cost counts until it is gone." |
 | Trials table | "Trial", "Hypothesis", "Session", "Outcome", "Value", "Cost", "Started from"; "Show all 14 trials" |
 | Watch, Versions | "Watch this experiment", "On a schedule", "When the default branch moves", "Last measurement"; "Current", "Superseded"; "Numbers are never compared across versions." |

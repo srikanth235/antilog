@@ -12,7 +12,7 @@ The settled product, directed by the owner. Everything here is target; nothing i
 - **Experiment.** Its definition of better (metric and direction, evaluation and protected files, guardrails, data and holdout, repeats, acceptance criteria, quick check, patience, value model) is immutable once sealed; a change makes a new version and numbers never carry across. State: Not sealed, Sealed, Watching or Regressed.
 - **Session.** A chat with one agent in one machine. It always belongs to an experiment. Status: Working, Waiting for you, Done or Failed; a stopped one is Done, "Stopped by NAME". On screen it is named by its agent.
 - **Trial.** One `measure` call: a set of commits (one per repo changed), the trial it started from and a one-line hypothesis.
-- **Tools.** Every session gets the Antilog tools, and `antilog mcp` (target) serves them to an agent on a person's own machine. Work tools: `seal`, `measure` (asynchronous: a ticket now, the measurement later as an event), `history`, `spawn`, `deliver`, `watch`. Setup tools, each a card: `attach_repo`, `request_credential`, `set_environment`, `request_budget`. See [session tools](../session/tools.md) and [judge tools](../judge/tools.md).
+- **Tools.** Every session gets the Antilog tools, and `antilog mcp` (target) serves them to an agent on a person's own machine. Work tools: `seal`, `measure` (asynchronous: a ticket now, the measurement later as an event), `history`, `deliver`, `watch`. Setup tools, each a card: `attach_repo`, `request_credential`, `set_environment`, `request_budget`. See [session tools](../session/tools.md) and [judge tools](../judge/tools.md).
 - **Memory is `history`.** Each trial carries its hypothesis, so a later session reads what was tried and what failed. There is no notes feature. Skill packs are written know-how a person adds, not a record of trials.
 
 ## Settings are tools
@@ -39,7 +39,6 @@ The settled product, directed by the owner. Everything here is target; nothing i
 ## Sessions, budget and storage
 
 - **One agent per session,** with any number of repos. Git is the hand-off: each session gets a short-lived git token per repo that pushes only to its own branch, and Antilog stores commit ids, never diffs.
-- **Spawn.** A session may spawn others in the same experiment, on the same budget, on any agent. A spawned session cannot spawn, appears as a card and opens as its own chat. See [session rules](../session/rules.md).
 - **Budget.** One per experiment, covering all its sessions and judge time. It is set on the composer (default: the project's, then the organization's) and an editor or owner can change it at any time; lowering it below spend stops new measurements. When it is spent the judge refuses `measure` and the experiment is Waiting for you with a Raise budget card. It sits inside its project's optional monthly cap, inside the organization's.
 - **The sandbox is temporary, the conversation is not.** A sandbox ends when the session is idle or stopped, and resuming starts a new one from the session's branches.
 - **What the server stores:** the conversation, tool call names and card states, commit ids, measurements, spend and audit rows. Never tool output, file contents, diffs or data. Tool output and raw logs stay on the platform, are fetched when opened and may expire; the session says so.
@@ -192,7 +191,7 @@ A `antilog mcp` connection works inside a session in the experiment, named by it
 - Whether scoring is offline only or production results are used too.
 - Whether Antilog ever reshapes data (today no, see [non-goals](non-goals.md)).
 - Whether "Try a demo" stays in the web app.
-- Whether every trial in the version, from every session and including quick-check stops, should count in k. Spawned sessions raise the bar for all.
+- Whether every trial in the version, from every session and including quick-check stops, should count in k.
 - How experiments on the same code interact: overlapping changes, a default branch that moves mid-experiment, one win making another's baseline stale. Today only delivery rebases.
 - How a secret pasted into the chat is caught before the conversation is stored.
 - Who holds the judge's signing key when self-hosted (on Antilog cloud it is Antilog's, in AWS Secrets Manager), how it rotates, and what "Signed by the judge" proves to someone outside the organization.

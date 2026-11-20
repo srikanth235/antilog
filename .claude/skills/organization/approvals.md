@@ -43,7 +43,7 @@ Settings, Approvals holds policy. Settings, Connections lists the repos, credent
 
 ## Budgets
 
-- One budget per experiment, covering all its sessions and their judge time. Spend is model tokens, sandbox time and judge time. The meter is in [../session/model.md](../session/model.md).
+- One budget per experiment, covering all its sessions and their judge time. Spend is model tokens, machine time and judge time. The meter is in [../session/model.md](../session/model.md).
 - A person sets it when starting, from the budget on the composer's row. It defaults to the project's default budget per experiment, which falls back to the organization's default in Settings, Budgets (boards show $10 as the example).
 - An editor or owner can change it at any time: from the scoreboard strip ("Change budget"), from the experiment detail page, or in a row on the Seal experiment card. Lowering it below what is spent stops new measurements. Each change is an audit row. An experiment's budget sits inside its project's cap, and a raise that would pass the cap is refused.
 - `request_budget` lets the agent ask for more through a Raise budget card; policy for it stays in Settings, Approvals.

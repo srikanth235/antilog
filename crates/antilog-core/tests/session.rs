@@ -306,33 +306,6 @@ async fn setup_tools_ask_and_refuse_with_a_next_step() {
 }
 
 #[tokio::test]
-async fn spawn_hands_over_history_and_a_spawned_session_cannot_spawn() {
-    let (deps, seed) = world(1_000).await;
-    let agent = lead(&deps, &seed).await;
-    let org = seed.organization.id;
-    agent.call(
-        "s",
-        "spawn",
-        json!({"agent":"codex","prompt":"try indexes"}),
-    );
-    agent.step(&deps).await;
-    let spawned = agent.answer("s");
-    let child: antilog_types::SessionId =
-        serde_json::from_value(spawned["session"].clone()).unwrap();
-    let child_row = deps.store.session(org, child).await.unwrap().unwrap();
-    assert_eq!(child_row.parent, Some(agent.session.id));
-    let child_agent = Agent::new(child_row);
-    child_agent.call("x", "spawn", json!({"agent":"codex","prompt":"again"}));
-    child_agent.step(&deps).await;
-    assert!(
-        child_agent.answer("x")["error"]
-            .as_str()
-            .unwrap()
-            .contains("spawned session cannot spawn")
-    );
-}
-
-#[tokio::test]
 async fn a_spent_budget_stops_new_sessions_and_measurements() {
     let (deps, seed) = world(100).await;
     let agent = lead(&deps, &seed).await;

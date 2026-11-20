@@ -25,13 +25,11 @@ export function activityOf(
   return "done";
 }
 
-/** The lead session is the first one started and has no parent. */
+/** The lead session is the first one started. */
 export function leadSession(
   sessions: readonly Schemas["Session"][],
 ): Schemas["Session"] | undefined {
-  return [...sessions]
-    .filter((session) => session.parent === null || session.parent === undefined)
-    .sort((a, b) => a.createdAt - b.createdAt)[0];
+  return [...sessions].sort((a, b) => a.createdAt - b.createdAt)[0];
 }
 
 export function pendingCards(approvals: readonly Schemas["Approval"][]): Schemas["Approval"][] {

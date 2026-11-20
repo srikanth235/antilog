@@ -43,7 +43,6 @@ struct SessionRow {
     id: Uuid,
     organization_id: Uuid,
     experiment_id: Uuid,
-    parent_session_id: Option<Uuid>,
     agent: String,
     status: String,
     note: Option<String>,
@@ -59,7 +58,6 @@ impl TryFrom<SessionRow> for Session {
             id: SessionId::from_uuid(row.id),
             organization_id: OrganizationId::from_uuid(row.organization_id),
             experiment_id: ExperimentId::from_uuid(row.experiment_id),
-            parent: row.parent_session_id.map(SessionId::from_uuid),
             agent: row.agent,
             status: SessionStatus::parse(&row.status)
                 .ok_or_else(|| corrupt("session status", &row.status))?,
@@ -167,11 +165,10 @@ impl SessionStore for PgStore {
     ) -> Result<(), StoreError> {
         let mut tx = self.scoped(session.organization_id).await?;
         sqlx::query!(
-            "insert into sessions (id, organization_id, experiment_id, parent_session_id, agent, status, note, created_at, updated_at) values ($1, $2, $3, $4, $5, $6, $7, to_timestamp($8::bigint / 1000.0), to_timestamp($9::bigint / 1000.0))",
+            "insert into sessions (id, organization_id, experiment_id, agent, status, note, created_at, updated_at) values ($1, $2, $3, $4, $5, $6, to_timestamp($7::bigint / 1000.0), to_timestamp($8::bigint / 1000.0))",
             session.id.as_uuid(),
             session.organization_id.as_uuid(),
             session.experiment_id.as_uuid(),
-            session.parent.map(|parent| parent.as_uuid()),
             session.agent,
             session.status.as_str(),
             session.note,
@@ -193,7 +190,7 @@ impl SessionStore for PgStore {
         let mut tx = self.scoped(organization).await?;
         sqlx::query_as!(
             SessionRow,
-            "select id, organization_id, experiment_id, parent_session_id, agent, status, note, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from updated_at) * 1000)::bigint as \"updated_at!\" from sessions where organization_id = $1 and id = $2",
+            "select id, organization_id, experiment_id, agent, status, note, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from updated_at) * 1000)::bigint as \"updated_at!\" from sessions where organization_id = $1 and id = $2",
             organization.as_uuid(),
             id.as_uuid(),
         )
@@ -212,7 +209,7 @@ impl SessionStore for PgStore {
         let mut tx = self.scoped(organization).await?;
         sqlx::query_as!(
             SessionRow,
-            "select id, organization_id, experiment_id, parent_session_id, agent, status, note, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from updated_at) * 1000)::bigint as \"updated_at!\" from sessions where organization_id = $1 and experiment_id = $2 order by created_at, id",
+            "select id, organization_id, experiment_id, agent, status, note, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from updated_at) * 1000)::bigint as \"updated_at!\" from sessions where organization_id = $1 and experiment_id = $2 order by created_at, id",
             organization.as_uuid(),
             experiment.as_uuid(),
         )
@@ -235,7 +232,7 @@ impl SessionStore for PgStore {
         let mut tx = self.scoped(organization).await?;
         let row = sqlx::query_as!(
             SessionRow,
-            "update sessions set status = coalesce($3, status), note = coalesce($4, note), updated_at = to_timestamp($5::bigint / 1000.0) where organization_id = $1 and id = $2 returning id, organization_id, experiment_id, parent_session_id, agent, status, note, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from updated_at) * 1000)::bigint as \"updated_at!\"",
+            "update sessions set status = coalesce($3, status), note = coalesce($4, note), updated_at = to_timestamp($5::bigint / 1000.0) where organization_id = $1 and id = $2 returning id, organization_id, experiment_id, agent, status, note, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from updated_at) * 1000)::bigint as \"updated_at!\"",
             organization.as_uuid(),
             id.as_uuid(),
             change.status.map(SessionStatus::as_str),
@@ -344,7 +341,7 @@ impl SessionStore for PgStore {
         let mut tx = self.scoped(organization).await?;
         sqlx::query_as!(
             SessionRow,
-            "select id, organization_id, experiment_id, parent_session_id, agent, status, note, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from updated_at) * 1000)::bigint as \"updated_at!\" from sessions where organization_id = $1 and updated_at >= to_timestamp($2::bigint / 1000.0) order by updated_at, id limit $3",
+            "select id, organization_id, experiment_id, agent, status, note, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from updated_at) * 1000)::bigint as \"updated_at!\" from sessions where organization_id = $1 and updated_at >= to_timestamp($2::bigint / 1000.0) order by updated_at, id limit $3",
             organization.as_uuid(),
             since,
             i64::from(limit),

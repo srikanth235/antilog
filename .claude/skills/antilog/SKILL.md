@@ -49,7 +49,7 @@ Every session gets the Antilog tools, and `antilog mcp` serves the same ones. Th
 | Tool | Does | Owner page |
 | --- | --- | --- |
 | `seal`, `measure`, `history`, `deliver`, `watch` | Propose and seal the definition, measure a trial (quick check, then full measurement), read every trial, open the pull requests, measure again later | [../judge/tools.md](../judge/tools.md) |
-| `spawn`, `attach_repo`, `request_credential`, `set_environment`, `request_budget` | Start another session, and set up in the chat with a card. A credential value is typed into the form, never the chat | [../session/tools.md](../session/tools.md) |
+| `attach_repo`, `request_credential`, `set_environment`, `request_budget` | Set up in the chat with a card. A credential value is typed into the form, never the chat | [../session/tools.md](../session/tools.md) |
 
 The judge runs the sealed test command in the session's machine and takes the number from its output, and the result never has a holdout value. Numbers an agent makes in its own session never count.
 

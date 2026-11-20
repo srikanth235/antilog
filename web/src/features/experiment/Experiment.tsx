@@ -129,12 +129,12 @@ export function Experiment(props: {
     });
     if (session.id !== lead?.id)
       timeline.push({
-        key: `spawned-${session.id}`,
+        key: `session-${session.id}`,
         at: session.createdAt,
         rank: 3,
         node: (
           <Link
-            key={`spawned-${session.id}`}
+            key={`session-${session.id}`}
             className="cd spc"
             to="/experiments/$experimentId"
             params={{ experimentId: e.id }}

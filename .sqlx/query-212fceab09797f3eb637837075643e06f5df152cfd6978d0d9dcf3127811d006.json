@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select id, organization_id, experiment_id, parent_session_id, agent, status, note, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from updated_at) * 1000)::bigint as \"updated_at!\" from sessions where organization_id = $1 and updated_at >= to_timestamp($2::bigint / 1000.0) order by updated_at, id limit $3",
+  "query": "update sessions set status = coalesce($3, status), note = coalesce($4, note), updated_at = to_timestamp($5::bigint / 1000.0) where organization_id = $1 and id = $2 returning id, organization_id, experiment_id, agent, status, note, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from updated_at) * 1000)::bigint as \"updated_at!\"",
   "describe": {
     "columns": [
       {
@@ -38,17 +38,6 @@
       },
       {
         "ordinal": 3,
-        "name": "parent_session_id",
-        "type_info": "Uuid",
-        "origin": {
-          "Table": {
-            "table": "sessions",
-            "name": "parent_session_id"
-          }
-        }
-      },
-      {
-        "ordinal": 4,
         "name": "agent",
         "type_info": "Text",
         "origin": {
@@ -59,7 +48,7 @@
         }
       },
       {
-        "ordinal": 5,
+        "ordinal": 4,
         "name": "status",
         "type_info": "Text",
         "origin": {
@@ -70,7 +59,7 @@
         }
       },
       {
-        "ordinal": 6,
+        "ordinal": 5,
         "name": "note",
         "type_info": "Text",
         "origin": {
@@ -81,13 +70,13 @@
         }
       },
       {
-        "ordinal": 7,
+        "ordinal": 6,
         "name": "created_at!",
         "type_info": "Int8",
         "origin": "Expression"
       },
       {
-        "ordinal": 8,
+        "ordinal": 7,
         "name": "updated_at!",
         "type_info": "Int8",
         "origin": "Expression"
@@ -96,7 +85,9 @@
     "parameters": {
       "Left": [
         "Uuid",
-        "Int8",
+        "Uuid",
+        "Text",
+        "Text",
         "Int8"
       ]
     },
@@ -104,7 +95,6 @@
       false,
       false,
       false,
-      true,
       false,
       false,
       true,
@@ -112,5 +102,5 @@
       null
     ]
   },
-  "hash": "6a7430b3b3a5624f0f8fe6a3c73f5c5fd2ea53e91f7eaf0e31ff67641744c892"
+  "hash": "212fceab09797f3eb637837075643e06f5df152cfd6978d0d9dcf3127811d006"
 }

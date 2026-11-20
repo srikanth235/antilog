@@ -464,7 +464,7 @@ export const w = {
   },
   spendKinds: {
     tokens: "Model tokens",
-    sandbox: "Sandbox time",
+    machine: "Machine time",
     judge: "The judge",
   },
   scoreboard: {

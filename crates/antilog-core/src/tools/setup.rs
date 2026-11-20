@@ -6,7 +6,7 @@ use super::{Caller, Done, ToolError, input};
 use crate::approval::{self, CardRequest};
 use crate::deps::Deps;
 use crate::organization::Refusal;
-use crate::session::{NewSession, now_ms};
+use crate::session::now_ms;
 use crate::store::{SessionChange, SessionStore};
 
 /// A card in front of a person, or approved by policy when the experiment follows it.
@@ -300,55 +300,4 @@ pub(super) async fn request_budget<D: Deps>(
     )
     .await?;
     Ok((waiting(deps, caller, &approval).await, None))
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-struct Spawn {
-    agent: String,
-    prompt: String,
-    environment: Option<String>,
-}
-
-pub(super) async fn spawn<D: Deps>(deps: &D, caller: &Caller, value: serde_json::Value) -> Done {
-    let Spawn {
-        agent,
-        prompt,
-        environment,
-    } = input(value)?;
-    let me = deps
-        .store()
-        .session(caller.organization, caller.session)
-        .await?
-        .ok_or_else(|| ToolError::new("this session is unknown"))?;
-    if me.parent.is_some() {
-        return Err(ToolError::new(
-            "a spawned session cannot spawn: ask the lead session to start it",
-        ));
-    }
-    let tried = super::judge::tried(deps, caller).await;
-    let prompt = if tried.is_empty() {
-        prompt
-    } else {
-        format!("{prompt}\n\nTried so far in this experiment:\n{tried}")
-    };
-    let session = crate::session::start(
-        deps,
-        caller.organization,
-        caller.experiment,
-        NewSession {
-            agent,
-            prompt,
-            environment,
-            parent: Some(caller.session),
-            actor: caller.actor,
-            ..NewSession::default()
-        },
-    )
-    .await
-    .map_err(|error| ToolError::new(error.to_string()))?;
-    Ok((
-        json!({ "session": session.id, "status": session.status, "agent": session.agent }),
-        None,
-    ))
 }

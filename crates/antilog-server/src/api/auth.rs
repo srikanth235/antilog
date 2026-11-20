@@ -236,7 +236,6 @@ impl IntoResponse for Fail {
                         Invariant::OverCap => "over_cap",
                         Invariant::IllegalTransition => "illegal_transition",
                         Invariant::AlwaysAsk => "always_ask",
-                        Invariant::SpawnedCannotSpawn => "spawned_cannot_spawn",
                         Invariant::AppendOnly => "append_only",
                     };
                     body(StatusCode::CONFLICT, code, &invariant.to_string())

@@ -56,7 +56,6 @@ pub trait SessionStore {
         audit: &AuditEntry,
     ) -> impl Future<Output = Result<(), StoreError>> + Send;
 
-    /// A parent must be a session of the same experiment that is not itself spawned.
     fn create_session(
         &self,
         session: &Session,

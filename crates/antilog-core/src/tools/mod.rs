@@ -135,14 +135,13 @@ impl<D: Deps> ToolHost for Toolbox<'_, D> {
             "measure" => judge::measure(self.0, caller, input).await,
             "history" => judge::history(self.0, caller, input).await,
             "deliver" => judge::deliver(self.0, caller, input).await,
-            "spawn" => setup::spawn(self.0, caller, input).await,
             "attach_repo" => setup::attach_repo(self.0, caller, input).await,
             "request_credential" => setup::request_credential(self.0, caller, input).await,
             "set_environment" => setup::set_environment(self.0, caller, input).await,
             "request_budget" => setup::request_budget(self.0, caller, input).await,
             other => Err(ToolError::new(format!(
                 "no tool named {other}: the tools are {}",
-                definitions(false)
+                definitions()
                     .iter()
                     .map(|t| t.name.as_str())
                     .collect::<Vec<_>>()
@@ -178,10 +177,10 @@ fn tool(name: &str, description: &str, schema: Value) -> ToolDef {
     }
 }
 
-/// One definition, served to a session and by `antilog mcp`. A spawned session has no `spawn`.
-pub fn definitions(spawned: bool) -> Vec<ToolDef> {
+/// One definition, served to a session and by `antilog mcp`.
+pub fn definitions() -> Vec<ToolDef> {
     let commits = json!({"type":"array","items":{"type":"object","properties":{"repo":{"type":"string"},"sha":{"type":"string"}},"required":["repo","sha"]}});
-    let mut tools = vec![
+    vec![
         tool(
             "seal",
             "Propose the experiment's definition (metric, evaluation, pinned commits, datasets, repeats). Runs the seal checks and puts a Seal experiment card in front of a person. Nothing is measured until it is sealed.",
@@ -234,16 +233,5 @@ pub fn definitions(spawned: bool) -> Vec<ToolDef> {
             "Ask to raise the experiment's budget, in US cents, with a reason.",
             json!({"type":"object","properties":{"amount_cents":{"type":"integer"},"reason":{"type":"string"}},"required":["amount_cents","reason"]}),
         ),
-    ];
-    if !spawned {
-        tools.insert(
-            4,
-            tool(
-                "spawn",
-                "Start another session in this experiment on a named agent, with what has been tried so far. Costs the experiment's budget; prefer the lower-cost agent.",
-                json!({"type":"object","properties":{"agent":{"type":"string"},"prompt":{"type":"string"},"environment":{"type":"string"}},"required":["agent","prompt"]}),
-            ),
-        );
-    }
-    tools
+    ]
 }

@@ -71,8 +71,6 @@ pub struct Session {
     pub id: SessionId,
     pub organization_id: OrganizationId,
     pub experiment_id: ExperimentId,
-    /// Set on a spawned session; a spawned session cannot spawn.
-    pub parent: Option<SessionId>,
     pub agent: String,
     pub status: SessionStatus,
     /// Why it ended, such as "Stopped by Ada" or "Handed off to Codex".
@@ -92,7 +90,6 @@ impl Session {
             id: SessionId::new(),
             organization_id,
             experiment_id,
-            parent: None,
             agent: agent.into(),
             status: SessionStatus::Working,
             note: None,

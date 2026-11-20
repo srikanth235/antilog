@@ -44,7 +44,7 @@ Use the governing principles and the non-goals below as settled. Apply them dire
 | What every area owes the customer | [promises.md](promises.md) |
 | What we decided not to build | [non-goals.md](non-goals.md) |
 | The settled product, the owner's decisions and the open questions | [rulings.md](rulings.md) |
-| Sessions, agents, environments, credentials, connectors, skill packs, spawn, budgets | [session owes](../session/owes.md), [rules](../session/rules.md) |
+| Sessions, agents, environments, credentials, connectors, skill packs, budgets | [session owes](../session/owes.md), [rules](../session/rules.md) |
 | Experiments, evaluation templates, seal, measure, acceptance, the holdout, anti-cheat, receipts, watch | [judge owes](../judge/owes.md), [rules](../judge/rules.md) |
 | Projects, members, roles, sign-in, tokens, approvals, policy, budgets, the audit log, notifications | [organization owes](../organization/owes.md), [rules](../organization/rules.md) |
 | How a screen looks, behaves and reads | the [design](../design/SKILL.md) skill |

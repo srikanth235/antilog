@@ -1448,7 +1448,6 @@ export interface components {
             /** @description Why it ended, such as "Stopped by Ada" or "Handed off to Codex". */
             note?: string | null;
             organizationId: components["schemas"]["OrganizationId"];
-            parent?: components["schemas"]["SessionId"] | null;
             status: components["schemas"]["SessionStatus"];
             /** Format: int64 */
             updatedAt: number;
@@ -1514,7 +1513,7 @@ export interface components {
             version: number;
         };
         /** @enum {string} */
-        SpendKind: "tokens" | "sandbox" | "judge";
+        SpendKind: "tokens" | "machine" | "judge";
         /** @description What starts a session in an experiment. */
         StartSession: {
             agent: string;
