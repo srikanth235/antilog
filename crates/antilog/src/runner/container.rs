@@ -23,7 +23,6 @@ use std::process::Stdio;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use antilog_types::SessionId;
 use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 use tokio::io::AsyncWriteExt;
@@ -303,9 +302,9 @@ impl<C: Cli> ContainerSandbox<C> {
     }
 
     /// The session's own internal network, and the relay on its gateway.
-    async fn network(&self, session: SessionId) -> Result<Net> {
-        let name = format!("antilog-{session}");
-        let label = format!("antilog.session={session}");
+    async fn network(&self, spec: &SandboxSpec) -> Result<Net> {
+        let name = format!("antilog-{}", spec.name());
+        let label = format!("antilog.session={}", spec.session);
         self.docker(["network", "create", "--internal", "--label", &label, &name])
             .await?
             .ok("creating the network")?;
@@ -380,7 +379,7 @@ impl<C: Cli> ContainerSandbox<C> {
         let tag = setup_tag(&environment.id, environment.version);
         let present = self.docker(["image", "inspect", &tag]).await?.status == 0;
         if !present {
-            let name = format!("antilog-setup-{}", spec.session);
+            let name = format!("antilog-setup-{}", spec.name());
             let mut args = vec![
                 "run".to_owned(),
                 "--name".to_owned(),
@@ -437,7 +436,7 @@ impl<C: Cli> ContainerSandbox<C> {
     async fn boot(&self, spec: &SandboxSpec, net: &Net) -> Result<Booted> {
         let env = machine_env(spec, proxy_env(&net.gateway, net.port, &spec.proxy_token));
         let image = self.image_for(spec, net, &env).await?;
-        let name = format!("antilog-{}", spec.session);
+        let name = format!("antilog-{}", spec.name());
         let sysbox = self
             .docker(["info", "--format", "{{json .Runtimes}}"])
             .await
@@ -493,11 +492,11 @@ impl<C: Cli> Sandbox for ContainerSandbox<C> {
 
     async fn start(&self, spec: &SandboxSpec) -> Result<ContainerMachine<C>> {
         self.reap().await;
-        let net = self.network(spec.session).await?;
+        let net = self.network(spec).await?;
         let booted = match self.boot(spec, &net).await {
             Ok(booted) => booted,
             Err(error) => {
-                self.docker(["rm", "-f", "-v", &format!("antilog-{}", spec.session)])
+                self.docker(["rm", "-f", "-v", &format!("antilog-{}", spec.name())])
                     .await
                     .ok();
                 self.remove_net(net).await;
@@ -670,7 +669,7 @@ impl<C: Cli> Machine for ContainerMachine<C> {
 mod tests {
     use std::collections::VecDeque;
 
-    use antilog_types::EnvironmentSpec;
+    use antilog_types::{EnvironmentSpec, SessionId};
 
     use super::*;
 
@@ -739,6 +738,7 @@ mod tests {
             session: SessionId::new(),
             environment,
             proxy_token: "alc_tok/en".into(),
+            run: None,
         }
     }
 
@@ -937,6 +937,51 @@ mod tests {
                 format!("rm -f -v antilog-{}", spec.session),
                 format!("network rm antilog-{}", spec.session),
             ]
+        );
+        std::fs::remove_dir_all(&state).ok();
+    }
+
+    #[tokio::test]
+    async fn a_run_machine_is_a_second_container_of_the_session_with_its_own_name_and_network() {
+        let state = temp();
+        let recorder = Arc::new(Recorder::default());
+        network_answers(&recorder, "172.20.0.2");
+        let sandbox = sandbox(&recorder, &state);
+        let environment = EnvironmentSpec {
+            cpus: 3,
+            memory_mb: 4096,
+            ..EnvironmentSpec::default()
+        };
+        let live = spec(environment);
+        let run = uuid::Uuid::now_v7();
+        let fresh_spec = live.clone().for_run(run);
+        let _live_machine = sandbox.start(&live).await.unwrap();
+        network_answers(&recorder, "172.21.0.2");
+        let before = recorder.lines().len();
+        let fresh = sandbox.start(&fresh_spec).await.unwrap();
+        let name = format!("antilog-{}-{run}", live.session);
+        let lines = recorder.lines()[before..].to_vec();
+        assert!(
+            lines.iter().any(|l| l.starts_with(&format!(
+                "network create --internal --label antilog.session={} {name}",
+                live.session
+            ))),
+            "{lines:?}"
+        );
+        let started = lines.iter().find(|l| l.starts_with("run -d")).unwrap();
+        assert!(
+            started.contains(&format!("--name {name} --network {name}")),
+            "{started}"
+        );
+        assert!(
+            started.contains("--cpus 3") && started.contains("--memory 4096m"),
+            "{started}"
+        );
+        let before = recorder.lines().len();
+        fresh.stop().await;
+        assert_eq!(
+            recorder.lines()[before..],
+            [format!("rm -f -v {name}"), format!("network rm {name}")]
         );
         std::fs::remove_dir_all(&state).ok();
     }

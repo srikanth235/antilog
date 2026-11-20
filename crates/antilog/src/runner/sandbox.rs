@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 
 use antilog_types::{EnvironmentSpec, SessionId, SessionSpec};
 use anyhow::{Result, bail};
+use uuid::Uuid;
 
 /// A command to run in the machine. `args[0]` is the program.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -101,6 +102,9 @@ pub struct SandboxSpec {
     pub environment: EnvironmentSpec,
     /// The password of the machine's login at the proxy: the session's model token.
     pub proxy_token: String,
+    /// Set for the fresh machine of one judge run (a holdout run), which belongs to the same
+    /// session but needs its own name, network and folder.
+    pub run: Option<Uuid>,
 }
 
 impl SandboxSpec {
@@ -109,6 +113,22 @@ impl SandboxSpec {
             session: spec.session,
             environment: spec.environment.clone(),
             proxy_token: spec.model_token.clone(),
+            run: None,
+        }
+    }
+
+    /// The same machine, made for one judge run.
+    #[must_use]
+    pub fn for_run(mut self, run: Uuid) -> Self {
+        self.run = Some(run);
+        self
+    }
+
+    /// What names the machine's container, network and folder.
+    pub fn name(&self) -> String {
+        match self.run {
+            Some(run) => format!("{}-{run}", self.session),
+            None => self.session.to_string(),
         }
     }
 }
@@ -229,7 +249,7 @@ pub mod plain {
         async fn start(&self, spec: &SandboxSpec) -> Result<PlainMachine> {
             Ok(PlainMachine::new(
                 Paths {
-                    work: self.workdir.join(spec.session.to_string()),
+                    work: self.workdir.join(spec.name()),
                     config: self.config.clone(),
                     skills: self.skills.clone(),
                 },
@@ -331,6 +351,7 @@ mod tests {
             session: SessionId::new(),
             environment,
             proxy_token: String::new(),
+            run: None,
         };
         let machine = sandbox.start(&spec).await.unwrap();
         assert_eq!(

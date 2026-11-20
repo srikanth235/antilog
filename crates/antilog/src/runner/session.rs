@@ -41,7 +41,11 @@ fn clone_url(repo: &RepoSpec) -> String {
     }
 }
 
-async fn clone_all<M: Machine>(machine: &M, dir: &Path, spec: &SessionSpec) -> Result<()> {
+pub(super) async fn clone_all<M: Machine>(
+    machine: &M,
+    dir: &Path,
+    spec: &SessionSpec,
+) -> Result<()> {
     run_in_machine(
         machine,
         Exec::new([
@@ -162,8 +166,9 @@ fn password() -> Result<String> {
     Ok(bytes.iter().map(|byte| format!("{byte:02x}")).collect())
 }
 
-struct Live<M: Machine> {
-    machine: Arc<M>,
+struct Live<S: Sandbox> {
+    sandbox: Arc<S>,
+    machine: Arc<S::Machine>,
     opencode: Arc<Opencode>,
     server: Server,
     spec: SessionSpec,
@@ -177,7 +182,7 @@ struct Live<M: Machine> {
     done: Done,
 }
 
-impl<M: Machine> Live<M> {
+impl<S: Sandbox> Live<S> {
     /// Sends what is waiting. A server that cannot be reached leaves it for the next try: the
     /// server ignores an item it already has.
     async fn flush(&mut self) -> Result<()> {
@@ -244,9 +249,11 @@ impl<M: Machine> Live<M> {
                     self.spec.session,
                     self.spec.runner_token.clone(),
                 );
-                let (machine, done, id) = (self.machine.clone(), self.done.clone(), envelope.id);
+                let (sandbox, machine) = (self.sandbox.clone(), self.machine.clone());
+                let spec = self.spec.clone();
+                let (done, id) = (self.done.clone(), envelope.id);
                 tokio::spawn(async move {
-                    let result = machine::run(&*machine, id, &run).await;
+                    let result = machine::run(&*sandbox, &*machine, &spec, id, &run).await;
                     match server.result(session, &token, &result).await {
                         Ok(()) => finish(&done, id),
                         Err(error) => tracing::warn!(%error, "could not return a run's outcome"),
@@ -328,9 +335,9 @@ async fn start<S: Sandbox>(
     server: &Server,
     spec: &SessionSpec,
     done: &Done,
-) -> Result<Live<S::Machine>> {
+) -> Result<Live<S>> {
     let machine = Arc::new(sandbox.start(&SandboxSpec::new(spec)).await?);
-    match prepare(&machine, opencode, server, spec, done).await {
+    match prepare(sandbox, &machine, opencode, server, spec, done).await {
         Ok(live) => Ok(live),
         Err(error) => {
             machine.stop().await;
@@ -339,13 +346,14 @@ async fn start<S: Sandbox>(
     }
 }
 
-async fn prepare<M: Machine>(
-    machine: &Arc<M>,
+async fn prepare<S: Sandbox>(
+    sandbox: &Arc<S>,
+    machine: &Arc<S::Machine>,
     opencode: &Arc<Opencode>,
     server: &Server,
     spec: &SessionSpec,
     done: &Done,
-) -> Result<Live<M>> {
+) -> Result<Live<S>> {
     let root = machine.paths().work.clone();
     clone_all(&**machine, &root, spec).await?;
     let config = machine.paths().config.clone();
@@ -381,6 +389,7 @@ async fn prepare<M: Machine>(
         None => api.create_session().await?,
     };
     Ok(Live {
+        sandbox: sandbox.clone(),
         machine: machine.clone(),
         opencode: opencode.clone(),
         server: server.clone(),

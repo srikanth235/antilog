@@ -71,7 +71,7 @@ Built: `crates/antilog-proxy`, one binary on one listener (`ANTILOG_PROXY_LISTEN
 
 ## The sealed test command (judge)
 
-The judge runs the sealed command through `SessionMachine::run` in the session's machine. Its last output line is the measurement:
+The judge runs the sealed command through `SessionMachine::run`. A run on evaluation data happens in the session's machine. A run with `data.holdout` true happens in a second machine (`runner/machine.rs::run`): the runner starts it through the same `Sandbox` from the session's `EnvironmentSpec` (same image and setup snapshot, same limits, same proxy login and network rules), named `antilog-<session>-<command id>` with its own network, clones the session's repos from the code host (never copied from the agent's machine), restores the protected files, runs the command, and removes the machine and its network on success, failure or a clone that fails. Only that machine gets the holdout run; the live machine sees no exec of it. The machine belongs to the session, so it is not a second session for any cap. Its last output line is the measurement:
 
 ```json
 {"metric": 123.4, "guardrails": {"p99_ms": 210, "errors": 0}}
