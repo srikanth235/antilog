@@ -19,7 +19,7 @@ One gate command with profiles (local, pull request, nightly, release) is the ta
 
 | Layer | Run (all target) | Stack |
 | --- | --- | --- |
-| Rust (`antilog-core`, `antilog-server`, `antilog`) | `cargo fmt --all --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo nextest run --workspace` (`cargo test --doc` for doctests), `cargo deny check` (all four exist; CI job `rust`) | [stack/rust/antilog.md](../stack/rust/antilog.md) |
+| Rust (`antilog-core`, `antilog-server`, `antilog-proxy`, `antilog`) | `cargo fmt --all --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo nextest run --workspace` (`cargo test --doc` for doctests), `cargo deny check` (all four exist; CI job `rust`) | [stack/rust/antilog.md](../stack/rust/antilog.md) |
 | An API type, route or event | the Rust checks, `cargo run -q -p antilog-server -- openapi | diff - openapi/antilog.json`, then `pnpm generate:api` in `web/` leaves no diff (CI jobs `rust` and `web-client`); see [change/api-endpoint.md](../change/api-endpoint.md) | [stack/rust/antilog.md](../stack/rust/antilog.md) |
 | The CLI, an Antilog tool or `antilog mcp` | the Rust checks, then the CLI test script against a built `antilog` and a test server | [stack/rust/antilog.md](../stack/rust/antilog.md), [stack/mcp/antilog.md](../stack/mcp/antilog.md) |
 | TypeScript (the web app, the generated client) | `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm build`, `pnpm e2e` (all exist) (the browser tests are `@playwright/test`; never run `playwright install`, see [stack/playwright/antilog.md](../stack/playwright/antilog.md)) | [stack/typescript/antilog.md](../stack/typescript/antilog.md) |
