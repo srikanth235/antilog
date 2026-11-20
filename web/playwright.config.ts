@@ -38,6 +38,9 @@ export default defineConfig({
               ANTILOG_CONNECTORS_ALLOW_PRIVATE: "1",
               ANTILOG_SECRET_MASTER_KEY:
                 "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff",
+              // The model-key tests seal a key under their own master.
+              ANTILOG_SECRET_MODEL_KEY_MASTER:
+                "ffeeddccbbaa99887766554433221100ffeeddccbbaa99887766554433221100",
               ANTILOG_LISTEN: new URL(api).host,
             },
           },
