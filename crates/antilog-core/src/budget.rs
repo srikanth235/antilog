@@ -137,16 +137,23 @@ fn cents(value: Option<i64>) -> Result<(), Refusal> {
     }
 }
 
-/// Only an organization owner changes the cap and the default budget.
+/// Only an organization owner changes the cap, the default budget and how many sessions may run at
+/// once (`None`: leave that as it is).
 pub async fn set_organization_limits<S: Store>(
     store: &S,
     who: &Principal,
     now: i64,
     monthly_cap_cents: Option<i64>,
     default_budget_cents: Option<i64>,
+    max_running_sessions: Option<u32>,
 ) -> Result<(), Refusal> {
     cents(monthly_cap_cents)?;
     cents(default_budget_cents)?;
+    if max_running_sessions == Some(0) {
+        return Err(Refusal::Invalid(
+            "an organization may run at least one session",
+        ));
+    }
     permit(
         store,
         who,
@@ -161,6 +168,7 @@ pub async fn set_organization_limits<S: Store>(
             who.organization,
             monthly_cap_cents,
             default_budget_cents,
+            max_running_sessions,
             &entry(
                 who,
                 "organization.set_limits",

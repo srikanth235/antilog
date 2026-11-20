@@ -1,4 +1,4 @@
-use antilog_core::store::{RunnerStore, StoreError};
+use antilog_core::store::{RUNNER_LOCK_LAPSE_MS, RunnerStore, StoreError};
 use antilog_types::{
     Command, Envelope, ExperimentId, Machine, MachineState, OrganizationId, RunResult, Seed,
     SessionId,
@@ -110,11 +110,12 @@ impl RunnerStore for PgStore {
     ) -> Result<Vec<Machine>, StoreError> {
         let mut tx = self.runner().await?;
         let claimed = sqlx::query!(
-            "select session_id as \"session_id!\", organization_id as \"organization_id!\", experiment_id as \"experiment_id!\", agent as \"agent!\", state as \"state!\", holder, seed as \"seed!\", resume as \"resume!\" from claim_machines($1, $2, to_timestamp($3::bigint / 1000.0), to_timestamp($4::bigint / 1000.0))",
+            "select session_id as \"session_id!\", organization_id as \"organization_id!\", experiment_id as \"experiment_id!\", agent as \"agent!\", state as \"state!\", holder, seed as \"seed!\", resume as \"resume!\" from claim_machines($1, $2, to_timestamp($3::bigint / 1000.0), to_timestamp($4::bigint / 1000.0), $5)",
             holder,
             i32::try_from(limit).unwrap_or(i32::MAX),
             now,
             until,
+            RUNNER_LOCK_LAPSE_MS,
         )
         .fetch_all(&mut *tx)
         .await
@@ -149,6 +150,24 @@ impl RunnerStore for PgStore {
         .map_err(map)?;
         tx.commit().await.map_err(map)?;
         Ok(())
+    }
+
+    async fn mark_overdue(
+        &self,
+        holder: &str,
+        claimed_before: i64,
+    ) -> Result<Vec<SessionId>, StoreError> {
+        let mut tx = self.runner().await?;
+        let overdue = sqlx::query_scalar!(
+            "update machines set expiring = true where holder = $1 and state in ('claimed', 'running', 'idle') and not expiring and claimed_at < to_timestamp($2::bigint / 1000.0) returning session_id",
+            holder,
+            claimed_before,
+        )
+        .fetch_all(&mut *tx)
+        .await
+        .map_err(map)?;
+        tx.commit().await.map_err(map)?;
+        Ok(overdue.into_iter().map(SessionId::from_uuid).collect())
     }
 
     async fn renew(

@@ -630,9 +630,16 @@ async fn budgets_and_caps_are_enforced_and_nested() {
     let id = world.organization.id;
     let (editor, _) = world.member("ed", Role::Editor).await;
 
-    budget::set_organization_limits(&world.store, &world.owner, T0, Some(5_000), Some(1_000))
-        .await
-        .unwrap();
+    budget::set_organization_limits(
+        &world.store,
+        &world.owner,
+        T0,
+        Some(5_000),
+        Some(1_000),
+        None,
+    )
+    .await
+    .unwrap();
     budget::set_project_limits(
         &world.store,
         &world.owner,
@@ -644,7 +651,7 @@ async fn budgets_and_caps_are_enforced_and_nested() {
     .await
     .unwrap();
     assert!(matches!(
-        budget::set_organization_limits(&world.store, &editor, T0, None, None).await,
+        budget::set_organization_limits(&world.store, &editor, T0, None, None, None).await,
         Err(Refusal::Denied)
     ));
     assert!(matches!(
@@ -664,7 +671,7 @@ async fn budgets_and_caps_are_enforced_and_nested() {
         Err(Refusal::Invariant(Invariant::OverCap))
     ));
     assert!(matches!(
-        budget::set_organization_limits(&world.store, &world.owner, T0, Some(-1), None).await,
+        budget::set_organization_limits(&world.store, &world.owner, T0, Some(-1), None, None).await,
         Err(Refusal::Invalid(_))
     ));
     budget::set_experiment_budget(&world.store, &editor, T0, experiment.id, 2_000)

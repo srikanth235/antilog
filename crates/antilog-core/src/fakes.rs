@@ -173,6 +173,11 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn fake_store_limits_the_session_machine() {
+        crate::seed::runner_limits_suite(&FakeStore::default()).await;
+    }
+
+    #[tokio::test]
     async fn fake_store_keeps_model_keys_and_finds_a_session_for_the_gateway() {
         crate::gateway_suite::model_key_suite(&FakeStore::default()).await;
     }

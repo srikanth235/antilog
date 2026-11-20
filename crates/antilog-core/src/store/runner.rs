@@ -7,6 +7,10 @@ use uuid::Uuid;
 
 use super::StoreError;
 
+/// A runner's organization lock lapses when the runner has not polled for this long (ten
+/// minutes), so a crashed runner does not hold its organization for ever.
+pub const RUNNER_LOCK_LAPSE_MS: i64 = 10 * 60 * 1000;
+
 /// The queue of sessions and what passes between the server and a runner. A runner serves every
 /// organization, so these calls name a session rather than an organization.
 pub trait RunnerStore {
@@ -30,7 +34,11 @@ pub trait RunnerStore {
     ///
     /// A runner locks to the organization of the first session it claims and claims only that
     /// organization's sessions afterwards, until `unlock_runner`, so customers never share a
-    /// host. A call with no room (`limit` 0) claims nothing and locks nothing.
+    /// host. A call with no room (`limit` 0) claims nothing and locks nothing. Every call is the
+    /// runner's poll: a lock whose runner has not polled for `RUNNER_LOCK_LAPSE_MS` lapses, and
+    /// any runner of any organization may then take its place. An organization is never handed
+    /// a claim beyond its `max_running_sessions` machines (claimed, running and idle); its
+    /// queued sessions wait.
     fn claim(
         &self,
         holder: &str,
@@ -42,6 +50,14 @@ pub trait RunnerStore {
     /// The runner is leaving, so its organization lock goes, unless it still holds a session
     /// (then the lock stays: its host still holds that organization's work).
     fn unlock_runner(&self, holder: &str) -> impl Future<Output = Result<(), StoreError>> + Send;
+
+    /// Flags every session `holder` holds whose claim began before `claimed_before`
+    /// (milliseconds) and was not flagged yet, and returns them: their machine time is up.
+    fn mark_overdue(
+        &self,
+        holder: &str,
+        claimed_before: i64,
+    ) -> impl Future<Output = Result<Vec<SessionId>, StoreError>> + Send;
 
     /// Extends the lease of every session `holder` still holds, and returns them.
     fn renew(

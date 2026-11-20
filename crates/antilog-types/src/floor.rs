@@ -109,6 +109,9 @@ pub struct NewProject {
 pub struct Limits {
     pub monthly_cap_cents: Option<i64>,
     pub default_budget_cents: Option<i64>,
+    /// Most sessions running on machines at once; omitted: unchanged.
+    #[serde(default)]
+    pub max_running_sessions: Option<u32>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToSchema)]

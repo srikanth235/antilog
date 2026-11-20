@@ -83,6 +83,7 @@ async fn set_organization_limits<D: Deps + 'static>(
         app.now(),
         limits.monthly_cap_cents,
         limits.default_budget_cents,
+        limits.max_running_sessions,
     )
     .await?;
     Ok(StatusCode::NO_CONTENT)

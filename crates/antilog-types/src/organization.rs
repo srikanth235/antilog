@@ -15,7 +15,12 @@ pub struct Organization {
     pub monthly_cap_cents: Option<i64>,
     /// Default budget per experiment, in US cents.
     pub default_budget_cents: Option<i64>,
+    /// Most sessions this organization has on machines at once; queued ones wait.
+    pub max_running_sessions: u32,
 }
+
+/// What an organization may run at once until an owner says otherwise.
+pub const DEFAULT_MAX_RUNNING_SESSIONS: u32 = 10;
 
 impl Organization {
     pub fn new(name: impl Into<String>, created_at: i64) -> Self {
@@ -25,6 +30,7 @@ impl Organization {
             created_at,
             monthly_cap_cents: None,
             default_budget_cents: None,
+            max_running_sessions: DEFAULT_MAX_RUNNING_SESSIONS,
         }
     }
 }

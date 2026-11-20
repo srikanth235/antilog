@@ -34,6 +34,9 @@ pub struct Settings {
     pub lease: SignedDuration,
     /// How long a session's tokens live.
     pub token_ttl: SignedDuration,
+    /// How long one claim may hold a machine; then the session is let go as a release does, and
+    /// a message resumes it.
+    pub max_lifetime: SignedDuration,
 }
 
 impl Settings {
@@ -46,6 +49,7 @@ impl Settings {
             model: model.to_owned(),
             lease: SignedDuration::from_secs(60),
             token_ttl: SignedDuration::from_hours(12),
+            max_lifetime: SignedDuration::from_hours(24),
         }
     }
 }
@@ -183,6 +187,17 @@ pub async fn poll<D: Deps>(
         return Ok(PollResponse::default());
     }
     let renewed = store.renew(&request.runner, now, until).await?;
+    let lifetime = settings
+        .max_lifetime
+        .as_millis()
+        .try_into()
+        .unwrap_or(i64::MAX);
+    for session in store
+        .mark_overdue(&request.runner, now.saturating_sub(lifetime))
+        .await?
+    {
+        time_up(deps, settings, session, now).await?;
+    }
     let lost = request
         .held
         .iter()
@@ -205,6 +220,52 @@ pub async fn poll<D: Deps>(
         commands,
         lost,
     })
+}
+
+/// The machine has had its time: the runner is told to export and let the session go, the way a
+/// release does, and the conversation says why. A person's next message resumes it.
+async fn time_up<D: Deps>(
+    deps: &D,
+    settings: &Settings,
+    session: SessionId,
+    now: i64,
+) -> Result<(), RunnerError> {
+    let store = deps.store();
+    let Some(machine) = store.machine(session).await? else {
+        return Ok(());
+    };
+    store
+        .push_command(
+            machine.organization,
+            session,
+            &Command::Release {
+                outcome: ReleaseOutcome::Idle,
+            },
+            now,
+        )
+        .await?;
+    let Some(row) = store.session(machine.organization, session).await? else {
+        return Ok(());
+    };
+    let minutes = settings.max_lifetime.as_mins();
+    let span = if minutes % 60 == 0 {
+        format!("{} hours", minutes / 60)
+    } else {
+        format!("{minutes} minutes")
+    };
+    let text = format!(
+        "This session used its {span} on a machine, so Antilog stopped the machine and kept the conversation. Send a message to continue."
+    );
+    record(
+        deps,
+        &row,
+        format!("lifetime:{session}:{now}"),
+        EventKind::Agent,
+        None,
+        &text,
+    )
+    .await?;
+    set_status(store, now, &machine, SessionStatus::WaitingForYou).await
 }
 
 async fn held_by<D: Deps>(

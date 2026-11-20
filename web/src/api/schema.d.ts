@@ -1511,6 +1511,11 @@ export interface components {
         Limits: {
             /** Format: int64 */
             defaultBudgetCents?: number | null;
+            /**
+             * Format: int32
+             * @description Most sessions running on machines at once; omitted: unchanged.
+             */
+            maxRunningSessions?: number | null;
             /** Format: int64 */
             monthlyCapCents?: number | null;
         };
@@ -1698,6 +1703,11 @@ export interface components {
              */
             defaultBudgetCents?: number | null;
             id: components["schemas"]["OrganizationId"];
+            /**
+             * Format: int32
+             * @description Most sessions this organization has on machines at once; queued ones wait.
+             */
+            maxRunningSessions: number;
             /**
              * Format: int64
              * @description Monthly cap on all spend, in US cents. `None`: no cap.

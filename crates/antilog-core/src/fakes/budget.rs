@@ -9,12 +9,16 @@ impl BudgetStore for FakeStore {
         organization: OrganizationId,
         monthly_cap_cents: Option<i64>,
         default_budget_cents: Option<i64>,
+        max_running_sessions: Option<u32>,
         audit: &AuditEntry,
     ) -> Result<(), StoreError> {
         let mut ledger = locked(&self.ledger);
         let mut next = not_found(ledger.organization(organization))?.clone();
         next.monthly_cap_cents = monthly_cap_cents;
         next.default_budget_cents = default_budget_cents;
+        if let Some(max) = max_running_sessions {
+            next.max_running_sessions = max;
+        }
         ledger.organization_limits_fit(&next)?;
         if let Some(row) = ledger
             .organizations

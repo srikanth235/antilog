@@ -22,6 +22,7 @@ The access words below are not in [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md
 | budget | What one experiment may spend across all its sessions and their judge time. It sits inside its project's cap | a monthly cap |
 | project cap | An optional monthly limit on the spend of all of a project's experiments. It sits inside the organization's monthly cap | a budget |
 | monthly cap | The most an organization may spend in a month | a budget |
+| running sessions cap | The most sessions an organization has on machines at once (10 by default, set by an owner with the limits); queued sessions wait for a place | a budget |
 | action | One named write: it checks permission, writes an audit entry and emits an event | a route, a handler |
 | audit entry | An append-only record of a tool call that changed something, or of an approval: actor, name, target, time, outcome | a log line |
 | event | A live message that something changed, carrying no secret | an audit entry |

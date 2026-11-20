@@ -4993,6 +4993,15 @@
             ],
             "format": "int64"
           },
+          "maxRunningSessions": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "description": "Most sessions running on machines at once; omitted: unchanged.",
+            "minimum": 0
+          },
           "monthlyCapCents": {
             "type": [
               "integer",
@@ -5590,7 +5599,8 @@
         "required": [
           "id",
           "name",
-          "createdAt"
+          "createdAt",
+          "maxRunningSessions"
         ],
         "properties": {
           "createdAt": {
@@ -5608,6 +5618,12 @@
           },
           "id": {
             "$ref": "#/components/schemas/OrganizationId"
+          },
+          "maxRunningSessions": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Most sessions this organization has on machines at once; queued ones wait.",
+            "minimum": 0
           },
           "monthlyCapCents": {
             "type": [

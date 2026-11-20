@@ -21,7 +21,7 @@ pub use customize::{ConnectorRow, CustomizeStore, SessionScope};
 pub use environment::EnvironmentStore;
 pub use model_key::{GatewayScope, ModelKeyStore};
 pub use organization::{Membership, OrganizationStore, SignInRecord, TokenRecord};
-pub use runner::RunnerStore;
+pub use runner::{RUNNER_LOCK_LAPSE_MS, RunnerStore};
 pub use session::{NewEvent, SessionChange, SessionStore};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]

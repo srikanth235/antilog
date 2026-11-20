@@ -33,6 +33,11 @@ struct World {
 }
 
 async fn world() -> World {
+    world_with(None).await
+}
+
+/// `lifetime`: the most a claim may hold a machine; omitted, the server's default.
+async fn world_with(lifetime: Option<jiff::SignedDuration>) -> World {
     let deps = Arc::new(FakeDeps::new(
         FakeMachine::default(),
         FakeCodeHost::default(),
@@ -44,6 +49,9 @@ async fn world() -> World {
         "vendor/model-1",
     );
     core.clone_base = "/srv/git/".to_owned();
+    if let Some(lifetime) = lifetime {
+        core.max_lifetime = lifetime;
+    }
     let app = router(
         deps.clone(),
         Settings {
@@ -638,4 +646,92 @@ async fn a_claim_carries_the_environment_version_the_session_started_on() {
     let two = spec(second.id);
     assert_eq!((two.version, two.network), (2, NetworkLevel::None));
     assert_eq!(spec(plain.id), EnvironmentSpec::default());
+}
+
+#[tokio::test]
+async fn a_machine_that_has_had_its_time_is_let_go_like_a_release_and_a_message_resumes_it() {
+    let world = world_with(Some(jiff::SignedDuration::from_mins(2))).await;
+    let org = world.seed.organization.id;
+    let session = start(&world, "a").await;
+    let id = session.id.to_string();
+    let spec = poll(&world.app, "r1", &[]).await["claims"][0].clone();
+    let token = spec["runnerToken"].as_str().unwrap();
+    // Each poll renews the lease; the machine time runs on.
+    for _ in 0..2 {
+        world
+            .deps
+            .clock
+            .advance(jiff::SignedDuration::from_secs(50));
+        let body = poll(&world.app, "r1", &[&id]).await;
+        assert!(
+            body["commands"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .all(|c| c["command"]["kind"] != "release"),
+            "{body}"
+        );
+    }
+    world
+        .deps
+        .clock
+        .advance(jiff::SignedDuration::from_secs(50));
+    let body = poll(&world.app, "r1", &[&id]).await;
+    assert_eq!(
+        body["commands"][0]["command"],
+        json!({"kind": "release", "outcome": "idle"})
+    );
+    // Said once, and in plain words.
+    let events = world
+        .deps
+        .store
+        .session_events(org, session.id, 0, 100)
+        .await
+        .unwrap();
+    let notice = events
+        .iter()
+        .find(|event| event.text.contains("2 minutes"))
+        .expect("the conversation says why");
+    assert!(notice.text.contains("Send a message to continue"));
+    let row = world
+        .deps
+        .store
+        .session(org, session.id)
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(row.status, SessionStatus::WaitingForYou);
+    let again = poll(&world.app, "r1", &[&id]).await;
+    assert_eq!(again["commands"], json!([]));
+
+    // The runner exports and lets go; a message resumes from the export.
+    let (status, _) = call(
+        &world.app,
+        "POST",
+        &format!("/runner/sessions/{}/release", session.id),
+        Some(token),
+        json!({"outcome": "idle", "export": "{\"info\":{}}"}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    session::message(
+        &*world.deps,
+        org,
+        session.id,
+        Some(world.seed.owner.id),
+        "go on",
+    )
+    .await
+    .unwrap();
+    let resumed = poll(&world.app, "r2", &[]).await;
+    assert_eq!(resumed["claims"][0]["resume"], true);
+    // A fresh claim has its whole time again.
+    let quiet = poll(&world.app, "r2", &[&id]).await;
+    assert!(
+        quiet["commands"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|c| c["command"]["kind"] != "release")
+    );
 }

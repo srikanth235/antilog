@@ -698,6 +698,48 @@ async fn policy_budgets_and_the_audit_page() {
         )
         .await;
     assert_eq!(limits.status, StatusCode::NO_CONTENT);
+    let cap = |value: Option<u32>| json!({"monthlyCapCents": 10_000, "defaultBudgetCents": 1_000, "maxRunningSessions": value});
+    let own = org
+        .call(Method::GET, "/organization", &org.owner, None)
+        .await;
+    assert_eq!(
+        own.body["maxRunningSessions"], 10,
+        "ten unless an owner says otherwise"
+    );
+    let set = org
+        .call(
+            Method::PUT,
+            "/organization/limits",
+            &org.owner,
+            Some(cap(Some(3))),
+        )
+        .await;
+    assert_eq!(set.status, StatusCode::NO_CONTENT);
+    let own = org
+        .call(Method::GET, "/organization", &org.owner, None)
+        .await;
+    assert_eq!(own.body["maxRunningSessions"], 3);
+    // Omitted: unchanged. Zero: refused.
+    org.call(
+        Method::PUT,
+        "/organization/limits",
+        &org.owner,
+        Some(cap(None)),
+    )
+    .await;
+    let own = org
+        .call(Method::GET, "/organization", &org.owner, None)
+        .await;
+    assert_eq!(own.body["maxRunningSessions"], 3);
+    let zero = org
+        .call(
+            Method::PUT,
+            "/organization/limits",
+            &org.owner,
+            Some(cap(Some(0))),
+        )
+        .await;
+    assert_eq!(zero.status, StatusCode::UNPROCESSABLE_ENTITY);
     let project = org
         .call(
             Method::POST,

@@ -183,6 +183,7 @@ async fn organizations<S: Store>(store: &S) {
             organization.id,
             Some(10_000),
             Some(2_000),
+            Some(3),
             &entry(organization.id, owner.id, "budget.set"),
         )
         .await
@@ -202,6 +203,7 @@ async fn organizations<S: Store>(store: &S) {
                 organization.id,
                 Some(1_000),
                 Some(2_000),
+                None,
                 &entry(organization.id, owner.id, "budget.set"),
             )
             .await,
@@ -557,7 +559,13 @@ async fn budgets_and_spend<S: Store>(store: &S) {
     };
 
     store
-        .set_organization_limits(org, Some(10_000), Some(2_000), &world.log("budget.set"))
+        .set_organization_limits(
+            org,
+            Some(10_000),
+            Some(2_000),
+            None,
+            &world.log("budget.set"),
+        )
         .await
         .expect("set");
     refused(limits(Some(20_000), None).await, Invariant::OverCap);
@@ -565,7 +573,7 @@ async fn budgets_and_spend<S: Store>(store: &S) {
     limits(Some(5_000), Some(1_000)).await.expect("inside");
     refused(
         store
-            .set_organization_limits(org, Some(4_000), None, &world.log("budget.set"))
+            .set_organization_limits(org, Some(4_000), None, None, &world.log("budget.set"))
             .await,
         Invariant::OverCap,
     );
@@ -609,7 +617,7 @@ async fn budgets_and_spend<S: Store>(store: &S) {
     );
 
     store
-        .set_organization_limits(org, None, None, &world.log("budget.set"))
+        .set_organization_limits(org, None, None, None, &world.log("budget.set"))
         .await
         .expect("lifting the organization cap");
     let second_project = Project::new(org, "search", "", T0);

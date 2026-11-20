@@ -20,6 +20,7 @@ use std::collections::BTreeMap;
 use std::net::IpAddr;
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -97,6 +98,22 @@ pub struct ContainerConfig {
     pub proxy_addr: String,
     /// Where the runner keeps what it must remember between sessions.
     pub state_dir: PathBuf,
+    /// The most disk one container may write, in GiB; 0 for no limit. Docker enforces it only
+    /// where the storage driver supports `--storage-opt size=` (`probe_disk`).
+    pub disk_gb: u64,
+}
+
+/// Whether `docker run --storage-opt size=` can work with this storage driver: `driver` is
+/// `docker info`'s `Driver` and `status` its `DriverStatus` as JSON. Overlay2 does only on XFS
+/// (and then only with project quotas, which the first refusal at `docker run` tells).
+fn supports_disk_size(driver: &str, status: &str) -> bool {
+    match driver {
+        "devicemapper" | "btrfs" | "zfs" | "windowsfilter" => true,
+        "overlay2" => status
+            .replace(' ', "")
+            .contains("\"BackingFilesystem\",\"xfs\""),
+        _ => false,
+    }
 }
 
 /// The setup images this runner made and when each was last used.
@@ -248,6 +265,9 @@ pub struct ContainerSandbox<C: Cli> {
     cli: Arc<C>,
     config: ContainerConfig,
     images: Mutex<Images>,
+    /// Containers get `--storage-opt size=`: the storage driver was found able (`probe_disk`) and
+    /// has not refused it since.
+    disk_limited: AtomicBool,
 }
 
 impl<C: Cli> ContainerSandbox<C> {
@@ -257,7 +277,77 @@ impl<C: Cli> ContainerSandbox<C> {
             cli: Arc::new(cli),
             config,
             images: Mutex::new(images),
+            disk_limited: AtomicBool::new(false),
         }
+    }
+
+    /// Asks Docker once, when the runner starts, whether its storage driver can limit a
+    /// container's disk. When it cannot the runner says so once and runs sessions without the
+    /// limit; it never fails a session for it.
+    pub async fn probe_disk(&self) {
+        if self.config.disk_gb == 0 {
+            tracing::info!("the container disk is not limited: the limit is 0");
+            return;
+        }
+        let info = self
+            .docker(["info", "--format", "{{.Driver}}|{{json .DriverStatus}}"])
+            .await
+            .ok()
+            .filter(|out| out.status == 0)
+            .map(|out| String::from_utf8_lossy(&out.stdout).trim().to_owned());
+        let (driver, status) = info
+            .as_deref()
+            .and_then(|text| text.split_once('|'))
+            .unwrap_or(("unknown", ""));
+        if supports_disk_size(driver, status) {
+            self.disk_limited.store(true, Ordering::SeqCst);
+            tracing::info!(gb = self.config.disk_gb, %driver, "each container's disk is limited");
+        } else {
+            tracing::warn!(%driver, "the container disk is not limited: this storage driver does not support --storage-opt size");
+        }
+    }
+
+    /// `docker run` with the disk limit when there is one; Docker refusing it (an XFS without
+    /// project quotas) drops the limit for this runner, once, and the run goes on without it.
+    async fn run_sized(&self, args: Vec<String>, env: Vec<(String, String)>) -> Result<Output> {
+        if self.disk_limited.load(Ordering::SeqCst) {
+            let mut sized = args.clone();
+            sized.splice(
+                1..1,
+                [
+                    "--storage-opt".to_owned(),
+                    format!("size={}g", self.config.disk_gb),
+                ],
+            );
+            let out = self
+                .cli
+                .run(Call {
+                    args: sized,
+                    env: env.clone(),
+                    stdin: None,
+                })
+                .await?;
+            if out.status == 0 || !String::from_utf8_lossy(&out.stderr).contains("storage-opt") {
+                return Ok(out);
+            }
+            self.disk_limited.store(false, Ordering::SeqCst);
+            tracing::warn!("the container disk is not limited: Docker refused --storage-opt size");
+            // The refused run may have made the container before it failed.
+            if let Some(name) = args
+                .iter()
+                .position(|arg| arg == "--name")
+                .and_then(|at| args.get(at + 1))
+            {
+                self.docker(["rm", "-f", "-v", name]).await.ok();
+            }
+        }
+        self.cli
+            .run(Call {
+                args,
+                env,
+                stdin: None,
+            })
+            .await
     }
 
     fn images(&self) -> std::sync::MutexGuard<'_, Images> {
@@ -397,14 +487,7 @@ impl<C: Cli> ContainerSandbox<C> {
                 environment.setup_script.clone(),
             ]);
             let built = async {
-                let out = self
-                    .cli
-                    .run(Call {
-                        args,
-                        env: env.to_vec(),
-                        stdin: None,
-                    })
-                    .await?;
+                let out = self.run_sized(args, env.to_vec()).await?;
                 if out.status != 0 {
                     let log = String::from_utf8_lossy(&out.stderr);
                     let tail: String = log
@@ -464,12 +547,7 @@ impl<C: Cli> ContainerSandbox<C> {
         }
         args.extend(env_flags(&env));
         args.extend([image, "sleep".to_owned(), "infinity".to_owned()]);
-        self.cli
-            .run(Call {
-                args,
-                env: env.clone(),
-                stdin: None,
-            })
+        self.run_sized(args, env.clone())
             .await?
             .ok("starting the container")?;
         Ok(Booted { name, sysbox })
@@ -730,6 +808,7 @@ mod tests {
                 image: "antilog-session:test".into(),
                 proxy_addr: "127.0.0.1:9".into(),
                 state_dir: state.to_path_buf(),
+                disk_gb: 20,
             },
         )
     }
@@ -746,6 +825,74 @@ mod tests {
     fn network_answers(recorder: &Recorder, ip: &str) {
         recorder.answer("network inspect", 0, "127.0.0.1\n", "");
         recorder.answer("inspect", 0, &format!("{ip}\n"), "");
+    }
+
+    #[test]
+    fn only_some_storage_drivers_can_limit_a_container_disk() {
+        let xfs = r#"[["Backing Filesystem","xfs"],["Supports d_type","true"]]"#;
+        let ext4 = r#"[["Backing Filesystem","extfs"],["Supports d_type","true"]]"#;
+        assert!(supports_disk_size("overlay2", xfs));
+        assert!(!supports_disk_size("overlay2", ext4));
+        assert!(supports_disk_size("zfs", "[]"));
+        assert!(supports_disk_size("btrfs", "[]"));
+        assert!(!supports_disk_size("vfs", "[]"));
+    }
+
+    /// The `docker run` line of a session started on a recorder that answered `info`.
+    async fn run_line(
+        info: Option<(i32, &str, &str)>,
+        run_answer: Option<(i32, &str)>,
+    ) -> Vec<String> {
+        let state = temp();
+        let recorder = Arc::new(Recorder::default());
+        network_answers(&recorder, "172.20.0.2");
+        if let Some((status, driver, details)) = info {
+            recorder.answer("info", status, &format!("{driver}|{details}\n"), "");
+        }
+        if let Some((status, stderr)) = run_answer {
+            recorder.answer("run ", status, "", stderr);
+        }
+        let sandbox = sandbox(&recorder, &state);
+        sandbox.probe_disk().await;
+        let _machine = sandbox.start(&spec(EnvironmentSpec::default())).await;
+        recorder.lines()
+    }
+
+    #[tokio::test]
+    async fn the_disk_is_limited_only_where_the_storage_driver_can() {
+        let xfs = r#"[["Backing Filesystem","xfs"]]"#;
+        let lines = run_line(Some((0, "overlay2", xfs)), None).await;
+        let run = lines.iter().find(|l| l.starts_with("run ")).unwrap();
+        assert!(run.starts_with("run --storage-opt size=20g -d"), "{run}");
+
+        let ext4 = r#"[["Backing Filesystem","extfs"]]"#;
+        let lines = run_line(Some((0, "overlay2", ext4)), None).await;
+        let run = lines.iter().find(|l| l.starts_with("run ")).unwrap();
+        assert!(!run.contains("storage-opt"), "{run}");
+
+        // Docker cannot be asked: no limit, and the session still starts.
+        let lines = run_line(Some((1, "", "")), None).await;
+        assert!(
+            lines
+                .iter()
+                .any(|l| l.starts_with("run ") && !l.contains("storage-opt"))
+        );
+    }
+
+    #[tokio::test]
+    async fn a_refused_disk_limit_does_not_fail_the_session() {
+        let xfs = r#"[["Backing Filesystem","xfs"]]"#;
+        let lines = run_line(
+            Some((0, "overlay2", xfs)),
+            Some((
+                125,
+                "--storage-opt is supported only for overlay over xfs with 'pquota' mount option",
+            )),
+        )
+        .await;
+        let runs: Vec<&String> = lines.iter().filter(|l| l.starts_with("run ")).collect();
+        assert_eq!(runs.len(), 2, "{lines:?}");
+        assert!(runs[0].contains("storage-opt") && !runs[1].contains("storage-opt"));
     }
 
     #[tokio::test]
