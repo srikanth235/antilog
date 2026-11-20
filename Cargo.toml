@@ -12,6 +12,10 @@ publish = false
 [workspace.dependencies]
 antilog-types = { path = "crates/antilog-types" }
 antilog-core = { path = "crates/antilog-core" }
+antilog-server = { path = "crates/antilog-server" }
+bytes = "1.12.2"
+hyper = "1.12.0"
+hyper-util = "0.1.21"
 anyhow = "1.0.104"
 axum = "0.8.9"
 clap = { version = "4.6.7", features = ["derive"] }

@@ -1,22 +1,21 @@
 use antilog_core::clock::SystemClock;
 use antilog_core::deps::Deps;
-use std::sync::Arc;
 use std::time::Duration;
 
-use antilog_core::fakes::{FakeCodeHost, FakeCredentials, FakeSigner};
+use antilog_core::fakes::{FakeCodeHost, FakeSigner};
 use antilog_types::OrganizationId;
 
 use crate::pg::{PgJudge, PgStore};
 use crate::queue::QueueMachine;
 
-/// What the server runs on: Postgres for the ledger, the judge's tables and the runner queue, and
-/// the fakes for the signer, the code host and session credentials until their real adapters exist.
+/// What the server runs on: Postgres for the ledger, the judge's tables, the runner queue and
+/// session credentials (so a token minted at claim verifies at the proxy and the MCP endpoint),
+/// and the fakes for the signer and the code host until their real adapters exist.
 pub struct ServerDeps {
     pub store: PgStore,
     pub machine: QueueMachine<PgStore>,
     pub signer: FakeSigner,
     pub code: FakeCodeHost,
-    pub credentials: FakeCredentials,
 }
 
 /// How long the judge waits for a command it sent to a session's machine.
@@ -28,7 +27,6 @@ impl ServerDeps {
             machine: QueueMachine::new(store.clone(), MACHINE_TIMEOUT),
             signer: FakeSigner::new("fake"),
             code: FakeCodeHost::default(),
-            credentials: FakeCredentials::new(Arc::new(SystemClock)),
             store,
         }
     }
@@ -41,7 +39,7 @@ impl Deps for ServerDeps {
     type Signer = FakeSigner;
     type Clock = SystemClock;
     type Code = FakeCodeHost;
-    type Credentials = FakeCredentials;
+    type Credentials = PgStore;
 
     fn store(&self) -> &PgStore {
         &self.store
@@ -61,7 +59,7 @@ impl Deps for ServerDeps {
     fn code(&self) -> &FakeCodeHost {
         &self.code
     }
-    fn credentials(&self) -> &FakeCredentials {
-        &self.credentials
+    fn credentials(&self) -> &PgStore {
+        &self.store
     }
 }

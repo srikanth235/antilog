@@ -2,8 +2,6 @@
 
 use std::sync::Arc;
 
-use antilog_core::clock::SystemClock;
-use antilog_core::fakes::FakeCredentials;
 use antilog_server::api;
 use antilog_server::deps::ServerDeps;
 use antilog_server::pg::PgStore;
@@ -27,7 +25,9 @@ async fn main() -> anyhow::Result<()> {
         .connect(&database_url)
         .await
         .context("connecting to Postgres")?;
-    let store = PgStore::new(pool);
+    let store = PgStore::new(pool)
+        .sealed_by(&antilog_core::secrets::EnvSecrets::from_env())
+        .await;
     store.migrate().await.context("applying migrations")?;
     tracing::warn!("no real code host or credential store is built yet: serving on the fakes");
     let settings = api::auth::Settings::from_env();
@@ -40,14 +40,9 @@ async fn main() -> anyhow::Result<()> {
         .with_context(|| format!("binding {listen}"))?;
     tracing::info!(%listen, "serving");
     let app = Arc::new(api::auth::App {
-        deps: Arc::new(ServerDeps::on_fakes(store)),
+        deps: Arc::new(ServerDeps::on_fakes(store.clone())),
         settings,
     });
-    tracing::warn!("session tokens are not stored yet: the MCP endpoint refuses every token");
-    let router = api::router_with_reach(
-        app,
-        FakeCredentials::new(Arc::new(SystemClock)),
-        api::customize::Backend::from_env().await?,
-    );
+    let router = api::router_with_reach(app, store, api::customize::Backend::from_env().await?);
     axum::serve(listener, router).await.context("serving")
 }

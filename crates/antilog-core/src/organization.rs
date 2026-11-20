@@ -62,6 +62,8 @@ pub enum Action {
     OrganizationLimitsSet,
     PolicySet,
     AgentSet,
+    ModelKeySet,
+    ModelKeyRemove,
     EvaluationAdd,
     ConnectorSet,
     SkillAdd,
@@ -96,6 +98,8 @@ impl Action {
         Self::OrganizationLimitsSet,
         Self::PolicySet,
         Self::AgentSet,
+        Self::ModelKeySet,
+        Self::ModelKeyRemove,
         Self::EvaluationAdd,
         Self::ConnectorSet,
         Self::SkillAdd,
@@ -130,6 +134,8 @@ impl Action {
             Self::OrganizationLimitsSet => "organization.set_limits",
             Self::PolicySet => "policy.set",
             Self::AgentSet => "agent.set",
+            Self::ModelKeySet => "model_key.set",
+            Self::ModelKeyRemove => "model_key.remove",
             Self::EvaluationAdd => "evaluation.add",
             Self::ConnectorSet => "connector.set",
             Self::SkillAdd => "skill.add",
@@ -177,6 +183,8 @@ impl Action {
             | Self::OrganizationLimitsSet
             | Self::PolicySet
             | Self::AgentSet
+            | Self::ModelKeySet
+            | Self::ModelKeyRemove
             | Self::ConnectorSet
             | Self::SkillRemove
             | Self::PluginAdd

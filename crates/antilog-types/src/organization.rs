@@ -160,3 +160,49 @@ pub struct SignInSession {
     pub expires_at: i64,
     pub ended_at: Option<i64>,
 }
+
+/// A model provider whose key an organization brings. The proxy forwards to it unchanged.
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, ToSchema,
+)]
+#[serde(rename_all = "camelCase")]
+pub enum ModelProvider {
+    Anthropic,
+    Openai,
+}
+
+impl ModelProvider {
+    pub const ALL: [Self; 2] = [Self::Anthropic, Self::Openai];
+
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Anthropic => "anthropic",
+            Self::Openai => "openai",
+        }
+    }
+
+    pub fn parse(name: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|p| p.as_str() == name)
+    }
+}
+
+/// A key to set or replace. It is never returned.
+#[derive(Clone, PartialEq, Eq, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct NewModelKey {
+    pub key: String,
+}
+
+impl std::fmt::Debug for NewModelKey {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("NewModelKey([redacted])")
+    }
+}
+
+/// Which providers an organization has a key for, and when it was last set. Never the key.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ModelKeyStatus {
+    pub provider: ModelProvider,
+    pub set_at: i64,
+}

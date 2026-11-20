@@ -2,7 +2,7 @@
 
 > v0 replaces the agent platforms, the stepping relay and the judge sandbox: see [docs/V0.md](../../../docs/V0.md). Lines that still name them are being removed.
 
-Experiment rows, sessions and spend records are in the store ([../change/ledger-table.md](../change/ledger-table.md)); the tools and the budget stop are built; the rest is target. [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md) defines the words for screens; here an agent is a worker: a model run by a harness. What each screen shows is in [../design/behaviour.md](../design/behaviour.md), not here.
+Experiment rows, sessions and spend records are in the store ([../change/ledger-table.md](../change/ledger-table.md)); the tools, the budget stop, the model proxy (`crates/antilog-proxy`: model gateway, spend booking and egress allowlist) and the organization's model keys are built; the rest is target. [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md) defines the words for screens; here an agent is a worker: a model run by a harness. What each screen shows is in [../design/behaviour.md](../design/behaviour.md), not here.
 
 ## Where a session sits
 
@@ -31,7 +31,7 @@ Experiment rows, sessions and spend records are in the store ([../change/ledger-
 | Object | Means | Not |
 | --- | --- | --- |
 | budget | One per experiment, covering all its sessions and their judge time. It sits inside the project's optional monthly cap, inside the organization's (see [../organization/approvals.md](../organization/approvals.md)). Set when starting (default: the project's, else the organization's); an editor or owner can change it at any time; lowering it below the spend stops new measurements. The agent asks with `request_budget` | a bill, a per-session allowance |
-| spend record | One append-only row of money or tokens, tied to a session and its agent, read from the proxy's token counts | an invoice |
+| spend record | One append-only row of money or tokens, tied to a session and its agent. Model spend is booked by the proxy from the usage in each reply: whole cents, rounded up, priced from one table in code with the model as the key (`antilog-proxy/src/price.rs`) | an invoice |
 | cost per trial | Defined in [../judge/model.md](../judge/model.md); derived from spend records | |
 | where the spend went | The experiment's spend split by Kept, Within noise, Worse, Guardrail failed, Rejected, Failed and Not measured (agent work that never reached `measure`), as dollars and a share. Derived | a bill |
 | compaction | Summarising a session's context and continuing. Antilog does it on its own at 80 percent and says so in a timeline line; a person can also compact, or start a fresh session with a summary | forgetting |

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Dialog } from "../../components/dialog/Dialog";
 import { Glyph, Icon } from "../../components/icon/Icon";
 import { w } from "../../words";
+import { ModelKeys } from "./ModelKeys";
 import {
   Appearance,
   Approvals,
@@ -20,6 +21,7 @@ export type Section =
   | "tokens"
   | "general"
   | "members"
+  | "model-keys"
   | "approvals"
   | "budgets"
   | "audit";
@@ -30,6 +32,7 @@ export const SECTIONS: readonly Section[] = [
   "tokens",
   "general",
   "members",
+  "model-keys",
   "approvals",
   "budgets",
   "audit",
@@ -49,6 +52,7 @@ const RAIL: { group: "you" | "organization"; items: { id: Section; icon: React.R
     items: [
       { id: "general", icon: <Icon name="org" /> },
       { id: "members", icon: <Icon name="users" /> },
+      { id: "model-keys", icon: <Icon name="key" /> },
       { id: "approvals", icon: <Icon name="verify" /> },
       { id: "budgets", icon: <Glyph name="gauge" /> },
       { id: "audit", icon: <Glyph name="hist" /> },
@@ -62,6 +66,7 @@ const BODY: Record<Section, () => React.ReactNode> = {
   tokens: () => <Tokens />,
   general: () => <General />,
   members: () => <Members />,
+  "model-keys": () => <ModelKeys />,
   approvals: () => <Approvals />,
   budgets: () => <Budgets />,
   audit: () => <Audit />,

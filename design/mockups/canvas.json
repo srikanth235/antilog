@@ -1468,6 +1468,46 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "SettingsModelKeys.dc.html": {
+      "x": 19760,
+      "y": 10550,
+      "w": 1440,
+      "h": 900,
+      "title": "9 \u00b7 Settings, Model keys",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SettingsModelKeysAdd.dc.html": {
+      "x": 21280,
+      "y": 10550,
+      "w": 1440,
+      "h": 900,
+      "title": "9 \u00b7 Settings, Add a model key",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SettingsModelKeysAddDark.dc.html": {
+      "x": 21280,
+      "y": 10550,
+      "w": 1440,
+      "h": 900,
+      "title": "9 \u00b7 Settings, Add a model key \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SettingsModelKeysDark.dc.html": {
+      "x": 19760,
+      "y": 10550,
+      "w": 1440,
+      "h": 900,
+      "title": "9 \u00b7 Settings, Model keys \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "SettingsPlatforms.dc.html": {
       "x": 0,
       "y": 9450,
@@ -2233,6 +2273,10 @@
     "SettingsGeneralDark.dc.html",
     "SettingsMembers.dc.html",
     "SettingsMembersDark.dc.html",
+    "SettingsModelKeys.dc.html",
+    "SettingsModelKeysAdd.dc.html",
+    "SettingsModelKeysAddDark.dc.html",
+    "SettingsModelKeysDark.dc.html",
     "SettingsPlatforms.dc.html",
     "SettingsPlatformsDark.dc.html",
     "SettingsPlatformsEmpty.dc.html",

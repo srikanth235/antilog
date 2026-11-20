@@ -7,6 +7,7 @@ mod budget;
 mod card;
 mod code_host;
 mod customize;
+mod model_key;
 mod organization;
 mod runner;
 mod session;
@@ -16,6 +17,7 @@ pub use budget::{BudgetStore, SpendLine, SpendRow, SpendScope, SpendTotal};
 pub use card::CardStore;
 pub use code_host::{CodeHostStore, PullRequestRow};
 pub use customize::{ConnectorRow, CustomizeStore, SessionScope};
+pub use model_key::{GatewayScope, ModelKeyStore};
 pub use organization::{Membership, OrganizationStore, SignInRecord, TokenRecord};
 pub use runner::RunnerStore;
 pub use session::{NewEvent, SessionChange, SessionStore};
@@ -54,6 +56,7 @@ pub trait Store:
     + CardStore
     + CodeHostStore
     + RunnerStore
+    + ModelKeyStore
     + CustomizeStore
     + Send
     + Sync

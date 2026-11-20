@@ -40,11 +40,11 @@ Every approval is an audit row: who, which card, what it would do, when, the out
 
 ## Settings pages
 
-Settings, Approvals holds policy. Settings, Connections lists the repos, credentials and environments that were approved, each with Revoke. Budgets holds the organization's default budget per experiment, the monthly cap, and the list of projects and experiments with their budgets and spend. These pages are read-only for non-owners, not hidden. Two things are still set up in Settings because no experiment can run without them: model keys (self-hosted), and members and sign-in.
+Settings, Approvals holds policy. Settings, Connections lists the repos, credentials and environments that were approved, each with Revoke. Budgets holds the organization's default budget per experiment, the monthly cap, and the list of projects and experiments with their budgets and spend. These pages are read-only for non-owners, not hidden. Two things are still set up in Settings because no experiment can run without them: model keys (Settings, Model keys: an owner sets, replaces or removes one per provider, Anthropic and OpenAI; every member sees which providers have one and never the key; built), and members and sign-in.
 
 ## Budgets
 
-- One budget per experiment, covering all its sessions and their judge time. Spend is model tokens, machine time and judge time. The meter is in [../session/model.md](../session/model.md).
+- One budget per experiment, covering all its sessions and their judge time. Spend is model tokens, machine time and judge time. The proxy books model tokens and refuses a model call once the budget is spent; the meter is in [../session/model.md](../session/model.md).
 - A person sets it when starting, from the budget on the composer's row. It defaults to the project's default budget per experiment, which falls back to the organization's default in Settings, Budgets (boards show $10 as the example).
 - An editor or owner can change it at any time: from the scoreboard strip ("Change budget"), from the experiment detail page, or in a row on the Seal experiment card. Lowering it below what is spent stops new measurements. Each change is an audit row. An experiment's budget sits inside its project's cap, and a raise that would pass the cap is refused.
 - `request_budget` lets the agent ask for more through a Raise budget card; policy for it stays in Settings, Approvals.

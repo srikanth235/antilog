@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select verify_session_credential($1, $2)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "verify_session_credential",
+        "type_info": "Uuid",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bytea",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "37f705dc0b3eac390e785e7afb9b038486e6dc2484414c62fda4c57ad38f1f1f"
+}

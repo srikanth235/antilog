@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select mint_session_credential($1, $2, $3, $4)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "mint_session_credential",
+        "type_info": "Void",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bytea",
+        "Uuid",
+        "Text",
+        "Float8"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "e7f652da73a663799b1febb1d0b732004549b44eef2f41d8339410e36b304b77"
+}

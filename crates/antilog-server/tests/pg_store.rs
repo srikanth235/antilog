@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use antilog_core::store::judge::judge_store_suite;
-use antilog_core::store::{ApprovalStore, OrganizationStore};
+use antilog_core::store::{ApprovalStore, ModelKeyStore, OrganizationStore, SessionStore};
 use antilog_core::testing::store_suite;
 use antilog_server::pg::{MIGRATOR, PgStore};
 use antilog_types::{
@@ -68,9 +68,14 @@ async fn database_at() -> anyhow::Result<(PgPool, Container, String)> {
     Ok((pool, Some(container), url))
 }
 
+fn sealer() -> anyhow::Result<antilog_core::sealed::Sealer> {
+    antilog_core::sealed::Sealer::new(&antilog_core::secrets::Secret::new("ab".repeat(32)))
+        .map_err(|e| anyhow::anyhow!("{e}"))
+}
+
 async fn migrated_store() -> anyhow::Result<(PgStore, PgPool, Container)> {
     let (pool, container) = database().await?;
-    let store = PgStore::new(pool.clone());
+    let store = PgStore::new(pool.clone()).with_sealer(sealer()?);
     store.migrate().await?;
     Ok((store, pool, container))
 }
@@ -388,7 +393,11 @@ async fn app_store() -> anyhow::Result<(PgStore, PgPool, Container)> {
         .max_connections(4)
         .connect(&app_url)
         .await?;
-    Ok((PgStore::new(pool.clone()), pool, container))
+    Ok((
+        PgStore::new(pool.clone()).with_sealer(sealer()?),
+        pool,
+        container,
+    ))
 }
 
 #[tokio::test]
@@ -788,6 +797,110 @@ async fn the_queue_machine_runs_a_command_through_the_holding_runner() -> anyhow
     assert_eq!(
         store.machine(session.id).await?.map(|m| m.state),
         Some(MachineState::Queued)
+    );
+    Ok(())
+}
+
+#[tokio::test]
+async fn postgres_keeps_session_credentials_as_a_role_without_bypass() -> anyhow::Result<()> {
+    let (store, pool, _container) = app_store().await?;
+    antilog_core::gateway_suite::credentials_suite(&store, &store).await;
+    // Only a hash is kept, and a token is not a column.
+    let token = {
+        use antilog_core::credentials::{Purpose, SessionCredentials};
+        let seed = antilog_core::seed::experiment(&store, 100).await;
+        let session = antilog_types::Session::new(
+            seed.organization.id,
+            seed.experiment.id,
+            "opencode",
+            antilog_core::seed::T0,
+        );
+        store
+            .create_session(
+                &session,
+                &AuditEntry::new(
+                    seed.organization.id,
+                    Some(seed.owner.id),
+                    "session.start",
+                    session.id.to_string(),
+                    AuditOutcome::Done,
+                    antilog_core::seed::T0,
+                ),
+            )
+            .await?;
+        store
+            .mint(
+                session.id,
+                Purpose::Model,
+                jiff::SignedDuration::from_mins(5),
+            )
+            .await?
+    };
+    // The app role, with no organization set, sees no credential row at all.
+    let rows: i64 = sqlx::query_scalar("select count(*) from session_credentials")
+        .fetch_one(&pool)
+        .await?;
+    assert_eq!(rows, 0);
+    assert!(!token.is_empty());
+    Ok(())
+}
+
+#[tokio::test]
+async fn postgres_seals_model_keys_and_scopes_them_to_their_organization() -> anyhow::Result<()> {
+    let (store, pool, _container) = app_store().await?;
+    antilog_core::gateway_suite::model_key_suite(&store).await;
+
+    let seed = antilog_core::seed::experiment(&store, 100).await;
+    let org = seed.organization.id;
+    let audit = AuditEntry::new(
+        org,
+        Some(seed.owner.id),
+        "model_key.set",
+        "anthropic",
+        AuditOutcome::Done,
+        1,
+    );
+    store
+        .put_model_key(
+            org,
+            antilog_types::ModelProvider::Anthropic,
+            &antilog_core::secrets::Secret::new("sk-ant-plain-text-marker"),
+            1,
+            &audit,
+        )
+        .await?;
+    // As the role the server runs as: with no organization set the row is invisible, and with
+    // it set the stored bytes are not the key.
+    let seen: i64 = sqlx::query_scalar("select count(*) from model_keys")
+        .fetch_one(&pool)
+        .await?;
+    assert_eq!(seen, 0);
+    let mut tx = pool.begin().await?;
+    sqlx::query("select set_config('antilog.organization_id', $1, true)")
+        .bind(org.as_uuid().to_string())
+        .execute(&mut *tx)
+        .await?;
+    let sealed: Vec<u8> = sqlx::query_scalar("select sealed from model_keys")
+        .fetch_one(&mut *tx)
+        .await?;
+    assert!(
+        !sealed
+            .windows(b"plain-text-marker".len())
+            .any(|w| w == b"plain-text-marker")
+    );
+
+    // Without a master key the store refuses rather than keep a key in the clear.
+    let bare = PgStore::new(pool.clone());
+    assert!(
+        bare.put_model_key(
+            org,
+            antilog_types::ModelProvider::Openai,
+            &antilog_core::secrets::Secret::new("sk"),
+            1,
+            &audit
+        )
+        .await
+        .is_err()
     );
     Ok(())
 }
