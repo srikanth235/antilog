@@ -42,6 +42,8 @@ export function Home({ project: preferred }: { project: string | undefined }) {
   const environments = useEnvironments();
   const [agent, setAgent] = useState("auto");
   const [environment, setEnvironment] = useState<string | null>(null);
+  // An archived environment is not offered to a new session.
+  const offered = (environments.data ?? []).filter((item) => !item.archived);
 
   const list = projects.data ?? [];
   const selectedId =
@@ -181,8 +183,8 @@ export function Home({ project: preferred }: { project: string | undefined }) {
           <Select
             variant="chip"
             label={w.home.environment}
-            value={environment ?? environments.data?.[0]?.id ?? null}
-            options={(environments.data ?? []).map((item) => ({
+            value={environment ?? offered[0]?.id ?? null}
+            options={offered.map((item) => ({
               value: item.id,
               label: item.name,
             }))}

@@ -40,7 +40,7 @@ Every approval is an audit row: who, which card, what it would do, when, the out
 
 ## Settings pages
 
-Settings, Approvals holds policy. Settings, Connections lists the repos, credentials and environments that were approved, each with Revoke. Budgets holds the organization's default budget per experiment, the monthly cap, and the list of projects and experiments with their budgets and spend. These pages are read-only for non-owners, not hidden. Two things are still set up in Settings because no experiment can run without them: model keys (Settings, Model keys: an owner sets, replaces or removes one per provider, Anthropic and OpenAI; every member sees which providers have one and never the key; built), and members and sign-in.
+Settings, Approvals holds policy. Settings, Connections holds the environments sessions run on: everyone reads them, owners and editors add, change (a new version) and archive them. The repos and credentials approved in chats are listed there too (target), each with Revoke. Budgets holds the organization's default budget per experiment, the monthly cap, and the list of projects and experiments with their budgets and spend. These pages are read-only for non-owners, not hidden. Two things are still set up in Settings because no experiment can run without them: model keys (Settings, Model keys: an owner sets, replaces or removes one per provider, Anthropic and OpenAI; every member sees which providers have one and never the key; built), and members and sign-in.
 
 ## Budgets
 

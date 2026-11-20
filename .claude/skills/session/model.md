@@ -23,7 +23,7 @@ Experiment rows, sessions and spend records are in the store ([../change/ledger-
 | Auto | The agent choice that picks the best cost per win for this evaluation kind in this project among the agents the organization turned on, and says why in one line. A person can always pick a named agent. With no data it uses the default agent an owner sets in Customize, Agents. No agent is preselected by brand | a favoured agent |
 | hand off | Moving a session to another agent: the new session starts in the same experiment on the same branch with a summary and the history; the old one ends Done, "Handed off to Codex" | a spawn, a new experiment |
 | failover | An agent that is unavailable or rate-limited leaves the session Waiting for you with a Continue on another agent? card naming the agent Auto would choose. Policy may allow it without asking; a timeline line and an audit row record it | a retry on the same platform |
-| environment | Image or setup script, size and network policy. An agent proposes a change with `set_environment` | a server, a config file |
+| environment | What a session runs on: network level (none, limited with exact hosts, full), plain variables, a setup script and a size. An organization manages them in Settings, Connections; every change is a new version and a session keeps the version it started on. An agent proposes a change with `set_environment` (target) | a server, a config file |
 | attached repo | A repo on the code host the session works in, any number. Short-lived git token per repo, push only to the session's own branch | a clone Antilog keeps |
 
 ## Spend

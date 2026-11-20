@@ -198,7 +198,7 @@ Every title is the card's name. A declined card reads "Declined by NAME · 14:02
 | Rail | "You": Profile, Appearance, Access tokens, This device. "Organization": General, Members, Single sign-on, Approvals, Budgets, Connections, Audit log |
 | Approvals | "Policy by card"; "Always ask", "Allow up to a limit", "Allow"; "Always asks. A person must type the value."; "Allow never pauses" |
 | Budgets | "Default budget per experiment", "Monthly cap", "Spent this month"; "Experiments, with budget and spend"; "Sessions of EXPERIMENT"; "Where the spend went"; "Cost per win by project"; "Change budget" (also on the strip, the experiment page and the Seal card; editors and owners only) |
-| Connections | "Repos", "Credentials", "Environments"; "Revoke"; "Added by NAME · date · used by 3 sessions"; "Nothing approved yet." |
+| Connections | "Repos", "Credentials", "Environments"; "Add environment", "Edit", "Archive", "Save as version 4"; "Version 3 · changed by NAME · date"; "No network", "Limited network, 3 hosts", "Full network"; "Revoke"; "Nothing approved yet." |
 | Audit log | "Who", "What", "When", "Outcome"; "All", "Approvals only" |
 | Access tokens, Members | "Create access token", "Shown once. Copy it now."; Members columns "Member", "Signed in through", "Role"; "Owner", "Editor", "Viewer"; "Only owners can change roles. You can read them." |
 | This device | "Install app", "Get the Mac app" (target), "Notify me when this experiment needs me" |

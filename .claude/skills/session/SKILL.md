@@ -20,7 +20,7 @@ A session is one agent's work inside an experiment: a chat with one agent in one
 | Changing `attach_repo`, `request_credential`, `set_environment` or `request_budget`, or how tools reach a session | [tools.md](tools.md) |
 | Changing what agents are told | [prompts.md](prompts.md) |
 | Supporting a new agent (a model run by a harness) | [add-agent.md](add-agent.md) |
-| Adding an environment (image, setup script, size, network) | [add-environment.md](add-environment.md) |
+| Adding or changing an environment (network, variables, setup script, size) | [add-environment.md](add-environment.md) |
 | Adding a connector (a remote MCP server the session endpoint calls for an agent), its sealed credential and each tool's On, Off or Ask first | [add-connector.md](add-connector.md) |
 | Adding a skill pack (a versioned `SKILL.md` folder agents load on demand, never read by the judge), or a plugin that brings them | [add-skill-pack.md](add-skill-pack.md) |
 | `seal`, `measure`, `history`, `deliver`, `watch`, the experiment and the holdout | [../judge/SKILL.md](../judge/SKILL.md) |

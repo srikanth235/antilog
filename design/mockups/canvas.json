@@ -1428,6 +1428,26 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "SettingsEnvironment.dc.html": {
+      "w": 1440,
+      "h": 900,
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true,
+      "x": 12160,
+      "y": 9450,
+      "title": "8 \u00b7 Settings, Connections, change environment"
+    },
+    "SettingsEnvironmentDark.dc.html": {
+      "w": 1440,
+      "h": 900,
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true,
+      "x": 12160,
+      "y": 9450,
+      "title": "8 \u00b7 Settings, Connections, change environment \u00b7 dark"
+    },
     "SettingsGeneral.dc.html": {
       "x": 9120,
       "y": 10550,
@@ -2269,6 +2289,8 @@
     "SettingsConnectionsDark.dc.html",
     "SettingsDevice.dc.html",
     "SettingsDeviceDark.dc.html",
+    "SettingsEnvironment.dc.html",
+    "SettingsEnvironmentDark.dc.html",
     "SettingsGeneral.dc.html",
     "SettingsGeneralDark.dc.html",
     "SettingsMembers.dc.html",

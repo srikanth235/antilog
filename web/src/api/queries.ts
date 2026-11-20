@@ -227,6 +227,39 @@ export function useEnvironments() {
   });
 }
 
+function refreshEnvironments(client: QueryClient) {
+  return client.invalidateQueries({ queryKey: keys.environments() });
+}
+
+export function useCreateEnvironment() {
+  return useWrite(
+    async (body: Schemas["NewEnvironment"]) => unwrap(await api.POST("/environments", { body })),
+    refreshEnvironments,
+  );
+}
+
+/** An edit is the environment's next version. */
+export function useEditEnvironment() {
+  return useWrite(
+    async (vars: { id: string; body: Schemas["NewEnvironment"] }) =>
+      unwrap(
+        await api.PUT("/environments/{id}", {
+          params: { path: { id: vars.id } },
+          body: vars.body,
+        }),
+      ),
+    refreshEnvironments,
+  );
+}
+
+export function useArchiveEnvironment() {
+  return useWrite(
+    async (id: string) =>
+      unwrap(await api.POST("/environments/{id}/archive", { params: { path: { id } } })),
+    refreshEnvironments,
+  );
+}
+
 export function useEvaluations() {
   return useQuery({
     queryKey: keys.evaluations(),
