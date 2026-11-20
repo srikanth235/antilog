@@ -142,6 +142,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "antilog-proxy"
+version = "0.0.0"
+dependencies = [
+ "antilog-core",
+ "antilog-server",
+ "antilog-types",
+ "anyhow",
+ "axum",
+ "bytes",
+ "hyper",
+ "hyper-util",
+ "jiff",
+ "reqwest 0.13.5",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "tokio",
+ "tokio-stream",
+ "tower",
+ "tracing",
+ "tracing-subscriber",
+ "uuid",
+]
+
+[[package]]
 name = "antilog-server"
 version = "0.0.0"
 dependencies = [
