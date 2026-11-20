@@ -17,9 +17,6 @@ cargo nextest run --workspace
 cargo deny check
 cargo sqlx prepare --workspace --check   # DATABASE_URL points at a database with the migrations applied
 cargo run -q -p antilog-server -- openapi | diff - openapi/antilog.json
-cargo lambda build --release --arm64 -p antilog-aws
-tofu fmt -check -recursive deploy/tofu
-tofu -chdir=deploy/tofu/aws init -backend=false && tofu -chdir=deploy/tofu/aws validate
 ```
 
 A changed route or type: regenerate `openapi/antilog.json`, then `pnpm generate:api` in `web/`. A changed query: `cargo sqlx prepare --workspace`. A design change: `python3 design/tools/tokens.py`, then `--check`. Hooks in `.githooks/` and CI run the same checks. Fix the code, not the check.

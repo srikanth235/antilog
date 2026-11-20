@@ -1,6 +1,6 @@
 # Rust in Antilog
 
-The Foundation is on this branch: `crates/antilog-types`, `antilog-core` (the traits `Store` (with one supertrait per area: organization, session, budget, approval), `SessionMachine`, `Clock`, `Signer`, `Secrets` with fakes in `antilog_core::fakes`, and the storage suite in `antilog_core::testing`), `antilog-server` (the health route, the OpenAPI document and the Postgres `Store`), `antilog-aws` (the Lambda entry) and `antilog` (the CLI and `antilog mcp`). `EnvSecrets` is the `Secrets` adapter. Toolchain 1.100.0 is pinned in `rust-toolchain.toml`; `deny.toml` holds the licence and advisory policy. Everything else on this page is still how the code is written when it lands.
+The Foundation is on this branch: `crates/antilog-types`, `antilog-core` (the traits `Store` (with one supertrait per area: organization, session, budget, approval), `SessionMachine`, `Clock`, `Signer`, `Secrets` with fakes in `antilog_core::fakes`, and the storage suite in `antilog_core::testing`), `antilog-server` (the health route, the OpenAPI document and the Postgres `Store`) and `antilog` (the CLI and `antilog mcp`). `EnvSecrets` is the `Secrets` adapter. Toolchain 1.100.0 is pinned in `rust-toolchain.toml`; `deny.toml` holds the licence and advisory policy. Everything else on this page is still how the code is written when it lands.
 
 ## Workflow and done criteria
 
@@ -26,7 +26,7 @@ Fix the code, not the check. Never add `#[allow]` or loosen a lint to get green.
 One Cargo workspace, versions in [libraries.md](../libraries.md):
 
 - `antilog-core`: all logic. The acceptance criteria (one pure function), the judge's queue, the budget meter, approvals and policy, permissions, the audit log and the API routes as an axum `Router`. It asks storage by name through one `Store` trait and never writes SQL. It orchestrates and records and **never connects to customer data**.
-- `antilog-server`: the one server, for Antilog cloud and self-hosted alike, with two entry points over the same axum `Router`: a Lambda one through `lambda_http` (built with `cargo-lambda`, for pay-per-use) and a normal tokio listener. The Postgres `Store` through `sqlx`, the job queue, object storage through `object_store`, the embedded web app. It ships as one container image. It is a native Linux binary, not WebAssembly, so tokio, sqlx, rustls and the AWS SDK all work.
+- `antilog-server`: the one server, for Antilog cloud and self-hosted alike, served by a tokio listener over an axum `Router`. The Postgres `Store` through `sqlx`, the job queue, object storage through `object_store`, the embedded web app. It ships as one container image. It is a native Linux binary, not WebAssembly, so tokio, sqlx, rustls and the AWS SDK all work.
 - `antilog`: the CLI and the MCP server, built on the API's generated types.
 
 Shared types (the API's request and response types, ids, states) live in a library crate that all of them use. No gRPC, no Redis: the queue lives in Postgres ([../postgres/antilog.md](../postgres/antilog.md)). Every agent platform is one adapter behind the platform trait; the core does not change for a new one, and depends on none of them. All connections go out over HTTPS.
@@ -38,9 +38,6 @@ Scale-to-zero (Lambda on AWS; Cloud Run on GCP and Container Apps on Azure when 
 - **Nothing runs after a response is sent.** No spawned tokio task, in-process timer or background loop outlives its request. Work that must happen later is a row in Postgres plus a wake-up.
 - **An invocation is at most 15 minutes.** Long work (waiting on a measurement or a watch) is asked of the session's machine and answered by a later call, never held open in the server. Lambda durable functions are not used: their SDK is TypeScript and Python only.
 - **Event streams end before the cap.** The browser reconnects with `Last-Event-ID` and the stream replays from the events table. See [../../change/live-event.md](../../change/live-event.md).
-
-The AWS side of this (Lambda, Aurora) is in [../aws/antilog.md](../aws/antilog.md).
-
 ### The core stays clean
 
 - **`antilog-core` never imports `sqlx`, a cloud SDK or an adapter crate.** Time, ids, storage and the session machine come in through traits that the server implements, so the core is tested with doubles and fixed clocks.

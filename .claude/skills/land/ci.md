@@ -6,10 +6,6 @@
 | --- | --- |
 | commits | `.githooks/commit-msg` on every commit since the default branch (the new commits only, on the default branch) |
 | files | `.githooks/pre-commit --all`: secrets, stray and oversized files, em dashes, model names, and `python3 design/tools/tokens.py --check` |
-| tofu | `tofu fmt -check` and `tofu validate` for each module under `deploy/tofu/aws`, with no backend |
-| lambda | `cargo lambda build --release --arm64`, then `cargo lambda watch` and a local `cargo lambda invoke` of `/health` against a Postgres service |
-
-`.github/workflows/deploy-aws.yml` is the only deploy: a pull request is checked without AWS, and a manual run plans and (on request) applies in the `aws-dev` environment, behind its reviewers. A push never starts it.
 
 Add each job below with the first code of its layer, and keep the local hooks fast: anything slower than a second belongs here, not in a hook.
 
