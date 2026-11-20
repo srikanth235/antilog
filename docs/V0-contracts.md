@@ -10,21 +10,11 @@ The interfaces the build sessions share, fixed before they start so that none of
 | B, proxy | the `antilog-proxy` binary, the `session_credentials` table, `SessionCredentials`, model keys per organization, metering and the budget stop | spend rows and budgets |
 | C, reach | the per-session MCP endpoint, Customize backends for connectors, skills and plugins | `SessionCredentials` |
 
-The `SessionCredentials` trait and its fake land on the base branch before A, B and C start, so all three build against it. B writes the Postgres store.
+The `SessionCredentials` trait and its fake are on the base branch, so all three build against it. B writes the Postgres store.
 
 ## SessionCredentials (core)
 
-```rust
-pub enum Purpose { Model, Mcp, Runner }
-#[async_trait]
-pub trait SessionCredentials: Send + Sync {
-    /// A fresh opaque token; only its hash is stored.
-    async fn mint(&self, session: SessionId, purpose: Purpose, ttl: Duration) -> Result<String>;
-    /// The session the token belongs to, if it is live and for this purpose.
-    async fn verify(&self, token: &str, purpose: Purpose) -> Result<Option<SessionId>>;
-    async fn revoke_all(&self, session: SessionId) -> Result<()>;
-}
-```
+Built: `antilog-core/src/credentials.rs`, with `FakeCredentials` in `fakes/credentials.rs`. `Purpose` is `Model`, `Mcp` or `Runner`. `mint(session, purpose, ttl)` returns a fresh opaque token and stores only its hash. `verify(token, purpose)` returns the session if the token is live. `revoke_all(session)` ends every token the session holds. B writes the Postgres store.
 
 ## Queue and runner (A)
 

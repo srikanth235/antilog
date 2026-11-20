@@ -6,6 +6,7 @@ pub mod auth;
 pub mod budget;
 pub mod clock;
 pub mod code_host;
+pub mod credentials;
 pub mod delivery;
 pub mod deps;
 pub mod evaluations;

@@ -8,12 +8,14 @@ mod approval;
 mod budget;
 mod card;
 mod code_host;
+mod credentials;
 pub(crate) mod ledger;
 mod machine;
 mod organization;
 mod session;
 mod world;
 
+pub use credentials::FakeCredentials;
 pub use machine::{FakeMachine, Profile};
 pub use world::{FakeCodeHost, FakeDeps};
 
