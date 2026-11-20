@@ -65,6 +65,13 @@ pub enum Action {
     ModelKeySet,
     ModelKeyRemove,
     EvaluationAdd,
+    ConnectorSet,
+    SkillAdd,
+    SkillRemove,
+    PluginAdd,
+    PluginRemove,
+    ProjectSkillSet,
+    ExperimentReachSet,
     ExperimentBudgetSet,
     ExperimentCreate,
     SessionStart,
@@ -94,6 +101,13 @@ impl Action {
         Self::ModelKeySet,
         Self::ModelKeyRemove,
         Self::EvaluationAdd,
+        Self::ConnectorSet,
+        Self::SkillAdd,
+        Self::SkillRemove,
+        Self::PluginAdd,
+        Self::PluginRemove,
+        Self::ProjectSkillSet,
+        Self::ExperimentReachSet,
         Self::ExperimentBudgetSet,
         Self::ExperimentCreate,
         Self::SessionStart,
@@ -123,6 +137,13 @@ impl Action {
             Self::ModelKeySet => "model_key.set",
             Self::ModelKeyRemove => "model_key.remove",
             Self::EvaluationAdd => "evaluation.add",
+            Self::ConnectorSet => "connector.set",
+            Self::SkillAdd => "skill.add",
+            Self::SkillRemove => "skill.remove",
+            Self::PluginAdd => "plugin.add",
+            Self::PluginRemove => "plugin.remove",
+            Self::ProjectSkillSet => "project.set_skill",
+            Self::ExperimentReachSet => "experiment.set_reach",
             Self::ExperimentBudgetSet => "experiment.set_budget",
             Self::ExperimentCreate => "experiment.create",
             Self::SessionStart => "session.start",
@@ -146,6 +167,8 @@ impl Action {
             Self::ExperimentBudgetSet
             | Self::ExperimentCreate
             | Self::EvaluationAdd
+            | Self::SkillAdd
+            | Self::ExperimentReachSet
             | Self::SessionStart
             | Self::SessionMessage
             | Self::SessionStop
@@ -162,6 +185,11 @@ impl Action {
             | Self::AgentSet
             | Self::ModelKeySet
             | Self::ModelKeyRemove
+            | Self::ConnectorSet
+            | Self::SkillRemove
+            | Self::PluginAdd
+            | Self::PluginRemove
+            | Self::ProjectSkillSet
             | Self::ApprovalDecideValueModel
             | Self::ValueModelSet
             | Self::TokenCreateForOther
@@ -177,6 +205,8 @@ impl Action {
                 | Self::ProjectLimitsSet
                 | Self::ExperimentBudgetSet
                 | Self::ExperimentCreate
+                | Self::ProjectSkillSet
+                | Self::ExperimentReachSet
                 | Self::SessionStart
                 | Self::SessionMessage
                 | Self::SessionStop

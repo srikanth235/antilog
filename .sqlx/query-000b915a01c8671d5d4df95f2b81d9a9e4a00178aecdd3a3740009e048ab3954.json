@@ -1,0 +1,64 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select name, version, description, plugin_id from skill_versions where organization_id = $1 order by name, version",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "skill_versions",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "version",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "skill_versions",
+            "name": "version"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "description",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "skill_versions",
+            "name": "description"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "plugin_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "skill_versions",
+            "name": "plugin_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "000b915a01c8671d5d4df95f2b81d9a9e4a00178aecdd3a3740009e048ab3954"
+}

@@ -9,6 +9,7 @@ mod budget;
 mod card;
 mod code_host;
 mod credentials;
+mod customize;
 mod judge;
 mod model_key;
 mod organization;

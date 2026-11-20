@@ -29,6 +29,11 @@ export const keys = {
   autoAgent: () => ["agents", "auto"] as const,
   environments: () => ["environments"] as const,
   evaluations: () => ["evaluations"] as const,
+  connectors: () => ["connectors"] as const,
+  skills: () => ["skills"] as const,
+  plugins: () => ["plugins"] as const,
+  experimentConnectors: (id: string) => ["experiments", id, "connectors"] as const,
+  experimentSkills: (id: string) => ["experiments", id, "skills"] as const,
   budgets: () => ["budgets"] as const,
   spend: () => ["spend"] as const,
   experimentSpend: (id: string) => ["experiments", id, "spend"] as const,
@@ -242,6 +247,197 @@ export function useAddEvaluation() {
     async (body: Schemas["NewEvaluationTemplate"]) =>
       unwrap(await api.POST("/evaluations", { body })),
     (client) => client.invalidateQueries({ queryKey: keys.evaluations() }),
+  );
+}
+
+export function useConnectors() {
+  return useQuery({
+    queryKey: keys.connectors(),
+    queryFn: async () => unwrap(await api.GET("/connectors")),
+  });
+}
+
+export function useConnector(id: string) {
+  return useQuery({
+    queryKey: [...keys.connectors(), id] as const,
+    queryFn: async () => unwrap(await api.GET("/connectors/{id}", { params: { path: { id } } })),
+    retry: false,
+  });
+}
+
+const refreshConnectors = (client: QueryClient) =>
+  client.invalidateQueries({ queryKey: keys.connectors() });
+
+export function useAddConnector() {
+  return useWrite(
+    async (body: Schemas["NewConnector"]) => unwrap(await api.POST("/connectors", { body })),
+    refreshConnectors,
+  );
+}
+
+export function useCheckConnector(id: string) {
+  return useWrite(
+    async () => unwrap(await api.POST("/connectors/{id}/check", { params: { path: { id } } })),
+    refreshConnectors,
+  );
+}
+
+export function useSetConnectorCredential(id: string) {
+  return useWrite(
+    async (credential: string) =>
+      unwrap(
+        await api.PUT("/connectors/{id}/credential", {
+          params: { path: { id } },
+          body: { credential },
+        }),
+      ),
+    refreshConnectors,
+  );
+}
+
+export function useSetToolMode(id: string) {
+  return useWrite(
+    async (change: { tool: string; mode: Schemas["ToolMode"] }) =>
+      unwrap(
+        await api.PUT("/connectors/{id}/tools/{tool}", {
+          params: { path: { id, tool: change.tool } },
+          body: { mode: change.mode },
+        }),
+      ),
+    refreshConnectors,
+  );
+}
+
+export function useRemoveConnector(id: string) {
+  return useWrite(
+    async () => unwrap(await api.DELETE("/connectors/{id}", { params: { path: { id } } })),
+    refreshConnectors,
+  );
+}
+
+/** The organization's skill packs. With a project, `on` says whether that project has the pack On. */
+export function useSkills(project?: string) {
+  return useQuery({
+    queryKey: [...keys.skills(), { project: project ?? null }] as const,
+    queryFn: async () =>
+      unwrap(
+        await api.GET("/skills", {
+          params: { query: project === undefined ? {} : { project } },
+        }),
+      ),
+  });
+}
+
+export function useSkillVersion(name: string, version: number | undefined) {
+  return useQuery({
+    queryKey: [...keys.skills(), name, "versions", version] as const,
+    enabled: version !== undefined,
+    queryFn: async () =>
+      unwrap(
+        await api.GET("/skills/{name}/versions/{version}", {
+          params: { path: { name, version: version ?? 0 } },
+        }),
+      ),
+  });
+}
+
+const refreshSkills = (client: QueryClient) =>
+  client.invalidateQueries({ queryKey: keys.skills() });
+
+export function useAddSkill() {
+  return useWrite(
+    async (body: Schemas["NewSkill"]) => unwrap(await api.POST("/skills", { body })),
+    refreshSkills,
+  );
+}
+
+export function useRemoveSkill(name: string) {
+  return useWrite(
+    async () => unwrap(await api.DELETE("/skills/{name}", { params: { path: { name } } })),
+    refreshSkills,
+  );
+}
+
+export function useSetProjectSkill(name: string) {
+  return useWrite(
+    async (change: { project: string; on: boolean }) =>
+      unwrap(
+        await api.PUT("/projects/{id}/skills/{name}", {
+          params: { path: { id: change.project, name } },
+          body: { on: change.on },
+        }),
+      ),
+    refreshSkills,
+  );
+}
+
+export function usePlugins() {
+  return useQuery({
+    queryKey: keys.plugins(),
+    queryFn: async () => unwrap(await api.GET("/plugins")),
+  });
+}
+
+/** A plugin brings or takes away skill packs, connectors and evaluation templates. */
+function refreshPlugin(client: QueryClient) {
+  return Promise.all(
+    [keys.plugins(), keys.skills(), keys.connectors(), keys.evaluations()].map((queryKey) =>
+      client.invalidateQueries({ queryKey }),
+    ),
+  );
+}
+
+export function useAddPlugin() {
+  return useWrite(
+    async (body: Schemas["NewPlugin"]) => unwrap(await api.POST("/plugins", { body })),
+    refreshPlugin,
+  );
+}
+
+export function useRemovePlugin(id: string) {
+  return useWrite(
+    async (keep: Schemas["PluginPart"][]) =>
+      unwrap(await api.POST("/plugins/{id}/remove", { params: { path: { id } }, body: { keep } })),
+    refreshPlugin,
+  );
+}
+
+export function useExperimentConnectors(id: string) {
+  return useQuery({
+    queryKey: keys.experimentConnectors(id),
+    queryFn: async () =>
+      unwrap(await api.GET("/experiments/{id}/connectors", { params: { path: { id } } })),
+  });
+}
+
+export function useSetExperimentConnectors(id: string) {
+  return useWrite(
+    async (connectors: string[]) =>
+      unwrap(
+        await api.PUT("/experiments/{id}/connectors", {
+          params: { path: { id } },
+          body: { connectors },
+        }),
+      ),
+    (client) => client.invalidateQueries({ queryKey: keys.experimentConnectors(id) }),
+  );
+}
+
+export function useExperimentSkills(id: string) {
+  return useQuery({
+    queryKey: keys.experimentSkills(id),
+    queryFn: async () =>
+      unwrap(await api.GET("/experiments/{id}/skills", { params: { path: { id } } })),
+  });
+}
+
+export function useSetExperimentSkills(id: string) {
+  return useWrite(
+    async (skills: string[]) =>
+      unwrap(
+        await api.PUT("/experiments/{id}/skills", { params: { path: { id } }, body: { skills } }),
+      ),
+    (client) => client.invalidateQueries({ queryKey: keys.experimentSkills(id) }),
   );
 }
 

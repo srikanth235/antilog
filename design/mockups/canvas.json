@@ -72,26 +72,6 @@
       "expand": "fill",
       "is_interactive": true
     },
-    "AddConnectorMcp.dc.html": {
-      "x": 22800,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Add MCP server",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "AddConnectorMcpDark.dc.html": {
-      "x": 22800,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Add MCP server \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
     "AddEvaluation.dc.html": {
       "x": 6080,
       "y": 8350,
@@ -312,6 +292,26 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "ConnectorRemove.dc.html": {
+      "x": 42560,
+      "y": 8350,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Customize, Remove connector",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "ConnectorRemoveDark.dc.html": {
+      "x": 42560,
+      "y": 8350,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Customize, Remove connector \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "Connectors.dc.html": {
       "x": 15200,
       "y": 8350,
@@ -328,26 +328,6 @@
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Customize, Connectors \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "ConnectorsDiscover.dc.html": {
-      "x": 18240,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Connectors, discover",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "ConnectorsDiscoverDark.dc.html": {
-      "x": 18240,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Connectors, discover \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -588,6 +568,26 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "PluginRemove.dc.html": {
+      "x": 44080,
+      "y": 8350,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Customize, Remove plugin",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "PluginRemoveDark.dc.html": {
+      "x": 44080,
+      "y": 8350,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Customize, Remove plugin \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "Plugins.dc.html": {
       "x": 34960,
       "y": 8350,
@@ -604,26 +604,6 @@
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Customize, Plugins \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "PluginsDiscover.dc.html": {
-      "x": 38000,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Plugins, discover",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "PluginsDiscoverDark.dc.html": {
-      "x": 38000,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Plugins, discover \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -884,6 +864,26 @@
       "w": 1440,
       "h": 900,
       "title": "3 \u00b7 Session, composer expanded \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionConnectorTool.dc.html": {
+      "x": 38000,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, use a connector tool",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionConnectorToolDark.dc.html": {
+      "x": 38000,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, use a connector tool \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -1821,26 +1821,6 @@
       "expand": "fill",
       "is_interactive": true
     },
-    "SkillsDiscover.dc.html": {
-      "x": 10640,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Skills, discover",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "SkillsDiscoverDark.dc.html": {
-      "x": 10640,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Skills, discover \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
     "SkillsEmpty.dc.html": {
       "x": 9120,
       "y": 8350,
@@ -2153,8 +2133,6 @@
     "AddAgentDark.dc.html",
     "AddConnector.dc.html",
     "AddConnectorDark.dc.html",
-    "AddConnectorMcp.dc.html",
-    "AddConnectorMcpDark.dc.html",
     "AddEvaluation.dc.html",
     "AddEvaluationDark.dc.html",
     "AddPlatform.dc.html",
@@ -2177,10 +2155,10 @@
     "ConnectorDetailDark.dc.html",
     "ConnectorError.dc.html",
     "ConnectorErrorDark.dc.html",
+    "ConnectorRemove.dc.html",
+    "ConnectorRemoveDark.dc.html",
     "Connectors.dc.html",
     "ConnectorsDark.dc.html",
-    "ConnectorsDiscover.dc.html",
-    "ConnectorsDiscoverDark.dc.html",
     "ConnectorsEmpty.dc.html",
     "ConnectorsEmptyDark.dc.html",
     "DatasetHoldout.dc.html",
@@ -2205,10 +2183,10 @@
     "PlatformErrorDark.dc.html",
     "PluginDetail.dc.html",
     "PluginDetailDark.dc.html",
+    "PluginRemove.dc.html",
+    "PluginRemoveDark.dc.html",
     "Plugins.dc.html",
     "PluginsDark.dc.html",
-    "PluginsDiscover.dc.html",
-    "PluginsDiscoverDark.dc.html",
     "PluginsEmpty.dc.html",
     "PluginsEmptyDark.dc.html",
     "Project.dc.html",
@@ -2235,6 +2213,8 @@
     "SessionChangesDark.dc.html",
     "SessionComposerExpanded.dc.html",
     "SessionComposerExpandedDark.dc.html",
+    "SessionConnectorTool.dc.html",
+    "SessionConnectorToolDark.dc.html",
     "SessionCredential.dc.html",
     "SessionCredentialDark.dc.html",
     "SessionDelivered.dc.html",
@@ -2329,8 +2309,6 @@
     "SkillDetailDark.dc.html",
     "Skills.dc.html",
     "SkillsDark.dc.html",
-    "SkillsDiscover.dc.html",
-    "SkillsDiscoverDark.dc.html",
     "SkillsEmpty.dc.html",
     "SkillsEmptyDark.dc.html",
     "WebInstalled.dc.html",

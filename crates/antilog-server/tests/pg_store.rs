@@ -268,6 +268,13 @@ async fn check_constraints_list_the_values_of_the_enums() -> anyhow::Result<()> 
             "audit_outcome",
             texts(AuditOutcome::ALL, AuditOutcome::as_str),
         ),
+        (
+            "connectors_health",
+            texts(
+                antilog_types::ConnectorHealth::ALL,
+                antilog_types::ConnectorHealth::as_str,
+            ),
+        ),
     ];
     for (name, values) in expected {
         let definition: String = sqlx::query_scalar(
@@ -762,5 +769,15 @@ async fn postgres_seals_model_keys_and_scopes_them_to_their_organization() -> an
         .await
         .is_err()
     );
+    Ok(())
+}
+
+#[tokio::test]
+async fn postgres_keeps_connectors_skills_and_plugins_and_finds_a_session_by_id()
+-> anyhow::Result<()> {
+    // As the role the server runs as, so row-level security is in force.
+    let (store, _pool, _container) = app_store().await?;
+    let deps = antilog_server::deps::ServerDeps::on_fakes(store);
+    antilog_core::customize::suite::reach_suite(&deps).await;
     Ok(())
 }

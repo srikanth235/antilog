@@ -13,8 +13,10 @@ use axum::routing::get;
 use utoipa::OpenApi;
 
 pub mod auth;
+pub mod customize;
 pub mod e2e;
 pub mod live;
+pub mod mcp;
 pub mod model_key;
 pub mod organization;
 pub mod value;
@@ -61,6 +63,10 @@ pub fn router<D: Deps + 'static>(deps: Arc<D>, settings: auth::Settings) -> Rout
 }
 
 pub fn router_with<D: Deps + 'static>(app: Arc<auth::App<D>>) -> Router {
+    base(&app).with_state(app)
+}
+
+fn base<D: Deps + 'static>(app: &auth::App<D>) -> Router<Arc<auth::App<D>>> {
     let router = Router::new()
         .route("/health", get(health::<D>))
         .merge(auth::routes())
@@ -74,12 +80,34 @@ pub fn router_with<D: Deps + 'static>(app: Arc<auth::App<D>>) -> Router {
     } else {
         router
     };
-    let router = if app.settings.code_host_webhook_secret.is_some() {
+    if app.settings.code_host_webhook_secret.is_some() {
         router.merge(webhook::routes())
     } else {
         router
-    };
-    router.with_state(app)
+    }
+}
+
+/// The server with the routes that reach beyond a session's machine: Customize, and the MCP
+/// endpoint of each session. `credentials` verifies the sessions' MCP tokens.
+pub fn router_with_reach<D, V, C>(
+    app: Arc<auth::App<D>>,
+    credentials: V,
+    backend: customize::Backend<C>,
+) -> Router
+where
+    D: Deps + 'static,
+    V: antilog_core::credentials::SessionCredentials + 'static,
+    C: antilog_core::customize::ConnectorClient + 'static,
+{
+    let backend = Arc::new(backend);
+    let mcp = Arc::new(mcp::Mcp {
+        credentials,
+        backend: backend.clone(),
+    });
+    base(&app)
+        .merge(customize::routes(backend))
+        .merge(mcp::routes(mcp))
+        .with_state(app)
 }
 
 pub fn openapi_json() -> String {
@@ -90,6 +118,7 @@ pub fn openapi_json() -> String {
     doc.merge(session::Doc::openapi());
     doc.merge(value::Doc::openapi());
     doc.merge(live::Doc::openapi());
+    doc.merge(customize::Doc::openapi());
     doc.to_pretty_json()
         .unwrap_or_else(|error| unreachable!("the document serializes: {error}"))
 }

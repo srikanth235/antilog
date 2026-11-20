@@ -10,11 +10,11 @@ All target.
 - Give each outside system exactly one translator and stop its vocabulary there, because a second translator forks the meaning of a column.
 - Never reshape or pipe data. Build no transform and no pipeline: the customer prepares data in their own warehouse, because a transform layer makes Antilog responsible for data quality it cannot see.
 - Never change a dataset version after it is created, and never let a holdout be granted to an agent (the control is absent), because a version that moves cannot be reproduced.
-- Register each connector's two credentials once, in the customer's own system, and keep neither value in Antilog, because the server must hold no access to customer data. The agent credential is read-only and leaves out the holdout; the judge credential is separate. Both are short-lived and minted per session.
+- Keep a connector's credential sealed (`Sealer`, bound to its row), open it only on the server for one call or check, and never send it to a session, a client, an event or a log, because a credential in a machine is read by whatever runs there. A connector is reached only through the session endpoint, over https at a public address, and each call is audited.
 - Let a session contact only the endpoints its experiment and environment allow, because a sandbox with open egress can send customer data anywhere.
-- Keep a skill pack to written text, never hold holdout data in one, and never let the judge read one, because a pack is advice to agents and an advice channel into the judge is a way to move what counts. Record the versions an experiment read.
+- Keep a skill pack to written text (size capped, no key in it), never hold holdout data in one, and never let the judge read one, because a pack is advice to agents and an advice channel into the judge is a way to move what counts. Record the versions an experiment read.
 - Never let a plugin mark, unmark or grant a dataset, because a bundle has no powers of its own.
-- Never connect the Antilog server to data or route dataset rows through it, because data is read only inside platform sandboxes.
+- Store none of what a connector returns: the server relays one call's answer to the session and keeps no rows, because the rest can carry customer data.
 - Make a git token push only to the session's own branch, short-lived and one per repo, because a token that reaches another branch can rewrite what the judge measured.
 - Run no loop on the server and keep no step machine. The agent drives. The only server-side state machines are the judge's queue and the budget meter, because a loop on the server decides things a person and an agent should.
 - Open a terminal, a file or a preview only in the agent's own sandbox, for a person with edit access (read-only for a viewer), and record that it was opened in the audit log, because a shell in a sandbox is a way into it. Store none of what passes through it.

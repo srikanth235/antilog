@@ -11,7 +11,7 @@
 | Spend well | Cost per trial is shown and derived from spend records, the Seal experiment card estimates a measurement before it is bought, agents read `history` before they propose, spawned sessions default to the lower-cost agent, and Where the spend went accounts for every dollar (target). |
 | No tie to one provider | Auto chooses by measured cost per win among the agents turned on and says why, a session can be handed off to another agent, and an agent that fails hands the session to a Continue on another agent? card. No agent is preselected by brand (target). |
 | Failure never shown as empty | A conversation, a tool output or a log that cannot be fetched says so. It is never shown as blank or as healthy (target). |
-| Least access | Antilog holds only what a runner needs: the customer's model keys, saved per organization per provider, sealed in Postgres and used only by the proxy (built). No cross-account role, no cloud keys, no connector admin secrets (target). |
+| Least access | Antilog holds only what a runner needs: the customer's model keys, saved per organization per provider, sealed in Postgres and used only by the proxy (built). No cross-account role, no cloud keys, no connector admin secrets. A connector's own credential is held sealed and never leaves the server. |
 
 ## How each is checked
 
@@ -31,6 +31,6 @@ Nothing on this branch checks them yet.
 
 **Failure never shown as empty.** Check: a test fetches an expired tool output and expects "expired", not an empty block; a platform error shows as failed.
 
-**Least access.** Check: no path stores a cloud key, a cross-account role or a connector admin secret, and no response, event or log carries a platform credential.
+**Least access.** Check: no path stores a cloud key, a cross-account role or a connector admin secret, and no response, event or log carries a platform or connector credential.
 
 **Any platform.** Check: one test suite every adapter must pass, run against a recorded fake in CI and against each real platform with the owner's go-ahead (see [../land/real-cloud.md](../land/real-cloud.md)).

@@ -23,7 +23,7 @@ Read the skill for **design**, not code: how to name tools, write descriptions a
 
 ## Connecting to other MCP servers
 
-That is a different thing: an MCP connector lets an agent's code read an outside system, and it is built in the session area. See [../../session/add-connector.md](../../session/add-connector.md) and [../../session/SKILL.md](../../session/SKILL.md). Antilog is the client there, and the credential rules of that page apply.
+That is a different thing: a connector is a remote MCP server the session endpoint calls for an agent, and it is built in the session area (`antilog-server/src/connectors.rs`). See [../../session/add-connector.md](../../session/add-connector.md) and [../../session/SKILL.md](../../session/SKILL.md). Antilog is the client there, and the credential rules of that page apply.
 
 ## Updating general/
 

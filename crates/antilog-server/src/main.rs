@@ -36,10 +36,11 @@ async fn main() -> anyhow::Result<()> {
         .await
         .with_context(|| format!("binding {listen}"))?;
     tracing::info!(%listen, "serving");
-    let router = api::router(
-        Arc::new(ServerDeps::on_fakes(store)),
-        api::auth::Settings::from_env(),
-    );
+    let app = Arc::new(api::auth::App {
+        deps: Arc::new(ServerDeps::on_fakes(store.clone())),
+        settings: api::auth::Settings::from_env(),
+    });
+    let router = api::router_with_reach(app, store, api::customize::Backend::from_env().await?);
     let guard = OriginGuard::from_env();
     let router = if guard.is_on() {
         router.layer(axum::middleware::from_fn(move |request, next| {

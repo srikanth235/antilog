@@ -11,7 +11,7 @@ use crate::store::{SessionChange, SessionStore};
 
 /// A card in front of a person, or approved by policy when the experiment follows it.
 /// The agent gets the answer in the tool's reply either way.
-pub(super) struct Card {
+pub(crate) struct Card {
     pub kind: CardKind,
     pub summary: String,
     pub payload: CardPayload,
@@ -19,7 +19,7 @@ pub(super) struct Card {
     pub needs_owner: bool,
 }
 
-pub(super) async fn ask<D: Deps>(
+pub(crate) async fn ask<D: Deps>(
     deps: &D,
     caller: &Caller,
     tool: &str,
@@ -81,7 +81,7 @@ pub(super) async fn follow<D: Deps>(deps: &D, caller: &Caller, approval: &Approv
     }
 }
 
-pub(super) async fn waiting<D: Deps>(
+pub(crate) async fn waiting<D: Deps>(
     deps: &D,
     caller: &Caller,
     approval: &Approval,

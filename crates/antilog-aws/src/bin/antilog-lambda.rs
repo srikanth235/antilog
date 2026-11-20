@@ -41,23 +41,36 @@ async fn main() -> anyhow::Result<()> {
         .acquire_timeout(Duration::from_secs(45))
         .connect_lazy(&database_url)
         .context("reading the database url")?;
-    let deps = Arc::new(
-        AwsDeps::from_env(PgStore::new(pool).sealed_by(&EnvSecrets::from_env()).await).await?,
-    );
+    let deps = Arc::new(AwsDeps::from_env(PgStore::new(pool)).await?);
 
-    lambda::serve(build_router(deps), OriginGuard::required_from_env())
-        .await
-        .map_err(|e| anyhow::anyhow!(e))
+    let backend = api::customize::Backend::from_env().await?;
+    lambda::serve(
+        build_router(deps, backend),
+        OriginGuard::required_from_env(),
+    )
+    .await
+    .map_err(|e| anyhow::anyhow!(e))
 }
 
 /// The server's routes plus the one operation the deploy needs: migrations, run once by
 /// the deploy workflow before traffic, never at start-up (each instance would race).
 /// Both are routes of the same `Router`; `/internal/` is closed to the internet.
-fn build_router(deps: Arc<AwsDeps>) -> Router {
+fn build_router(
+    deps: Arc<AwsDeps>,
+    backend: api::customize::Backend<antilog_server::connectors::HttpConnectors>,
+) -> Router {
     let operations = Router::new()
         .route("/internal/migrate", post(migrate))
         .with_state(deps.clone());
-    api::router(deps, api::auth::Settings::from_env()).merge(operations)
+    let app = Arc::new(api::auth::App {
+        deps,
+        settings: api::auth::Settings::from_env(),
+    });
+    // Session tokens are not stored yet, so the MCP endpoint refuses every token until the
+    // credentials store replaces this fake.
+    let credentials =
+        antilog_core::fakes::FakeCredentials::new(Arc::new(antilog_core::clock::SystemClock));
+    api::router_with_reach(app, credentials, backend).merge(operations)
 }
 
 async fn migrate(State(deps): State<Arc<AwsDeps>>) -> Result<&'static str, (StatusCode, String)> {

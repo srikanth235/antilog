@@ -15,7 +15,7 @@ Built: the permission matrix and project override (`antilog-core/tests/organizat
 
 **Permission.** A test per route that the role matrix is applied, driven from the route table in the OpenAPI document, so a new route without a check fails. A test that a project's role overrides the organization role for that project only, and that an experiment is never reachable through a project its caller has no role in.
 
-**Approval.** A test that each of the eight card kinds runs its tool only after approval, that a changed value model needs a project owner, that a viewer cannot approve, and that Add credential cannot be set to Allow.
+**Approval.** A test that each of the nine card kinds runs its tool only after approval, that a changed value model needs a project owner, that a viewer cannot approve, and that Add credential cannot be set to Allow.
 
 **Audit.** A test that every write route and every approval produces exactly one audit entry with an actor and a name, in the same transaction as the change, and that a denial is audited too.
 

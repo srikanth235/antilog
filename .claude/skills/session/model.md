@@ -38,35 +38,30 @@ Experiment rows, sessions and spend records are in the store ([../change/ledger-
 
 Spending well is the sum of these, each owned once: the estimate on the Seal card and patience are the judge's ([../judge/tools.md](../judge/tools.md)); `history` first and the lower-cost default for `spawn` are in [tools.md](tools.md) and [prompts.md](prompts.md).
 
-## Connectors and data
+## Connectors, skill packs and plugins
+
+What an agent can reach beyond its machine ([docs/V0.md](../../../docs/V0.md)).
 
 | Object | Means | Not |
 | --- | --- | --- |
-| connector | A data system or MCP server an agent's code may read: Snowflake, Databricks, DynamoDB, BigQuery, Postgres, Amazon S3, any MCP server. It holds two credentials and the datasets under it, with one translator for its system. Status: Connected, Reconnect, Not checked. The code host is not a connector. Steps in [add-connector.md](add-connector.md) | a dataset, a cloud account |
-| dataset | A named table or file set under one connector. Antilog records its id, versions, size and marking, never rows | a connector, a query |
+| connector | A remote MCP server, added in Customize, Connectors with a URL and an optional credential. The server calls it for a session, so the credential never reaches a machine. Each of its tools is On, Off or Ask first. Status: Connected, Reconnect, Not checked. The code host is not a connector. Steps in [add-connector.md](add-connector.md) | a data system, a cloud account |
+| tool mode | On, Off or Ask first, per tool of a connector. Ask first raises a card and one approval pays for one call | a role |
+| sealed credential | A connector's credential, encrypted with the master key and bound to its row. Opened on the server for one call; never returned by a route | a session secret |
+| session endpoint | `/mcp/sessions/{id}`: the one MCP endpoint of a session, with a bearer token for `Purpose::Mcp`. Serves the Antilog tools and the switched-on connectors' tools | a connector |
+| skill pack | A versioned `SKILL.md` folder of written text, immutable per version. Screen word: Skill, in Customize, Skills. An experiment selects packs, each pinned to a version; OpenCode loads one on demand; the receipt lists the versions. Agents only: the judge never reads one. Steps in [add-skill-pack.md](add-skill-pack.md) | a file in `.claude/skills/`, a plugin |
+| plugin | An Antilog bundle (a manifest with skills, connectors and evaluation templates). Adding one unpacks it into those parts, each governed as usual; it has no powers of its own. Removing one asks whether to keep each part, and a part in use is never removed | a connector, a harness plugin |
+
+## Datasets and the holdout
+
+The judge owns these words ([../judge/model.md](../judge/model.md)). The earlier design hung them under data connectors with an agent credential and a judge credential. That design is not built, and in v0 a connector is a remote MCP server that holds no datasets; where evaluation data lives and how the holdout is kept from agents is for the judge pages to settle.
+
+| Object | Means | Not |
+| --- | --- | --- |
+| dataset | A named table or file set an experiment reads. Antilog records its id, versions, size and marking, never rows | a connector, a query |
 | dataset version | One state of a dataset, with an id and a date; it never changes. A virtual dataset points at data left in place, pinned by an as-of time in the version id | latest, an editable snapshot |
 | marking | A label that limits who may read a dataset. Holdout is the only one | a search tag |
-| holdout | A marking: only the judge's credential reaches it. Enforced by the credentials; no control grants it to an agent (the control is absent, not disabled). Shown as "Restricted to the judge" | a split an agent can see |
-| agent credential | Read-only on the views the person lists, holdout excluded | a write credential |
-| judge credential | A separate read-only credential that also covers the holdout. No agent ever holds it | the agent credential |
-| credential reference | Antilog's record that a credential exists in a platform's store: id, connector, holder (agent or judge), who approved it. Never the value | the secret |
+| holdout | A marking: evaluation data only the judge can read. No control grants it to an agent (the control is absent, not disabled). Shown as "Restricted to the judge" | a split an agent can see |
 
-| | Agent credential | Judge credential |
-| --- | --- | --- |
-| Kept in | The platform's credential store | The judge platform's credential store |
-| Reaches a session as | A short-lived credential minted for that session | A short-lived credential minted for that judge sandbox |
-| Held by | Agents | The judge sandbox only |
-
-- Antilog keeps neither value. The customer makes both with the connector's recipe; Antilog holds no connector admin secret.
-- The server never reads data. It stores ids, versions, sizes, markings, status and who added what. Checks run in the session's machine.
-- A connector that is not Connected shows its datasets as "Not checked", never empty, and names the experiments that cannot measure until it is fixed.
-
-## Skill packs and plugins
-
-| Object | Means | Not |
-| --- | --- | --- |
-| skill pack | Versioned written know-how agents read before they propose changes ("Postgres query tuning"). Screen word: Skill, in Customize, Skills. An experiment selects packs and records the versions read. Agents only: the judge never reads one and a pack never holds holdout data. Steps in [add-skill-pack.md](add-skill-pack.md) | a dataset, a file in `.claude/skills/`, a plugin |
-| plugin | A bundle that adds evaluations, skill packs, suggested connectors and recommended agents under their own kinds. No powers of its own: it can never mark, unmark or grant a dataset | a connector, an agent |
 
 ## What the server stores
 
@@ -76,7 +71,7 @@ The server keeps a ledger of a session. It runs no loop. A person can talk or in
 | --- | --- |
 | The conversation: what people and agents said ([../product/rulings.md](../product/rulings.md)); built as `session_events`, read by `GET /sessions/{id}/events` | Tool output |
 | Tool call names (built, in the conversation) and card states | File contents, diffs |
-| Commit ids, dataset ids and versions, connector status | Data |
+| Commit ids, skill pack versions, connector status | Data |
 | Measurements | Raw logs |
 | Spend and audit rows | |
 

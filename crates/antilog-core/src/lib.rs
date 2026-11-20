@@ -7,6 +7,7 @@ pub mod budget;
 pub mod clock;
 pub mod code_host;
 pub mod credentials;
+pub mod customize;
 pub mod delivery;
 pub mod deps;
 pub mod evaluations;

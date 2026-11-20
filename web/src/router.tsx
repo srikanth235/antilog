@@ -11,9 +11,18 @@ import { ApiFailure, api, unwrap } from "./api/client";
 import { useLiveUpdates } from "./api/live";
 import { keys, useMe } from "./api/queries";
 import { TipProvider } from "./components/tooltip/Tooltip";
+import { AddConnector } from "./features/customize/AddConnector";
 import { AddEvaluation } from "./features/customize/AddEvaluation";
+import { AddPlugin } from "./features/customize/AddPlugin";
+import { AddSkill } from "./features/customize/AddSkill";
+import { ConnectorDetail } from "./features/customize/ConnectorDetail";
+import { Connectors } from "./features/customize/Connectors";
 import { EvaluationDetail } from "./features/customize/EvaluationDetail";
 import { Evaluations } from "./features/customize/Evaluations";
+import { PluginDetail } from "./features/customize/PluginDetail";
+import { Plugins } from "./features/customize/Plugins";
+import { SkillDetail } from "./features/customize/SkillDetail";
+import { Skills } from "./features/customize/Skills";
 import { Experiment } from "./features/experiment/Experiment";
 import { ExperimentDetail } from "./features/experiment/ExperimentDetail";
 import type { Panel } from "./features/experiment/Header";
@@ -272,6 +281,97 @@ const evaluationDetail = createRoute({
   },
 });
 
+const skills = createRoute({
+  getParentRoute: () => app,
+  path: "/customize/skills",
+  component: () => (
+    <Scroll>
+      <Skills />
+    </Scroll>
+  ),
+});
+const addSkill = createRoute({
+  getParentRoute: () => app,
+  path: "/customize/skills/new",
+  component: () => (
+    <Scroll>
+      <AddSkill />
+    </Scroll>
+  ),
+});
+const skillDetail = createRoute({
+  getParentRoute: () => app,
+  path: "/customize/skills/$name",
+  component: function SkillPage() {
+    const { name } = skillDetail.useParams();
+    return (
+      <Scroll>
+        <SkillDetail name={name} />
+      </Scroll>
+    );
+  },
+});
+const connectors = createRoute({
+  getParentRoute: () => app,
+  path: "/customize/connectors",
+  component: () => (
+    <Scroll>
+      <Connectors />
+    </Scroll>
+  ),
+});
+const addConnector = createRoute({
+  getParentRoute: () => app,
+  path: "/customize/connectors/new",
+  component: () => (
+    <Scroll>
+      <AddConnector />
+    </Scroll>
+  ),
+});
+const connectorDetail = createRoute({
+  getParentRoute: () => app,
+  path: "/customize/connectors/$id",
+  component: function ConnectorPage() {
+    const { id } = connectorDetail.useParams();
+    return (
+      <Scroll>
+        <ConnectorDetail id={id} />
+      </Scroll>
+    );
+  },
+});
+const plugins = createRoute({
+  getParentRoute: () => app,
+  path: "/customize/plugins",
+  component: () => (
+    <Scroll>
+      <Plugins />
+    </Scroll>
+  ),
+});
+const addPlugin = createRoute({
+  getParentRoute: () => app,
+  path: "/customize/plugins/new",
+  component: () => (
+    <Scroll>
+      <AddPlugin />
+    </Scroll>
+  ),
+});
+const pluginDetail = createRoute({
+  getParentRoute: () => app,
+  path: "/customize/plugins/$id",
+  component: function PluginPage() {
+    const { id } = pluginDetail.useParams();
+    return (
+      <Scroll>
+        <PluginDetail id={id} />
+      </Scroll>
+    );
+  },
+});
+
 const settings = createRoute({
   getParentRoute: () => app,
   path: "/settings/$section",
@@ -306,6 +406,15 @@ const tree = root.addChildren([
     evaluations,
     addEvaluation,
     evaluationDetail,
+    skills,
+    addSkill,
+    skillDetail,
+    connectors,
+    addConnector,
+    connectorDetail,
+    plugins,
+    addPlugin,
+    pluginDetail,
     settings,
   ]),
 ]);

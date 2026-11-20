@@ -2,36 +2,31 @@ import { Tabs as Base } from "@base-ui/react/tabs";
 import { Link } from "@tanstack/react-router";
 import { w } from "../../words";
 
-/** Each tab is a URL. Only Evaluations is in the first release; the rest say so. */
-export function Tabs() {
-  const later = [
-    w.customize.skills,
-    w.customize.connectors,
-    w.customize.agents,
-    w.customize.plugins,
-  ];
+export type Tab = "evaluations" | "skills" | "connectors" | "plugins";
+
+/** Each tab is a URL. Agents is not in the first release and says so. */
+export function Tabs({ active }: { active: Tab }) {
+  const tab = (value: Tab, to: string, label: string) => (
+    <Base.Tab
+      key={value}
+      value={value}
+      className={value === active ? "ptab on" : "ptab"}
+      nativeButton={false}
+      render={<Link to={to} />}
+    >
+      {label}
+    </Base.Tab>
+  );
   return (
-    <Base.Root value="evaluations">
+    <Base.Root value={active}>
       <Base.List className="ctabs" aria-label={w.customize.tabs}>
-        <Base.Tab
-          value="evaluations"
-          className="ptab on"
-          nativeButton={false}
-          render={<Link to="/customize/evaluations" />}
-        >
-          {w.customize.evaluations}
+        {tab("evaluations", "/customize/evaluations", w.customize.evaluations)}
+        {tab("skills", "/customize/skills", w.customize.skills)}
+        {tab("connectors", "/customize/connectors", w.customize.connectors)}
+        <Base.Tab value="agents" className="ptab" disabled title={w.customize.laterTabs}>
+          {w.customize.agents}
         </Base.Tab>
-        {later.map((label) => (
-          <Base.Tab
-            key={label}
-            value={label}
-            className="ptab"
-            disabled
-            title={w.customize.laterTabs}
-          >
-            {label}
-          </Base.Tab>
-        ))}
+        {tab("plugins", "/customize/plugins", w.customize.plugins)}
       </Base.List>
     </Base.Root>
   );

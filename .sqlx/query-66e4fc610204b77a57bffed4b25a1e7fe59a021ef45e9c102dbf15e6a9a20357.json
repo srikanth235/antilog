@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update skill_versions set plugin_id = null where organization_id = $1 and plugin_id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "66e4fc610204b77a57bffed4b25a1e7fe59a021ef45e9c102dbf15e6a9a20357"
+}
