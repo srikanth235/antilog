@@ -85,6 +85,14 @@ pub trait RunnerStore {
         now: i64,
     ) -> impl Future<Output = Result<bool, StoreError>> + Send;
 
+    /// Adds a repo to the session's seed, once, so a later claim or resume clones it. False when
+    /// the seed had it already.
+    fn add_seed_repo(
+        &self,
+        session: SessionId,
+        repo: &str,
+    ) -> impl Future<Output = Result<bool, StoreError>> + Send;
+
     /// A queue entry for the session's holder. Commands are delivered once, oldest first.
     fn push_command(
         &self,

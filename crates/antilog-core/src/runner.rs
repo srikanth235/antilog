@@ -112,8 +112,16 @@ pub fn opencode_config(
             "headers": {"Authorization": format!("Bearer {mcp_token}")},
         }},
         "skills": {"paths": ["/opt/antilog/skills"]},
-        "permission": {"bash": "ask", "edit": "allow"},
+        "permission": {"bash": "allow", "edit": "allow"},
     })
+}
+
+fn repo_spec(settings: &Settings, name: &str) -> RepoSpec {
+    RepoSpec {
+        name: name.to_owned(),
+        url: format!("{}{name}", settings.clone_base),
+        token: None,
+    }
 }
 
 async fn spec<D: Deps>(
@@ -159,11 +167,7 @@ async fn spec<D: Deps>(
             .seed
             .repos
             .iter()
-            .map(|name| RepoSpec {
-                name: name.clone(),
-                url: format!("{}{name}", settings.clone_base),
-                token: None,
-            })
+            .map(|name| repo_spec(settings, name))
             .collect(),
         environment,
         skills,
@@ -221,7 +225,13 @@ pub async fn poll<D: Deps>(
     {
         claims.push(spec(deps, settings, &machine).await?);
     }
-    let commands = store.take_commands(&request.runner).await?;
+    let mut commands = store.take_commands(&request.runner).await?;
+    // The queue holds only the name of an attached repo; where to clone it from is the server's.
+    for envelope in &mut commands {
+        if let Command::AttachRepo { repo } = &mut envelope.command {
+            *repo = repo_spec(settings, &repo.name);
+        }
+    }
     Ok(PollResponse {
         claims,
         commands,

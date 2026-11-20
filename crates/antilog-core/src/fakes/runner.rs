@@ -247,6 +247,16 @@ impl RunnerStore for FakeStore {
         Ok(true)
     }
 
+    async fn add_seed_repo(&self, session: SessionId, repo: &str) -> Result<bool, StoreError> {
+        let mut state = locked(&self.runner);
+        let row = state.row(session).ok_or(StoreError::NotFound)?;
+        if row.machine.seed.repos.iter().any(|name| name == repo) {
+            return Ok(false);
+        }
+        row.machine.seed.repos.push(repo.to_owned());
+        Ok(true)
+    }
+
     async fn wake_machine(&self, session: SessionId, _now: i64) -> Result<bool, StoreError> {
         let mut state = locked(&self.runner);
         let resume = state.exports.contains_key(&session);

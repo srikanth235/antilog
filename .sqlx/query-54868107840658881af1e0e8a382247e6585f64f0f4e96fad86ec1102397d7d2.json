@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update machines set seed = $2 where session_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "54868107840658881af1e0e8a382247e6585f64f0f4e96fad86ec1102397d7d2"
+}

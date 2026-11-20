@@ -105,6 +105,8 @@ pub struct RunSpec {
 pub enum Command {
     /// A person's message for the agent.
     Message { text: String },
+    /// A repo a person approved: clone it into the live machine if it is not there yet.
+    AttachRepo { repo: RepoSpec },
     /// A person's answer to a permission the agent asked.
     Approval { permission: String, reply: Reply },
     /// Interrupt the agent's current turn.

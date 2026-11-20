@@ -736,6 +736,25 @@ pub async fn runner_suite<S: Store>(store: &S) {
     store.drop_command(run_id).await.expect("drop");
     assert_eq!(store.result(run_id).await.expect("read"), None);
 
+    // An approved repo joins the seed once.
+    assert!(
+        store
+            .add_seed_repo(first.id, "acme/lib")
+            .await
+            .expect("add")
+    );
+    assert!(
+        !store
+            .add_seed_repo(first.id, "acme/lib")
+            .await
+            .expect("again")
+    );
+    let seeded = store.machine(first.id).await.expect("read").expect("row");
+    assert_eq!(
+        seeded.seed.repos.last().map(String::as_str),
+        Some("acme/lib")
+    );
+
     // Idle, then let go with an export; a later message queues it again to resume.
     assert!(
         store

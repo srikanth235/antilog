@@ -448,7 +448,7 @@ async fn decide<D: Deps + 'static>(
     let decided =
         approval::decide(app.store(), &authed.who, app.now(), id, decide.decision).await?;
     if let Some(session) = decided.session_id {
-        // The decision stands even when applying it fails now; the agent is not told yet.
+        // The decision stands even when applying it fails now. Settling also tells the agent.
         if let Err(error) =
             antilog_core::session::settle(&*app.deps, decided.organization_id, session).await
         {

@@ -6,8 +6,9 @@ use antilog_core::fakes::{FakeCodeHost, FakeDeps, FakeMachine, Profile};
 use antilog_core::judge::fixtures::definition;
 use antilog_core::seed::{Seed, T0, experiment};
 use antilog_core::session::{self, NewSession};
+use antilog_core::store::RunnerStore;
 use antilog_core::store::{ApprovalStore, OrganizationStore, SessionStore};
-use antilog_types::{ApprovalStatus, Decision, SessionStatus};
+use antilog_types::{ApprovalStatus, Command, Decision, SessionStatus};
 use common::Agent;
 use serde_json::{Value, json};
 
@@ -336,6 +337,67 @@ async fn a_spent_budget_stops_new_sessions_and_measurements() {
     )
     .await;
     assert!(matches!(again, Err(session::SessionError::Budget(_))));
+}
+
+#[tokio::test]
+async fn a_decided_card_reaches_the_agent_once_and_an_approved_repo_reaches_the_machine() {
+    let (deps, seed) = world(1_000).await;
+    let agent = lead(&deps, &seed).await;
+    let (org, id) = (seed.organization.id, agent.session.id);
+    agent.call("a", "attach_repo", json!({"repo": "acme/lib"}));
+    agent.step(&deps).await;
+    // A runner holds the machine: the repo is cloned now.
+    let held = deps.store.claim("host", 1, T0, T0 + 60_000).await.unwrap();
+    assert_eq!(held.len(), 1);
+    let card = deps.store.approvals(org, seed.experiment.id).await.unwrap()[0].id;
+    let entry = antilog_types::AuditEntry::new(
+        org,
+        Some(seed.owner.id),
+        "card.approve",
+        card,
+        antilog_types::AuditOutcome::Approved,
+        T0,
+    );
+    deps.store
+        .decide_approval(org, card, Decision::Approve, seed.owner.id, T0, &entry)
+        .await
+        .unwrap();
+    // Settling twice, as the decision and the agent's next call both do, tells it once.
+    for _ in 0..2 {
+        session::settle(&deps, org, id).await.unwrap();
+    }
+    let machine = deps.store.machine(id).await.unwrap().unwrap();
+    assert_eq!(machine.seed.repos, ["acme/lib"], "a later claim clones it");
+    let commands = deps.store.take_commands("host").await.unwrap();
+    let attach: Vec<_> = commands
+        .iter()
+        .filter_map(|e| match &e.command {
+            Command::AttachRepo { repo } => Some(repo.name.as_str()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(attach, ["acme/lib"]);
+    let messages: Vec<_> = commands
+        .iter()
+        .filter_map(|e| match &e.command {
+            Command::Message { text } if text.starts_with("Approved") => Some(text.as_str()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(messages.len(), 1, "one message wakes the agent");
+    assert!(messages[0].contains("being cloned into the machine's working folder as lib"));
+    // The conversation has it as a note from Antilog, not as the person's words.
+    let page = session::transcript(&deps.store, org, id, None, None)
+        .await
+        .unwrap();
+    let notes: Vec<_> = page
+        .events
+        .iter()
+        .filter(|e| e.text.starts_with("Approved"))
+        .collect();
+    assert_eq!(notes.len(), 1);
+    assert_eq!(notes[0].kind, antilog_types::EventKind::Agent);
+    assert_eq!(notes[0].member_id, None);
 }
 
 #[tokio::test]

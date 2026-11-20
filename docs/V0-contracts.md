@@ -63,7 +63,7 @@ Built: `crates/antilog-proxy`, one binary on one listener (`ANTILOG_PROXY_LISTEN
   },
   "mcp": {"antilog": {"type": "remote", "url": "<server>/mcp/sessions/<id>", "headers": {"Authorization": "Bearer <mcp token>"}}},
   "skills": {"paths": ["/opt/antilog/skills"]},
-  "permission": {"bash": "ask", "edit": "allow"}
+  "permission": {"bash": "allow", "edit": "allow"}
 }
 ```
 
@@ -88,7 +88,9 @@ Base and trial runs are interleaved by the judge (`judge/paired.rs`). The number
 - A machine row is its own table (`machines`), not columns on `sessions`. Commands wait in `machine_commands` until a runner takes them; a run's outcome is stored on its command; an export is replaced on each release (`machine_exports`).
 - `POST /runner/poll` also takes `held` (the sessions the runner runs now, answered by `lost`) and `done` (command ids it finished). Release outcomes `idle`, `done` and `failed` leave the machine `released`, `done` and `failed`.
 - `GET /runner/sessions/{id}/export` serves the last export for `opencode import`. `GET /runner/sessions/{id}/skills/{name}/{version}` serves the skill versions the session's experiment selected (Customize's `session_skill`; 404 for any other); a claim's skills list is that selection; a pack is JSON, `{files: [{path, content}]}` (session C's `SkillVersion`), written to `/opt/antilog/skills/<name>/<path>`; a path that escapes the folder skips the pack.
-- An OpenCode permission ask becomes an Ask first card (`ask_first`), added to the card kinds.
+- An OpenCode permission ask becomes an Ask first card (`ask_first`), added to the card kinds. Bash and edit are allowed in the config (the machine is isolated), so only another tool asks.
+- A decided card reaches the agent: `settle` records its outcome as an agent-kind note in the conversation (key `card:<approval id>`, the same kind as the machine-time note) and queues a `message` command with the same words, waking a released machine first. Both callers of `settle` (a person's decision, policy approval) therefore tell it, once, because `mark_applied` guards each card.
+- An approved Attach repo adds the repo to the machine's seed (`RunnerStore::add_seed_repo`, so a later claim or resume clones it) and, while a runner holds the machine, queues `attach_repo`. The queue holds only the repo name; `POST /runner/poll` fills in the clone address from the server's clone base. The runner clones it beside the others if it is not there; a failed clone is logged, not fatal.
 - The judge's data (`ANTILOG_DATA_KIND`, `ANTILOG_DATASET_ID`, `ANTILOG_DATASET_VERSION`) is named to the command; delivering the rows is not built.
 - `--pure` stops a repo's plugin code from running; `OPENCODE_DISABLE_PROJECT_CONFIG` also stops its MCP servers, skills and agents. Neither is needed to keep a repo from overriding the provider, permissions or autoupdate: the managed config wins. See [../.claude/skills/session/runner.md](../.claude/skills/session/runner.md).
 

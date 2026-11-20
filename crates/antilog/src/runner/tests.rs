@@ -308,6 +308,13 @@ async fn backend(proxy: &str, model: &str) -> (Arc<FakeDeps>, Seed, String, Path
         "git init -q . && git config user.email a@b && git config user.name n && echo base > file.txt && git add . && git commit -qm base",
     );
 
+    let lib = temp.join("origin/acme/lib");
+    std::fs::create_dir_all(&lib).unwrap();
+    sh(
+        &lib,
+        "git init -q . && git config user.email a@b && git config user.name n && echo lib > lib.txt && git add . && git commit -qm lib",
+    );
+
     let deps = Arc::new(FakeDeps::new(
         FakeMachine::default(),
         FakeCodeHost::default(),
@@ -457,7 +464,7 @@ async fn a_session_runs_from_the_queue_through_opencode_and_back() {
     assert_eq!(config["autoupdate"], false);
     assert_eq!(
         config["permission"],
-        json!({"bash": "ask", "edit": "allow"})
+        json!({"bash": "allow", "edit": "allow"})
     );
     assert_eq!(
         config["provider"]["anthropic"]["options"]["baseURL"],
@@ -589,6 +596,31 @@ async fn a_session_runs_from_the_queue_through_opencode_and_back() {
         (locked(&world.shared).aborts == 1).then_some(())
     })
     .await;
+
+    // An approved repo is cloned into the live machine, beside the first one. The queue holds
+    // only its name; the server says where it is cloned from.
+    world
+        .deps
+        .store
+        .push_command(
+            org,
+            session.id,
+            &Command::AttachRepo {
+                repo: antilog_types::RepoSpec {
+                    name: "acme/lib".into(),
+                    url: String::new(),
+                    token: None,
+                },
+            },
+            3,
+        )
+        .await
+        .unwrap();
+    let lib = world
+        .workdir
+        .join(session.id.to_string())
+        .join("lib/lib.txt");
+    until("the attached repo", async || lib.exists().then_some(())).await;
 
     // The judge's command runs in the machine on the commit asked for, and its output comes back.
     let repo = world.workdir.join(session.id.to_string()).join("api");

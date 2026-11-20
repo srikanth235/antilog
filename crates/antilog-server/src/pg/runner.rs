@@ -215,6 +215,34 @@ impl RunnerStore for PgStore {
         Ok(changed == 1)
     }
 
+    async fn add_seed_repo(&self, session: SessionId, repo: &str) -> Result<bool, StoreError> {
+        let mut tx = self.runner().await?;
+        let row = sqlx::query!(
+            "select seed from machines where session_id = $1 for update",
+            session.as_uuid(),
+        )
+        .fetch_optional(&mut *tx)
+        .await
+        .map_err(map)?
+        .ok_or(StoreError::NotFound)?;
+        let mut seed: Seed = serde_json::from_str(&row.seed)
+            .map_err(|error| StoreError::Unavailable(Box::new(error)))?;
+        if seed.repos.iter().any(|name| name == repo) {
+            return Ok(false);
+        }
+        seed.repos.push(repo.to_owned());
+        sqlx::query!(
+            "update machines set seed = $2 where session_id = $1",
+            session.as_uuid(),
+            json(&seed)?,
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(map)?;
+        tx.commit().await.map_err(map)?;
+        Ok(true)
+    }
+
     async fn wake_machine(&self, session: SessionId, now: i64) -> Result<bool, StoreError> {
         let mut tx = self.runner().await?;
         let changed = sqlx::query!(

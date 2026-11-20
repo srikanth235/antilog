@@ -238,6 +238,21 @@ impl<S: Sandbox> Live<S> {
                     .prompt(&self.oc_session, &text, &self.spec.model)
                     .await?;
             }
+            Command::AttachRepo { repo } => {
+                // A failed clone is not the session's end: the agent can still work without it.
+                let only = SessionSpec {
+                    repos: vec![repo.clone()],
+                    ..self.spec.clone()
+                };
+                match clone_all(&*self.machine, &self.machine.paths().work.clone(), &only).await {
+                    Ok(()) => {
+                        if !self.spec.repos.iter().any(|have| have.name == repo.name) {
+                            self.spec.repos.push(repo);
+                        }
+                    }
+                    Err(error) => tracing::warn!(%error, "could not clone an attached repo"),
+                }
+            }
             Command::Approval { permission, reply } => {
                 self.api.reply(&permission, reply).await?;
             }
