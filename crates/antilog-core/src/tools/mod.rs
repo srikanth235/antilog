@@ -1,5 +1,6 @@
 mod judge;
 mod setup;
+mod shape;
 
 use std::future::Future;
 
@@ -163,9 +164,18 @@ impl<D: Deps> ToolHost for Toolbox<'_, D> {
 pub(crate) type Done = Result<(Value, Option<Ticket>), ToolError>;
 
 pub(crate) fn input<T: serde::de::DeserializeOwned>(value: Value) -> Result<T, ToolError> {
-    serde_json::from_value(value).map_err(|error| {
+    input_for("", value)
+}
+
+/// Like `input`; for `seal` and `measure` a parse error also names the failing field and its shape.
+pub(crate) fn input_for<T: serde::de::DeserializeOwned>(
+    tool: &str,
+    value: Value,
+) -> Result<T, ToolError> {
+    serde_json::from_value(value.clone()).map_err(|error| {
         ToolError::new(format!(
-            "the input is wrong: {error}. Check the tool's input fields"
+            "the input is wrong: {}. Check the tool's input fields",
+            shape::explain(tool, &value, &error.to_string())
         ))
     })
 }
@@ -184,16 +194,16 @@ pub fn definitions() -> Vec<ToolDef> {
     vec![
         tool(
             "seal",
-            "Propose the experiment's definition (metric, evaluation, pinned commits, datasets, repeats). Runs the seal checks and puts a Seal experiment card in front of a person. Nothing is measured until it is sealed.",
+            shape::SEAL_DESCRIPTION,
             json!({"type":"object","properties":{
-                "definition":{"type":"object","description":"The experiment definition."},
-                "files":{"type":"array","description":"Protected files with their content hashes."},
-                "cheats":{"type":"array","description":"Planted cheats the evaluation must reject: {name, commits, changed}."}
+                "definition":{"type":"object","description":"The experiment definition: {metric, kind, evaluation, guardrails, data, repeats, quickCheck, patience, holdoutCap, valueModel, criteria}. See the tool description for a full example."},
+                "files":{"type":"array","description":"Protected files with their content hashes: [{repo, path, sha256}]."},
+                "cheats":{"type":"array","description":"Planted cheats the evaluation must reject, all four standard ones: [{name, commits: [{repo, sha}], changed: [[repo, path]]}]."}
             },"required":["definition"]}),
         ),
         tool(
             "measure",
-            "Measure a change. Returns a ticket at once; the judge's outcome arrives later as a message. Give one commit per repo changed and the Kept trial it started from (none: the baseline).",
+            shape::MEASURE_DESCRIPTION,
             json!({"type":"object","properties":{
                 "commits":commits,
                 "parent":{"type":"string","description":"A Kept trial id from history."},

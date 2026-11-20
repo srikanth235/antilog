@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
 use super::setup::{Card, ask, follow, waiting};
-use super::{Caller, Done, Ticket, ToolError, input};
+use super::{Caller, Done, Ticket, ToolError, input, input_for};
 use crate::code_host::CodeHost;
 use crate::deps::Deps;
 use crate::ids::uuid_of;
@@ -48,8 +48,8 @@ async fn latest<D: Deps>(
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct CheatIn {
-    name: String,
+pub(super) struct CheatIn {
+    pub(super) name: String,
     commits: Vec<CommitRef>,
     #[serde(default)]
     changed: Vec<(String, String)>,
@@ -57,12 +57,12 @@ struct CheatIn {
 
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-struct SealIn {
-    definition: Definition,
+pub(super) struct SealIn {
+    pub(super) definition: Definition,
     #[serde(default)]
-    files: Vec<ProtectedFile>,
+    pub(super) files: Vec<ProtectedFile>,
     #[serde(default)]
-    cheats: Vec<CheatIn>,
+    pub(super) cheats: Vec<CheatIn>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -83,7 +83,7 @@ fn planted(cheats: Vec<CheatIn>) -> Vec<PlantedCheat> {
 }
 
 pub(super) async fn seal<D: Deps>(deps: &D, caller: &Caller, value: Value) -> Done {
-    let proposal: SealIn = input(value)?;
+    let proposal: SealIn = input_for("seal", value)?;
     let version = latest(deps, caller.organization, caller.experiment)
         .await?
         .map_or(1, |s| s.version() + 1);
@@ -267,8 +267,8 @@ pub async fn seal_approved<D: Deps>(deps: &D, approval: &Approval) -> Result<u32
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
-struct MeasureIn {
-    commits: Vec<CommitRef>,
+pub(super) struct MeasureIn {
+    pub(super) commits: Vec<CommitRef>,
     hypothesis: String,
     parent: Option<TrialId>,
     version: Option<u32>,
@@ -276,7 +276,7 @@ struct MeasureIn {
 
 pub(super) async fn measure<D: Deps>(deps: &D, caller: &Caller, value: Value) -> Done {
     use crate::store::SessionStore as _;
-    let m: MeasureIn = input(value)?;
+    let m: MeasureIn = input_for("measure", value)?;
     if m.commits.is_empty() {
         return Err(ToolError::new("give one commit per repo changed"));
     }

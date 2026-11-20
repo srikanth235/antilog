@@ -84,6 +84,10 @@ The judge runs the sealed command through `SessionMachine::run`. A run on evalua
 
 Base and trial runs are interleaved by the judge (`judge/paired.rs`). The number comes from this line, never from the agent's report.
 
+## The `seal` and `measure` inputs (judge)
+
+The tool descriptions (`antilog-core/src/tools/shape.rs`) carry a complete, valid speed example, and a test parses it. Field names are camelCase, unknown fields are refused, and a protected path, repo pin, commit ref and dataset ref are objects (`{repo, glob}`, `{repo, commit}`, `{repo, sha}`, `{id, version}`), never strings. Usual values: `repeats` 5, `quickCheck` true, `patience` 6, `holdoutCap` 20, `criteria` 1, `valueModel` null, `direction` `minimize` or `maximize`. A parse error names the failing field and ends with a one-line example of its shape: "...The failing field is `definition.evaluation.protected[0]`; its shape is [{"repo":"app","glob":"bench.js"}]...". The path comes from a hand-written shape tree in `shape.rs` (no `serde_path_to_error`); a field added to `Definition` is added there too, and a test fails if the example stops parsing.
+
 ## As built (session A)
 
 - A machine row is its own table (`machines`), not columns on `sessions`. Commands wait in `machine_commands` until a runner takes them; a run's outcome is stored on its command; an export is replaced on each release (`machine_exports`).
