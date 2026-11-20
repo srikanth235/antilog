@@ -51,7 +51,7 @@ pub trait SessionCredentials: Send + Sync {
 - Routes `/anthropic/v1/*` (key in `x-api-key`) and `/openai/v1/*` (key in `Authorization: Bearer`). The proxy verifies the session token with `Purpose::Model`, swaps in the organization's key for that provider and forwards without translation.
 - Spend is booked only by the proxy, from the usage in each response, including the last event of a stream. OpenCode's own counts are not authoritative: an aborted turn reports zero.
 - Before forwarding, the proxy checks the experiment's remaining budget. Once it is spent, it refuses with an error the agent can read.
-- Egress: a CONNECT forward proxy with the environment's allowlist, without decrypting traffic. Attaching network secrets needs decryption and is left for after v0.
+- Egress: a CONNECT forward proxy with the environment's allowlist, without decrypting traffic. Network secrets need decryption and come after v0; in v0 a service key is a plain environment variable (owner, 20 Nov).
 
 ## OpenCode config the server generates
 
