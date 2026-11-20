@@ -130,7 +130,7 @@ pub struct ZenPrices {
 
 #[derive(Deserialize)]
 struct ZenList {
-    data: Vec<ZenModel>,
+    data: Vec<serde_json::Value>,
 }
 
 #[derive(Deserialize)]
@@ -159,7 +159,24 @@ struct ZenSide {
 #[derive(Deserialize)]
 struct ZenCache {
     read: Option<f64>,
-    write: Option<f64>,
+    write: Option<ZenWrite>,
+}
+
+/// A cache write is one price, or one per time to live. The dearest counts.
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum ZenWrite {
+    One(f64),
+    ByTtl(BTreeMap<String, f64>),
+}
+
+impl ZenWrite {
+    fn dollars(&self) -> f64 {
+        match self {
+            Self::One(price) => *price,
+            Self::ByTtl(prices) => prices.values().copied().fold(0.0, f64::max),
+        }
+    }
 }
 
 /// US dollars per million tokens to thousandths of a dollar, rounded up.
@@ -176,6 +193,8 @@ fn parse_zen(body: &[u8]) -> Result<BTreeMap<String, Price>, serde_json::Error> 
     Ok(list
         .data
         .into_iter()
+        // A model whose entry does not parse is left out, so it is unknown, not the whole list.
+        .filter_map(|model| serde_json::from_value::<ZenModel>(model).ok())
         .filter_map(|model| {
             let text = model.cost?.text?;
             let input = thousandths(text.input.price);
@@ -187,7 +206,7 @@ fn parse_zen(body: &[u8]) -> Result<BTreeMap<String, Price>, serde_json::Error> 
                 .map_or(input, thousandths);
             let cache_write = cache
                 .as_ref()
-                .and_then(|c| c.write)
+                .and_then(|c| c.write.as_ref().map(ZenWrite::dollars))
                 .map_or(input, thousandths);
             Some((
                 model.id,
@@ -393,6 +412,16 @@ mod tests {
             }
         );
         assert_eq!(table["free"].output, 0);
+    }
+
+    #[test]
+    fn a_cache_write_price_per_time_to_live_takes_the_dearest() {
+        let body = br#"{"data":[
+            {"id":"t","cost":{"text":{"input":{"price":0.2,"cache":{"read":0.02,"write":{"30m":0.25,"12h":0.5}}},"output":{"price":1.2}}}},
+            {"id":"odd","cost":"unexpected"}]}"#;
+        let table = parse_zen(body).unwrap();
+        assert_eq!(table["t"].cache_write, 500);
+        assert!(!table.contains_key("odd"));
     }
 
     #[test]
