@@ -4,10 +4,3 @@ node_modules/
 .env
 .env.*
 !.env.example
-
-# OpenTofu
-.terraform/
-*.tfstate
-*.tfstate.*
-tfplan
-deploy/tofu/**/.build/

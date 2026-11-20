@@ -6,7 +6,6 @@ use antilog_core::clock::SystemClock;
 use antilog_core::fakes::FakeCredentials;
 use antilog_server::api;
 use antilog_server::deps::ServerDeps;
-use antilog_server::origin::OriginGuard;
 use antilog_server::pg::PgStore;
 use anyhow::Context;
 use sqlx::postgres::PgPoolOptions;
@@ -46,13 +45,5 @@ async fn main() -> anyhow::Result<()> {
         FakeCredentials::new(Arc::new(SystemClock)),
         api::customize::Backend::from_env().await?,
     );
-    let guard = OriginGuard::from_env();
-    let router = if guard.is_on() {
-        router.layer(axum::middleware::from_fn(move |request, next| {
-            guard.clone().layer(request, next)
-        }))
-    } else {
-        router
-    };
     axum::serve(listener, router).await.context("serving")
 }
