@@ -27,7 +27,7 @@ Every light board, by canvas row (each has a generated `XDark` twin except the r
 | 4 Experiment and receipts | `ExperimentDetail`, `Receipt` |
 | 5 Search | `SearchStart`, `Search`, `SearchEmpty` |
 | 6 Projects and Report | `Projects`, `Project`, `ProjectEmpty`, `Report`, `AddValueModel` |
-| 6 Customize | `Evaluations`, `EvaluationsEmpty`, `EvaluationsDiscover`, `EvaluationDetail`, `AddEvaluation`, `Skills`, `SkillsEmpty`, `SkillsDiscover`, `SkillDetail`, `AddSkill`, `Connectors`, `ConnectorsEmpty`, `ConnectorsDiscover`, `ConnectorDetail`, `AddConnector`, `AddConnectorMcp`, `ConnectorError`, `DatasetHoldout`, `Agents`, `AgentsEmpty`, `AgentsDiscover`, `AgentDetail`, `AddAgent`, `Plugins`, `PluginsEmpty`, `PluginsDiscover`, `PluginDetail`, `AddPlugin` |
+| 6 Customize | `Evaluations`, `EvaluationsEmpty`, `EvaluationsDiscover`, `EvaluationDetail`, `AddEvaluation`, `Skills`, `SkillsEmpty`, `SkillDetail`, `AddSkill`, `Connectors`, `ConnectorsEmpty`, `ConnectorDetail`, `AddConnector`, `ConnectorError`, `ConnectorRemove`, `DatasetHoldout`, `Agents`, `AgentsEmpty`, `AgentsDiscover`, `AgentDetail`, `AddAgent`, `Plugins`, `PluginsEmpty`, `PluginDetail`, `AddPlugin`, `PluginRemove` |
 | 8 Agent platforms, approvals, budgets, connections | `SettingsPlatforms`, `SettingsPlatformsEmpty`, `SettingsPlatformsManaged`, `PlatformError`, `AddPlatform`, `SettingsBudgets`, `SettingsApprovals`, `SettingsConnections` |
 | 9 Organization | `SettingsProfile`, `SettingsAppearance`, `SettingsTokens`, `SettingsTokensEmpty`, `SettingsDevice`, `SettingsGeneral`, `SettingsMembers`, `SettingsSso`, `SettingsAudit`, `SettingsReadOnly` |
 | 10 Installed web app | `WebInstalled`, `WebNotification`, `WebOffline` |
