@@ -37,9 +37,8 @@ Lays the shared interface so the tracks can run in parallel.
 | B. Judge | [judge](../judge/SKILL.md) | Seal and seal checks; measure with paired runs; the bar (lower bound above zero at 1 − 0.05/k); the holdout; Kept; ed25519 receipts; deliver; Return and the Report |
 | C. Organization | [organization](../organization/SKILL.md) | Sign-in with GitHub and Google; roles; approvals and policy; budgets and the monthly cap; the audit log |
 | D. Session | [session](../session/SKILL.md) | The Antilog tools served to a session and by `antilog mcp`, setup tools, spend; the runner and the proxy ([docs/V0.md](../../../docs/V0.md)) come next |
-| E. AWS | [stack/aws](../stack/aws/antilog.md) | The Lambda entry (`lambda_http`, streaming), Secrets Manager, OpenTofu for Lambda, Aurora Serverless v2, S3 and CloudFront, Budgets |
 
-A and B start first; C and D follow once A's tables for their area exist. E builds against the traits and needs the gates only to deploy.
+A and B start first; C and D follow once A's tables for their area exist.
 
 ### F. Web app (after A–D's endpoints)
 

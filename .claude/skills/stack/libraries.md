@@ -42,7 +42,6 @@ Do not add a dependency for convenience. A new one is a product call: ask the ow
 | Receipt signing (ed25519), token and session hashes, constant-time compare (pure Rust) | `ed25519-dalek` / `sha2` / `subtle` | 3.0.0 / 0.11.1 / 2.6.1 |
 | Embedded web app | `rust-embed` | 8.14.0 |
 | AWS credentials (workload identity through the default chain) | `aws-config` | 1.13.2 |
-| Server on Lambda: serves the axum `Router` / runs the handler | `lambda_http` / `lambda_runtime` | 1.3.2 / 1.5.0 |
 | Foundry adapter sign-in (its REST API through `reqwest`; Azure has no Rust agents crate) | `azure_core` | 1.1.0 |
 | GitHub | `octocrab` | 0.54.9 |
 | Postgres connector (not needed by the target unless credential minting is ruled; the server never connects to data) | `tokio-postgres` | 0.7.18 |
@@ -103,8 +102,6 @@ A proposal, not yet built. The app is SwiftUI and macOS only; Windows and Linux 
 | Tool | Version |
 | --- | --- |
 | `cargo-chef` (Docker builds) | 0.1.78 |
-| `cargo-lambda` (builds and invokes the Lambda binary) | 1.9.2 |
-| OpenTofu (one module per cloud) | 1.13.9, with the `aws` provider `~> 6.73` |
 | cosign | 3.1.4 |
 | syft | 1.57.1 |
 

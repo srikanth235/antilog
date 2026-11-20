@@ -4,7 +4,6 @@ use std::sync::Arc;
 
 use antilog_server::api;
 use antilog_server::deps::ServerDeps;
-use antilog_server::origin::OriginGuard;
 use antilog_server::pg::PgStore;
 use anyhow::Context;
 use sqlx::postgres::PgPoolOptions;
@@ -41,13 +40,5 @@ async fn main() -> anyhow::Result<()> {
         settings: api::auth::Settings::from_env(),
     });
     let router = api::router_with_reach(app, store, api::customize::Backend::from_env().await?);
-    let guard = OriginGuard::from_env();
-    let router = if guard.is_on() {
-        router.layer(axum::middleware::from_fn(move |request, next| {
-            guard.clone().layer(request, next)
-        }))
-    } else {
-        router
-    };
     axum::serve(listener, router).await.context("serving")
 }
