@@ -50,6 +50,12 @@ enum Command {
         /// --exit-after-last-session) waits for its sessions to be let go before it stops them.
         #[arg(long, default_value_t = 30)]
         drain_grace_sec: u64,
+        /// The most disk one session's container may write, in GiB (0: no limit); defaults to
+        /// the ANTILOG_DISK_GB environment variable, then 20. Docker enforces it only where the
+        /// storage driver supports `--storage-opt size=`; elsewhere the runner says so once at
+        /// start and runs without it.
+        #[arg(long)]
+        disk_gb: Option<u64>,
         /// Seconds between polls.
         #[arg(long, default_value_t = 5)]
         poll_secs: u64,
@@ -88,6 +94,7 @@ async fn main() -> anyhow::Result<()> {
             opencode,
             exit_after_last_session,
             drain_grace_sec,
+            disk_gb,
             poll_secs,
             pure,
             disable_project_config,
@@ -108,6 +115,25 @@ async fn main() -> anyhow::Result<()> {
             let proxy_addr = proxy
                 .or_else(|| std::env::var("ANTILOG_PROXY_ADDR").ok())
                 .ok_or_else(|| anyhow::anyhow!("give --proxy or set ANTILOG_PROXY_ADDR"))?;
+            let disk_gb = match disk_gb {
+                Some(gb) => gb,
+                None => match std::env::var("ANTILOG_DISK_GB") {
+                    Ok(text) => text.trim().parse().map_err(|_| {
+                        anyhow::anyhow!("ANTILOG_DISK_GB is not a whole number of GiB")
+                    })?,
+                    Err(_) => 20,
+                },
+            };
+            let sandbox = runner::ContainerSandbox::new(
+                runner::Docker { binary: docker },
+                runner::ContainerConfig {
+                    image,
+                    proxy_addr,
+                    state_dir,
+                    disk_gb,
+                },
+            );
+            sandbox.probe_disk().await;
             runner::run(
                 config,
                 runner::Opencode {
@@ -115,14 +141,7 @@ async fn main() -> anyhow::Result<()> {
                     pure,
                     disable_project_config,
                 },
-                runner::ContainerSandbox::new(
-                    runner::Docker { binary: docker },
-                    runner::ContainerConfig {
-                        image,
-                        proxy_addr,
-                        state_dir,
-                    },
-                ),
+                sandbox,
             )
             .await
         }

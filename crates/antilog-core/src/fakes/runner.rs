@@ -6,11 +6,15 @@ use antilog_types::{
 use uuid::Uuid;
 
 use super::{FakeStore, locked};
-use crate::store::{RunnerStore, StoreError};
+use crate::store::{RUNNER_LOCK_LAPSE_MS, RunnerStore, StoreError};
 
 struct Row {
     machine: Machine,
     lease_until: i64,
+    /// When the current claim began.
+    claimed_at: i64,
+    /// The release for an over-long claim was sent.
+    expiring: bool,
 }
 
 struct Pending {
@@ -27,8 +31,8 @@ pub(super) struct State {
     machines: Vec<Row>,
     commands: Vec<Pending>,
     exports: HashMap<SessionId, String>,
-    /// The organization each runner is locked to.
-    locks: HashMap<String, OrganizationId>,
+    /// The organization each runner is locked to, and when it last polled.
+    locks: HashMap<String, (OrganizationId, i64)>,
 }
 
 impl State {
@@ -81,6 +85,8 @@ impl RunnerStore for FakeStore {
                 resume: false,
             },
             lease_until: 0,
+            claimed_at: 0,
+            expiring: false,
         });
         Ok(())
     }
@@ -104,35 +110,69 @@ impl RunnerStore for FakeStore {
             .filter(|row| row.status.is_active())
             .map(|row| row.id)
             .collect();
+        let caps: HashMap<OrganizationId, usize> = locked(&self.ledger)
+            .organizations
+            .iter()
+            .map(|row| (row.id, row.max_running_sessions as usize))
+            .collect();
         let mut state = locked(&self.runner);
         state.requeue_lapsed(now);
+        state
+            .locks
+            .retain(|_, (_, polled)| *polled >= now - RUNNER_LOCK_LAPSE_MS);
+        if let Some((_, polled)) = state.locks.get_mut(holder) {
+            *polled = now;
+        }
         if limit == 0 {
             return Ok(Vec::new());
         }
+        let running = |state: &State, organization: OrganizationId| {
+            state
+                .machines
+                .iter()
+                .filter(|row| {
+                    row.machine.state.is_held() && row.machine.organization == organization
+                })
+                .count()
+        };
+        let room = |state: &State, organization: OrganizationId| {
+            caps.get(&organization)
+                .copied()
+                .unwrap_or(0)
+                .saturating_sub(running(state, organization))
+        };
         let eligible = |row: &Row| {
             row.machine.state == MachineState::Queued && active.contains(&row.machine.session)
         };
         let lock = match state.locks.get(holder) {
-            Some(lock) => *lock,
+            Some((lock, _)) => *lock,
             None => {
-                let Some(first) = state.machines.iter().find(|row| eligible(row)) else {
+                let Some(first) = state
+                    .machines
+                    .iter()
+                    .find(|row| eligible(row) && room(&state, row.machine.organization) > 0)
+                else {
                     return Ok(Vec::new());
                 };
                 let organization = first.machine.organization;
-                state.locks.insert(holder.to_owned(), organization);
+                state.locks.insert(holder.to_owned(), (organization, now));
                 organization
             }
         };
+        let mut left = room(&state, lock).min(limit as usize);
         let mut claimed = Vec::new();
         for row in &mut state.machines {
-            if claimed.len() >= limit as usize {
+            if left == 0 {
                 break;
             }
             if eligible(row) && row.machine.organization == lock {
                 row.machine.state = MachineState::Claimed;
                 row.machine.holder = Some(holder.to_owned());
                 row.lease_until = until;
+                row.claimed_at = now;
+                row.expiring = false;
                 claimed.push(row.machine.clone());
+                left -= 1;
             }
         }
         Ok(claimed)
@@ -147,6 +187,26 @@ impl RunnerStore for FakeStore {
             state.locks.remove(holder);
         }
         Ok(())
+    }
+
+    async fn mark_overdue(
+        &self,
+        holder: &str,
+        claimed_before: i64,
+    ) -> Result<Vec<SessionId>, StoreError> {
+        let mut state = locked(&self.runner);
+        let mut overdue = Vec::new();
+        for row in &mut state.machines {
+            if row.machine.state.is_held()
+                && row.machine.holder.as_deref() == Some(holder)
+                && !row.expiring
+                && row.claimed_at < claimed_before
+            {
+                row.expiring = true;
+                overdue.push(row.machine.session);
+            }
+        }
+        Ok(overdue)
     }
 
     async fn renew(

@@ -50,6 +50,7 @@ pub trait BudgetStore {
         organization: OrganizationId,
         monthly_cap_cents: Option<i64>,
         default_budget_cents: Option<i64>,
+        max_running_sessions: Option<u32>,
         audit: &AuditEntry,
     ) -> impl Future<Output = Result<(), StoreError>> + Send;
 

@@ -14,6 +14,7 @@ use axum::http::{HeaderMap, StatusCode, header};
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
+use jiff::SignedDuration;
 use subtle::ConstantTimeEq;
 
 use super::auth::App;
@@ -252,6 +253,14 @@ impl RunnerSettings {
         );
         if let Some(base) = super::auth::setting("ANTILOG_CLONE_BASE") {
             core.clone_base = base;
+        }
+        if let Some(hours) = super::auth::setting("ANTILOG_MAX_SESSION_HOURS") {
+            match hours.parse::<i64>() {
+                Ok(hours) if hours >= 1 => core.max_lifetime = SignedDuration::from_hours(hours),
+                _ => tracing::warn!(
+                    "ANTILOG_MAX_SESSION_HOURS is not a whole number of hours; keeping 24"
+                ),
+            }
         }
         Some(Self { key, core })
     }

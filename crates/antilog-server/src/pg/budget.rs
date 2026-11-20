@@ -11,14 +11,16 @@ impl BudgetStore for PgStore {
         organization: OrganizationId,
         monthly_cap_cents: Option<i64>,
         default_budget_cents: Option<i64>,
+        max_running_sessions: Option<u32>,
         entry: &AuditEntry,
     ) -> Result<(), StoreError> {
         let mut tx = self.scoped(organization).await?;
         let changed = sqlx::query!(
-            "update organizations set monthly_cap_cents = $2, default_budget_cents = $3 where id = $1",
+            "update organizations set monthly_cap_cents = $2, default_budget_cents = $3, max_running_sessions = coalesce($4, max_running_sessions) where id = $1",
             organization.as_uuid(),
             monthly_cap_cents,
             default_budget_cents,
+            max_running_sessions.map(|max| i32::try_from(max).unwrap_or(i32::MAX)),
         )
         .execute(&mut *tx)
         .await

@@ -96,12 +96,13 @@ impl OrganizationStore for PgStore {
     async fn create_organization(&self, organization: &Organization) -> Result<(), StoreError> {
         let mut tx = self.scoped(organization.id).await?;
         sqlx::query!(
-            "insert into organizations (id, name, created_at, monthly_cap_cents, default_budget_cents) values ($1, $2, to_timestamp($3::bigint / 1000.0), $4, $5)",
+            "insert into organizations (id, name, created_at, monthly_cap_cents, default_budget_cents, max_running_sessions) values ($1, $2, to_timestamp($3::bigint / 1000.0), $4, $5, $6)",
             organization.id.as_uuid(),
             organization.name,
             organization.created_at,
             organization.monthly_cap_cents,
             organization.default_budget_cents,
+            i32::try_from(organization.max_running_sessions).unwrap_or(i32::MAX),
         )
         .execute(&mut *tx)
         .await
@@ -112,7 +113,7 @@ impl OrganizationStore for PgStore {
     async fn organization(&self, id: OrganizationId) -> Result<Option<Organization>, StoreError> {
         let mut tx = self.scoped(id).await?;
         let row = sqlx::query!(
-            "select id, name, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", monthly_cap_cents, default_budget_cents from organizations where id = $1",
+            "select id, name, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", monthly_cap_cents, default_budget_cents, max_running_sessions from organizations where id = $1",
             id.as_uuid()
         )
         .fetch_optional(&mut *tx)
@@ -124,6 +125,7 @@ impl OrganizationStore for PgStore {
             created_at: row.created_at,
             monthly_cap_cents: row.monthly_cap_cents,
             default_budget_cents: row.default_budget_cents,
+            max_running_sessions: u32::try_from(row.max_running_sessions).unwrap_or(1),
         }))
     }
 
@@ -211,7 +213,7 @@ impl OrganizationStore for PgStore {
         let mut found = Vec::with_capacity(rows.len());
         for row in rows {
             let organization = sqlx::query!(
-                "select id, name, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", monthly_cap_cents, default_budget_cents from organizations where id = $1",
+                "select id, name, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", monthly_cap_cents, default_budget_cents, max_running_sessions from organizations where id = $1",
                 row.organization_id,
             )
             .fetch_one(&mut *tx)
@@ -225,6 +227,8 @@ impl OrganizationStore for PgStore {
                     created_at: organization.created_at,
                     monthly_cap_cents: organization.monthly_cap_cents,
                     default_budget_cents: organization.default_budget_cents,
+                    max_running_sessions: u32::try_from(organization.max_running_sessions)
+                        .unwrap_or(1),
                 },
             });
         }

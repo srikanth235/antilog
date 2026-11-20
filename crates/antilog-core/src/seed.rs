@@ -941,3 +941,165 @@ pub async fn runner_lock_suite<S: Store>(store: &S) {
     assert_eq!(afresh.len(), 2);
     assert!(afresh.iter().all(|m| m.organization == other_org));
 }
+
+/// A queued session for `seed`'s organization.
+async fn queue_session<S: Store>(store: &S, seed: &Seed, at: i64) -> antilog_types::SessionId {
+    use antilog_types::Session;
+
+    let org = seed.organization.id;
+    let session = Session::new(org, seed.experiment.id, "opencode", at);
+    let log = AuditEntry::new(
+        org,
+        Some(seed.owner.id),
+        "session.start",
+        session.id,
+        AuditOutcome::Done,
+        at,
+    );
+    store
+        .create_session(&session, &log)
+        .await
+        .expect("a session is created");
+    let machine_seed = antilog_types::Seed {
+        repos: Vec::new(),
+        environment: None,
+        environment_version: None,
+    };
+    store
+        .enqueue_machine(org, session.id, &machine_seed, at)
+        .await
+        .expect("queued");
+    session.id
+}
+
+/// The limits on the session machine: a lock whose runner stopped polling lapses after ten
+/// minutes, an organization is handed no claim beyond its cap, and a machine that has had its
+/// time is flagged once.
+pub async fn runner_limits_suite<S: Store>(store: &S) {
+    use antilog_types::MachineState;
+
+    const MINUTE: i64 = 60_000;
+    let lapse = crate::store::RUNNER_LOCK_LAPSE_MS;
+
+    // A lock lapses: r1 locks to the first organization, and a poll keeps it there.
+    let a = experiment(store, 1_000).await;
+    let b = experiment(store, 1_000).await;
+    let in_a = queue_session(store, &a, T0).await;
+    let first = store.claim("r1", 1, 1_000, 61_000).await.expect("claim");
+    assert_eq!(first.first().map(|m| m.session), Some(in_a));
+    let in_b = queue_session(store, &b, T0).await;
+    let beat = 1_000 + 9 * MINUTE;
+    assert!(
+        store
+            .claim("r1", 0, beat, beat + MINUTE)
+            .await
+            .expect("claim")
+            .is_empty()
+    );
+    let later = beat + 9 * MINUTE;
+    let again = store
+        .claim("r1", 5, later, later + MINUTE)
+        .await
+        .expect("claim");
+    assert_eq!(
+        again.iter().map(|m| m.session).collect::<Vec<_>>(),
+        vec![in_a],
+        "eighteen minutes after the first claim but nine after its last poll: still locked"
+    );
+    store
+        .set_machine_state(in_a, "r1", MachineState::Done, later)
+        .await
+        .expect("state");
+    // Silent for more than ten minutes: the lock is gone and the name is free for anyone.
+    let now = later + lapse + 1;
+    let taken = store
+        .claim("r1", 5, now, now + MINUTE)
+        .await
+        .expect("claim");
+    assert_eq!(
+        taken.iter().map(|m| m.session).collect::<Vec<_>>(),
+        vec![in_b],
+        "the lapsed runner's name now takes the other organization's session"
+    );
+    store
+        .set_machine_state(in_b, "r1", MachineState::Done, now)
+        .await
+        .expect("state");
+
+    // A cap: an organization of two running sessions is handed no third while two run.
+    let c = experiment(store, 1_000).await;
+    let cap_audit = AuditEntry::new(
+        c.organization.id,
+        Some(c.owner.id),
+        "organization.set_limits",
+        c.organization.id,
+        AuditOutcome::Done,
+        T0,
+    );
+    store
+        .set_organization_limits(c.organization.id, None, None, Some(2), &cap_audit)
+        .await
+        .expect("limits");
+    let read = store
+        .organization(c.organization.id)
+        .await
+        .expect("read")
+        .expect("organization");
+    assert_eq!(read.max_running_sessions, 2);
+    let mut queued = Vec::new();
+    for _ in 0..3 {
+        queued.push(queue_session(store, &c, T0).await);
+    }
+    let at = now + 5 * MINUTE;
+    let got = store.claim("r9", 10, at, at + MINUTE).await.expect("claim");
+    assert_eq!(got.len(), 2, "two places, three queued");
+    assert!(
+        store
+            .claim("r8", 10, at, at + MINUTE)
+            .await
+            .expect("claim")
+            .is_empty(),
+        "no runner is handed the third while two run"
+    );
+    let waiting = store.claim("r9", 10, at, at + MINUTE).await.expect("claim");
+    assert!(waiting.is_empty(), "the same runner too");
+    let released = got.first().expect("two");
+    store
+        .set_machine_state(released.session, "r9", MachineState::Released, at)
+        .await
+        .expect("state");
+    let third = store.claim("r9", 10, at, at + MINUTE).await.expect("claim");
+    assert_eq!(
+        third.len(),
+        1,
+        "a place opened and the queued session took it"
+    );
+    assert!(queued.contains(&third.first().expect("one").session));
+
+    // Machine time: flagged once, only after the cutoff, and only for this holder.
+    assert!(
+        store
+            .mark_overdue("r9", at - 1)
+            .await
+            .expect("overdue")
+            .is_empty(),
+        "claimed at `at`, not before"
+    );
+    let over = store.mark_overdue("r9", at + 1).await.expect("overdue");
+    assert_eq!(over.len(), 2);
+    assert!(
+        store
+            .mark_overdue("r9", at + 1)
+            .await
+            .expect("overdue")
+            .is_empty(),
+        "the release is sent once"
+    );
+    assert!(
+        store
+            .mark_overdue("r8", at + 1)
+            .await
+            .expect("overdue")
+            .is_empty()
+    );
+}

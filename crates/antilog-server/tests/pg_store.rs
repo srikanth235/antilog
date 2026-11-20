@@ -103,6 +103,13 @@ async fn postgres_locks_a_runner_to_the_organization_of_its_first_claim() -> any
 }
 
 #[tokio::test]
+async fn postgres_limits_the_session_machine() -> anyhow::Result<()> {
+    let (store, _pool, _container) = app_store().await?;
+    antilog_core::seed::runner_limits_suite(&store).await;
+    Ok(())
+}
+
+#[tokio::test]
 async fn postgres_store_keeps_the_card_state() -> anyhow::Result<()> {
     let (store, _pool, _container) = migrated_store().await?;
     antilog_core::seed::card_suite(&store).await;
