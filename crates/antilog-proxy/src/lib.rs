@@ -5,6 +5,7 @@
 
 pub mod egress;
 pub mod gateway;
+pub mod mcp;
 pub mod price;
 pub mod server;
 pub mod usage;
@@ -22,6 +23,8 @@ pub use egress::{NetworkAccess, SessionNetworks};
 pub struct Upstreams {
     pub anthropic: String,
     pub openai: String,
+    /// The Antilog server, where `/mcp/*` is passed on to; none turns the pass-through off.
+    pub server: Option<String>,
 }
 
 impl Default for Upstreams {
@@ -29,6 +32,7 @@ impl Default for Upstreams {
         Self {
             anthropic: "https://api.anthropic.com".to_owned(),
             openai: "https://api.openai.com".to_owned(),
+            server: None,
         }
     }
 }

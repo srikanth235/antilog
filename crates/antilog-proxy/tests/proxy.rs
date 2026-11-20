@@ -365,7 +365,8 @@ impl Rig {
             networks: SessionNetworks::default(),
             upstreams: Upstreams {
                 anthropic: upstream.clone(),
-                openai: upstream,
+                openai: upstream.clone(),
+                server: Some(upstream),
             },
             http: reqwest::Client::new(),
             platform_hosts: options.platform_hosts.clone(),
@@ -917,6 +918,27 @@ async fn no_network_refuses_every_tunnel_and_the_gateway_still_answers() {
         )
         .await;
     assert_eq!(reply.status(), StatusCode::OK);
+}
+
+#[tokio::test]
+async fn an_mcp_call_is_passed_to_the_server_with_its_own_token() {
+    let rig = Rig::start(Options::default()).await;
+    rig.http
+        .post(format!("http://{}/mcp/sessions/abc?x=1", rig.addr))
+        .header("authorization", "Bearer the-mcp-token")
+        .header("mcp-session-id", "m1")
+        .json(&json!({"jsonrpc":"2.0","id":1,"method":"tools/list"}))
+        .send()
+        .await
+        .unwrap();
+    let seen = rig.log.lock().unwrap().clone();
+    let call = seen
+        .iter()
+        .find(|s| s.path == "/mcp/sessions/abc")
+        .expect("the server got the call");
+    assert_eq!(call.headers["authorization"], "Bearer the-mcp-token");
+    assert_eq!(call.headers["mcp-session-id"], "m1");
+    assert_eq!(call.body["method"], "tools/list");
 }
 
 #[tokio::test]

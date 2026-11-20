@@ -16,6 +16,8 @@ MODEL="${MODEL:-opencode/big-pickle}"
 PROVIDER="${MODEL%%/*}"
 PROMPT="${PROMPT:-List the tools you have from the antilog MCP server by name, then reply with the single word ready.}"
 WAIT_SECS="${WAIT_SECS:-300}"
+PROFILE="${PROFILE:-release}"   # or debug, to reuse a debug build
+BIN="target/$PROFILE"
 RUN=.local-run
 PG_PORT="${PG_PORT:-55432}"
 SERVER="http://127.0.0.1:8080"
@@ -39,16 +41,24 @@ cleanup() {
 trap cleanup EXIT
 
 step "Building the server, the proxy and the runner"
-cargo build --release -q -p antilog-server -p antilog-proxy -p antilog
+if [ "$PROFILE" = release ]; then
+  cargo build --release -q -p antilog-server -p antilog-proxy -p antilog
+else
+  cargo build -q -p antilog-server -p antilog-proxy -p antilog
+fi
 
 step "Building the session image"
 secret=()
 [ -n "${EXTRA_CA:-}" ] && secret=(--secret "id=ca,src=$EXTRA_CA")
-docker build -q "${secret[@]}" -t antilog-session:latest session-image >/dev/null
+if [ -z "${REBUILD:-}" ] && docker image inspect antilog-session:latest >/dev/null 2>&1; then
+  echo "using the existing image (REBUILD=1 rebuilds it)"
+else
+  docker build -q "${secret[@]}" -t antilog-session:latest session-image >/dev/null
+fi
 
 step "Starting Postgres on port $PG_PORT"
 docker rm -f antilog-local-pg >/dev/null 2>&1 || true
-docker run -d --name antilog-local-pg -e POSTGRES_PASSWORD=pw -p "127.0.0.1:$PG_PORT:5432" postgres:16 >/dev/null
+docker run -d --name antilog-local-pg -e POSTGRES_PASSWORD=pw -p "127.0.0.1:$PG_PORT:5432" "${PG_IMAGE:-postgres:18}" >/dev/null
 for _ in $(seq 1 60); do docker exec antilog-local-pg pg_isready -U postgres >/dev/null 2>&1 && break; sleep 1; done
 export DATABASE_URL="postgres://postgres:pw@127.0.0.1:$PG_PORT/postgres"
 
@@ -58,13 +68,15 @@ export ANTILOG_SECRET_MASTER_KEY="$(openssl rand -hex 32)"
 export ANTILOG_RUNNER_KEY="$(openssl rand -hex 24)"
 
 step "Starting the server and the proxy (logs in $RUN/)"
+# The session's container reaches only the proxy: model calls go to /<provider>/v1 and MCP calls
+# to /mcp, which the proxy passes on to the server. The host names are never resolved inside it.
 ANTILOG_LISTEN=0.0.0.0:8080 ANTILOG_FAKE_SIGN_IN=1 ANTILOG_OPEN_ORGANIZATIONS=1 \
   ANTILOG_INSECURE_COOKIES=1 ANTILOG_MODEL="$MODEL" \
-  ANTILOG_PROXY_URL=http://antilog-proxy:8081 ANTILOG_PUBLIC_URL=http://antilog-server:8080 \
-  target/release/antilog-server >"$RUN/server.log" 2>&1 &
+  ANTILOG_PROXY_URL=http://antilog-proxy:8081 ANTILOG_PUBLIC_URL=http://antilog-proxy:8081 \
+  "$BIN"/antilog-server >"$RUN/server.log" 2>&1 &
 pids+=($!)
-ANTILOG_PROXY_LISTEN=0.0.0.0:8081 ANTILOG_PROXY_PLATFORM_HOSTS=antilog-server,antilog-proxy,github.com \
-  target/release/antilog-proxy >"$RUN/proxy.log" 2>&1 &
+ANTILOG_PROXY_LISTEN=0.0.0.0:8081 ANTILOG_PROXY_SERVER_URL=http://127.0.0.1:8080 ANTILOG_PROXY_PLATFORM_HOSTS=antilog-server,antilog-proxy,github.com \
+  "$BIN"/antilog-proxy >"$RUN/proxy.log" 2>&1 &
 pids+=($!)
 for _ in $(seq 1 60); do curl -fsS "$SERVER/auth/providers" >/dev/null 2>&1 && break; sleep 1; done
 curl -fsS "$SERVER/auth/providers" >/dev/null || die "the server did not start; see $RUN/server.log"
@@ -90,7 +102,7 @@ project=$(api POST /projects '{"name":"local run","description":""}' | field "['
 experiment=$(api POST "/projects/$project/experiments" '{"goal":"local end-to-end run","budgetCapCents":500}' | field "['id']")
 
 step "Starting the runner"
-target/release/antilog runner --server "$SERVER" --name local --proxy 127.0.0.1:8081 \
+"$BIN"/antilog runner --server "$SERVER" --name local --proxy 127.0.0.1:8081 \
   --state-dir "$RUN/state" >"$RUN/runner.log" 2>&1 &
 pids+=($!)
 
@@ -101,6 +113,7 @@ echo "session $session"
 
 step "Waiting up to ${WAIT_SECS}s for the session"
 seen=0
+worked=
 for _ in $(seq 1 $((WAIT_SECS / 5))); do
   sleep 5
   status=$(api GET "/sessions/$session" | field "['status']" 2>/dev/null || echo unknown)
@@ -119,7 +132,13 @@ for e in events[start:]:
 print(len(events))
 EOF
 )
-  case "$status" in waiting_for_you|done|failed|Waiting*|Done|Failed) break ;; esac
+  # A new session waits until a runner picks it up, so "waiting_for_you" counts only after the
+  # agent has worked.
+  [ "$status" = working ] && worked=1
+  case "$status" in
+    done|failed) break ;;
+    waiting_for_you) [ -n "${worked:-}" ] && break ;;
+  esac
 done
 
 step "Result"

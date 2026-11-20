@@ -473,6 +473,7 @@ where
         .route("/health", axum::routing::get(|| async { "ok" }))
         .route("/anthropic/v1/{*rest}", any(anthropic::<S, C, K>))
         .route("/openai/v1/{*rest}", any(openai::<S, C, K>))
+        .route("/mcp/{*rest}", any(crate::mcp::forward::<S, C, K>))
         .with_state(proxy)
 }
 
