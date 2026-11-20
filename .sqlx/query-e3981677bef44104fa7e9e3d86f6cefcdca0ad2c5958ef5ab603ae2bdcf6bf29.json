@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into environments (organization_id, id, archived, created_at) values ($1, $2, false, to_timestamp($3::bigint / 1000.0))",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e3981677bef44104fa7e9e3d86f6cefcdca0ad2c5958ef5ab603ae2bdcf6bf29"
+}

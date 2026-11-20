@@ -10,6 +10,7 @@ pub mod credentials;
 pub mod customize;
 pub mod delivery;
 pub mod deps;
+pub mod environments;
 pub mod evaluations;
 pub mod fakes;
 pub mod gateway_suite;

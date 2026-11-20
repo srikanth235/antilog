@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update environments set archived = true where organization_id = $1 and id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "aba3450d9f0c1cc3b0e51f18460d354c6aa3027f5d7aff3247e3bdf55d122c08"
+}

@@ -2144,3 +2144,220 @@ async fn model_keys_are_set_by_an_owner_listed_by_anyone_and_never_returned() {
     assert!(log.contains("model_key.set") && log.contains("model_key.remove"));
     assert!(log.contains("model_key.set") && !log.contains("sk-ant"));
 }
+
+fn environment_body(name: &str) -> Value {
+    json!({
+        "name": name, "network": "limited", "allowedHosts": ["API.stripe.com"],
+        "allowPackageManagers": true, "variables": {"STRIPE_KEY": "sk_test"},
+        "setupScript": "npm ci", "cpus": 4, "memoryMb": 16384
+    })
+}
+
+#[tokio::test]
+async fn environments_are_read_by_every_member_and_managed_by_owners_and_editors() {
+    let org = org().await;
+    let (_, viewer) = org.member("vi", "viewer").await;
+    let (_, editor) = org.member("ed", "editor").await;
+
+    // The built-in default is always there, and a viewer reads.
+    let listed = org.call(Method::GET, "/environments", &viewer, None).await;
+    assert_eq!(listed.status, StatusCode::OK);
+    assert_eq!(listed.body.as_array().map(Vec::len), Some(1));
+    assert_eq!(listed.body[0]["builtIn"], true);
+
+    // A viewer may not make, change or archive one, and the denial is audited.
+    let body = environment_body("Checkout staging");
+    for (method, uri) in [
+        (Method::POST, "/environments"),
+        (Method::PUT, "/environments/checkout-staging"),
+        (Method::POST, "/environments/checkout-staging/archive"),
+    ] {
+        let denied = org.call(method, uri, &viewer, Some(body.clone())).await;
+        assert_eq!(denied.status, StatusCode::FORBIDDEN, "{uri}");
+    }
+    let log = org.call(Method::GET, "/audit", &org.owner, None).await;
+    let denials = log.body["entries"]
+        .as_array()
+        .map(|rows| {
+            rows.iter()
+                .filter(|row| {
+                    row["outcome"] == "denied"
+                        && row["action"]
+                            .as_str()
+                            .is_some_and(|a| a.starts_with("environment."))
+                })
+                .count()
+        })
+        .unwrap_or(0);
+    assert_eq!(denials, 3, "{:?}", log.body);
+
+    // An editor makes one: version 1, the id from the name, host names cleaned.
+    let made = org
+        .call(Method::POST, "/environments", &editor, Some(body.clone()))
+        .await;
+    assert_eq!(made.status, StatusCode::CREATED, "{:?}", made.body);
+    assert_eq!(made.body["id"], "checkout-staging");
+    assert_eq!(made.body["version"], 1);
+    assert_eq!(made.body["allowedHosts"], json!(["api.stripe.com"]));
+    assert_eq!(made.body["builtIn"], false);
+    let again = org
+        .call(
+            Method::POST,
+            "/environments",
+            &org.owner,
+            Some(body.clone()),
+        )
+        .await;
+    assert_eq!(again.status, StatusCode::CONFLICT);
+
+    // An owner's edit is the next version.
+    let mut changed = body.clone();
+    changed["network"] = json!("none");
+    let edited = org
+        .call(
+            Method::PUT,
+            "/environments/checkout-staging",
+            &org.owner,
+            Some(changed),
+        )
+        .await;
+    assert_eq!(edited.status, StatusCode::OK, "{:?}", edited.body);
+    assert_eq!(
+        (
+            edited.body["version"].clone(),
+            edited.body["network"].clone()
+        ),
+        (json!(2), json!("none"))
+    );
+    let listed = org.call(Method::GET, "/environments", &viewer, None).await;
+    assert_eq!(listed.body.as_array().map(Vec::len), Some(2));
+    assert_eq!(listed.body[1]["version"], 2);
+
+    // Nothing the machine's wiring depends on, and no host that is not a name, is accepted.
+    for bad in [
+        json!({"variables": {"HTTPS_PROXY": "http://evil"}}),
+        json!({"variables": {"ANTILOG_TOKEN": "x"}}),
+        json!({"variables": {"1BAD": "x"}}),
+        json!({"allowedHosts": ["*.stripe.com"]}),
+        json!({"allowedHosts": ["10.0.0.1"]}),
+        json!({"allowedHosts": ["https://stripe.com"]}),
+        json!({"setupScript": "x".repeat(64 * 1024 + 1)}),
+        json!({"cpus": 0}),
+        json!({"memoryMb": 1}),
+        json!({"name": "  "}),
+    ] {
+        let mut body = environment_body("Other");
+        for (key, value) in bad.as_object().into_iter().flatten() {
+            body[key] = value.clone();
+        }
+        let refused = org
+            .call(Method::POST, "/environments", &editor, Some(body))
+            .await;
+        assert_eq!(refused.status, StatusCode::UNPROCESSABLE_ENTITY, "{bad}");
+    }
+    // The built-in default cannot be taken, changed or archived.
+    let default = org
+        .call(
+            Method::POST,
+            "/environments",
+            &editor,
+            Some(environment_body("Default")),
+        )
+        .await;
+    assert_eq!(default.status, StatusCode::CONFLICT);
+    let default = org
+        .call(
+            Method::PUT,
+            "/environments/default",
+            &editor,
+            Some(environment_body("Default")),
+        )
+        .await;
+    assert_eq!(default.status, StatusCode::UNPROCESSABLE_ENTITY);
+    let missing = org
+        .call(
+            Method::PUT,
+            "/environments/nothing",
+            &editor,
+            Some(environment_body("Nothing")),
+        )
+        .await;
+    assert_eq!(missing.status, StatusCode::NOT_FOUND);
+
+    // A session starts on the stored environment, then not once it is archived.
+    let project = org
+        .call(
+            Method::POST,
+            "/projects",
+            &org.owner,
+            Some(json!({"name": "checkout", "description": ""})),
+        )
+        .await;
+    let project_id = project.body["id"].as_str().unwrap_or_default().to_owned();
+    let experiment = org
+        .call(
+            Method::POST,
+            &format!("/projects/{project_id}/experiments"),
+            &editor,
+            Some(json!({"goal": "cut p95", "budgetCapCents": 500})),
+        )
+        .await;
+    let sessions = format!(
+        "/experiments/{}/sessions",
+        experiment.body["id"].as_str().unwrap_or_default()
+    );
+    let start = |environment: &str| json!({"agent": "auto", "prompt": "go", "repos": [], "environment": environment});
+    let started = org
+        .call(
+            Method::POST,
+            &sessions,
+            &editor,
+            Some(start("checkout-staging")),
+        )
+        .await;
+    assert_eq!(started.status, StatusCode::CREATED, "{:?}", started.body);
+    let unknown = org
+        .call(Method::POST, &sessions, &editor, Some(start("nothing")))
+        .await;
+    assert_eq!(unknown.status, StatusCode::UNPROCESSABLE_ENTITY);
+    let archived = org
+        .call(
+            Method::POST,
+            "/environments/checkout-staging/archive",
+            &editor,
+            None,
+        )
+        .await;
+    assert_eq!(archived.status, StatusCode::NO_CONTENT);
+    let refused = org
+        .call(
+            Method::POST,
+            &sessions,
+            &editor,
+            Some(start("checkout-staging")),
+        )
+        .await;
+    assert_eq!(
+        (refused.status, &refused.body["code"]),
+        (
+            StatusCode::UNPROCESSABLE_ENTITY,
+            &json!("invalid_environment")
+        )
+    );
+    let listed = org.call(Method::GET, "/environments", &viewer, None).await;
+    assert_eq!(listed.body[1]["archived"], true);
+    let frozen = org
+        .call(
+            Method::PUT,
+            "/environments/checkout-staging",
+            &editor,
+            Some(environment_body("Checkout staging")),
+        )
+        .await;
+    assert_eq!(frozen.status, StatusCode::UNPROCESSABLE_ENTITY);
+    // The default is always offered.
+    let on_default = org
+        .call(Method::POST, &sessions, &editor, Some(start("default")))
+        .await;
+    assert_eq!(on_default.status, StatusCode::CREATED);
+}

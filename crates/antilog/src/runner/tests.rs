@@ -713,8 +713,7 @@ async fn a_skill_pack_is_unpacked_into_the_skills_folder() {
         agent: "opencode".into(),
         model: "v/m".into(),
         repos: vec![],
-        environment: None,
-        variables: Default::default(),
+        environment: antilog_types::EnvironmentSpec::default(),
         skills: vec![
             antilog_types::SkillDownload {
                 name: "perf".into(),

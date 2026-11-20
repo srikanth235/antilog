@@ -788,7 +788,7 @@
         "operationId": "environments",
         "responses": {
           "200": {
-            "description": "Where a session may run",
+            "description": "The built-in default, then the organization's environments by id, archived ones marked",
             "content": {
               "application/json": {
                 "schema": {
@@ -796,6 +796,162 @@
                   "items": {
                     "$ref": "#/components/schemas/Environment"
                   }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [],
+        "operationId": "create_environment",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewEnvironment"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created at version 1; owners and editors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Environment"
+                }
+              }
+            }
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/environments/{id}": {
+      "put": {
+        "tags": [],
+        "operationId": "edit_environment",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The environment's id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewEnvironment"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The next version; owners and editors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Environment"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/environments/{id}/archive": {
+      "post": {
+        "tags": [],
+        "operationId": "archive_environment",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The environment's id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Archived; owners and editors"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
                 }
               }
             }
@@ -4274,22 +4430,93 @@
       },
       "Environment": {
         "type": "object",
-        "description": "Where an experiment's session may run.",
+        "description": "One version of an environment an organization manages, or the built-in default. A change\nmakes a new version; a session records the version it ran.",
         "required": [
           "id",
           "name",
-          "builtIn"
+          "version",
+          "network",
+          "allowedHosts",
+          "allowPackageManagers",
+          "variables",
+          "setupScript",
+          "cpus",
+          "memoryMb",
+          "builtIn",
+          "archived",
+          "createdAt"
         ],
         "properties": {
+          "allowPackageManagers": {
+            "type": "boolean"
+          },
+          "allowedHosts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Exact host names; used at the limited level."
+          },
+          "archived": {
+            "type": "boolean"
+          },
           "builtIn": {
             "type": "boolean",
-            "description": "Offered until environments can be registered."
+            "description": "The default every organization has; it is not stored and cannot be changed."
+          },
+          "cpus": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "createdAt": {
+            "type": "integer",
+            "format": "int64",
+            "description": "When this version was made, in milliseconds."
+          },
+          "createdBy": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/MemberId",
+                "description": "Who made this version; empty for the built-in default."
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "id": {
             "type": "string"
           },
+          "memoryMb": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
           "name": {
             "type": "string"
+          },
+          "network": {
+            "$ref": "#/components/schemas/NetworkLevel"
+          },
+          "setupScript": {
+            "type": "string",
+            "description": "Runs as root once per version before the agent starts; empty for none."
+          },
+          "variables": {
+            "type": "object",
+            "description": "Plain variables, readable by the agent. Model keys never go here.",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
           }
         },
         "additionalProperties": false
@@ -5008,6 +5235,15 @@
           "openai"
         ]
       },
+      "NetworkLevel": {
+        "type": "string",
+        "description": "How much of the network a session's machine may reach (docs/V0.md, Environments). `None`\nis no outbound traffic except the model gateway; `Limited` is `allowed_hosts` plus package\nregistries when allowed; `Full` is any host except private, loopback and metadata addresses.",
+        "enum": [
+          "none",
+          "limited",
+          "full"
+        ]
+      },
       "NewAgent": {
         "type": "object",
         "description": "What an owner sets for an agent.",
@@ -5052,6 +5288,59 @@
           },
           "url": {
             "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "NewEnvironment": {
+        "type": "object",
+        "description": "What makes an environment, or a new version of one. The id comes from the name on create.",
+        "required": [
+          "name",
+          "network",
+          "allowPackageManagers",
+          "cpus",
+          "memoryMb"
+        ],
+        "properties": {
+          "allowPackageManagers": {
+            "type": "boolean"
+          },
+          "allowedHosts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "cpus": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "memoryMb": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "name": {
+            "type": "string"
+          },
+          "network": {
+            "$ref": "#/components/schemas/NetworkLevel"
+          },
+          "setupScript": {
+            "type": "string",
+            "description": "At most 64 KB."
+          },
+          "variables": {
+            "type": "object",
+            "description": "Readable by the agent: a service key goes here, a model key never does.",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "propertyNames": {
+              "type": "string"
+            }
           }
         },
         "additionalProperties": false

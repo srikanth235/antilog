@@ -5,9 +5,10 @@
 
 use antilog_types::{
     Agent, Approval, ApprovalId, ApprovalStatus, AuditEntry, AuditId, AuditOutcome, CardKind,
-    CostTier, Decision, EvaluationKind, EvaluationTemplate, EventKind, Experiment,
-    ExperimentStatus, Identity, Member, MemberId, Organization, OrganizationId, Policy, PolicyMode,
-    Project, ProjectRole, Role, Session, SessionStatus, Spend, SpendId, SpendKind,
+    CostTier, Decision, Environment, EvaluationKind, EvaluationTemplate, EventKind, Experiment,
+    ExperimentStatus, Identity, Member, MemberId, NetworkLevel, Organization, OrganizationId,
+    Policy, PolicyMode, Project, ProjectRole, Role, Session, SessionStatus, Spend, SpendId,
+    SpendKind,
 };
 
 use crate::store::{Invariant, NewEvent, SessionChange, SpendScope, SpendTotal, Store, StoreError};
@@ -144,6 +145,7 @@ pub async fn store_suite<S: Store>(store: &S) {
     budgets_and_spend(store).await;
     experiments_and_sessions(store).await;
     agents(store).await;
+    environments(store).await;
     evaluations(store).await;
     approvals(store).await;
     audit_log(store).await;
@@ -1089,6 +1091,175 @@ async fn agents<S: Store>(store: &S) {
             .await
             .expect("another organization")
             .is_empty()
+    );
+}
+
+async fn environments<S: Store>(store: &S) {
+    let world = world(store).await;
+    let org = world.id();
+    let version = |id: &str, version: u32, network: NetworkLevel| Environment {
+        id: id.to_owned(),
+        name: format!("{id} {version}"),
+        version,
+        network,
+        allowed_hosts: vec!["api.stripe.com".to_owned()],
+        allow_package_managers: version % 2 == 1,
+        variables: [("STRIPE_KEY".to_owned(), "sk_test".to_owned())].into(),
+        setup_script: "echo ready".to_owned(),
+        cpus: 4,
+        memory_mb: 16384,
+        built_in: false,
+        archived: false,
+        created_by: Some(world.owner.id),
+        created_at: T0 + i64::from(version),
+    };
+    assert!(store.environments(org).await.expect("none yet").is_empty());
+
+    // A new environment is version 1; its id is taken for good.
+    let first = version("bench", 1, NetworkLevel::Limited);
+    store
+        .add_environment(org, &first, &world.log("environment.create"))
+        .await
+        .expect("created");
+    conflict(
+        store
+            .add_environment(org, &first, &world.log("environment.create"))
+            .await,
+    );
+    store
+        .add_environment(
+            org,
+            &version("full", 1, NetworkLevel::Full),
+            &world.log("environment.create"),
+        )
+        .await
+        .expect("a second environment");
+
+    // An edit is the next version; the old one stays readable as it was.
+    let second = version("bench", 2, NetworkLevel::None);
+    store
+        .add_environment_version(org, &second, &world.log("environment.edit"))
+        .await
+        .expect("edited");
+    // Two edits made from one version cannot both land, and a version cannot be skipped.
+    conflict(
+        store
+            .add_environment_version(org, &second, &world.log("environment.edit"))
+            .await,
+    );
+    conflict(
+        store
+            .add_environment_version(
+                org,
+                &version("bench", 5, NetworkLevel::None),
+                &world.log("environment.edit"),
+            )
+            .await,
+    );
+    not_found(
+        store
+            .add_environment_version(
+                org,
+                &version("nothing", 2, NetworkLevel::None),
+                &world.log("environment.edit"),
+            )
+            .await,
+    );
+    assert_eq!(
+        store
+            .environment_version(org, "bench", 1)
+            .await
+            .expect("read"),
+        Some(first.clone())
+    );
+    assert_eq!(
+        store
+            .environment_version(org, "bench", 2)
+            .await
+            .expect("read"),
+        Some(second.clone())
+    );
+    assert_eq!(
+        store
+            .environment_version(org, "bench", 3)
+            .await
+            .expect("read"),
+        None
+    );
+    let listed = store.environments(org).await.expect("listed");
+    assert_eq!(
+        listed
+            .iter()
+            .map(|row| (row.id.as_str(), row.version, row.network, row.archived))
+            .collect::<Vec<_>>(),
+        vec![
+            ("bench", 2, NetworkLevel::None, false),
+            ("full", 1, NetworkLevel::Full, false)
+        ]
+    );
+    assert_eq!(listed.first(), Some(&second));
+
+    // Archiving hides nothing that ran: every version stays readable, marked archived, and the
+    // environment takes no new version. Archiving again changes nothing.
+    store
+        .archive_environment(org, "bench", &world.log("environment.archive"))
+        .await
+        .expect("archived");
+    store
+        .archive_environment(org, "bench", &world.log("environment.archive"))
+        .await
+        .expect("archived again");
+    not_found(
+        store
+            .archive_environment(org, "nothing", &world.log("environment.archive"))
+            .await,
+    );
+    refused(
+        store
+            .add_environment_version(
+                org,
+                &version("bench", 3, NetworkLevel::None),
+                &world.log("environment.edit"),
+            )
+            .await,
+        Invariant::IllegalTransition,
+    );
+    let kept = store
+        .environment_version(org, "bench", 1)
+        .await
+        .expect("read")
+        .expect("kept");
+    assert!(kept.archived);
+    assert_eq!(
+        Environment {
+            archived: false,
+            ..kept
+        },
+        first
+    );
+    let listed = store.environments(org).await.expect("listed");
+    assert_eq!(
+        listed
+            .iter()
+            .map(|row| (row.id.as_str(), row.archived))
+            .collect::<Vec<_>>(),
+        vec![("bench", true), ("full", false)]
+    );
+
+    // Another organization sees none of it.
+    let other = world_org(store).await;
+    assert!(store.environments(other).await.expect("read").is_empty());
+    assert_eq!(
+        store
+            .environment_version(other, "bench", 1)
+            .await
+            .expect("read"),
+        None
+    );
+    not_found(
+        store
+            .archive_environment(other, "bench", &world.log("environment.archive"))
+            .await,
     );
 }
 

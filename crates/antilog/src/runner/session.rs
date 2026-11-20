@@ -321,6 +321,7 @@ async fn start<H: Harness>(
         dir: work_dir(&root, spec),
         password: password()?,
         env: spec
+            .environment
             .variables
             .iter()
             .map(|(k, v)| (k.clone(), v.clone()))

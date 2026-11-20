@@ -1,6 +1,6 @@
-//! The agents an organization turned on, the environments a session may run on, and Auto.
+//! The agents an organization turned on, and Auto.
 
-use antilog_types::{Agent, AuditOutcome, CostTier, Environment, NewAgent, OrganizationId};
+use antilog_types::{Agent, AuditOutcome, CostTier, NewAgent, OrganizationId};
 
 use crate::organization::{Action, Principal, Refusal, entry, member_of, permit};
 use crate::store::Store;
@@ -127,18 +127,4 @@ pub async fn set<S: Store>(
         )
         .await?;
     Ok(agent)
-}
-
-/// The environments a session may run on. One default is all there is until environments can be
-/// registered.
-pub async fn environments<S: Store>(
-    store: &S,
-    who: &Principal,
-) -> Result<Vec<Environment>, Refusal> {
-    member_of(store, who).await?;
-    Ok(vec![Environment {
-        id: "default".to_owned(),
-        name: "Default".to_owned(),
-        built_in: true,
-    }])
 }

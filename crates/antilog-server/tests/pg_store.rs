@@ -210,6 +210,9 @@ async fn audit_log_and_spend_refuse_every_change() -> anyhow::Result<()> {
         "truncate session_events",
         "update evaluation_templates set name = 'x'",
         "delete from evaluation_templates",
+        "update environment_versions set name = 'x'",
+        "delete from environment_versions",
+        "truncate environment_versions",
     ] {
         let error = sqlx::query(statement).execute(&pool).await.err();
         let code = error.and_then(|error| {
@@ -609,6 +612,71 @@ async fn the_session_area_and_the_judge_see_only_their_organization() -> anyhow:
         .bind(b.organization.id.as_uuid())
         .execute(&mut *tx)
         .await;
+    let code = forged.err().and_then(|e| {
+        e.as_database_error()
+            .and_then(|d| d.code().map(String::from))
+    });
+    assert_eq!(
+        code.as_deref(),
+        Some("42501"),
+        "a write into another organization is refused"
+    );
+    Ok(())
+}
+
+#[tokio::test]
+async fn environments_and_their_versions_see_only_their_organization() -> anyhow::Result<()> {
+    use antilog_core::store::EnvironmentStore;
+    use antilog_types::{Environment, NetworkLevel};
+
+    let (store, pool, _container) = app_store().await?;
+    let a = antilog_core::seed::experiment(&store, 1_000).await;
+    let b = antilog_core::seed::experiment(&store, 1_000).await;
+    for (seed, id) in [(&a, "bench"), (&b, "bench"), (&b, "other")] {
+        let mut environment = Environment::built_in();
+        environment.id = id.to_owned();
+        environment.network = NetworkLevel::Full;
+        environment.built_in = false;
+        store
+            .add_environment(
+                seed.organization.id,
+                &environment,
+                &AuditEntry::new(
+                    seed.organization.id,
+                    Some(seed.owner.id),
+                    "environment.create",
+                    id,
+                    AuditOutcome::Done,
+                    1,
+                ),
+            )
+            .await?;
+    }
+    for table in ["environments", "environment_versions"] {
+        let unscoped: i64 =
+            sqlx::query_scalar(sqlx::AssertSqlSafe(format!("select count(*) from {table}")))
+                .fetch_one(&pool)
+                .await?;
+        assert_eq!(unscoped, 0, "{table} without an organization set");
+    }
+    let mut tx = pool.begin().await?;
+    sqlx::query("select set_config('antilog.organization_id', $1, true)")
+        .bind(a.organization.id.to_string())
+        .execute(&mut *tx)
+        .await?;
+    for table in ["environments", "environment_versions"] {
+        let own: i64 =
+            sqlx::query_scalar(sqlx::AssertSqlSafe(format!("select count(*) from {table}")))
+                .fetch_one(&mut *tx)
+                .await?;
+        assert_eq!(own, 1, "{table} shows only a's one environment");
+    }
+    let forged = sqlx::query(
+        "insert into environments (organization_id, id, created_at) values ($1, 'forged', now())",
+    )
+    .bind(b.organization.id.as_uuid())
+    .execute(&mut *tx)
+    .await;
     let code = forged.err().and_then(|e| {
         e.as_database_error()
             .and_then(|d| d.code().map(String::from))
