@@ -2,7 +2,7 @@
 
 - Hand credentials to a session only through `request_credential`, never in a prompt, chat message or repo file. In v0 a service key may sit in an environment variable the agent can read, and the screen says so ([docs/V0.md](../../../docs/V0.md)); a model key never enters a session, because a secret there is read by more people than it is meant for.
 - Keep credentials out of every response, event, log and tag.
-- Never show an agent a holdout value, in a message, card or tool result, and never give it the holdout credential, because what an agent reads it can fit. It learns only Kept or Failed holdout. Only the judge holds the holdout credential (see [../judge/rules.md](../judge/rules.md)).
+- Never show an agent a holdout value, in a message, card or tool result, and never put the holdout in its machine, because what an agent reads it can fit. It learns only Kept or Failed holdout. A holdout measurement runs in a fresh container of the same environment version, and only that container receives the holdout data (see [../judge/rules.md](../judge/rules.md)).
 - Give each outside system exactly one translator and stop its vocabulary there, because a second translator forks the meaning of a column.
 - Never reshape or pipe data. Build no transform and no pipeline: the customer prepares data in their own warehouse, because a transform layer makes Antilog responsible for data quality it cannot see.
 - Never change a dataset version after it is created, and never let a holdout be granted to an agent (the control is absent), because a version that moves cannot be reproduced.

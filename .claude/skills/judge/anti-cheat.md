@@ -25,14 +25,14 @@ Before an experiment can be sealed the judge measures the baseline, pairs the sa
 
 ## 4. Confirm before Kept
 
-Every measurement is paired: the trial and the trial it started from run interleaved for the sealed number of repeats, so drift cancels. A trial beats the bar when the one-sided lower confidence bound of its mean paired gain is above zero at confidence 1 − 0.05/k, where k counts the trials measured in this experiment version. It is then measured again, paired, on a fresh checkout and checked on the holdout. The bar rises with k, so many attempts cannot win by luck.
+Every measurement is paired: the trial and the trial it started from run interleaved for the sealed number of repeats, so drift cancels. A trial beats the bar when the one-sided lower confidence bound of its mean paired gain is above zero at confidence 1 − 0.05/k, where k counts the trials measured in this experiment version. It is then measured again, paired, on a fresh checkout and checked on the holdout, in a fresh container of the same environment version that only that container's run receives the holdout data in. The agent's live machine never holds it. The bar rises with k, so many attempts cannot win by luck.
 
 The quick check that precedes this (one pair against the best) only stops weak trials early to save cost. It never decides Kept, runs only in the judge, and is sealed with the experiment, so a trial cannot skip or fake it.
 
 - Stops: a lucky measurement, and fitting to the evaluation data.
 When patience is reached, the judge measures each session's branch head that differs from every measured trial as one cumulative trial against the best, so real gains each below the bar can add up. It counts in k and meets the same bar.
 
-The holdout answers one bit per trial, so it is an oracle an agent could probe. The judge credential is read-only and holdout checks are capped per experiment version (sealed, default 20); at the cap a new version with a new holdout is needed.
+The holdout answers one bit per trial, so it is an oracle an agent could probe. The holdout credential is read-only, goes only to that fresh container, and holdout checks are capped per experiment version (sealed, default 20); at the cap a new version with a new holdout is needed.
 
 - Does not stop: a holdout that is too small or too like the evaluation data, or probing below the cap.
 

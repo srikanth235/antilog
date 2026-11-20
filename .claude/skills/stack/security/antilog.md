@@ -5,7 +5,7 @@
 **This page wins over `general/`.** The skills are written for audits of any project. Antilog's bar is its own trust rules, in [../../product/promises.md](../../product/promises.md), [../../session/rules.md](../../session/rules.md), [../../judge/rules.md](../../judge/rules.md) and [../../organization/rules.md](../../organization/rules.md):
 
 - The server never connects to data.
-- The holdout credential goes only to the judge.
+- The holdout credential goes only to the fresh container that measures the holdout.
 - A model key never enters a session machine; the proxy swaps the session's token for the key. A service key may sit in an environment variable, and the screen says so.
 - Every session's machine is released and its disk dropped when its run ends.
 
