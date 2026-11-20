@@ -1,9 +1,8 @@
 use std::future::Future;
 
 use antilog_types::{
-    Agent, AuditEntry, Cleanup, EvaluationTemplate, EventKind, Experiment, ExperimentId,
-    ExperimentStatus, MemberId, OrganizationId, ProjectId, Session, SessionEvent, SessionId,
-    SessionStatus,
+    Agent, AuditEntry, EvaluationTemplate, EventKind, Experiment, ExperimentId, ExperimentStatus,
+    MemberId, OrganizationId, ProjectId, Session, SessionEvent, SessionId, SessionStatus,
 };
 
 use super::StoreError;
@@ -13,12 +12,10 @@ use super::StoreError;
 pub struct SessionChange {
     pub status: Option<SessionStatus>,
     pub note: Option<String>,
-    pub platform_handle: Option<String>,
-    pub cleanup: Option<Cleanup>,
 }
 
 /// One item to append to a conversation. `key` is unique within the session: appending it again
-/// changes nothing, so a relay that delivers a page twice records it once.
+/// changes nothing, so an item delivered twice is recorded once.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct NewEvent {
     pub organization: OrganizationId,

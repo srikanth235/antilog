@@ -1,12 +1,11 @@
 //! The server's `Router` on Lambda, behind a function URL with response streaming.
 //!
-//! Two callers reach it. The function URL carries browsers and the CLI. EventBridge
-//! Scheduler invokes the function directly with an event shaped like a function URL
-//! request, so the same `Router` handles a wake-up as `POST /internal/wake/{job}`. A
-//! direct invoke needs `lambda:InvokeFunction`, which only the scheduler role holds. A
-//! path under `/internal/` is therefore refused unless the event says the scheduler sent
-//! it: a function URL request always carries the URL's own domain name, so no outside
-//! caller can forge the scheduler's.
+//! Two callers reach it. The function URL carries browsers and the CLI. The deploy workflow
+//! invokes the function directly with an event shaped like a function URL request, so the
+//! same `Router` handles `POST /internal/migrate`. A direct invoke needs
+//! `lambda:InvokeFunction`, which only the deploy role holds. A path under `/internal/` is
+//! therefore refused unless the event says the deploy sent it: a function URL request always
+//! carries the URL's own domain name, so no outside caller can forge the deploy's.
 //!
 //! Everything else must carry CloudFront's origin secret (`antilog_server::origin`), with
 //! no exception for `/health`; with no secret set the function refuses all of it.
@@ -17,69 +16,31 @@ use lambda_http::http::{Request, Response, StatusCode};
 use lambda_http::request::RequestContext;
 use lambda_http::{Body, Error, RequestExt, service_fn};
 use tower::ServiceExt;
-use uuid::Uuid;
 
-/// The domain name a scheduler-sent event carries in its request context.
-pub const SCHEDULER_DOMAIN: &str = "scheduler.antilog.internal";
+/// The domain name a deploy-sent event carries in its request context.
+pub const DEPLOY_DOMAIN: &str = "deploy.antilog.internal";
 pub const INTERNAL_PREFIX: &str = "/internal/";
-pub const WAKE_PREFIX: &str = "/internal/wake/";
-pub const WAKE_HEADER: &str = "x-antilog-wake";
 
-/// The event Scheduler hands the function for one job: a `POST` to
-/// `/internal/wake/{organization}/{job}` carrying the wake secret in `x-antilog-wake`,
-/// which the server requires (and mounts the route only when it has one).
-pub fn wake_event(organization: Uuid, job: Uuid, secret: &str) -> String {
-    let path = format!("{WAKE_PREFIX}{organization}/{job}");
-    serde_json::json!({
-        "version": "2.0",
-        "routeKey": "$default",
-        "rawPath": path,
-        "rawQueryString": "",
-        "headers": {"content-type": "application/json", WAKE_HEADER: secret},
-        "requestContext": {
-            "accountId": "anonymous",
-            "apiId": "antilog-scheduler",
-            "domainName": SCHEDULER_DOMAIN,
-            "domainPrefix": "scheduler",
-            "http": {
-                "method": "POST",
-                "path": path,
-                "protocol": "HTTP/1.1",
-                "sourceIp": "127.0.0.1",
-                "userAgent": "antilog-scheduler"
-            },
-            "requestId": "scheduler",
-            "routeKey": "$default",
-            "stage": "$default",
-            "time": "01/Jan/2026:00:00:00 +0000",
-            "timeEpoch": 0
-        },
-        "body": "",
-        "isBase64Encoded": false
-    })
-    .to_string()
-}
-
-fn from_scheduler(request: &Request<Body>) -> bool {
+fn from_deploy(request: &Request<Body>) -> bool {
     matches!(
         request.request_context_ref(),
         Some(RequestContext::ApiGatewayV2(context))
-            if context.domain_name.as_deref() == Some(SCHEDULER_DOMAIN)
+            if context.domain_name.as_deref() == Some(DEPLOY_DOMAIN)
     )
 }
 
-/// Runs one request through the router, keeping `/internal/` for the scheduler.
+/// Runs one request through the router, keeping `/internal/` for the deploy.
 pub async fn handle(
     router: Router,
     guard: &OriginGuard,
     request: Request<Body>,
 ) -> Result<Response<axum::body::Body>, Error> {
-    let scheduler = from_scheduler(&request);
-    // Only CloudFront (which adds the origin secret) and the scheduler may reach the server.
-    if !scheduler && !guard.allows(request.headers()) {
+    let deploy = from_deploy(&request);
+    // Only CloudFront (which adds the origin secret) and the deploy may reach the server.
+    if !deploy && !guard.allows(request.headers()) {
         return Ok(OriginGuard::refusal());
     }
-    if request.uri().path().starts_with(INTERNAL_PREFIX) && !scheduler {
+    if request.uri().path().starts_with(INTERNAL_PREFIX) && !deploy {
         let mut refused = Response::new(axum::body::Body::from(
             r#"{"code":"not_found","message":"No such route.","fields":[]}"#,
         ));
@@ -126,7 +87,7 @@ mod tests {
     fn router() -> Router {
         Router::new()
             .route("/health", get(|| async { "ok" }))
-            .route("/internal/wake/{org}/{job}", post(|| async { "woke" }))
+            .route("/internal/migrate", post(|| async { "migrated" }))
     }
 
     fn open() -> OriginGuard {
@@ -184,28 +145,27 @@ mod tests {
         assert_eq!(text(response).await, (StatusCode::OK, "ok".to_owned()));
     }
 
+    fn deploy_event() -> Request<Body> {
+        from_str(include_str!("../../../deploy/tofu/aws/events/migrate.json"))
+            .unwrap_or_else(|e| unreachable!("{e}"))
+    }
+
     #[tokio::test]
-    async fn the_scheduler_event_is_a_wake_request() {
-        let (org, job) = (Uuid::from_u128(1), Uuid::from_u128(2));
-        let request =
-            from_str(&wake_event(org, job, "s3cret")).unwrap_or_else(|e| unreachable!("{e}"));
-        assert_eq!(request.uri().path(), format!("/internal/wake/{org}/{job}"));
-        assert_eq!(
-            request
-                .headers()
-                .get(WAKE_HEADER)
-                .and_then(|v| v.to_str().ok()),
-            Some("s3cret")
-        );
+    async fn the_deploy_event_reaches_an_internal_path() {
+        let request = deploy_event();
+        assert_eq!(request.uri().path(), "/internal/migrate");
         let response = handle(router(), &open(), request)
             .await
             .unwrap_or_else(|e| unreachable!("{e}"));
-        assert_eq!(text(response).await, (StatusCode::OK, "woke".to_owned()));
+        assert_eq!(
+            text(response).await,
+            (StatusCode::OK, "migrated".to_owned())
+        );
     }
 
     #[tokio::test]
     async fn the_internet_cannot_reach_internal_paths() {
-        let response = handle(router(), &open(), url_request("/internal/wake/a/b", "POST"))
+        let response = handle(router(), &open(), url_request("/internal/migrate", "POST"))
             .await
             .unwrap_or_else(|e| unreachable!("{e}"));
         let (status, body) = text(response).await;
@@ -214,7 +174,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn without_the_origin_secret_the_function_refuses_everything_but_the_scheduler() {
+    async fn without_the_origin_secret_the_function_refuses_everything_but_the_deploy() {
         let guard = OriginGuard::requiring([antilog_core::secrets::Secret::new("front")]);
         for request in [
             url_request("/health", "GET"),
@@ -233,13 +193,13 @@ mod tests {
         .await
         .unwrap_or_else(|e| unreachable!("{e}"));
         assert_eq!(text(through).await, (StatusCode::OK, "ok".to_owned()));
-        let (org, job) = (Uuid::from_u128(1), Uuid::from_u128(2));
-        let wake =
-            from_str(&wake_event(org, job, "s3cret")).unwrap_or_else(|e| unreachable!("{e}"));
-        let response = handle(router(), &guard, wake)
+        let response = handle(router(), &guard, deploy_event())
             .await
             .unwrap_or_else(|e| unreachable!("{e}"));
-        assert_eq!(text(response).await, (StatusCode::OK, "woke".to_owned()));
+        assert_eq!(
+            text(response).await,
+            (StatusCode::OK, "migrated".to_owned())
+        );
     }
 
     #[tokio::test]

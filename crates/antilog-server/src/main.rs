@@ -28,10 +28,7 @@ async fn main() -> anyhow::Result<()> {
         .context("connecting to Postgres")?;
     let store = PgStore::new(pool);
     store.migrate().await.context("applying migrations")?;
-    anyhow::ensure!(
-        std::env::var("ANTILOG_PLATFORM").as_deref() == Ok("fake"),
-        "no agent platform adapter is built yet: set ANTILOG_PLATFORM=fake to serve on the fakes"
-    );
+    tracing::warn!("no runner or code host is built yet: serving on the fakes for both");
 
     let listener = tokio::net::TcpListener::bind(&listen)
         .await

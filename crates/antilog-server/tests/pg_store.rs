@@ -5,8 +5,8 @@ use antilog_core::store::{ApprovalStore, OrganizationStore};
 use antilog_core::testing::store_suite;
 use antilog_server::pg::{MIGRATOR, PgStore};
 use antilog_types::{
-    ApprovalStatus, AuditEntry, AuditOutcome, CardKind, Cleanup, ExperimentStatus, Member,
-    MemberKind, Organization, OrganizationId, PolicyMode, Role, SessionStatus, SpendKind,
+    ApprovalStatus, AuditEntry, AuditOutcome, CardKind, ExperimentStatus, Member, MemberKind,
+    Organization, OrganizationId, PolicyMode, Role, SessionStatus, SpendKind,
 };
 use sqlx::PgPool;
 use sqlx::postgres::PgPoolOptions;
@@ -60,9 +60,9 @@ async fn postgres_store_passes_the_store_suite() -> anyhow::Result<()> {
 }
 
 #[tokio::test]
-async fn postgres_store_keeps_the_relay_state() -> anyhow::Result<()> {
+async fn postgres_store_keeps_the_card_state() -> anyhow::Result<()> {
     let (store, _pool, _container) = migrated_store().await?;
-    antilog_core::seed::relay_suite(&store).await;
+    antilog_core::seed::card_suite(&store).await;
     Ok(())
 }
 
@@ -228,7 +228,6 @@ async fn check_constraints_list_the_values_of_the_enums() -> anyhow::Result<()> 
             "sessions_status",
             texts(SessionStatus::ALL, SessionStatus::as_str),
         ),
-        ("sessions_cleanup", texts(Cleanup::ALL, Cleanup::as_str)),
         ("spend_kind", texts(SpendKind::ALL, SpendKind::as_str)),
         ("policies_card", texts(CardKind::ALL, CardKind::as_str)),
         ("approvals_card", texts(CardKind::ALL, CardKind::as_str)),
@@ -498,7 +497,6 @@ async fn the_session_area_and_the_judge_see_only_their_organization() -> anyhow:
         "experiments",
         "sessions",
         "spend",
-        "session_relay",
         "seal_proposals",
         "approvals_told",
         "sealed_experiments",

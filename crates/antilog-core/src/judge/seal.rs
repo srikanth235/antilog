@@ -1,12 +1,14 @@
+use antilog_types::SessionId;
 use antilog_types::judge::{
     CheatCheck, CommitRef, Definition, ExperimentId, Outcome, ProtectedFile, SealChecks,
     SealRefused, SealedExperiment,
 };
 
+use super::paired::{Data, PairedRun, RunError, run_paired};
 use super::run::{Env, Sides, evaluate};
 use super::stats::noise;
 use crate::clock::Clock;
-use crate::platform::{Data, PairedRun, Platform, PlatformError};
+use crate::machine::SessionMachine;
 use crate::store::judge::{JudgeStore, JudgeStoreError};
 
 /// Code the proposer plants to see whether the evaluation rejects it.
@@ -22,7 +24,7 @@ pub enum SealError {
     #[error(transparent)]
     Refused(#[from] SealRefused),
     #[error(transparent)]
-    Sandbox(#[from] PlatformError),
+    Run(#[from] RunError),
     #[error("the baseline measured too few or unusable repeats")]
     Unusable,
     #[error(transparent)]
@@ -42,8 +44,9 @@ fn baseline(def: &Definition) -> Vec<CommitRef> {
 
 /// The baseline measurement, the noise check (the commit paired with itself) and the
 /// planted cheats. A definition that fails any of them gets no `SealChecks`.
-pub async fn run_checks<S: Platform>(
-    sandbox: &S,
+pub async fn run_checks<M: SessionMachine>(
+    machine: &M,
+    session: SessionId,
     definition: &Definition,
     files: &[ProtectedFile],
     cheats: &[PlantedCheat],
@@ -53,9 +56,10 @@ pub async fn run_checks<S: Platform>(
         return Err(SealRefused::Definition(problems).into());
     }
     let base = baseline(definition);
-    let pairs = sandbox
-        .run_paired(&PairedRun {
-            seal: None,
+    let pairs = run_paired(
+        machine,
+        session,
+        &PairedRun {
             command: &definition.evaluation.command,
             files,
             data: Data::Evaluation(&definition.data.evaluation),
@@ -63,8 +67,9 @@ pub async fn run_checks<S: Platform>(
             trial: &base,
             repeats: definition.repeats,
             guardrails: &definition.guardrails,
-        })
-        .await?;
+        },
+    )
+    .await?;
     let direction = definition.metric.direction;
     let diffs: Vec<f64> = pairs
         .metric
@@ -85,12 +90,9 @@ pub async fn run_checks<S: Platform>(
             }
         }
         let ran = evaluate(
-            sandbox,
-            Env {
-                definition,
-                files,
-                seal: None,
-            },
+            machine,
+            session,
+            Env { definition, files },
             std::num::NonZeroU32::MIN,
             spread,
             definition.touched(&cheat.changed),
@@ -121,8 +123,9 @@ pub struct Proposal {
 
 /// Runs the seal checks, seals the definition as one new version and stores it.
 /// Call it only after a person approved the card.
-pub async fn seal<S: Platform, J: JudgeStore, C: Clock>(
-    sandbox: &S,
+pub async fn seal<M: SessionMachine, J: JudgeStore, C: Clock>(
+    machine: &M,
+    session: SessionId,
     store: &J,
     clock: &C,
     proposal: Proposal,
@@ -134,7 +137,7 @@ pub async fn seal<S: Platform, J: JudgeStore, C: Clock>(
         files,
         cheats,
     } = proposal;
-    let checks = run_checks(sandbox, &definition, &files, &cheats).await?;
+    let checks = run_checks(machine, session, &definition, &files, &cheats).await?;
     let sealed = SealedExperiment::seal(
         experiment,
         version,

@@ -1,24 +1,14 @@
-mod relay;
+mod settle;
 
-use std::time::Duration;
-
+use crate::deps::Deps;
+use crate::spend::{BudgetError, ensure_budget};
+use crate::store::{NewEvent, SessionChange, SessionStore, StoreError};
 use antilog_types::{
     AuditEntry, AuditOutcome, EventKind, ExperimentId, MemberId, OrganizationId, Session,
     SessionId, SessionStatus,
 };
-use jiff::SignedDuration;
 
-use crate::deps::Deps;
-use crate::platform::{Platform, PlatformError, SessionHandle, SessionSpec};
-use crate::spend::{BudgetError, ensure_budget};
-use crate::store::{NewEvent, SessionChange, SessionStore, StoreError};
-use crate::timer::{JobId, Timer, TimerError};
-use crate::tools::definitions;
-
-pub use relay::{Step, step};
-
-/// One relay step is about this long; the next wake-up is booked at its end.
-pub const STEP: Duration = Duration::from_secs(600);
+pub use settle::settle;
 
 #[derive(Debug, thiserror::Error)]
 pub enum SessionError {
@@ -30,10 +20,6 @@ pub enum SessionError {
     Budget(#[from] BudgetError),
     #[error(transparent)]
     Store(StoreError),
-    #[error(transparent)]
-    Platform(#[from] PlatformError),
-    #[error(transparent)]
-    Timer(#[from] TimerError),
 }
 
 impl From<StoreError> for SessionError {
@@ -45,33 +31,13 @@ impl From<StoreError> for SessionError {
     }
 }
 
-pub fn job(session: SessionId) -> JobId {
-    JobId(session.as_uuid().as_u128())
-}
-
 pub(crate) fn now_ms<D: Deps>(deps: &D) -> i64 {
     use crate::clock::Clock;
     deps.clock().now().as_millisecond()
 }
 
-pub(crate) async fn book<D: Deps>(
-    deps: &D,
-    organization: OrganizationId,
-    session: SessionId,
-    after: Duration,
-) -> Result<(), TimerError> {
-    use crate::clock::Clock;
-    let after = SignedDuration::try_from(after).unwrap_or(SignedDuration::from_secs(600));
-    let at = deps
-        .clock()
-        .now()
-        .checked_add(after)
-        .unwrap_or_else(|_| deps.clock().now());
-    deps.timer().wake_at(organization, job(session), at).await
-}
-
 /// Keeps one item of the conversation. Only the words said and the name of a tool called, never a
-/// tool's input or output. Keyed, so a relay that delivers it twice records it once.
+/// tool's input or output. Keyed, so an item delivered twice is recorded once.
 pub(crate) async fn record<D: Deps>(
     deps: &D,
     session: &Session,
@@ -121,8 +87,8 @@ pub struct NewSession {
     pub actor: Option<MemberId>,
 }
 
-/// Starts a session in an experiment on the platform and books its first relay step.
-/// A platform that is down leaves the session Waiting for you, never lost.
+/// Starts a session in an experiment: its row, its first words and its audit entry. The agent
+/// runs wherever the runner puts it; nothing here starts one.
 pub async fn start<D: Deps>(
     deps: &D,
     organization: OrganizationId,
@@ -142,13 +108,7 @@ pub async fn start<D: Deps>(
         row.budget_cap_cents,
     )
     .await?;
-    let mut session = Session::new(
-        organization,
-        experiment,
-        &new.agent,
-        deps.platform().name(),
-        now_ms(deps),
-    );
+    let mut session = Session::new(organization, experiment, &new.agent, now_ms(deps));
     session.parent = new.parent;
     let entry = audit(deps, organization, new.actor, "session.start", session.id);
     deps.store().create_session(&session, &entry).await?;
@@ -163,46 +123,17 @@ pub async fn start<D: Deps>(
         )
         .await?;
     }
-    let spec = SessionSpec {
-        agent: new.agent,
-        prompt: new.prompt,
-        repos: new.repos,
-        environment: new.environment,
-        tools: definitions(new.parent.is_some()),
-    };
-    let change = match deps.platform().start_session(&spec).await {
-        Ok(SessionHandle(handle)) => SessionChange {
-            platform_handle: Some(handle),
-            ..SessionChange::default()
-        },
-        Err(error) => {
-            let _ = &error;
-            SessionChange {
-                status: Some(SessionStatus::WaitingForYou),
-                note: Some("The platform is unavailable. Continue on another agent?".into()),
-                ..SessionChange::default()
-            }
-        }
-    };
-    let started = change.platform_handle.is_some();
-    let session = deps
-        .store()
-        .update_session(organization, session.id, &change, now_ms(deps), None)
-        .await?;
-    if started {
-        book(deps, organization, session.id, STEP).await?;
-    }
     Ok(session)
 }
 
-/// The session an agent on a person's own machine works under: no platform, no relay.
+/// The session an agent on a person's own machine works under.
 pub async fn open_external<D: Deps>(
     deps: &D,
     organization: OrganizationId,
     experiment: ExperimentId,
     actor: Option<MemberId>,
 ) -> Result<Session, SessionError> {
-    let session = Session::new(organization, experiment, "mcp", "external", now_ms(deps));
+    let session = Session::new(organization, experiment, "mcp", now_ms(deps));
     let entry = audit(deps, organization, actor, "session.start", session.id);
     deps.store().create_session(&session, &entry).await?;
     Ok(session)
@@ -212,22 +143,20 @@ async fn active<D: Deps>(
     deps: &D,
     organization: OrganizationId,
     id: SessionId,
-) -> Result<(Session, SessionHandle), SessionError> {
+) -> Result<Session, SessionError> {
     let session = deps
         .store()
         .session(organization, id)
         .await?
         .ok_or(SessionError::NotFound)?;
-    match (&session.platform_handle, session.status.is_active()) {
-        (Some(handle), true) => {
-            let handle = SessionHandle(handle.clone());
-            Ok((session, handle))
-        }
-        _ => Err(SessionError::Ended),
+    if session.status.is_active() {
+        Ok(session)
+    } else {
+        Err(SessionError::Ended)
     }
 }
 
-/// A person talks to the session: the agent gets the text and the session is Working again.
+/// A person talks to the session: their words join the conversation and it is Working again.
 pub async fn message<D: Deps>(
     deps: &D,
     organization: OrganizationId,
@@ -235,8 +164,7 @@ pub async fn message<D: Deps>(
     actor: Option<MemberId>,
     text: &str,
 ) -> Result<Session, SessionError> {
-    let (row, handle) = active(deps, organization, id).await?;
-    deps.platform().send_input(&handle, text).await?;
+    let row = active(deps, organization, id).await?;
     record(
         deps,
         &row,
@@ -250,7 +178,7 @@ pub async fn message<D: Deps>(
         status: Some(SessionStatus::Working),
         ..SessionChange::default()
     };
-    let session = deps
+    Ok(deps
         .store()
         .update_session(
             organization,
@@ -259,9 +187,7 @@ pub async fn message<D: Deps>(
             now_ms(deps),
             Some(&audit(deps, organization, actor, "session.message", id)),
         )
-        .await?;
-    book(deps, organization, id, Duration::ZERO).await?;
-    Ok(session)
+        .await?)
 }
 
 /// A person stops the session: Done, "Stopped by NAME". What it spent until now is kept.
@@ -272,23 +198,24 @@ pub async fn stop<D: Deps>(
     actor: Option<MemberId>,
     name: &str,
 ) -> Result<Session, SessionError> {
-    let (_, handle) = active(deps, organization, id).await?;
-    deps.platform().stop(&handle).await?;
-    relay::drain(deps, organization, id, &handle).await?;
-    let session = relay::finish(
-        deps,
-        organization,
-        id,
-        &handle,
-        SessionStatus::Done,
-        Some(format!("Stopped by {name}")),
-        audit(deps, organization, actor, "session.stop", id),
-    )
-    .await?;
-    Ok(session)
+    active(deps, organization, id).await?;
+    let change = SessionChange {
+        status: Some(SessionStatus::Done),
+        note: Some(format!("Stopped by {name}")),
+    };
+    Ok(deps
+        .store()
+        .update_session(
+            organization,
+            id,
+            &change,
+            now_ms(deps),
+            Some(&audit(deps, organization, actor, "session.stop", id)),
+        )
+        .await?)
 }
 
-/// Spend is metered by the relay; this is its total for an experiment.
+/// What the experiment has spent; this is its total for an experiment.
 pub async fn budget_left<D: Deps>(
     deps: &D,
     organization: OrganizationId,

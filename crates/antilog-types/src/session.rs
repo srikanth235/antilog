@@ -64,8 +64,6 @@ impl SessionStatus {
     }
 }
 
-text_enum!(Cleanup { Removed => "removed", NotRemoved => "not_removed" });
-
 /// One agent's work inside an experiment.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -76,12 +74,9 @@ pub struct Session {
     /// Set on a spawned session; a spawned session cannot spawn.
     pub parent: Option<SessionId>,
     pub agent: String,
-    pub platform: String,
-    pub platform_handle: Option<String>,
     pub status: SessionStatus,
     /// Why it ended, such as "Stopped by Ada" or "Handed off to Codex".
     pub note: Option<String>,
-    pub cleanup: Option<Cleanup>,
     pub created_at: i64,
     pub updated_at: i64,
 }
@@ -91,7 +86,6 @@ impl Session {
         organization_id: OrganizationId,
         experiment_id: ExperimentId,
         agent: impl Into<String>,
-        platform: impl Into<String>,
         created_at: i64,
     ) -> Self {
         Self {
@@ -100,11 +94,8 @@ impl Session {
             experiment_id,
             parent: None,
             agent: agent.into(),
-            platform: platform.into(),
-            platform_handle: None,
             status: SessionStatus::Working,
             note: None,
-            cleanup: None,
             created_at,
             updated_at: created_at,
         }
@@ -144,14 +135,13 @@ text_enum!(
     CostTier { Low => "low", Medium => "medium", High => "high" }
 );
 
-/// An agent an organization may run: a model on an agent platform.
+/// An agent an organization may run: a model and the harness around it.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Agent {
     /// A lower-case slug such as `claude-code`; sessions name it.
     pub id: String,
     pub name: String,
-    pub platform: String,
     /// Auto chooses only among the agents that are turned on.
     pub enabled: bool,
     /// What Auto uses before it has data; an owner sets it, and it is never set by brand.
@@ -166,7 +156,6 @@ pub struct Agent {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct NewAgent {
     pub name: String,
-    pub platform: String,
     pub enabled: bool,
     pub is_default: bool,
     pub cost_tier: CostTier,
@@ -186,8 +175,7 @@ pub struct AutoChoice {
 pub struct Environment {
     pub id: String,
     pub name: String,
-    pub platform: String,
-    /// Offered by the platform until environments can be registered.
+    /// Offered until environments can be registered.
     pub built_in: bool,
 }
 
@@ -218,14 +206,6 @@ pub struct SendMessage {
     pub text: String,
 }
 
-/// The result of one relay step.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct StepResult {
-    pub status: SessionStatus,
-    pub events: u32,
-}
-
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ToolDefinition {
@@ -235,7 +215,7 @@ pub struct ToolDefinition {
     pub input_schema: serde_json::Value,
 }
 
-/// A call of one Antilog tool from an agent that is not in a platform session, such as `antilog mcp`.
+/// A call of one Antilog tool from an agent that is not in an Antilog session, such as `antilog mcp`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ToolCall {

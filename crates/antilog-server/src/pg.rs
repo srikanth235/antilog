@@ -5,10 +5,10 @@ use sqlx::{PgConnection, PgPool, Postgres, Transaction};
 
 mod approval;
 mod budget;
+mod card;
 mod code_host;
 mod judge;
 mod organization;
-mod relay;
 mod session;
 
 pub use judge::PgJudge;

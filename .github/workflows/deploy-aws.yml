@@ -16,7 +16,6 @@ on:
     paths:
       - "deploy/tofu/**"
       - "crates/antilog-aws/**"
-      - "crates/antilog-agentcore/**"
       - ".github/workflows/deploy-aws.yml"
   workflow_dispatch:
     inputs:

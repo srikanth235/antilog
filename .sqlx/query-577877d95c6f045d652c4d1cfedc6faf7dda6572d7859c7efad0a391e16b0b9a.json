@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "update sessions set status = coalesce($3, status), note = coalesce($4, note), platform_handle = coalesce($5, platform_handle), cleanup = coalesce($6, cleanup), updated_at = to_timestamp($7::bigint / 1000.0) where organization_id = $1 and id = $2 returning id, organization_id, experiment_id, parent_session_id, agent, platform, platform_handle, status, note, cleanup, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from updated_at) * 1000)::bigint as \"updated_at!\"",
+  "query": "update sessions set status = coalesce($3, status), note = coalesce($4, note), updated_at = to_timestamp($5::bigint / 1000.0) where organization_id = $1 and id = $2 returning id, organization_id, experiment_id, parent_session_id, agent, status, note, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from updated_at) * 1000)::bigint as \"updated_at!\"",
   "describe": {
     "columns": [
       {
@@ -60,28 +60,6 @@
       },
       {
         "ordinal": 5,
-        "name": "platform",
-        "type_info": "Text",
-        "origin": {
-          "Table": {
-            "table": "sessions",
-            "name": "platform"
-          }
-        }
-      },
-      {
-        "ordinal": 6,
-        "name": "platform_handle",
-        "type_info": "Text",
-        "origin": {
-          "Table": {
-            "table": "sessions",
-            "name": "platform_handle"
-          }
-        }
-      },
-      {
-        "ordinal": 7,
         "name": "status",
         "type_info": "Text",
         "origin": {
@@ -92,7 +70,7 @@
         }
       },
       {
-        "ordinal": 8,
+        "ordinal": 6,
         "name": "note",
         "type_info": "Text",
         "origin": {
@@ -103,24 +81,13 @@
         }
       },
       {
-        "ordinal": 9,
-        "name": "cleanup",
-        "type_info": "Text",
-        "origin": {
-          "Table": {
-            "table": "sessions",
-            "name": "cleanup"
-          }
-        }
-      },
-      {
-        "ordinal": 10,
+        "ordinal": 7,
         "name": "created_at!",
         "type_info": "Int8",
         "origin": "Expression"
       },
       {
-        "ordinal": 11,
+        "ordinal": 8,
         "name": "updated_at!",
         "type_info": "Int8",
         "origin": "Expression"
@@ -130,8 +97,6 @@
       "Left": [
         "Uuid",
         "Uuid",
-        "Text",
-        "Text",
         "Text",
         "Text",
         "Int8"
@@ -145,12 +110,9 @@
       false,
       false,
       true,
-      false,
-      true,
-      true,
       null,
       null
     ]
   },
-  "hash": "554026419b480d11eb83bcee8115913ae69f7ab9e23d6306c0656300a1cad6c8"
+  "hash": "577877d95c6f045d652c4d1cfedc6faf7dda6572d7859c7efad0a391e16b0b9a"
 }

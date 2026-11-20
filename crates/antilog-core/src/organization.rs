@@ -68,7 +68,6 @@ pub enum Action {
     SessionStart,
     SessionMessage,
     SessionStop,
-    SessionStep,
     ToolCall,
     ApprovalDecide,
     ApprovalDecideValueModel,
@@ -96,7 +95,6 @@ impl Action {
         Self::SessionStart,
         Self::SessionMessage,
         Self::SessionStop,
-        Self::SessionStep,
         Self::ToolCall,
         Self::ApprovalDecide,
         Self::ApprovalDecideValueModel,
@@ -124,7 +122,6 @@ impl Action {
             Self::SessionStart => "session.start",
             Self::SessionMessage => "session.message",
             Self::SessionStop => "session.stop",
-            Self::SessionStep => "session.step",
             Self::ToolCall => "tool.call",
             Self::ApprovalDecide | Self::ApprovalDecideValueModel => "approval.decide",
             Self::ValueModelSet => "value_model.set",
@@ -146,7 +143,6 @@ impl Action {
             | Self::SessionStart
             | Self::SessionMessage
             | Self::SessionStop
-            | Self::SessionStep
             | Self::ToolCall
             | Self::ApprovalDecide
             | Self::ReportRead => Role::Editor,
@@ -176,7 +172,6 @@ impl Action {
                 | Self::SessionStart
                 | Self::SessionMessage
                 | Self::SessionStop
-                | Self::SessionStep
                 | Self::ToolCall
                 | Self::ApprovalDecide
                 | Self::ApprovalDecideValueModel

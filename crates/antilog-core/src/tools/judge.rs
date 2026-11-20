@@ -8,7 +8,7 @@ use antilog_types::{
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
-use super::setup::{Card, ask, waiting};
+use super::setup::{Card, ask, follow, waiting};
 use super::{Caller, Done, Ticket, ToolError, input};
 use crate::code_host::CodeHost;
 use crate::deps::Deps;
@@ -16,10 +16,9 @@ use crate::ids::uuid_of;
 use crate::judge::measure::{MeasureError, best};
 use crate::judge::receipt::{Context, issue};
 use crate::judge::seal::{PlantedCheat, Proposal, run_checks};
-use crate::platform::Platform;
 use crate::spend::ensure_budget;
 use crate::store::judge::JudgeStore;
-use crate::store::{RelayStore, SessionStore};
+use crate::store::{CardStore, SessionStore};
 
 fn word(outcome: Outcome) -> String {
     serde_json::to_value(outcome)
@@ -116,7 +115,8 @@ pub(super) async fn seal<D: Deps>(deps: &D, caller: &Caller, value: Value) -> Do
         .await?
         .map_or(1, |s| s.version() + 1);
     let checks = run_checks(
-        deps.platform(),
+        deps.machine(),
+        caller.session,
         &proposal.definition,
         &proposal.files,
         &planted(
@@ -221,6 +221,7 @@ pub(super) async fn seal<D: Deps>(deps: &D, caller: &Caller, value: Value) -> Do
     deps.store()
         .put_proposal(caller.organization, approval.id, &body)
         .await?;
+    follow(deps, caller, &approval).await;
     let answer = json!({
         "approval": approval.id,
         "status": "waiting for a person",
@@ -253,8 +254,12 @@ pub async fn seal_approved<D: Deps>(deps: &D, approval: &Approval) -> Result<u32
         .ok_or_else(|| ToolError::new("no proposal is stored for this card: call seal again"))?;
     let Stored { version, proposal } = serde_json::from_str(&body)
         .map_err(|_| ToolError::new("the stored proposal cannot be read: call seal again"))?;
+    let session = approval
+        .session_id
+        .ok_or_else(|| ToolError::new("the card has no session to run the seal checks in"))?;
     let sealed = crate::judge::seal::seal(
-        deps.platform(),
+        deps.machine(),
+        session,
         &deps.judge(org),
         deps.clock(),
         Proposal {
@@ -363,7 +368,7 @@ pub(super) async fn finish<D: Deps>(deps: &D, caller: &Caller, ticket: &Ticket) 
         }
     };
     match crate::judge::measure::measure(
-        deps.platform(),
+        deps.machine(),
         &deps.judge(caller.organization),
         &sealed,
         trial.clone(),
@@ -416,7 +421,6 @@ pub(crate) async fn issue_receipt<D: Deps>(
     let agents = match deps.store().session(org, record.trial.session).await {
         Ok(Some(session)) => vec![AgentRun {
             agent: session.agent,
-            platform: session.platform,
             session: session.id,
         }],
         _ => Vec::new(),
@@ -434,7 +438,6 @@ pub(crate) async fn issue_receipt<D: Deps>(
             credential_scopes: Vec::new(),
         },
         compute: ComputeSection {
-            platform: deps.platform().name().to_owned(),
             environment: "default".to_owned(),
             judge_image: "antilog-judge".to_owned(),
             judge_digest: "unset".to_owned(),
@@ -603,5 +606,5 @@ pub(super) async fn deliver<D: Deps>(deps: &D, caller: &Caller, value: Value) ->
         },
     )
     .await?;
-    Ok((waiting(&approval), None))
+    Ok((waiting(deps, caller, &approval).await, None))
 }

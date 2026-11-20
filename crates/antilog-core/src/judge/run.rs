@@ -1,19 +1,20 @@
 use std::num::NonZeroU32;
 
+use antilog_types::SessionId;
 use antilog_types::judge::{
     CRITERIA_VERSION, CommitRef, Decision, Definition, GuardrailReading, HoldoutResult, Outcome,
-    ProtectedFile, SealHash, Stage, Stats,
+    ProtectedFile, Stage, Stats,
 };
 
 use super::acceptance::{Criteria, Evidence, Need, Verdict, decide};
+use super::paired::{Data, PairedRun, Pairs, run_paired};
 use super::stats::{bar_confidence, confidence_95, stats};
-use crate::platform::{Data, PairedRun, Pairs, Platform};
+use crate::machine::SessionMachine;
 
 #[derive(Clone, Copy)]
 pub struct Env<'a> {
     pub definition: &'a Definition,
     pub files: &'a [ProtectedFile],
-    pub seal: Option<&'a SealHash>,
 }
 
 /// Where a trial starts from and what it changed, as full commit sets.
@@ -47,15 +48,16 @@ fn usable(pairs: &Pairs, repeats: u32) -> Result<(), String> {
     for series in all {
         let finite = series.iter().all(|(b, t)| b.is_finite() && t.is_finite());
         if series.len() != n || !finite {
-            return Err("the judge sandbox returned an unusable result".into());
+            return Err("the command returned an unusable result".into());
         }
     }
     Ok(())
 }
 
-/// Runs the stages `decide` asks for, one fresh sandbox each, until it is done.
-pub async fn evaluate<S: Platform>(
-    sandbox: &S,
+/// Runs the stages `decide` asks for, each in a fresh checkout, until it is done.
+pub async fn evaluate<M: SessionMachine>(
+    machine: &M,
+    session: SessionId,
     env: Env<'_>,
     k: NonZeroU32,
     noise: f64,
@@ -85,7 +87,6 @@ pub async fn evaluate<S: Platform>(
         },
     };
     let run = |data, base, repeats| PairedRun {
-        seal: env.seal,
         command: &def.evaluation.command,
         files: env.files,
         data,
@@ -111,7 +112,7 @@ pub async fn evaluate<S: Platform>(
             ),
             Need::Holdout => (Data::Holdout(&def.data.holdout), sides.parent, def.repeats),
         };
-        let pairs = match sandbox.run_paired(&run(data, base, repeats)).await {
+        let pairs = match run_paired(machine, session, &run(data, base, repeats)).await {
             Ok(pairs) => usable(&pairs, repeats).map(|()| pairs),
             Err(error) => Err(error.to_string()),
         };

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select id, organization_id, experiment_id, parent_session_id, agent, platform, platform_handle, status, note, cleanup, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from updated_at) * 1000)::bigint as \"updated_at!\" from sessions where organization_id = $1 and id = $2",
+  "query": "select id, organization_id, experiment_id, parent_session_id, agent, status, note, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from updated_at) * 1000)::bigint as \"updated_at!\" from sessions where organization_id = $1 and updated_at >= to_timestamp($2::bigint / 1000.0) order by updated_at, id limit $3",
   "describe": {
     "columns": [
       {
@@ -60,28 +60,6 @@
       },
       {
         "ordinal": 5,
-        "name": "platform",
-        "type_info": "Text",
-        "origin": {
-          "Table": {
-            "table": "sessions",
-            "name": "platform"
-          }
-        }
-      },
-      {
-        "ordinal": 6,
-        "name": "platform_handle",
-        "type_info": "Text",
-        "origin": {
-          "Table": {
-            "table": "sessions",
-            "name": "platform_handle"
-          }
-        }
-      },
-      {
-        "ordinal": 7,
         "name": "status",
         "type_info": "Text",
         "origin": {
@@ -92,7 +70,7 @@
         }
       },
       {
-        "ordinal": 8,
+        "ordinal": 6,
         "name": "note",
         "type_info": "Text",
         "origin": {
@@ -103,24 +81,13 @@
         }
       },
       {
-        "ordinal": 9,
-        "name": "cleanup",
-        "type_info": "Text",
-        "origin": {
-          "Table": {
-            "table": "sessions",
-            "name": "cleanup"
-          }
-        }
-      },
-      {
-        "ordinal": 10,
+        "ordinal": 7,
         "name": "created_at!",
         "type_info": "Int8",
         "origin": "Expression"
       },
       {
-        "ordinal": 11,
+        "ordinal": 8,
         "name": "updated_at!",
         "type_info": "Int8",
         "origin": "Expression"
@@ -129,7 +96,8 @@
     "parameters": {
       "Left": [
         "Uuid",
-        "Uuid"
+        "Int8",
+        "Int8"
       ]
     },
     "nullable": [
@@ -140,12 +108,9 @@
       false,
       false,
       true,
-      false,
-      true,
-      true,
       null,
       null
     ]
   },
-  "hash": "936e03852b65e6826bab30994fd67f9e4548b41bfad9e6da9d18427b229f0536"
+  "hash": "6a7430b3b3a5624f0f8fe6a3c73f5c5fd2ea53e91f7eaf0e31ff67641744c892"
 }

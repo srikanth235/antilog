@@ -2,7 +2,6 @@ import { Link } from "@tanstack/react-router";
 import type { Schemas } from "../../api/client";
 import { useAgentLabel } from "../../api/queries";
 import { Icon } from "../../components/icon/Icon";
-import { platformName } from "../../lib/domain";
 import { dollars } from "../../lib/format";
 import { type History, OUTCOME_COLOR, OUTCOME_WORDS } from "../../lib/history";
 import { w } from "../../words";
@@ -89,9 +88,7 @@ export function DetailsPanel(props: {
             >
               <span className="col">
                 <span>{agentLabel(session.agent)}</span>
-                <span className="xs mut">
-                  {w.activity[session.status]} · {platformName(session.platform)}
-                </span>
+                <span className="xs mut">{w.activity[session.status]}</span>
               </span>
             </Link>
           ))}
@@ -155,7 +152,7 @@ export function TrialsPanel(props: {
   );
 }
 
-/** Changes, Terminal, Preview and Files read from the agent platform, which the API does not serve yet. (target) */
+/** Changes, Terminal, Preview and Files read from the session's machine, which the API does not serve yet. (target) */
 export function PlatformPanel({ panel, onClose }: { panel: Panel; onClose: () => void }) {
   return (
     <PanelFrame panel={panel} onClose={onClose}>

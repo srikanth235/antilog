@@ -1,39 +1,28 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::indexing_slicing)]
 
 use antilog_core::delivery::{self, Handled, PullRequestAction, PullRequestEvent};
-use antilog_core::fakes::{FakeCodeHost, FakeDeps, FakePlatform};
+mod common;
+
+use antilog_core::fakes::{FakeCodeHost, FakeDeps, FakeMachine, Profile};
 use antilog_core::judge::fixtures::definition;
-use antilog_core::judge::sandbox::Profile;
 use antilog_core::organization::Principal;
-use antilog_core::platform::{PlatformEvent, SessionHandle};
 use antilog_core::seed::{Seed, T0, experiment};
 use antilog_core::session::{self, NewSession};
 use antilog_core::store::judge::JudgeStore;
 use antilog_core::store::{ApprovalStore, BudgetStore};
-use antilog_core::tools::Toolbox;
 use antilog_core::value::{self, Range};
 use antilog_types::judge::{NewValueModel, ValueModelRef, ValueSource, WinEventKind};
 use antilog_types::{ApprovalStatus, CardKind, CardPayload, Decision};
+use common::Agent;
 use serde_json::{Value, json};
 
-fn platform() -> FakePlatform {
-    let mut p = FakePlatform::default().with("base", Profile::new(100.0));
+fn machine() -> FakeMachine {
+    let mut p = FakeMachine::default().with("base", Profile::new(100.0));
     for i in 0..4 {
         p = p.with(&format!("cheat-{i}"), Profile::new(10.0).holdout(100.0));
     }
     p.with("fast", Profile::new(80.0))
         .with("faster", Profile::new(70.0))
-}
-
-fn call(deps: &FakeDeps, handle: &SessionHandle, id: &str, name: &str, input: Value) {
-    deps.platform.emit(
-        handle,
-        PlatformEvent::ToolCall {
-            id: id.into(),
-            name: name.into(),
-            input,
-        },
-    );
 }
 
 fn cheats() -> Value {
@@ -56,7 +45,7 @@ fn cheats() -> Value {
 struct Run {
     deps: FakeDeps,
     seed: Seed,
-    handle: SessionHandle,
+    agent: Agent,
     session: antilog_types::Session,
 }
 
@@ -95,10 +84,7 @@ async fn decide_all(run: &Run) {
 }
 
 async fn step(run: &Run) {
-    let host = Toolbox(&run.deps);
-    session::step(&run.deps, &host, run.seed.organization.id, run.session.id)
-        .await
-        .unwrap();
+    run.agent.step(&run.deps).await;
 }
 
 /// A sealed experiment worth $1 a year per ms, with one Kept trial that moved p95 from 100 to 80.
@@ -107,7 +93,7 @@ async fn kept_win(
     commits: Value,
     repos: &[&str],
 ) -> (Run, antilog_types::judge::TrialId) {
-    let deps = FakeDeps::new(platform(), code);
+    let deps = FakeDeps::new(machine(), code);
     let seed = experiment(&deps.store, 100_000).await;
     let owner = Principal {
         organization: seed.organization.id,
@@ -143,11 +129,10 @@ async fn kept_win(
     )
     .await
     .unwrap();
-    let handle = SessionHandle(session.platform_handle.clone().unwrap());
     let run = Run {
         deps,
         seed,
-        handle,
+        agent: Agent::new(session.clone()),
         session,
     };
     let mut definition = definition();
@@ -162,9 +147,7 @@ async fn kept_win(
         id: model.model.id,
         version: model.model.version,
     });
-    call(
-        &run.deps,
-        &run.handle,
+    run.agent.call(
         "c1",
         "seal",
         json!({"definition": definition, "cheats": cheats()}),
@@ -172,9 +155,7 @@ async fn kept_win(
     step(&run).await;
     decide_all(&run).await;
     step(&run).await;
-    call(
-        &run.deps,
-        &run.handle,
+    run.agent.call(
         "c2",
         "measure",
         json!({"commits": commits, "hypothesis":"cache"}),
@@ -231,13 +212,7 @@ async fn an_approved_card_opens_the_pull_request_and_a_merge_delivers_it_once() 
     )
     .await;
     let org = run.seed.organization.id;
-    call(
-        &run.deps,
-        &run.handle,
-        "c3",
-        "deliver",
-        json!({"trial": trial}),
-    );
+    run.agent.call("c3", "deliver", json!({"trial": trial}));
     step(&run).await;
 
     // The card carries its fields and opens nothing until a person approves.
@@ -264,13 +239,7 @@ async fn an_approved_card_opens_the_pull_request_and_a_merge_delivers_it_once() 
     let (repo, sha, body) = (&opened[0].repo, &opened[0].sha, &opened[0].body);
     assert_eq!((repo.as_str(), sha.as_str()), ("app", "fast"));
     assert!(body.contains("100.00") && body.contains("80.00"), "{body}");
-    let told = run
-        .deps
-        .platform
-        .inputs(&run.handle)
-        .last()
-        .unwrap()
-        .clone();
+    let told = run.agent.inputs().last().unwrap().clone();
     assert!(told.contains("https://code.example/app/pull/1"), "{told}");
     let events = run
         .deps
@@ -343,13 +312,7 @@ async fn closing_a_pull_request_takes_the_win_back_to_not_opened_and_a_reopen_re
         &["app"],
     )
     .await;
-    call(
-        &run.deps,
-        &run.handle,
-        "c3",
-        "deliver",
-        json!({"trial": trial}),
-    );
+    run.agent.call("c3", "deliver", json!({"trial": trial}));
     step(&run).await;
     decide_all(&run).await;
     step(&run).await;
@@ -391,13 +354,7 @@ async fn a_linked_set_is_delivered_only_when_every_pull_request_merged() {
         &["app", "lib"],
     )
     .await;
-    call(
-        &run.deps,
-        &run.handle,
-        "c3",
-        "deliver",
-        json!({"trial": trial}),
-    );
+    run.agent.call("c3", "deliver", json!({"trial": trial}));
     step(&run).await;
     decide_all(&run).await;
     step(&run).await;
@@ -451,23 +408,11 @@ async fn a_refusing_code_host_leaves_the_win_unopened_and_tells_the_session() {
     )
     .await;
     run.deps.code.refuse_pull_requests();
-    call(
-        &run.deps,
-        &run.handle,
-        "c3",
-        "deliver",
-        json!({"trial": trial}),
-    );
+    run.agent.call("c3", "deliver", json!({"trial": trial}));
     step(&run).await;
     decide_all(&run).await;
     step(&run).await;
-    let told = run
-        .deps
-        .platform
-        .inputs(&run.handle)
-        .last()
-        .unwrap()
-        .clone();
+    let told = run.agent.inputs().last().unwrap().clone();
     assert!(told.contains("opening the pull request failed"), "{told}");
     assert!(
         run.deps

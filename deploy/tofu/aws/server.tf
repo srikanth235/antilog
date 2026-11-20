@@ -11,7 +11,7 @@ resource "aws_cloudwatch_log_group" "server" {
 
 resource "aws_iam_role" "server" {
   name                 = "${local.prefix}-server"
-  description          = "The server function: logs, its schedules, and the agent runtimes it calls"
+  description          = "The server function: its logs"
   permissions_boundary = var.permissions_boundary_arn
 
   assume_role_policy = jsonencode({
@@ -24,52 +24,20 @@ resource "aws_iam_role" "server" {
   })
 }
 
-locals {
-  runtime_arns = compact([
-    try(aws_bedrockagentcore_agent_runtime.agent[0].agent_runtime_arn, ""),
-    try(aws_bedrockagentcore_agent_runtime.judge[0].agent_runtime_arn, ""),
-  ])
-}
-
 resource "aws_iam_role_policy" "server" {
   name = "server"
   role = aws_iam_role.server.id
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = concat(
-      [
-        {
-          Sid      = "Logs"
-          Effect   = "Allow"
-          Action   = ["logs:CreateLogStream", "logs:PutLogEvents"]
-          Resource = "${aws_cloudwatch_log_group.server.arn}:*"
-        },
-        {
-          Sid      = "BookWakeUps"
-          Effect   = "Allow"
-          Action   = ["scheduler:CreateSchedule", "scheduler:UpdateSchedule", "scheduler:DeleteSchedule", "scheduler:GetSchedule"]
-          Resource = "arn:aws:scheduler:${var.region}:${var.account_id}:schedule/${aws_scheduler_schedule_group.wake.name}/*"
-        },
-        {
-          Sid       = "HandTheSchedulerItsRole"
-          Effect    = "Allow"
-          Action    = "iam:PassRole"
-          Resource  = aws_iam_role.scheduler.arn
-          Condition = { StringEquals = { "iam:PassedToService" = "scheduler.amazonaws.com" } }
-        },
-      ],
-      length(local.runtime_arns) == 0 ? [] : [
-        {
-          Sid    = "CallTheAgentRuntimes"
-          Effect = "Allow"
-          Action = ["bedrock-agentcore:InvokeAgentRuntime", "bedrock-agentcore:StopRuntimeSession"]
-          Resource = flatten([
-            for arn in local.runtime_arns : [arn, "${arn}/runtime-endpoint/*"]
-          ])
-        },
-      ],
-    )
+    Statement = [
+      {
+        Sid      = "Logs"
+        Effect   = "Allow"
+        Action   = ["logs:CreateLogStream", "logs:PutLogEvents"]
+        Resource = "${aws_cloudwatch_log_group.server.arn}:*"
+      },
+    ]
   })
 }
 
@@ -92,23 +60,11 @@ resource "aws_lambda_function" "server" {
   environment {
     variables = merge(
       {
-        RUST_LOG                     = "info"
-        ANTILOG_SECRET_DATABASE_URL  = aws_secretsmanager_secret_version.database_url.secret_string
-        ANTILOG_WAKE_SECRET          = aws_secretsmanager_secret_version.wake.secret_string
-        ANTILOG_ORIGIN_SECRET        = local.origin_active
-        ANTILOG_ORIGIN_SECRET_NEXT   = local.origin_next
-        ANTILOG_SECRET_RECEIPT_KEY   = aws_secretsmanager_secret_version.receipt_key.secret_string
-        ANTILOG_SCHEDULER_GROUP      = aws_scheduler_schedule_group.wake.name
-        ANTILOG_SCHEDULER_TARGET_ARN = "arn:aws:lambda:${var.region}:${var.account_id}:function:${local.server_function}"
-        ANTILOG_SCHEDULER_ROLE_ARN   = aws_iam_role.scheduler.arn
-        ANTILOG_AGENT_MODEL          = local.agent_model
-        ANTILOG_AGENT_FALLBACK_MODEL = local.fallback_model
-      },
-      length(aws_bedrockagentcore_agent_runtime.agent) == 0 ? {} : {
-        ANTILOG_AGENTCORE_AGENT_RUNTIME = aws_bedrockagentcore_agent_runtime.agent[0].agent_runtime_arn
-      },
-      length(aws_bedrockagentcore_agent_runtime.judge) == 0 ? {} : {
-        ANTILOG_AGENTCORE_JUDGE_RUNTIME = aws_bedrockagentcore_agent_runtime.judge[0].agent_runtime_arn
+        RUST_LOG                    = "info"
+        ANTILOG_SECRET_DATABASE_URL = aws_secretsmanager_secret_version.database_url.secret_string
+        ANTILOG_ORIGIN_SECRET       = local.origin_active
+        ANTILOG_ORIGIN_SECRET_NEXT  = local.origin_next
+        ANTILOG_SECRET_RECEIPT_KEY  = aws_secretsmanager_secret_version.receipt_key.secret_string
       },
       var.github_client_id == "" || var.public_url == "" ? {} : {
         ANTILOG_GITHUB_CLIENT_ID = var.github_client_id
@@ -130,7 +86,7 @@ resource "aws_lambda_function" "server" {
 
 # The URL is public (a function behind CloudFront cannot be private without IAM signing of
 # POST bodies), so the server itself refuses every request that lacks CloudFront's
-# `x-antilog-origin` secret; see secrets.tf. Only the scheduler's direct invokes pass without it.
+# `x-antilog-origin` secret; see secrets.tf. Only the deploy's direct invokes pass without it.
 resource "aws_lambda_function_url" "server" {
   function_name      = aws_lambda_function.server.function_name
   authorization_type = "NONE"

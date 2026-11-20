@@ -444,9 +444,17 @@ async fn decide<D: Deps + 'static>(
     Path(id): Path<ApprovalId>,
     Json(decide): Json<Decide>,
 ) -> Reply<Approval> {
-    Ok(Json(
-        approval::decide(app.store(), &authed.who, app.now(), id, decide.decision).await?,
-    ))
+    let decided =
+        approval::decide(app.store(), &authed.who, app.now(), id, decide.decision).await?;
+    if let Some(session) = decided.session_id {
+        // The decision stands even when applying it fails now; the agent is not told yet.
+        if let Err(error) =
+            antilog_core::session::settle(&*app.deps, decided.organization_id, session).await
+        {
+            tracing::warn!(%error, "applying a decided card failed");
+        }
+    }
+    Ok(Json(decided))
 }
 
 #[derive(Deserialize, IntoParams)]

@@ -676,23 +676,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/sessions/{id}/step": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** The timer's wake-up for a session. At least once, so safe to call again. */
-        post: operations["step"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/sessions/{id}/stop": {
         parameters: {
             query?: never;
@@ -820,7 +803,7 @@ export interface components {
             /** Format: int64 */
             revokedAt?: number | null;
         };
-        /** @description An agent an organization may run: a model on an agent platform. */
+        /** @description An agent an organization may run: a model and the harness around it. */
         Agent: {
             /** @description Offered because the organization has set none up yet; an owner's own list replaces it. */
             builtIn: boolean;
@@ -832,7 +815,6 @@ export interface components {
             /** @description What Auto uses before it has data; an owner sets it, and it is never set by brand. */
             isDefault: boolean;
             name: string;
-            platform: string;
         };
         AgentRow: {
             agent: string;
@@ -853,7 +835,6 @@ export interface components {
         };
         AgentRun: {
             agent: string;
-            platform: string;
             session: components["schemas"]["SessionId"];
         };
         ApiError: {
@@ -996,8 +977,6 @@ export interface components {
         };
         /** Format: int64 */
         Cents: number;
-        /** @enum {string} */
-        Cleanup: "removed" | "not_removed";
         CommitRef: {
             repo: string;
             sha: string;
@@ -1007,7 +986,6 @@ export interface components {
             environment: string;
             judgeDigest: string;
             judgeImage: string;
-            platform: string;
         };
         /**
          * @description "$", "$$" or "$$$", set from the agent's price.
@@ -1040,11 +1018,10 @@ export interface components {
         Direction: "minimize" | "maximize";
         /** @description Where an experiment's session may run. */
         Environment: {
-            /** @description Offered by the platform until environments can be registered. */
+            /** @description Offered until environments can be registered. */
             builtIn: boolean;
             id: string;
             name: string;
-            platform: string;
         };
         /**
          * @description What an evaluation measures.
@@ -1266,7 +1243,6 @@ export interface components {
             enabled: boolean;
             isDefault: boolean;
             name: string;
-            platform: string;
         };
         NewEvaluationTemplate: {
             command: string;
@@ -1465,7 +1441,6 @@ export interface components {
         /** @description One agent's work inside an experiment. */
         Session: {
             agent: string;
-            cleanup?: components["schemas"]["Cleanup"] | null;
             /** Format: int64 */
             createdAt: number;
             experimentId: components["schemas"]["ExperimentId"];
@@ -1474,8 +1449,6 @@ export interface components {
             note?: string | null;
             organizationId: components["schemas"]["OrganizationId"];
             parent?: components["schemas"]["SessionId"] | null;
-            platform: string;
-            platformHandle?: string | null;
             status: components["schemas"]["SessionStatus"];
             /** Format: int64 */
             updatedAt: number;
@@ -1549,12 +1522,6 @@ export interface components {
             prompt: string;
             repos?: string[];
         };
-        /** @description The result of one relay step. */
-        StepResult: {
-            /** Format: int32 */
-            events: number;
-            status: components["schemas"]["SessionStatus"];
-        };
         StoppedExperiment: {
             /** @description True when the experiment spent all of its budget. */
             budgetSpent: boolean;
@@ -1573,7 +1540,7 @@ export interface components {
             secret: string;
             token: components["schemas"]["AccessToken"];
         };
-        /** @description A call of one Antilog tool from an agent that is not in a platform session, such as `antilog mcp`. */
+        /** @description A call of one Antilog tool from an agent that is not in an Antilog session, such as `antilog mcp`. */
         ToolCall: {
             /** @description Unique per call; sending a call again with the same id changes nothing twice. */
             call?: string | null;
@@ -1775,7 +1742,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description A lower-case slug such as agentcore-glm */
+                /** @description A lower-case slug such as opencode */
                 id: string;
             };
             cookie?: never;
@@ -3204,36 +3171,6 @@ export interface operations {
                 };
             };
             409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-        };
-    };
-    step: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The session */
-                id: components["schemas"]["SessionId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StepResult"];
-                };
-            };
-            404: {
                 headers: {
                     [name: string]: unknown;
                 };

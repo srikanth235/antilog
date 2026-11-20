@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use antilog_core::fakes::{FakeCodeHost, FakeDeps, FakePlatform};
+use antilog_core::fakes::{FakeCodeHost, FakeDeps, FakeMachine};
 use antilog_core::signature::sign;
 use antilog_server::api::auth::Settings;
 use antilog_server::api::router;
@@ -14,14 +14,13 @@ use tower::ServiceExt;
 fn app(secret: Option<&str>) -> Router {
     router(
         Arc::new(FakeDeps::new(
-            FakePlatform::default(),
+            FakeMachine::default(),
             FakeCodeHost::default(),
         )),
         Settings {
             providers: Vec::new(),
             open_organizations: false,
             secure_cookies: true,
-            wake_secret: None,
             code_host_webhook_secret: secret.map(str::to_owned),
             e2e_seed: false,
         },

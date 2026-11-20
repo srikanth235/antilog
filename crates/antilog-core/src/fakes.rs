@@ -6,31 +6,29 @@ use sha2::{Digest, Sha256};
 
 mod approval;
 mod budget;
+mod card;
 mod code_host;
 pub(crate) mod ledger;
+mod machine;
 mod organization;
-mod platform;
-mod relay;
 mod session;
 mod world;
 
-pub use platform::FakePlatform;
+pub use machine::{FakeMachine, Profile};
 pub use world::{FakeCodeHost, FakeDeps};
 
 use crate::clock::Clock;
 use crate::secrets::{Secret, Secrets, SecretsError};
 use crate::signer::{Signature, Signer};
 use crate::store::{Store, StoreError};
-use crate::timer::{JobId, Timer, TimerError};
 
-mod relay_state {
+mod card_state {
     use std::collections::{HashMap, HashSet};
 
-    use antilog_types::{ApprovalId, OrganizationId, SessionId};
+    use antilog_types::{ApprovalId, OrganizationId};
 
     #[derive(Default)]
-    pub struct Relay {
-        pub cursors: HashMap<(OrganizationId, SessionId), String>,
+    pub struct Cards {
         pub proposals: HashMap<(OrganizationId, ApprovalId), String>,
         pub told: HashSet<(OrganizationId, ApprovalId)>,
     }
@@ -70,7 +68,7 @@ impl Clock for FakeClock {
 #[derive(Default)]
 pub struct FakeStore {
     ledger: std::sync::Arc<Mutex<ledger::Ledger>>,
-    relay: Mutex<relay_state::Relay>,
+    cards: Mutex<card_state::Cards>,
     code_host: Mutex<code_host::State>,
 }
 
@@ -84,37 +82,6 @@ impl FakeStore {
 
 impl Store for FakeStore {
     async fn ping(&self) -> Result<(), StoreError> {
-        Ok(())
-    }
-}
-
-#[derive(Default)]
-pub struct FakeTimer(Mutex<HashMap<JobId, Timestamp>>);
-
-impl FakeTimer {
-    pub fn booked(&self) -> Vec<(JobId, Timestamp)> {
-        let mut booked: Vec<_> = locked(&self.0)
-            .iter()
-            .map(|(job, at)| (*job, *at))
-            .collect();
-        booked.sort_by_key(|(job, at)| (*at, job.0));
-        booked
-    }
-}
-
-impl Timer for FakeTimer {
-    async fn wake_at(
-        &self,
-        _: antilog_types::OrganizationId,
-        job: JobId,
-        at: Timestamp,
-    ) -> Result<(), TimerError> {
-        locked(&self.0).insert(job, at);
-        Ok(())
-    }
-
-    async fn cancel(&self, _: antilog_types::OrganizationId, job: JobId) -> Result<(), TimerError> {
-        locked(&self.0).remove(&job);
         Ok(())
     }
 }
@@ -183,8 +150,8 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn fake_store_keeps_the_relay_state() {
-        crate::seed::relay_suite(&FakeStore::default()).await;
+    async fn fake_store_keeps_the_card_state() {
+        crate::seed::card_suite(&FakeStore::default()).await;
     }
 
     #[tokio::test]
@@ -203,22 +170,6 @@ mod tests {
             clock.now(),
             start.checked_add(SignedDuration::from_secs(60)).unwrap()
         );
-    }
-
-    #[tokio::test]
-    async fn fake_timer_books_and_cancels() {
-        let timer = FakeTimer::default();
-        let at: Timestamp = "2026-11-18T00:10:00Z".parse().unwrap();
-        timer
-            .wake_at(antilog_types::OrganizationId::new(), JobId(1), at)
-            .await
-            .unwrap();
-        assert_eq!(timer.booked(), vec![(JobId(1), at)]);
-        timer
-            .cancel(antilog_types::OrganizationId::new(), JobId(1))
-            .await
-            .unwrap();
-        assert!(timer.booked().is_empty());
     }
 
     #[test]

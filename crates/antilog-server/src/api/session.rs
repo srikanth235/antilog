@@ -5,7 +5,6 @@ use std::sync::Arc;
 
 use antilog_core::deps::Deps;
 use antilog_core::organization::{self as floor, Action, Refusal};
-use antilog_core::platform::Platform;
 use antilog_core::session::{self, NewSession, SessionError};
 use antilog_core::store::judge::JudgeStore;
 use antilog_core::store::{OrganizationStore, SessionStore};
@@ -14,9 +13,8 @@ use antilog_core::{agents, evaluations as evals};
 use antilog_types::judge::{Receipt, TrialId};
 use antilog_types::{
     Agent, ApiError, AutoChoice, Environment, EvaluationTemplate, EventPage, Experiment,
-    ExperimentId, NewAgent, NewEvaluationTemplate, NewExperiment, OrganizationId, ProjectId,
-    SendMessage, Session, SessionId, StartSession, StepResult, ToolCall, ToolDefinition,
-    ToolResult,
+    ExperimentId, NewAgent, NewEvaluationTemplate, NewExperiment, ProjectId, SendMessage, Session,
+    SessionId, StartSession, ToolCall, ToolDefinition, ToolResult,
 };
 use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
@@ -45,7 +43,6 @@ use super::auth::{App, Authed, Fail};
     evaluations,
     evaluation,
     add_evaluation,
-    step,
     tools,
     call,
     history,
@@ -68,7 +65,7 @@ pub fn refuse(error: SessionError) -> Response {
             "The session has ended: start a new one.".to_owned(),
         ),
         SessionError::Budget(error) => (StatusCode::CONFLICT, "budget_spent", error.to_string()),
-        SessionError::Platform(_) | SessionError::Timer(_) | SessionError::Store(_) => (
+        SessionError::Store(_) => (
             StatusCode::SERVICE_UNAVAILABLE,
             "unavailable",
             "A dependency does not answer; retry shortly.".to_owned(),
@@ -175,13 +172,7 @@ async fn start<D: Deps + 'static>(
     Json(body): Json<StartSession>,
 ) -> Result<(StatusCode, Json<Session>), Fail> {
     permit(&app, &authed, Action::SessionStart, experiment).await?;
-    let agent = agents::resolve(
-        app.store(),
-        authed.who.organization,
-        app.deps.platform().name(),
-        &body.agent,
-    )
-    .await?;
+    let agent = agents::resolve(app.store(), authed.who.organization, &body.agent).await?;
     let new = NewSession {
         agent,
         prompt: body.prompt,
@@ -291,9 +282,7 @@ async fn agents<D: Deps + 'static>(
     State(app): Shared<D>,
     authed: Authed,
 ) -> Result<Json<Vec<Agent>>, Fail> {
-    Ok(Json(
-        agents::list(app.store(), &authed.who, app.deps.platform().name()).await?,
-    ))
+    Ok(Json(agents::list(app.store(), &authed.who).await?))
 }
 
 #[utoipa::path(
@@ -308,18 +297,13 @@ async fn auto_agent<D: Deps + 'static>(
     authed: Authed,
 ) -> Result<Json<AutoChoice>, Fail> {
     floor::member_of(app.store(), &authed.who).await?;
-    let (agent, reason) = agents::auto(
-        app.store(),
-        authed.who.organization,
-        app.deps.platform().name(),
-    )
-    .await?;
+    let (agent, reason) = agents::auto(app.store(), authed.who.organization).await?;
     Ok(Json(AutoChoice { agent, reason }))
 }
 
 #[utoipa::path(
     put, path = "/agents/{id}", operation_id = "set_agent", security(("bearer" = [])),
-    params(("id" = String, Path, description = "A lower-case slug such as agentcore-glm")),
+    params(("id" = String, Path, description = "A lower-case slug such as opencode")),
     request_body = NewAgent,
     responses((status = 200, description = "Set; organization owners only", body = Agent))
 )]
@@ -383,9 +367,7 @@ async fn environments<D: Deps + 'static>(
     State(app): Shared<D>,
     authed: Authed,
 ) -> Result<Json<Vec<Environment>>, Fail> {
-    Ok(Json(
-        agents::environments(app.store(), &authed.who, app.deps.platform().name()).await?,
-    ))
+    Ok(Json(agents::environments(app.store(), &authed.who).await?))
 }
 
 #[derive(serde::Deserialize, utoipa::IntoParams)]
@@ -423,33 +405,6 @@ async fn events<D: Deps + 'static>(
     .await
     .map(Json)
     .map_err(Fail::Session)
-}
-
-/// The timer's wake-up for a session. At least once, so safe to call again.
-#[utoipa::path(
-    post, path = "/sessions/{id}/step", security(("bearer" = [])),
-    params(("id" = SessionId, Path, description = "The session")),
-    responses((status = 200, body = StepResult), (status = 404, body = ApiError))
-)]
-async fn step<D: Deps + 'static>(
-    State(app): Shared<D>,
-    authed: Authed,
-    Path(id): Path<SessionId>,
-) -> Result<Json<StepResult>, Fail> {
-    let row = owned(&app, &authed, id).await?;
-    permit(&app, &authed, Action::SessionStep, row.experiment_id).await?;
-    let done = session::step(
-        &*app.deps,
-        &Toolbox(&*app.deps),
-        authed.who.organization,
-        id,
-    )
-    .await
-    .map_err(Fail::Session)?;
-    Ok(Json(StepResult {
-        status: done.status,
-        events: u32::try_from(done.events).unwrap_or(u32::MAX),
-    }))
 }
 
 #[utoipa::path(get, path = "/tools", responses((status = 200, body = Vec<ToolDefinition>)))]
@@ -574,44 +529,6 @@ async fn receipt<D: Deps + 'static>(
         .ok_or(Refusal::NotFound.into())
 }
 
-/// The scheduler's wake-up for a job, which is a session id. No sign-in; the platform in front
-/// blocks `/internal` for the internet and `ANTILOG_WAKE_SECRET` is required in `x-antilog-wake`.
-/// A session that no longer exists is answered 204 so the scheduler stops retrying it.
-async fn wake<D: Deps + 'static>(
-    State(app): Shared<D>,
-    headers: axum::http::HeaderMap,
-    Path((organization, job)): Path<(OrganizationId, uuid::Uuid)>,
-) -> Result<Response, Fail> {
-    let secret = app.settings.wake_secret.as_deref().unwrap_or_default();
-    let given = headers
-        .get("x-antilog-wake")
-        .map_or(&[][..], |value| value.as_bytes());
-    if secret.is_empty() || !bool::from(subtle::ConstantTimeEq::ct_eq(given, secret.as_bytes())) {
-        return Err(Fail::Unauthenticated);
-    }
-    match session::step(
-        &*app.deps,
-        &Toolbox(&*app.deps),
-        organization,
-        SessionId::from_uuid(job),
-    )
-    .await
-    {
-        Ok(done) => Ok(Json(StepResult {
-            status: done.status,
-            events: u32::try_from(done.events).unwrap_or(u32::MAX),
-        })
-        .into_response()),
-        Err(SessionError::NotFound) => Ok(StatusCode::NO_CONTENT.into_response()),
-        Err(error) => Err(Fail::Session(error)),
-    }
-}
-
-/// Mounted only when `ANTILOG_WAKE_SECRET` is set; not in the OpenAPI document.
-pub fn wake_routes<D: Deps + 'static>() -> Router<Arc<App<D>>> {
-    Router::new().route("/internal/wake/{organization}/{job}", post(wake::<D>))
-}
-
 pub fn routes<D: Deps + 'static>() -> Router<Arc<App<D>>> {
     Router::new()
         .route("/tools", get(tools))
@@ -638,7 +555,6 @@ pub fn routes<D: Deps + 'static>() -> Router<Arc<App<D>>> {
         .route("/evaluations/{id}", get(evaluation::<D>))
         .route("/sessions/{id}/events", get(events::<D>))
         .route("/sessions/{id}/stop", post(stop::<D>))
-        .route("/sessions/{id}/step", post(step::<D>))
         .route("/experiments/{id}/history", get(history::<D>))
         .route("/trials/{id}/receipt", get(receipt::<D>))
 }

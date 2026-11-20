@@ -3,7 +3,7 @@ use std::sync::Mutex;
 
 use antilog_types::judge::CommitRef;
 
-use super::{FakeClock, FakePlatform, FakeSigner, FakeStore, FakeTimer, locked};
+use super::{FakeClock, FakeMachine, FakeSigner, FakeStore, locked};
 use crate::code_host::{CodeHost, CodeHostError, OpenedPullRequest, PullRequestSpec};
 use crate::deps::Deps;
 use crate::store::judge::FakeJudgeStore;
@@ -82,23 +82,21 @@ impl CodeHost for FakeCodeHost {
 pub struct FakeDeps {
     pub store: FakeStore,
     pub judge: FakeJudgeStore,
-    pub platform: FakePlatform,
+    pub machine: FakeMachine,
     pub signer: FakeSigner,
     pub clock: FakeClock,
-    pub timer: FakeTimer,
     pub code: FakeCodeHost,
 }
 
 impl FakeDeps {
-    pub fn new(platform: FakePlatform, code: FakeCodeHost) -> Self {
+    pub fn new(machine: FakeMachine, code: FakeCodeHost) -> Self {
         let store = FakeStore::default();
         Self {
             judge: store.judge_store(),
             store,
-            platform,
+            machine,
             signer: FakeSigner::new("fake"),
             clock: FakeClock::new("2026-11-18T09:00:00Z".parse().unwrap_or_default()),
-            timer: FakeTimer::default(),
             code,
         }
     }
@@ -107,10 +105,9 @@ impl FakeDeps {
 impl Deps for FakeDeps {
     type Store = FakeStore;
     type Judge = FakeJudgeStore;
-    type Platform = FakePlatform;
+    type Machine = FakeMachine;
     type Signer = FakeSigner;
     type Clock = FakeClock;
-    type Timer = FakeTimer;
     type Code = FakeCodeHost;
 
     fn store(&self) -> &FakeStore {
@@ -119,17 +116,14 @@ impl Deps for FakeDeps {
     fn judge(&self, _: antilog_types::OrganizationId) -> FakeJudgeStore {
         self.judge.clone()
     }
-    fn platform(&self) -> &FakePlatform {
-        &self.platform
+    fn machine(&self) -> &FakeMachine {
+        &self.machine
     }
     fn signer(&self) -> &FakeSigner {
         &self.signer
     }
     fn clock(&self) -> &FakeClock {
         &self.clock
-    }
-    fn timer(&self) -> &FakeTimer {
-        &self.timer
     }
     fn code(&self) -> &FakeCodeHost {
         &self.code

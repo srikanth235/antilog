@@ -26,14 +26,6 @@ output "database_endpoint" {
   value = aws_rds_cluster.database.endpoint
 }
 
-output "ecr_agent_repository" {
-  value = aws_ecr_repository.agent.repository_url
-}
-
-output "ecr_judge_repository" {
-  value = aws_ecr_repository.judge.repository_url
-}
-
 output "killswitch_function" {
   value = aws_lambda_function.killswitch.function_name
 }

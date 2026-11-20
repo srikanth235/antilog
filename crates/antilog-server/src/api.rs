@@ -60,7 +60,6 @@ pub fn router<D: Deps + 'static>(deps: Arc<D>, settings: auth::Settings) -> Rout
 }
 
 pub fn router_with<D: Deps + 'static>(app: Arc<auth::App<D>>) -> Router {
-    let wake = app.settings.wake_secret.is_some();
     let router = Router::new()
         .route("/health", get(health::<D>))
         .merge(auth::routes())
@@ -68,11 +67,6 @@ pub fn router_with<D: Deps + 'static>(app: Arc<auth::App<D>>) -> Router {
         .merge(session::routes())
         .merge(value::routes())
         .merge(live::routes());
-    let router = if wake {
-        router.merge(session::wake_routes())
-    } else {
-        router
-    };
     let router = if app.settings.e2e_seed {
         router.merge(e2e::routes())
     } else {
@@ -99,7 +93,7 @@ pub fn openapi_json() -> String {
 
 #[cfg(test)]
 mod tests {
-    use antilog_core::fakes::{FakeCodeHost, FakeDeps, FakePlatform};
+    use antilog_core::fakes::{FakeCodeHost, FakeDeps, FakeMachine};
     use axum::body::Body;
     use axum::http::Request;
     use tower::ServiceExt;
@@ -110,14 +104,13 @@ mod tests {
     async fn health_answers_ok_from_the_fake_store() {
         let app = router(
             Arc::new(FakeDeps::new(
-                FakePlatform::default(),
+                FakeMachine::default(),
                 FakeCodeHost::default(),
             )),
             auth::Settings {
                 providers: Vec::new(),
                 open_organizations: false,
                 secure_cookies: true,
-                wake_secret: None,
                 code_host_webhook_secret: None,
                 e2e_seed: false,
             },

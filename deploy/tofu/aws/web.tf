@@ -35,7 +35,7 @@ resource "aws_cloudfront_origin_access_control" "web" {
   signing_protocol                  = "sigv4"
 }
 
-# /internal is for the scheduler alone, whatever the host and however the path is reached.
+# /internal is for the deploy alone, whatever the host and however the path is reached.
 resource "aws_cloudfront_function" "block_internal" {
   name    = "${local.prefix}-block-internal"
   runtime = "cloudfront-js-2.0"

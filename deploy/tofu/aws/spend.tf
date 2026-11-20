@@ -73,11 +73,8 @@ resource "aws_cloudwatch_metric_alarm" "model_spend" {
 }
 
 # The kill switch -------------------------------------------------------------------
-# Deny-all on the antilog-* roles it locks, the server's concurrency to 0, and every
-# schedule disabled. It cannot lock itself or the CI role that releases it. AgentCore has
-# no call that lists a runtime's sessions, so runtimes are stopped by denying their role
-# (no more model calls, no image pulls) and by nothing being able to start a new session;
-# a running session ends at its idle timeout.
+# Deny-all on the antilog-* roles it locks and the server's concurrency to 0. It cannot lock
+# itself or the CI role that releases it.
 
 data "archive_file" "killswitch" {
   type        = "zip"
@@ -98,7 +95,7 @@ data "aws_iam_role" "killswitch" {
 
 resource "aws_lambda_function" "killswitch" {
   function_name = local.killswitch
-  description   = "Spend kill switch: deny-all on antilog roles, concurrency 0, schedules off"
+  description   = "Spend kill switch: deny-all on antilog roles, concurrency 0"
   role          = data.aws_iam_role.killswitch.arn
 
   runtime       = "python3.13"
@@ -112,9 +109,8 @@ resource "aws_lambda_function" "killswitch" {
 
   environment {
     variables = {
-      LOCKED_ROLES   = join(",", local.locked_roles)
-      SERVER         = local.server_function
-      SCHEDULE_GROUP = aws_scheduler_schedule_group.wake.name
+      LOCKED_ROLES = join(",", local.locked_roles)
+      SERVER       = local.server_function
     }
   }
 

@@ -18,14 +18,7 @@ import {
   useTranscript,
 } from "../../api/queries";
 import { Failed, Loading } from "../../components/state/State";
-import {
-  activityOf,
-  canEdit,
-  leadSession,
-  MCP_AGENT,
-  pendingCards,
-  platformName,
-} from "../../lib/domain";
+import { activityOf, canEdit, leadSession, MCP_AGENT, pendingCards } from "../../lib/domain";
 import { parseHistory } from "../../lib/history";
 import { w } from "../../words";
 import { ApprovalCard } from "./ApprovalCard";
@@ -130,10 +123,7 @@ export function Experiment(props: {
         <div key={`start-${session.id}`} className="tl">
           {session.agent === MCP_AGENT
             ? w.experiment.connectedAgent
-            : w.experiment.startedSession(
-                agentLabel(session.agent),
-                platformName(session.platform),
-              )}
+            : w.experiment.startedSession(agentLabel(session.agent))}
         </div>
       ),
     });

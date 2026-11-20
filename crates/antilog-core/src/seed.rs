@@ -79,8 +79,8 @@ pub async fn experiment<S: Store>(store: &S, budget_cents: i64) -> Seed {
     }
 }
 
-/// What every `RelayStore` must do: keep the cursor, write a proposal once, tell once.
-pub async fn relay_suite<S: Store>(store: &S) {
+/// What every `CardStore` must do: write a proposal once, apply a card once.
+pub async fn card_suite<S: Store>(store: &S) {
     use antilog_types::{Approval, ApprovalId, ApprovalStatus, CardKind, Session};
 
     use crate::store::StoreError;
@@ -97,30 +97,11 @@ pub async fn relay_suite<S: Store>(store: &S) {
             T0,
         )
     };
-    let session = Session::new(org, seed.experiment.id, "claude", "fake", T0);
+    let session = Session::new(org, seed.experiment.id, "claude", T0);
     store
         .create_session(&session, &log("session.start"))
         .await
         .expect("a session is created");
-    assert_eq!(
-        store.relay_cursor(org, session.id).await.expect("read"),
-        None
-    );
-    for cursor in ["3", "9"] {
-        store
-            .save_relay_cursor(org, session.id, cursor, T0)
-            .await
-            .expect("saved");
-    }
-    assert_eq!(
-        store
-            .relay_cursor(org, session.id)
-            .await
-            .expect("read")
-            .as_deref(),
-        Some("9")
-    );
-
     let approval = Approval {
         id: ApprovalId::new(),
         organization_id: org,
@@ -161,8 +142,8 @@ pub async fn relay_suite<S: Store>(store: &S) {
         store.proposal(elsewhere, approval.id).await.expect("read"),
         None
     );
-    assert!(store.mark_told(org, approval.id).await.expect("marked"));
-    assert!(!store.mark_told(org, approval.id).await.expect("marked"));
+    assert!(store.mark_applied(org, approval.id).await.expect("marked"));
+    assert!(!store.mark_applied(org, approval.id).await.expect("marked"));
 }
 
 /// What the win-delivery tables must do on any store, in the ledger and the judge's tables together:
@@ -205,7 +186,7 @@ pub async fn wins_suite<S: Store, J: crate::store::judge::JudgeStore>(
     )
     .expect("seals");
     judge.put_sealed(&sealed).await.expect("sealed");
-    let session = Session::new(org, seed.experiment.id, "claude", "fake", T0);
+    let session = Session::new(org, seed.experiment.id, "claude", T0);
     store
         .create_session(&session, &log("session.create"))
         .await

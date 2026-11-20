@@ -37,7 +37,7 @@ test("start an experiment, approve a card, read the settings", async ({ page }, 
   await expect(
     page.getByRole("heading", { name: "Cut checkout p95 latency", level: 1 }),
   ).toBeVisible();
-  await expect(page.getByText("Started a session on the fake platform")).toBeVisible();
+  await expect(page.getByText(/Started a session with/)).toBeVisible();
   // The conversation comes from the server: the prompt is there once, not twice.
   await expect(page.locator(".bubble", { hasText: "Cut checkout p95 latency" })).toHaveCount(1);
 

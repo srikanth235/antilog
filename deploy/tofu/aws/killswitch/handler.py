@@ -2,11 +2,10 @@
 
 An alarm event, or an empty one, locks everything:
   1. an inline deny-all policy on each locked role (not this function's own role),
-  2. the server function's reserved concurrency set to 0, so nothing runs,
-  3. every enabled schedule in the wake-up group set to DISABLED.
+  2. the server function's reserved concurrency set to 0, so nothing runs.
 
-{"action": "release"} undoes it: deletes the deny-all policies, deletes the concurrency
-setting (the next deploy applies the configured one) and enables the schedules again.
+{"action": "release"} undoes it: deletes the deny-all policies and deletes the concurrency
+setting (the next deploy applies the configured one).
 Only boto3, which Lambda's Python runtime already has.
 """
 
@@ -22,53 +21,23 @@ DENY_ALL = json.dumps(
 
 ROLES = [r for r in os.environ.get("LOCKED_ROLES", "").split(",") if r]
 SERVER = os.environ.get("SERVER", "")
-GROUP = os.environ.get("SCHEDULE_GROUP", "")
 
 iam = boto3.client("iam")
 lam = boto3.client("lambda")
-scheduler = boto3.client("scheduler")
-
-# What UpdateSchedule needs back, because it replaces the whole schedule.
-KEEP = (
-    "Name",
-    "GroupName",
-    "ScheduleExpression",
-    "ScheduleExpressionTimezone",
-    "FlexibleTimeWindow",
-    "Target",
-    "ActionAfterCompletion",
-    "Description",
-    "StartDate",
-    "EndDate",
-    "KmsKeyArn",
-)
-
-
-def set_schedules(from_state, to_state):
-    changed = []
-    pages = scheduler.get_paginator("list_schedules").paginate(GroupName=GROUP, State=from_state)
-    for page in pages:
-        for item in page["Schedules"]:
-            current = scheduler.get_schedule(Name=item["Name"], GroupName=GROUP)
-            update = {k: current[k] for k in KEEP if k in current}
-            scheduler.update_schedule(State=to_state, **update)
-            changed.append(item["Name"])
-    return changed
 
 
 def lock():
-    done = {"roles": [], "concurrency": None, "schedules": []}
+    done = {"roles": [], "concurrency": None}
     for role in ROLES:
         iam.put_role_policy(RoleName=role, PolicyName=POLICY, PolicyDocument=DENY_ALL)
         done["roles"].append(role)
     lam.put_function_concurrency(FunctionName=SERVER, ReservedConcurrentExecutions=0)
     done["concurrency"] = 0
-    done["schedules"] = set_schedules("ENABLED", "DISABLED")
     return done
 
 
 def release():
-    done = {"roles": [], "concurrency": "removed", "schedules": []}
+    done = {"roles": [], "concurrency": "removed"}
     for role in ROLES:
         try:
             iam.delete_role_policy(RoleName=role, PolicyName=POLICY)
@@ -76,7 +45,6 @@ def release():
             pass
         done["roles"].append(role)
     lam.delete_function_concurrency(FunctionName=SERVER)
-    done["schedules"] = set_schedules("DISABLED", "ENABLED")
     return done
 
 

@@ -193,7 +193,6 @@ export function Receipt({ trialId }: { trialId: string }) {
       <Section title={r.compute}>
         <Rows
           rows={[
-            [r.judgePlatform, body.compute.platform],
             [r.environment, body.compute.environment],
             [
               r.judgeImage,
@@ -201,7 +200,7 @@ export function Receipt({ trialId }: { trialId: string }) {
                 {body.compute.judgeImage} {body.compute.judgeDigest}
               </span>,
             ],
-            [r.agents, list(body.compute.agents.map((a) => `${a.agent} on ${a.platform}`))],
+            [r.agents, list(body.compute.agents.map((a) => a.agent))],
           ]}
         />
       </Section>

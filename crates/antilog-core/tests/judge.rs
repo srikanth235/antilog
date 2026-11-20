@@ -2,13 +2,14 @@
 
 use antilog_core::clock::SystemClock;
 use antilog_core::fakes::FakeSigner;
+use antilog_core::fakes::{FakeMachine, Profile};
 use antilog_core::judge::ed25519::Ed25519Signer;
 use antilog_core::judge::fixtures::{definition, trial};
 use antilog_core::judge::measure::{MeasureError, Refusal, measure};
 use antilog_core::judge::receipt::{Context, ReceiptError, VerifyError, issue, verify};
-use antilog_core::judge::sandbox::{FakeSandbox, Profile};
 use antilog_core::judge::seal::{PlantedCheat, Proposal, SealError, seal};
 use antilog_core::store::judge::{FakeJudgeStore, JudgeStore};
+use antilog_types::SessionId;
 use antilog_types::judge::*;
 
 fn cheats(rejected_by_holdout_only: bool) -> Vec<PlantedCheat> {
@@ -30,8 +31,8 @@ fn cheats(rejected_by_holdout_only: bool) -> Vec<PlantedCheat> {
         .collect()
 }
 
-fn sandbox() -> FakeSandbox {
-    let mut s = FakeSandbox::default().with("base", Profile::new(100.0));
+fn machine() -> FakeMachine {
+    let mut s = FakeMachine::default().with("base", Profile::new(100.0));
     for i in 0..4 {
         s = s.with(&format!("cheat-{i}"), Profile::new(10.0).holdout(100.0));
     }
@@ -54,12 +55,18 @@ fn proposal(def: Definition) -> Proposal {
     }
 }
 
-async fn sealed_with(def: Definition) -> (FakeSandbox, FakeJudgeStore, SealedExperiment) {
-    let (sandbox, store) = (sandbox(), FakeJudgeStore::default());
-    let sealed = seal(&sandbox, &store, &SystemClock, proposal(def))
-        .await
-        .unwrap();
-    (sandbox, store, sealed)
+async fn sealed_with(def: Definition) -> (FakeMachine, FakeJudgeStore, SealedExperiment) {
+    let (machine, store) = (machine(), FakeJudgeStore::default());
+    let sealed = seal(
+        &machine,
+        SessionId::new(),
+        &store,
+        &SystemClock,
+        proposal(def),
+    )
+    .await
+    .unwrap();
+    (machine, store, sealed)
 }
 
 fn changed(path: &str) -> Vec<(String, String)> {
@@ -78,8 +85,8 @@ async fn sealing_runs_the_checks_and_stores_one_version() {
 
 #[tokio::test]
 async fn a_cheat_the_evaluation_accepts_blocks_the_seal() {
-    let (sandbox, store) = (
-        sandbox().with("sneaky", Profile::new(10.0)),
+    let (machine, store) = (
+        machine().with("sneaky", Profile::new(10.0)),
         FakeJudgeStore::default(),
     );
     let mut p = proposal(definition());
@@ -87,7 +94,9 @@ async fn a_cheat_the_evaluation_accepts_blocks_the_seal() {
         repo: "app".into(),
         sha: "sneaky".into(),
     }];
-    let err = seal(&sandbox, &store, &SystemClock, p).await.unwrap_err();
+    let err = seal(&machine, SessionId::new(), &store, &SystemClock, p)
+        .await
+        .unwrap_err();
     assert!(
         matches!(err, SealError::Refused(SealRefused::CheatNotRejected(_))),
         "{err}"
@@ -96,10 +105,12 @@ async fn a_cheat_the_evaluation_accepts_blocks_the_seal() {
 
 #[tokio::test]
 async fn a_missing_standard_cheat_blocks_the_seal() {
-    let (sandbox, store) = (sandbox(), FakeJudgeStore::default());
+    let (machine, store) = (machine(), FakeJudgeStore::default());
     let mut p = proposal(definition());
     p.cheats.pop();
-    let err = seal(&sandbox, &store, &SystemClock, p).await.unwrap_err();
+    let err = seal(&machine, SessionId::new(), &store, &SystemClock, p)
+        .await
+        .unwrap_err();
     assert!(matches!(
         err,
         SealError::Refused(SealRefused::CheatMissing(_))
@@ -108,10 +119,10 @@ async fn a_missing_standard_cheat_blocks_the_seal() {
 
 #[tokio::test]
 async fn a_win_is_confirmed_and_checked_on_the_holdout() {
-    let (sandbox, store, sealed) = sealed_with(definition()).await;
-    let before = sandbox.calls().len();
+    let (machine, store, sealed) = sealed_with(definition()).await;
+    let before = machine.calls().len();
     let record = measure(
-        &sandbox,
+        &machine,
         &store,
         &sealed,
         trial(&sealed, None, "fast"),
@@ -128,19 +139,24 @@ async fn a_win_is_confirmed_and_checked_on_the_holdout() {
         (Stage::Full, 1, Some(HoldoutResult::Passed))
     );
     assert!(m.confirmation.is_some() && m.gain.unwrap().lower > 0.0);
+    let runs = |n: usize, holdout: bool| std::iter::repeat_n(holdout, n);
     assert_eq!(
-        sandbox.calls()[before..],
-        [(false, 1), (false, 5), (false, 5), (true, 5)],
-        "quick check, full, confirmation in another sandbox, holdout"
+        machine.calls()[before..],
+        runs(2, false)
+            .chain(runs(10, false))
+            .chain(runs(10, false))
+            .chain(runs(10, true))
+            .collect::<Vec<_>>(),
+        "quick check, full, confirmation in a fresh checkout, holdout: each a base and a trial run per repeat"
     );
 }
 
 #[tokio::test]
 async fn weak_trials_stop_early_and_are_never_kept() {
-    let (sandbox, store, sealed) = sealed_with(definition()).await;
-    let before = sandbox.calls().len();
+    let (machine, store, sealed) = sealed_with(definition()).await;
+    let before = machine.calls().len();
     let slow = measure(
-        &sandbox,
+        &machine,
         &store,
         &sealed,
         trial(&sealed, None, "slow"),
@@ -152,7 +168,7 @@ async fn weak_trials_stop_early_and_are_never_kept() {
     let m = slow.finished.unwrap().measurement.unwrap();
     assert_eq!(m.stage, Stage::QuickCheck);
     let same = measure(
-        &sandbox,
+        &machine,
         &store,
         &sealed,
         trial(&sealed, None, "same"),
@@ -162,17 +178,17 @@ async fn weak_trials_stop_early_and_are_never_kept() {
     .unwrap();
     assert_eq!(same.outcome(), Outcome::WithinNoise);
     assert_eq!(
-        sandbox.calls().len() - before,
-        2,
+        machine.calls().len() - before,
+        4,
         "one quick pair each, nothing more"
     );
 }
 
 #[tokio::test]
 async fn a_trial_that_fits_the_evaluation_fails_the_holdout_and_no_holdout_value_leaks() {
-    let (sandbox, store, sealed) = sealed_with(definition()).await;
+    let (machine, store, sealed) = sealed_with(definition()).await;
     let record = measure(
-        &sandbox,
+        &machine,
         &store,
         &sealed,
         trial(&sealed, None, "fits-eval"),
@@ -191,10 +207,10 @@ async fn a_trial_that_fits_the_evaluation_fails_the_holdout_and_no_holdout_value
 
 #[tokio::test]
 async fn a_protected_path_is_rejected_before_anything_runs_and_has_no_number() {
-    let (sandbox, store, sealed) = sealed_with(definition()).await;
-    let before = sandbox.calls().len();
+    let (machine, store, sealed) = sealed_with(definition()).await;
+    let before = machine.calls().len();
     let record = measure(
-        &sandbox,
+        &machine,
         &store,
         &sealed,
         trial(&sealed, None, "fast"),
@@ -204,15 +220,15 @@ async fn a_protected_path_is_rejected_before_anything_runs_and_has_no_number() {
     .unwrap();
     assert_eq!(record.outcome(), Outcome::Rejected);
     assert!(record.finished.unwrap().measurement.is_none());
-    assert_eq!(sandbox.calls().len(), before);
+    assert_eq!(machine.calls().len(), before);
 }
 
 #[tokio::test]
 async fn a_run_that_fails_is_failed_and_has_no_number() {
-    let (sandbox, store, sealed) = sealed_with(definition()).await;
-    let sandbox = sandbox.failing("broken");
+    let (machine, store, sealed) = sealed_with(definition()).await;
+    let machine = machine.failing("broken");
     let record = measure(
-        &sandbox,
+        &machine,
         &store,
         &sealed,
         trial(&sealed, None, "broken"),
@@ -226,10 +242,10 @@ async fn a_run_that_fails_is_failed_and_has_no_number() {
 
 #[tokio::test]
 async fn the_bar_rises_with_each_trial_measured() {
-    let (sandbox, store, sealed) = sealed_with(definition()).await;
+    let (machine, store, sealed) = sealed_with(definition()).await;
     for expect_k in 1..=3 {
         let r = measure(
-            &sandbox,
+            &machine,
             &store,
             &sealed,
             trial(&sealed, None, "meh"),
@@ -243,9 +259,9 @@ async fn the_bar_rises_with_each_trial_measured() {
 
 #[tokio::test]
 async fn lineage_must_run_through_kept_trials_of_this_version() {
-    let (sandbox, store, sealed) = sealed_with(definition()).await;
+    let (machine, store, sealed) = sealed_with(definition()).await;
     let first = measure(
-        &sandbox,
+        &machine,
         &store,
         &sealed,
         trial(&sealed, None, "fast"),
@@ -254,7 +270,7 @@ async fn lineage_must_run_through_kept_trials_of_this_version() {
     .await
     .unwrap();
     let child = trial(&sealed, Some(first.trial.id), "faster");
-    let second = measure(&sandbox, &store, &sealed, child, &changed("src/a.rs"))
+    let second = measure(&machine, &store, &sealed, child, &changed("src/a.rs"))
         .await
         .unwrap();
     assert_eq!(second.outcome(), Outcome::Kept);
@@ -273,32 +289,32 @@ async fn lineage_must_run_through_kept_trials_of_this_version() {
     );
     let orphan = trial(&sealed, Some(TrialId::new()), "fast");
     assert!(matches!(
-        measure(&sandbox, &store, &sealed, orphan, &[]).await,
+        measure(&machine, &store, &sealed, orphan, &[]).await,
         Err(MeasureError::Refused(Refusal::BadParent))
     ));
-    let slow = measure(&sandbox, &store, &sealed, trial(&sealed, None, "slow"), &[])
+    let slow = measure(&machine, &store, &sealed, trial(&sealed, None, "slow"), &[])
         .await
         .unwrap();
     let from_unkept = trial(&sealed, Some(slow.trial.id), "fast");
     assert!(matches!(
-        measure(&sandbox, &store, &sealed, from_unkept, &[]).await,
+        measure(&machine, &store, &sealed, from_unkept, &[]).await,
         Err(MeasureError::Refused(Refusal::BadParent))
     ));
 }
 
 #[tokio::test]
 async fn an_unknown_repo_and_another_version_are_refused() {
-    let (sandbox, store, sealed) = sealed_with(definition()).await;
+    let (machine, store, sealed) = sealed_with(definition()).await;
     let mut t = trial(&sealed, None, "fast");
     t.commits[0].repo = "other".into();
     assert!(matches!(
-        measure(&sandbox, &store, &sealed, t, &[]).await,
+        measure(&machine, &store, &sealed, t, &[]).await,
         Err(MeasureError::Refused(Refusal::UnknownRepo))
     ));
     let mut t = trial(&sealed, None, "fast");
     t.version = 9;
     assert!(matches!(
-        measure(&sandbox, &store, &sealed, t, &[]).await,
+        measure(&machine, &store, &sealed, t, &[]).await,
         Err(MeasureError::Refused(Refusal::WrongVersion))
     ));
 }
@@ -307,25 +323,25 @@ async fn an_unknown_repo_and_another_version_are_refused() {
 async fn patience_and_the_holdout_cap_refuse_measure() {
     let mut def = definition();
     def.patience = 2;
-    let (sandbox, store, sealed) = sealed_with(def).await;
+    let (machine, store, sealed) = sealed_with(def).await;
     for _ in 0..2 {
-        measure(&sandbox, &store, &sealed, trial(&sealed, None, "same"), &[])
+        measure(&machine, &store, &sealed, trial(&sealed, None, "same"), &[])
             .await
             .unwrap();
     }
     assert!(matches!(
-        measure(&sandbox, &store, &sealed, trial(&sealed, None, "fast"), &[]).await,
+        measure(&machine, &store, &sealed, trial(&sealed, None, "fast"), &[]).await,
         Err(MeasureError::Refused(Refusal::PatienceReached(2)))
     ));
 
     let mut def = definition();
     def.holdout_cap = 1;
-    let (sandbox, store, sealed) = sealed_with(def).await;
-    measure(&sandbox, &store, &sealed, trial(&sealed, None, "fast"), &[])
+    let (machine, store, sealed) = sealed_with(def).await;
+    measure(&machine, &store, &sealed, trial(&sealed, None, "fast"), &[])
         .await
         .unwrap();
     assert!(matches!(
-        measure(&sandbox, &store, &sealed, trial(&sealed, None, "fast"), &[]).await,
+        measure(&machine, &store, &sealed, trial(&sealed, None, "fast"), &[]).await,
         Err(MeasureError::Refused(Refusal::HoldoutCapReached(1)))
     ));
 }
@@ -343,7 +359,6 @@ fn context(digest: &str) -> Context {
             credential_scopes: vec![],
         },
         compute: ComputeSection {
-            platform: "fake".into(),
             environment: "default".into(),
             judge_image: "judge:1".into(),
             judge_digest: digest.into(),
@@ -354,9 +369,9 @@ fn context(digest: &str) -> Context {
 
 #[tokio::test]
 async fn only_the_best_kept_trial_gets_a_signed_receipt_that_verifies() {
-    let (sandbox, store, sealed) = sealed_with(definition()).await;
+    let (machine, store, sealed) = sealed_with(definition()).await;
     let a = measure(
-        &sandbox,
+        &machine,
         &store,
         &sealed,
         trial(&sealed, None, "fast"),
@@ -365,7 +380,7 @@ async fn only_the_best_kept_trial_gets_a_signed_receipt_that_verifies() {
     .await
     .unwrap();
     let b = measure(
-        &sandbox,
+        &machine,
         &store,
         &sealed,
         trial(&sealed, Some(a.trial.id), "faster"),
@@ -373,7 +388,7 @@ async fn only_the_best_kept_trial_gets_a_signed_receipt_that_verifies() {
     )
     .await
     .unwrap();
-    let slow = measure(&sandbox, &store, &sealed, trial(&sealed, None, "slow"), &[])
+    let slow = measure(&machine, &store, &sealed, trial(&sealed, None, "slow"), &[])
         .await
         .unwrap();
     let records = store.trials(sealed.experiment(), 1).await.unwrap();
@@ -430,8 +445,8 @@ async fn only_the_best_kept_trial_gets_a_signed_receipt_that_verifies() {
 
 #[tokio::test]
 async fn a_receipt_must_use_the_sealed_value_model() {
-    let (sandbox, store, sealed) = sealed_with(definition()).await;
-    let win = measure(&sandbox, &store, &sealed, trial(&sealed, None, "fast"), &[])
+    let (machine, store, sealed) = sealed_with(definition()).await;
+    let win = measure(&machine, &store, &sealed, trial(&sealed, None, "fast"), &[])
         .await
         .unwrap();
     let records = store.trials(sealed.experiment(), 1).await.unwrap();

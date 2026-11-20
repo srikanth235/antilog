@@ -1,46 +1,9 @@
-use antilog_core::store::{RelayStore, StoreError};
-use antilog_types::{ApprovalId, OrganizationId, SessionId};
+use antilog_core::store::{CardStore, StoreError};
+use antilog_types::{ApprovalId, OrganizationId};
 
 use super::{PgStore, map};
 
-impl RelayStore for PgStore {
-    async fn relay_cursor(
-        &self,
-        organization: OrganizationId,
-        session: SessionId,
-    ) -> Result<Option<String>, StoreError> {
-        let mut tx = self.scoped(organization).await?;
-        sqlx::query_scalar!(
-            "select cursor from session_relay where organization_id = $1 and session_id = $2",
-            organization.as_uuid(),
-            session.as_uuid(),
-        )
-        .fetch_optional(&mut *tx)
-        .await
-        .map_err(map)
-    }
-
-    async fn save_relay_cursor(
-        &self,
-        organization: OrganizationId,
-        session: SessionId,
-        cursor: &str,
-        at: i64,
-    ) -> Result<(), StoreError> {
-        let mut tx = self.scoped(organization).await?;
-        sqlx::query!(
-            "insert into session_relay (organization_id, session_id, cursor, updated_at) values ($1, $2, $3, to_timestamp($4::bigint / 1000.0)) on conflict (session_id) do update set cursor = excluded.cursor, updated_at = excluded.updated_at",
-            organization.as_uuid(),
-            session.as_uuid(),
-            cursor,
-            at,
-        )
-        .execute(&mut *tx)
-        .await
-        .map_err(map)?;
-        tx.commit().await.map_err(map)
-    }
-
+impl CardStore for PgStore {
     async fn put_proposal(
         &self,
         organization: OrganizationId,
@@ -76,7 +39,7 @@ impl RelayStore for PgStore {
         .map_err(map)
     }
 
-    async fn mark_told(
+    async fn mark_applied(
         &self,
         organization: OrganizationId,
         approval: ApprovalId,

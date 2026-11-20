@@ -113,7 +113,6 @@ pub fn receipt(sealed: &SealedExperiment, trial: TrialId) -> Receipt {
             credential_scopes: vec![],
         },
         compute: ComputeSection {
-            platform: "fake".into(),
             environment: "default".into(),
             judge_image: "judge".into(),
             judge_digest: "sha256:0".into(),

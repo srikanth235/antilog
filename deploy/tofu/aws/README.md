@@ -14,18 +14,9 @@ Rules and decisions are in [`.claude/skills/stack/aws/antilog.md`](../../../.cla
      "Resource": "arn:aws:logs:us-east-1:987432215914:log-group:/aws/lambda/antilog-killswitch:*"},
     {"Effect": "Allow", "Action": ["iam:PutRolePolicy", "iam:DeleteRolePolicy"],
      "Resource": [
-       "arn:aws:iam::987432215914:role/antilog-server",
-       "arn:aws:iam::987432215914:role/antilog-scheduler",
-       "arn:aws:iam::987432215914:role/antilog-agent-runtime",
-       "arn:aws:iam::987432215914:role/antilog-judge-runtime"]},
+       "arn:aws:iam::987432215914:role/antilog-server"]},
     {"Effect": "Allow", "Action": ["lambda:PutFunctionConcurrency", "lambda:DeleteFunctionConcurrency"],
-     "Resource": "arn:aws:lambda:us-east-1:987432215914:function:antilog-server"},
-    {"Effect": "Allow", "Action": ["scheduler:GetSchedule", "scheduler:UpdateSchedule"],
-     "Resource": "arn:aws:scheduler:us-east-1:987432215914:schedule/antilog/*"},
-    {"Effect": "Allow", "Action": "scheduler:ListSchedules", "Resource": "*"},
-    {"Effect": "Allow", "Action": "iam:PassRole",
-     "Resource": "arn:aws:iam::987432215914:role/antilog-scheduler",
-     "Condition": {"StringEquals": {"iam:PassedToService": "scheduler.amazonaws.com"}}}
+     "Resource": "arn:aws:lambda:us-east-1:987432215914:function:antilog-server"}
   ]
 }
 ```
@@ -38,7 +29,7 @@ DNS for `antilog.tech` is at Cloudflare and is managed by hand; this module has 
 
 ## Only CloudFront reaches the server
 
-The Lambda function URL is public, so the server checks for itself. CloudFront adds `x-antilog-origin: <secret>` to every `/api/*` request (a custom origin header, which replaces any value the browser sends), and the function refuses every request without it with 403, except EventBridge Scheduler's direct invokes. There is no exception for `/health` (it answers through `/api/health`). With no secret in its environment the function refuses everything: it fails closed. The check cannot be turned off on Lambda.
+The Lambda function URL is public, so the server checks for itself. CloudFront adds `x-antilog-origin: <secret>` to every `/api/*` request (a custom origin header, which replaces any value the browser sends), and the function refuses every request without it with 403, except the deploy workflow's direct invokes. There is no exception for `/health` (it answers through `/api/health`). With no secret in its environment the function refuses everything: it fails closed. The check cannot be turned off on Lambda.
 
 OpenTofu generates two values (`random_password.origin["a"]` and `["b"]`) and keeps them in the Secrets Manager entry `antilog/origin-secret` (`{"active": ..., "other": ...}`). CloudFront sends the one named by `origin_secret_active`; the function accepts both (`ANTILOG_ORIGIN_SECRET` and `ANTILOG_ORIGIN_SECRET_NEXT`). Nothing is needed from the owner for the first deploy.
 

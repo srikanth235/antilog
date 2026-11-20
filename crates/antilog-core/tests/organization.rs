@@ -590,7 +590,7 @@ async fn spend_is_read_by_experiment_kind_and_session() {
 }
 
 async fn spend(world: &World, experiment: &Experiment, cents: i64, at: i64) {
-    let session = Session::new(world.organization.id, experiment.id, "claude", "fake", at);
+    let session = Session::new(world.organization.id, experiment.id, "claude", at);
     world
         .store
         .create_session(
@@ -931,7 +931,6 @@ async fn auto_picks_the_default_the_only_agent_or_asks_and_only_an_owner_sets_ag
     let org = world.organization.id;
     let new = |enabled, is_default| NewAgent {
         name: "Agent".into(),
-        platform: "agentcore".into(),
         enabled,
         is_default,
         cost_tier: CostTier::Low,
@@ -939,19 +938,15 @@ async fn auto_picks_the_default_the_only_agent_or_asks_and_only_an_owner_sets_ag
     let (editor, _) = world.member("ed", Role::Editor).await;
 
     // Nothing set up: the built-in agent keeps a first experiment from waiting on a settings visit.
-    let (agent, reason) = agents::auto(&world.store, org, "fake").await.unwrap();
-    assert_eq!((agent.id.as_str(), agent.built_in), ("agentcore-glm", true));
+    let (agent, reason) = agents::auto(&world.store, org).await.unwrap();
+    assert_eq!((agent.id.as_str(), agent.built_in), ("opencode", true));
     assert!(reason.contains("No agent is set up yet"));
     assert_eq!(
-        agents::resolve(&world.store, org, "fake", "auto")
-            .await
-            .unwrap(),
-        "agentcore-glm"
+        agents::resolve(&world.store, org, "auto").await.unwrap(),
+        "opencode"
     );
     assert_eq!(
-        agents::resolve(&world.store, org, "fake", "codex")
-            .await
-            .unwrap(),
+        agents::resolve(&world.store, org, "codex").await.unwrap(),
         "codex"
     );
 
@@ -974,7 +969,7 @@ async fn auto_picks_the_default_the_only_agent_or_asks_and_only_an_owner_sets_ag
     agents::set(&world.store, &world.owner, T0, "codex", new(true, false))
         .await
         .unwrap();
-    let (only, reason) = agents::auto(&world.store, org, "fake").await.unwrap();
+    let (only, reason) = agents::auto(&world.store, org).await.unwrap();
     assert_eq!(
         (only.id.as_str(), reason.as_str()),
         ("codex", "The only agent turned on.")
@@ -983,13 +978,13 @@ async fn auto_picks_the_default_the_only_agent_or_asks_and_only_an_owner_sets_ag
         .await
         .unwrap();
     assert!(matches!(
-        agents::auto(&world.store, org, "fake").await,
+        agents::auto(&world.store, org).await,
         Err(Refusal::Invalid(_))
     ));
     agents::set(&world.store, &world.owner, T0, "gemini", new(true, true))
         .await
         .unwrap();
-    let (chosen, reason) = agents::auto(&world.store, org, "fake").await.unwrap();
+    let (chosen, reason) = agents::auto(&world.store, org).await.unwrap();
     assert_eq!(chosen.id, "gemini");
     assert!(reason.contains("default"));
     agents::set(&world.store, &world.owner, T0, "gemini", new(false, false))
@@ -999,15 +994,9 @@ async fn auto_picks_the_default_the_only_agent_or_asks_and_only_an_owner_sets_ag
         .await
         .unwrap();
     assert!(matches!(
-        agents::auto(&world.store, org, "fake").await,
+        agents::auto(&world.store, org).await,
         Err(Refusal::Invalid(_))
     ));
-    assert_eq!(
-        agents::list(&world.store, &editor, "fake")
-            .await
-            .unwrap()
-            .len(),
-        2
-    );
+    assert_eq!(agents::list(&world.store, &editor).await.unwrap().len(), 2);
     assert_eq!(world.audited("agent.set", AuditOutcome::Done).await, 5);
 }

@@ -70,14 +70,12 @@ pub struct DataSection {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct AgentRun {
     pub agent: String,
-    pub platform: String,
     pub session: SessionId,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ComputeSection {
-    pub platform: String,
     pub environment: String,
     pub judge_image: String,
     pub judge_digest: String,

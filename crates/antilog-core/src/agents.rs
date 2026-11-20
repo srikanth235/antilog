@@ -8,15 +8,13 @@ use crate::store::Store;
 /// The id a person or an agent writes to say "choose for me".
 pub const AUTO: &str = "auto";
 
-/// The agent on Antilog cloud: AgentCore with GLM 4.7 Flash (zai.glm-4.7-flash) and Qwen3 Coder 30B
-/// (qwen.qwen3-coder-30b-a3b-v1:0) as the fallback, named for the platform and not a brand.
+/// The one built-in agent: the OpenCode harness (see `docs/V0.md`).
 /// Offered only while the organization has set up no agent of its own, so a first experiment
 /// starts without a settings visit. An owner's list replaces it, and Auto says it is the reason.
-fn built_in(platform: &str) -> Agent {
+fn built_in() -> Agent {
     Agent {
-        id: "agentcore-glm".to_owned(),
-        name: "AgentCore · GLM 4.7 Flash".to_owned(),
-        platform: platform.to_owned(),
+        id: "opencode".to_owned(),
+        name: "OpenCode".to_owned(),
         enabled: true,
         is_default: false,
         cost_tier: CostTier::Low,
@@ -24,27 +22,19 @@ fn built_in(platform: &str) -> Agent {
     }
 }
 
-async fn known<S: Store>(
-    store: &S,
-    organization: OrganizationId,
-    platform: &str,
-) -> Result<Vec<Agent>, Refusal> {
+async fn known<S: Store>(store: &S, organization: OrganizationId) -> Result<Vec<Agent>, Refusal> {
     let stored = store.agents(organization).await?;
     Ok(if stored.is_empty() {
-        vec![built_in(platform)]
+        vec![built_in()]
     } else {
         stored
     })
 }
 
-/// Every member reads the agents; `platform` is the one this server runs sessions on.
-pub async fn list<S: Store>(
-    store: &S,
-    who: &Principal,
-    platform: &str,
-) -> Result<Vec<Agent>, Refusal> {
+/// Every member reads the agents.
+pub async fn list<S: Store>(store: &S, who: &Principal) -> Result<Vec<Agent>, Refusal> {
     member_of(store, who).await?;
-    known(store, who.organization, platform).await
+    known(store, who.organization).await
 }
 
 /// The agent Auto picks and why. Cost per win needs the judge's history of this project and
@@ -53,9 +43,8 @@ pub async fn list<S: Store>(
 pub async fn auto<S: Store>(
     store: &S,
     organization: OrganizationId,
-    platform: &str,
 ) -> Result<(Agent, String), Refusal> {
-    let agents = known(store, organization, platform).await?;
+    let agents = known(store, organization).await?;
     let enabled: Vec<&Agent> = agents.iter().filter(|agent| agent.enabled).collect();
     if let Some(default) = enabled.iter().find(|agent| agent.is_default) {
         return Ok((
@@ -70,7 +59,7 @@ pub async fn auto<S: Store>(
         )),
         [only] if only.built_in => Ok((
             (*only).clone(),
-            "No agent is set up yet, so Antilog uses the AgentCore agent (GLM 4.7 Flash, with Qwen3 Coder 30B as the fallback).".to_owned(),
+            "No agent is set up yet, so Antilog uses the built-in OpenCode agent.".to_owned(),
         )),
         [only] => Ok(((*only).clone(), "The only agent turned on.".to_owned())),
         _ => Err(Refusal::Invalid(
@@ -83,11 +72,10 @@ pub async fn auto<S: Store>(
 pub async fn resolve<S: Store>(
     store: &S,
     organization: OrganizationId,
-    platform: &str,
     requested: &str,
 ) -> Result<String, Refusal> {
     if requested == AUTO {
-        Ok(auto(store, organization, platform).await?.0.id)
+        Ok(auto(store, organization).await?.0.id)
     } else {
         Ok(requested.to_owned())
     }
@@ -115,12 +103,8 @@ pub async fn set<S: Store>(
             "an agent's id is lower-case letters, digits and hyphens, and is not \"auto\"",
         ));
     }
-    if !(1..=200).contains(&new.name.trim().chars().count())
-        || !(1..=64).contains(&new.platform.trim().chars().count())
-    {
-        return Err(Refusal::Invalid(
-            "an agent's name is 1 to 200 characters and its platform 1 to 64",
-        ));
+    if !(1..=200).contains(&new.name.trim().chars().count()) {
+        return Err(Refusal::Invalid("an agent's name is 1 to 200 characters"));
     }
     if new.is_default && !new.enabled {
         return Err(Refusal::Invalid("the default agent must be turned on"));
@@ -129,7 +113,6 @@ pub async fn set<S: Store>(
     let agent = Agent {
         id: id.to_owned(),
         name: new.name.trim().to_owned(),
-        platform: new.platform.trim().to_owned(),
         enabled: new.enabled,
         is_default: new.is_default,
         cost_tier: new.cost_tier,
@@ -146,18 +129,16 @@ pub async fn set<S: Store>(
     Ok(agent)
 }
 
-/// The environments a session may run on. The platform's own default is all there is until
-/// environments can be registered; its size and image are the platform's.
+/// The environments a session may run on. One default is all there is until environments can be
+/// registered.
 pub async fn environments<S: Store>(
     store: &S,
     who: &Principal,
-    platform: &str,
 ) -> Result<Vec<Environment>, Refusal> {
     member_of(store, who).await?;
     Ok(vec![Environment {
         id: "default".to_owned(),
         name: "Default".to_owned(),
-        platform: platform.to_owned(),
         built_in: true,
     }])
 }

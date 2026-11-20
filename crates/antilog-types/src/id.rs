@@ -108,7 +108,6 @@ mod text_enum_schema {
         schema_matches_wire(ApprovalStatus::ALL);
         schema_matches_wire(AuditOutcome::ALL);
         schema_matches_wire(CardKind::ALL);
-        schema_matches_wire(Cleanup::ALL);
         schema_matches_wire(CostTier::ALL);
         schema_matches_wire(Decision::ALL);
         schema_matches_wire(EvaluationKind::ALL);

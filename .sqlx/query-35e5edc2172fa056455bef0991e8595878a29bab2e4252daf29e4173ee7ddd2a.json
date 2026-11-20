@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select id, name, platform, enabled, is_default, cost_tier from agents where organization_id = $1 order by id",
+  "query": "select id, name, enabled, is_default, cost_tier from agents where organization_id = $1 order by id",
   "describe": {
     "columns": [
       {
@@ -27,17 +27,6 @@
       },
       {
         "ordinal": 2,
-        "name": "platform",
-        "type_info": "Text",
-        "origin": {
-          "Table": {
-            "table": "agents",
-            "name": "platform"
-          }
-        }
-      },
-      {
-        "ordinal": 3,
         "name": "enabled",
         "type_info": "Bool",
         "origin": {
@@ -48,7 +37,7 @@
         }
       },
       {
-        "ordinal": 4,
+        "ordinal": 3,
         "name": "is_default",
         "type_info": "Bool",
         "origin": {
@@ -59,7 +48,7 @@
         }
       },
       {
-        "ordinal": 5,
+        "ordinal": 4,
         "name": "cost_tier",
         "type_info": "Text",
         "origin": {
@@ -80,9 +69,8 @@
       false,
       false,
       false,
-      false,
       false
     ]
   },
-  "hash": "3986b2cbd4a653ce7fe9689a7e81818e7a2e18f02da4dcb8006d7375e5321100"
+  "hash": "35e5edc2172fa056455bef0991e8595878a29bab2e4252daf29e4173ee7ddd2a"
 }

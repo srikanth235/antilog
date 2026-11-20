@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into sessions (id, organization_id, experiment_id, parent_session_id, agent, status, note, created_at, updated_at) values ($1, $2, $3, $4, $5, $6, $7, to_timestamp($8::bigint / 1000.0), to_timestamp($9::bigint / 1000.0))",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "84074631d04484c77efda5a35ab54af65fd55ab3cc4baf1b81f4d915140c5990"
+}

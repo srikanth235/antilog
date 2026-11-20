@@ -13,7 +13,7 @@ test("a card appears without a reload, and nothing polls while the stream delive
   await expect(
     page.getByRole("heading", { name: "Cut checkout p95 latency", level: 1 }),
   ).toBeVisible();
-  await expect(page.getByText("Started a session on the fake platform")).toBeVisible();
+  await expect(page.getByText(/Started a session with/)).toBeVisible();
   const id = page.url().split("/experiments/")[1]?.split(/[?#]/)[0];
 
   // Let the stream's first message refetch what the page shows, then count what is asked.
@@ -46,7 +46,7 @@ test("when the stream fails the page polls as before", async ({ page }) => {
   await page.getByLabel("New experiment").fill("Cut checkout p95 latency");
   await page.getByLabel("Budget ($)").fill("10");
   await page.getByRole("button", { name: "Send" }).click();
-  await expect(page.getByText("Started a session on the fake platform")).toBeVisible();
+  await expect(page.getByText(/Started a session with/)).toBeVisible();
   const id = page.url().split("/experiments/")[1]?.split(/[?#]/)[0];
   const asked = await page.request.post(`/api/experiments/${id}/tools/request_budget`, {
     data: { input: { amount_cents: 5000, reason: "more trials" } },
@@ -62,7 +62,7 @@ test("an experiment page left open reads history without opening sessions", asyn
   await page.getByLabel("New experiment").fill("Cut checkout p95 latency");
   await page.getByLabel("Budget ($)").fill("10");
   await page.getByRole("button", { name: "Send" }).click();
-  await expect(page.getByText("Started a session on the fake platform")).toBeVisible();
+  await expect(page.getByText(/Started a session with/)).toBeVisible();
   const id = page.url().split("/experiments/")[1]?.split(/[?#]/)[0];
   const sessions = async () =>
     ((await (await page.request.get(`/api/experiments/${id}/sessions`)).json()) as unknown[])

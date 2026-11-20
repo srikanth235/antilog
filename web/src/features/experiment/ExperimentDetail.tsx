@@ -11,7 +11,7 @@ import {
 } from "../../api/queries";
 import { Icon } from "../../components/icon/Icon";
 import { Empty, Failed, Loading } from "../../components/state/State";
-import { canEdit, platformName } from "../../lib/domain";
+import { canEdit } from "../../lib/domain";
 import { dateTime, dollars } from "../../lib/format";
 import { kept, OUTCOME_WORDS, parseHistory } from "../../lib/history";
 import { w } from "../../words";
@@ -63,7 +63,7 @@ export function ExperimentDetail({ experimentId }: { experimentId: string }) {
   const parsed = parseHistory(history.data);
   const project = projects.data?.find((p) => p.id === e.projectId);
   const list = sessions.data ?? [];
-  const cols = "minmax(0, 1.4fr) minmax(0, 1.4fr) 150px 110px";
+  const cols = "minmax(0, 1.4fr) 150px 110px";
   return (
     <article className="page ct">
       <Link
@@ -164,7 +164,6 @@ export function ExperimentDetail({ experimentId }: { experimentId: string }) {
           <div className="tb" style={{ ["--cols" as string]: cols, marginTop: 12 }}>
             <div className="tb-r th">
               <span>{t.session}</span>
-              <span>{t.platform}</span>
               <span>{t.started}</span>
               <span>{t.state}</span>
             </div>
@@ -179,12 +178,8 @@ export function ExperimentDetail({ experimentId }: { experimentId: string }) {
                 <span className="n">
                   <span>{w.sidebar.session(agentLabel(s.agent))}</span>
                 </span>
-                <span>{platformName(s.platform)}</span>
                 <span className="ink2">{dateTime(s.createdAt)}</span>
-                <span>
-                  {w.activity[s.status]}
-                  {s.cleanup === "not_removed" ? ` · ${t.notRemoved}` : ""}
-                </span>
+                <span>{w.activity[s.status]}</span>
               </Link>
             ))}
           </div>

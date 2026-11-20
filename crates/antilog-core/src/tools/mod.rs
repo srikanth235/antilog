@@ -8,11 +8,18 @@ use antilog_types::{MemberId, OrganizationId, SessionId};
 use serde_json::{Value, json};
 
 use crate::deps::Deps;
-use crate::platform::ToolDef;
-use crate::store::StoreError;
+use crate::store::{SessionStore, StoreError};
 
 pub(crate) use judge::issue_receipt;
 pub use judge::seal_approved;
+
+/// A tool an agent may call: its name, what it does and the shape of its input.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ToolDef {
+    pub name: String,
+    pub description: String,
+    pub schema: Value,
+}
 
 /// `history` as a plain read for a person, with no session behind it.
 pub async fn read_history<D: Deps>(
@@ -68,7 +75,7 @@ impl From<crate::store::judge::JudgeStoreError> for ToolError {
     }
 }
 
-/// A measurement that was accepted and is still to run; its outcome arrives as a message.
+/// A measurement that was accepted and is still to run; `finish` runs it.
 #[derive(Debug, Clone)]
 pub struct Ticket {
     pub trial: Trial,
@@ -89,7 +96,7 @@ impl ToolReply {
     }
 }
 
-/// What serves tool calls: the relay for a session, the API for `antilog mcp`.
+/// What serves tool calls: the API, for a session and for `antilog mcp`.
 pub trait ToolHost: Send + Sync {
     fn call(
         &self,
@@ -102,25 +109,27 @@ pub trait ToolHost: Send + Sync {
     fn finish(&self, caller: &Caller, ticket: &Ticket) -> impl Future<Output = String> + Send;
 }
 
-/// The host of a session that is stopping: nothing new starts.
-pub struct NoTools;
-
-impl ToolHost for NoTools {
-    async fn call(&self, _: &Caller, _: &str, _: Value) -> ToolReply {
-        ToolReply::error(ToolError::new(
-            "the session is stopping: nothing new starts",
-        ))
-    }
-
-    async fn finish(&self, _: &Caller, _: &Ticket) -> String {
-        "The session is stopping.".to_owned()
-    }
-}
-
 pub struct Toolbox<'a, D: Deps>(pub &'a D);
 
 impl<D: Deps> ToolHost for Toolbox<'_, D> {
     async fn call(&self, caller: &Caller, name: &str, input: Value) -> ToolReply {
+        // The conversation keeps the name of the tool, never its input or its answer.
+        if let Ok(Some(session)) = self
+            .0
+            .store()
+            .session(caller.organization, caller.session)
+            .await
+        {
+            let _ = crate::session::record(
+                self.0,
+                &session,
+                format!("tool:{}", caller.call),
+                antilog_types::EventKind::Tool,
+                None,
+                name,
+            )
+            .await;
+        }
         let result = match name {
             "seal" => judge::seal(self.0, caller, input).await,
             "measure" => judge::measure(self.0, caller, input).await,

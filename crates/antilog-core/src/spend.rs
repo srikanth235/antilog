@@ -5,7 +5,7 @@ use crate::clock::Clock;
 use crate::ids::uuid_of;
 use crate::store::{BudgetStore, SpendScope, SpendTotal, StoreError};
 
-/// One metered usage report from a platform. `seed` makes a replayed report the same row.
+/// One metered usage report from the model gateway. `seed` makes a replayed report the same row.
 pub async fn record_usage<B: BudgetStore>(
     store: &B,
     organization: OrganizationId,

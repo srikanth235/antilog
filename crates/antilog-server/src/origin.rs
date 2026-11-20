@@ -5,7 +5,7 @@
 //! refuses a request without it. The rule:
 //!
 //! - **On Lambda the check is always on** ([`OriginGuard::required_from_env`]). With no
-//!   secret set it refuses everything except the scheduler's own invocations: it fails
+//!   secret set it refuses everything except the deploy's own invocations: it fails
 //!   closed. There is no switch to turn it off.
 //! - **The local server** ([`OriginGuard::from_env`]) checks only when a secret is set, and
 //!   says so in its log when it does not. Tests build [`OriginGuard::off`] explicitly.

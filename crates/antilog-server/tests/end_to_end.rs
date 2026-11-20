@@ -10,9 +10,8 @@
 use std::sync::Arc;
 
 use antilog_core::auth::FakeSignIn;
-use antilog_core::fakes::{FakeCodeHost, FakeDeps, FakePlatform};
+use antilog_core::fakes::{FakeCodeHost, FakeDeps, FakeMachine, Profile};
 use antilog_core::judge::fixtures::definition;
-use antilog_core::judge::sandbox::Profile;
 use antilog_server::api::auth::{Provider, Settings};
 use antilog_server::api::router;
 use axum::Router;
@@ -107,25 +106,20 @@ fn cheats() -> Value {
 }
 
 fn app() -> Router {
-    app_with(None)
-}
-
-fn app_with(wake_secret: Option<String>) -> Router {
-    let mut platform = FakePlatform::default().with("base", Profile::new(100.0));
+    let mut machine = FakeMachine::default().with("base", Profile::new(100.0));
     for i in 0..4 {
-        platform = platform.with(&format!("cheat-{i}"), Profile::new(10.0).holdout(100.0));
+        machine = machine.with(&format!("cheat-{i}"), Profile::new(10.0).holdout(100.0));
     }
-    let platform = platform.with("fast", Profile::new(80.0));
+    let machine = machine.with("fast", Profile::new(80.0));
     router(
         Arc::new(FakeDeps::new(
-            platform,
+            machine,
             FakeCodeHost::default().with("fast", "app", "src/a.rs"),
         )),
         Settings {
             providers: vec![Provider::Fake(FakeSignIn)],
             open_organizations: true,
             secure_cookies: true,
-            wake_secret,
             code_host_webhook_secret: None,
             e2e_seed: false,
         },
@@ -191,8 +185,6 @@ async fn from_sign_in_to_a_signed_receipt() {
     )
     .await;
     assert_eq!(status, StatusCode::OK, "{decided}");
-    let (status, stepped) = post(format!("/sessions/{sid}/step"), json!({})).await;
-    assert_eq!(status, StatusCode::OK, "{stepped}");
     let (_, row) = get(format!("/experiments/{exp}")).await;
     assert_eq!(row["status"], "sealed");
 
@@ -231,94 +223,5 @@ async fn from_sign_in_to_a_signed_receipt() {
     assert!(
         started[0]["actor"].is_string(),
         "the audit names the member: {started:?}"
-    );
-}
-
-#[tokio::test]
-async fn a_scheduler_wake_up_steps_the_session_with_the_shared_secret() {
-    let app = app_with(Some("wake-secret".into()));
-    let owner = sign_in(&app).await;
-    let (_, project) = send(
-        &app,
-        Method::POST,
-        "/projects",
-        &owner,
-        json!({"name": "p", "description": ""}),
-    )
-    .await;
-    let (_, experiment) = send(
-        &app,
-        Method::POST,
-        &format!("/projects/{}/experiments", project["id"].as_str().unwrap()),
-        &owner,
-        json!({"goal": "g", "budgetCapCents": 1000}),
-    )
-    .await;
-    let (_, session) = send(
-        &app,
-        Method::POST,
-        &format!(
-            "/experiments/{}/sessions",
-            experiment["id"].as_str().unwrap()
-        ),
-        &owner,
-        json!({"agent": "claude", "prompt": "go"}),
-    )
-    .await;
-    let (_, me) = send(&app, Method::GET, "/organization", &owner, json!({})).await;
-    let org = me["id"].as_str().unwrap().to_owned();
-    let wake = |org: String, job: String, secret: Option<&'static str>| {
-        let mut request = Request::post(format!("/internal/wake/{org}/{job}"));
-        if let Some(secret) = secret {
-            request = request.header("x-antilog-wake", secret);
-        }
-        let request = request.body(Body::empty()).unwrap();
-        let app = app.clone();
-        async move { app.oneshot(request).await.unwrap().status() }
-    };
-    let id = session["id"].as_str().unwrap().to_owned();
-    assert_eq!(
-        wake(org.clone(), id.clone(), None).await,
-        StatusCode::UNAUTHORIZED
-    );
-    assert_eq!(
-        wake(org.clone(), id.clone(), Some("wrong")).await,
-        StatusCode::UNAUTHORIZED
-    );
-    assert_eq!(
-        wake(org.clone(), id.clone(), Some("wake-secret")).await,
-        StatusCode::OK
-    );
-    assert_eq!(
-        wake(org.clone(), id, Some("wake-secret")).await,
-        StatusCode::OK,
-        "a second wake-up is safe"
-    );
-    let ghost = "018f3b1e-0000-7000-8000-000000000000";
-    assert_eq!(
-        wake(org, ghost.into(), Some("wake-secret")).await,
-        StatusCode::NO_CONTENT
-    );
-    let doc: Value = serde_json::from_str(&antilog_server::api::openapi_json()).unwrap();
-    assert!(
-        doc["paths"]
-            .as_object()
-            .unwrap()
-            .keys()
-            .all(|p| !p.starts_with("/internal"))
-    );
-}
-
-#[tokio::test]
-async fn the_wake_route_is_absent_without_a_secret() {
-    let app = app();
-    let request = Request::post(
-        "/internal/wake/018f3b1e-0000-7000-8000-000000000000/018f3b1e-0000-7000-8000-000000000000",
-    )
-    .body(Body::empty())
-    .unwrap();
-    assert_eq!(
-        app.oneshot(request).await.unwrap().status(),
-        StatusCode::NOT_FOUND
     );
 }

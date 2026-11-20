@@ -135,10 +135,6 @@ impl SessionStore for FakeStore {
         if change.note.is_some() {
             row.note.clone_from(&change.note);
         }
-        if change.platform_handle.is_some() {
-            row.platform_handle.clone_from(&change.platform_handle);
-        }
-        row.cleanup = change.cleanup.or(row.cleanup);
         row.updated_at = at;
         let updated = row.clone();
         ledger.audit.extend(audit.cloned());

@@ -55,23 +55,6 @@ resource "aws_secretsmanager_secret" "judge_credential" {
   recovery_window_in_days = 7
 }
 
-# Sent by EventBridge Scheduler in `x-antilog-wake`; the server mounts its wake route only when it has it.
-resource "random_password" "wake" {
-  length  = 48
-  special = false
-}
-
-resource "aws_secretsmanager_secret" "wake" {
-  name                    = "${local.prefix}/wake-secret"
-  description             = "Authenticates the scheduler's wake-up requests"
-  recovery_window_in_days = 7
-}
-
-resource "aws_secretsmanager_secret_version" "wake" {
-  secret_id     = aws_secretsmanager_secret.wake.id
-  secret_string = random_password.wake.result
-}
-
 # CloudFront adds one of these to every /api request in `x-antilog-origin`, and the server
 # refuses a request without one of them, so the Lambda function URL (public by design) is no
 # way around CloudFront. Two values exist so one can be rotated while the other still works:

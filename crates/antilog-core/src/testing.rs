@@ -5,7 +5,7 @@
 
 use antilog_types::{
     Agent, Approval, ApprovalId, ApprovalStatus, AuditEntry, AuditId, AuditOutcome, CardKind,
-    Cleanup, CostTier, Decision, EvaluationKind, EvaluationTemplate, EventKind, Experiment,
+    CostTier, Decision, EvaluationKind, EvaluationTemplate, EventKind, Experiment,
     ExperimentStatus, Identity, Member, MemberId, Organization, OrganizationId, Policy, PolicyMode,
     Project, ProjectRole, Role, Session, SessionStatus, Spend, SpendId, SpendKind,
 };
@@ -631,8 +631,8 @@ async fn budgets_and_spend<S: Store>(store: &S) {
         .create_experiment(&second, &world.log("experiment.create"))
         .await
         .expect("created");
-    let lead = Session::new(org, first.id, "claude", "agentcore", T0);
-    let elsewhere = Session::new(org, second.id, "claude", "agentcore", T0);
+    let lead = Session::new(org, first.id, "claude", T0);
+    let elsewhere = Session::new(org, second.id, "claude", T0);
     for session in [&lead, &elsewhere] {
         store
             .create_session(session, &world.log("session.create"))
@@ -809,23 +809,23 @@ async fn experiments_and_sessions<S: Store>(store: &S) {
             .await,
     );
 
-    let lead = Session::new(org, experiment.id, "claude", "agentcore", T0);
+    let lead = Session::new(org, experiment.id, "claude", T0);
     let create = async |session: &Session| {
         store
             .create_session(session, &world.log("session.create"))
             .await
     };
     create(&lead).await.expect("created");
-    let mut child = Session::new(org, experiment.id, "codex", "openai", T0 + 1);
+    let mut child = Session::new(org, experiment.id, "codex", T0 + 1);
     child.parent = Some(lead.id);
     create(&child).await.expect("a spawned session");
-    let mut grandchild = Session::new(org, experiment.id, "codex", "openai", T0 + 2);
+    let mut grandchild = Session::new(org, experiment.id, "codex", T0 + 2);
     grandchild.parent = Some(child.id);
     refused(create(&grandchild).await, Invariant::SpawnedCannotSpawn);
     let other = self::experiment(store, &world, 1_000)
         .await
         .expect("created");
-    let mut stray = Session::new(org, other.id, "codex", "openai", T0);
+    let mut stray = Session::new(org, other.id, "codex", T0);
     stray.parent = Some(lead.id);
     not_found(create(&stray).await);
     conflict(create(&lead).await);
@@ -840,7 +840,6 @@ async fn experiments_and_sessions<S: Store>(store: &S) {
     let waiting = update(
         SessionChange {
             status: Some(SessionStatus::WaitingForYou),
-            platform_handle: Some("handle-1".into()),
             ..SessionChange::default()
         },
         T0 + 5,
@@ -849,7 +848,6 @@ async fn experiments_and_sessions<S: Store>(store: &S) {
     .await
     .expect("waiting");
     assert_eq!(waiting.status, SessionStatus::WaitingForYou);
-    assert_eq!(waiting.platform_handle.as_deref(), Some("handle-1"));
     assert_eq!(waiting.updated_at, T0 + 5);
     update(
         SessionChange {
@@ -866,7 +864,6 @@ async fn experiments_and_sessions<S: Store>(store: &S) {
         SessionChange {
             status: Some(SessionStatus::Done),
             note: Some("Stopped by Ada".into()),
-            ..SessionChange::default()
         },
         T0 + 7,
         Some(&stop),
@@ -874,7 +871,6 @@ async fn experiments_and_sessions<S: Store>(store: &S) {
     .await
     .expect("done");
     assert_eq!(done.note.as_deref(), Some("Stopped by Ada"));
-    assert_eq!(done.platform_handle.as_deref(), Some("handle-1"));
     assert!(logged(store, org, stop.id).await);
     for status in [
         SessionStatus::Working,
@@ -894,20 +890,6 @@ async fn experiments_and_sessions<S: Store>(store: &S) {
             Invariant::IllegalTransition,
         );
     }
-    let cleaned = update(
-        SessionChange {
-            cleanup: Some(Cleanup::Removed),
-            ..SessionChange::default()
-        },
-        T0 + 9,
-        None,
-    )
-    .await
-    .expect("clean-up is reported after the end");
-    assert_eq!(
-        (cleaned.status, cleaned.cleanup),
-        (SessionStatus::Done, Some(Cleanup::Removed))
-    );
     not_found(
         store
             .update_session(
@@ -1048,7 +1030,6 @@ async fn agents<S: Store>(store: &S) {
     let agent = |id: &str, enabled, is_default| Agent {
         id: id.to_owned(),
         name: id.to_owned(),
-        platform: "agentcore".into(),
         enabled,
         is_default,
         cost_tier: CostTier::Medium,

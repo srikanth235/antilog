@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into agents (organization_id, id, name, enabled, is_default, cost_tier, created_at) values ($1, $2, $3, $4, $5, $6, to_timestamp($7::bigint / 1000.0)) on conflict (organization_id, id) do update set name = excluded.name, enabled = excluded.enabled, is_default = excluded.is_default, cost_tier = excluded.cost_tier",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Bool",
+        "Bool",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "0521ffc96f03160244c6bb914bcfd28b6901533ec3014499d6bc645148bc69b5"
+}

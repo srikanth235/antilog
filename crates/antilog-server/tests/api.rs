@@ -8,7 +8,7 @@
 use std::sync::Arc;
 
 use antilog_core::auth::FakeSignIn;
-use antilog_core::fakes::{FakeCodeHost, FakeDeps, FakePlatform};
+use antilog_core::fakes::{FakeCodeHost, FakeDeps, FakeMachine};
 use antilog_server::api::auth::{Provider, Settings};
 use antilog_server::api::{openapi_json, router};
 use axum::Router;
@@ -25,14 +25,13 @@ fn app(fake: bool, open: bool) -> Router {
     };
     router(
         Arc::new(FakeDeps::new(
-            FakePlatform::default(),
+            FakeMachine::default(),
             FakeCodeHost::default(),
         )),
         Settings {
             providers,
             open_organizations: open,
             secure_cookies: true,
-            wake_secret: None,
             code_host_webhook_secret: None,
             e2e_seed: false,
         },
@@ -877,10 +876,10 @@ fn openapi_operation_ids_are_unique_and_path_parameters_are_in_the_path() {
     }
 }
 
-/// An organization on a store the test can also reach, for what only the relay or a tool writes.
+/// An organization on a store the test can also reach, for what only a tool writes.
 async fn org_with_store() -> (Org, Arc<FakeDeps>) {
     let deps = Arc::new(FakeDeps::new(
-        FakePlatform::default(),
+        FakeMachine::default(),
         FakeCodeHost::default(),
     ));
     let app = router(
@@ -889,7 +888,6 @@ async fn org_with_store() -> (Org, Arc<FakeDeps>) {
             providers: vec![Provider::Fake(FakeSignIn)],
             open_organizations: true,
             secure_cookies: true,
-            wake_secret: None,
             code_host_webhook_secret: None,
             e2e_seed: false,
         },
@@ -1059,13 +1057,7 @@ async fn pending_cards_the_transcript_and_spend_are_read_across_roles() {
     assert!(seen(&after).is_empty());
 
     // A session with a conversation and spend.
-    let session = Session::new(
-        organization,
-        experiment_uuid,
-        "claude",
-        "fake",
-        1_700_000_000_000,
-    );
+    let session = Session::new(organization, experiment_uuid, "claude", 1_700_000_000_000);
     deps.store
         .create_session(
             &session,
@@ -1196,10 +1188,10 @@ async fn agents_auto_and_environments_are_read_by_members_and_set_by_owners() {
         .to_owned();
 
     let listed = org.call(Method::GET, "/agents", &viewer, None).await;
-    assert_eq!(listed.body[0]["id"], "agentcore-glm");
+    assert_eq!(listed.body[0]["id"], "opencode");
     assert_eq!(listed.body[0]["builtIn"], true);
     let auto = org.call(Method::GET, "/agents/auto", &viewer, None).await;
-    assert_eq!(auto.body["agent"]["id"], "agentcore-glm");
+    assert_eq!(auto.body["agent"]["id"], "opencode");
     let environments = org.call(Method::GET, "/environments", &viewer, None).await;
     assert_eq!(environments.body[0]["id"], "default");
 
@@ -1214,10 +1206,10 @@ async fn agents_auto_and_environments_are_read_by_members_and_set_by_owners() {
         .await;
     assert_eq!(
         (started.status, &started.body["agent"]),
-        (StatusCode::CREATED, &json!("agentcore-glm"))
+        (StatusCode::CREATED, &json!("opencode"))
     );
 
-    let body = json!({"name": "Codex", "platform": "agentcore", "enabled": true, "isDefault": false, "costTier": "high"});
+    let body = json!({"name": "Codex", "enabled": true, "isDefault": false, "costTier": "high"});
     let denied = org
         .call(Method::PUT, "/agents/codex", &editor, Some(body.clone()))
         .await;
@@ -1230,7 +1222,12 @@ async fn agents_auto_and_environments_are_read_by_members_and_set_by_owners() {
         (StatusCode::OK, &json!(false))
     );
     let two = org
-        .call(Method::PUT, "/agents/gemini", &org.owner, Some(json!({"name": "Gemini", "platform": "agentcore", "enabled": true, "isDefault": false, "costTier": "low"})))
+        .call(
+            Method::PUT,
+            "/agents/gemini",
+            &org.owner,
+            Some(json!({"name": "Gemini", "enabled": true, "isDefault": false, "costTier": "low"})),
+        )
         .await;
     assert_eq!(two.status, StatusCode::OK);
     let asks = org.call(Method::GET, "/agents/auto", &viewer, None).await;
@@ -1256,7 +1253,14 @@ async fn agents_auto_and_environments_are_read_by_members_and_set_by_owners() {
         )
         .await;
     assert_eq!(named.status, StatusCode::CREATED);
-    let bad = org.call(Method::PUT, "/agents/Bad", &org.owner, Some(json!({"name": "x", "platform": "p", "enabled": true, "isDefault": false, "costTier": "low"}))).await;
+    let bad = org
+        .call(
+            Method::PUT,
+            "/agents/Bad",
+            &org.owner,
+            Some(json!({"name": "x", "enabled": true, "isDefault": false, "costTier": "low"})),
+        )
+        .await;
     assert_eq!(bad.status, StatusCode::UNPROCESSABLE_ENTITY);
 }
 
@@ -1693,7 +1697,7 @@ mod live {
         }
 
         async fn session(&self, organization: OrganizationId, experiment: ExperimentId) -> Session {
-            let session = Session::new(organization, experiment, "claude", "fake", self.now());
+            let session = Session::new(organization, experiment, "claude", self.now());
             self.deps
                 .store
                 .create_session(
@@ -1766,7 +1770,6 @@ mod live {
                 providers: Vec::new(),
                 open_organizations: false,
                 secure_cookies: true,
-                wake_secret: None,
                 code_host_webhook_secret: None,
                 e2e_seed: false,
             },
@@ -2015,7 +2018,6 @@ mod live {
                 providers: Vec::new(),
                 open_organizations: false,
                 secure_cookies: true,
-                wake_secret: None,
                 code_host_webhook_secret: None,
                 e2e_seed: false,
             },

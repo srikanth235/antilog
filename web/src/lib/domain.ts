@@ -38,7 +38,7 @@ export function pendingCards(approvals: readonly Schemas["Approval"][]): Schemas
   return approvals.filter((approval) => approval.status === "pending");
 }
 
-/** `antilog mcp` opens its sessions as agent "mcp" on platform "external". */
+/** `antilog mcp` opens its sessions as agent "mcp". */
 export const MCP_AGENT = "mcp";
 
 /** The agent a session ran: its display name from the organization's list. An id never becomes a name. */
@@ -49,19 +49,6 @@ export function agentLabel(
   const found = agents?.find((agent) => agent.id === id);
   if (found !== undefined) return found.name;
   return id === MCP_AGENT ? w.session.yourAgent : w.session.unknownAgent;
-}
-
-const PLATFORMS: Record<string, string> = {
-  fake: "the fake platform",
-  agentcore: "AWS AgentCore",
-  managed: "Claude Managed Agents",
-  openai: "OpenAI Agents API",
-  foundry: "Microsoft Foundry Agent Service",
-  google: "Google Agent Runtime",
-  external: "your machine",
-};
-export function platformName(platform: string): string {
-  return PLATFORMS[platform] ?? w.session.unknownPlatform;
 }
 
 /** The default budget the server applies to a new experiment: the project's, else the organization's, else none. */

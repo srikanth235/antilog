@@ -10,7 +10,7 @@ use crate::session::{NewSession, now_ms};
 use crate::store::{SessionChange, SessionStore};
 
 /// A card in front of a person, or approved by policy when the experiment follows it.
-/// The agent gets the answer as a message either way.
+/// The agent gets the answer in the tool's reply either way.
 pub(super) struct Card {
     pub kind: CardKind,
     pub summary: String,
@@ -73,18 +73,31 @@ pub(super) async fn ask<D: Deps>(
     Ok(approval)
 }
 
-pub(super) fn waiting(approval: &Approval) -> serde_json::Value {
+/// Applies a card the experiment's policy approved at once; a card in front of a person is
+/// applied when they decide it.
+pub(super) async fn follow<D: Deps>(deps: &D, caller: &Caller, approval: &Approval) {
+    if approval.status != ApprovalStatus::Pending {
+        let _ = crate::session::settle(deps, caller.organization, caller.session).await;
+    }
+}
+
+pub(super) async fn waiting<D: Deps>(
+    deps: &D,
+    caller: &Caller,
+    approval: &Approval,
+) -> serde_json::Value {
+    follow(deps, caller, approval).await;
     if approval.status == ApprovalStatus::Pending {
         json!({
             "approval": approval.id,
             "status": "waiting for a person",
-            "note": "A card is in front of a person. The answer arrives as a message; do not call this tool again for it."
+            "note": "A card is in front of a person. Do not call this tool again for it."
         })
     } else {
         json!({
             "approval": approval.id,
             "status": "approved by policy",
-            "note": "Policy approved it. What follows arrives as a message; do not call this tool again for it."
+            "note": "Policy approved it. Do not call this tool again for it."
         })
     }
 }
@@ -127,7 +140,7 @@ pub(super) async fn attach_repo<D: Deps>(
         },
     )
     .await?;
-    Ok((waiting(&approval), None))
+    Ok((waiting(deps, caller, &approval).await, None))
 }
 
 #[derive(Deserialize)]
@@ -174,7 +187,7 @@ pub(super) async fn request_credential<D: Deps>(
         },
     )
     .await?;
-    Ok((waiting(&approval), None))
+    Ok((waiting(deps, caller, &approval).await, None))
 }
 
 #[derive(Deserialize)]
@@ -236,7 +249,7 @@ pub(super) async fn set_environment<D: Deps>(
         },
     )
     .await?;
-    Ok((waiting(&approval), None))
+    Ok((waiting(deps, caller, &approval).await, None))
 }
 
 #[derive(Deserialize)]
@@ -286,7 +299,7 @@ pub(super) async fn request_budget<D: Deps>(
         },
     )
     .await?;
-    Ok((waiting(&approval), None))
+    Ok((waiting(deps, caller, &approval).await, None))
 }
 
 #[derive(Deserialize)]

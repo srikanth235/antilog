@@ -105,7 +105,7 @@ pub async fn headroom<S: Store>(
     })
 }
 
-/// What the judge asks before `measure` and a platform asks before a session step:
+/// What the judge asks before `measure` and a session asks before it starts:
 /// refused when nothing is left under any limit.
 pub async fn ensure_room<S: Store>(
     store: &S,

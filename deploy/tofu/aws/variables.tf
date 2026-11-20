@@ -106,20 +106,6 @@ variable "database_deletion_protection" {
   default = true
 }
 
-# Agents -----------------------------------------------------------------------
-
-variable "agent_image_uri" {
-  description = "The agent image in the account's registry. Empty means no agent runtime yet."
-  type        = string
-  default     = ""
-}
-
-variable "judge_image_uri" {
-  description = "The judge sandbox image. Empty means no judge runtime yet."
-  type        = string
-  default     = ""
-}
-
 # Sign-in ----------------------------------------------------------------------
 
 variable "github_client_id" {

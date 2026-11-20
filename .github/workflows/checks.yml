@@ -213,13 +213,6 @@ jobs:
           # Compile from the committed .sqlx/: the database here has no migrations, and an online
           # check against it fails the build, which left the invoke below waiting forever.
           SQLX_OFFLINE: "true"
-          # Placeholders: the clients are built but nothing calls AWS on /health.
-          ANTILOG_AGENTCORE_AGENT_RUNTIME: arn:aws:bedrock-agentcore:us-east-1:000000000000:runtime/local_agent
-          ANTILOG_AGENTCORE_JUDGE_RUNTIME: arn:aws:bedrock-agentcore:us-east-1:000000000000:runtime/local_judge
-          ANTILOG_SCHEDULER_GROUP: antilog
-          ANTILOG_SCHEDULER_TARGET_ARN: arn:aws:lambda:us-east-1:000000000000:function:local
-          ANTILOG_SCHEDULER_ROLE_ARN: arn:aws:iam::000000000000:role/local
-          ANTILOG_WAKE_SECRET: local-wake-secret
           # Must match the x-antilog-origin header in crates/antilog-aws/tests/events/health.json.
           ANTILOG_ORIGIN_SECRET: local-origin-secret
           ANTILOG_SECRET_RECEIPT_KEY: "0000000000000000000000000000000000000000000000000000000000000001"

@@ -175,7 +175,7 @@ impl<A: Api> ServerHandler for Mcp<A> {
 mod tests {
     use std::sync::Arc;
 
-    use antilog_core::fakes::{FakeCodeHost, FakeDeps, FakePlatform};
+    use antilog_core::fakes::{FakeCodeHost, FakeDeps, FakeMachine};
     use antilog_core::seed::experiment;
     use serde_json::json;
 
@@ -183,7 +183,7 @@ mod tests {
 
     async fn serve() -> (Mcp<Http>, Arc<FakeDeps>, antilog_core::seed::Seed) {
         let deps = Arc::new(FakeDeps::new(
-            FakePlatform::default(),
+            FakeMachine::default(),
             FakeCodeHost::default(),
         ));
         let seed = experiment(&deps.store, 1_000).await;
@@ -211,7 +211,6 @@ mod tests {
                 providers: Vec::new(),
                 open_organizations: false,
                 secure_cookies: true,
-                wake_secret: None,
                 code_host_webhook_secret: None,
                 e2e_seed: false,
             },

@@ -36,7 +36,7 @@ test("the conversation reads in time order and sessions carry the agent's name",
   await page.getByLabel("New experiment").fill("Cut checkout p95 latency");
   await page.getByLabel("Budget ($)").fill("10");
   await page.getByRole("button", { name: "Send" }).click();
-  await expect(page.getByText(/^Started a session on/)).toBeVisible();
+  await expect(page.getByText(/^Started a session with/)).toBeVisible();
   const id = page.url().split("/experiments/")[1]?.split(/[?#]/)[0];
   const asked = await page.request.post(`/api/experiments/${id}/tools/request_budget`, {
     data: { input: { amount_cents: 5000, reason: "more trials" } },
@@ -47,7 +47,7 @@ test("the conversation reads in time order and sessions carry the agent's name",
 
   // The person's opening message is first, then the lines and the card, in the order they happened.
   const opening = await page.locator(".bubble").first().boundingBox();
-  const started = await page.getByText(/^Started a session on/).boundingBox();
+  const started = await page.getByText(/^Started a session with/).boundingBox();
   const raised = await card.boundingBox();
   expect(opening?.y ?? 0).toBeLessThan(started?.y ?? 0);
   expect(started?.y ?? 0).toBeLessThan(raised?.y ?? 0);
@@ -58,7 +58,7 @@ test("the conversation reads in time order and sessions carry the agent's name",
   await expect(card.getByText("$60", { exact: true })).toBeVisible();
 
   // Names are the agent's display name, never an id turned into words.
-  await expect(page.getByText(/Agentcore/)).toHaveCount(0);
+  await expect(page.getByText(/Agentcore/i)).toHaveCount(0);
   await expect(page.getByText(/\bMcp\b/)).toHaveCount(0);
   await expect(page.getByText(/connected from your machine/).first()).toBeVisible();
 });

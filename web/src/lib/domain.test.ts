@@ -48,10 +48,10 @@ describe("domain", () => {
     ]);
   });
   it("names agents by their display name, never by their id", () => {
-    const agents = [{ id: "agentcore-glm", name: "AgentCore · GLM 4.7 Flash" }];
-    expect(agentLabel(agents, "agentcore-glm")).toBe("AgentCore · GLM 4.7 Flash");
+    const agents = [{ id: "opencode", name: "OpenCode" }];
+    expect(agentLabel(agents, "opencode")).toBe("OpenCode");
     expect(agentLabel(agents, "mcp")).toBe("Your agent");
     expect(agentLabel(agents, "claude-code")).toBe("An agent");
-    expect(agentLabel(undefined, "agentcore-glm")).toBe("An agent");
+    expect(agentLabel(undefined, "opencode")).toBe("An agent");
   });
 });

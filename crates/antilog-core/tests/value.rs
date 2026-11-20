@@ -87,7 +87,7 @@ impl World {
     }
 
     async fn session(&self, agent: &str, experiment: &Experiment) -> Session {
-        let session = Session::new(self.owner.organization, experiment.id, agent, "fake", T0);
+        let session = Session::new(self.owner.organization, experiment.id, agent, T0);
         self.store
             .create_session(
                 &session,

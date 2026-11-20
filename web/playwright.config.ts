@@ -29,7 +29,6 @@ export default defineConfig({
             reuseExistingServer: true,
             timeout: 60_000,
             env: {
-              ANTILOG_PLATFORM: "fake",
               ANTILOG_FAKE_SIGN_IN: "1",
               ANTILOG_OPEN_ORGANIZATIONS: "1",
               ANTILOG_INSECURE_COOKIES: "1",
