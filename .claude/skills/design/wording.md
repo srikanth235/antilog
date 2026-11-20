@@ -1,7 +1,5 @@
 # Wording
 
-> v0 removes agent platforms, the judge platform and the judge sandbox ([docs/V0.md](../../../docs/V0.md)). The boards that drew them (`SettingsPlatforms*`, `AddPlatform`, `PlatformError`) are still in `design/mockups/` because other boards link to them; they are not to be built.
-
 The vocabulary source is [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md), including its "On screen" column and its list of retired words. Read it before writing a word a user sees. Where it and this page disagree, the glossary wins and this page is fixed. Where a light board and this page disagree about an exact label, the board wins. The product's own rulings are in [product](../product/rulings.md).
 
 **Copy is signage, not conversation**: calm, concrete, specific, read at a glance. "Win merged" is the register; a sentence that pads a fact is not.

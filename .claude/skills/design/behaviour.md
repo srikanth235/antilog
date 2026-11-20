@@ -1,7 +1,5 @@
 # Behaviour
 
-> v0 removes agent platforms, the judge platform and the judge sandbox ([docs/V0.md](../../../docs/V0.md)). The boards that drew them (`SettingsPlatforms*`, `AddPlatform`, `PlatformError`) are still in `design/mockups/` because other boards link to them; they are not to be built.
-
 How a screen behaves. The web app and the macOS app (target; its boards are owed) share behaviour, words and element ids, never pixels. Values live in `design/tokens.toml`; the boards in `design/mockups/` show the result and are listed in the index in [`design/mockups/README.md`](../../../design/mockups/README.md) (flow and checks: [mockups.md](mockups.md)). Exact labels are in [wording.md](wording.md). What an experiment and a session are, what the judge does and what a card asks are in [session](../session/SKILL.md), [judge](../judge/SKILL.md) and [approvals](../organization/approvals.md). Where a board and this page disagree about a screen, the light board wins and this page is fixed.
 
 A person states a goal, an experiment starts, and a coding agent in a session talks to them while the judge's numbers are the only ones that count (target). There is no mode, no plan step and no setup screen: setup happens in the chat, as a card.

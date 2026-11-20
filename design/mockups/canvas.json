@@ -92,26 +92,6 @@
       "expand": "fill",
       "is_interactive": true
     },
-    "AddPlatform.dc.html": {
-      "x": 6080,
-      "y": 9450,
-      "w": 1440,
-      "h": 900,
-      "title": "8 \u00b7 Settings, Agent platforms, add platform",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "AddPlatformDark.dc.html": {
-      "x": 6080,
-      "y": 9450,
-      "w": 1440,
-      "h": 900,
-      "title": "8 \u00b7 Settings, Agent platforms, add platform \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
     "AddPlugin.dc.html": {
       "x": 41040,
       "y": 8350,
@@ -524,26 +504,6 @@
       "w": 1440,
       "h": 900,
       "title": "2 \u00b7 Home, empty \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "PlatformError.dc.html": {
-      "x": 4560,
-      "y": 9450,
-      "w": 1440,
-      "h": 900,
-      "title": "8 \u00b7 Settings, Agent platforms, credential rejected",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "PlatformErrorDark.dc.html": {
-      "x": 4560,
-      "y": 9450,
-      "w": 1440,
-      "h": 900,
-      "title": "8 \u00b7 Settings, Agent platforms, credential rejected \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -1528,66 +1488,6 @@
       "expand": "fill",
       "is_interactive": true
     },
-    "SettingsPlatforms.dc.html": {
-      "x": 0,
-      "y": 9450,
-      "w": 1440,
-      "h": 900,
-      "title": "8 \u00b7 Settings, Agent platforms",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "SettingsPlatformsDark.dc.html": {
-      "x": 0,
-      "y": 9450,
-      "w": 1440,
-      "h": 900,
-      "title": "8 \u00b7 Settings, Agent platforms \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "SettingsPlatformsEmpty.dc.html": {
-      "x": 1520,
-      "y": 9450,
-      "w": 1440,
-      "h": 900,
-      "title": "8 \u00b7 Settings, Agent platforms, none added",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "SettingsPlatformsEmptyDark.dc.html": {
-      "x": 1520,
-      "y": 9450,
-      "w": 1440,
-      "h": 900,
-      "title": "8 \u00b7 Settings, Agent platforms, none added \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "SettingsPlatformsManaged.dc.html": {
-      "x": 3040,
-      "y": 9450,
-      "w": 1440,
-      "h": 900,
-      "title": "8 \u00b7 Settings, Agent platforms, Antilog cloud",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "SettingsPlatformsManagedDark.dc.html": {
-      "x": 3040,
-      "y": 9450,
-      "w": 1440,
-      "h": 900,
-      "title": "8 \u00b7 Settings, Agent platforms, Antilog cloud \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
     "SettingsProfile.dc.html": {
       "x": 0,
       "y": 10550,
@@ -2155,8 +2055,6 @@
     "AddConnectorDark.dc.html",
     "AddEvaluation.dc.html",
     "AddEvaluationDark.dc.html",
-    "AddPlatform.dc.html",
-    "AddPlatformDark.dc.html",
     "AddPlugin.dc.html",
     "AddPluginDark.dc.html",
     "AddSkill.dc.html",
@@ -2199,8 +2097,6 @@
     "HomeDark.dc.html",
     "HomeEmpty.dc.html",
     "HomeEmptyDark.dc.html",
-    "PlatformError.dc.html",
-    "PlatformErrorDark.dc.html",
     "PluginDetail.dc.html",
     "PluginDetailDark.dc.html",
     "PluginRemove.dc.html",
@@ -2299,12 +2195,6 @@
     "SettingsModelKeysAdd.dc.html",
     "SettingsModelKeysAddDark.dc.html",
     "SettingsModelKeysDark.dc.html",
-    "SettingsPlatforms.dc.html",
-    "SettingsPlatformsDark.dc.html",
-    "SettingsPlatformsEmpty.dc.html",
-    "SettingsPlatformsEmptyDark.dc.html",
-    "SettingsPlatformsManaged.dc.html",
-    "SettingsPlatformsManagedDark.dc.html",
     "SettingsProfile.dc.html",
     "SettingsProfileDark.dc.html",
     "SettingsRail.dc.html",
