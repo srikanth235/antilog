@@ -675,21 +675,31 @@ async fn a_session_that_cannot_start_is_released_as_failed() {
 #[tokio::test]
 async fn a_skill_pack_is_unpacked_into_the_skills_folder() {
     let temp = std::env::temp_dir().join(format!("antilog-skill-{}", Uuid::now_v7()));
-    let pack = temp.join("pack/perf");
-    std::fs::create_dir_all(&pack).unwrap();
-    std::fs::write(pack.join("SKILL.md"), "# perf\n").unwrap();
-    sh(&temp.join("pack"), "tar -czf ../perf.tar.gz perf");
-    let bytes = std::fs::read(temp.join("perf.tar.gz")).unwrap();
-    let app = Router::new().route(
-        "/runner/sessions/{id}/skills/perf/3",
-        get(move |headers: HeaderMap| {
-            let bytes = bytes.clone();
-            async move {
-                assert_eq!(headers["authorization"], "Bearer tok");
-                bytes
-            }
-        }),
-    );
+    std::fs::create_dir_all(&temp).unwrap();
+    let bytes = json!({"files": [
+        {"path": "SKILL.md", "content": "# perf\n"},
+        {"path": "notes/more.md", "content": "more\n"},
+    ]})
+    .to_string();
+    let escape = json!({"files": [{"path": "../../evil", "content": "x"}]}).to_string();
+    let app = Router::new()
+        .route(
+            "/runner/sessions/{id}/skills/escape/1",
+            get(move || {
+                let escape = escape.clone();
+                async move { escape }
+            }),
+        )
+        .route(
+            "/runner/sessions/{id}/skills/perf/3",
+            get(move |headers: HeaderMap| {
+                let bytes = bytes.clone();
+                async move {
+                    assert_eq!(headers["authorization"], "Bearer tok");
+                    bytes
+                }
+            }),
+        );
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let server = format!("http://{}", listener.local_addr().unwrap());
     tokio::spawn(async move { axum::serve(listener, app).await });
@@ -710,6 +720,11 @@ async fn a_skill_pack_is_unpacked_into_the_skills_folder() {
                 name: "perf".into(),
                 version: "3".into(),
                 path: format!("/runner/sessions/{}/skills/perf/3", "x"),
+            },
+            antilog_types::SkillRef {
+                name: "escape".into(),
+                version: "1".into(),
+                path: format!("/runner/sessions/{}/skills/escape/1", "x"),
             },
             antilog_types::SkillRef {
                 name: "gone".into(),

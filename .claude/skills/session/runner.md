@@ -13,7 +13,7 @@ Each session has a machine row (`machines`): `queued`, `claimed`, `running`, `id
 
 ## `antilog runner`
 
-Polls over outbound HTTPS only. For a claim it clones the repos into `<workdir>/<session>/<repo>`, writes the config to `/etc/opencode/opencode.json` (OpenCode's managed path: a repo's own `opencode.json` cannot override it, and `OPENCODE_CONFIG` does not win, so never rely on it), unpacks the skill packs into `/opt/antilog/skills`, then starts `opencode serve` on 127.0.0.1 with a random password, `OPENCODE_DISABLE_MODELS_FETCH=1` and `autoupdate: false`. One session per machine: the managed config is one file.
+Polls over outbound HTTPS only. For a claim it clones the repos into `<workdir>/<session>/<repo>`, writes the config to `/etc/opencode/opencode.json` (OpenCode's managed path: a repo's own `opencode.json` cannot override it, and `OPENCODE_CONFIG` does not win, so never rely on it), writes the skill packs (JSON: text files with relative paths; a path that leaves the pack's folder skips the pack) into `/opt/antilog/skills/<name>/`, then starts `opencode serve` on 127.0.0.1 with a random password, `OPENCODE_DISABLE_MODELS_FETCH=1` and `autoupdate: false`. One session per machine: the managed config is one file.
 
 - Messages go in with `prompt_async`, an abort with `abort`, a person's answer to a permission with `/permission/{id}/reply`.
 - `GET /event` has no replay and no event id. After every connect the runner reads `GET /session/{id}/message` (paged by `before`, cursor in `x-next-cursor`), `GET /permission` and `GET /session/status`, and sends what is new, keyed by message id and part id. Only what an agent finished saying and the name of each tool it called are sent; the server stores nothing a tool returned.

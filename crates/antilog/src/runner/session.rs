@@ -81,23 +81,50 @@ fn work_dir(dir: &Path, spec: &SessionSpec) -> PathBuf {
     }
 }
 
+/// A path inside a skill pack: relative, with nothing that climbs out of the folder.
+fn inside(path: &str) -> bool {
+    !path.is_empty()
+        && Path::new(path)
+            .components()
+            .all(|part| matches!(part, std::path::Component::Normal(_)))
+}
+
+#[derive(serde::Deserialize)]
+struct Pack {
+    files: Vec<PackFile>,
+}
+
+#[derive(serde::Deserialize)]
+struct PackFile {
+    path: String,
+    content: String,
+}
+
+/// Writes each pack to `<skills dir>/<name>/`. A pack is JSON: text files with their paths. One
+/// that cannot be fetched, or names a path outside its folder, is skipped whole.
 pub(super) async fn install_skills(config: &Config, server: &Server, spec: &SessionSpec) {
     for skill in &spec.skills {
         let pack = async {
+            if !inside(&skill.name) || Path::new(&skill.name).components().count() != 1 {
+                bail!("the name is not a folder name");
+            }
             let Some(bytes) = server.skill(&skill.path, &spec.runner_token).await? else {
                 bail!("not available");
             };
-            tokio::fs::create_dir_all(&config.skills_dir).await?;
-            let archive = config
-                .skills_dir
-                .join(format!(".{}-{}.tar.gz", skill.name, skill.version));
-            tokio::fs::write(&archive, bytes).await?;
+            let pack: Pack = serde_json::from_slice(&bytes).context("reading the pack")?;
+            if let Some(bad) = pack.files.iter().find(|file| !inside(&file.path)) {
+                bail!("{} is outside the pack's folder", bad.path);
+            }
             let target = config.skills_dir.join(&skill.name);
             tokio::fs::remove_dir_all(&target).await.ok();
-            let archive_text = archive.to_string_lossy().into_owned();
-            let unpacked = run_in(&config.skills_dir, &["tar", "-xzf", &archive_text]).await;
-            tokio::fs::remove_file(&archive).await.ok();
-            unpacked
+            for file in &pack.files {
+                let path = target.join(&file.path);
+                if let Some(parent) = path.parent() {
+                    tokio::fs::create_dir_all(parent).await?;
+                }
+                tokio::fs::write(path, &file.content).await?;
+            }
+            anyhow::Ok(())
         }
         .await;
         if let Err(error) = pack {
