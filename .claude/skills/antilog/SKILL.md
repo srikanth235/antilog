@@ -7,7 +7,7 @@ description: Drive Antilog from the shell with the `antilog` command (target; on
 
 `antilog` is a command-line client of an Antilog server, for the same experiments as the web app: `antilog "cut checkout p95"` starts an experiment, with its lead session, in the terminal. `antilog mcp` serves the Antilog tools to an agent the person already uses on their own machine. It is (target): the commands below are the design and may change as the program is built.
 
-The server is Antilog cloud or a self-hosted server at a URL. The client holds no data and runs no sandbox: it asks the server, which starts sessions on agent platforms. Only the judge's numbers count, whichever client proposed the change.
+The server is Antilog cloud or a self-hosted server at a URL. The client holds no data and runs no machine: it asks the server; a runner starts the sessions ([docs/V0.md](../../../docs/V0.md)). Only the judge's numbers count, whichever client proposed the change.
 
 ## Sign in
 
@@ -51,7 +51,7 @@ Every session gets the Antilog tools, and `antilog mcp` serves the same ones. Th
 | `seal`, `measure`, `history`, `deliver`, `watch` | Propose and seal the definition, measure a trial (quick check, then full measurement), read every trial, open the pull requests, measure again later | [../judge/tools.md](../judge/tools.md) |
 | `spawn`, `attach_repo`, `request_credential`, `set_environment`, `request_budget` | Start another session, and set up in the chat with a card. A credential value is typed into the form, never the chat | [../session/tools.md](../session/tools.md) |
 
-The judge measures every trial in a judge sandbox with no agent in it, and the result never has a holdout value. Numbers an agent makes in its own session never count.
+The judge runs the sealed test command in the session's machine and takes the number from its output, and the result never has a holdout value. Numbers an agent makes in its own session never count.
 
 ## MCP
 

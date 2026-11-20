@@ -1,5 +1,7 @@
 # What session owes
 
+> Parts of this page still name agent platforms, the judge sandbox or the relay; `docs/V0.md` replaces them: [docs/V0.md](../../../docs/V0.md).
+
 | Promise | The rule |
 | --- | --- |
 | Nothing asked first | Before the first message a person chooses at most a project, repos, an agent, an environment and a budget, each with a default. No settings page, no form, no plan step (target). |
@@ -7,10 +9,9 @@
 | Clean up | Every session and sandbox Antilog starts is ended, deleted on its platform and shown as Removed. One that is not deleted shows Not removed, is retried, and its cost counts until it is gone (target). |
 | Spend recorded honestly | Nothing is spent without a budget. Every dollar is tied to an experiment, a session and its agent, read from the platform's usage, and shown per session and per experiment. The budget covers all its sessions and the judge time (target). |
 | Spend well | Cost per trial is shown and derived from spend records, the Seal experiment card estimates a measurement before it is bought, agents read `history` before they propose, spawned sessions default to the lower-cost agent, and Where the spend went accounts for every dollar (target). |
-| No tie to one provider | Auto chooses by measured cost per win among the agents turned on and says why, a session can be handed off to another agent, and a platform that fails hands the session to a Continue on another agent? card. No agent is preselected by brand (target). |
+| No tie to one provider | Auto chooses by measured cost per win among the agents turned on and says why, a session can be handed off to another agent, and an agent that fails hands the session to a Continue on another agent? card. No agent is preselected by brand (target). |
 | Failure never shown as empty | A conversation, a tool output or a log that cannot be fetched says so. It is never shown as blank or as healthy (target). |
-| Least access | Antilog holds only agent platform credentials: the customer's when self-hosted, its own on Antilog cloud. No cross-account role, no cloud keys, no connector admin secrets (target). |
-| Any platform | The same promises hold on every agent platform (target). |
+| Least access | Antilog holds only what a runner needs: the customer's model keys, saved per organization per provider. No cross-account role, no cloud keys, no connector admin secrets (target). |
 
 ## How each is checked
 
@@ -20,9 +21,9 @@ Nothing on this branch checks them yet.
 
 **Credentials never in chat.** Check: no message, event, log or tool argument carries a credential value, a scan of stored conversations finds none, and the form posts only to the platform's credential store.
 
-**Clean up.** Check: after a session ends, listing the platform's sessions and sandboxes tagged with it finds nothing and the sessions table shows Removed. A session whose deletion fails shows Not removed and keeps counting its cost.
+**Clean up.** Check: after a session ends, its machine is paused or reaped by the runner and its cost stops counting (target; see [docs/V0.md](../../../docs/V0.md)).
 
-**Spend recorded honestly.** Check: the budget meter stops a session at its limit, every spend row carries the session and the agent, rows reconcile against the platform's bill, and the sessions table and Settings, Budgets sum to the experiment's spend.
+**Spend recorded honestly.** Check: the budget meter stops a session at its limit, every spend row carries the session and the agent, rows reconcile against the model gateway's token counts, and the sessions table and Settings, Budgets sum to the experiment's spend.
 
 **Spend well.** Check: cost per trial equals the spend rows since the session's previous trial plus the judge time, and the Where the spend went categories sum to the experiment's spend, with Not measured the remainder. Built for the Report (`tests/value.rs`): a spend row names its trial or goes to the session's next trial by time; target: judge spend booked against its trial, and the same table on the experiment page. A test that `spawn` with no agent named picks the organization's lower-cost agent, and that the brief tells agents to call `history` first.
 

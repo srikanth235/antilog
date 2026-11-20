@@ -1,6 +1,6 @@
 # Postgres and SQL in Antilog
 
-(target) Postgres is the only store, on Antilog cloud (Aurora Serverless v2 at zero when pay-per-use, RDS on EKS; in-cluster only for local tests) and self-hosted (RDS, Azure Database for PostgreSQL, Cloud SQL, or the client's own), reached through `sqlx` with the `postgres` feature. Queries live behind the `Store` trait in the Postgres store crate; the core never writes SQL. Nothing of it is on this branch. Versions are in [libraries.md](../libraries.md): Postgres 18, `sqlx` 0.9 (and `sqlx-cli`), `testcontainers` for tests.
+(target) Postgres is the only store, on Antilog cloud (Aurora Serverless v2 at zero when pay-per-use, in-cluster only for local tests) and self-hosted (RDS, Azure Database for PostgreSQL, Cloud SQL, or the client's own), reached through `sqlx` with the `postgres` feature. Queries live behind the `Store` trait in the Postgres store crate; the core never writes SQL. Nothing of it is on this branch. Versions are in [libraries.md](../libraries.md): Postgres 18, `sqlx` 0.9 (and `sqlx-cli`), `testcontainers` for tests.
 
 ## Workflow and done criteria
 
@@ -26,7 +26,7 @@ cargo nextest run -p <crate>             # database tests, against Postgres in a
 - **Compile-time-checked queries.** Use `query!`, `query_as!` and `query_scalar!` so a wrong column or type fails the build. Commit the offline query data (`.sqlx/`) with every change to a query, and build CI with `SQLX_OFFLINE=true` so the build needs no database. `cargo sqlx prepare` regenerates it against a migrated database. Use the runtime `query()` only where a query is built dynamically, and then keep it small and tested.
 - **Embedded migrations** run at start-up with `sqlx::migrate!`, before the server reports ready. In a multi-replica deployment only one replica applies them at a time (sqlx takes an advisory lock for this).
 - **One pool**, configured at start (`max_connections`, `acquire_timeout`, `idle_timeout`, `max_lifetime`); see [general/async-services.md](../rust/general/async-services.md) and the connection rules in the general digest. Never hold a connection across a call to another service.
-- **Transactions are explicit and short.** `begin()`, do the writes, `commit()`. Do not call out to the network, an agent platform or a model inside one. A transaction left uncommitted is rolled back on drop, but end it explicitly.
+- **Transactions are explicit and short.** `begin()`, do the writes, `commit()`. Do not call out to the network, a session machine or a model inside one. A transaction left uncommitted is rolled back on drop, but end it explicitly.
 - **Map the errors.** Unique violation is a conflict (409), foreign key violation is a bad reference (422), serialization failure and deadlock mean retry the whole transaction (bounded, with backoff), a pool timeout is overload (503), the rest is internal (500, with the cause in the log).
 - **Dynamic SQL is built with `QueryBuilder` and binds**, never string formatting of values. Identifiers are never taken from user input.
 - **Keep SQL in the persistence code of its module**, behind a trait that the rest of the code uses. Tests of other modules use the in-memory double, not the database.
@@ -72,11 +72,8 @@ The queue is a table in Postgres. No Redis, no message bus, no cloud queue ([lib
   ```
 
 - **A claim is a lease.** A worker renews it while it works. A reaper puts jobs whose lease expired back to `queued` (counting the attempt), so a worker that dies does not hold a job forever. Jobs are therefore delivered **at least once**: the handler must be idempotent, keyed by the job id.
-- **Who wakes a worker depends on how the server runs.** On pay-per-use (Lambda) nothing polls: each due time books a one-off wake-up with the cloud's scheduler (EventBridge Scheduler on AWS), which invokes the server to claim what is due, and a process never waits between requests. On Kubernetes a worker polls in the process. Either way the claim below is the same query.
-- **The server takes its own jobs.** Jobs are platform jobs ([../../change/platform-job.md](../../change/platform-job.md)): a server process claims one and calls the agent platform over HTTPS. No platform calls the server. The claim is the same query, scoped to the organization. Results are ids, numbers and states, not customer data.
 - **Bounded and observable.** Cap attempts, record the last error (without secrets), move a job that keeps failing to a `failed` state with a reason, and expose queue depth and oldest-job age as metrics. Keep a partial index for the hot path: `create index on jobs (priority desc, created_at) where state = 'queued'`.
 - **Keep it small.** Autovacuum settings on the queue table are tightened because rows churn ([general/postgres-best-practices.md](general/postgres-best-practices.md)); finished jobs older than a retention period are moved or deleted in batches. On Kubernetes, `LISTEN/NOTIFY` may wake a worker sooner, but polling must still work if a notification is missed. `LISTEN/NOTIFY` is not used on Lambda, which holds no connection between requests.
-- **Use a transaction-scoped advisory lock** for singleton work (one scheduler, one reaper) rather than a dummy row.
 
 ## Tests
 

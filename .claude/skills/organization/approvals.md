@@ -12,12 +12,12 @@ An approval card has a title, what would happen, what it may cost, and Approve a
 | --- | --- | --- | --- |
 | Seal experiment | `seal` | The definition, the seal check results, a Budget row, the estimate, the expected return and the value model for the metric (or "No value set") | Always ask |
 | Raise budget | `request_budget` | The amount asked, spent so far, the budget now | Allow up to a limit: asks above the limit set in Settings, Approvals |
-| Add credential | `request_credential` | The host and why. A secure form: the value is typed there, never into the chat, and goes straight to the platform's credential store. The agent never sees it | Always ask, and can never be pre-approved |
+| Add credential | `request_credential` | The host and why. A secure form: the value is typed there, never into the chat, and goes straight to the server's secret store. The agent never sees it | Always ask, and can never be pre-approved |
 | Attach repo | `attach_repo` | The repo and the access asked | Always ask |
 | Change environment | `set_environment` | Image, setup script, size and network, as a change from now | Always ask |
 | Open pull request | `deliver` | One pull request per repo changed, and the receipt | Always ask |
 | Keep going? | Patience reached (sealed, default 6 trials in a row not Kept) | "The last 6 trials did not beat 1,102 ms. $48 of $100 is left." Actions: Keep going, Stop here, and a note of what was tried | Always ask. Allow means never pause |
-| Continue on another agent? | A platform that is unavailable or rate-limited | The agent Auto would choose and why, and what has been done so far | Always ask. Allow continues without asking and records a timeline line |
+| Continue on another agent? | An agent that is unavailable or rate-limited | The agent Auto would choose and why, and what has been done so far | Always ask. Allow continues without asking and records a timeline line |
 
 The tools are in [../session/tools.md](../session/tools.md) and [../judge/tools.md](../judge/tools.md).
 
@@ -39,7 +39,7 @@ Every approval is an audit row: who, which card, what it would do, when, the out
 
 ## Settings pages
 
-Settings, Approvals holds policy. Settings, Connections lists the repos, credentials and environments that were approved, each with Revoke. Budgets holds the organization's default budget per experiment, the monthly cap, and the list of projects and experiments with their budgets and spend. These pages are read-only for non-owners, not hidden. Two things are still set up in Settings because no experiment can run without them: agent platform accounts (self-hosted), and members and sign-in.
+Settings, Approvals holds policy. Settings, Connections lists the repos, credentials and environments that were approved, each with Revoke. Budgets holds the organization's default budget per experiment, the monthly cap, and the list of projects and experiments with their budgets and spend. These pages are read-only for non-owners, not hidden. Two things are still set up in Settings because no experiment can run without them: model keys (self-hosted), and members and sign-in.
 
 ## Budgets
 

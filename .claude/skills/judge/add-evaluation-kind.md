@@ -18,10 +18,9 @@ An evaluation has a **kind** (what is measured) and may start from a **template*
 ## Steps
 
 1. **A name and a one-line meaning.** The kind has a word in [the glossary](../../../docs/GLOSSARY.md) and in [model.md](model.md).
-2. **A pure output format.** The command prints one JSON object with the metric as a dotted path, plus any guardrail metrics. An agent asking for a measurement gets the measured value, guardrail values and noise band back, never the holdout value. The kind may bring up what it needs inside the judge sandbox and removes it after.
+2. **A pure output format.** The command prints one JSON object with the metric as a dotted path, plus any guardrail metrics. An agent asking for a measurement gets the measured value, guardrail values and noise band back, never the holdout value. The test runs inside the session's own machine ([docs/V0.md](../../../docs/V0.md)).
 3. **Data by reference only.** The evaluation names datasets by id and version. It never holds a credential or a connection string.
 4. **Protected paths.** The kind lists what an agent may never change: the evaluation command, the scoring and the holdout. Each path names its repo. A trial that touches one is Rejected before it is measured.
-5. **Runnable with no agent.** The kind must run as a command in a judge sandbox on the judge platform (see [anti-cheat.md](anti-cheat.md)). It needs no network route except to the experiment's data.
 6. **A holdout.** The kind says what its holdout is and how it is marked "Restricted to the judge". A kind with no way to hold data back cannot confirm a win and is not accepted.
 7. **Noise and the quick check.** The kind defines repeats and how the noise is derived from the baseline and the same-commit measurement. It says what one repeat is, because measurements are paired repeats and the quick check runs exactly one pair, and what one measurement costs, because the estimate on the Seal experiment card comes from the seal checks. The acceptance criteria are not changed by a new kind.
 8. **Planted cheats.** The standard three plus those that fit the kind. Each must be rejected by the evaluation, or the seal check fails.

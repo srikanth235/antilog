@@ -4,7 +4,7 @@
 | --- | --- |
 | Permission | Every read and write is checked against the member's role in the project it touches (the organization role unless the project set one), in one place. |
 | Approval | A tool call that matters runs only after a person with the right role approves its card, or policy pre-approves it. Add credential is never pre-approved, and a value model is set or changed only with a project owner's approval. |
-| Audit | Every tool call that changes something, and every approval, is recorded with an actor. Changing agent platform accounts, project membership, a project's budget, a value model, a hand off, a failover and exporting a report are among them. |
+| Audit | Every tool call that changes something, and every approval, is recorded with an actor. Changing model keys, project membership, a project's budget, a value model, a hand off, a failover and exporting a report are among them. |
 | Budget | An experiment never spends past its budget, a project never past its monthly cap, if it has one, and an organization never past its monthly cap. |
 | Secrets | No response, event or log carries a secret. |
 | No surprise calls | A self-hosted server contacts only the endpoints its administrator configured. A session contacts only the endpoints its environment allows. |

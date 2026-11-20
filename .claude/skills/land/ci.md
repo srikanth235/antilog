@@ -22,12 +22,10 @@ One job per layer, each running the commands in [checks.md](checks.md). A pull r
 | rust | fmt, clippy with warnings denied, tests, `cargo deny`, on Linux and on macOS (the CLI builds for both) |
 | api | the OpenAPI document and generated client are current |
 | storage | the storage suite against Postgres (a container); migrations from empty and from the last release |
-| deploy-config | `helm lint` and `helm template` per cloud, and an install of the chart on k3s with a smoke test |
 | web | typecheck, lint, tests |
 | macos-app | build and test the Swift app, on a macOS runner only |
-| platform | the platform test suite against the fake platform |
-| judge | the acceptance criteria tests, the seal checks against the fake judge sandbox, the protected-path test |
-| release | builds the programs (`antilog-server`, `antilog`), the container image and the Helm chart; signs them and attaches an SBOM |
+| judge | the acceptance criteria tests, the seal checks against the fake session machine, the protected-path test |
+| release | builds the programs (`antilog-server`, `antilog`) and the container image; signs them and attaches an SBOM |
 
 Rules:
 

@@ -11,7 +11,7 @@ A notification tells a person that something needs them or that work they asked 
 | A regression: a watched experiment measured worse than delivered by more than the noise | whoever started the experiment, and owners | Regression · the experiment title, then the change |
 | A budget was spent | whoever started the experiment, and owners | Budget spent · the experiment title |
 | Patience reached: an experiment paused on a Keep going? card | the editors and owners of its project | Waiting for you · the experiment title, then Keep going? |
-| A session needs another agent (platform unavailable) | the editors and owners of its project | Waiting for you · the experiment title, then Continue on another agent? |
+| A session needs another agent (agent unavailable) | the editors and owners of its project | Waiting for you · the experiment title, then Continue on another agent? |
 | An experiment's work finished (Done or Failed) | whoever started the experiment, only if they asked ("Notify me when this finishes") | Done or Failed · the experiment title |
 
 A trial that breaks a guardrail is only recorded and notifies no one. The words come from the one catalogue and the glossary ([../design/wording.md](../design/wording.md)); a notification never says something the app would not.

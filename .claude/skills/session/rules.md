@@ -1,5 +1,7 @@
 # Session: rules that never bend
 
+> Parts of this page still name agent platforms, the judge sandbox or the relay; `docs/V0.md` replaces them: [docs/V0.md](../../../docs/V0.md).
+
 All target.
 
 - Hand credentials to a session only through the platform's credential store, never in a prompt, chat message, repo file, plain-text environment variable or Antilog's database, because a secret there is read by more people than it is meant for.
@@ -23,8 +25,6 @@ All target.
 - Show agent figures only as measured by the judge on this organization's code, never as a vendor benchmark, because an outside number is a claim nobody here can check.
 - Fail over only to an agent the organization turned on, and record it as a timeline line and an audit row, because a session that moves silently moves spend and code access silently.
 - Hand a spawned or handed-off session a summary and the history, never tool output or diffs, because the server stores neither.
-- Run every session on an agent platform, through the one agent trait, because a second way to start work is a second way to leak it. Antilog runs no sandboxes of its own.
-- Serve the Antilog tools to a session over its own event stream, and never require a platform to reach the server, because a self-hosted server may sit behind a firewall.
 - Never give Antilog access to the customer's cloud: no cross-account role, no stored cloud keys. Antilog holds only platform credentials, because access we hold is access that can be stolen. On Antilog cloud they sit in AWS Secrets Manager, read by the server through workload identity.
 - Record spend from the platform's usage, and make the judge refuse `measure` when the budget is spent, because a cap that is only advice is not a cap. Use the platform's own limits (turns, time, tokens) as a second stop where it has them.
 - Attribute every spend record to its session and agent, because one session must not spend another's money unseen.

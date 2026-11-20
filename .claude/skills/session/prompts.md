@@ -1,5 +1,7 @@
 # What agents are told
 
+> Parts of this page still name agent platforms, the judge sandbox or the relay; `docs/V0.md` replaces them: [docs/V0.md](../../../docs/V0.md).
+
 All target. What agents are told is part of the product, not an implementation detail. It decides whether an agent measures, asks, stops and reports honestly.
 
 ## Where it lives
@@ -24,7 +26,7 @@ One place in the repo, versioned. A change to it is a change to the product and 
 
 - Short and plain. A long prompt is read less.
 - Say what is true of the product, not what is hoped of the model.
-- The same brief for every agent where the platform allows, so agents compare fairly.
+- The same brief for every agent, so agents compare fairly.
 - No platform words and no vendor in the brief.
 - A rule that must never bend lives in code, not in a prompt. The prompt explains it.
 

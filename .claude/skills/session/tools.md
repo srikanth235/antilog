@@ -1,10 +1,10 @@
 # Session: spawn and the setup tools
 
-Built on the fake platform in `antilog-core/src/tools/` and `session/`: `spawn`, the four setup tools (each creates an approval; the relay tells the session how it ended and applies a raised budget) and the relay. What an approved `attach_repo`, `request_credential` or `set_environment` does on a real platform, and the Continue on another agent? card, are target. Every session gets the Antilog tools. This page covers `spawn` and the four setup tools. The work tools `seal`, `measure`, `history`, `deliver` and `watch` are in [../judge/tools.md](../judge/tools.md). Cards, policy and who may approve are in [../organization/approvals.md](../organization/approvals.md).
+Built in `antilog-core/src/tools/` and `session/`: `spawn`, the four setup tools (each creates an approval; settling a decided card applies a raised budget). What an approved `attach_repo`, `request_credential` or `set_environment` does in a real session machine, and the Continue on another agent? card, are target. Every session gets the Antilog tools. This page covers `spawn` and the four setup tools. The work tools `seal`, `measure`, `history`, `deliver` and `watch` are in [../judge/tools.md](../judge/tools.md). Cards, policy and who may approve are in [../organization/approvals.md](../organization/approvals.md).
 
 ## How the tools reach a session
 
-Antilog declares them as tools the client provides and answers them over the session's own event stream. No platform has to reach the server, so a self-hosted server behind a firewall works. Two platform limits are unproven and checked in the spike ([add-platform.md](add-platform.md)).
+The runner reaches the server over outbound HTTPS only ([docs/V0.md](../../../docs/V0.md)), so a self-hosted server behind a firewall works. Each session gets one MCP endpoint that serves the tools below.
 
 `measure` is asynchronous: it returns a ticket at once and the measurement arrives later as a session event, which sidesteps both limits.
 
@@ -17,7 +17,7 @@ Antilog declares them as tools the client provides and answers them over the ses
 | Inputs | An agent (a model on a platform), an environment, a first message. The new session is in the same experiment. The call hands over a summary of what was tried (from `history`) so the new session does not repeat a dead end. With no agent named it defaults to the organization's chosen lower-cost agent; naming a costlier one needs a reason |
 | Card | Spawned session: agent with its cost tier, status, its best; opens that session as its own chat inside the experiment |
 | Who approves | Nobody, inside the budget. The spawned session spends the experiment's budget |
-| Refuses | A call from a spawned session; a budget that is spent; an agent whose platform account is not configured |
+| Refuses | A call from a spawned session; a budget that is spent |
 
 The parent is told when a spawned session finishes. A person can open any spawned session and talk to it, and can start sibling sessions from the composer.
 

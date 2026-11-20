@@ -1,5 +1,7 @@
 # Behaviour
 
+> v0 removes agent platforms, the judge platform and the judge sandbox ([docs/V0.md](../../../docs/V0.md)). The boards that drew them (`SettingsPlatforms*`, `AddPlatform`, `PlatformError`) are still in `design/mockups/` because other boards link to them; they are not to be built.
+
 How a screen behaves. The web app and the macOS app (target; its boards are owed) share behaviour, words and element ids, never pixels. Values live in `design/tokens.toml`; the boards in `design/mockups/` show the result and are listed in the index in [`design/mockups/README.md`](../../../design/mockups/README.md) (flow and checks: [mockups.md](mockups.md)). Exact labels are in [wording.md](wording.md). What an experiment and a session are, what the judge does and what a card asks are in [session](../session/SKILL.md), [judge](../judge/SKILL.md) and [approvals](../organization/approvals.md). Where a board and this page disagree about a screen, the light board wins and this page is fixed.
 
 A person states a goal, an experiment starts, and a coding agent in a session talks to them while the judge's numbers are the only ones that count (target). There is no mode, no plan step and no setup screen: setup happens in the chat, as a card.
@@ -94,7 +96,7 @@ A card is a frame: a title, what would happen, what it may cost, two buttons; ev
 
 **Experiment detail** (`ExperimentDetail`, a DetailPage), opened from "Details" in the session header. Back to its project. The title with state, version and activity; "New version" and "Start session". A strip: Best, Trials, Spent of budget with "Change budget", Per kept trial, and Delivered, Pending and Return (only when the experiment states a value per unit). Sections, in order:
 
-1. **Definition**: metric and direction, evaluation command, protected paths per repo, guardrails, repeats, quick check, patience, value model, acceptance criteria, judge platform. Immutable: a sealed experiment is never edited; "New version" makes one, and numbers never carry across versions.
+1. **Definition**: metric and direction, evaluation command, protected paths per repo, guardrails, repeats, quick check, patience, value model, acceptance criteria. Immutable: a sealed experiment is never edited; "New version" makes one, and numbers never carry across versions.
 2. **Seal checks**: baseline, noise and cheat checks as they were when sealed.
 3. **Data**: the evaluation data and the holdout with dataset versions, connector and marking (the holdout "Restricted to the judge"); then the skill pack versions read and the evaluation template it started from, each linking to Customize.
 4. **Value**: the sealed value model, what it is worth, cost so far, Return, and how At risk works.
@@ -104,7 +106,7 @@ A card is a frame: a title, what would happen, what it may cost, two buttons; ev
 8. **Trials**: every trial across sessions, failures included, with hypothesis, session, outcome, value, cost and what it started from; quick-check trials are marked. A row opens that session's chat at that trial.
 9. **Wins** with their pull requests, each linking to its receipt. 10. **Watch**: the switch, its triggers (a schedule, the default branch moving) and the last measurement. 11. **Versions**: each with its seal date and state.
 
-**Receipt** (`Receipt`, a DetailPage), one win. The header has the trial, the signature and "Verify again", then the numbers: baseline, what it started from, this trial and the change. Groups: Signature checks; Experiment (version and seal, value model, worth, cost and Return of the win); Commits per repo with pull requests; Data (dataset versions read, repo commits, the credentials used with scope: agents read-only with the holdout excluded, the judge its own); Compute (judge platform and environment, judge image and digest, agents and sessions with platforms, a fresh judge sandbox per measurement); Values; Repeats and noise; Trials tried; Holdout (Passed or Failed, never a value); Second opinion; Spend; and Lineage, the chain from the baseline to the win with each node a link to its trial.
+**Receipt** (`Receipt`, a DetailPage), one win. The header has the trial, the signature and "Verify again", then the numbers: baseline, what it started from, this trial and the change. Groups: Signature checks; Experiment (version and seal, value model, worth, cost and Return of the win); Commits per repo with pull requests; Data (dataset versions read, repo commits, the credentials used with scope: agents read-only with the holdout excluded, the judge its own); Compute (environment, judge image and digest, agents and sessions with platforms, a fresh judge sandbox per measurement); Values; Repeats and noise; Trials tried; Holdout (Passed or Failed, never a value); Second opinion; Spend; and Lineage, the chain from the baseline to the win with each node a link to its trial.
 
 There is no experiments list page and no "All experiments" link: a project lists its experiments, and search has an Experiments scope.
 
@@ -175,7 +177,6 @@ Settings are for reading and revoking what was approved; setup does not begin he
 | General | Organization name, deployment (Antilog cloud or Self-hosted), server address, data location |
 | Members | Users and service principals: how each signs in and their organization role (Owner, Editor, Viewer), their default in every project. Invite, change role, remove. At least one owner always remains. A project's own roles are on the project page |
 | Single sign-on | The sign-in methods: GitHub and Google (each a switch), and, on a self-hosted server only, "Your OpenID Connect provider" (single sign-on), which only an owner sets up (provider, client ID, client secret reference, group mapping, status); how long a sign-in lasts. No passwords. Antilog cloud has no provider row (owner's call, 17 Nov 2026), so there the section shows only GitHub and Google. The boards show the self-hosted view |
-| Agent platforms | The five platforms with columns Platform, Account and Status (platform accounts only; agents are in Customize) (Connected, or Needs attention when a credential is rejected), one badged "Judge platform"; Test connection, Update credential, Remove, "Add platform"; a link to Customize, Agents. Self-hosted, owners manage and others read. On Antilog cloud (`SettingsPlatformsManaged`) it is read-only for everyone: Antilog manages the accounts and bills at cost through each experiment's budget, and the section shows where data is kept and retention per platform. A rejected credential (`PlatformError`) names the sessions that cannot start |
 | Approvals | One row per card kind (eight) with its policy: Always ask, Allow up to a limit, or Allow. Add credential always asks and offers no choice; Keep going? offers Always ask or Allow. Only owners change policy |
 | Budgets | The default budget per experiment, the monthly cap and spent this month; experiments with budget and spend; an experiment's sessions with their share; "Where the spend went" for the organization; "Cost per win by project" with Return. No budget passes its project's cap or the monthly cap. Organization owners change the default and cap; project owners a project's cap and default (on the project page); editors one experiment's budget |
 | Connections | What was approved in chats: Repos, Credentials (names and where kept, never values) and Environments, each with who added it, when, how many sessions use it, and Revoke. A link to Customize, Connectors |
@@ -206,7 +207,6 @@ One sentence and at most one action, no feature explanation. A list gets its own
 | Sidebar | no experiment | Experiments you start appear here. | none | `SidebarEmpty` |
 | Search | no match | No results for “query”. | none | `SearchEmpty` |
 | Settings, Access tokens | none made | No access tokens yet. | Create access token | `SettingsTokensEmpty` |
-| Settings, Agent platforms | self-hosted, none added | No agent platform is added yet. | Add platform | `SettingsPlatformsEmpty` |
 | Projects | no project | No projects yet. | New project | none; `HomeEmpty` covers a new organization |
 | Project | no experiment | No experiments in this project yet. | New experiment | `ProjectEmpty` |
 | Customize, Evaluations | none added | No evaluations yet. | Add evaluation | `EvaluationsEmpty` |

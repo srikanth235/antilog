@@ -1,5 +1,7 @@
 # Session: threat model
 
+> Parts of this page still name agent platforms, the judge sandbox or the relay; `docs/V0.md` replaces them: [docs/V0.md](../../../docs/V0.md).
+
 What a hijacked agent could do, and what stops it (target). Assume every agent can be prompt-injected: it reads text that people outside the organization can write, and it follows instructions in that text more often than anyone would like. The design must hold when the agent is working for someone else.
 
 ## Untrusted text an agent reads

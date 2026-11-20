@@ -9,8 +9,7 @@ Do not add a dependency for convenience. A new one is a product call: ask the ow
 **Shape.** One Cargo workspace builds one core and one server, with the CLI:
 
 - `antilog-core`: all logic and the API routes as an axum `Router`, behind one `Store` trait. It never imports `sqlx`, a cloud SDK or an adapter crate. It never connects to data.
-- `antilog-server`: the one server, for Antilog cloud and self-hosted. The API, the embedded web app, Postgres, object storage. It ships as a container image and a Helm chart, and talks out to the agent platforms over HTTPS.
-- The agent platform adapters (AWS AgentCore, then the Kubernetes sandbox adapter, then Microsoft Foundry Agent Service and Google Agent Runtime, then Claude Managed Agents and the OpenAI Agents API), one adapter each behind one platform trait, in their own crate or crates. They call the platforms over HTTPS. Antilog runs no sandboxes of its own outside the Kubernetes adapter, which runs them in the same cluster. Their client crates are in the table below.
+- `antilog-server`: the one server, for Antilog cloud and self-hosted. The API, the embedded web app, Postgres, object storage. It ships as a container image.
 - `antilog`: the CLI and the MCP server, built on the API's types.
 
 
@@ -44,10 +43,6 @@ Do not add a dependency for convenience. A new one is a product call: ask the ow
 | Embedded web app | `rust-embed` | 8.14.0 |
 | AWS credentials (workload identity through the default chain) | `aws-config` | 1.13.2 |
 | Server on Lambda: serves the axum `Router` / runs the handler | `lambda_http` / `lambda_runtime` | 1.3.2 / 1.5.0 |
-| Timer adapter on AWS (one-off wake-ups) | `aws-sdk-scheduler` | 1.122.0 |
-| AgentCore adapter (data plane / control plane) | `aws-sdk-bedrockagentcore` / `aws-sdk-bedrockagentcorecontrol` | 1.86.0 / 1.101.0 |
-| Kubernetes sandbox adapter | `kube` / `k8s-openapi` | 5.1.0 / 0.29.0 |
-| Google Agent Runtime adapter (when a GCP client signs) | `google-cloud-aiplatform-v1` | 1.19.0 |
 | Foundry adapter sign-in (its REST API through `reqwest`; Azure has no Rust agents crate) | `azure_core` | 1.1.0 |
 | GitHub | `octocrab` | 0.54.9 |
 | Postgres connector (not needed by the target unless credential minting is ruled; the server never connects to data) | `tokio-postgres` | 0.7.18 |
@@ -71,7 +66,7 @@ Snowflake, Databricks and BigQuery have no maintained Rust client we would ship;
 
 Cloud SDKs stay inside their adapter crate. The server reads secrets from mounted files or the environment, so it needs no secrets-manager SDK on any cloud.
 
-Background jobs (platform jobs, see [change/platform-job.md](../change/platform-job.md)) use a small queue in the store: Postgres with `FOR UPDATE SKIP LOCKED`. No Redis, no message bus, no cloud queue.
+Background jobs use a small queue in the store: Postgres with `FOR UPDATE SKIP LOCKED`. No Redis, no message bus, no cloud queue.
 
 **Web app (TypeScript)**: see [typescript.md](typescript/antilog.md).
 
@@ -109,9 +104,7 @@ A proposal, not yet built. The app is SwiftUI and macOS only; Windows and Linux 
 | --- | --- |
 | `cargo-chef` (Docker builds) | 0.1.78 |
 | `cargo-lambda` (builds and invokes the Lambda binary) | 1.9.2 |
-| Helm (the chart) | pinned when the chart lands (target) |
 | OpenTofu (one module per cloud) | 1.13.9, with the `aws` provider `~> 6.73` |
-| k3s (the chart's install test in CI) | pinned when the chart lands (target) |
 | cosign | 3.1.4 |
 | syft | 1.57.1 |
 

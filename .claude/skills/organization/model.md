@@ -25,7 +25,7 @@ The access words below are not in [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md
 | audit entry | An append-only record of a tool call that changed something, or of an approval: actor, name, target, time, outcome | a log line |
 | event | A live message that something changed, carrying no secret | an audit entry |
 
-Roles in one line each, in a project: viewer reads its experiments and approves nothing (a viewer of a project reads its report); editor also starts experiments, talks to agents, approves cards and changes an experiment's budget; owner also manages the project's members, its budget (the cap and the default per experiment), its value models and the project itself. Organization owners also manage members, sign-in, policy, the default agent, agent platform accounts, the default budget and the organization cap. A person's organization role is their default in every project, and a project can set someone's role for that project, higher or lower. Visibility does not follow repo access.
+Roles in one line each, in a project: viewer reads its experiments and approves nothing (a viewer of a project reads its report); editor also starts experiments, talks to agents, approves cards and changes an experiment's budget; owner also manages the project's members, its budget (the cap and the default per experiment), its value models and the project itself. Organization owners also manage members, sign-in, policy, the default agent, model keys, the default budget and the organization cap. A person's organization role is their default in every project, and a project can set someone's role for that project, higher or lower. Visibility does not follow repo access.
 
 ## How this area refers to the others
 

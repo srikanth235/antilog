@@ -1,5 +1,7 @@
 # Judge: rules that never bend
 
+> v0: the test runs inside the session's own machine and the judge takes the number from the sealed test command, not from the agent's report; there is no separate judge sandbox. Where this page says "judge sandbox", read [docs/V0.md](../../../docs/V0.md).
+
 - Count only the judge's numbers, because a number made in an agent's session is not a trusted measurement. It is never shown as a result.
 - Never give an agent the holdout credential, because an agent that sees the held-back data will fit it. Only the judge sandbox holds it.
 - Never change a sealed experiment, because a definition that can move is not a benchmark. A new version starts a new record, and numbers never carry across versions.

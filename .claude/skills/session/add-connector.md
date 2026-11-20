@@ -1,5 +1,7 @@
 # Add a connector
 
+> Parts of this page still name agent platforms, the judge sandbox or the relay; `docs/V0.md` replaces them: [docs/V0.md](../../../docs/V0.md).
+
 A connector is a data system or MCP server an agent's code may read: Snowflake, Databricks, DynamoDB, BigQuery, Postgres, Amazon S3 or any MCP server. The code host (GitHub, GitLab) is how repos attach and pull requests open, and is added as a code host, not a connector. A cloud account is not a connector. All steps are target.
 
 Connectors live in Customize, Connectors (Yours and Discover; boards `Connectors`, `ConnectorsEmpty`, `ConnectorsDiscover`, `ConnectorDetail`, `AddConnector`, `AddConnectorMcp`, `ConnectorError`, `DatasetHoldout`; layout in [../design/behaviour.md](../design/behaviour.md)). A connector is added there with "Add connector", or from the Add credential card in a chat; what a card adds appears in Customize.

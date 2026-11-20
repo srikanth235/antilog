@@ -1,5 +1,7 @@
 # Judge: objects and words
 
+> v0: the test runs inside the session's own machine and the judge takes the number from the sealed test command, not from the agent's report; there is no separate judge sandbox. Where this page says "judge sandbox", read [docs/V0.md](../../../docs/V0.md).
+
 Where [the glossary](../../../docs/GLOSSARY.md) defines a word, this file keeps its meaning. All of this is target. The session is the other object ([../session/model.md](../session/model.md)).
 
 | Object | Means | Not |

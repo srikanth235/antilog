@@ -1,14 +1,10 @@
 # AGENTS.md
 
-Antilog is a chat and a judge. A person states a goal and talks to a coding agent in a sandbox with repos attached, and every session gets the judge's tools: an agent asks the judge to measure a change, only the judge's numbers count, and only a measured win becomes a pull request. It serves three aims beside trust: cost control (every dollar and token of an experiment is spent well), no tie to one model provider, and Return for the organization. It is organised around four things (a **project** that groups experiments, an **experiment** in it, a **session** inside the experiment and a **measurement**), one Customize page for reusable setup (evaluations, skill packs, connectors, agents, plugins) and three areas: the **session** (the chat and where an agent runs), the **judge** (what "better" means and how a win is decided) and the **organization** floor (members, roles in the organization and per project, sign-in, tokens, approvals, budgets, audit log). Settings are tools: setup happens in the chat as an approved tool call. The target is a server with a web app as the client of its API, one Helm chart on Kubernetes with Postgres, run by us as Antilog cloud on AWS (phase 1) or self-hosted in a client's own AWS, Azure or GCP account (phase 2). Antilog is sold as services: our engineers deliver engagements on it, and client engineers take over. Agents run as sessions on agent platforms (Claude Managed Agents, AWS AgentCore, the OpenAI Agents API, Microsoft Foundry Agent Service, Google Agent Runtime): the customer's own when self-hosted, ours on Antilog cloud. Target design is marked "(target)".
+Antilog is a chat and a judge. A person states a goal and talks to a coding agent in a session; every session gets the judge's tools. An agent asks the judge to measure a change, only the judge's numbers count, and only a measured win becomes a pull request. A **project** groups **experiments**; an experiment holds **sessions** and the judge's **measurements**. The organization floor holds members, roles, sign-in, approvals, budgets and the audit log.
 
-## This branch starts fresh
+`docs/V0.md` is the owner's design for v0 (a runner that polls a queue, one machine per session, OpenCode, one proxy). It wins over any skill, ruling or board until the skills are rewritten to match it. Delete code that a decision there makes irrelevant in the same change that replaces it.
 
-`main` holds the agreed design: these skills, the design boards and tokens in `design/` (`mockups/`, `tokens.toml`, `tools/`), the logo in `design/icon/` and the glossary. This branch adds the Foundation: the Cargo workspace in `crates/` (`antilog-types`, `antilog-core` with its traits and fakes, `antilog-server` with the Postgres `Store`, `antilog-agentcore` and `antilog`, the last two empty), `openapi/antilog.json` and the generated client in `web/`. The ledger adds the organization and session tables, with one `Store` trait per area (organization, session, budget, approval), their fakes and the storage suite. The judge in `antilog-core/src/judge/` adds seal, paired measurement, the acceptance function, receipts and value, with a `JudgeStore` trait, its fake and its Postgres tables (`pg/judge.rs`). The organization floor adds, in `antilog-core`, the action layer with its one permission matrix (`organization.rs`), sign-in with a fake provider (`auth.rs`), approvals and policy (`approval.rs`) and budgets and caps (`budget.rs`), and in `antilog-server` the GitHub and OpenID Connect providers (`signin.rs`) and the endpoints (`api/auth.rs`, `api/organization.rs`), with row-level security on the organization's own tables. The session area adds the `Platform` trait (agent and judge sandbox in one, with `FakePlatform`), the relay in `antilog-core/src/session/` (steps of about 10 minutes that save the platform's cursor and book the next wake-up through `Timer`), the tools in `antilog-core/src/tools/` (served to a session by the relay and by `antilog mcp`), spend metering and the budget stop in `spend.rs`, the session endpoints in `antilog-server/src/api/session.rs`, and `antilog mcp` in `crates/antilog`. The wire-up joins them: the endpoints sit behind sign-in and the permission matrix (experiments, sessions, tools, receipts), `antilog-server/src/deps.rs` builds the dependencies (Postgres plus the fakes, chosen by `ANTILOG_PLATFORM=fake`), row-level security covers every table with an organization, and the setup tools and the seal card raise their cards through `approval.rs`. The AWS track adds `EnvSecrets` (`secrets.rs`) and the platform contract suite (`platform_suite.rs`) to the core, the AgentCore `Platform` in `crates/antilog-agentcore` (tested against a stub runtime, never against AWS yet), the Lambda entry and the EventBridge Scheduler `Timer` in `crates/antilog-aws`, the OpenTofu module in `deploy/tofu/aws/` and `.github/workflows/deploy-aws.yml`; nothing has been applied to an account. The web app's API adds `GET /me`, sign-in that needs no organization id (the identity's oldest membership signs in), one list of pending cards (`approval.rs`), the conversation (`session_events`, `GET /sessions/{id}/events`; words and tool names only), spend per experiment by kind and session (`budget.rs`), agents with Auto and environments (`agents.rs`) and evaluation templates (`evaluations.rs`), each with its migration, fake and Postgres store. Value adds, in `antilog-core/src/value.rs`, `antilog-server/src/api/value.rs` and `antilog-types/src/judge/figures.rs`: value models by project and metric (a project owner sets one, each change a new version; `value_models` and the append-only `win_events` tables), Delivered, Pending, At risk and Return derived from sealed models, win events and spend rows, and the monthly Report, with the web screens (Add value model, the Project page's Value section, value on the experiment page, the receipt and the Seal card, and Report). Win delivery adds, in `antilog-core/src/delivery.rs`, `CodeHost::open_pull_request` (an approved Open pull request card opens one pull request per repo changed and writes the win event "opened"; only `FakeCodeHost` exists, the real GitHub App is not set up), the pull request registry (`store/code_host.rs`, table `pull_requests`) and `handle` for the code host's events, and in `antilog-server/src/api/webhook.rs` `POST /webhooks/code-host`: mounted only when `ANTILOG_CODE_HOST_WEBHOOK_SECRET` is set, GitHub-style HMAC-SHA256 checked in constant time with the `hmac` crate (`antilog-core/src/signature.rs`), 401 without a good signature, idempotent per delivery id, not in OpenAPI. A merge makes a win Delivered once every linked pull request has merged; a close takes it back. A trial carries when it ran (`Trial.at`) and a spend row may name its trial (`Spend.trial_id`), so the Report's Where the spend went has a per-outcome table and the month scoreboard counts trials by their own time. Each card kind has a typed `CardPayload` (`antilog-types/src/ledger.rs`) that the web cards render and the actions read; nothing parses a summary. A value model and its audit row are one transaction (`put_value_model_audited`). `ANTILOG_E2E_SEED=1` mounts `/internal/e2e/{experiment}/win` (`seed::kept_win`) so an end-to-end test can start from a win; never set it anywhere else. Live updates add `GET /events/stream` (`antilog-server/src/api/live.rs`, server-sent events replayed from `session_events` by `Last-Event-ID`) and the web app's `EventSource` with its poll as the fallback; an open stream checks its credential and membership every 30 seconds and ends when they no longer hold. A person's read of `history` is `GET /experiments/{id}/history`, which opens no session (a tool call with no session id still opens an "mcp" one, for an agent). On AWS only CloudFront may reach the function (`antilog-server/src/origin.rs`, the secret header `x-antilog-origin`). Owed: the periodic reconcile of pull requests and the watch, the real code host with its installation-to-organization mapping, and a meter that books judge spend against its trial. No export, email, Ideas or production scoring. No other platform adapter and no `watch` yet. Everything else is not built yet.
-
-Every skill describes the target. A path or command that does not exist on this branch yet is marked "(target)".
-
-When code lands on this branch, update the pages that name its paths and commands and drop their "(target)" marks, in the same change.
+The runner, the proxy and the real code host are not built. A path or command that does not exist yet is marked "(target)".
 
 ## Checks
 
@@ -21,34 +17,32 @@ cargo nextest run --workspace
 cargo deny check
 cargo sqlx prepare --workspace --check   # DATABASE_URL points at a database with the migrations applied
 cargo run -q -p antilog-server -- openapi | diff - openapi/antilog.json
-cargo lambda build --release --arm64 -p antilog-aws        # the Lambda binary; CI also invokes /health locally (cargo lambda watch and invoke)
+cargo lambda build --release --arm64 -p antilog-aws
 tofu fmt -check -recursive deploy/tofu
 tofu -chdir=deploy/tofu/aws init -backend=false && tofu -chdir=deploy/tofu/aws validate
 ```
 
-A changed type or route: regenerate `openapi/antilog.json` (`cargo run -q -p antilog-server -- openapi > openapi/antilog.json`), then the client (`cd web && pnpm install && pnpm generate:api`). A changed query: `cargo sqlx prepare --workspace` and commit `.sqlx/`. For a design change, edit the light board and run `python3 design/tools/tokens.py`, then `python3 design/tools/tokens.py --check`. Git hooks in `.githooks/` check each commit (Claude Code sessions turn them on at start; elsewhere run `git config core.hooksPath .githooks`), and `.github/workflows/checks.yml` runs the same checks on every push, plus the Rust and web-client jobs.
-
-- Fix the code, not the check. Do not loosen a lint, test or snapshot to get green.
+A changed route or type: regenerate `openapi/antilog.json`, then `pnpm generate:api` in `web/`. A changed query: `cargo sqlx prepare --workspace`. A design change: `python3 design/tools/tokens.py`, then `--check`. Hooks in `.githooks/` and CI run the same checks. Fix the code, not the check.
 
 ## Skills
 
-Guidance lives in [`.claude/skills/`](.claude/skills), each a short router. Start from the question:
+Guidance lives in [`.claude/skills/`](.claude/skills), each a short router:
 
-- `product`: what do we owe the customer, and what do we refuse to build?
-- `session`: how does the chat work, and where does an agent run? Also skill packs and connectors.
-- `judge`: what does better mean, and how is a win decided?
-- `organization`: who may approve what, and how is it recorded? Projects and roles per project.
-- `design`: what does it look like and say? Boards, light and dark, the macOS app.
-- `change`: how does this kind of change travel through the layers?
-- `stack`: how do I write this language here (Rust, TypeScript and React, modern HTML, CSS and browser APIs, Swift for macOS, Postgres, Kubernetes and Helm, security review, MCP, Playwright), and which library may I use?
-- `land`: how do I prove it and ship it?
-- `orchestrate`: how is multi-session work run? Only for a session that directs other sessions.
-- `antilog`: how to drive Antilog from the shell.
+- `product`: what we owe the customer; what we refuse to build.
+- `session`: the chat, where an agent runs, skill packs, connectors.
+- `judge`: what "better" means; how a win is decided.
+- `organization`: who may approve what; how it is recorded.
+- `design`: boards, tokens, wording.
+- `change`: how a kind of change travels through the layers.
+- `stack`: how to write each language here; which library may be used.
+- `land`: how to prove a change and ship it.
+- `orchestrate`: only for a session that directs other sessions.
+- `antilog`: driving Antilog from the shell.
 
 ## Conventions
 
-- **Docs describe current state.** When a change makes a doc wrong, fix the doc in the same change. Target design is marked "(target)".
-- **Product calls go to the owner.** When a choice is about what the product should be and the `product` skill does not settle it, ask rather than guess.
+- **Docs describe current state.** Fix a doc in the change that makes it wrong.
+- **Product calls go to the owner.** Ask when `product` does not settle it.
 - **Mockups first.** Every visual or UX change starts as a board in `design/mockups/`.
-- **Child session vs subagent.** A "child session" (or just "session", for implementation work) is a separate Claude Code session started from this one with `create_session`; it has its own container and shows in the owner's session list. A "subagent" runs inside this session and reports only to it. Implementation work goes to child sessions on Sonnet, at most three at once (owner, 18 Nov); the orchestrator runs on Opus. Ask when a request could mean either.
-- **Vocabulary** follows [`docs/GLOSSARY.md`](docs/GLOSSARY.md): "experiment" is the noun for what a user creates, in the apps, the CLI, the API, the words catalogue and user-facing docs; it belongs to a project, and a session is one agent's work inside it. Say "skill pack" in docs where "skill" could mean the files in `.claude/skills/`. Retired words are listed at the end of the glossary.
+- **Child session vs subagent.** A child session comes from `create_session`; a subagent runs inside this one. Implementation goes to child sessions on Sonnet, at most three at once.
+- **Vocabulary** follows [`docs/GLOSSARY.md`](docs/GLOSSARY.md): "experiment" is what a user creates; say "skill pack" where "skill" could mean the files in `.claude/skills/`.

@@ -1,5 +1,7 @@
 # Judge: the anti-cheat
 
+> v0: the test runs inside the session's own machine and the judge takes the number from the sealed test command, not from the agent's report; there is no separate judge sandbox. Where this page says "judge sandbox", read [docs/V0.md](../../../docs/V0.md).
+
 Six mechanisms built into the judge (target). An agent that is rewarded for a number will find the cheapest way to move it, so each mechanism says what it stops and what it does not.
 
 ## 1. Sealed experiment
@@ -20,7 +22,6 @@ Each measurement runs in a fresh judge sandbox. The rules:
 - It reads no skill pack: a pack is advice to agents and never an input to the judge.
 - It is removed afterwards.
 
-Where it can run: on an agent platform that can run a command in a sandbox with no agent, the judge platform ([../session/add-platform.md](../session/add-platform.md) says which can). The customer's own CI runner is not included (decided by the owner; see [../product/rulings.md](../product/rulings.md)).
 
 - Stops: an agent reading the holdout, tampering with the measurement, or leaking data out.
 - Does not stop: a leak through the numbers themselves. Returning only named numbers narrows it and does not remove it.

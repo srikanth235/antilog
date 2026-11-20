@@ -6,18 +6,20 @@ description: >-
 
 # Product
 
-Antilog is a chat and a judge. The chat works like Claude Code on the web: a person talks to a coding agent that works in a sandbox with repos attached. The judge is a set of tools every session gets. An agent asks the judge to measure a change, and only the judge's numbers count. Only a measured win becomes a pull request. There are no modes, no plan step and no orchestration loop on the server: the agent drives, and the server relays sessions, runs the judge and keeps a ledger.
+> The v0 design is in [docs/V0.md](../../../docs/V0.md) and wins over this page and its rulings.
 
-Four things hold it together. A **project** groups the experiments for one area of the code, with roles per project. An **experiment** (the sealed goal and everything measured against it) belongs to one project. A **session** (one agent's work in one sandbox) belongs to an experiment. A **measurement** is the judge's signed result for one trial. Reusable setup (evaluations, skill packs, connectors, agents, plugins) lives in one Customize page. Everything else is a view over measurements. Settings are tools: setup happens in the chat as an approved tool call, and a settings page lists and revokes what was approved. The organization floor (members, roles, projects, sign-in, tokens, approvals, budgets, audit log, notifications) sits under all of it.
+Antilog is a chat and a judge. The chat works like Claude Code on the web: a person talks to a coding agent that works in a machine with repos attached. The judge is a set of tools every session gets. An agent asks the judge to measure a change, and only the judge's numbers count. Only a measured win becomes a pull request. There are no modes, no plan step and no orchestration loop on the server: the agent drives, and the server relays sessions, runs the judge and keeps a ledger.
 
-The target is a server with a web app as the client of its API, sold as services: our engineers deliver engagements on it, and client engineers take over. It runs two ways from one Helm chart on Kubernetes with Postgres: Antilog cloud (phase 1, on our AWS account and Antilog's platform accounts) and self-hosted (phase 2, in the client's own AWS, Azure or GCP account). See the business model and deployment in [rulings](rulings.md). Antilog runs no sandboxes for agents: they run as sessions on agent platforms (Claude Managed Agents, AWS AgentCore, the OpenAI Agents API, Microsoft Foundry Agent Service, Google Agent Runtime) behind one trait. Nothing here is built (target).
+Four things hold it together. A **project** groups the experiments for one area of the code, with roles per project. An **experiment** (the sealed goal and everything measured against it) belongs to one project. A **session** (one agent's work in one machine) belongs to an experiment. A **measurement** is the judge's signed result for one trial. Reusable setup (evaluations, skill packs, connectors, agents, plugins) lives in one Customize page. Everything else is a view over measurements. Settings are tools: setup happens in the chat as an approved tool call, and a settings page lists and revokes what was approved. The organization floor (members, roles, projects, sign-in, tokens, approvals, budgets, audit log, notifications) sits under all of it.
+
+The target is a server with a web app as the client of its API, sold as services: our engineers deliver engagements on it, and client engineers take over. It runs two ways with Postgres: Antilog cloud (phase 1, on our AWS account) and self-hosted (phase 2, in the client's own AWS, Azure or GCP account). See the business model and deployment in [rulings](rulings.md). Agents run as sessions on a runner, one machine per session ([docs/V0.md](../../../docs/V0.md)). Nothing here is built (target).
 
 ## The three aims
 
 Beside trust (the judge's rules never bend), the product serves three aims. Every feature is checked against them.
 
 1. **Cost control.** Every dollar and token of an experiment is spent well: cost per trial, an estimate before spending, a quick check before the full measurement, a pause when trials stop paying (patience), history read first, the right-sized agent, compaction, and a view of where the spend went.
-2. **No tie to one model provider.** Agents are measured against each other on the customer's own code (the agent scoreboard), Auto picks among the agents the organization turned on, a session can be handed off to another agent, and a failing platform fails over. No agent is chosen by brand.
+2. **No tie to one model provider.** Agents are measured against each other on the customer's own code (the agent scoreboard), Auto picks among the agents the organization turned on, a session can be handed off to another agent, and a failing agent fails over. No agent is chosen by brand.
 3. **Return for the organization.** A value model says what a unit of the metric is worth, a project owner sets it, and Return counts everything spent, including experiments that found nothing. Ideas are ranked by expected value over expected cost, and a monthly report shows it.
 
 Use the governing principles and the non-goals below as settled. Apply them directly when they answer a question. The rest is in the files below.
@@ -27,8 +29,8 @@ Use the governing principles and the non-goals below as settled. Apply them dire
 1. **A chat and a judge.** Every feature belongs to the session, the judge or the organization floor, and is shown inside an experiment, a project or Customize. If it fits none, question it.
 2. **The judge decides, never a person or an agent.** The moment a hand or a proposer can mark a win, no win means anything.
 3. **Settings are tools.** Setup happens in the chat as an approved tool call. A settings page lists and revokes.
-4. **The agent drives.** The server relays, measures and records. It runs no loop.
-5. **Antilog never holds the data.** Ids, versions, numbers, states, the conversation's words and audit rows only. Data is read only inside a platform's sandbox.
+4. **The agent drives.** The server measures and records. It runs no loop.
+5. **Antilog never holds the data.** Ids, versions, numbers, states, the conversation's words and audit rows only. Data is read only inside the session's machine.
 6. **Everything is governed.** Approvals by role, every change recorded.
 7. **Derive, do not store.** Value, Return, cost per trial and status come from measurements and spend records.
 8. **Failure is never shown as zero or empty, and nothing unchecked is shown as healthy.**
@@ -42,7 +44,7 @@ Use the governing principles and the non-goals below as settled. Apply them dire
 | What every area owes the customer | [promises.md](promises.md) |
 | What we decided not to build | [non-goals.md](non-goals.md) |
 | The settled product, the owner's decisions and the open questions | [rulings.md](rulings.md) |
-| Sessions, agents, platforms, environments, credentials, connectors, skill packs, spawn, budgets | [session owes](../session/owes.md), [rules](../session/rules.md) |
+| Sessions, agents, environments, credentials, connectors, skill packs, spawn, budgets | [session owes](../session/owes.md), [rules](../session/rules.md) |
 | Experiments, evaluation templates, seal, measure, acceptance, the holdout, anti-cheat, receipts, watch | [judge owes](../judge/owes.md), [rules](../judge/rules.md) |
 | Projects, members, roles, sign-in, tokens, approvals, policy, budgets, the audit log, notifications | [organization owes](../organization/owes.md), [rules](../organization/rules.md) |
 | How a screen looks, behaves and reads | the [design](../design/SKILL.md) skill |
@@ -55,8 +57,8 @@ Ask these in order. The first one that bites usually settles it.
 1. **Is it a non-goal?** A shaped version of one (a "light" judge on a laptop, a "just this once" stored password, a "quick" hand-marked win) is still the non-goal.
 2. **Which area owns it?** The session, the judge or the organization floor. If none, question the feature before building it.
 3. **Does it break a promise, or a never-bend rule, of that area?** Read the area's `owes.md` and `rules.md`.
-4. **Does it make the server connect to data or store it, or read data anywhere other than a platform's sandbox?** If yes, the design is wrong.
-5. **Can an agent or a person change what counts?** The holdout, the sealed experiment, the judge sandbox and the acceptance criteria are not the proposer's. Chat can change what an agent tries, never what counts.
+4. **Does it make the server connect to data or store it, or read data anywhere other than the session's machine?** If yes, the design is wrong.
+5. **Can an agent or a person change what counts?** The holdout, the sealed experiment, the acceptance criteria are not the proposer's. Chat can change what an agent tries, never what counts.
 6. **Is it setup that asks before the first message, or lives only on a settings page?** Make it an approved tool call in the chat. Settings lists and revokes.
 7. **Does it add a second mechanism for a job that has one?** Use the one that exists.
 8. **Does it work self-hosted, with no outside calls?** Only configured endpoints may be contacted.

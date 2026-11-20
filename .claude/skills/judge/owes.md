@@ -1,5 +1,7 @@
 # What the judge owes
 
+> v0: the test runs inside the session's own machine and the judge takes the number from the sealed test command, not from the agent's report; there is no separate judge sandbox. Where this page says "judge sandbox", read [docs/V0.md](../../../docs/V0.md).
+
 Five promises. Each has one line on how it is checked. Nothing is built, so every check is to add.
 
 | Promise | The rule |

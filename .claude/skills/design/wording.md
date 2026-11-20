@@ -1,5 +1,7 @@
 # Wording
 
+> v0 removes agent platforms, the judge platform and the judge sandbox ([docs/V0.md](../../../docs/V0.md)). The boards that drew them (`SettingsPlatforms*`, `AddPlatform`, `PlatformError`) are still in `design/mockups/` because other boards link to them; they are not to be built.
+
 The vocabulary source is [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md), including its "On screen" column and its list of retired words. Read it before writing a word a user sees. Where it and this page disagree, the glossary wins and this page is fixed. Where a light board and this page disagree about an exact label, the board wins. The product's own rulings are in [product](../product/rulings.md).
 
 **Copy is signage, not conversation**: calm, concrete, specific, read at a glance. "Win merged" is the register; a sentence that pads a fact is not.
@@ -19,7 +21,6 @@ The vocabulary source is [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md), includ
 | session (one agent's work inside an experiment, named by its agent: "Claude Code session") | thread, task, workspace, container, VM |
 | Seal experiment, sealed experiment, experiment version | Lock, freeze, publish |
 | Seal checks (the baseline, the noise check and the cheat checks) | Validation, sanity checks |
-| Judge, Judge sandbox, Judge platform (badge on one agent platform) | grader, scorer, measuring sandbox, runner |
 | trial (one `measure` call) | attempt, candidate |
 | measurement (the judge's signed result for a trial) | score, benchmark result |
 | Kept (a trial's outcome) | Accepted, Passed, Beats noise (as an outcome) |
@@ -45,7 +46,6 @@ The vocabulary source is [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md), includ
 | dataset, dataset version | table (alone), snapshot, latest |
 | Agent credential, Judge credential | token, key, secret |
 | Removed, Not removed (clean-up state) | Deleted, Orphaned, Leaked |
-| agent platform (Claude Managed Agents, AWS AgentCore, OpenAI Agents API, Microsoft Foundry Agent Service, Google Agent Runtime) | runner, launcher, backend, agent host |
 | environment (image, setup script, size, network) | machine, instance |
 | permission ("Can read", "No access") | grant |
 | Connected, Reconnect, Not checked (connector status) | Healthy, Broken, Unknown, Offline |
@@ -71,7 +71,7 @@ Add each new term to the glossary in the same change that introduces it. Prefer 
 | Details panel | sections "Experiment" ("Experiment details"), "Environment" ("Change environment"), "Repos" ("Attach a repo"), "Agent", "Budget" ("$42 of $100", "Change budget"), "Sessions", "Context" ("44% used", "88k of 200k", "Compact", "Fresh session with summary") |
 | Trials panel | "14 across 3 sessions"; filter "All sessions"; "Show 6 earlier trials" |
 | Changes panel | "Against the base of BRANCH"; "Trial 12, Kept" or "Working copy"; "Protected: a change here is Rejected." |
-| Terminal panel | "Agent sandbox · Claude Managed Agents"; "The judge never runs here. Measurements happen in a fresh judge sandbox."; "Type a command and press Return"; viewer: "Read-only. Only editors and owners can type here." |
+| Terminal panel | "Agent machine"; "The judge never runs here. Measurements run the sealed test in a fresh checkout."; "Type a command and press Return"; viewer: "Read-only. Only editors and owners can type here." |
 | Preview, Files | "Reload", "Open in a new tab", "Port 3000 in the agent sandbox. Only people in this experiment can open it."; "In the agent sandbox", "Read-only" |
 | Share popover | roles "Owner", "Editor", "Viewer" with "From Checkout platform"; "Anyone in the organization with the link can view"; "Sharing never gives more than a person's role in the project."; "Copy link" |
 
@@ -118,7 +118,7 @@ Trial numbers are per experiment, across its sessions. The holdout value is neve
 
 | Card | Fields, in order | Buttons | Collapsed line |
 | --- | --- | --- | --- |
-| Seal experiment | Metric and direction, Evaluation command, Protected paths, Data and holdout, Skill packs ("Recorded on the receipt"), Guardrails, Baseline, Noise check, Cheat checks, Evaluation kind (planted cheats), "Cost and value", Judge platform | "Seal experiment", "Decline" | "Experiment sealed by NAME · 14:02" |
+| Seal experiment | Metric and direction, Evaluation command, Protected paths, Data and holdout, Skill packs ("Recorded on the receipt"), Guardrails, Baseline, Noise check, Cheat checks, Evaluation kind (planted cheats), "Cost and value" | "Seal experiment", "Decline" | "Experiment sealed by NAME · 14:02" |
 | Raise budget | Now, Requested, What it may cost, Why | "Raise budget", "Decline" | "Budget raised to $200 by NAME · 14:02" |
 | Add credential | Connector, "Create it first", Agent credential, Judge credential, "What each one gets" | "Add credential", "Decline" | "Credential added by NAME · 14:02" |
 | Attach repo | Repo, Branch, Access ("Pushes only to the session's own branch") | "Attach repo", "Decline" | "Repo attached by NAME · 14:02" |
@@ -140,8 +140,8 @@ Every title is the card's name. A declined card reads "Declined by NAME · 14:02
 | Where | Words |
 | --- | --- |
 | Experiment detail | "New version", "Start session", "See sessions"; strip "Best", "Trials", "Spent", "Per kept trial", "Delivered", "Pending", "Return"; sections "Definition", "Seal checks", "Data", "Value", "Scoreboard", "Where the spend went", "Sessions", "Trials", "Wins", "Watch", "Versions" |
-| Definition rows | "Metric", "Direction" (Lower is better, Higher is better), "Evaluation command", "Protected paths", "Guardrails", "Repeats", "Quick check", "Patience", "Value model", "Acceptance criteria", "Judge platform" |
-| Acceptance criteria | "Kept when it beats what it started from by more than the bar, every guardrail holds, and it is confirmed in a fresh judge sandbox and on the holdout." |
+| Definition rows | "Metric", "Direction" (Lower is better, Higher is better), "Evaluation command", "Protected paths", "Guardrails", "Repeats", "Quick check", "Patience", "Value model", "Acceptance criteria" |
+| Acceptance criteria | "Kept when it beats what it started from by more than the bar, every guardrail holds, and it is confirmed in a fresh checkout and on the holdout." |
 | Immutable | "Sealed experiments never change. A change makes a new version, and numbers do not carry across versions." |
 | Evaluation kinds | "Speed", "Quality", "Size", "Cost"; templates "Load test", "Query latency", "Test suite duration", "Bundle size", "Forecast error", "Your own"; "Planted cheats": "Skip the work", "Hard-code the answer", "Return early" |
 | Value section | "Worth", "Cost so far", "Return", "How At risk works." |
@@ -150,7 +150,7 @@ Every title is the card's name. A declined card reads "Declined by NAME · 14:02
 | Session not removed | "The Gemini session was not removed. Antilog retries, and its cost counts until it is gone." |
 | Trials table | "Trial", "Hypothesis", "Session", "Outcome", "Value", "Cost", "Started from"; "Show all 14 trials" |
 | Watch, Versions | "Watch this experiment", "On a schedule", "When the default branch moves", "Last measurement"; "Current", "Superseded"; "Numbers are never compared across versions." |
-| Receipt | "Receipt for trial 12"; "Signed by the judge", "Verify again"; "The signature matches", "The signer is the judge", "The judge image matches"; sections "Experiment", "Data", "Compute", "Commits", "Values", "Repeats and noise", "Trials tried", "Holdout", "Second opinion", "Spend", "Lineage"; "Worth of this win", "Cost of the win", "Return of the win"; "Dataset versions", "Repo commits", "Agent credential", "Judge credential"; "Judge platform", "Judge image", "Agents and sessions", "Measured on"; holdout "Passed" or "Failed", never a value; "Baseline, then trial 3, trial 7, trial 12. Each started from the one before it." |
+| Receipt | "Receipt for trial 12"; "Signed by the judge", "Verify again"; "The signature matches", "The signer is the judge", "The judge image matches"; sections "Experiment", "Data", "Compute", "Commits", "Values", "Repeats and noise", "Trials tried", "Holdout", "Second opinion", "Spend", "Lineage"; "Worth of this win", "Cost of the win", "Return of the win"; "Dataset versions", "Repo commits", "Agent credential", "Judge credential"; "Judge image", "Agents and sessions", "Measured on"; holdout "Passed" or "Failed", never a value; "Baseline, then trial 3, trial 7, trial 12. Each started from the one before it." |
 
 ## Projects and Report
 
@@ -196,8 +196,7 @@ Every title is the card's name. A declined card reads "Declined by NAME · 14:02
 | --- | --- |
 | Sign-in | "Continue with GitHub", "Continue with Google", and on a self-hosted server "Continue with single sign-on"; "Sign-in refused."; "No access" ("This account has no access to HOST. Ask an owner to invite you."), "Use another account", "Sign out" |
 | Settings, Single sign-on | "Sign-in methods", "GitHub", "Google", "Your OpenID Connect provider" (self-hosted only; "Only an owner sets it up."), "Stay signed in for" |
-| Rail | "You": Profile, Appearance, Access tokens, This device. "Organization": General, Members, Single sign-on, Agent platforms, Approvals, Budgets, Connections, Audit log |
-| Agent platforms | "Claude Managed Agents", "AWS AgentCore", "OpenAI Agents API", "Microsoft Foundry Agent Service" ("Foundry Agent Service" where space is short), "Google Agent Runtime"; "Add platform", "Test connection", "Update credential", "Remove"; badge "Judge platform"; Connected, Needs attention; "Agents are in Customize"; "bench-std · AWS AgentCore · 4 vCPU, 16 GiB"; Antilog cloud "Managed by Antilog." and "Data and retention" |
+| Rail | "You": Profile, Appearance, Access tokens, This device. "Organization": General, Members, Single sign-on, Approvals, Budgets, Connections, Audit log |
 | Approvals | "Policy by card"; "Always ask", "Allow up to a limit", "Allow"; "Always asks. A person must type the value."; "Allow never pauses" |
 | Budgets | "Default budget per experiment", "Monthly cap", "Spent this month"; "Experiments, with budget and spend"; "Sessions of EXPERIMENT"; "Where the spend went"; "Cost per win by project"; "Change budget" (also on the strip, the experiment page and the Seal card; editors and owners only) |
 | Connections | "Repos", "Credentials", "Environments"; "Revoke"; "Added by NAME · date · used by 3 sessions"; "Nothing approved yet." |
@@ -227,7 +226,6 @@ The empty sentences and their one action are in [behaviour](behaviour.md#empty-s
 | Screen | Sentence | Action |
 | --- | --- | --- |
 | Experiment, no trials or wins | "No trials yet." / "No wins yet." | none |
-| Session, platform unreachable | "Can't reach PLATFORM. Output stays there; try again when it is back." | "Try again" |
 | Sign-in refused | "This account has no access to HOST. Ask an owner to invite you." | "Use another account" |
 | Offline | "Can't reach HOST. Showing what was last known." | "Try again" |
 
@@ -257,7 +255,7 @@ A `·` never joins two thoughts in one string; it survives only between short me
 - A word means one thing. Do not give one object two names across pages or clients. "Auto" is the agent choice and nothing else; the approval mode is "Ask" or "Follow policy".
 - Money and units are worded the same on every page.
 - Defensive reassurance (a fact followed by what was not lost, deleted or sent) belongs only where the risk decision is made, in full sentences. A status or an empty state repeating the promise is noise.
-- A cloud account is not a connector, and neither is the code host. Platform names appear under Agent platforms in Settings, beside an agent, and on the Seal experiment card as the judge platform. Never Kubernetes.
+- A cloud account is not a connector, and neither is the code host. Never Kubernetes.
 - An agent's message is signed "Antilog", with the agent as a quiet second label. An agent's logo appears only where the agent is the subject.
 - Model providers are a field on an agent, not a connector category.
 - Only the judge's numbers are worded as results. A number from a session is "checked in the session" and never shown as a result.
