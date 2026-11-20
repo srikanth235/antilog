@@ -4,7 +4,7 @@ A skill pack is a versioned folder of written know-how that an agent loads on de
 
 A skill pack is added from Customize, Skills (boards `Skills`, `SkillsEmpty`, `SkillDetail`, `AddSkill`), or arrives with a plugin.
 
-1. **A `SKILL.md` folder, text only.** `SKILL.md` at the top starts with front matter holding `name` (lower case letters, digits, hyphens) and `description`. Every file is text: at most 100 files, 256 KB each, 1 MB in all, relative paths with no `..`, no NUL, no private key. A pack holds no code the server runs and no credential. Upload one `SKILL.md` or a set of text files. Zip upload comes after approval of a zip crate.
+1. **A `SKILL.md` folder, text only.** `SKILL.md` at the top starts with front matter holding `name` (lower case letters, digits, hyphens) and `description`. Every file is text: at most 100 files, 256 KB each, 1 MB in all, relative paths with no `..`, no NUL, no private key. A pack holds no code the server runs and no credential. Upload one `SKILL.md`, or a folder: the screen reads its text files and sends them as a list (no zip in v0).
 2. **A version on every upload.** Uploading a name that exists makes the next immutable version. An experiment names the versions it selected; a new version never moves a selection.
 3. **Agents are the only audience.** The judge never reads a pack. A pack never changes what counts.
 4. **Chosen per experiment, On or Off per project.** An editor or owner of the project selects the packs an experiment uses; each is pinned to its latest version at that moment. A project owner turns a pack Off to hide it from New experiment in that project, and an experiment that already selected a version keeps it. A pack an experiment selected is never removed.
