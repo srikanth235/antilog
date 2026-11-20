@@ -212,6 +212,7 @@ async fn a_claim_carries_the_spec_the_contract_lists() {
         json!({
             "autoupdate": false,
             "small_model": "vendor/model-1",
+            "experimental": {"mcp_timeout": 1_800_000},
             "provider": {
                 "anthropic": {"options": {"baseURL": "https://proxy.example/anthropic/v1", "apiKey": model}},
                 "openai": {"options": {"baseURL": "https://proxy.example/openai/v1", "apiKey": model}},
