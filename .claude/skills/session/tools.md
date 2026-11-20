@@ -18,7 +18,7 @@ Each shows a card in the chat. The agent never sees a credential value.
 | --- | --- | --- | --- | --- |
 | `attach_repo` | A repo on the code host | Attach repo | An owner or editor of the experiment's project; policy may pre-approve | A repo the code host account cannot reach; a viewer's approval |
 | `request_credential` | A connector, a reason, a scope | Add credential: with a secure form whose value is sealed on the server (see [add-connector.md](add-connector.md)) | An owner or editor, always; policy can never pre-approve it | A scope that includes the holdout or write rights; a value in chat |
-| `set_environment` | Image or setup script, size, network | Change environment | An owner or editor; policy may pre-approve | A change that would exceed the budget's rate; hosts the platform cannot allow |
+| `set_environment` | Image or setup script, size, network | Change environment | An owner or editor; policy may pre-approve | A change that would exceed the budget's rate; hosts the proxy refuses |
 | `request_budget` | An amount and a reason | Raise budget, with what it may cost | An owner or editor; policy may allow up to a limit | An amount that takes the experiment's budget over its project's cap or the organization's monthly cap |
 
 An editor or owner can also change the experiment's budget at any time without a card. Each refusal reaches the agent as a plain reason, and the session shows a calm one-line card, never a blank.

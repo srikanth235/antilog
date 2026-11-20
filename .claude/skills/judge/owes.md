@@ -1,12 +1,10 @@
 # What the judge owes
 
-> v0: the test runs inside the session's own machine and the judge takes the number from the sealed test command, not from the agent's report; there is no separate judge sandbox. Where this page says "judge sandbox", read [docs/V0.md](../../../docs/V0.md).
-
 Five promises. Each has one line on how it is checked. Nothing is built, so every check is to add.
 
 | Promise | The rule |
 | --- | --- |
-| Decide | The quick check never decides: only a trial that beats the trial it started from by more than the bar, holds every guardrail and is confirmed in a fresh judge sandbox and on the holdout is Kept. Only the judge's numbers count. Nobody can mark a win by hand. |
+| Decide | The quick check never decides: only a trial that beats the trial it started from by more than the bar, holds every guardrail and is confirmed on a fresh checkout and on the holdout is Kept. Only the judge's numbers count. Nobody can mark a win by hand. |
 | Tamper-proof | An agent never reads the holdout and never changes the evaluation. A trial that changes a protected path is Rejected. The judge never reads a skill pack, and a plugin can never mark, unmark or grant a dataset. |
 | Receipt | Every win carries a signed receipt with every field listed under receipt in [model.md](model.md): Experiment, Data and Compute. |
 | Honest numbers | Value is derived from measured wins. A win counts as Delivered once its pull request is merged; Pending (open pull request) is never counted as delivered and is not in Return. A failure is never shown as zero. Return is Delivered divided by everything spent in its scope, misses included, and a regressed amount is At risk, not Delivered. |

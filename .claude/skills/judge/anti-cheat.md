@@ -1,7 +1,5 @@
 # Judge: the anti-cheat
 
-> v0: the test runs inside the session's own machine and the judge takes the number from the sealed test command, not from the agent's report; there is no separate judge sandbox. Where this page says "judge sandbox", read [docs/V0.md](../../../docs/V0.md).
-
 Six mechanisms built into the judge (target). An agent that is rewarded for a number will find the cheapest way to move it, so each mechanism says what it stops and what it does not.
 
 ## 1. Sealed experiment
@@ -11,20 +9,12 @@ The seal is a hash over the experiment's definition and its protected files at p
 - Stops: changing the evaluation, the scoring or the data it reads.
 - Does not stop: a change to unprotected code that fools the evaluation. A protected path list that is too short.
 
-## 2. Separate sandbox
+## 2. The number comes from the sealed command
 
-Each measurement runs in a fresh judge sandbox. The rules:
+The test runs inside the session's own machine ([docs/V0.md](../../../docs/V0.md)). The runner checks each commit out in a `git worktree` beside the clone, restores the protected files by hash from the repo's history, runs the sealed test command and returns its exit status and output. The judge takes the number from that command, never from the agent's report. A skill pack is advice to agents and never an input to the judge.
 
-- No agent is in it.
-- It holds the judge's credential, which alone reaches the holdout. The judge sandbox is the only holder.
-- It has no network route except to the experiment's data.
-- It returns only the numbers the experiment names.
-- It reads no skill pack: a pack is advice to agents and never an input to the judge.
-- It is removed afterwards.
-
-
-- Stops: an agent reading the holdout, tampering with the measurement, or leaking data out.
-- Does not stop: a leak through the numbers themselves. Returning only named numbers narrows it and does not remove it.
+- Stops: tampering with the measurement through the agent's own report.
+- Does not stop: an agent that is still running in the same machine. Returning only named numbers narrows a leak through the numbers and does not remove it.
 
 ## 3. Seal checks
 
@@ -35,7 +25,7 @@ Before an experiment can be sealed the judge measures the baseline, pairs the sa
 
 ## 4. Confirm before Kept
 
-Every measurement is paired: in one fresh judge sandbox the trial and the trial it started from run interleaved for the sealed number of repeats, so drift between sandboxes cancels. A trial beats the bar when the one-sided lower confidence bound of its mean paired gain is above zero at confidence 1 − 0.05/k, where k counts the trials measured in this experiment version. It is then measured again, paired, in another fresh judge sandbox and checked on the holdout. The bar rises with k, so many attempts cannot win by luck.
+Every measurement is paired: the trial and the trial it started from run interleaved for the sealed number of repeats, so drift cancels. A trial beats the bar when the one-sided lower confidence bound of its mean paired gain is above zero at confidence 1 − 0.05/k, where k counts the trials measured in this experiment version. It is then measured again, paired, on a fresh checkout and checked on the holdout. The bar rises with k, so many attempts cannot win by luck.
 
 The quick check that precedes this (one pair against the best) only stops weak trials early to save cost. It never decides Kept, runs only in the judge, and is sealed with the experiment, so a trial cannot skip or fake it.
 

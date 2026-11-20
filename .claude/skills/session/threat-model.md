@@ -1,8 +1,6 @@
 # Session: threat model
 
-> Parts of this page still name agent platforms, the judge sandbox or the relay; `docs/V0.md` replaces them: [docs/V0.md](../../../docs/V0.md).
-
-What a hijacked agent could do, and what stops it (target). Assume every agent can be prompt-injected: it reads text that people outside the organization can write, and it follows instructions in that text more often than anyone would like. The design must hold when the agent is working for someone else.
+What a hijacked agent could do, and what stops it Assume every agent can be prompt-injected: it reads text that people outside the organization can write, and it follows instructions in that text more often than anyone would like. The design must hold when the agent is working for someone else.
 
 ## Untrusted text an agent reads
 
@@ -20,11 +18,11 @@ A person's own messages in the chat are trusted as that person's, within their r
 | --- | --- | --- |
 | A git token for its own branch | Pushes only to the session's branch, short-lived, one per repo | It can push anything to that branch, including data it read. The branch is on the code host |
 | A connector's tools through the session endpoint | The credential stays on the server; each tool is On, Off or Ask first and each call is audited | It can use any On tool with any input, and read what the connector returns |
-| Network from its sandbox | Only the endpoints the environment allows | Any allowed endpoint that accepts writes is a way out |
+| Network from its machine | Only the endpoints the environment allows | Any allowed endpoint that accepts writes is a way out |
 | The Antilog tools | Cards ask a person unless policy pre-approved them; Add credential always asks; `deliver` refuses a trial that is not Kept | It can spend the budget on trials, and write misleading hypotheses and pull request text |
 | The conversation | Stored as words only, never tool output | Whatever it writes in a message is stored, including data it read |
 
-It never holds the holdout credential, a write credential, a model key, a cloud credential or the judge's signing key. It cannot mark a win, change a sealed experiment or reach the judge sandbox.
+It never holds the holdout credential, a write credential, a model key, a cloud credential or the judge's signing key. It cannot mark a win or change a sealed experiment.
 
 ## Rules
 

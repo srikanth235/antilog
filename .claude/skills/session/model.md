@@ -1,8 +1,6 @@
 # Session: objects and words
 
-> v0 replaces the agent platforms, the stepping relay and the judge sandbox: see [docs/V0.md](../../../docs/V0.md). Lines that still name them are being removed.
-
-Experiment rows, sessions and spend records are in the store ([../change/ledger-table.md](../change/ledger-table.md)); the tools, the budget stop, the model proxy (`crates/antilog-proxy`: model gateway, spend booking and egress allowlist) and the organization's model keys are built; the rest is target. [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md) defines the words for screens; here an agent is a worker: a model run by a harness. What each screen shows is in [../design/behaviour.md](../design/behaviour.md), not here.
+Experiment rows, sessions and spend records are in the store ([../change/ledger-table.md](../change/ledger-table.md)); the tools, the budget stop, the model proxy (`crates/antilog-proxy`: model gateway, spend booking and network allowlist), the organization's model keys, the runner and environments are built; the real code host is not. [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md) defines the words for screens; here an agent is a worker: a model run by a harness. What each screen shows is in [../design/behaviour.md](../design/behaviour.md), not here.
 
 ## Where a session sits
 
@@ -17,13 +15,13 @@ Experiment rows, sessions and spend records are in the store ([../change/ledger-
 
 | Object | Means | Not |
 | --- | --- | --- |
-| agent | A model run by a harness (OpenCode in v0). It holds a short-lived git token for its own branch per repo and read-only connector credentials that leave out the holdout, never a model key | the platform, a login or key |
+| agent | A model run by a harness (OpenCode in v0). It holds a short-lived git token for its own branch per repo, never a model key (the proxy holds the customer's keys and meters spend) | a login or key |
 | cost tier | "$" to "$$$" on each agent, with the measured figure ("about $2.40 per trial here"), priced from the proxy's token counts ([add-agent.md](add-agent.md)) | a quality ranking |
 | agent scoreboard | Per agent, filtered by evaluation kind and project: experiments, trials, kept, wins delivered, cost per win, median time to a win, Delivered value. Only from the judge's measurements here: "Measured by the judge on your code. Not a vendor benchmark." | a vendor benchmark |
 | Auto | The agent choice that picks the best cost per win for this evaluation kind in this project among the agents the organization turned on, and says why in one line. A person can always pick a named agent. With no data it uses the default agent an owner sets in Customize, Agents. No agent is preselected by brand | a favoured agent |
-| hand off | Moving a session to another agent: the new session starts in the same experiment on the same branch with a summary and the history; the old one ends Done, "Handed off to Codex" | a spawn, a new experiment |
-| failover | An agent that is unavailable or rate-limited leaves the session Waiting for you with a Continue on another agent? card naming the agent Auto would choose. Policy may allow it without asking; a timeline line and an audit row record it | a retry on the same platform |
-| environment | What a session runs on: network level (none, limited with exact hosts, full), plain variables, a setup script and a size. An organization manages them in Settings, Connections; every change is a new version and a session keeps the version it started on. An agent proposes a change with `set_environment` (target) | a server, a config file |
+| hand off | Moving a session to another agent: the new session starts in the same experiment on the same branch with a summary and the history; the old one ends Done, "Handed off to Codex" | a new experiment |
+| failover | An agent that is unavailable or rate-limited leaves the session Waiting for you with a Continue on another agent? card naming the agent Auto would choose. Policy may allow it without asking; a timeline line and an audit row record it | a retry on the same model |
+| environment | What a session runs on: network level (none, limited with exact hosts, full), plain variables, a setup script and a size. An organization manages them in Settings, Connections; every change is a new version and a session keeps the version it started on. An agent proposes a change with `set_environment` | a server, a config file |
 | attached repo | A repo on the code host the session works in, any number. Short-lived git token per repo, push only to the session's own branch | a clone Antilog keeps |
 
 ## Spend
@@ -36,7 +34,7 @@ Experiment rows, sessions and spend records are in the store ([../change/ledger-
 | where the spend went | The experiment's spend split by Kept, Within noise, Worse, Guardrail failed, Rejected, Failed and Not measured (agent work that never reached `measure`), as dollars and a share. Derived | a bill |
 | compaction | Summarising a session's context and continuing. Antilog does it on its own at 80 percent and says so in a timeline line; a person can also compact, or start a fresh session with a summary | forgetting |
 
-Spending well is the sum of these, each owned once: the estimate on the Seal card and patience are the judge's ([../judge/tools.md](../judge/tools.md)); `history` first and the lower-cost default for `spawn` are in [tools.md](tools.md) and [prompts.md](prompts.md).
+Spending well is the sum of these, each owned once: the estimate on the Seal card and patience are the judge's ([../judge/tools.md](../judge/tools.md)); `history` first is in [tools.md](tools.md) and [prompts.md](prompts.md).
 
 ## Connectors, skill packs and plugins
 
@@ -53,7 +51,7 @@ What an agent can reach beyond its machine ([docs/V0.md](../../../docs/V0.md)).
 
 ## Datasets and the holdout
 
-The judge owns these words ([../judge/model.md](../judge/model.md)). The earlier design hung them under data connectors with an agent credential and a judge credential. That design is not built, and in v0 a connector is a remote MCP server that holds no datasets; where evaluation data lives and how the holdout is kept from agents is for the judge pages to settle.
+The judge owns these words ([../judge/model.md](../judge/model.md)). A connector holds no datasets; where evaluation data lives and how the holdout is kept from agents is for the judge pages to settle.
 
 | Object | Means | Not |
 | --- | --- | --- |
@@ -77,7 +75,7 @@ The server keeps a ledger of a session. It runs no loop. A person can talk or in
 
 Tool output and raw logs stay on the session machine and are fetched when opened. They may expire, and the session says so; a failed fetch shows as failed, never as empty.
 
-The terminal, Changes, Preview and Files panels read from the agent's own sandbox when opened and the server keeps no copy. A person with edit access can type in the terminal, a viewer sees it read-only, and opening one is an audit row ("Opened a terminal in Claude Code session"). It is never an Antilog host or the judge sandbox. How the panels look is in [../design/behaviour.md](../design/behaviour.md).
+The terminal, Changes, Preview and Files panels read from the session's machine when opened and the server keeps no copy. A person with edit access can type in the terminal, a viewer sees it read-only, and opening one is an audit row ("Opened a terminal in Claude Code session"). It is never an Antilog host. How the panels look is in [../design/behaviour.md](../design/behaviour.md).
 
 ## Lifecycle
 
@@ -87,12 +85,6 @@ The terminal, Changes, Preview and Files panels read from the agent's own sandbo
 4. **Resume.** A message queues the session again. The next machine clones the repos and imports the export, so the agent has its history. Whatever was not pushed is gone if it lands on a new machine.
 
 Git is the hand-off: a trial is a set of commits, one per repo changed. Antilog stores commit ids, never diffs; another session or the judge reads the code from git.
-
-## Two offerings
-
-- **Antilog cloud (phase 1):** we run the server on our AWS account and every session on Antilog's own machines; spend is rebilled through the budget.
-
-One server, one chart. A promise that holds in one and not the other is a defect.
 
 ## How this area refers to the others
 

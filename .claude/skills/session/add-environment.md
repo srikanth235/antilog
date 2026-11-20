@@ -9,7 +9,7 @@ Built: `antilog-types` (`Environment`, `NewEnvironment`, and `EnvironmentSpec` w
 - **Versions.** Creating makes version 1; an edit is the next version, never an update in place. The versions are append-only (a trigger refuses a change), because a session records the version it ran. An environment's id comes from its name once and is kept. An edit made from an old version loses with a conflict.
 - **Archive.** An archived environment is no longer offered and takes no new version; sessions already on it keep running, and its versions stay readable.
 - **Who.** Everyone reads. Owners and editors create, edit and archive (`environment.create`, `environment.edit`, `environment.archive` in the permission matrix); a denial is audited.
-- **Network.** `none` reaches nothing but the model gateway; `limited` reaches exact host names (no wildcard, port or address) and the package registries when switched on; `full` reaches any host except a private, loopback or metadata address. The proxy enforces it from the session's own version ([../../../docs/V0-contracts.md](../../../docs/V0-contracts.md)).
+- **Network.** `none` reaches only the platform hosts (the model gateway, MCP and the code host, always allowed); `limited` reaches exact host names (no wildcard, port or address) and the package registries when switched on; `full` reaches any host except a private, loopback or metadata address. The proxy enforces it from the session's own version ([../../../docs/V0-contracts.md](../../../docs/V0-contracts.md)).
 - **Variables are plain.** The agent can read them, and the screen says so. A model key never goes there: model keys stay sealed with the organization and are never sent into a session. Names `ANTILOG_*` and the proxy variables are refused. The setup script is at most 64 KB.
 
 ## Steps for a change
@@ -17,7 +17,7 @@ Built: `antilog-types` (`Environment`, `NewEnvironment`, and `EnvironmentSpec` w
 1. Types and validation: `antilog-core/src/environments.rs`; run `cargo run -q -p antilog-server -- openapi > openapi/antilog.json` and `pnpm generate:api` in `web/`.
 2. A new column: [../change/ledger-table.md](../change/ledger-table.md); `cargo sqlx prepare --workspace`.
 3. The screen: a board first ([../change/screen.md](../change/screen.md)); `SettingsConnections` and `SettingsEnvironment` are the boards.
-4. Cost it: show the estimated spend per hour on the Change environment card before approval (target; with `set_environment`).
+4. Cost it: show the estimated spend per hour on the Change environment card before approval.
 
 ## Proving it
 

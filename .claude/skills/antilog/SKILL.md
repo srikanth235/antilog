@@ -5,7 +5,7 @@ description: Drive Antilog from the shell with the `antilog` command (target; `a
 
 # Antilog
 
-`antilog` is a command-line client of an Antilog server, for the same experiments as the web app: `antilog "cut checkout p95"` starts an experiment, with its lead session, in the terminal. `antilog mcp` serves the Antilog tools to an agent the person already uses on their own machine. It is (target): the commands below are the design and may change as the program is built.
+`antilog` is a command-line client of an Antilog server, for the same experiments as the web app: `antilog "cut checkout p95"` starts an experiment, with its lead session, in the terminal. `antilog mcp` serves the Antilog tools to an agent the person already uses on their own machine. `antilog mcp` and `antilog runner` are built (the runner is for hosts we keep, see [../session/runner.md](../session/runner.md)); the other commands below are the design and may change as the program is built.
 
 The server is Antilog cloud or a self-hosted server at a URL. The client holds no data and runs no machine: it asks the server; a runner starts the sessions ([docs/V0.md](../../../docs/V0.md)). Only the judge's numbers count, whichever client proposed the change.
 
@@ -46,7 +46,7 @@ Anything not listed is whatever `antilog --help` shows; it is the source once th
 
 Polls a server's queue and runs its sessions on this machine: `antilog runner --server URL --proxy HOST:PORT` with the runner key in `ANTILOG_RUNNER_KEY`; it runs each session in a Docker container. It is for the machine image, not for people. What it does is in [../session/runner.md](../session/runner.md).
 
-## The Antilog tools (target)
+## The Antilog tools
 
 Every session gets the Antilog tools, and `antilog mcp` serves the same ones. They are not shell commands a person runs.
 
@@ -59,7 +59,7 @@ The judge runs the sealed test command in the session's machine and takes the nu
 
 ## MCP
 
-`antilog mcp` serves the Antilog tools on stdio, for an agent on the person's own machine (Claude Code, Codex). The agent can propose a change anywhere; only the judge measures it. It works inside a session in the experiment, with no platform sandbox, and pushes trial commits to that session's branch with a short-lived git token minted for the session. It ships in the first release. It signs in with an access token and is registered with `claude mcp add antilog -- antilog mcp`. A tool that matters shows its approval card to the person, in the terminal or the web app.
+`antilog mcp` serves the Antilog tools on stdio, for an agent on the person's own machine (Claude Code, Codex). The agent can propose a change anywhere; only the judge measures it. It works inside a session in the experiment, on the person's own machine, and pushes trial commits to that session's branch with a short-lived git token minted for the session. It ships in the first release. It signs in with an access token and is registered with `claude mcp add antilog -- antilog mcp`. A tool that matters shows its approval card to the person, in the terminal or the web app.
 
 ## Decided
 

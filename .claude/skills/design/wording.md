@@ -71,7 +71,7 @@ Add each new term to the glossary in the same change that introduces it. Prefer 
 | Trials panel | "14 across 3 sessions"; filter "All sessions"; "Show 6 earlier trials" |
 | Changes panel | "Against the base of BRANCH"; "Trial 12, Kept" or "Working copy"; "Protected: a change here is Rejected." |
 | Terminal panel | "Agent machine"; "The judge never runs here. Measurements run the sealed test in a fresh checkout."; "Type a command and press Return"; viewer: "Read-only. Only editors and owners can type here." |
-| Preview, Files | "Reload", "Open in a new tab", "Port 3000 in the agent sandbox. Only people in this experiment can open it."; "In the agent sandbox", "Read-only" |
+| Preview, Files | "Reload", "Open in a new tab", "Port 3000 in the session's machine. Only people in this experiment can open it."; "In the session's machine", "Read-only" |
 | Share popover | roles "Owner", "Editor", "Viewer" with "From Checkout platform"; "Anyone in the organization with the link can view"; "Sharing never gives more than a person's role in the project."; "Copy link" |
 
 ## Composer and conversation
@@ -84,8 +84,8 @@ Add each new term to the glossary in the same change that introduces it. Prefer 
 | Other placeholders | Waiting for you "Answer, or approve the card above"; Done or Failed "Continue this session"; read-only "Viewers read experiments. Only editors and owners can send." |
 | Notify prompt (once, after the first measurement) | "Notify me when this experiment needs me"; "Notify me", "Not now" |
 | Tool line | verb and object, quiet ("Read 4 files", "Asked the judge to measure") |
-| Long tool output | "Fetching from PLATFORM"; "This output has expired on PLATFORM."; "Can't reach PLATFORM. Output stays there; try again when it is back." |
-| Spawned, failed, ended | "Started a session on PLATFORM with AGENT"; "The session failed on PLATFORM. Open the platform's log, or start again." ("Start again"); "The sandbox ended while idle. Sending a message starts a new one from the session's branches." |
+| Long tool output | "Fetching from the session"; "This output has expired."; "Can't reach the session's machine. Output stays there; try again when it is back." |
+| Started, failed, ended | "Started a session with AGENT"; "The session failed. Start again." ("Start again"); "The machine was released while idle. Sending a message starts a new one from the session's branches." |
 | Compaction | "Compacted the conversation automatically at 80% of the context window. 44% used now." |
 | Agent menu | "Agent for this session"; "Auto" with "Auto would choose Codex: lowest cost per win on Speed experiments here, $18"; tiers "$", "$$", "$$$" with "About $2.70 per trial here"; "Hand off to..."; "Tiers run from $ to $$$. Cost per trial is measured by the judge on your code." |
 | Hand off | "Priya Raman handed the Claude Code session off to Codex. Same experiment, same branches."; "Handed off to Codex"; "Summary from Claude Code session" with "Goal", "Done", "From history", "Where it stopped" |
@@ -107,7 +107,7 @@ Add each new term to the glossary in the same change that introduces it. Prefer 
 | Seal check rows | "Baseline", "Noise check", "Cheat checks" ("3 of 3 rejected") |
 | Cost and value | "Cost and value", "Part of the sealed definition"; "Value model"; "Propose a different value" ("Needs a project owner's approval on this card."); "No value set"; "Expected return" ("Goal: 14.0%, worth about $11,000 a year. Budget $10."); "Quick check" ("On", "Never decides Kept"); "Patience" ("trials in a row"); "Cost estimate" ("One measurement costs about $0.30 (3 repeats on Sales history v7). This budget buys about 12 trials.") |
 | Keep going? | "The last 6 trials did not beat 1,102 ms. $48 of $100 is left."; "What was tried" ("Copy as a note"); "Patience" ("6 trials in a row, set when the experiment was sealed."); "Settings, Approvals can let an experiment go on without asking."; "Keep going", "Stop here"; timeline "The last 6 trials in a row were not Kept" |
-| Continue on another agent? | "The platform behind Codex is rate-limited. Your work is safe on BRANCH."; "Auto would choose", "It starts with", "Policy" ("Ask before continuing on another agent."); "Continue on Gemini", "Choose another agent", "Wait and try again"; timeline "OpenAI Agents API is rate-limited. Tried again 3 times." |
+| Continue on another agent? | "Codex is rate-limited. Your work is safe on BRANCH."; "Auto would choose", "It starts with", "Policy" ("Ask before continuing on another agent."); "Continue on Gemini", "Choose another agent", "Wait and try again"; timeline "The model is rate-limited. Tried again 3 times." |
 | Judge note | "Measured by the judge. A number from the session never counts." |
 | Holdout | "Restricted to the judge"; "Marked Holdout. Enforced by the credentials: only the judge's includes it." |
 
@@ -128,7 +128,7 @@ Every title is the card's name. A declined card reads "Declined by NAME · 14:02
 
 | Where | Words |
 | --- | --- |
-| Add credential | recipe "Create it first: in Snowflake, a read-only role on the views you list, with the holdout tables not granted. Then a second, separate read-only role that also covers the holdout, for the judge."; "Typed here, never in the chat. Each value goes straight to its platform's credential store."; link "Browse connectors" |
+| Add credential | recipe "Create it first: in Snowflake, a read-only role on the views you list, with the holdout tables not granted. Then a second, separate read-only role that also covers the holdout, for the judge."; "Typed here, never in the chat. Each value goes straight to the server's sealed store."; link "Browse connectors" |
 | Before Approve | "Nothing happens until you approve." |
 | Cost line | "May cost up to $50" or "Costs nothing" |
 | Pre-approved | "Allowed by policy" (collapsed: "Budget raised to $200 · allowed by policy") |
@@ -145,7 +145,7 @@ Every title is the card's name. A declined card reads "Declined by NAME · 14:02
 | Evaluation kinds | "Speed", "Quality", "Size", "Cost"; templates "Load test", "Query latency", "Test suite duration", "Bundle size", "Forecast error", "Your own"; "Planted cheats": "Skip the work", "Hard-code the answer", "Return early" |
 | Value section | "Worth", "Cost so far", "Return", "How At risk works." |
 | Where the spend went | "Kept trials", "Within noise", "Worse", "Guardrail failed", "Rejected", "Failed", "Not measured"; columns "Outcome", "Spent", "Share" |
-| Sessions table | "Session", "Platform", "Started", "Ended", "Spend", "State", "Clean-up"; "Lead session"; Removed, Not removed; "Running", "When it ends" |
+| Sessions table | "Session", "Started", "Ended", "Spend", "State", "Clean-up"; "Lead session"; Removed, Not removed; "Running", "When it ends" |
 | Session not removed | "The Gemini session was not removed. Antilog retries, and its cost counts until it is gone." |
 | Trials table | "Trial", "Hypothesis", "Session", "Outcome", "Value", "Cost", "Started from"; "Show all 14 trials" |
 | Watch, Versions | "Watch this experiment", "On a schedule", "When the default branch moves", "Last measurement"; "Current", "Superseded"; "Numbers are never compared across versions." |
@@ -171,12 +171,10 @@ Every title is the card's name. A declined card reads "Declined by NAME · 14:02
 | Skills | columns "Skill pack", "Source", "Version", "Used in"; "Your team", "By Antilog"; "Versions", "What agents get", "Who can read it", "On", "Off"; "Agents read it. The judge never reads it, so a skill pack cannot change how a result is measured." |
 | Plugins | columns "Plugin", "Adds", "Status" ("Added"); "A plugin runs no code and has no powers of its own. It can never mark, unmark or grant access to a dataset."; "Remove plugin" opens "Keep the items it added?" with "Keep items", "Remove items"; "Items in use by an experiment stay." |
 | Connectors | columns "Connector", "Status", "Used by"; "Snowflake · ANALYTICS", "Checked 2 min ago", "Used by 3 experiments", "Not used yet"; "Snowflake", "Databricks", "BigQuery", "Postgres", "DynamoDB", "Amazon S3", "MCP server"; "The code host is under Connections"; buttons "Check connection", "Check again", "Update credential", "Remove", "Browse connectors" |
-| How access is scoped | "Credentials" ("Registered once and kept in each platform's credential store. Antilog keeps none."), "Agents get" ("A read-only credential on the views listed below. The holdout is left out."), "The judge gets" ("Its own read-only credential that also covers the holdout, kept on the judge platform."), "Lifetime" ("Short-lived, minted per session.") |
 | Datasets table | "Dataset", "Version", "Marking", "Agents", "Judge"; "Can read", "No access"; holdout row "Restricted to the judge", no control; "A dataset version never changes after it is created." |
-| Add connector | "Agent credential", "Judge credential", "What each one gets"; "Create it in Snowflake first: a read-only role on the views you list, holdout tables not granted."; "A separate read-only role that also covers the holdout."; "Goes to each agent platform's credential store." |
 | Connector error | "Can't read the credential for orders-db."; "2 experiments cannot measure until then:"; "Not checked" |
-| Agents | "Agent scoreboard"; "Default agent"; filters "Evaluation kind", "Project", "Range"; columns "Agent", "Experiments", "Trials", "Kept", "Wins delivered", "Cost per win", "Median time to a win", "Delivered", "Auto"; "about $2.90 per trial here"; "Measured by the judge on your code. Not a vendor benchmark."; "Platform accounts are in Settings" |
-| Agent page | "Platform and model", "Parallel limit", "Cost tier", "Turned on for Auto", "What the agent holds" ("Git", "Connectors", "Model key"), "Recent trials", "Remove agent" |
+| Agents | "Agent scoreboard"; "Default agent"; filters "Evaluation kind", "Project", "Range"; columns "Agent", "Experiments", "Trials", "Kept", "Wins delivered", "Cost per win", "Median time to a win", "Delivered", "Auto"; "about $2.90 per trial here"; "Measured by the judge on your code. Not a vendor benchmark." |
+| Agent page | "Model", "Parallel limit", "Cost tier", "Turned on for Auto", "What the agent holds" ("Git", "Connectors", "Model key"), "Recent trials", "Remove agent" |
 
 ## Global search
 

@@ -1,7 +1,5 @@
 # Judge: objects and words
 
-> v0: the test runs inside the session's own machine and the judge takes the number from the sealed test command, not from the agent's report; there is no separate judge sandbox. Where this page says "judge sandbox", read [docs/V0.md](../../../docs/V0.md).
-
 Where [the glossary](../../../docs/GLOSSARY.md) defines a word, this file keeps its meaning. All of this is target. The session is the other object ([../session/model.md](../session/model.md)).
 
 | Object | Means | Not |
@@ -19,13 +17,13 @@ Where [the glossary](../../../docs/GLOSSARY.md) defines a word, this file keeps 
 | protected path | A file or glob in the evaluation. It names its repo | a file path alone |
 | guardrail | A measured quantity that must not get worse while the metric improves | budget |
 | data | The evaluation data an agent sees values for, and the holdout it never sees, named by dataset id and version (datasets: [../session/model.md](../session/model.md)) | a connector, a credential |
-| holdout | Data only the judge sandbox may read, enforced by credentials. Shown as "Restricted to the judge" | a validation split an agent can see |
+| holdout | Data only the judge may read. Shown as "Restricted to the judge" | a validation split an agent can see |
 | seal | A hash over the definition and its protected files at pinned commits, made when a person approves an experiment that passed the seal checks | a signature on a win |
 | seal checks | The baseline measurement, the noise check (the same commit paired with itself) and the cheat checks | review |
 | trial | One `measure` call: a set of commits (one per repo changed), the trial it started from, and a one-line hypothesis | a session, a win |
 | measurement | The judge's signed result for one trial under one experiment version | an agent's own number |
 | outcome | One of: Measuring, Kept, Within noise, Worse, Guardrail failed, Failed holdout, Rejected (changed a protected path), Failed (did not run) | verdict, opinion |
-| Kept | A trial that beat the trial it started from by more than the bar, held every guardrail and was confirmed in a fresh judge sandbox and on the holdout | accepted, a win |
+| Kept | A trial that beat the trial it started from by more than the bar, held every guardrail and was confirmed on a fresh checkout and on the holdout | accepted, a win |
 | bar | What a trial's paired gain must clear: the one-sided lower confidence bound of the mean paired difference above zero, at confidence 1 − 0.05/k for the k-th trial measured in the experiment version | a fixed threshold |
 | best | The experiment's best Kept trial | any trial that looked good |
 | win | An experiment's best Kept trial, ready to deliver or delivered | a Kept trial that is not the best |
@@ -63,6 +61,6 @@ Derived from measurements, win events and spend records, never stored on their o
 
 ## How this area refers to the others
 
-- Session: by session id and commit ids. The judge never names a platform's agent ids, regions or instance ids.
+- Session: by session id and commit ids. The judge never names a host or machine id.
 - Data: by dataset id and version only. An experiment never names a connector or a credential.
 - Organization: by organization id, project id and member id for approvals and audit rows.

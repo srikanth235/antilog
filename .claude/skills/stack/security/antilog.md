@@ -5,9 +5,9 @@
 **This page wins over `general/`.** The skills are written for audits of any project. Antilog's bar is its own trust rules, in [../../product/promises.md](../../product/promises.md), [../../session/rules.md](../../session/rules.md), [../../judge/rules.md](../../judge/rules.md) and [../../organization/rules.md](../../organization/rules.md):
 
 - The server never connects to data.
-- The holdout credential goes only to the judge sandbox.
-- Credentials reach a session only through the platform's credential store. No model key enters a sandbox.
-- Every session and sandbox is ended and deleted when its run ends.
+- The holdout credential goes only to the judge.
+- A model key never enters a session machine; the proxy swaps the session's token for the key. A service key may sit in an environment variable, and the screen says so.
+- Every session's machine is released and its disk dropped when its run ends.
 
 A review checks a change against those first, then against the skill's checklist. A finding that breaks one of them is blocking.
 
@@ -15,7 +15,7 @@ A review checks a change against those first, then against the skill's checklist
 
 | Skill | Use it | Notes |
 | --- | --- | --- |
-| [rust-review](general/trailofbits/rust-review/SKILL.md) | Before landing a large Rust change, and on a schedule, for the server (`antilog-core`, `antilog-server`) and the platform adapters | Most useful where input is untrusted: the API, the platform adapters' parsing of session events, the `measure` tool intake. `unsafe` is rare here; see [../rust/antilog.md](../rust/antilog.md) |
+| [rust-review](general/trailofbits/rust-review/SKILL.md) | Before landing a large Rust change, and on a schedule, for the server (`antilog-core`, `antilog-server`) and the runner | Most useful where input is untrusted: the API, the runner's parsing of session events, the `measure` tool intake. `unsafe` is rare here; see [../rust/antilog.md](../rust/antilog.md) |
 | [supply-chain-risk-auditor](general/trailofbits/supply-chain-risk-auditor/SKILL.md) | When a dependency is added or raised, with [../libraries.md](../libraries.md) | Alongside `cargo deny check`, not instead of it. A new dependency is still a product call |
 | [sharp-edges](general/trailofbits/sharp-edges/SKILL.md) | When designing an API or a config: access tokens and their scopes, roles, the holdout marking, connector settings, defaults | Ask whether the safe use is the easy use and whether a wrong value fails loudly |
 | [property-based-testing](general/trailofbits/property-based-testing/SKILL.md) | When writing tests for the acceptance criteria, the noise floor, budget arithmetic, the judge's queue transitions, and the export and import file round trip | Use `proptest` (Rust). The web app has no property-test library in [../libraries.md](../libraries.md), so none for TypeScript. Test layout is in [../../land/tests.md](../../land/tests.md) |

@@ -6,8 +6,6 @@ description: >-
 
 # Session
 
-> v0 replaces agent platforms, the stepping relay and the judge sandbox with a runner and one machine per session: see [docs/V0.md](../../../docs/V0.md).
-
 A session is one agent's work inside an experiment: a chat with one agent in one machine, with any number of repos attached. It belongs to an experiment, which belongs to a project, and is named on screen by its agent ("Claude Code session"). The agent drives the work. The server keeps a ledger of the session and runs the judge, and runs no loop. A runner polls the server's queue and runs the agent's harness in one machine per session ([docs/V0.md](../../../docs/V0.md)); how it works is in [runner.md](runner.md). The judge, and what counts as a win, is in [../judge/SKILL.md](../judge/SKILL.md).
 
 | If you are doing | Read |

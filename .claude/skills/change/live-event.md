@@ -17,5 +17,5 @@ Events tell a client that something changed so it can refetch. An event is not t
 1. Add a variant to `LiveEvent` in `crates/antilog-types/src/live.rs` (give a variant with fields `#[serde(rename_all = "camelCase")]`, which utoipa needs) and make `crates/antilog-server/src/api/live.rs` produce it, scoped like the others. (target: publish it from the action layer, never from a handler.)
 2. Regenerate the document and the TypeScript client by [api-endpoint.md](api-endpoint.md). The event union is part of the document and is snapshotted.
 3. Tell the web app and the Mac app which screens refetch on it; the boards say which state changes (see [screen.md](screen.md)).
-4. Tests, in `antilog-server/tests/api.rs` (`mod live`) and `web/e2e/live.spec.ts`: the stream replays after a gap, sends `resync` when it cannot, ends at its age limit, and another organization's events never arrive. (target: after a stream ends at the cap on Lambda, and publishing after commit only.)
+4. Tests, in `antilog-server/tests/api.rs` (`mod live`) and `web/e2e/live.spec.ts`: the stream replays after a gap, sends `resync` when it cannot, ends at its age limit, and another organization's events never arrive.
 

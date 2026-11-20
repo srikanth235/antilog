@@ -1,6 +1,6 @@
 # Tests
 
-None of this exists yet; it is how tests are written once code lands (target).
+How tests are written here.
 
 ## Approach (target)
 

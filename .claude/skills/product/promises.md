@@ -1,6 +1,6 @@
 # The promises
 
-What every area owes the customer, and the one rule each follows. A promise kept in some places and broken in others is a broken promise. Each area's `owes.md` states its promises in full and its `rules.md` holds the never-bend rules; this page is the index. All of it is target.
+What every area owes the customer, and the one rule each follows. A promise kept in some places and broken in others is a broken promise. Each area's `owes.md` states its promises in full and its `rules.md` holds the never-bend rules; this page is the index.
 
 | Area | Promise | The rule |
 | --- | --- | --- |
@@ -14,7 +14,7 @@ What every area owes the customer, and the one rule each follows. A promise kept
 | Session | **Least access** | Credentials reach a session only through the server, never a prompt, a repo file or Antilog's database. An agent gets read-only connector credentials that leave out the holdout, and a short-lived git token that pushes only to its own branch. |
 | Session | **Spend** | No spend without a budget, one per experiment across all its sessions, inside its project's cap and the organization's. A person can change it at any time. When it is spent the judge refuses `measure` and the sessions wait for a person. |
 | Session | **Spend well** | Cost per trial is shown, a measurement is estimated before it is bought, a quick check precedes the full one, and the experiment pauses when trials stop paying. No agent is favoured: Auto says why it chose. |
-| Session | **Clean up** | A session's machine is paused when idle and reaped when stopped or past its maximum lifetime, and the conversation outlives it (target). |
+| Session | **Clean up** | A session's machine is released when idle or stopped, or past its maximum lifetime, and the conversation outlives it. |
 | Organization | **Permission** | Every read and write is role-checked at project scope, with the organization role as the default, and roles decide who may approve which card. |
 | Organization | **Approval** | A tool call that matters asks a person unless policy pre-approved it. Add credential can never be pre-approved, and a value model is approved by a project owner. |
 | Organization | **Audit** | Every tool call that changed something, and every approval, is logged: who, what, when, the outcome. |

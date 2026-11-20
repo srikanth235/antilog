@@ -8,7 +8,7 @@ description: >-
 
 A change crosses layers that must agree: Rust types, the generated OpenAPI document, the generated TypeScript client, the Antilog tools (served to a session and by `antilog mcp`), the CLI, the action layer, the store (Postgres), the boards, the tests and the docs. Checks fail until they do. Find the row, follow it, then prove it with [land](../land/SKILL.md).
 
-The pages describe the target: `antilog-core`, the server `antilog-server`, and `antilog` (the CLI and MCP). Nothing of it is built on this branch, so each path and command that does not exist yet is marked (target).
+The pages cover `antilog-core`, the server `antilog-server`, the proxy `antilog-proxy` and `antilog` (the CLI, MCP and runner). A path or command that does not exist yet is marked (target).
 
 | If you are doing | Read |
 | --- | --- |

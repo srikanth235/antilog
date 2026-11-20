@@ -6,7 +6,7 @@
 
 ## Our server
 
-`antilog mcp` (built: `crates/antilog/src/mcp.rs`; `watch` is not served yet, and sign-in is target) is a mode of the `antilog` CLI that serves the Antilog tools on stdio, built with `rmcp` (version in [../libraries.md](../libraries.md)). The tools are `seal`, `measure`, `history`, `spawn`, `deliver`, `watch` and the setup tools `attach_repo`, `request_credential`, `set_environment` and `request_budget`. They are the same tools every session gets, so an agent a person already uses on their own machine (Claude Code, Codex) can propose a change that only the judge measures. It is Rust, on the API's own types. How a client signs in and how it is registered is in [../../antilog/SKILL.md](../../antilog/SKILL.md). The tools are described in [../../session/tools.md](../../session/tools.md) and [../../judge/tools.md](../../judge/tools.md), and a new or changed tool follows [../../change/tool.md](../../change/tool.md).
+`antilog mcp` (built: `crates/antilog/src/mcp.rs`; `watch` is not served yet) is a mode of the `antilog` CLI that serves the Antilog tools on stdio, built with `rmcp` (version in [../libraries.md](../libraries.md)). The tools are `seal`, `measure`, `history`, `deliver`, `watch` and the setup tools `attach_repo`, `request_credential`, `set_environment` and `request_budget`. They are the same tools every session gets, so an agent a person already uses on their own machine (Claude Code, Codex) can propose a change that only the judge measures. It is Rust, on the API's own types. How a client signs in and how it is registered is in [../../antilog/SKILL.md](../../antilog/SKILL.md). The tools are described in [../../session/tools.md](../../session/tools.md) and [../../judge/tools.md](../../judge/tools.md), and a new or changed tool follows [../../change/tool.md](../../change/tool.md).
 
 Read the skill for **design**, not code: how to name tools, write descriptions a model can choose between, shape inputs and outputs, paginate, return errors that say what to do next, and write an evaluation of realistic questions. Skip its TypeScript and Python server guides and its scripts.
 
@@ -18,7 +18,7 @@ Read the skill for **design**, not code: how to name tools, write descriptions a
 - **A tool does a whole job.** An agent calls it from its name and description alone, so a tool takes intent (`measure` this commit) and does the steps inside: no tool the agent must call in a set order, no ids it must look up first, no cleanup it must remember. See "Every language" in [../SKILL.md](../SKILL.md).
 - **Every error says how to recover.** A refusal names the next action and the tool for it: "not sealed: call seal first", "budget exhausted: call request_budget", "trial not Kept: deliver needs a Kept trial". An error an agent cannot act on makes it guess.
 - **Output is bounded.** Every list (history, trials, sessions) is capped and paginated with a cursor, and long text is truncated with a note on how to get more. A large result fills the agent's context and makes it worse at the task.
-- **Secrets never appear in a tool result.** Not a token, a connector secret or a platform credential.
+- **Secrets never appear in a tool result.** Not a token, a connector secret or a model key.
 - **Evaluate it.** Write the skill's evaluation questions against a test server and keep them with the CLI's tests ([../../land/tests.md](../../land/tests.md)).
 
 ## Connecting to other MCP servers

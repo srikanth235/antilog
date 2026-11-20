@@ -8,7 +8,7 @@ description: >-
 
 Prove the change at the layer it lives in, report what ran and what did not.
 
-The real checks on this branch are the Rust checks and `python3 design/tools/tokens.py --check`, run by CI. The pages describe the target checks, with each command that does not exist yet marked (target).
+The checks are in [AGENTS.md](../../../AGENTS.md), run by CI; a command that does not exist yet is marked (target).
 
 | If you are doing | Read |
 | --- | --- |

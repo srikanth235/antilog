@@ -2,7 +2,7 @@
 
 Antilog is a chat and a judge. A person states a goal and talks to a coding agent in a session; every session gets the judge's tools. An agent asks the judge to measure a change, only the judge's numbers count, and only a measured win becomes a pull request. A **project** groups **experiments**; an experiment holds **sessions** and the judge's **measurements**. The organization floor holds members, roles, sign-in, approvals, budgets and the audit log.
 
-`docs/V0.md` is the owner's design for v0 (a runner that polls a queue, one machine per session, OpenCode, one proxy). It wins over any skill, ruling or board until the skills are rewritten to match it. Delete code that a decision there makes irrelevant in the same change that replaces it.
+`docs/V0.md` is the owner's design for v0 (a runner that polls a queue, one machine per session, OpenCode, one proxy). The skills follow it; where a board still disagrees, the page wins. Delete code that a decision there makes irrelevant in the same change that replaces it.
 
 The runner and the proxy (`crates/antilog-proxy`) are built; the real code host is not. A path or command that does not exist yet is marked "(target)".
 

@@ -17,7 +17,7 @@ A doc-only change has no command: read the links and fix every statement the cha
 
 One gate command with profiles (local, pull request, nightly, release) is the target, `cargo xtask gate --profile <name>`. The design check moves into it as `cargo xtask design` (see [design mockups](../design/mockups.md)). Until the gate exists, run the commands for the layer. The language rules and exact flags are in the stack skill for each layer.
 
-| Layer | Run (all target) | Stack |
+| Layer | Run | Stack |
 | --- | --- | --- |
 | Rust (`antilog-core`, `antilog-server`, `antilog-proxy`, `antilog`) | `cargo fmt --all --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo nextest run --workspace` (`cargo test --doc` for doctests), `cargo deny check` (all four exist; CI job `rust`) | [stack/rust/antilog.md](../stack/rust/antilog.md) |
 | An API type, route or event | the Rust checks, `cargo run -q -p antilog-server -- openapi | diff - openapi/antilog.json`, then `pnpm generate:api` in `web/` leaves no diff (CI jobs `rust` and `web-client`); see [change/api-endpoint.md](../change/api-endpoint.md) | [stack/rust/antilog.md](../stack/rust/antilog.md) |

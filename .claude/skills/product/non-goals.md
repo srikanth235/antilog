@@ -14,7 +14,7 @@ These are decided. Do not build them, propose them in passing, or leave a hook "
 - **A wrapped desktop app for Windows and Linux.** The native app is macOS only; Windows and Linux use the web app, installed as a progressive web app.
 - **A second design language.** One look, Midnight Brass, in every client and in the docs.
 - **Transforms or data pipelines inside Antilog.** Connectors say what an agent's code may read; Antilog does not reshape data. Customers already own their pipelines.
-- **Agents holding write, cloud, model or holdout credentials.** Agents get only read-only connector credentials that exclude the holdout, and a short-lived git token that may push only to the session's own branch, through the server (see `docs/V0.md`). Credentials are typed into a secure form, never the chat, and the agent never sees them.
+- **Agents holding write, cloud, model or holdout credentials.** Agents get a short-lived git token that may push only to the session's own branch, through the server (see `docs/V0.md`). Credentials are typed into a secure form, never the chat; a model key never enters a session machine.
 - **Antilog holding access to the customer's cloud.** No cross-account role and no stored cloud keys. Antilog holds only the customer's model keys, saved per organization per provider.
 - **Antilog storing or brokering customer data.** The server never connects to data and stores none. It never stores tool output, file contents or diffs. There is no plane that pulls or proxies data.
 - **Letting chat change what counts.** Chat can change what an agent tries. It can never change a sealed experiment, the protected files, the holdout or the acceptance criteria.
@@ -24,3 +24,6 @@ These are decided. Do not build them, propose them in passing, or leave a hook "
 - **Vendor benchmark claims.** Antilog shows what the judge measured on the customer's code ("Measured by the judge on your code. Not a vendor benchmark."). It never ranks or promotes an agent or provider from outside figures, and the word is "agent scoreboard", never "leaderboard".
 - **A value model set by an agent.** An agent may suggest one in prose. Only a project owner sets or approves it, and it is sealed with the experiment.
 - **An agent chosen by brand.** No agent is preselected anywhere. Auto chooses by measured cost per win among the agents an organization turned on, and says why.
+- **Sessions directing sessions.** No nested sessions, no `spawn` tool: a person starts sessions ([docs/V0.md](../../../docs/V0.md), Not in v0).
+- **An infrastructure tool in the product.** No OpenTofu, Terraform or sealed templates; an agent writes and runs infrastructure code itself in its machine ([docs/V0.md](../../../docs/V0.md)).
+- **Paying for the customer's model calls.** Customers bring their model keys; the proxy meters the spend.

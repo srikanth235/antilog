@@ -41,8 +41,6 @@ Do not add a dependency for convenience. A new one is a product call: ask the ow
 | Webhook signature (HMAC-SHA256, `X-Hub-Signature-256`) checked with `verify_slice`, which compares in constant time; chosen over a hand-written HMAC, and already in the lockfile | `hmac` | 0.13.0 (matches `sha2` 0.11) |
 | Receipt signing (ed25519), token and session hashes, constant-time compare (pure Rust) | `ed25519-dalek` / `sha2` / `subtle` | 3.0.0 / 0.11.1 / 2.6.1 |
 | Embedded web app | `rust-embed` | 8.14.0 |
-| AWS credentials (workload identity through the default chain) | `aws-config` | 1.13.2 |
-| Foundry adapter sign-in (its REST API through `reqwest`; Azure has no Rust agents crate) | `azure_core` | 1.1.0 |
 | GitHub | `octocrab` | 0.54.9 |
 | Postgres connector (not needed by the target unless credential minting is ruled; the server never connects to data) | `tokio-postgres` | 0.7.18 |
 | Egress proxy, TLS interception (not needed by the target: no egress proxy) | `hudsucker` / `rcgen` | 0.25.0 / 0.14.10 |
@@ -57,13 +55,11 @@ Do not add a dependency for convenience. A new one is a product call: ask the ow
 | Postgres in tests (`GenericImage`; `testcontainers-modules` 0.15.0 needs `testcontainers` 0.27, so it is dropped) | `testcontainers` | 0.28.0 |
 | Test runner, licences | `cargo-nextest` / `cargo-deny` | 0.9.152 / 0.20.2 |
 
-The three AWS SDK crates are used with `default-features = false` and `default-https-client`, `rt-tokio`: their default `rustls` feature is the legacy client (rustls 0.21 and h2 0.3) and fails `cargo deny`.
-
 Sessions and access tokens need no library: each is 32 random bytes shown once, stored as a SHA-256 hash through the `Store` and compared in constant time. `tower-sessions` was dropped (November 2026): the hashed-token scheme is small and keeps sessions in our own tables. Better Auth was considered and refused: it is TypeScript and keeps its own user, session and organization tables beside ours.
 
-Snowflake, Databricks and BigQuery have no maintained Rust client we would ship; their connectors call each vendor's REST API through `reqwest`. Every connector sits behind one `Connector` trait, so its vocabulary stops there, and each says how to make a read-only, holdout-excluding credential for its system (whether Antilog mints them per session is open). Agent platforms sit behind one agent trait, one adapter each; the judge is a separate trait. Platform crates stay inside each adapter.
+Snowflake, Databricks and BigQuery have no maintained Rust client we would ship; their connectors call each vendor's REST API through `reqwest`. Every connector sits behind one `Connector` trait, so its vocabulary stops there, and each says how to make a read-only, holdout-excluding credential for its system (whether Antilog mints them per session is open).
 
-Cloud SDKs stay inside their adapter crate. The server reads secrets from mounted files or the environment, so it needs no secrets-manager SDK on any cloud.
+The server reads secrets from mounted files or the environment, so it needs no cloud SDK.
 
 Background jobs use a small queue in the store: Postgres with `FOR UPDATE SKIP LOCKED`. No Redis, no message bus, no cloud queue.
 
@@ -105,4 +101,4 @@ A proposal, not yet built. The app is SwiftUI and macOS only; Windows and Linux 
 | cosign | 3.1.4 |
 | syft | 1.57.1 |
 
-Rules for any addition: self-hosting must keep working (no call to a service the administrator did not configure), the licence must suit a product we ship, and the crate must be maintained. A new outside system also needs a trait with a real and a mock implementation (an agent platform has the fake platform); see [rust.md](rust/antilog.md).
+Rules for any addition: self-hosting must keep working (no call to a service the administrator did not configure), the licence must suit a product we ship, and the crate must be maintained. A new outside system also needs a trait with a real and a mock implementation; see [rust.md](rust/antilog.md).
