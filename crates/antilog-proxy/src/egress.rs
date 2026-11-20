@@ -2,11 +2,14 @@
 //! its traffic here with its token as the proxy password. The tunnel is opaque bytes; nothing is
 //! decrypted. A host that is not allowed is refused and logged.
 
-use std::future::Future;
+use std::collections::HashMap;
 use std::net::IpAddr;
+use std::sync::{Mutex, PoisonError};
+use std::time::{Duration, Instant};
 
 use antilog_core::credentials::Purpose;
-use antilog_types::SessionId;
+use antilog_core::environments;
+use antilog_types::{EnvironmentSpec, NetworkLevel, SessionId};
 use axum::body::Body;
 use axum::http::{HeaderMap, Request, Response, StatusCode, header};
 use hyper::body::Incoming;
@@ -71,17 +74,84 @@ impl NetworkAccess {
     }
 }
 
-/// What a session's environment lets it reach. Environments are not stored yet, so v0 gives every
-/// session one answer (`StaticEnvironment`); the real one reads the session's environment.
-pub trait Environments: Send + Sync {
-    fn network(&self, session: SessionId) -> impl Future<Output = NetworkAccess> + Send;
+impl NetworkAccess {
+    /// What an environment version lets its sessions reach.
+    pub fn of(environment: &EnvironmentSpec) -> Self {
+        match environment.network {
+            NetworkLevel::None => Self::None,
+            NetworkLevel::Limited => Self::Limited {
+                hosts: environment.allowed_hosts.clone(),
+                package_registries: environment.allow_package_managers,
+            },
+            NetworkLevel::Full => Self::Full,
+        }
+    }
 }
 
-pub struct StaticEnvironment(pub NetworkAccess);
+/// What each session's environment lets it reach. The answer is the environment version the
+/// session's machine was started on, read from the store and kept for a short while: a
+/// session's version never changes, so a kept answer is only ever as old as the cache.
+pub struct SessionNetworks {
+    ttl: Duration,
+    kept: Mutex<HashMap<SessionId, (Instant, NetworkAccess)>>,
+}
 
-impl Environments for StaticEnvironment {
-    async fn network(&self, _session: SessionId) -> NetworkAccess {
-        self.0.clone()
+impl SessionNetworks {
+    /// The longest an answer is kept.
+    pub const MAX_TTL: Duration = Duration::from_secs(60);
+
+    pub fn new(ttl: Duration) -> Self {
+        Self {
+            ttl: ttl.min(Self::MAX_TTL),
+            kept: Mutex::new(HashMap::new()),
+        }
+    }
+
+    /// The session's network. A session with no machine, an environment version that is gone or
+    /// a store that does not answer gets `None`: it fails closed, and the failure is not kept.
+    pub async fn network<S: Backend>(&self, store: &S, session: SessionId) -> NetworkAccess {
+        if let Some((at, access)) = self
+            .kept
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .get(&session)
+            && at.elapsed() < self.ttl
+        {
+            return access.clone();
+        }
+        let found = match store.machine(session).await {
+            Ok(Some(machine)) => {
+                environments::of_seed(store, machine.organization, &machine.seed).await
+            }
+            Ok(None) => Ok(None),
+            Err(error) => Err(error),
+        };
+        match found {
+            Ok(Some(spec)) => {
+                let access = NetworkAccess::of(&spec);
+                let mut kept = self.kept.lock().unwrap_or_else(PoisonError::into_inner);
+                if kept.len() >= 4096 {
+                    let ttl = self.ttl;
+                    kept.retain(|_, (at, _)| at.elapsed() < ttl);
+                }
+                kept.insert(session, (Instant::now(), access.clone()));
+                access
+            }
+            Ok(None) => {
+                tracing::warn!(%session, "egress: the session has no environment to take a network from");
+                NetworkAccess::None
+            }
+            Err(error) => {
+                tracing::error!(%error, "egress: the environment could not be read");
+                NetworkAccess::None
+            }
+        }
+    }
+}
+
+impl Default for SessionNetworks {
+    fn default() -> Self {
+        Self::new(Self::MAX_TTL)
     }
 }
 
@@ -166,15 +236,11 @@ fn presented(headers: &HeaderMap) -> Option<String> {
 
 /// Answers a CONNECT: checks the token, the allowlist and where the name leads, then splices the
 /// two connections together until either side closes.
-pub async fn connect<S, C, K, E>(
-    proxy: Shared<S, C, K, E>,
-    request: Request<Incoming>,
-) -> Response<Body>
+pub async fn connect<S, C, K>(proxy: Shared<S, C, K>, request: Request<Incoming>) -> Response<Body>
 where
     S: Backend,
     C: Tokens,
     K: Time,
-    E: Environments + 'static,
 {
     let Some(authority) = request.uri().authority().cloned() else {
         return reply(StatusCode::BAD_REQUEST);
@@ -196,7 +262,12 @@ where
             return reply(StatusCode::SERVICE_UNAVAILABLE);
         }
     };
-    if !proxy.environments.network(session).await.allows(&host) {
+    if !proxy
+        .networks
+        .network(&proxy.store, session)
+        .await
+        .allows(&host)
+    {
         tracing::warn!(%session, %host, port, "egress refused: not on the allowlist");
         return reply(StatusCode::FORBIDDEN);
     }
@@ -261,6 +332,29 @@ mod tests {
         assert!(limited(true).allows("registry.npmjs.org"));
         assert!(!NetworkAccess::None.allows("api.stripe.com"));
         assert!(NetworkAccess::Full.allows("anything.example"));
+    }
+
+    #[test]
+    fn an_environment_gives_its_level_and_a_kept_answer_is_never_older_than_a_minute() {
+        let mut spec = EnvironmentSpec {
+            allowed_hosts: vec!["api.stripe.com".into()],
+            ..EnvironmentSpec::default()
+        };
+        assert_eq!(
+            NetworkAccess::of(&spec),
+            NetworkAccess::Limited {
+                hosts: vec!["api.stripe.com".into()],
+                package_registries: true,
+            }
+        );
+        spec.network = NetworkLevel::None;
+        assert_eq!(NetworkAccess::of(&spec), NetworkAccess::None);
+        spec.network = NetworkLevel::Full;
+        assert_eq!(NetworkAccess::of(&spec), NetworkAccess::Full);
+        assert_eq!(
+            SessionNetworks::new(Duration::from_secs(3600)).ttl,
+            SessionNetworks::MAX_TTL
+        );
     }
 
     #[test]

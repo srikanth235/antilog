@@ -25,7 +25,7 @@ use tokio_stream::wrappers::ReceiverStream;
 
 use crate::price;
 use crate::usage::{EventWatcher, Usage};
-use crate::{Backend, Environments, Proxy, Shared, Time, Tokens as TokenStore};
+use crate::{Backend, Proxy, Shared, Time, Tokens as TokenStore};
 
 /// The largest request a session may send through: a long conversation with files in it.
 const MAX_REQUEST: usize = 64 << 20;
@@ -128,8 +128,8 @@ struct Call {
     scope: GatewayScope,
 }
 
-async fn handle<S, C, K, E>(
-    proxy: Shared<S, C, K, E>,
+async fn handle<S, C, K>(
+    proxy: Shared<S, C, K>,
     provider: ModelProvider,
     request: Request,
 ) -> Response
@@ -137,7 +137,6 @@ where
     S: Backend,
     C: TokenStore,
     K: Time,
-    E: Environments + 'static,
 {
     let (parts, body) = request.into_parts();
 
@@ -376,8 +375,8 @@ enum Outcome {
 }
 
 /// Relays a stream chunk by chunk, watching it for usage, and books when it ends, however it ends.
-async fn pump<S, C, K, E>(
-    proxy: Shared<S, C, K, E>,
+async fn pump<S, C, K>(
+    proxy: Shared<S, C, K>,
     call: Call,
     mut upstream: reqwest::Response,
     tx: mpsc::Sender<Result<Bytes, io::Error>>,
@@ -385,7 +384,6 @@ async fn pump<S, C, K, E>(
     S: Backend,
     C: TokenStore,
     K: Time,
-    E: Environments + 'static,
 {
     let mut usage = Usage::default();
     let mut watcher = EventWatcher::default();
@@ -413,12 +411,11 @@ async fn pump<S, C, K, E>(
 
 /// One spend row from what a reply reported. Whole cents, rounded up. A model the table does not
 /// know is booked at the highest price it has, and that is logged.
-async fn book<S, C, K, E>(proxy: &Proxy<S, C, K, E>, call: &Call, usage: &Usage, outcome: Outcome)
+async fn book<S, C, K>(proxy: &Proxy<S, C, K>, call: &Call, usage: &Usage, outcome: Outcome)
 where
     S: Backend,
     C: TokenStore,
     K: Time,
-    E: Environments + 'static,
 {
     let session = call.session;
     let provider = call.provider.as_str();
@@ -454,29 +451,28 @@ where
 }
 
 /// The gateway's routes: one per provider, and a health check.
-pub fn router<S, C, K, E>(proxy: Shared<S, C, K, E>) -> Router
+pub fn router<S, C, K>(proxy: Shared<S, C, K>) -> Router
 where
     S: Backend,
     C: TokenStore,
     K: Time,
-    E: Environments + 'static,
 {
-    async fn anthropic<S: Backend, C: TokenStore, K: Time, E: Environments + 'static>(
-        State(proxy): State<Shared<S, C, K, E>>,
+    async fn anthropic<S: Backend, C: TokenStore, K: Time>(
+        State(proxy): State<Shared<S, C, K>>,
         request: Request,
     ) -> Response {
         handle(proxy, ModelProvider::Anthropic, request).await
     }
-    async fn openai<S: Backend, C: TokenStore, K: Time, E: Environments + 'static>(
-        State(proxy): State<Shared<S, C, K, E>>,
+    async fn openai<S: Backend, C: TokenStore, K: Time>(
+        State(proxy): State<Shared<S, C, K>>,
         request: Request,
     ) -> Response {
         handle(proxy, ModelProvider::Openai, request).await
     }
     Router::new()
         .route("/health", axum::routing::get(|| async { "ok" }))
-        .route("/anthropic/v1/{*rest}", any(anthropic::<S, C, K, E>))
-        .route("/openai/v1/{*rest}", any(openai::<S, C, K, E>))
+        .route("/anthropic/v1/{*rest}", any(anthropic::<S, C, K>))
+        .route("/openai/v1/{*rest}", any(openai::<S, C, K>))
         .with_state(proxy)
 }
 

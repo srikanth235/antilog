@@ -10,18 +10,14 @@ use hyper_util::rt::TokioIo;
 use tokio::net::TcpListener;
 use tower::ServiceExt;
 
-use crate::{Backend, Environments, Shared, Time, Tokens, egress, gateway};
+use crate::{Backend, Shared, Time, Tokens, egress, gateway};
 
 /// Serves until the listener fails. Each connection is its own task.
-pub async fn serve<S, C, K, E>(
-    listener: TcpListener,
-    proxy: Shared<S, C, K, E>,
-) -> std::io::Result<()>
+pub async fn serve<S, C, K>(listener: TcpListener, proxy: Shared<S, C, K>) -> std::io::Result<()>
 where
     S: Backend,
     C: Tokens,
     K: Time,
-    E: Environments + 'static,
 {
     let router = gateway::router(proxy.clone());
     loop {
