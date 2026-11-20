@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into experiment_connectors (organization_id, experiment_id, connector_id) values ($1, $2, $3)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "dab105c0411e2aa0df72f74756c349d69107449e577a7cdc2326bfbc6502ad86"
+}

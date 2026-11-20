@@ -23,7 +23,7 @@ The pages describe the target: `antilog-core`, the server `antilog-server`, and 
 | The acceptance criteria | [judge/change-acceptance.md](../judge/change-acceptance.md) |
 | A connector | [session/add-connector.md](../session/add-connector.md) |
 | A skill pack | [session/add-skill-pack.md](../session/add-skill-pack.md) |
-| A plugin, or a new kind of thing a plugin may bring | [session/add-skill-pack.md](../session/add-skill-pack.md) (a plugin has no powers of its own), then [screen.md](screen.md) for its Customize tab and detail page |
+| A plugin, or a new kind of thing a plugin may bring | [session/add-skill-pack.md](../session/add-skill-pack.md) (a plugin has no powers of its own; `antilog-core/src/customize/plugins.rs`), then [screen.md](screen.md) for its Customize tab and detail page |
 | A project, or a role in a project | [organization/add-role.md](../organization/add-role.md), then [organization/add-audited-action.md](../organization/add-audited-action.md) |
 | An agent | [session/add-agent.md](../session/add-agent.md) |
 | An environment | [session/add-environment.md](../session/add-environment.md) |

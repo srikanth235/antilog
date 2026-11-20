@@ -398,6 +398,16 @@ pub(crate) async fn issue_receipt<D: Deps>(
         }],
         _ => Vec::new(),
     };
+    let skill_packs =
+        crate::store::CustomizeStore::experiment_skills(deps.store(), org, caller.experiment)
+            .await
+            .unwrap_or_default()
+            .into_iter()
+            .map(|skill| antilog_types::judge::SkillPackRef {
+                id: skill.name,
+                version: skill.version,
+            })
+            .collect();
     let data = &sealed.definition().data;
     let context = Context {
         value_model,
@@ -406,7 +416,7 @@ pub(crate) async fn issue_receipt<D: Deps>(
         cost_of_win: spend,
         data: DataSection {
             datasets: vec![data.evaluation.clone(), data.holdout.clone()],
-            skill_packs: Vec::new(),
+            skill_packs,
             commits: record.trial.commits.clone(),
             credential_scopes: Vec::new(),
         },

@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into project_skills_off (organization_id, project_id, name) values ($1, $2, $3) on conflict do nothing",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5a076da9210b6b67b9fbdd73ab046e1a51177c69eec14976f3264926183a0282"
+}

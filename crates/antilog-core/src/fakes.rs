@@ -8,13 +8,16 @@ mod approval;
 mod budget;
 mod card;
 mod code_host;
+mod connectors;
 mod credentials;
+mod customize;
 pub(crate) mod ledger;
 mod machine;
 mod organization;
 mod session;
 mod world;
 
+pub use connectors::{Call, FakeConnectors};
 pub use credentials::FakeCredentials;
 pub use machine::{FakeMachine, Profile};
 pub use world::{FakeCodeHost, FakeDeps};
@@ -72,6 +75,7 @@ pub struct FakeStore {
     ledger: std::sync::Arc<Mutex<ledger::Ledger>>,
     cards: Mutex<card_state::Cards>,
     code_host: Mutex<code_host::State>,
+    customize: Mutex<customize::State>,
 }
 
 impl FakeStore {

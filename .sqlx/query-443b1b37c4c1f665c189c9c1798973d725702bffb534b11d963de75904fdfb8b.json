@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from connectors where organization_id = $1 and plugin_id = $2 and slug = $3",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "443b1b37c4c1f665c189c9c1798973d725702bffb534b11d963de75904fdfb8b"
+}

@@ -62,6 +62,7 @@ Built: `antilog-core/src/credentials.rs`, with `FakeCredentials` in `fakes/crede
 
 - `/mcp/sessions/{id}`: streamable HTTP with a bearer token for `Purpose::Mcp`. It serves the judge's tools and the switched-on connectors' tools. Each tool is on, off or ask first.
 - Skills are downloaded per version from `GET /runner/sessions/{id}/skills/{name}/{version}`. A ships the route, C supplies the content. The runner unpacks them into `/opt/antilog/skills/<name>/`.
+- Built (C): the endpoint is `antilog_server::api::mcp`, mounted with `api::router_with_reach(app, credentials, Backend)`, which also mounts the Customize routes. The skills handler is `antilog_server::api::customize::session_skill(deps, session, name, version)`: it answers only for a version the session's experiment selected, with `SkillVersion { files: [{path, content}] }` (JSON text files; no zip in v0), and `session_skill_refs(deps, session)` lists the selected `{name, version}` for the claim. A authenticates the runner and mounts both. Connector credentials are sealed with `Sealer` under `connector:<id>`; the server needs `ANTILOG_SECRET_MASTER_KEY` (64 hex) to hold one. `ANTILOG_CONNECTORS_ALLOW_PRIVATE=1` lets a connector sit on a loopback address, for local development and tests only.
 
 ## The sealed test command (judge)
 

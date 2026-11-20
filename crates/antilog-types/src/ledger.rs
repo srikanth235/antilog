@@ -33,6 +33,7 @@ text_enum!(
         OpenPullRequest => "open_pull_request",
         KeepGoing => "keep_going",
         ContinueOnAnotherAgent => "continue_on_another_agent",
+        UseConnectorTool => "use_connector_tool",
     }
 );
 
@@ -117,6 +118,13 @@ pub enum CardPayload {
         tried: u32,
     },
     ContinueOnAnotherAgent {},
+    /// A connector's tool set to "ask first". The digest names the one input approved.
+    #[serde(rename_all = "camelCase")]
+    UseConnectorTool {
+        connector: String,
+        tool: String,
+        input_digest: String,
+    },
 }
 
 impl CardPayload {
@@ -131,6 +139,7 @@ impl CardPayload {
             Self::OpenPullRequest { .. } => CardKind::OpenPullRequest,
             Self::KeepGoing { .. } => CardKind::KeepGoing,
             Self::ContinueOnAnotherAgent {} => CardKind::ContinueOnAnotherAgent,
+            Self::UseConnectorTool { .. } => CardKind::UseConnectorTool,
         }
     }
 }
