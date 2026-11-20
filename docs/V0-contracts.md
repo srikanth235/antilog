@@ -6,7 +6,7 @@ The interfaces the build sessions share, fixed before they start so that none of
 
 | Session | Owns | Uses |
 | :- | :- | :- |
-| A, runner | the queue and leases, `/runner/*`, the `antilog runner` command, the OpenCode driver, the runner's `SessionMachine` | `SessionCredentials` |
+| A, runner | the queue and leases, `/runner/*`, the `antilog runner` command, the OpenCode driver, the runner's `SessionMachine` (trait in `antilog-core/src/machine.rs`), resume of a reclaimed session by `opencode export` and `opencode import` | `SessionCredentials` |
 | B, proxy | the `antilog-proxy` binary, the `session_credentials` table, `SessionCredentials`, model keys per organization, metering and the budget stop | spend rows and budgets |
 | C, reach | the per-session MCP endpoint, Customize backends for connectors, skills and plugins | `SessionCredentials` |
 
@@ -72,3 +72,13 @@ pub trait SessionCredentials: Send + Sync {
 
 - `/mcp/sessions/{id}`: streamable HTTP with a bearer token for `Purpose::Mcp`. It serves the judge's tools and the switched-on connectors' tools. Each tool is on, off or ask first.
 - Skills are downloaded per version from `GET /runner/sessions/{id}/skills/{name}/{version}`. A ships the route, C supplies the content. The runner unpacks them into `/opt/antilog/skills/<name>/`.
+
+## The sealed test command (judge)
+
+The judge runs the sealed command through `SessionMachine::run` in the session's machine. Its last output line is the measurement:
+
+```json
+{"metric": 123.4, "guardrails": {"p99_ms": 210, "errors": 0}}
+```
+
+Base and trial runs are interleaved by the judge (`judge/paired.rs`). The number comes from this line, never from the agent's report.
