@@ -26,18 +26,30 @@ enum Command {
         /// A name for this runner.
         #[arg(long)]
         name: Option<String>,
-        /// Where sessions are cloned.
-        #[arg(long, default_value = "/var/lib/antilog/sessions")]
-        workdir: std::path::PathBuf,
-        /// OpenCode's machine-wide config, which a repo's own config cannot override.
-        #[arg(long, default_value = "/etc/opencode/opencode.json")]
-        config_path: std::path::PathBuf,
-        /// Where skill packs are unpacked.
-        #[arg(long, default_value = "/opt/antilog/skills")]
-        skills_dir: std::path::PathBuf,
-        /// The OpenCode binary, pinned by the machine image.
+        /// The session image each session's container starts from (`session-image/`).
+        #[arg(long, default_value = "antilog-session:latest")]
+        image: String,
+        /// The proxy's `host:port`, which is the only way out of a session's container; defaults
+        /// to the ANTILOG_PROXY_ADDR environment variable.
+        #[arg(long)]
+        proxy: Option<String>,
+        /// The Docker command line.
+        #[arg(long, default_value = "docker")]
+        docker: String,
+        /// Where this runner remembers its setup images between sessions.
+        #[arg(long, default_value = "/var/lib/antilog/runner")]
+        state_dir: std::path::PathBuf,
+        /// The OpenCode binary inside the session image.
         #[arg(long, default_value = "opencode")]
         opencode: String,
+        /// Exit after the last session is let go, so the host can be wiped. The runner serves
+        /// one organization until it exits.
+        #[arg(long)]
+        exit_after_last_session: bool,
+        /// How long a draining runner (after SIGTERM, or after its last session with
+        /// --exit-after-last-session) waits for its sessions to be let go before it stops them.
+        #[arg(long, default_value_t = 30)]
+        drain_grace_sec: u64,
         /// Seconds between polls.
         #[arg(long, default_value_t = 5)]
         poll_secs: u64,
@@ -69,10 +81,13 @@ async fn main() -> anyhow::Result<()> {
             server,
             key,
             name,
-            workdir,
-            config_path,
-            skills_dir,
+            image,
+            proxy,
+            docker,
+            state_dir,
             opencode,
+            exit_after_last_session,
+            drain_grace_sec,
             poll_secs,
             pure,
             disable_project_config,
@@ -87,10 +102,12 @@ async fn main() -> anyhow::Result<()> {
             if let Some(name) = name {
                 config.name = name;
             }
-            config.workdir = workdir;
-            config.config_path = config_path;
-            config.skills_dir = skills_dir;
             config.poll = std::time::Duration::from_secs(poll_secs.max(1));
+            config.exit_after_last_session = exit_after_last_session;
+            config.drain_grace = std::time::Duration::from_secs(drain_grace_sec);
+            let proxy_addr = proxy
+                .or_else(|| std::env::var("ANTILOG_PROXY_ADDR").ok())
+                .ok_or_else(|| anyhow::anyhow!("give --proxy or set ANTILOG_PROXY_ADDR"))?;
             runner::run(
                 config,
                 runner::Opencode {
@@ -98,6 +115,14 @@ async fn main() -> anyhow::Result<()> {
                     pure,
                     disable_project_config,
                 },
+                runner::ContainerSandbox::new(
+                    runner::Docker { binary: docker },
+                    runner::ContainerConfig {
+                        image,
+                        proxy_addr,
+                        state_dir,
+                    },
+                ),
             )
             .await
         }

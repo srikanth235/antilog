@@ -1,42 +1,15 @@
-//! OpenCode, driven over its HTTP API. `Harness` is how one is started, so a test can put a fake
-//! HTTP server in its place; `Api` is what it speaks once running.
+//! OpenCode, driven over its HTTP API. `Opencode` starts it in a session's machine and runs its
+//! CLI there; `Api` is what it speaks once running.
 
 use std::collections::{HashMap, HashSet};
-use std::future::Future;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::time::Duration;
 
 use antilog_types::{Item, ItemKind, Reply};
 use anyhow::{Context, Result, bail};
 use serde_json::{Value, json};
-use tokio::process::{Child, Command};
 
-/// What a harness needs to start one OpenCode.
-pub struct Launch {
-    /// Where it works: a clone, or the folder holding several.
-    pub dir: PathBuf,
-    /// A random password for this server, which listens on 127.0.0.1 only.
-    pub password: String,
-    /// Variables from the session's environment.
-    pub env: Vec<(String, String)>,
-}
-
-/// A started OpenCode. The child is killed when this is dropped.
-pub struct Started {
-    pub base: String,
-    pub child: Option<Child>,
-}
-
-pub trait Harness: Send + Sync + 'static {
-    fn launch(&self, launch: &Launch) -> impl Future<Output = Result<Started>> + Send;
-
-    /// `opencode export`: the session as JSON, for a later claim to import.
-    fn export(&self, launch: &Launch, session: &str)
-    -> impl Future<Output = Result<String>> + Send;
-
-    /// `opencode import`: puts an export back and returns the id of the session it made.
-    fn import(&self, launch: &Launch, file: &Path) -> impl Future<Output = Result<String>> + Send;
-}
+use super::sandbox::{Exec, Machine};
 
 /// The real thing, pinned by the session image to one version.
 pub struct Opencode {
@@ -48,59 +21,54 @@ pub struct Opencode {
 }
 
 impl Opencode {
-    fn command(&self, launch: &Launch, args: &[&str]) -> Command {
-        let mut command = Command::new(&self.binary);
-        command.args(args);
+    fn command(&self, dir: &Path, password: &str, args: &[&str]) -> Exec {
+        let mut exec = Exec::new(std::iter::once(self.binary.as_str()).chain(args.iter().copied()));
         if self.pure {
-            command.arg("--pure");
+            exec.args.push("--pure".to_owned());
         }
-        command
-            .current_dir(&launch.dir)
-            .env("OPENCODE_SERVER_PASSWORD", &launch.password)
-            .env_remove("ANTILOG_RUNNER_KEY")
-            .env("OPENCODE_DISABLE_MODELS_FETCH", "1")
-            .envs(launch.env.iter().map(|(k, v)| (k, v)))
-            .kill_on_drop(true);
+        exec = exec
+            .dir(dir)
+            .env("OPENCODE_SERVER_PASSWORD", password)
+            .env("OPENCODE_DISABLE_MODELS_FETCH", "1");
         if self.disable_project_config {
-            command.env("OPENCODE_DISABLE_PROJECT_CONFIG", "1");
+            exec = exec.env("OPENCODE_DISABLE_PROJECT_CONFIG", "1");
         }
-        command
-    }
-}
-
-async fn free_port() -> Result<u16> {
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
-    Ok(listener.local_addr()?.port())
-}
-
-impl Harness for Opencode {
-    async fn launch(&self, launch: &Launch) -> Result<Started> {
-        let port = free_port().await?.to_string();
-        let child = self
-            .command(
-                launch,
-                &["serve", "--hostname", "127.0.0.1", "--port", &port],
-            )
-            .stdin(std::process::Stdio::null())
-            .stdout(std::process::Stdio::null())
-            .stderr(std::process::Stdio::null())
-            .spawn()
-            .with_context(|| format!("starting {}", self.binary))?;
-        Ok(Started {
-            base: format!("http://127.0.0.1:{port}"),
-            child: Some(child),
-        })
+        exec
     }
 
-    async fn export(&self, launch: &Launch, session: &str) -> Result<String> {
-        let output = self
-            .command(launch, &["export", session])
-            .output()
+    /// Starts `opencode serve` in the machine and returns the URL the runner reaches it by.
+    pub async fn serve<M: Machine>(
+        &self,
+        machine: &M,
+        dir: &Path,
+        password: &str,
+    ) -> Result<String> {
+        let listener = machine.listener().await?;
+        let port = listener.port.to_string();
+        machine
+            .spawn(self.command(
+                dir,
+                password,
+                &["serve", "--hostname", &listener.bind, "--port", &port],
+            ))
             .await
-            .context("running opencode export")?;
-        if !output.status.success() {
-            bail!("opencode export failed: {}", output.status);
-        }
+            .with_context(|| format!("starting {}", self.binary))?;
+        Ok(listener.base)
+    }
+
+    /// `opencode export`: the session as JSON, for a later claim to import.
+    pub async fn export<M: Machine>(
+        &self,
+        machine: &M,
+        dir: &Path,
+        password: &str,
+        session: &str,
+    ) -> Result<String> {
+        let output = machine
+            .exec(self.command(dir, password, &["export", session]))
+            .await
+            .context("running opencode export")?
+            .ok("opencode export")?;
         let text = String::from_utf8(output.stdout).context("the export is not text")?;
         // The export is JSON; anything the CLI printed before it is dropped.
         match text.find('{') {
@@ -109,16 +77,20 @@ impl Harness for Opencode {
         }
     }
 
-    async fn import(&self, launch: &Launch, file: &Path) -> Result<String> {
+    /// `opencode import`: puts an export back and returns the id of the session it made.
+    pub async fn import<M: Machine>(
+        &self,
+        machine: &M,
+        dir: &Path,
+        password: &str,
+        file: &Path,
+    ) -> Result<String> {
         let file = file.to_string_lossy().into_owned();
-        let output = self
-            .command(launch, &["import", &file])
-            .output()
+        let output = machine
+            .exec(self.command(dir, password, &["import", &file]))
             .await
-            .context("running opencode import")?;
-        if !output.status.success() {
-            bail!("opencode import failed: {}", output.status);
-        }
+            .context("running opencode import")?
+            .ok("opencode import")?;
         let text = String::from_utf8_lossy(&output.stdout);
         text.split(|c: char| !c.is_ascii_alphanumeric() && c != '_')
             .find(|word| word.starts_with("ses_"))

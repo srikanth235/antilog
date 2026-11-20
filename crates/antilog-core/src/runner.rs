@@ -171,6 +171,14 @@ pub async fn poll<D: Deps>(
     let now = now_ms(deps);
     let until = now.saturating_add(settings.lease.as_millis().try_into().unwrap_or(60_000));
     let store = deps.store();
+    if request.exiting {
+        // The last poll: report what is finished, let the organization lock go, claim nothing.
+        store
+            .finish_commands(&request.runner, &request.done)
+            .await?;
+        store.unlock_runner(&request.runner).await?;
+        return Ok(PollResponse::default());
+    }
     let renewed = store.renew(&request.runner, now, until).await?;
     let lost = request
         .held

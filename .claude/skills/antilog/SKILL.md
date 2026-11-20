@@ -44,7 +44,7 @@ Anything not listed is whatever `antilog --help` shows; it is the source once th
 
 ## `antilog runner`
 
-Polls a server's queue and runs its sessions on this machine: `antilog runner --server URL` with the runner key in `ANTILOG_RUNNER_KEY`. It is for the machine image, not for people. What it does is in [../session/runner.md](../session/runner.md).
+Polls a server's queue and runs its sessions on this machine: `antilog runner --server URL --proxy HOST:PORT` with the runner key in `ANTILOG_RUNNER_KEY`; it runs each session in a Docker container. It is for the machine image, not for people. What it does is in [../session/runner.md](../session/runner.md).
 
 ## The Antilog tools (target)
 

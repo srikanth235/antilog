@@ -27,6 +27,8 @@ pub(super) struct State {
     machines: Vec<Row>,
     commands: Vec<Pending>,
     exports: HashMap<SessionId, String>,
+    /// The organization each runner is locked to.
+    locks: HashMap<String, OrganizationId>,
 }
 
 impl State {
@@ -104,12 +106,29 @@ impl RunnerStore for FakeStore {
             .collect();
         let mut state = locked(&self.runner);
         state.requeue_lapsed(now);
+        if limit == 0 {
+            return Ok(Vec::new());
+        }
+        let eligible = |row: &Row| {
+            row.machine.state == MachineState::Queued && active.contains(&row.machine.session)
+        };
+        let lock = match state.locks.get(holder) {
+            Some(lock) => *lock,
+            None => {
+                let Some(first) = state.machines.iter().find(|row| eligible(row)) else {
+                    return Ok(Vec::new());
+                };
+                let organization = first.machine.organization;
+                state.locks.insert(holder.to_owned(), organization);
+                organization
+            }
+        };
         let mut claimed = Vec::new();
         for row in &mut state.machines {
             if claimed.len() >= limit as usize {
                 break;
             }
-            if row.machine.state == MachineState::Queued && active.contains(&row.machine.session) {
+            if eligible(row) && row.machine.organization == lock {
                 row.machine.state = MachineState::Claimed;
                 row.machine.holder = Some(holder.to_owned());
                 row.lease_until = until;
@@ -117,6 +136,17 @@ impl RunnerStore for FakeStore {
             }
         }
         Ok(claimed)
+    }
+
+    async fn unlock_runner(&self, holder: &str) -> Result<(), StoreError> {
+        let mut state = locked(&self.runner);
+        let holds = state.machines.iter().any(|row| {
+            row.machine.state.is_held() && row.machine.holder.as_deref() == Some(holder)
+        });
+        if !holds {
+            state.locks.remove(holder);
+        }
+        Ok(())
     }
 
     async fn renew(

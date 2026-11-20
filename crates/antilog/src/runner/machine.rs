@@ -1,5 +1,6 @@
 //! The runner's side of `SessionMachine`: check out the commits, restore the protected files,
-//! run the judge's command and return its exit status and output.
+//! run the judge's command and return its exit status and output. It all happens in the
+//! session's machine, through `Machine::exec`.
 
 use std::path::{Path, PathBuf};
 
@@ -7,8 +8,9 @@ use antilog_types::RunSpec;
 use antilog_types::judge::ProtectedFile;
 use anyhow::{Context, Result, bail};
 use sha2::{Digest, Sha256};
-use tokio::process::Command;
 use uuid::Uuid;
+
+use super::sandbox::{Exec, Machine};
 
 /// What the command printed, last bytes kept.
 const OUTPUT_LIMIT: usize = 1 << 20;
@@ -18,15 +20,18 @@ pub fn repo_dir(workdir: &Path, repo: &str) -> PathBuf {
     workdir.join(repo.rsplit('/').next().unwrap_or(repo))
 }
 
-async fn git(dir: &Path, args: &[&str]) -> Result<Vec<u8>> {
-    let output = Command::new("git")
-        .arg("-C")
-        .arg(dir)
-        .args(args)
-        .output()
+async fn git<M: Machine>(machine: &M, dir: &Path, args: &[&str]) -> Result<Vec<u8>> {
+    let mut command = vec![
+        "git".to_owned(),
+        "-C".to_owned(),
+        dir.to_string_lossy().into_owned(),
+    ];
+    command.extend(args.iter().map(|arg| (*arg).to_owned()));
+    let output = machine
+        .exec(Exec::new(command))
         .await
         .context("running git")?;
-    if !output.status.success() {
+    if output.status != 0 {
         bail!(
             "git {} failed: {}",
             args.first().copied().unwrap_or_default(),
@@ -45,24 +50,36 @@ fn digest(bytes: &[u8]) -> String {
 
 /// Puts the sealed content of a protected file back. The seal names a file by its hash, so the
 /// content is looked for, by that hash, in the repo's own history: never taken from the trial.
-async fn restore(repo: &Path, checkout: &Path, file: &ProtectedFile) -> Result<()> {
+async fn restore<M: Machine>(
+    machine: &M,
+    repo: &Path,
+    checkout: &Path,
+    file: &ProtectedFile,
+) -> Result<()> {
     let want = file.sha256.trim_start_matches("sha256:");
     let target = checkout.join(&file.path);
-    if let Ok(current) = tokio::fs::read(&target).await
-        && digest(&current) == want
-    {
+    let current = machine
+        .exec(Exec::new([
+            "cat".to_owned(),
+            target.to_string_lossy().into_owned(),
+        ]))
+        .await?;
+    if current.status == 0 && digest(&current.stdout) == want {
         return Ok(());
     }
-    let history = git(repo, &["log", "--all", "--format=%H", "--", &file.path]).await?;
+    let history = git(
+        machine,
+        repo,
+        &["log", "--all", "--format=%H", "--", &file.path],
+    )
+    .await?;
     for commit in String::from_utf8_lossy(&history).lines() {
-        let Ok(content) = git(repo, &["show", &format!("{commit}:{}", file.path)]).await else {
+        let Ok(content) = git(machine, repo, &["show", &format!("{commit}:{}", file.path)]).await
+        else {
             continue;
         };
         if digest(&content) == want {
-            if let Some(parent) = target.parent() {
-                tokio::fs::create_dir_all(parent).await?;
-            }
-            tokio::fs::write(&target, content).await?;
+            machine.put(&target, &content).await?;
             return Ok(());
         }
     }
@@ -73,11 +90,17 @@ async fn restore(repo: &Path, checkout: &Path, file: &ProtectedFile) -> Result<(
     )
 }
 
-async fn prepare(workdir: &Path, root: &Path, spec: &RunSpec) -> Result<Vec<(PathBuf, PathBuf)>> {
+async fn prepare<M: Machine>(
+    machine: &M,
+    workdir: &Path,
+    root: &Path,
+    spec: &RunSpec,
+) -> Result<Vec<(PathBuf, PathBuf)>> {
     let mut trees = Vec::new();
     for commit in &spec.commits {
         let repo = repo_dir(workdir, &commit.repo);
         if git(
+            machine,
             &repo,
             &["cat-file", "-e", &format!("{}^{{commit}}", commit.sha)],
         )
@@ -85,11 +108,14 @@ async fn prepare(workdir: &Path, root: &Path, spec: &RunSpec) -> Result<Vec<(Pat
         .is_err()
         {
             // Not in the clone yet: the trial may have been pushed from elsewhere.
-            git(&repo, &["fetch", "--all", "--quiet"]).await.ok();
+            git(machine, &repo, &["fetch", "--all", "--quiet"])
+                .await
+                .ok();
         }
         let checkout = repo_dir(root, &commit.repo);
         let target = checkout.to_string_lossy().into_owned();
         git(
+            machine,
             &repo,
             &["worktree", "add", "--detach", &target, &commit.sha],
         )
@@ -103,64 +129,74 @@ async fn prepare(workdir: &Path, root: &Path, spec: &RunSpec) -> Result<Vec<(Pat
             .with_context(|| {
                 format!("protected file {} names a repo not checked out", file.path)
             })?;
-        restore(repo, checkout, file).await?;
+        restore(machine, repo, checkout, file).await?;
     }
     Ok(trees)
 }
 
 /// Runs the command on the commits. A checkout or restore that fails is a run that failed, with
 /// the reason as its output, so the judge never reads a number from a run that was not clean.
-pub async fn run(workdir: &Path, id: Uuid, spec: &RunSpec) -> antilog_types::RunResult {
+pub async fn run<M: Machine>(machine: &M, id: Uuid, spec: &RunSpec) -> antilog_types::RunResult {
+    let workdir = machine.paths().work.clone();
     let root = workdir.join(".antilog-run").join(id.to_string());
     let mut trees = Vec::new();
     let outcome = async {
-        tokio::fs::create_dir_all(&root).await?;
-        trees = prepare(workdir, &root, spec).await?;
+        machine
+            .exec(Exec::new([
+                "mkdir".to_owned(),
+                "-p".to_owned(),
+                root.to_string_lossy().into_owned(),
+            ]))
+            .await?
+            .ok("making the run's folder")?;
+        trees = prepare(machine, &workdir, &root, spec).await?;
         let cwd = match trees.as_slice() {
             [(_, only)] => only.clone(),
             _ => root.clone(),
         };
         let script = format!("{{ {}\n}} 2>&1", spec.command);
-        let output = Command::new("sh")
-            .arg("-c")
-            .arg(script)
-            .current_dir(cwd)
-            .env_remove("ANTILOG_RUNNER_KEY")
-            .env(
-                "ANTILOG_DATA_KIND",
-                if spec.data.holdout {
-                    "holdout"
-                } else {
-                    "evaluation"
-                },
+        let output = machine
+            .exec(
+                Exec::new(["sh".to_owned(), "-c".to_owned(), script])
+                    .dir(&cwd)
+                    .env(
+                        "ANTILOG_DATA_KIND",
+                        if spec.data.holdout {
+                            "holdout"
+                        } else {
+                            "evaluation"
+                        },
+                    )
+                    .env("ANTILOG_DATASET_ID", &spec.data.dataset.id)
+                    .env(
+                        "ANTILOG_DATASET_VERSION",
+                        &spec.data.dataset.version.to_string(),
+                    )
+                    .env("ANTILOG_REPOS_ROOT", &root.to_string_lossy()),
             )
-            .env("ANTILOG_DATASET_ID", &spec.data.dataset.id)
-            .env(
-                "ANTILOG_DATASET_VERSION",
-                spec.data.dataset.version.to_string(),
-            )
-            .env("ANTILOG_REPOS_ROOT", &root)
-            .kill_on_drop(true)
-            .output()
             .await
             .context("running the command")?;
         let mut text = output.stdout;
         if text.len() > OUTPUT_LIMIT {
             text.drain(..text.len() - OUTPUT_LIMIT);
         }
-        anyhow::Ok((
-            output.status.code().unwrap_or(1),
-            String::from_utf8_lossy(&text).into_owned(),
-        ))
+        anyhow::Ok((output.status, String::from_utf8_lossy(&text).into_owned()))
     }
     .await;
     for (repo, checkout) in &trees {
         let target = checkout.to_string_lossy().into_owned();
-        git(repo, &["worktree", "remove", "--force", &target])
+        git(machine, repo, &["worktree", "remove", "--force", &target])
             .await
             .ok();
     }
-    tokio::fs::remove_dir_all(&root).await.ok();
+    machine
+        .exec(Exec::new([
+            "rm".to_owned(),
+            "-rf".to_owned(),
+            root.to_string_lossy().into_owned(),
+        ]))
+        .await
+        .ok();
     match outcome {
         Ok((exit, output)) => antilog_types::RunResult {
             command: id,
@@ -179,6 +215,10 @@ pub async fn run(workdir: &Path, id: Uuid, spec: &RunSpec) -> antilog_types::Run
 mod tests {
     use antilog_types::DataSpec;
     use antilog_types::judge::{CommitRef, DatasetRef};
+
+    use super::super::sandbox::Paths;
+    use super::super::sandbox::plain::PlainMachine;
+    use tokio::process::Command;
 
     use super::*;
 
@@ -243,8 +283,16 @@ mod tests {
             sha256: sealed,
         };
         let id = Uuid::now_v7();
+        let machine = PlainMachine::new(
+            Paths {
+                work: temp.clone(),
+                config: temp.join("opencode.json"),
+                skills: temp.join("skills"),
+            },
+            Vec::new(),
+        );
         let result = run(
-            &temp,
+            &machine,
             id,
             &spec("cat code.txt; sh bench/run.sh; echo \"$ANTILOG_DATA_KIND $ANTILOG_DATASET_ID@$ANTILOG_DATASET_VERSION\"; exit 3", &sha, vec![file.clone()]),
         )
@@ -261,7 +309,12 @@ mod tests {
             sha256: digest(b"nothing"),
             ..file
         };
-        let result = run(&temp, Uuid::now_v7(), &spec("echo hi", &sha, vec![forged])).await;
+        let result = run(
+            &machine,
+            Uuid::now_v7(),
+            &spec("echo hi", &sha, vec![forged]),
+        )
+        .await;
         assert_eq!(result.exit, 1);
         assert!(
             result.output.contains("not in the repo's history"),

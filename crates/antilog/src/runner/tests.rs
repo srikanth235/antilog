@@ -29,8 +29,9 @@ use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
 use uuid::Uuid;
 
-use super::opencode::{Harness, Launch, Started};
-use super::{Config, run};
+use super::sandbox::plain::{Plain, PlainMachine};
+use super::sandbox::{Exec, Listener, Machine, Output, Paths, Sandbox, SandboxSpec};
+use super::{Config, Opencode, run};
 
 const KEY: &str = "runner-key";
 
@@ -170,29 +171,96 @@ fn assistant_message(message: &str) -> Value {
     json!({"type": "message.updated", "properties": {"sessionID": "ses_fake", "info": {"id": message, "role": "assistant"}}})
 }
 
-struct FakeHarness {
+/// A machine on this host whose `opencode` is the fake HTTP server: `serve` does nothing and the
+/// CLI answers from `Fake`.
+struct FakeSandbox {
     base: String,
     shared: Shared,
+    plain: Plain,
 }
 
-impl Harness for FakeHarness {
-    async fn launch(&self, launch: &Launch) -> anyhow::Result<Started> {
-        assert!(!launch.password.is_empty());
-        Ok(Started {
+struct ScriptedMachine {
+    base: String,
+    shared: Shared,
+    plain: PlainMachine,
+}
+
+fn fake_opencode() -> Opencode {
+    Opencode {
+        binary: "opencode".into(),
+        pure: false,
+        disable_project_config: false,
+    }
+}
+
+impl Sandbox for FakeSandbox {
+    type Machine = ScriptedMachine;
+
+    async fn start(&self, spec: &SandboxSpec) -> anyhow::Result<ScriptedMachine> {
+        Ok(ScriptedMachine {
             base: self.base.clone(),
-            child: None,
+            shared: self.shared.clone(),
+            plain: self.plain.start(spec).await?,
+        })
+    }
+}
+
+impl Machine for ScriptedMachine {
+    fn paths(&self) -> &Paths {
+        self.plain.paths()
+    }
+
+    async fn exec(&self, exec: Exec) -> anyhow::Result<Output> {
+        let words: Vec<&str> = exec.args.iter().map(String::as_str).collect();
+        match words.as_slice() {
+            ["opencode", "export", session, ..] => {
+                assert!(
+                    exec.env
+                        .iter()
+                        .any(|(k, v)| k == "OPENCODE_SERVER_PASSWORD" && !v.is_empty())
+                );
+                Ok(Output {
+                    stdout: json!({"info": {"id": session}, "messages": []})
+                        .to_string()
+                        .into_bytes(),
+                    ..Output::default()
+                })
+            }
+            ["opencode", "import", file, ..] => {
+                locked(&self.shared)
+                    .imported
+                    .push(std::fs::read_to_string(file)?);
+                Ok(Output {
+                    stdout: b"imported ses_fake".to_vec(),
+                    ..Output::default()
+                })
+            }
+            _ => self.plain.exec(exec).await,
+        }
+    }
+
+    async fn spawn(&self, exec: Exec) -> anyhow::Result<()> {
+        if exec.args.first().map(String::as_str) == Some("opencode") {
+            assert!(
+                exec.env
+                    .iter()
+                    .any(|(k, v)| k == "OPENCODE_SERVER_PASSWORD" && !v.is_empty())
+            );
+            return Ok(());
+        }
+        self.plain.spawn(exec).await
+    }
+
+    async fn listener(&self) -> anyhow::Result<Listener> {
+        Ok(Listener {
+            bind: "127.0.0.1".into(),
+            port: 0,
+            base: self.base.clone(),
         })
     }
 
-    async fn export(&self, _: &Launch, session: &str) -> anyhow::Result<String> {
-        Ok(json!({"info": {"id": session}, "messages": []}).to_string())
-    }
-
-    async fn import(&self, _: &Launch, file: &Path) -> anyhow::Result<String> {
-        locked(&self.shared)
-            .imported
-            .push(std::fs::read_to_string(file)?);
-        Ok("ses_fake".to_owned())
+    async fn stop(&self) {
+        self.plain.stop().await;
     }
 }
 
@@ -268,21 +336,30 @@ async fn backend(proxy: &str, model: &str) -> (Arc<FakeDeps>, Seed, String, Path
 }
 
 async fn world() -> World {
+    world_with(|_| {}, Arc::default()).await
+}
+
+async fn world_with(
+    adjust: impl FnOnce(&mut Config),
+    stop: Arc<std::sync::atomic::AtomicBool>,
+) -> World {
     let (deps, seed, server, temp) = backend("https://proxy.example", "vendor/model-1").await;
     let shared: Shared = Shared::default();
     let base = serve_fake(shared.clone()).await;
     let mut config = Config::new(&server, KEY);
-    config.workdir = temp.join("work");
-    config.config_path = temp.join("etc/opencode/opencode.json");
-    config.skills_dir = temp.join("skills");
     config.poll = Duration::from_millis(50);
-    let (config_path, workdir) = (config.config_path.clone(), config.workdir.clone());
-    let runner = tokio::spawn(run(
+    adjust(&mut config);
+    let plain = Plain::under(&temp);
+    let (config_path, workdir) = (plain.config.clone(), plain.workdir.clone());
+    let runner = tokio::spawn(super::run_until(
         config,
-        FakeHarness {
+        fake_opencode(),
+        FakeSandbox {
             base,
             shared: shared.clone(),
+            plain,
         },
+        stop,
     ));
     World {
         deps,
@@ -672,6 +749,115 @@ async fn a_session_that_cannot_start_is_released_as_failed() {
     );
 }
 
+/// A second organization's queued session, for a runner that has let its lock go to take.
+async fn other_organizations_session(world: &World) -> (antilog_types::OrganizationId, Session) {
+    let other = experiment(&world.deps.store, 10_000).await;
+    let session = session::start(
+        &*world.deps,
+        other.organization.id,
+        other.experiment.id,
+        NewSession {
+            agent: "opencode".into(),
+            prompt: "go".into(),
+            repos: vec![],
+            environment: None,
+            actor: Some(other.owner.id),
+        },
+    )
+    .await
+    .unwrap();
+    (other.organization.id, session)
+}
+
+#[tokio::test]
+async fn a_runner_started_to_exit_leaves_after_its_last_session_and_lets_its_lock_go() {
+    let world = world_with(
+        |config| {
+            config.name = "wipe-me".into();
+            config.exit_after_last_session = true;
+        },
+        Arc::default(),
+    )
+    .await;
+    let org = world.seed.organization.id;
+    let session = start(&world, "cut p95").await;
+    until("running", async || {
+        matches!(
+            state(&world, &session).await,
+            MachineState::Running | MachineState::Idle
+        )
+        .then_some(())
+    })
+    .await;
+    // It is locked to this organization: another organization's session is not its to take.
+    let (other_org, other) = other_organizations_session(&world).await;
+    tokio::time::sleep(Duration::from_millis(300)).await;
+    assert_eq!(state(&world, &other).await, MachineState::Queued);
+    assert!(!world.runner.is_finished());
+
+    world
+        .deps
+        .store
+        .push_command(
+            org,
+            session.id,
+            &Command::Release {
+                outcome: antilog_types::ReleaseOutcome::Done,
+            },
+            1,
+        )
+        .await
+        .unwrap();
+    until("the runner exits", async || {
+        world.runner.is_finished().then_some(())
+    })
+    .await;
+    assert_eq!(state(&world, &session).await, MachineState::Done);
+    // Its lock went with it: the name takes any organization's work again.
+    let claimed = world
+        .deps
+        .store
+        .claim("wipe-me", 1, 1_900_000_000_000, 1_900_000_060_000)
+        .await
+        .unwrap();
+    assert_eq!(claimed.len(), 1);
+    assert_eq!(claimed[0].organization, other_org);
+}
+
+#[tokio::test]
+async fn a_runner_told_to_stop_gives_its_sessions_the_grace_then_stops_them_and_leaves() {
+    let stop = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let world = world_with(
+        |config| {
+            config.name = "draining".into();
+            config.drain_grace = Duration::from_millis(400);
+        },
+        stop.clone(),
+    )
+    .await;
+    let session = start(&world, "cut p95").await;
+    until("running", async || {
+        matches!(
+            state(&world, &session).await,
+            MachineState::Running | MachineState::Idle
+        )
+        .then_some(())
+    })
+    .await;
+    stop.store(true, std::sync::atomic::Ordering::SeqCst);
+    // Within the grace it still holds the session, and claims nothing new.
+    let (_, other) = other_organizations_session(&world).await;
+    tokio::time::sleep(Duration::from_millis(150)).await;
+    assert!(!world.runner.is_finished());
+    assert_eq!(state(&world, &other).await, MachineState::Queued);
+    // After the grace it stops the session and exits.
+    until("the runner exits", async || {
+        world.runner.is_finished().then_some(())
+    })
+    .await;
+    assert_eq!(state(&world, &other).await, MachineState::Queued);
+}
+
 #[tokio::test]
 async fn a_skill_pack_is_unpacked_into_the_skills_folder() {
     let temp = std::env::temp_dir().join(format!("antilog-skill-{}", Uuid::now_v7()));
@@ -704,8 +890,15 @@ async fn a_skill_pack_is_unpacked_into_the_skills_folder() {
     let server = format!("http://{}", listener.local_addr().unwrap());
     tokio::spawn(async move { axum::serve(listener, app).await });
 
-    let mut config = Config::new(&server, KEY);
-    config.skills_dir = temp.join("skills");
+    let skills_dir = temp.join("skills");
+    let machine = PlainMachine::new(
+        Paths {
+            work: temp.join("work"),
+            config: temp.join("opencode.json"),
+            skills: skills_dir.clone(),
+        },
+        Vec::new(),
+    );
     let spec = antilog_types::SessionSpec {
         session: antilog_types::SessionId::new(),
         organization: antilog_types::OrganizationId::new(),
@@ -738,13 +931,13 @@ async fn a_skill_pack_is_unpacked_into_the_skills_folder() {
         runner_token: "tok".into(),
         resume: false,
     };
-    super::session::install_skills(&config, &super::api::Server::new(&server), &spec).await;
+    super::session::install_skills(&machine, &super::api::Server::new(&server), &spec).await;
     assert_eq!(
-        std::fs::read_to_string(config.skills_dir.join("perf/SKILL.md")).unwrap(),
+        std::fs::read_to_string(skills_dir.join("perf/SKILL.md")).unwrap(),
         "# perf\n"
     );
     assert!(
-        !config.skills_dir.join("gone").exists(),
+        !skills_dir.join("gone").exists(),
         "a pack that is not there is skipped"
     );
     std::fs::remove_dir_all(&temp).ok();
@@ -821,11 +1014,10 @@ async fn real_opencode_runs_a_session_end_to_end() {
     let (deps, seed, server, temp) = backend(&proxy, &model).await;
     let org = seed.organization.id;
     let mut config = Config::new(&server, KEY);
-    config.workdir = temp.join("work");
-    // OpenCode reads its managed config from this path only.
-    config.config_path = PathBuf::from("/etc/opencode/opencode.json");
-    config.skills_dir = temp.join("skills");
     config.poll = Duration::from_millis(100);
+    let mut plain = Plain::under(&temp);
+    // OpenCode reads its managed config from this path only.
+    plain.config = PathBuf::from("/etc/opencode/opencode.json");
     let runner = tokio::spawn(run(
         config,
         super::Opencode {
@@ -833,6 +1025,7 @@ async fn real_opencode_runs_a_session_end_to_end() {
             pure: false,
             disable_project_config: false,
         },
+        plain,
     ));
     let session = session::start(
         &*deps,

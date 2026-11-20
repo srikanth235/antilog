@@ -1,6 +1,6 @@
 # The runner
 
-Where an agent runs (built; the proxy and a real code host are not). The decisions are in [docs/V0.md](../../../docs/V0.md), the interfaces in [docs/V0-contracts.md](../../../docs/V0-contracts.md).
+Where an agent runs (built, with the container backend; a real code host is not). The decisions are in [docs/V0.md](../../../docs/V0.md), the interfaces in [docs/V0-contracts.md](../../../docs/V0-contracts.md).
 
 ## The queue
 
@@ -9,18 +9,37 @@ Each session has a machine row (`machines`): `queued`, `claimed`, `running`, `id
 - `claimed`: leased, not yet started. `running` and `idle` follow OpenCode's busy and idle status. `released`: the runner exported the session and let the machine go; a person's message, or a judge command, queues it again with `resume`.
 - A claim returns the session spec: repos, environment variables, skill versions with download paths, the generated OpenCode config, the model, and three tokens (`Model`, `Mcp`, `Runner`) minted for the claim. Claiming revokes the tokens of any earlier holder; releasing revokes all of them.
 - Per-session calls (`/events`, `/results`, `/release`, `/export`, the skills download) carry that session's `Runner` token. None of the `/runner/*` routes is in the public OpenAPI.
+- **One organization per runner.** A runner locks to the organization of the first session it claims (`runner_locks`, taken inside `claim_machines`, so the server enforces it) and is offered only that organization's sessions until it exits. A poll with no room (`capacity` 0) locks nothing. A runner's last poll carries `exiting: true`, which deletes the lock unless the runner still holds a session; a crashed runner's lock stays with its name, and a new process has a new name. A host is never shared between customers.
 - The routes are mounted only when `ANTILOG_RUNNER_KEY` is set. `ANTILOG_MODEL` (`provider/model`) is required with it; `ANTILOG_PROXY_URL`, `ANTILOG_PUBLIC_URL`, `ANTILOG_CLONE_BASE` tell the machine where things are.
 
 ## `antilog runner`
 
-Polls over outbound HTTPS only. For a claim it clones the repos into `<workdir>/<session>/<repo>`, writes the config to `/etc/opencode/opencode.json` (OpenCode's managed path: a repo's own `opencode.json` cannot override it, and `OPENCODE_CONFIG` does not win, so never rely on it), writes the skill packs (JSON: text files with relative paths; a path that leaves the pack's folder skips the pack) into `/opt/antilog/skills/<name>/`, then starts `opencode serve` on 127.0.0.1 with a random password, `OPENCODE_DISABLE_MODELS_FETCH=1` and `autoupdate: false`. One session per machine: the managed config is one file.
+Polls over outbound HTTPS only. A claim becomes one **machine**, started by a `Sandbox` (`runner/sandbox.rs`): `start` makes the machine, and the `Machine` it returns can `exec` a command, `put` a file as root, `spawn` a process that stays up, give a `listener` for a server, and `stop`, which takes the machine and its disk away. Everything the runner does to a session goes through those calls: the clones, the managed config, the skill packs, OpenCode (`Opencode::serve`, `export`, `import` in `opencode.rs`) and the judge's `run` (`machine.rs`). A microVM or VM backend is another `Sandbox`; nothing else changes. `SandboxSpec` is built from `EnvironmentSpec::default()` and the claim's `variables` until the claim carries a whole environment; the session's `Model` token is the machine's login at the proxy.
+
+In the machine the runner clones the repos into `/work/<repo>`, writes the config to `/etc/opencode/opencode.json` (OpenCode's managed path: a repo's own `opencode.json` cannot override it, and `OPENCODE_CONFIG` does not win, so never rely on it), writes the skill packs (JSON: text files with relative paths; a path that leaves the pack's folder skips the pack) into `/opt/antilog/skills/<name>/`, then starts `opencode serve` with a random password, `OPENCODE_DISABLE_MODELS_FETCH=1` and `autoupdate: false`. One session per machine: the managed config is one file.
+
+### The container backend
+
+`runner/container.rs` drives the `docker` command line through `tokio::process` (no Docker crate). `antilog runner --image antilog-session:latest --proxy host:port` (`ANTILOG_PROXY_ADDR`; `--docker`, `--state-dir`).
+
+- **Image.** `session-image/Dockerfile`: OpenCode pinned (build argument `OPENCODE_VERSION`, 1.19.6), git, and Docker. No OpenTofu, Terraform or cloud tool: the agent installs what a goal needs.
+- **One container per session**, named `antilog-<session>`, with `--cpus`, `--memory` and `--memory-swap` from the environment (default 2 vCPU, 8 GB) and `--pids-limit 4096`. Never `--privileged`.
+- **Network.** Each session has its own `--internal` Docker network, which has no route out. The runner binds a relay on that network's gateway address that carries raw TCP to the proxy (`--proxy`, plain TCP: a proxy behind a TLS terminator needs its plain listener here). `HTTPS_PROXY` and `HTTP_PROXY` name the relay, with the CONNECT login `antilog:<model token>`. What passes is the proxy's call: the environment's hosts, or only the model gateway at `NetworkLevel::None`. The MCP endpoint and the code host reach the machine the same way, so the proxy must allow them.
+- **Docker for the agent.** When the host's Docker has the `sysbox-runc` runtime, the container runs under it and a `dockerd` starts inside, with the proxy's variables, so the agent has its own Docker without `--privileged`. Without sysbox the container has no Docker daemon and the runner logs it. Rootless Docker in a plain container needs `--privileged` or the host's seccomp, AppArmor and `/proc` protections switched off, so it is not used.
+- **Secrets stay out of the process list.** A variable or the proxy login reaches `docker` through its own environment (`-e NAME`), never as an argument.
+- **Setup scripts.** When the environment has one, a container of the session image runs it as root once per (`id`, `version`) and `docker commit` keeps the result as `antilog-env:<id>-v<version>`; later sessions start from it. The runner remembers when each tag was last used (`<state dir>/setup-images.json`) and removes one unused for 7 days. A script that fails fails the session's start and keeps no image.
+- **Release.** `opencode export` goes to the server, then `docker rm -f -v` removes the container and its disk, the network goes, and the relay stops. A session that fails to start is cleaned up the same way.
+
+### Leaving
+
+`--exit-after-last-session` makes the runner exit once its last session is let go, so its host can be wiped. `--drain-grace-sec` (default 30) follows Claude Code's drain: on SIGTERM or SIGINT, or after the last session with that flag, the runner **drains**: it claims nothing new, keeps polling to hold its leases and deliver commands, and waits up to the grace for its sessions to be let go; after the grace it stops them (their leases lapse and the sessions queue for another runner). Then it sends its last poll (`exiting: true`) and exits.
 
 - Messages go in with `prompt_async`, an abort with `abort`, a person's answer to a permission with `/permission/{id}/reply`.
 - `GET /event` has no replay and no event id. After every connect the runner reads `GET /session/{id}/message` (paged by `before`, cursor in `x-next-cursor`), `GET /permission` and `GET /session/status`, and sends what is new, keyed by message id and part id. Only what an agent finished saying and the name of each tool it called are sent; the server stores nothing a tool returned.
 - A `permission.asked` event becomes an Ask first card (`ask_first`, always asks unless policy allows). The answer comes back as an `approval` command.
 - Release: `opencode export` goes to the server with the release. A later claim fetches it and runs `opencode import`, so the agent has its history. If the stream cannot be kept the session is released as failed.
-- The judge's sealed command is a `run` command. The runner checks out each commit in a `git worktree` beside the clone, puts each protected file back by its hash (looked for in the repo's history, never taken from the trial; a hash that is nowhere is a failed run), and runs the command with `ANTILOG_DATA_KIND`, `ANTILOG_DATASET_ID` and `ANTILOG_DATASET_VERSION` set. The exit status and output go back through `/results`. Delivering the data itself is not built.
-- The runner key is removed from the environment of everything it starts.
+- The judge's sealed command is a `run` command. In the machine, the runner checks out each commit in a `git worktree` beside the clone, puts each protected file back by its hash (looked for in the repo's history, never taken from the trial; a hash that is nowhere is a failed run), and runs the command with `ANTILOG_DATA_KIND`, `ANTILOG_DATASET_ID` and `ANTILOG_DATASET_VERSION` set. The exit status and output go back through `/results`. Delivering the data itself is not built.
+- The runner key is never in a machine: the plain backend removes it from what it starts, and a container never receives it.
 
 ## What a repo can still do
 
@@ -36,4 +55,4 @@ Run against OpenCode 1.19.6 with the managed config in place:
 
 ## Testing it
 
-The `Harness` trait starts OpenCode, so tests put a fake HTTP server in its place (`crates/antilog/src/runner/tests.rs`). The ignored `real_opencode_runs_a_session_end_to_end` drives the pinned OpenCode against a scripted model server; its comment says how to run it.
+The plain-process backend (`sandbox::plain`, tests only: it isolates nothing) runs a "machine" in folders a test chooses; `runner/tests.rs` wraps it so that `opencode` is a fake HTTP server. The container backend is tested through a `Cli` that records the `docker` calls (`container.rs`), and its relay against a local socket; the store's lock in `runner_lock_suite` (the fake and Postgres). The ignored `real_opencode_runs_a_session_end_to_end` drives the pinned OpenCode against a scripted model server; its comment says how to run it. A real container run needs a Docker daemon and the built image, and was not run where this was written.

@@ -137,6 +137,9 @@ pub struct PollRequest {
     /// The sessions it is running now; any it names that it no longer holds come back as lost.
     #[serde(default)]
     pub held: Vec<SessionId>,
+    /// This is the runner's last poll: it is leaving, so the server lets its organization lock go.
+    #[serde(default)]
+    pub exiting: bool,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

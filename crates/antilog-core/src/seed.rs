@@ -565,7 +565,7 @@ pub async fn kept_win<D: crate::deps::Deps>(
     })
 }
 
-/// What every `RunnerStore` must do: lease sessions to a runner across organizations, hand each
+/// What every `RunnerStore` must do: lease sessions to a runner, hand each
 /// command over once, send an unfinished one again after a requeue, and keep results and exports.
 pub async fn runner_suite<S: Store>(store: &S) {
     use antilog_types::{
@@ -576,8 +576,9 @@ pub async fn runner_suite<S: Store>(store: &S) {
     use crate::store::{SessionChange, StoreError};
 
     let mut sessions = Vec::new();
+    // A runner serves one organization, so both sessions are in the same one.
+    let seed = experiment(store, 1_000).await;
     for _ in 0..2 {
-        let seed = experiment(store, 1_000).await;
         let org = seed.organization.id;
         let session = Session::new(org, seed.experiment.id, "opencode", T0);
         let log = AuditEntry::new(
@@ -626,7 +627,7 @@ pub async fn runner_suite<S: Store>(store: &S) {
         None
     );
 
-    // One runner takes work from both organizations, up to its limit, once each.
+    // One runner takes work up to its limit, once each.
     let claimed = store.claim("r1", 1, 1_000, 61_000).await.expect("claim");
     assert_eq!(claimed.len(), 1);
     let mine = claimed.first().expect("one");
@@ -794,4 +795,147 @@ pub async fn runner_suite<S: Store>(store: &S) {
             .expect("claim")
             .is_empty()
     );
+}
+
+/// A runner locks to the organization of the first session it claims, and claims only that
+/// organization's sessions until it exits (`unlock_runner`), so customers never share a host.
+pub async fn runner_lock_suite<S: Store>(store: &S) {
+    use antilog_types::{MachineState, Seed, Session};
+
+    let mut queued = Vec::new();
+    for _ in 0..2 {
+        let seed = experiment(store, 1_000).await;
+        let org = seed.organization.id;
+        for _ in 0..2 {
+            let session = Session::new(org, seed.experiment.id, "opencode", T0);
+            let log = AuditEntry::new(
+                org,
+                Some(seed.owner.id),
+                "session.start",
+                session.id,
+                AuditOutcome::Done,
+                T0,
+            );
+            store
+                .create_session(&session, &log)
+                .await
+                .expect("a session is created");
+            let seed_of = Seed {
+                repos: Vec::new(),
+                environment: None,
+            };
+            store
+                .enqueue_machine(org, session.id, &seed_of, T0)
+                .await
+                .expect("queued");
+            queued.push((org, session.id));
+        }
+    }
+    let at = |n: usize| *queued.get(n).expect("four sessions");
+    let (org_a, org_b) = (at(0).0, at(2).0);
+    assert_ne!(org_a, org_b);
+
+    // A runner with no room takes nothing and locks to nothing.
+    assert!(
+        store
+            .claim("busy", 0, 1_000, 61_000)
+            .await
+            .expect("claim")
+            .is_empty()
+    );
+
+    // The first claim locks r1 to that session's organization; it never takes the other's.
+    let first = store.claim("r1", 1, 1_000, 61_000).await.expect("claim");
+    assert_eq!(first.len(), 1);
+    let locked_to = first.first().expect("one").organization;
+    let (other, other_org) = if locked_to == org_a {
+        (at(2).1, org_b)
+    } else {
+        (at(0).1, org_a)
+    };
+    let more = store.claim("r1", 10, 1_000, 61_000).await.expect("claim");
+    assert_eq!(more.len(), 1, "the rest of its own organization's sessions");
+    assert!(more.iter().all(|m| m.organization == locked_to));
+    assert!(
+        store
+            .claim("r1", 10, 1_000, 61_000)
+            .await
+            .expect("claim")
+            .is_empty()
+    );
+    let b = store.machine(other).await.expect("read").expect("row");
+    assert_eq!((b.state, b.organization), (MachineState::Queued, other_org));
+
+    // Another runner takes the other organization, and only that.
+    let theirs = store.claim("r2", 10, 1_000, 61_000).await.expect("claim");
+    assert_eq!(theirs.len(), 2);
+    assert!(theirs.iter().all(|m| m.organization == other_org));
+
+    // Everything is let go and queued again, both organizations' sessions.
+    for (holder, held) in [
+        ("r1", first.iter().chain(more.iter()).collect::<Vec<_>>()),
+        ("r2", theirs.iter().collect()),
+    ] {
+        for machine in held {
+            assert!(
+                store
+                    .set_machine_state(machine.session, holder, MachineState::Released, 2_000)
+                    .await
+                    .expect("state")
+            );
+            assert!(
+                store
+                    .wake_machine(machine.session, 2_000)
+                    .await
+                    .expect("wake")
+            );
+        }
+    }
+
+    // The lock outlives the leases: r2 holds nothing, but the other organization's sessions are
+    // still not its to take. r1 takes one of its own.
+    let again = store.claim("r1", 1, 3_000, 63_000).await.expect("claim");
+    assert_eq!(again.len(), 1);
+    assert_eq!(again.first().expect("one").organization, locked_to);
+    let b_again = store.claim("r2", 10, 3_000, 63_000).await.expect("claim");
+    assert_eq!(b_again.len(), 2);
+    assert!(b_again.iter().all(|m| m.organization == other_org));
+
+    // A runner that still holds a session is not unlocked by saying it is leaving.
+    store.unlock_runner("r1").await.expect("unlock");
+    let rest = store.claim("r1", 10, 3_100, 63_100).await.expect("claim");
+    assert!(rest.iter().all(|m| m.organization == locked_to));
+
+    // Once it holds nothing, leaving lets the lock go, and it locks afresh to whoever is next.
+    for machine in again.iter().chain(rest.iter()) {
+        store
+            .set_machine_state(machine.session, "r1", MachineState::Done, 4_000)
+            .await
+            .expect("state");
+    }
+    // The other organization's sessions wait again.
+    for machine in &b_again {
+        store
+            .set_machine_state(machine.session, "r2", MachineState::Released, 4_050)
+            .await
+            .expect("state");
+        assert!(
+            store
+                .wake_machine(machine.session, 4_050)
+                .await
+                .expect("wake")
+        );
+    }
+    assert!(
+        store
+            .claim("r1", 10, 4_100, 64_100)
+            .await
+            .expect("claim")
+            .is_empty(),
+        "r1 is still locked to the first organization, which has nothing queued"
+    );
+    store.unlock_runner("r1").await.expect("unlock");
+    let afresh = store.claim("r1", 10, 4_200, 64_200).await.expect("claim");
+    assert_eq!(afresh.len(), 2);
+    assert!(afresh.iter().all(|m| m.organization == other_org));
 }

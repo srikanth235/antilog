@@ -9,14 +9,13 @@ use antilog_types::{
     Command, Envelope, Item, Release, ReleaseOutcome, RepoSpec, SessionId, SessionSpec,
 };
 use anyhow::{Context, Result, bail};
-use tokio::process::Child;
 use tokio::sync::mpsc;
 use uuid::Uuid;
 
-use super::Config;
 use super::api::{NotHeld, Server};
 use super::machine::{self, repo_dir};
-use super::opencode::{Api, Harness, Launch, Tracker, permission};
+use super::opencode::{Api, Opencode, Tracker, permission};
+use super::sandbox::{Exec, Machine, Sandbox, SandboxSpec, run as run_in_machine};
 
 /// What the poll loop tells a session's task.
 pub enum Msg {
@@ -34,24 +33,6 @@ fn finish(done: &Done, id: Uuid) {
         .push(id);
 }
 
-async fn run_in(dir: &Path, args: &[&str]) -> Result<()> {
-    let output = tokio::process::Command::new(args.first().copied().unwrap_or("true"))
-        .args(args.get(1..).unwrap_or_default())
-        .current_dir(dir)
-        .env_remove("ANTILOG_RUNNER_KEY")
-        .output()
-        .await
-        .with_context(|| format!("running {}", args.join(" ")))?;
-    if !output.status.success() {
-        bail!(
-            "{} failed: {}",
-            args.first().copied().unwrap_or_default(),
-            String::from_utf8_lossy(&output.stderr).trim()
-        );
-    }
-    Ok(())
-}
-
 /// A clone address with the short-lived credential in it, for an https host.
 fn clone_url(repo: &RepoSpec) -> String {
     match (&repo.token, repo.url.strip_prefix("https://")) {
@@ -60,15 +41,50 @@ fn clone_url(repo: &RepoSpec) -> String {
     }
 }
 
-async fn clone_all(dir: &Path, spec: &SessionSpec) -> Result<()> {
-    tokio::fs::create_dir_all(dir).await?;
+async fn clone_all<M: Machine>(machine: &M, dir: &Path, spec: &SessionSpec) -> Result<()> {
+    run_in_machine(
+        machine,
+        Exec::new([
+            "mkdir".to_owned(),
+            "-p".to_owned(),
+            dir.to_string_lossy().into_owned(),
+        ]),
+        "making the session's folder",
+    )
+    .await?;
     for repo in &spec.repos {
         let target = repo_dir(dir, &repo.name);
-        if target.join(".git").exists() {
+        let target = target.to_string_lossy().into_owned();
+        let present = machine
+            .exec(Exec::new([
+                "test".to_owned(),
+                "-d".to_owned(),
+                format!("{target}/.git"),
+            ]))
+            .await?
+            .status
+            == 0;
+        if present {
             continue;
         }
-        let target = target.to_string_lossy().into_owned();
-        run_in(dir, &["git", "clone", "--quiet", &clone_url(repo), &target]).await?;
+        run_in_machine(
+            machine,
+            Exec::new([
+                "git".to_owned(),
+                "clone".to_owned(),
+                "--quiet".to_owned(),
+                clone_url(repo),
+                target.clone(),
+            ])
+            .dir(dir),
+            "git clone",
+        )
+        .await
+        // The clone address carries a credential; keep it out of the failure's text.
+        .map_err(|error| match &repo.token {
+            Some(token) => anyhow::anyhow!("{}", format!("{error:#}").replace(token, "***")),
+            None => error,
+        })?;
     }
     Ok(())
 }
@@ -102,7 +118,7 @@ struct PackFile {
 
 /// Writes each pack to `<skills dir>/<name>/`. A pack is JSON: text files with their paths. One
 /// that cannot be fetched, or names a path outside its folder, is skipped whole.
-pub(super) async fn install_skills(config: &Config, server: &Server, spec: &SessionSpec) {
+pub(super) async fn install_skills<M: Machine>(machine: &M, server: &Server, spec: &SessionSpec) {
     for skill in &spec.skills {
         let pack = async {
             if !inside(&skill.name) || Path::new(&skill.name).components().count() != 1 {
@@ -115,14 +131,19 @@ pub(super) async fn install_skills(config: &Config, server: &Server, spec: &Sess
             if let Some(bad) = pack.files.iter().find(|file| !inside(&file.path)) {
                 bail!("{} is outside the pack's folder", bad.path);
             }
-            let target = config.skills_dir.join(&skill.name);
-            tokio::fs::remove_dir_all(&target).await.ok();
+            let target = machine.paths().skills.join(&skill.name);
+            machine
+                .exec(Exec::new([
+                    "rm".to_owned(),
+                    "-rf".to_owned(),
+                    target.to_string_lossy().into_owned(),
+                ]))
+                .await?
+                .ok("clearing the pack's folder")?;
             for file in &pack.files {
-                let path = target.join(&file.path);
-                if let Some(parent) = path.parent() {
-                    tokio::fs::create_dir_all(parent).await?;
-                }
-                tokio::fs::write(path, &file.content).await?;
+                machine
+                    .put(&target.join(&file.path), file.content.as_bytes())
+                    .await?;
             }
             anyhow::Ok(())
         }
@@ -141,22 +162,22 @@ fn password() -> Result<String> {
     Ok(bytes.iter().map(|byte| format!("{byte:02x}")).collect())
 }
 
-struct Live<H: Harness> {
-    config: Arc<Config>,
-    harness: Arc<H>,
+struct Live<M: Machine> {
+    machine: Arc<M>,
+    opencode: Arc<Opencode>,
     server: Server,
     spec: SessionSpec,
-    launch: Launch,
+    /// Where OpenCode works, and its server's password.
+    dir: PathBuf,
+    password: String,
     api: Api,
-    child: Option<Child>,
     oc_session: String,
     tracker: Tracker,
     outbox: Vec<Item>,
-    root: PathBuf,
     done: Done,
 }
 
-impl<H: Harness> Live<H> {
+impl<M: Machine> Live<M> {
     /// Sends what is waiting. A server that cannot be reached leaves it for the next try: the
     /// server ignores an item it already has.
     async fn flush(&mut self) -> Result<()> {
@@ -223,9 +244,9 @@ impl<H: Harness> Live<H> {
                     self.spec.session,
                     self.spec.runner_token.clone(),
                 );
-                let (root, done, id) = (self.root.clone(), self.done.clone(), envelope.id);
+                let (machine, done, id) = (self.machine.clone(), self.done.clone(), envelope.id);
                 tokio::spawn(async move {
-                    let result = machine::run(&root, id, &run).await;
+                    let result = machine::run(&*machine, id, &run).await;
                     match server.result(session, &token, &result).await {
                         Ok(()) => finish(&done, id),
                         Err(error) => tracing::warn!(%error, "could not return a run's outcome"),
@@ -245,7 +266,11 @@ impl<H: Harness> Live<H> {
 
     /// Exports the session for a later claim, stops OpenCode and lets the machine go.
     async fn release(&mut self, outcome: ReleaseOutcome) -> Result<()> {
-        let export = match self.harness.export(&self.launch, &self.oc_session).await {
+        let export = match self
+            .opencode
+            .export(&*self.machine, &self.dir, &self.password, &self.oc_session)
+            .await
+        {
             Ok(export) => Some(export),
             Err(error) => {
                 tracing::warn!(%error, "could not export the session");
@@ -263,10 +288,9 @@ impl<H: Harness> Live<H> {
             .await
     }
 
+    /// Takes the machine away, with its disk.
     async fn stop(&mut self) {
-        if let Some(mut child) = self.child.take() {
-            child.kill().await.ok();
-        }
+        self.machine.stop().await;
     }
 
     /// The stream, until it ends, the session is let go (true) or the lease is lost.
@@ -298,78 +322,90 @@ impl<H: Harness> Live<H> {
     }
 }
 
-async fn start<H: Harness>(
-    config: &Arc<Config>,
-    harness: &Arc<H>,
+async fn start<S: Sandbox>(
+    sandbox: &Arc<S>,
+    opencode: &Arc<Opencode>,
     server: &Server,
     spec: &SessionSpec,
     done: &Done,
-) -> Result<Live<H>> {
-    let root = config.workdir.join(spec.session.to_string());
-    clone_all(&root, spec).await?;
-    if let Some(parent) = config.config_path.parent() {
-        tokio::fs::create_dir_all(parent).await?;
+) -> Result<Live<S::Machine>> {
+    let machine = Arc::new(sandbox.start(&SandboxSpec::new(spec)).await?);
+    match prepare(&machine, opencode, server, spec, done).await {
+        Ok(live) => Ok(live),
+        Err(error) => {
+            machine.stop().await;
+            Err(error)
+        }
     }
-    tokio::fs::write(
-        &config.config_path,
-        serde_json::to_vec_pretty(&spec.opencode_config)?,
-    )
-    .await
-    .with_context(|| format!("writing {}", config.config_path.display()))?;
-    install_skills(config, server, spec).await;
-    let launch = Launch {
-        dir: work_dir(&root, spec),
-        password: password()?,
-        env: spec
-            .variables
-            .iter()
-            .map(|(k, v)| (k.clone(), v.clone()))
-            .collect(),
-    };
+}
+
+async fn prepare<M: Machine>(
+    machine: &Arc<M>,
+    opencode: &Arc<Opencode>,
+    server: &Server,
+    spec: &SessionSpec,
+    done: &Done,
+) -> Result<Live<M>> {
+    let root = machine.paths().work.clone();
+    clone_all(&**machine, &root, spec).await?;
+    let config = machine.paths().config.clone();
+    machine
+        .put(&config, &serde_json::to_vec_pretty(&spec.opencode_config)?)
+        .await
+        .with_context(|| format!("writing {}", config.display()))?;
+    install_skills(&**machine, server, spec).await;
+    let dir = work_dir(&root, spec);
+    let password = password()?;
     // A session let go earlier comes back from its export.
     let mut imported = None;
     if spec.resume
         && let Some(export) = server.export(spec.session, &spec.runner_token).await?
     {
         let file = root.join(".antilog-export.json");
-        tokio::fs::write(&file, export).await?;
-        imported = Some(harness.import(&launch, &file).await?);
-        tokio::fs::remove_file(&file).await.ok();
+        machine.put(&file, export.as_bytes()).await?;
+        imported = Some(opencode.import(&**machine, &dir, &password, &file).await?);
+        machine
+            .exec(Exec::new([
+                "rm".to_owned(),
+                "-f".to_owned(),
+                file.to_string_lossy().into_owned(),
+            ]))
+            .await
+            .ok();
     }
-    let started = harness.launch(&launch).await?;
-    let api = Api::new(&started.base, &launch.password);
+    let base = opencode.serve(&**machine, &dir, &password).await?;
+    let api = Api::new(&base, &password);
     api.wait_healthy(Duration::from_secs(60)).await?;
     let oc_session = match imported {
         Some(id) => id,
         None => api.create_session().await?,
     };
     Ok(Live {
-        config: config.clone(),
-        harness: harness.clone(),
+        machine: machine.clone(),
+        opencode: opencode.clone(),
         server: server.clone(),
         spec: spec.clone(),
-        launch,
+        dir,
+        password,
         api,
-        child: started.child,
         tracker: Tracker::new(&oc_session),
         oc_session,
         outbox: Vec::new(),
-        root,
         done: done.clone(),
     })
 }
 
 /// Runs one session until it is let go or the lease is lost.
-pub async fn drive<H: Harness>(
-    config: Arc<Config>,
-    harness: Arc<H>,
+pub async fn drive<S: Sandbox>(
+    sandbox: Arc<S>,
+    opencode: Arc<Opencode>,
     server: Server,
     spec: SessionSpec,
     mut commands: mpsc::UnboundedReceiver<Msg>,
     done: Done,
 ) {
     let session: SessionId = spec.session;
-    let mut live = match start(&config, &harness, &server, &spec, &done).await {
+    let mut live = match start(&sandbox, &opencode, &server, &spec, &done).await {
         Ok(live) => live,
         Err(error) => {
             tracing::error!(%session, error = %format!("{error:#}"), "the session did not start");
@@ -384,7 +420,6 @@ pub async fn drive<H: Harness>(
             return;
         }
     };
-    let _ = &live.config;
     let mut attempts = 0;
     loop {
         match live.serve(&mut commands).await {

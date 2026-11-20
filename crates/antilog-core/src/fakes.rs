@@ -167,6 +167,11 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn fake_store_locks_a_runner_to_one_organization() {
+        crate::seed::runner_lock_suite(&FakeStore::default()).await;
+    }
+
+    #[tokio::test]
     async fn fake_store_keeps_model_keys_and_finds_a_session_for_the_gateway() {
         crate::gateway_suite::model_key_suite(&FakeStore::default()).await;
     }

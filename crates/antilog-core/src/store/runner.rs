@@ -27,6 +27,10 @@ pub trait RunnerStore {
     /// Puts every session whose lease lapsed before `now` back in `Queued`, then claims up to
     /// `limit` queued sessions for `holder` with a lease until `until` (milliseconds). A
     /// session whose organization budget or state forbids running is the caller's concern.
+    ///
+    /// A runner locks to the organization of the first session it claims and claims only that
+    /// organization's sessions afterwards, until `unlock_runner`, so customers never share a
+    /// host. A call with no room (`limit` 0) claims nothing and locks nothing.
     fn claim(
         &self,
         holder: &str,
@@ -34,6 +38,10 @@ pub trait RunnerStore {
         now: i64,
         until: i64,
     ) -> impl Future<Output = Result<Vec<Machine>, StoreError>> + Send;
+
+    /// The runner is leaving, so its organization lock goes, unless it still holds a session
+    /// (then the lock stays: its host still holds that organization's work).
+    fn unlock_runner(&self, holder: &str) -> impl Future<Output = Result<(), StoreError>> + Send;
 
     /// Extends the lease of every session `holder` still holds, and returns them.
     fn renew(

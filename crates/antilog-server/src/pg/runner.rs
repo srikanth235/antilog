@@ -138,6 +138,19 @@ impl RunnerStore for PgStore {
         Ok(machines)
     }
 
+    async fn unlock_runner(&self, holder: &str) -> Result<(), StoreError> {
+        let mut tx = self.runner().await?;
+        sqlx::query!(
+            "delete from runner_locks where holder = $1 and not exists (select 1 from machines where holder = $1 and state in ('claimed', 'running', 'idle'))",
+            holder,
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(map)?;
+        tx.commit().await.map_err(map)?;
+        Ok(())
+    }
+
     async fn renew(
         &self,
         holder: &str,
