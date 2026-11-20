@@ -72,3 +72,11 @@ The judge runs the sealed command through `SessionMachine::run` in the session's
 ```
 
 Base and trial runs are interleaved by the judge (`judge/paired.rs`). The number comes from this line, never from the agent's report.
+
+## Stored secrets (B and C)
+
+Customer model keys and connector credentials are encrypted in Postgres with `chacha20poly1305` (XChaCha20-Poly1305 with a random nonce for each value). The master key comes from the existing `Secrets` store, never from the database. B adds the crate and a small `Sealed` helper in `antilog-core/src/sealed.rs`. C uses that helper once B has landed; until then C builds against an identical copy behind the same API, and the orchestrator reconciles the two at merge (owner, 20 Nov).
+
+## MCP transport (C)
+
+The per-session endpoint uses rmcp's streamable HTTP server feature on the existing `rmcp` dependency (owner, 20 Nov).
