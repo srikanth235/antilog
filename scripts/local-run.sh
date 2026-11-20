@@ -4,6 +4,8 @@
 #
 #   ZEN_KEY=... scripts/local-run.sh                  # OpenCode Zen, a free model
 #   MODEL=opencode/big-pickle ZEN_KEY=... scripts/local-run.sh
+#   SERVE_ONLY=1 ZEN_KEY=x scripts/local-run.sh      # only the stack, to drive from the web app
+#   OpenCode Go: ANTILOG_PROXY_OPENCODE_URL=https://opencode.ai/zen/go MODEL=opencode/glm-5.3-flash
 #
 # Needs: Docker (running), a Rust toolchain, curl, python3, openssl. About 3 GB of disk for the
 # session image. Everything it starts is stopped on exit; its files live in .local-run/.
@@ -87,6 +89,17 @@ api() { # method path [json]
   curl "${args[@]}"
 }
 field() { python3 -c "import json,sys; d=json.load(sys.stdin); print(eval('d'+sys.argv[1]))" "$1"; }
+
+if [ -n "${SERVE_ONLY:-}" ]; then
+  step "Serving for the web app (Ctrl-C stops everything)"
+  "$BIN"/antilog runner --server "$SERVER" --name local --proxy 127.0.0.1:8081 \
+    --state-dir "$RUN/state" >"$RUN/runner.log" 2>&1 &
+  pids+=($!)
+  echo "API on $SERVER. Run the web app: cd web && ANTILOG_API=$SERVER pnpm dev, then open"
+  echo "http://localhost:5173, sign in with a test account, and add the model key under Settings."
+  wait
+  exit 0
+fi
 
 step "Signing up a test owner and organization"
 jar="$RUN/cookies"
