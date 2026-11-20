@@ -16,6 +16,7 @@ pub mod judge;
 pub mod machine;
 pub mod organization;
 pub mod runner;
+pub mod sealed;
 pub mod secrets;
 pub mod seed;
 pub mod session;
