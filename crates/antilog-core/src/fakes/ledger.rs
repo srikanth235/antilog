@@ -1,6 +1,6 @@
 use antilog_types::{
-    Agent, Approval, AuditEntry, EvaluationTemplate, Experiment, ExperimentId, Member, MemberId,
-    Organization, OrganizationId, Policy, Project, ProjectId, ProjectRole, Role, Session,
+    Agent, Approval, AuditEntry, Environment, EvaluationTemplate, Experiment, ExperimentId, Member,
+    MemberId, Organization, OrganizationId, Policy, Project, ProjectId, ProjectRole, Role, Session,
     SessionEvent, SessionId, Spend,
 };
 
@@ -23,6 +23,8 @@ pub(crate) struct Ledger {
     pub events: Vec<(String, SessionEvent)>,
     pub agents: Vec<(OrganizationId, Agent)>,
     pub evaluations: Vec<(OrganizationId, EvaluationTemplate)>,
+    /// Every version of every environment; `archived` is set on all of an environment's rows.
+    pub environments: Vec<(OrganizationId, Environment)>,
 }
 
 pub(super) fn least(a: Option<i64>, b: Option<i64>) -> Option<i64> {

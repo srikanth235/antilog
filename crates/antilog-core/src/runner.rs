@@ -2,8 +2,6 @@
 //! every organization; it holds a session by lease and everything it says about a session comes
 //! with that session's own `Runner` token.
 
-use std::collections::BTreeMap;
-
 use antilog_types::{
     ApprovalStatus, CardKind, CardPayload, Command, EventKind, Item, ItemKind, Machine,
     MachineState, PollRequest, PollResponse, Release, ReleaseOutcome, Reply, RepoSpec, RunResult,
@@ -15,6 +13,7 @@ use serde_json::{Value, json};
 use crate::approval::{CardRequest, raise};
 use crate::credentials::{CredentialsError, Purpose, SessionCredentials};
 use crate::deps::Deps;
+use crate::environments;
 use crate::organization::Refusal;
 use crate::session::{SessionError, audit, now_ms, record};
 use crate::store::{ApprovalStore, CustomizeStore, Store};
@@ -134,6 +133,11 @@ async fn spec<D: Deps>(
             version: skill.version.to_string(),
         })
         .collect();
+    // The version the session started on; one that has gone missing fails the claim, so a
+    // session never runs with a network its environment did not give it.
+    let environment = environments::of_seed(deps.store(), machine.organization, &machine.seed)
+        .await?
+        .ok_or(RunnerError::NotFound)?;
     Ok(SessionSpec {
         session,
         organization: machine.organization,
@@ -150,8 +154,7 @@ async fn spec<D: Deps>(
                 token: None,
             })
             .collect(),
-        environment: machine.seed.environment.clone(),
-        variables: BTreeMap::new(),
+        environment,
         skills,
         opencode_config: opencode_config(settings, session, &model_token, &mcp_token),
         model_token,

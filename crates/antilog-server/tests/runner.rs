@@ -559,3 +559,83 @@ async fn a_failed_release_marks_the_session_failed() {
         .unwrap();
     assert_eq!(row.status, SessionStatus::Failed);
 }
+
+#[tokio::test]
+async fn a_claim_carries_the_environment_version_the_session_started_on() {
+    use antilog_core::environments as env;
+    use antilog_types::{EnvironmentSpec, NetworkLevel, NewEnvironment};
+
+    let world = world().await;
+    let who = owner(&world);
+    let new = |network, hosts: &[&str]| NewEnvironment {
+        name: "Bench".into(),
+        network,
+        allowed_hosts: hosts.iter().map(|h| (*h).to_owned()).collect(),
+        allow_package_managers: false,
+        variables: [("STRIPE_KEY".to_owned(), "sk_test".to_owned())].into(),
+        setup_script: "npm ci".into(),
+        cpus: 4,
+        memory_mb: 16384,
+    };
+    env::create(
+        &world.deps.store,
+        &who,
+        1,
+        new(NetworkLevel::Limited, &["api.stripe.com"]),
+    )
+    .await
+    .unwrap();
+    let on = |environment: Option<&str>| NewSession {
+        agent: "opencode".into(),
+        prompt: "go".into(),
+        repos: vec![],
+        environment: environment.map(str::to_owned),
+        actor: Some(world.seed.owner.id),
+    };
+    let org = world.seed.organization.id;
+    let exp = world.seed.experiment.id;
+    let first = session::start(&*world.deps, org, exp, on(Some("bench")))
+        .await
+        .unwrap();
+    // An edit after the session started does not move it.
+    env::edit(
+        &world.deps.store,
+        &who,
+        2,
+        "bench",
+        new(NetworkLevel::None, &[]),
+    )
+    .await
+    .unwrap();
+    let second = session::start(&*world.deps, org, exp, on(Some("bench")))
+        .await
+        .unwrap();
+    let plain = session::start(&*world.deps, org, exp, on(None))
+        .await
+        .unwrap();
+
+    let polled = poll(&world.app, "r1", &[]).await;
+    let spec = |id: antilog_types::SessionId| -> EnvironmentSpec {
+        let claim = polled["claims"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|claim| claim["session"] == json!(id))
+            .expect("claimed");
+        serde_json::from_value(claim["environment"].clone()).expect("an environment spec")
+    };
+    let one = spec(first.id);
+    assert_eq!(
+        (one.id.as_str(), one.version, one.network),
+        ("bench", 1, NetworkLevel::Limited)
+    );
+    assert_eq!(one.allowed_hosts, vec!["api.stripe.com".to_owned()]);
+    assert_eq!(one.variables["STRIPE_KEY"], "sk_test");
+    assert_eq!(
+        (one.setup_script.as_str(), one.cpus, one.memory_mb),
+        ("npm ci", 4, 16384)
+    );
+    let two = spec(second.id);
+    assert_eq!((two.version, two.network), (2, NetworkLevel::None));
+    assert_eq!(spec(plain.id), EnvironmentSpec::default());
+}

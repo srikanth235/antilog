@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use antilog_core::clock::SystemClock;
 use antilog_core::secrets::EnvSecrets;
-use antilog_proxy::{NetworkAccess, Proxy, StaticEnvironment, Upstreams, server};
+use antilog_proxy::{Proxy, SessionNetworks, Upstreams, server};
 use antilog_server::pg::PgStore;
 use anyhow::Context;
 use sqlx::postgres::PgPoolOptions;
@@ -27,21 +27,6 @@ async fn main() -> anyhow::Result<()> {
         .context("connecting to Postgres")?;
     let store = PgStore::new(pool).sealed_by(&EnvSecrets::from_env()).await;
 
-    // Environments are not stored yet, so every session gets the network the proxy is told:
-    // the hosts in ANTILOG_PROXY_ALLOWED_HOSTS (comma separated) and, unless switched off with
-    // ANTILOG_PROXY_PACKAGE_REGISTRIES=0, the package registries. Nothing else.
-    let hosts = setting("ANTILOG_PROXY_ALLOWED_HOSTS")
-        .map(|list| {
-            list.split(',')
-                .map(|host| host.trim().to_owned())
-                .filter(|host| !host.is_empty())
-                .collect()
-        })
-        .unwrap_or_default();
-    let environments = StaticEnvironment(NetworkAccess::Limited {
-        hosts,
-        package_registries: setting("ANTILOG_PROXY_PACKAGE_REGISTRIES").as_deref() != Some("0"),
-    });
     let upstreams = Upstreams {
         anthropic: setting("ANTILOG_PROXY_ANTHROPIC_URL")
             .unwrap_or_else(|| Upstreams::default().anthropic),
@@ -51,7 +36,7 @@ async fn main() -> anyhow::Result<()> {
         credentials: store.clone(),
         store,
         clock: SystemClock,
-        environments,
+        networks: SessionNetworks::default(),
         upstreams,
         http: reqwest::Client::builder()
             .redirect(reqwest::redirect::Policy::none())

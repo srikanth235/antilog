@@ -15,7 +15,7 @@ use antilog_core::clock::Clock;
 use antilog_core::credentials::SessionCredentials;
 use antilog_core::store::Store;
 
-pub use egress::{Environments, NetworkAccess, StaticEnvironment};
+pub use egress::{NetworkAccess, SessionNetworks};
 
 /// Where each provider's API is. A test points these at a fake.
 #[derive(Debug, Clone)]
@@ -33,19 +33,21 @@ impl Default for Upstreams {
     }
 }
 
-/// Everything a request needs. `S` is the ledger and the sealed keys, `C` the session tokens.
-pub struct Proxy<S, C, K, E> {
+/// Everything a request needs. `S` is the ledger, the sealed keys and the environments, `C` the
+/// session tokens.
+pub struct Proxy<S, C, K> {
     pub store: S,
     pub credentials: C,
     pub clock: K,
-    pub environments: E,
+    /// What each session's environment lets it reach, looked up in `store` and kept briefly.
+    pub networks: SessionNetworks,
     pub upstreams: Upstreams,
     pub http: reqwest::Client,
     /// Whether a tunnel may reach a private or loopback address. Only a test turns this on.
     pub allow_private_addresses: bool,
 }
 
-pub type Shared<S, C, K, E> = Arc<Proxy<S, C, K, E>>;
+pub type Shared<S, C, K> = Arc<Proxy<S, C, K>>;
 
 /// The bounds every handler needs, named once.
 pub trait Backend: Store + 'static {}

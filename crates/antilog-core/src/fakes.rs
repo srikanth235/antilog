@@ -11,6 +11,7 @@ mod code_host;
 mod connectors;
 mod credentials;
 mod customize;
+mod environment;
 pub(crate) mod ledger;
 mod machine;
 mod model_key;

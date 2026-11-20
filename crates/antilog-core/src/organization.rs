@@ -62,6 +62,9 @@ pub enum Action {
     OrganizationLimitsSet,
     PolicySet,
     AgentSet,
+    EnvironmentCreate,
+    EnvironmentEdit,
+    EnvironmentArchive,
     ModelKeySet,
     ModelKeyRemove,
     EvaluationAdd,
@@ -98,6 +101,9 @@ impl Action {
         Self::OrganizationLimitsSet,
         Self::PolicySet,
         Self::AgentSet,
+        Self::EnvironmentCreate,
+        Self::EnvironmentEdit,
+        Self::EnvironmentArchive,
         Self::ModelKeySet,
         Self::ModelKeyRemove,
         Self::EvaluationAdd,
@@ -134,6 +140,9 @@ impl Action {
             Self::OrganizationLimitsSet => "organization.set_limits",
             Self::PolicySet => "policy.set",
             Self::AgentSet => "agent.set",
+            Self::EnvironmentCreate => "environment.create",
+            Self::EnvironmentEdit => "environment.edit",
+            Self::EnvironmentArchive => "environment.archive",
             Self::ModelKeySet => "model_key.set",
             Self::ModelKeyRemove => "model_key.remove",
             Self::EvaluationAdd => "evaluation.add",
@@ -167,6 +176,9 @@ impl Action {
             Self::ExperimentBudgetSet
             | Self::ExperimentCreate
             | Self::EvaluationAdd
+            | Self::EnvironmentCreate
+            | Self::EnvironmentEdit
+            | Self::EnvironmentArchive
             | Self::SkillAdd
             | Self::ExperimentReachSet
             | Self::SessionStart

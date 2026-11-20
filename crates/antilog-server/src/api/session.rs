@@ -9,12 +9,12 @@ use antilog_core::session::{self, NewSession, SessionError};
 use antilog_core::store::judge::JudgeStore;
 use antilog_core::store::{OrganizationStore, SessionStore};
 use antilog_core::tools::{Caller, ToolHost, Toolbox, definitions};
-use antilog_core::{agents, evaluations as evals};
+use antilog_core::{agents, environments as env, evaluations as evals};
 use antilog_types::judge::{Receipt, TrialId};
 use antilog_types::{
     Agent, ApiError, AutoChoice, Environment, EvaluationTemplate, EventPage, Experiment,
-    ExperimentId, NewAgent, NewEvaluationTemplate, NewExperiment, ProjectId, SendMessage, Session,
-    SessionId, StartSession, ToolCall, ToolDefinition, ToolResult,
+    ExperimentId, NewAgent, NewEnvironment, NewEvaluationTemplate, NewExperiment, ProjectId,
+    SendMessage, Session, SessionId, StartSession, ToolCall, ToolDefinition, ToolResult,
 };
 use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
@@ -40,6 +40,9 @@ use super::auth::{App, Authed, Fail};
     auto_agent,
     set_agent,
     environments,
+    create_environment,
+    edit_environment,
+    archive_environment,
     evaluations,
     evaluation,
     add_evaluation,
@@ -65,6 +68,11 @@ pub fn refuse(error: SessionError) -> Response {
             "The session has ended: start a new one.".to_owned(),
         ),
         SessionError::Budget(error) => (StatusCode::CONFLICT, "budget_spent", error.to_string()),
+        SessionError::Environment(error) => (
+            StatusCode::UNPROCESSABLE_ENTITY,
+            "invalid_environment",
+            error.to_string(),
+        ),
         SessionError::Store(_) => (
             StatusCode::SERVICE_UNAVAILABLE,
             "unavailable",
@@ -360,13 +368,58 @@ async fn add_evaluation<D: Deps + 'static>(
 
 #[utoipa::path(
     get, path = "/environments", security(("bearer" = [])),
-    responses((status = 200, description = "Where a session may run", body = Vec<Environment>))
+    responses((status = 200, description = "The built-in default, then the organization's environments by id, archived ones marked", body = Vec<Environment>))
 )]
 async fn environments<D: Deps + 'static>(
     State(app): Shared<D>,
     authed: Authed,
 ) -> Result<Json<Vec<Environment>>, Fail> {
-    Ok(Json(agents::environments(app.store(), &authed.who).await?))
+    Ok(Json(env::list(app.store(), &authed.who).await?))
+}
+
+#[utoipa::path(
+    post, path = "/environments", operation_id = "create_environment", security(("bearer" = [])),
+    request_body = NewEnvironment,
+    responses((status = 201, description = "Created at version 1; owners and editors", body = Environment), (status = 409, body = ApiError), (status = 422, body = ApiError))
+)]
+async fn create_environment<D: Deps + 'static>(
+    State(app): Shared<D>,
+    authed: Authed,
+    Json(new): Json<NewEnvironment>,
+) -> Result<(StatusCode, Json<Environment>), Fail> {
+    let made = env::create(app.store(), &authed.who, app.now(), new).await?;
+    Ok((StatusCode::CREATED, Json(made)))
+}
+
+#[utoipa::path(
+    put, path = "/environments/{id}", operation_id = "edit_environment", security(("bearer" = [])),
+    params(("id" = String, Path, description = "The environment's id")),
+    request_body = NewEnvironment,
+    responses((status = 200, description = "The next version; owners and editors", body = Environment), (status = 404, body = ApiError), (status = 409, body = ApiError), (status = 422, body = ApiError))
+)]
+async fn edit_environment<D: Deps + 'static>(
+    State(app): Shared<D>,
+    authed: Authed,
+    Path(id): Path<String>,
+    Json(new): Json<NewEnvironment>,
+) -> Result<Json<Environment>, Fail> {
+    Ok(Json(
+        env::edit(app.store(), &authed.who, app.now(), &id, new).await?,
+    ))
+}
+
+#[utoipa::path(
+    post, path = "/environments/{id}/archive", operation_id = "archive_environment", security(("bearer" = [])),
+    params(("id" = String, Path, description = "The environment's id")),
+    responses((status = 204, description = "Archived; owners and editors"), (status = 404, body = ApiError))
+)]
+async fn archive_environment<D: Deps + 'static>(
+    State(app): Shared<D>,
+    authed: Authed,
+    Path(id): Path<String>,
+) -> Result<StatusCode, Fail> {
+    env::archive(app.store(), &authed.who, app.now(), &id).await?;
+    Ok(StatusCode::NO_CONTENT)
 }
 
 #[derive(serde::Deserialize, utoipa::IntoParams)]
@@ -546,7 +599,12 @@ pub fn routes<D: Deps + 'static>() -> Router<Arc<App<D>>> {
         .route("/agents", get(agents::<D>))
         .route("/agents/auto", get(auto_agent::<D>))
         .route("/agents/{id}", put(set_agent::<D>))
-        .route("/environments", get(environments::<D>))
+        .route(
+            "/environments",
+            get(environments::<D>).post(create_environment::<D>),
+        )
+        .route("/environments/{id}", put(edit_environment::<D>))
+        .route("/environments/{id}/archive", post(archive_environment::<D>))
         .route(
             "/evaluations",
             get(evaluations::<D>).post(add_evaluation::<D>),

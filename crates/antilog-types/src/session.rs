@@ -1,8 +1,12 @@
+use std::collections::BTreeMap;
+
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 use crate::id::text_enum;
-use crate::{ExperimentId, MemberId, OrganizationId, ProjectId, SessionId};
+use crate::{
+    EnvironmentSpec, ExperimentId, MemberId, NetworkLevel, OrganizationId, ProjectId, SessionId,
+};
 
 text_enum!(
     /// Sealing is the judge's; Watching and Regressed are derived, never stored.
@@ -166,14 +170,88 @@ pub struct AutoChoice {
     pub reason: String,
 }
 
-/// Where an experiment's session may run.
+/// One version of an environment an organization manages, or the built-in default. A change
+/// makes a new version; a session records the version it ran.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Environment {
     pub id: String,
     pub name: String,
-    /// Offered until environments can be registered.
+    pub version: u32,
+    pub network: NetworkLevel,
+    /// Exact host names; used at the limited level.
+    pub allowed_hosts: Vec<String>,
+    pub allow_package_managers: bool,
+    /// Plain variables, readable by the agent. Model keys never go here.
+    pub variables: BTreeMap<String, String>,
+    /// Runs as root once per version before the agent starts; empty for none.
+    pub setup_script: String,
+    pub cpus: u32,
+    pub memory_mb: u32,
+    /// The default every organization has; it is not stored and cannot be changed.
     pub built_in: bool,
+    pub archived: bool,
+    /// Who made this version; empty for the built-in default.
+    pub created_by: Option<MemberId>,
+    /// When this version was made, in milliseconds.
+    pub created_at: i64,
+}
+
+impl Environment {
+    /// The built-in default, which matches `EnvironmentSpec::default()`.
+    pub fn built_in() -> Self {
+        let spec = EnvironmentSpec::default();
+        Self {
+            id: spec.id,
+            name: "Default".to_owned(),
+            version: spec.version,
+            network: spec.network,
+            allowed_hosts: spec.allowed_hosts,
+            allow_package_managers: spec.allow_package_managers,
+            variables: spec.variables,
+            setup_script: spec.setup_script,
+            cpus: spec.cpus,
+            memory_mb: spec.memory_mb,
+            built_in: true,
+            archived: false,
+            created_by: None,
+            created_at: 0,
+        }
+    }
+
+    /// What a runner receives and the proxy enforces.
+    pub fn spec(&self) -> EnvironmentSpec {
+        EnvironmentSpec {
+            id: self.id.clone(),
+            version: self.version,
+            network: self.network,
+            allowed_hosts: self.allowed_hosts.clone(),
+            allow_package_managers: self.allow_package_managers,
+            variables: self.variables.clone(),
+            setup_script: self.setup_script.clone(),
+            cpus: self.cpus,
+            memory_mb: self.memory_mb,
+        }
+    }
+}
+
+/// What makes an environment, or a new version of one. The id comes from the name on create.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct NewEnvironment {
+    pub name: String,
+    pub network: NetworkLevel,
+    #[serde(default)]
+    pub allowed_hosts: Vec<String>,
+    pub allow_package_managers: bool,
+    /// Readable by the agent: a service key goes here, a model key never does.
+    #[serde(default)]
+    pub variables: BTreeMap<String, String>,
+    /// At most 64 KB.
+    #[serde(default)]
+    pub setup_script: String,
+    pub cpus: u32,
+    pub memory_mb: u32,
 }
 
 /// What starts an experiment in a project. The budget defaults to the project's, then the organization's.

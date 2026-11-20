@@ -17,10 +17,15 @@ use antilog_core::credentials::{Purpose, SessionCredentials};
 use antilog_core::fakes::{FakeCredentials, FakeStore};
 use antilog_core::secrets::Secret;
 use antilog_core::seed::{self, Seed};
-use antilog_core::store::{BudgetStore, ModelKeyStore, SessionStore};
+use antilog_core::store::{
+    BudgetStore, EnvironmentStore, ModelKeyStore, RunnerStore, SessionStore,
+};
 use antilog_proxy::price::{self, Tokens};
-use antilog_proxy::{NetworkAccess, Proxy, StaticEnvironment, Upstreams, server};
-use antilog_types::{AuditEntry, AuditOutcome, ModelProvider, Session, SessionId};
+use antilog_proxy::{Proxy, SessionNetworks, Upstreams, server};
+use antilog_types::{
+    AuditEntry, AuditOutcome, Environment, ModelProvider, NetworkLevel, Seed as MachineSeed,
+    Session, SessionId,
+};
 use axum::Router;
 use axum::body::Body;
 use axum::extract::{Request, State};
@@ -221,7 +226,7 @@ impl Capture {
 
 // ---- the rig ------------------------------------------------------------------------------
 
-type TestProxy = Proxy<FakeStore, FakeCredentials, SystemClock, StaticEnvironment>;
+type TestProxy = Proxy<FakeStore, FakeCredentials, SystemClock>;
 
 struct Rig {
     proxy: Arc<TestProxy>,
@@ -237,6 +242,8 @@ struct Rig {
 
 struct Options {
     budget_cents: i64,
+    network: NetworkLevel,
+    registries: bool,
     hosts: Vec<String>,
     allow_private: bool,
     keys: bool,
@@ -246,6 +253,8 @@ impl Default for Options {
     fn default() -> Self {
         Self {
             budget_cents: 10_000,
+            network: NetworkLevel::Limited,
+            registries: false,
             hosts: Vec::new(),
             allow_private: false,
             keys: true,
@@ -304,6 +313,44 @@ impl Rig {
                     .unwrap();
             }
         }
+        // The session's machine was started on a stored environment, which says what it reaches.
+        let environment = Environment {
+            id: "bench".into(),
+            name: "Bench".into(),
+            version: 1,
+            network: options.network,
+            allowed_hosts: options.hosts,
+            allow_package_managers: options.registries,
+            variables: Default::default(),
+            setup_script: String::new(),
+            cpus: 2,
+            memory_mb: 8192,
+            built_in: false,
+            archived: false,
+            created_by: Some(seed.owner.id),
+            created_at: seed::T0,
+        };
+        store
+            .add_environment(
+                seed.organization.id,
+                &environment,
+                &audit(&seed, "environment.create"),
+            )
+            .await
+            .unwrap();
+        store
+            .enqueue_machine(
+                seed.organization.id,
+                session.id,
+                &MachineSeed {
+                    repos: Vec::new(),
+                    environment: Some("bench".into()),
+                    environment_version: Some(1),
+                },
+                seed::T0,
+            )
+            .await
+            .unwrap();
         let credentials = FakeCredentials::new(Arc::new(SystemClock));
         let token = credentials
             .mint(session.id, Purpose::Model, SignedDuration::from_mins(30))
@@ -313,10 +360,7 @@ impl Rig {
             store,
             credentials,
             clock: SystemClock,
-            environments: StaticEnvironment(NetworkAccess::Limited {
-                hosts: options.hosts,
-                package_registries: false,
-            }),
+            networks: SessionNetworks::default(),
             upstreams: Upstreams {
                 anthropic: upstream.clone(),
                 openai: upstream,
@@ -829,6 +873,131 @@ async fn a_tunnel_needs_a_live_session_token_and_never_reaches_a_private_address
     let (status, _) = connect(&rig, &target, Some(&rig.token)).await;
     assert_eq!(status, 403);
     assert!(rig.logs.text().contains("only to a private address"));
+}
+
+/// A tunnel to the echo server, with the answer if it was opened.
+async fn ping(rig: &Rig, target: &str) -> (u16, Option<[u8; 4]>) {
+    let (status, mut tunnel) = connect(rig, target, Some(&rig.token)).await;
+    if status != 200 {
+        return (status, None);
+    }
+    tunnel.write_all(b"ping").await.unwrap();
+    let mut answer = [0u8; 4];
+    tunnel.read_exact(&mut answer).await.unwrap();
+    (status, Some(answer))
+}
+
+#[tokio::test]
+async fn no_network_refuses_every_tunnel_and_the_gateway_still_answers() {
+    let rig = Rig::start(Options {
+        network: NetworkLevel::None,
+        // A list at this level is ignored, and so is the switch for registries.
+        hosts: vec!["127.0.0.1".into()],
+        registries: true,
+        allow_private: true,
+        ..Options::default()
+    })
+    .await;
+    let port = echo_server().await;
+    assert_eq!(ping(&rig, &format!("127.0.0.1:{port}")).await.0, 403);
+    assert_eq!(ping(&rig, "registry.npmjs.org:443").await.0, 403);
+    assert!(
+        rig.logs
+            .text()
+            .contains("egress refused: not on the allowlist")
+    );
+    // The model gateway is a route of the proxy itself, not a tunnel.
+    let reply = rig
+        .anthropic(
+            &rig.token,
+            json!({"model":format!("{}-20250929", am()),"max_tokens":10,"messages":[]}),
+        )
+        .await;
+    assert_eq!(reply.status(), StatusCode::OK);
+}
+
+#[tokio::test]
+async fn a_limited_network_allows_its_listed_hosts_only() {
+    let rig = Rig::start(Options {
+        hosts: vec!["127.0.0.1".into()],
+        allow_private: true,
+        ..Options::default()
+    })
+    .await;
+    let port = echo_server().await;
+    assert_eq!(
+        ping(&rig, &format!("127.0.0.1:{port}")).await,
+        (200, Some(*b"pong"))
+    );
+    assert_eq!(ping(&rig, "pypi.org:443").await.0, 403);
+
+    // Registries are one switch, covered where the allowlist is (`egress` unit tests); a name
+    // that is neither listed nor a registry is refused.
+    assert_eq!(ping(&rig, "evil.example:443").await.0, 403);
+}
+
+#[tokio::test]
+async fn a_full_network_allows_any_host_but_never_a_private_address() {
+    let open = Rig::start(Options {
+        network: NetworkLevel::Full,
+        allow_private: true,
+        ..Options::default()
+    })
+    .await;
+    let port = echo_server().await;
+    // Only the test's switch lets a tunnel reach this machine; nothing is listed.
+    assert_eq!(
+        ping(&open, &format!("127.0.0.1:{port}")).await,
+        (200, Some(*b"pong"))
+    );
+
+    let rig = Rig::start(Options {
+        network: NetworkLevel::Full,
+        ..Options::default()
+    })
+    .await;
+    for target in [
+        format!("127.0.0.1:{port}"),
+        format!("localhost:{port}"),
+        "10.1.2.3:443".to_owned(),
+        "192.168.0.10:443".to_owned(),
+        "169.254.169.254:80".to_owned(),
+        "[::1]:443".to_owned(),
+    ] {
+        assert_eq!(ping(&rig, &target).await.0, 403, "{target}");
+    }
+    assert!(rig.logs.text().contains("only to a private address"));
+}
+
+#[tokio::test]
+async fn a_session_with_no_machine_gets_no_network() {
+    let rig = Rig::start(Options {
+        network: NetworkLevel::Full,
+        allow_private: true,
+        ..Options::default()
+    })
+    .await;
+    // A session of an agent on a person's own machine has no machine row here.
+    let other = Session::new(
+        rig.seed.organization.id,
+        rig.seed.experiment.id,
+        "mcp",
+        seed::T0,
+    );
+    rig.proxy
+        .store
+        .create_session(&other, &audit(&rig.seed, "session.start"))
+        .await
+        .unwrap();
+    let token = rig
+        .proxy
+        .credentials
+        .mint(other.id, Purpose::Model, SignedDuration::from_mins(5))
+        .await
+        .unwrap();
+    let port = echo_server().await;
+    let (status, _) = connect(&rig, &format!("127.0.0.1:{port}"), Some(&token)).await;
+    assert_eq!(status, 403);
 }
 
 // ---- secrets stay out of logs -------------------------------------------------------------

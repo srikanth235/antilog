@@ -63,9 +63,8 @@ pub struct SessionSpec {
     /// `provider/model`, as OpenCode names it.
     pub model: String,
     pub repos: Vec<RepoSpec>,
-    pub environment: Option<String>,
-    /// Plain variables of the environment.
-    pub variables: BTreeMap<String, String>,
+    /// The environment version the session runs on; its variables are the machine's.
+    pub environment: EnvironmentSpec,
     pub skills: Vec<SkillDownload>,
     /// The machine-wide OpenCode config, generated here.
     pub opencode_config: serde_json::Value,
@@ -215,7 +214,11 @@ pub struct Release {
 #[serde(rename_all = "camelCase")]
 pub struct Seed {
     pub repos: Vec<String>,
+    /// The stored environment the session started on; `None` is the built-in default.
     pub environment: Option<String>,
+    /// The version of that environment, pinned when the session started.
+    #[serde(default)]
+    pub environment_version: Option<u32>,
 }
 
 /// A session's machine row.
@@ -233,17 +236,16 @@ pub struct Machine {
     pub resume: bool,
 }
 
-/// How much of the network a session's machine may reach (docs/V0.md, Environments).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum NetworkLevel {
-    /// No outbound traffic at all, not even through the proxy, except the model gateway.
-    None,
-    /// The proxy allows only `allowed_hosts`, plus package registries when allowed.
-    Limited,
-    /// The proxy allows any host.
-    Full,
-}
+text_enum!(
+    /// How much of the network a session's machine may reach (docs/V0.md, Environments). `None`
+    /// is no outbound traffic except the model gateway; `Limited` is `allowed_hosts` plus package
+    /// registries when allowed; `Full` is any host except private, loopback and metadata addresses.
+    NetworkLevel {
+        None => "none",
+        Limited => "limited",
+        Full => "full",
+    }
+);
 
 /// One version of an environment, as a runner receives it at claim. Every change to an
 /// environment makes a new version, so a setup snapshot is keyed by (`id`, `version`).

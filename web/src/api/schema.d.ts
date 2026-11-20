@@ -285,7 +285,39 @@ export interface paths {
         };
         get: operations["environments"];
         put?: never;
+        post: operations["create_environment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/environments/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["edit_environment"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/environments/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["archive_environment"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1297,12 +1329,38 @@ export interface components {
         Decision: "approve" | "decline";
         /** @enum {string} */
         Direction: "minimize" | "maximize";
-        /** @description Where an experiment's session may run. */
+        /**
+         * @description One version of an environment an organization manages, or the built-in default. A change
+         *     makes a new version; a session records the version it ran.
+         */
         Environment: {
-            /** @description Offered until environments can be registered. */
+            allowPackageManagers: boolean;
+            /** @description Exact host names; used at the limited level. */
+            allowedHosts: string[];
+            archived: boolean;
+            /** @description The default every organization has; it is not stored and cannot be changed. */
             builtIn: boolean;
+            /** Format: int32 */
+            cpus: number;
+            /**
+             * Format: int64
+             * @description When this version was made, in milliseconds.
+             */
+            createdAt: number;
+            createdBy?: components["schemas"]["MemberId"] | null;
             id: string;
+            /** Format: int32 */
+            memoryMb: number;
             name: string;
+            network: components["schemas"]["NetworkLevel"];
+            /** @description Runs as root once per version before the agent starts; empty for none. */
+            setupScript: string;
+            /** @description Plain variables, readable by the agent. Model keys never go here. */
+            variables: {
+                [key: string]: string;
+            };
+            /** Format: int32 */
+            version: number;
         };
         /**
          * @description What an evaluation measures.
@@ -1529,6 +1587,13 @@ export interface components {
          * @enum {string}
          */
         ModelProvider: "anthropic" | "openai";
+        /**
+         * @description How much of the network a session's machine may reach (docs/V0.md, Environments). `None`
+         *     is no outbound traffic except the model gateway; `Limited` is `allowed_hosts` plus package
+         *     registries when allowed; `Full` is any host except private, loopback and metadata addresses.
+         * @enum {string}
+         */
+        NetworkLevel: "none" | "limited" | "full";
         /** @description What an owner sets for an agent. */
         NewAgent: {
             costTier: components["schemas"]["CostTier"];
@@ -1541,6 +1606,23 @@ export interface components {
             credential?: string | null;
             name: string;
             url: string;
+        };
+        /** @description What makes an environment, or a new version of one. The id comes from the name on create. */
+        NewEnvironment: {
+            allowPackageManagers: boolean;
+            allowedHosts?: string[];
+            /** Format: int32 */
+            cpus: number;
+            /** Format: int32 */
+            memoryMb: number;
+            name: string;
+            network: components["schemas"]["NetworkLevel"];
+            /** @description At most 64 KB. */
+            setupScript?: string;
+            /** @description Readable by the agent: a service key goes here, a model key never does. */
+            variables?: {
+                [key: string]: string;
+            };
         };
         NewEvaluationTemplate: {
             command: string;
@@ -2663,13 +2745,133 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Where a session may run */
+            /** @description The built-in default, then the organization's environments by id, archived ones marked */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["Environment"][];
+                };
+            };
+        };
+    };
+    create_environment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewEnvironment"];
+            };
+        };
+        responses: {
+            /** @description Created at version 1; owners and editors */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Environment"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    edit_environment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The environment's id */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewEnvironment"];
+            };
+        };
+        responses: {
+            /** @description The next version; owners and editors */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Environment"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    archive_environment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The environment's id */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Archived; owners and editors */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
                 };
             };
         };

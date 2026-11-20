@@ -637,6 +637,7 @@ export const w = {
       "model-keys": "Model keys",
       approvals: "Approvals",
       budgets: "Budgets",
+      connections: "Connections",
       audit: "Audit log",
     },
     profile: {
@@ -697,6 +698,72 @@ export const w = {
       confirm: (provider: string) =>
         `Sessions that run a ${provider} model are refused until an owner adds a key again.`,
       keepIt: "Keep key",
+    },
+    environments: {
+      lead: "What sessions run on. Each change to an environment makes a new version, and a session keeps the version it started on. Nothing here shows a model key: Antilog keeps those and never sends them into a session.",
+      heading: "Environments",
+      add: "Add environment",
+      edit: "Edit",
+      archive: "Archive",
+      builtIn: "Built in",
+      archived: "Archived",
+      loadFailed: "The environments could not be loaded.",
+      networks: {
+        none: "No network",
+        limited: "Limited",
+        full: "Full",
+      },
+      networkHint:
+        "Limited reaches only the hosts below. Full reaches any public host, never a private or loopback address. No network reaches nothing but the model.",
+      summary: (network: string, hosts: number, registries: boolean) =>
+        network === "none"
+          ? "No network"
+          : network === "full"
+            ? "Full network"
+            : `Limited network, ${hosts === 1 ? "1 host" : `${hosts} hosts`}${registries ? ", package registries" : ""}`,
+      size: (cpus: number, memoryMb: number) =>
+        `${cpus} vCPU, ${memoryMb % 1024 === 0 ? `${memoryMb / 1024} GiB` : `${memoryMb} MB`}`,
+      version: (version: number) => `Version ${version}`,
+      changedBy: (version: number, who: string, when: string) =>
+        `Version ${version} · changed by ${who} · ${when}`,
+      madeBy: (who: string, when: string) => `Version 1 · made by ${who} · ${when}`,
+      archivedOn: (version: number, when: string) => `Version ${version} · archived · ${when}`,
+      newTitle: "Add an environment",
+      changeTitle: (name: string) => `Change ${name}`,
+      newLead: "It starts at version 1. A session picks an environment when it starts.",
+      changeLead: (next: number) =>
+        `Saving makes version ${next}. Sessions already running keep the version they started on.`,
+      name: "Name",
+      network: "Network",
+      hosts: "Allowed hosts",
+      hostsHint: "One exact host name per line. No wildcard, port or address.",
+      registries: "Package registries",
+      registriesHint: "npm, PyPI, crates.io, Go, Maven and system packages",
+      variables: "Variables",
+      variablesHint: "One NAME=value per line.",
+      variablesWarning:
+        "The agent can read these variables. Put a service key here only if a session needs it. A model key never goes here: Antilog keeps those and never sends them into a session.",
+      variablesBad:
+        "Each variable is one line of NAME=value, with a name of letters, digits and underscores.",
+      script: "Setup script",
+      scriptHint:
+        "Runs once as root before the agent starts, again only when the version changes. At most 64 KB.",
+      cpus: "CPUs",
+      memory: "Memory",
+      cpuOption: (n: number) => `${n} vCPU`,
+      saveNew: "Add environment",
+      saveVersion: (next: number) => `Save as version ${next}`,
+      cancel: "Cancel",
+      added: "Environment added",
+      saved: (version: number) => `Saved as version ${version}`,
+      archivedToast: "Environment archived",
+      exists: "An environment with that name already exists. Archived ones keep their name.",
+      archiveTitle: (name: string) => `Archive ${name}?`,
+      archiveConfirm:
+        "New sessions are no longer offered it. Sessions already running on it keep running, and its versions stay.",
+      keepIt: "Keep environment",
+      editorsOnly:
+        "Owners and editors can add, change and archive environments. Each change is in the audit log with who made it.",
     },
     general: {
       lead: "The organization's name and its limits.",

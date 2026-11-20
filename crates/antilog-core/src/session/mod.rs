@@ -1,6 +1,7 @@
 mod settle;
 
 use crate::deps::Deps;
+use crate::environments::{Unavailable, pin};
 use crate::spend::{BudgetError, ensure_budget};
 use crate::store::{NewEvent, RunnerStore, SessionChange, SessionStore, StoreError};
 use antilog_types::{
@@ -16,6 +17,8 @@ pub enum SessionError {
     NotFound,
     #[error("the session has ended; start a new one")]
     Ended,
+    #[error(transparent)]
+    Environment(#[from] Unavailable),
     #[error(transparent)]
     Budget(#[from] BudgetError),
     #[error(transparent)]
@@ -107,12 +110,16 @@ pub async fn start<D: Deps>(
         row.budget_cap_cents,
     )
     .await?;
+    // The environment is pinned at its version now: a later edit does not move a session.
+    let (environment, environment_version) =
+        pin(deps.store(), organization, new.environment.as_deref()).await?;
     let session = Session::new(organization, experiment, &new.agent, now_ms(deps));
     let entry = audit(deps, organization, new.actor, "session.start", session.id);
     deps.store().create_session(&session, &entry).await?;
     let seed = Seed {
         repos: new.repos,
-        environment: new.environment,
+        environment,
+        environment_version,
     };
     deps.store()
         .enqueue_machine(organization, session.id, &seed, now_ms(deps))

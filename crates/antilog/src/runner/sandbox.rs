@@ -93,8 +93,8 @@ pub struct Listener {
     pub base: String,
 }
 
-/// What a machine is made from. Built from `EnvironmentSpec::default()` and the session's own
-/// variables until the claim carries a whole environment.
+/// What a machine is made from: the claim's environment (limits, network, variables, setup
+/// script) and the login at the proxy.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SandboxSpec {
     pub session: SessionId,
@@ -107,10 +107,7 @@ impl SandboxSpec {
     pub fn new(spec: &SessionSpec) -> Self {
         Self {
             session: spec.session,
-            environment: EnvironmentSpec {
-                variables: spec.variables.clone(),
-                ..EnvironmentSpec::default()
-            },
+            environment: spec.environment.clone(),
             proxy_token: spec.model_token.clone(),
         }
     }

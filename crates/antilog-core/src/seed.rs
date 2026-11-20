@@ -596,6 +596,7 @@ pub async fn runner_suite<S: Store>(store: &S) {
         let seed_of = Seed {
             repos: vec!["acme/api".into()],
             environment: None,
+            environment_version: None,
         };
         store
             .enqueue_machine(org, session.id, &seed_of, T0)
@@ -823,6 +824,7 @@ pub async fn runner_lock_suite<S: Store>(store: &S) {
             let seed_of = Seed {
                 repos: Vec::new(),
                 environment: None,
+                environment_version: None,
             };
             store
                 .enqueue_machine(org, session.id, &seed_of, T0)
