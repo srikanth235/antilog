@@ -8,9 +8,9 @@
 //!
 //! Events are the rows of `session_events`, whose `seq` is the SSE id. A reconnect sends
 //! `Last-Event-ID` and the stream replays from that `seq`; a client too far behind (or ahead
-//! of a rebuilt ledger) gets `resync`. There is no `LISTEN/NOTIFY` on Lambda, so an open
-//! stream polls Postgres. It ends after [`Options::max_age`], well before the invocation cap
-//! and CloudFront's idle timeout, and the browser reconnects.
+//! of a rebuilt ledger) gets `resync`. An open stream polls Postgres rather than
+//! holding a `LISTEN/NOTIFY` connection. It ends after [`Options::max_age`], well inside the
+//! idle timeout of any proxy in front, and the browser reconnects.
 
 use std::collections::{HashMap, HashSet};
 use std::convert::Infallible;
