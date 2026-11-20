@@ -8,6 +8,7 @@ mod card;
 mod code_host;
 mod customize;
 mod organization;
+mod runner;
 mod session;
 
 pub use approval::ApprovalStore;
@@ -16,6 +17,7 @@ pub use card::CardStore;
 pub use code_host::{CodeHostStore, PullRequestRow};
 pub use customize::{ConnectorRow, CustomizeStore, SessionScope};
 pub use organization::{Membership, OrganizationStore, SignInRecord, TokenRecord};
+pub use runner::RunnerStore;
 pub use session::{NewEvent, SessionChange, SessionStore};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
@@ -51,6 +53,7 @@ pub trait Store:
     + ApprovalStore
     + CardStore
     + CodeHostStore
+    + RunnerStore
     + CustomizeStore
     + Send
     + Sync

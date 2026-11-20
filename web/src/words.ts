@@ -507,6 +507,7 @@ export const w = {
       open_pull_request: "Open pull request",
       keep_going: "Keep going?",
       continue_on_another_agent: "Continue on another agent?",
+      ask_first: "Allow this tool?",
       use_connector_tool: "Use a connector tool",
     },
     approve: {
@@ -518,6 +519,7 @@ export const w = {
       open_pull_request: "Open pull request",
       keep_going: "Keep going",
       continue_on_another_agent: "Continue",
+      ask_first: "Allow once",
       use_connector_tool: "Use tool",
     },
     rows: {
@@ -528,6 +530,7 @@ export const w = {
       access: "Access",
       connector: "Connector",
       tool: "Tool",
+      asked: "Asked",
       input: "Input digest",
       change: "Change",
       allSpent: (cap: string) => `${cap}, all spent`,

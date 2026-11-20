@@ -18,6 +18,7 @@ pub mod e2e;
 pub mod live;
 pub mod mcp;
 pub mod organization;
+pub mod runner;
 pub mod value;
 pub mod webhook;
 
@@ -75,6 +76,11 @@ fn base<D: Deps + 'static>(app: &auth::App<D>) -> Router<Arc<auth::App<D>>> {
         .merge(live::routes());
     let router = if app.settings.e2e_seed {
         router.merge(e2e::routes())
+    } else {
+        router
+    };
+    let router = if app.settings.runner.is_some() {
+        router.merge(runner::routes())
     } else {
         router
     };
@@ -142,6 +148,7 @@ mod tests {
                 secure_cookies: true,
                 code_host_webhook_secret: None,
                 e2e_seed: false,
+                runner: None,
             },
         );
         let response = app

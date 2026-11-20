@@ -151,6 +151,7 @@ async fn world() -> World {
             secure_cookies: true,
             code_host_webhook_secret: None,
             e2e_seed: false,
+            runner: None,
         },
     });
     let router = api::router_with_reach(

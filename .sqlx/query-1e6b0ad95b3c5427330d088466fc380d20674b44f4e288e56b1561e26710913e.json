@@ -1,0 +1,64 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update machine_commands c set delivered = true from machines m where m.session_id = c.session_id and m.holder = $1 and m.state in ('claimed', 'running', 'idle') and not c.delivered returning c.id, c.seq, c.session_id, c.body",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "machine_commands",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "seq",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "machine_commands",
+            "name": "seq"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "session_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "machine_commands",
+            "name": "session_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "body",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "machine_commands",
+            "name": "body"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "1e6b0ad95b3c5427330d088466fc380d20674b44f4e288e56b1561e26710913e"
+}

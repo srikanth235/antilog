@@ -14,6 +14,7 @@ mod customize;
 pub(crate) mod ledger;
 mod machine;
 mod organization;
+mod runner;
 mod session;
 mod world;
 
@@ -43,11 +44,13 @@ fn locked<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
     mutex.lock().unwrap_or_else(PoisonError::into_inner)
 }
 
-pub struct FakeClock(Mutex<Timestamp>);
+/// Clones share the same time.
+#[derive(Clone)]
+pub struct FakeClock(std::sync::Arc<Mutex<Timestamp>>);
 
 impl FakeClock {
     pub fn new(now: Timestamp) -> Self {
-        Self(Mutex::new(now))
+        Self(std::sync::Arc::new(Mutex::new(now)))
     }
 
     pub fn now_plus(&self, by: std::time::Duration) -> Timestamp {
@@ -75,6 +78,7 @@ pub struct FakeStore {
     ledger: std::sync::Arc<Mutex<ledger::Ledger>>,
     cards: Mutex<card_state::Cards>,
     code_host: Mutex<code_host::State>,
+    runner: Mutex<runner::State>,
     customize: Mutex<customize::State>,
 }
 
@@ -153,6 +157,11 @@ mod tests {
     #[tokio::test]
     async fn fake_store_passes_the_store_suite() {
         store_suite(&FakeStore::default()).await;
+    }
+
+    #[tokio::test]
+    async fn fake_store_leases_sessions_to_a_runner() {
+        crate::seed::runner_suite(&FakeStore::default()).await;
     }
 
     #[tokio::test]

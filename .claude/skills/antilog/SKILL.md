@@ -1,6 +1,6 @@
 ---
 name: antilog
-description: Drive Antilog from the shell with the `antilog` command (target; only `antilog mcp` is built on this branch). Use when the user asks about their experiments (list, show, history, receipt, spend), wants to start an experiment from the terminal (`antilog "cut checkout p95"`), sign in to an Antilog server, open a pull request for a win, or wants Antilog's tools as an MCP server (`antilog mcp`) for an agent on their own machine, or names Antilog.
+description: Drive Antilog from the shell with the `antilog` command (target; `antilog mcp` and `antilog runner` are built on this branch). Use when the user asks about their experiments (list, show, history, receipt, spend), wants to start an experiment from the terminal (`antilog "cut checkout p95"`), sign in to an Antilog server, open a pull request for a win, or wants Antilog's tools as an MCP server (`antilog mcp`) for an agent on their own machine, or names Antilog.
 ---
 
 # Antilog
@@ -41,6 +41,10 @@ The server is Antilog cloud or a self-hosted server at a URL. The client holds n
 | `antilog mcp` | Serve the Antilog tools on stdio |
 
 Anything not listed is whatever `antilog --help` shows; it is the source once the program exists.
+
+## `antilog runner`
+
+Polls a server's queue and runs its sessions on this machine: `antilog runner --server URL` with the runner key in `ANTILOG_RUNNER_KEY`. It is for the machine image, not for people. What it does is in [../session/runner.md](../session/runner.md).
 
 ## The Antilog tools (target)
 

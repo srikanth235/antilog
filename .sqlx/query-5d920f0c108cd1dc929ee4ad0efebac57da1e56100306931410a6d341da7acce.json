@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update machine_commands c set finished = true from machines m where m.session_id = c.session_id and m.holder = $1 and c.id = any($2)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "UuidArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5d920f0c108cd1dc929ee4ad0efebac57da1e56100306931410a6d341da7acce"
+}

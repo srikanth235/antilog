@@ -4,7 +4,7 @@ Antilog is a chat and a judge. A person states a goal and talks to a coding agen
 
 `docs/V0.md` is the owner's design for v0 (a runner that polls a queue, one machine per session, OpenCode, one proxy). It wins over any skill, ruling or board until the skills are rewritten to match it. Delete code that a decision there makes irrelevant in the same change that replaces it.
 
-The runner, the proxy and the real code host are not built. A path or command that does not exist yet is marked "(target)".
+The runner is built; the proxy and the real code host are not. A path or command that does not exist yet is marked "(target)".
 
 ## Checks
 

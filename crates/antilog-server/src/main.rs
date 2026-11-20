@@ -29,7 +29,11 @@ async fn main() -> anyhow::Result<()> {
         .context("connecting to Postgres")?;
     let store = PgStore::new(pool);
     store.migrate().await.context("applying migrations")?;
-    tracing::warn!("no runner or code host is built yet: serving on the fakes for both");
+    tracing::warn!("no real code host or credential store is built yet: serving on the fakes");
+    let settings = api::auth::Settings::from_env();
+    if settings.runner.is_none() {
+        tracing::warn!("ANTILOG_RUNNER_KEY is not set: no runner can claim a session");
+    }
 
     let listener = tokio::net::TcpListener::bind(&listen)
         .await
@@ -37,7 +41,7 @@ async fn main() -> anyhow::Result<()> {
     tracing::info!(%listen, "serving");
     let app = Arc::new(api::auth::App {
         deps: Arc::new(ServerDeps::on_fakes(store)),
-        settings: api::auth::Settings::from_env(),
+        settings,
     });
     tracing::warn!("session tokens are not stored yet: the MCP endpoint refuses every token");
     let router = api::router_with_reach(

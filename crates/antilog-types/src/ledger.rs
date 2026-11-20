@@ -33,6 +33,7 @@ text_enum!(
         OpenPullRequest => "open_pull_request",
         KeepGoing => "keep_going",
         ContinueOnAnotherAgent => "continue_on_another_agent",
+        AskFirst => "ask_first",
         UseConnectorTool => "use_connector_tool",
     }
 );
@@ -118,6 +119,16 @@ pub enum CardPayload {
         tried: u32,
     },
     ContinueOnAnotherAgent {},
+    /// The agent asked to use a tool that is set to ask first.
+    #[serde(rename_all = "camelCase")]
+    AskFirst {
+        /// The tool, such as `bash`.
+        tool: String,
+        /// What it would do, as the harness described it.
+        detail: String,
+        /// The harness's id for the ask; the answer goes back under it.
+        permission: String,
+    },
     /// A connector's tool set to "ask first". The digest names the one input approved.
     #[serde(rename_all = "camelCase")]
     UseConnectorTool {
@@ -139,6 +150,7 @@ impl CardPayload {
             Self::OpenPullRequest { .. } => CardKind::OpenPullRequest,
             Self::KeepGoing { .. } => CardKind::KeepGoing,
             Self::ContinueOnAnotherAgent {} => CardKind::ContinueOnAnotherAgent,
+            Self::AskFirst { .. } => CardKind::AskFirst,
             Self::UseConnectorTool { .. } => CardKind::UseConnectorTool,
         }
     }

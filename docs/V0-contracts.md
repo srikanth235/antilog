@@ -74,6 +74,15 @@ The judge runs the sealed command through `SessionMachine::run` in the session's
 
 Base and trial runs are interleaved by the judge (`judge/paired.rs`). The number comes from this line, never from the agent's report.
 
+## As built (session A)
+
+- A machine row is its own table (`machines`), not columns on `sessions`. Commands wait in `machine_commands` until a runner takes them; a run's outcome is stored on its command; an export is replaced on each release (`machine_exports`).
+- `POST /runner/poll` also takes `held` (the sessions the runner runs now, answered by `lost`) and `done` (command ids it finished). Release outcomes `idle`, `done` and `failed` leave the machine `released`, `done` and `failed`.
+- `GET /runner/sessions/{id}/export` serves the last export for `opencode import`. `GET /runner/sessions/{id}/skills/{name}/{version}` serves the skill versions the session's experiment selected (Customize's `session_skill`; 404 for any other); a claim's skills list is that selection; a pack is JSON, `{files: [{path, content}]}` (session C's `SkillVersion`), written to `/opt/antilog/skills/<name>/<path>`; a path that escapes the folder skips the pack.
+- An OpenCode permission ask becomes an Ask first card (`ask_first`), added to the card kinds.
+- The judge's data (`ANTILOG_DATA_KIND`, `ANTILOG_DATASET_ID`, `ANTILOG_DATASET_VERSION`) is named to the command; delivering the rows is not built.
+- `--pure` stops a repo's plugin code from running; `OPENCODE_DISABLE_PROJECT_CONFIG` also stops its MCP servers, skills and agents. Neither is needed to keep a repo from overriding the provider, permissions or autoupdate: the managed config wins. See [../.claude/skills/session/runner.md](../.claude/skills/session/runner.md).
+
 ## Stored secrets (B and C)
 
 Customer model keys and connector credentials are encrypted in Postgres with `chacha20poly1305` (XChaCha20-Poly1305 with a random nonce for each value). The master key comes from the existing `Secrets` store, never from the database. Built: `Sealer` in `antilog-core/src/sealed.rs` (`seal(plain, row)` and `open(stored, row)`; `row` is associated data that binds a value to its row, such as `model_key:<org>:anthropic`). B and C both use it (owner, 20 Nov).

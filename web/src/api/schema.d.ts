@@ -1112,7 +1112,7 @@ export interface components {
             projects: components["schemas"]["ProjectSpend"][];
         };
         /** @enum {string} */
-        CardKind: "seal_experiment" | "raise_budget" | "add_credential" | "attach_repo" | "change_environment" | "open_pull_request" | "keep_going" | "continue_on_another_agent" | "use_connector_tool";
+        CardKind: "seal_experiment" | "raise_budget" | "add_credential" | "attach_repo" | "change_environment" | "open_pull_request" | "keep_going" | "continue_on_another_agent" | "ask_first" | "use_connector_tool";
         /**
          * @description What each kind of card asks, as typed fields. A card shows these, never text parsed out of
          *     its summary, and an action that follows an approval reads what to do from here.
@@ -1182,6 +1182,15 @@ export interface components {
         } | {
             /** @enum {string} */
             kind: "continue_on_another_agent";
+        } | {
+            /** @description What it would do, as the harness described it. */
+            detail: string;
+            /** @enum {string} */
+            kind: "ask_first";
+            /** @description The harness's id for the ask; the answer goes back under it. */
+            permission: string;
+            /** @description The tool, such as `bash`. */
+            tool: string;
         } | {
             connector: string;
             inputDigest: string;

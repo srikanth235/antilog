@@ -2,10 +2,10 @@ mod settle;
 
 use crate::deps::Deps;
 use crate::spend::{BudgetError, ensure_budget};
-use crate::store::{NewEvent, SessionChange, SessionStore, StoreError};
+use crate::store::{NewEvent, RunnerStore, SessionChange, SessionStore, StoreError};
 use antilog_types::{
-    AuditEntry, AuditOutcome, EventKind, ExperimentId, MemberId, OrganizationId, Session,
-    SessionId, SessionStatus,
+    AuditEntry, AuditOutcome, Command, EventKind, ExperimentId, MemberId, OrganizationId, Seed,
+    Session, SessionId, SessionStatus,
 };
 
 pub use settle::settle;
@@ -110,7 +110,23 @@ pub async fn start<D: Deps>(
     let session = Session::new(organization, experiment, &new.agent, now_ms(deps));
     let entry = audit(deps, organization, new.actor, "session.start", session.id);
     deps.store().create_session(&session, &entry).await?;
+    let seed = Seed {
+        repos: new.repos,
+        environment: new.environment,
+    };
+    deps.store()
+        .enqueue_machine(organization, session.id, &seed, now_ms(deps))
+        .await?;
     if !new.prompt.trim().is_empty() {
+        tell(
+            deps,
+            organization,
+            session.id,
+            &Command::Message {
+                text: new.prompt.clone(),
+            },
+        )
+        .await?;
         record(
             deps,
             &session,
@@ -135,6 +151,24 @@ pub async fn open_external<D: Deps>(
     let entry = audit(deps, organization, actor, "session.start", session.id);
     deps.store().create_session(&session, &entry).await?;
     Ok(session)
+}
+
+/// Tells the session's machine, if it has one: a session of an agent on a person's own machine
+/// has none.
+async fn tell<D: Deps>(
+    deps: &D,
+    organization: OrganizationId,
+    id: SessionId,
+    command: &Command,
+) -> Result<(), SessionError> {
+    match deps
+        .store()
+        .push_command(organization, id, command, now_ms(deps))
+        .await
+    {
+        Ok(_) | Err(StoreError::NotFound) => Ok(()),
+        Err(error) => Err(error.into()),
+    }
 }
 
 async fn active<D: Deps>(
@@ -172,6 +206,18 @@ pub async fn message<D: Deps>(
         text,
     )
     .await?;
+    let now = now_ms(deps);
+    // A machine that was let go waits for a runner again; the words reach it once one holds it.
+    deps.store().wake_machine(id, now).await?;
+    tell(
+        deps,
+        organization,
+        id,
+        &Command::Message {
+            text: text.to_owned(),
+        },
+    )
+    .await?;
     let change = SessionChange {
         status: Some(SessionStatus::Working),
         ..SessionChange::default()
@@ -197,6 +243,15 @@ pub async fn stop<D: Deps>(
     name: &str,
 ) -> Result<Session, SessionError> {
     active(deps, organization, id).await?;
+    tell(
+        deps,
+        organization,
+        id,
+        &Command::Release {
+            outcome: antilog_types::ReleaseOutcome::Done,
+        },
+    )
+    .await?;
     let change = SessionChange {
         status: Some(SessionStatus::Done),
         note: Some(format!("Stopped by {name}")),

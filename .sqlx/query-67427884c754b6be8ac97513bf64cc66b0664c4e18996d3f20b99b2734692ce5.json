@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update machine_commands set result = $3, finished = true where id = $1 and session_id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "67427884c754b6be8ac97513bf64cc66b0664c4e18996d3f20b99b2734692ce5"
+}
