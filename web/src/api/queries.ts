@@ -35,6 +35,7 @@ export const keys = {
   transcript: (session: string) => ["sessions", session, "events"] as const,
   policies: () => ["policies"] as const,
   tokens: () => ["tokens"] as const,
+  modelKeys: () => ["model-keys"] as const,
   audit: () => ["audit"] as const,
   tools: () => ["tools"] as const,
   valueModels: (project: string) => ["projects", project, "value-models"] as const,
@@ -284,6 +285,13 @@ export function useTokens() {
   });
 }
 
+export function useModelKeys() {
+  return useQuery({
+    queryKey: keys.modelKeys(),
+    queryFn: async () => unwrap(await api.GET("/model-keys")),
+  });
+}
+
 export function useAudit() {
   return useInfiniteQuery({
     queryKey: keys.audit(),
@@ -499,6 +507,27 @@ export function useRevokeToken() {
   return useWrite(
     async (id: string) => unwrap(await api.DELETE("/tokens/{id}", { params: { path: { id } } })),
     (client) => client.invalidateQueries({ queryKey: keys.tokens() }),
+  );
+}
+
+export function useSetModelKey() {
+  return useWrite(
+    async (vars: { provider: Schemas["ModelProvider"]; key: string }) =>
+      unwrap(
+        await api.PUT("/model-keys/{provider}", {
+          params: { path: { provider: vars.provider } },
+          body: { key: vars.key },
+        }),
+      ),
+    (client) => client.invalidateQueries({ queryKey: keys.modelKeys() }),
+  );
+}
+
+export function useRemoveModelKey() {
+  return useWrite(
+    async (provider: Schemas["ModelProvider"]) =>
+      unwrap(await api.DELETE("/model-keys/{provider}", { params: { path: { provider } } })),
+    (client) => client.invalidateQueries({ queryKey: keys.modelKeys() }),
   );
 }
 

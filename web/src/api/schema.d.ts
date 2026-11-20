@@ -452,6 +452,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/model-keys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_model_keys"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/model-keys/{provider}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["set_model_key"];
+        post?: never;
+        delete: operations["remove_model_key"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/organization": {
         parameters: {
             query?: never;
@@ -1237,6 +1269,17 @@ export interface components {
         MemberId: string;
         /** @enum {string} */
         MemberKind: "person" | "service";
+        /** @description Which providers an organization has a key for, and when it was last set. Never the key. */
+        ModelKeyStatus: {
+            provider: components["schemas"]["ModelProvider"];
+            /** Format: int64 */
+            setAt: number;
+        };
+        /**
+         * @description A model provider whose key an organization brings. The proxy forwards to it unchanged.
+         * @enum {string}
+         */
+        ModelProvider: "anthropic" | "openai";
         /** @description What an owner sets for an agent. */
         NewAgent: {
             costTier: components["schemas"]["CostTier"];
@@ -1264,6 +1307,10 @@ export interface components {
             identity?: components["schemas"]["Identity"] | null;
             name: string;
             role: components["schemas"]["Role"];
+        };
+        /** @description A key to set or replace. It is never returned. */
+        NewModelKey: {
+            key: string;
         };
         NewOrganization: {
             code: string;
@@ -2604,6 +2651,101 @@ export interface operations {
             };
             /** @description The organization or a project would be left without an owner */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    list_model_keys: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The providers that have a key, with when it was set; never a key */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModelKeyStatus"][];
+                };
+            };
+        };
+    };
+    set_model_key: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The provider the key is for */
+                provider: components["schemas"]["ModelProvider"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewModelKey"];
+            };
+        };
+        responses: {
+            /** @description Set or replaced; organization owners only. The key is not returned */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModelKeyStatus"];
+                };
+            };
+            /** @description Not a usable key */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description The server has no master key to seal it with */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    remove_model_key: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The provider whose key to remove */
+                provider: components["schemas"]["ModelProvider"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed; organization owners only */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description There is no key for that provider */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

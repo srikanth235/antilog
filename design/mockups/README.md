@@ -29,7 +29,7 @@ Every light board, by canvas row (each has a generated `XDark` twin except the r
 | 6 Projects and Report | `Projects`, `Project`, `ProjectEmpty`, `Report`, `AddValueModel` |
 | 6 Customize | `Evaluations`, `EvaluationsEmpty`, `EvaluationsDiscover`, `EvaluationDetail`, `AddEvaluation`, `Skills`, `SkillsEmpty`, `SkillsDiscover`, `SkillDetail`, `AddSkill`, `Connectors`, `ConnectorsEmpty`, `ConnectorsDiscover`, `ConnectorDetail`, `AddConnector`, `AddConnectorMcp`, `ConnectorError`, `DatasetHoldout`, `Agents`, `AgentsEmpty`, `AgentsDiscover`, `AgentDetail`, `AddAgent`, `Plugins`, `PluginsEmpty`, `PluginsDiscover`, `PluginDetail`, `AddPlugin` |
 | 8 Agent platforms, approvals, budgets, connections | `SettingsPlatforms`, `SettingsPlatformsEmpty`, `SettingsPlatformsManaged`, `PlatformError`, `AddPlatform`, `SettingsBudgets`, `SettingsApprovals`, `SettingsConnections` |
-| 9 Organization | `SettingsProfile`, `SettingsAppearance`, `SettingsTokens`, `SettingsTokensEmpty`, `SettingsDevice`, `SettingsGeneral`, `SettingsMembers`, `SettingsSso`, `SettingsAudit`, `SettingsReadOnly` |
+| 9 Organization | `SettingsProfile`, `SettingsAppearance`, `SettingsTokens`, `SettingsTokensEmpty`, `SettingsDevice`, `SettingsGeneral`, `SettingsMembers`, `SettingsSso`, `SettingsModelKeys`, `SettingsModelKeysAdd`, `SettingsAudit`, `SettingsReadOnly` |
 | 10 Installed web app | `WebInstalled`, `WebNotification`, `WebOffline` |
 
 ## Naming

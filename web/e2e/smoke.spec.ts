@@ -117,3 +117,37 @@ test("a viewer can read but not send", async ({ page, browser }) => {
   await expect(other.getByText("Only owners can change this. You can read it.")).toBeVisible();
   await context.close();
 });
+
+test("an owner saves, replaces and removes a model key, and it is never shown again", async ({
+  page,
+}) => {
+  await signUp(page);
+  await page.goto("/settings/model-keys");
+  await expect(page.getByRole("dialog", { name: "Settings" })).toBeVisible();
+  await expect(page.getByText("No key")).toHaveCount(2);
+
+  await page.getByRole("button", { name: "Add key Anthropic" }).click();
+  await page.getByLabel("Anthropic key").fill("sk-ant-e2e-secret-value");
+  await page.getByRole("button", { name: "Save key" }).click();
+  await expect(page.getByText("Key saved")).toBeVisible();
+  await expect(page.getByText("Key set")).toHaveCount(1);
+  await expect(page.getByText("No key")).toHaveCount(1);
+  // Nothing on the page carries the key, and a reload still does not.
+  await page.reload();
+  await expect(page.getByText("Key set")).toHaveCount(1);
+  expect(await page.content()).not.toContain("sk-ant-e2e-secret-value");
+
+  await page.getByRole("button", { name: "Replace key Anthropic" }).click();
+  await page.getByLabel("Anthropic key").fill("sk-ant-e2e-second-value");
+  await page.getByRole("button", { name: "Save key" }).click();
+  await expect(page.getByText("Key saved")).toBeVisible();
+
+  await page.getByRole("button", { name: "Remove Anthropic" }).click();
+  await page.getByRole("button", { name: "Remove", exact: true }).last().click();
+  await expect(page.getByText("Key removed")).toBeVisible();
+  await expect(page.getByText("No key")).toHaveCount(2);
+
+  await page.getByRole("link", { name: "Audit log" }).click();
+  await expect(page.getByText("Model key set").first()).toBeVisible();
+  await expect(page.getByText("Model key removed").first()).toBeVisible();
+});
