@@ -4,6 +4,7 @@ import {
   activityOf,
   agentLabel,
   canEdit,
+  composerPlaceholderKey,
   defaultBudgetCents,
   leadSession,
   parseRepos,
@@ -49,5 +50,14 @@ describe("domain", () => {
     expect(agentLabel(agents, "mcp")).toBe("Your agent");
     expect(agentLabel(agents, "claude-code")).toBe("An agent");
     expect(agentLabel(undefined, "opencode")).toBe("An agent");
+  });
+});
+
+describe("composerPlaceholderKey", () => {
+  it("asks to approve the card only while a card shows", () => {
+    expect(composerPlaceholderKey("waiting_for_you", true)).toBe("waiting_for_you");
+    expect(composerPlaceholderKey("waiting_for_you", false)).toBe("waiting_no_card");
+    expect(composerPlaceholderKey("working", false)).toBe("working");
+    expect(composerPlaceholderKey("none", false)).toBe("none");
   });
 });
