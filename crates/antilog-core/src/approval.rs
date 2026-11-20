@@ -138,7 +138,7 @@ pub async fn decide<S: Store>(
         Decision::Approve => AuditOutcome::Approved,
         Decision::Decline => AuditOutcome::Declined,
     };
-    Ok(store
+    let decided = store
         .decide_approval(
             who.organization,
             id,
@@ -147,7 +147,16 @@ pub async fn decide<S: Store>(
             now,
             &entry(who, "approval.decide", id, outcome, now),
         )
-        .await?)
+        .await?;
+    // An ask-first card answers the permission the agent is waiting on.
+    if decided.card == CardKind::AskFirst {
+        crate::runner::answer(store, &decided, now)
+            .await
+            .map_err(|_| {
+                Refusal::Invalid("the answer could not reach the session; decide again")
+            })?;
+    }
+    Ok(decided)
 }
 
 pub async fn approvals<S: Store>(

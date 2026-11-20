@@ -29,6 +29,7 @@ pub async fn settle<D: Deps>(
     for approval in approvals {
         let decided = approval.status != ApprovalStatus::Pending;
         if approval.session_id != Some(session)
+            || approval.card == CardKind::AskFirst
             || !decided
             || !deps.store().mark_applied(organization, approval.id).await?
         {

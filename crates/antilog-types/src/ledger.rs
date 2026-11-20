@@ -33,6 +33,7 @@ text_enum!(
         OpenPullRequest => "open_pull_request",
         KeepGoing => "keep_going",
         ContinueOnAnotherAgent => "continue_on_another_agent",
+        AskFirst => "ask_first",
     }
 );
 
@@ -117,6 +118,16 @@ pub enum CardPayload {
         tried: u32,
     },
     ContinueOnAnotherAgent {},
+    /// The agent asked to use a tool that is set to ask first.
+    #[serde(rename_all = "camelCase")]
+    AskFirst {
+        /// The tool, such as `bash`.
+        tool: String,
+        /// What it would do, as the harness described it.
+        detail: String,
+        /// The harness's id for the ask; the answer goes back under it.
+        permission: String,
+    },
 }
 
 impl CardPayload {
@@ -131,6 +142,7 @@ impl CardPayload {
             Self::OpenPullRequest { .. } => CardKind::OpenPullRequest,
             Self::KeepGoing { .. } => CardKind::KeepGoing,
             Self::ContinueOnAnotherAgent {} => CardKind::ContinueOnAnotherAgent,
+            Self::AskFirst { .. } => CardKind::AskFirst,
         }
     }
 }

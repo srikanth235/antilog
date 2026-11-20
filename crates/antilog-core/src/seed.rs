@@ -564,3 +564,234 @@ pub async fn kept_win<D: crate::deps::Deps>(
         pull_requests,
     })
 }
+
+/// What every `RunnerStore` must do: lease sessions to a runner across organizations, hand each
+/// command over once, send an unfinished one again after a requeue, and keep results and exports.
+pub async fn runner_suite<S: Store>(store: &S) {
+    use antilog_types::{
+        Command, MachineState, Reply, RunResult, Seed, Session, SessionId, SessionStatus,
+    };
+    use uuid::Uuid;
+
+    use crate::store::{SessionChange, StoreError};
+
+    let mut sessions = Vec::new();
+    for _ in 0..2 {
+        let seed = experiment(store, 1_000).await;
+        let org = seed.organization.id;
+        let session = Session::new(org, seed.experiment.id, "opencode", T0);
+        let log = AuditEntry::new(
+            org,
+            Some(seed.owner.id),
+            "session.start",
+            session.id,
+            AuditOutcome::Done,
+            T0,
+        );
+        store
+            .create_session(&session, &log)
+            .await
+            .expect("a session is created");
+        let seed_of = Seed {
+            repos: vec!["acme/api".into()],
+            environment: None,
+        };
+        store
+            .enqueue_machine(org, session.id, &seed_of, T0)
+            .await
+            .expect("queued");
+        assert!(matches!(
+            store.enqueue_machine(org, session.id, &seed_of, T0).await,
+            Err(StoreError::Conflict)
+        ));
+        sessions.push((org, session));
+    }
+    let mut both = sessions.into_iter();
+    let (org, first) = both.next().expect("two sessions");
+    let (_, second) = both.next().expect("two sessions");
+    let (org, first, second) = (&org, &first, &second);
+    let queued = store
+        .machine(first.id)
+        .await
+        .expect("read")
+        .expect("a machine");
+    assert_eq!(queued.state, MachineState::Queued);
+    assert_eq!(queued.seed.repos, vec!["acme/api".to_owned()]);
+    assert_eq!(queued.agent, "opencode");
+    assert_eq!(
+        store
+            .machine(Session::new(*org, first.experiment_id, "x", T0).id)
+            .await
+            .expect("read"),
+        None
+    );
+
+    // One runner takes work from both organizations, up to its limit, once each.
+    let claimed = store.claim("r1", 1, 1_000, 61_000).await.expect("claim");
+    assert_eq!(claimed.len(), 1);
+    let mine = claimed.first().expect("one");
+    assert_eq!(mine.state, MachineState::Claimed);
+    assert_eq!(mine.holder.as_deref(), Some("r1"));
+    let rest = store.claim("r1", 5, 1_000, 61_000).await.expect("claim");
+    assert_eq!(rest.len(), 1);
+    assert_ne!(rest.first().expect("one").session, mine.session);
+    assert!(
+        store
+            .claim("r2", 5, 1_000, 61_000)
+            .await
+            .expect("claim")
+            .is_empty()
+    );
+
+    // A lease is renewed by its holder and by nobody else.
+    assert_eq!(
+        store
+            .renew("r1", 30_000, 90_000)
+            .await
+            .expect("renew")
+            .len(),
+        2
+    );
+    assert!(
+        store
+            .renew("r2", 30_000, 90_000)
+            .await
+            .expect("renew")
+            .is_empty()
+    );
+
+    // Commands go to the holder once, oldest first.
+    let message = Command::Message {
+        text: "hello".into(),
+    };
+    let one = store
+        .push_command(*org, first.id, &message, T0)
+        .await
+        .expect("push");
+    let two = store
+        .push_command(*org, first.id, &Command::Abort, T0)
+        .await
+        .expect("push");
+    assert!(store.take_commands("r2").await.expect("take").is_empty());
+    let taken = store.take_commands("r1").await.expect("take");
+    assert_eq!(
+        taken.iter().map(|e| e.id).collect::<Vec<_>>(),
+        vec![one, two]
+    );
+    assert_eq!(taken.first().expect("one").command, message);
+    assert!(store.take_commands("r1").await.expect("take").is_empty());
+    assert!(matches!(
+        store
+            .push_command(*org, SessionId::new(), &Command::Abort, T0)
+            .await,
+        Err(StoreError::NotFound)
+    ));
+
+    // A finished command is not sent again after a requeue; an unfinished one is.
+    store.finish_commands("r1", &[one]).await.expect("finish");
+    store.finish_commands("r2", &[two]).await.expect("finish");
+    assert_eq!(
+        store
+            .claim("r2", 5, 200_000, 260_000)
+            .await
+            .expect("claim")
+            .len(),
+        2
+    );
+    let again = store.take_commands("r2").await.expect("take");
+    let ids: Vec<Uuid> = again
+        .iter()
+        .filter(|e| e.session == first.id)
+        .map(|e| e.id)
+        .collect();
+    assert_eq!(ids, vec![two]);
+    assert!(
+        !store
+            .set_machine_state(first.id, "r1", MachineState::Idle, 200_000)
+            .await
+            .expect("state"),
+        "the lapsed holder no longer holds it"
+    );
+
+    // A command's outcome is kept for the one waiting.
+    let run = Command::Approval {
+        permission: "p1".into(),
+        reply: Reply::Once,
+    };
+    let run_id = store
+        .push_command(*org, first.id, &run, T0)
+        .await
+        .expect("push");
+    assert_eq!(store.result(run_id).await.expect("read"), None);
+    let result = RunResult {
+        command: run_id,
+        exit: 0,
+        output: "ok\n".into(),
+    };
+    assert!(!store.put_result(second.id, &result).await.expect("put"));
+    assert!(store.put_result(first.id, &result).await.expect("put"));
+    assert_eq!(store.result(run_id).await.expect("read"), Some(result));
+    store.drop_command(run_id).await.expect("drop");
+    assert_eq!(store.result(run_id).await.expect("read"), None);
+
+    // Idle, then let go with an export; a later message queues it again to resume.
+    assert!(
+        store
+            .set_machine_state(first.id, "r2", MachineState::Idle, 200_000)
+            .await
+            .expect("state")
+    );
+    assert!(!store.wake_machine(first.id, 200_000).await.expect("wake"));
+    store
+        .put_export(*org, first.id, "{\"export\":1}", 200_000)
+        .await
+        .expect("export");
+    assert!(
+        store
+            .set_machine_state(first.id, "r2", MachineState::Released, 200_000)
+            .await
+            .expect("state")
+    );
+    assert!(
+        store
+            .machine(first.id)
+            .await
+            .expect("read")
+            .expect("row")
+            .holder
+            .is_none()
+    );
+    assert!(
+        store
+            .take_commands("r2")
+            .await
+            .expect("take")
+            .iter()
+            .all(|e| e.session != first.id)
+    );
+    assert!(store.wake_machine(first.id, 210_000).await.expect("wake"));
+    let woken = store.machine(first.id).await.expect("read").expect("row");
+    assert_eq!((woken.state, woken.resume), (MachineState::Queued, true));
+    assert_eq!(
+        store.export(first.id).await.expect("read").as_deref(),
+        Some("{\"export\":1}")
+    );
+    assert_eq!(store.export(second.id).await.expect("read"), None);
+
+    // A session that has ended is not claimed again.
+    let ended = SessionChange {
+        status: Some(SessionStatus::Done),
+        note: None,
+    };
+    store
+        .update_session(*org, first.id, &ended, 220_000, None)
+        .await
+        .expect("done");
+    assert!(
+        store
+            .claim("r3", 5, 220_000, 280_000)
+            .await
+            .expect("claim")
+            .is_empty()
+    );
+}

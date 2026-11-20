@@ -213,6 +213,7 @@ mod tests {
                 secure_cookies: true,
                 code_host_webhook_secret: None,
                 e2e_seed: false,
+                runner: None,
             },
         );
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();

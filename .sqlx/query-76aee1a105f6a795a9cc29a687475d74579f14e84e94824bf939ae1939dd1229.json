@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select body from machine_exports where session_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "body",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "machine_exports",
+            "name": "body"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "76aee1a105f6a795a9cc29a687475d74579f14e84e94824bf939ae1939dd1229"
+}

@@ -497,6 +497,7 @@ export const w = {
       open_pull_request: "Open pull request",
       keep_going: "Keep going?",
       continue_on_another_agent: "Continue on another agent?",
+      ask_first: "Allow this tool?",
     },
     approve: {
       seal_experiment: "Seal experiment",
@@ -507,6 +508,7 @@ export const w = {
       open_pull_request: "Open pull request",
       keep_going: "Keep going",
       continue_on_another_agent: "Continue",
+      ask_first: "Allow once",
     },
     rows: {
       now: "Now",
@@ -515,6 +517,8 @@ export const w = {
       repo: "Repo",
       access: "Access",
       connector: "Connector",
+      tool: "Tool",
+      asked: "Asked",
       change: "Change",
       allSpent: (cap: string) => `${cap}, all spent`,
       ofCap: (spent: string, cap: string) => `${spent} of ${cap}`,

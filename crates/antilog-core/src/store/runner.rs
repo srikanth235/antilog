@@ -1,0 +1,115 @@
+use std::future::Future;
+
+use antilog_types::{
+    Command, Envelope, Machine, MachineState, OrganizationId, RunResult, Seed, SessionId,
+};
+use uuid::Uuid;
+
+use super::StoreError;
+
+/// The queue of sessions and what passes between the server and a runner. A runner serves every
+/// organization, so these calls name a session rather than an organization.
+pub trait RunnerStore {
+    /// A new session waits in `Queued`.
+    fn enqueue_machine(
+        &self,
+        organization: OrganizationId,
+        session: SessionId,
+        seed: &Seed,
+        at: i64,
+    ) -> impl Future<Output = Result<(), StoreError>> + Send;
+
+    fn machine(
+        &self,
+        session: SessionId,
+    ) -> impl Future<Output = Result<Option<Machine>, StoreError>> + Send;
+
+    /// Puts every session whose lease lapsed before `now` back in `Queued`, then claims up to
+    /// `limit` queued sessions for `holder` with a lease until `until` (milliseconds). A
+    /// session whose organization budget or state forbids running is the caller's concern.
+    fn claim(
+        &self,
+        holder: &str,
+        limit: u32,
+        now: i64,
+        until: i64,
+    ) -> impl Future<Output = Result<Vec<Machine>, StoreError>> + Send;
+
+    /// Extends the lease of every session `holder` still holds, and returns them.
+    fn renew(
+        &self,
+        holder: &str,
+        now: i64,
+        until: i64,
+    ) -> impl Future<Output = Result<Vec<SessionId>, StoreError>> + Send;
+
+    /// Moves a session the holder holds to `state`; false when it holds no such session.
+    /// `Released`, `Done` and `Failed` end the lease. `Done` and `Failed` are final.
+    fn set_machine_state(
+        &self,
+        session: SessionId,
+        holder: &str,
+        state: MachineState,
+        now: i64,
+    ) -> impl Future<Output = Result<bool, StoreError>> + Send;
+
+    /// A person wrote to a session whose machine was released: it waits for a runner again.
+    /// True when it was requeued.
+    fn wake_machine(
+        &self,
+        session: SessionId,
+        now: i64,
+    ) -> impl Future<Output = Result<bool, StoreError>> + Send;
+
+    /// A queue entry for the session's holder. Commands are delivered once, oldest first.
+    fn push_command(
+        &self,
+        organization: OrganizationId,
+        session: SessionId,
+        command: &Command,
+        at: i64,
+    ) -> impl Future<Output = Result<Uuid, StoreError>> + Send;
+
+    /// Takes the undelivered commands of the sessions `holder` holds and marks them delivered.
+    fn take_commands(
+        &self,
+        holder: &str,
+    ) -> impl Future<Output = Result<Vec<Envelope>, StoreError>> + Send;
+
+    /// A runner reports these commands as handled; one not reported is sent again after a
+    /// requeue.
+    fn finish_commands(
+        &self,
+        holder: &str,
+        ids: &[Uuid],
+    ) -> impl Future<Output = Result<(), StoreError>> + Send;
+
+    /// Forgets a command nobody waits for any more.
+    fn drop_command(&self, id: Uuid) -> impl Future<Output = Result<(), StoreError>> + Send;
+
+    /// Keeps the outcome of a `Run`. False when the session has no such command.
+    fn put_result(
+        &self,
+        session: SessionId,
+        result: &RunResult,
+    ) -> impl Future<Output = Result<bool, StoreError>> + Send;
+
+    fn result(
+        &self,
+        command: Uuid,
+    ) -> impl Future<Output = Result<Option<RunResult>, StoreError>> + Send;
+
+    /// The session's `opencode export`, replaced on each release.
+    fn put_export(
+        &self,
+        organization: OrganizationId,
+        session: SessionId,
+        body: &str,
+        at: i64,
+    ) -> impl Future<Output = Result<(), StoreError>> + Send;
+
+    fn export(
+        &self,
+        session: SessionId,
+    ) -> impl Future<Output = Result<Option<String>, StoreError>> + Send;
+}

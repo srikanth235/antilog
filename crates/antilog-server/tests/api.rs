@@ -34,6 +34,7 @@ fn app(fake: bool, open: bool) -> Router {
             secure_cookies: true,
             code_host_webhook_secret: None,
             e2e_seed: false,
+            runner: None,
         },
     )
 }
@@ -466,7 +467,7 @@ async fn roles_gate_the_writes_and_every_denial_is_audited() {
                 .body
                 .as_array()
                 .map(Vec::len),
-            Some(8)
+            Some(9)
         );
     }
 
@@ -890,6 +891,7 @@ async fn org_with_store() -> (Org, Arc<FakeDeps>) {
             secure_cookies: true,
             code_host_webhook_secret: None,
             e2e_seed: false,
+            runner: None,
         },
     );
     let created = create_organization(&app, "acme", "ada").await;
@@ -1772,6 +1774,7 @@ mod live {
                 secure_cookies: true,
                 code_host_webhook_secret: None,
                 e2e_seed: false,
+                runner: None,
             },
         });
         let options = Options {
@@ -2020,6 +2023,7 @@ mod live {
                 secure_cookies: true,
                 code_host_webhook_secret: None,
                 e2e_seed: false,
+                runner: None,
             },
         });
         let options = Options {

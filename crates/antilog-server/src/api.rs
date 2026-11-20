@@ -16,6 +16,7 @@ pub mod auth;
 pub mod e2e;
 pub mod live;
 pub mod organization;
+pub mod runner;
 pub mod value;
 pub mod webhook;
 
@@ -72,6 +73,11 @@ pub fn router_with<D: Deps + 'static>(app: Arc<auth::App<D>>) -> Router {
     } else {
         router
     };
+    let router = if app.settings.runner.is_some() {
+        router.merge(runner::routes())
+    } else {
+        router
+    };
     let router = if app.settings.code_host_webhook_secret.is_some() {
         router.merge(webhook::routes())
     } else {
@@ -113,6 +119,7 @@ mod tests {
                 secure_cookies: true,
                 code_host_webhook_secret: None,
                 e2e_seed: false,
+                runner: None,
             },
         );
         let response = app

@@ -2809,7 +2809,8 @@
           "change_environment",
           "open_pull_request",
           "keep_going",
-          "continue_on_another_agent"
+          "continue_on_another_agent",
+          "ask_first"
         ]
       },
       "CardPayload": {
@@ -3049,6 +3050,36 @@
                 "enum": [
                   "continue_on_another_agent"
                 ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "The agent asked to use a tool that is set to ask first.",
+            "required": [
+              "tool",
+              "detail",
+              "permission",
+              "kind"
+            ],
+            "properties": {
+              "detail": {
+                "type": "string",
+                "description": "What it would do, as the harness described it."
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "ask_first"
+                ]
+              },
+              "permission": {
+                "type": "string",
+                "description": "The harness's id for the ask; the answer goes back under it."
+              },
+              "tool": {
+                "type": "string",
+                "description": "The tool, such as `bash`."
               }
             }
           }

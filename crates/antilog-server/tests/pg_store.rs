@@ -5,8 +5,8 @@ use antilog_core::store::{ApprovalStore, OrganizationStore};
 use antilog_core::testing::store_suite;
 use antilog_server::pg::{MIGRATOR, PgStore};
 use antilog_types::{
-    ApprovalStatus, AuditEntry, AuditOutcome, CardKind, ExperimentStatus, Member, MemberKind,
-    Organization, OrganizationId, PolicyMode, Role, SessionStatus, SpendKind,
+    ApprovalStatus, AuditEntry, AuditOutcome, CardKind, ExperimentStatus, MachineState, Member,
+    MemberKind, Organization, OrganizationId, PolicyMode, Role, SessionStatus, SpendKind,
 };
 use sqlx::PgPool;
 use sqlx::postgres::PgPoolOptions;
@@ -14,12 +14,35 @@ use testcontainers::core::{IntoContainerPort, WaitFor};
 use testcontainers::runners::AsyncRunner;
 use testcontainers::{ContainerAsync, GenericImage, ImageExt};
 
-async fn database() -> anyhow::Result<(PgPool, ContainerAsync<GenericImage>)> {
+/// The container a test's database lives in; none when `ANTILOG_TEST_PG` names a Postgres server
+/// to use instead (a machine without Docker). Each test then gets a database of its own there.
+type Container = Option<ContainerAsync<GenericImage>>;
+
+async fn database() -> anyhow::Result<(PgPool, Container)> {
     let (pool, container, _url) = database_at().await?;
     Ok((pool, container))
 }
 
-async fn database_at() -> anyhow::Result<(PgPool, ContainerAsync<GenericImage>, String)> {
+async fn database_at() -> anyhow::Result<(PgPool, Container, String)> {
+    if let Ok(admin) = std::env::var("ANTILOG_TEST_PG") {
+        let name = format!("t_{}", uuid::Uuid::now_v7().simple());
+        let root = PgPoolOptions::new()
+            .max_connections(1)
+            .connect(&admin)
+            .await?;
+        sqlx::query(sqlx::AssertSqlSafe(format!("create database {name}")))
+            .execute(&root)
+            .await?;
+        let url = match admin.rsplit_once('/') {
+            Some((server, _)) => format!("{server}/{name}"),
+            None => admin,
+        };
+        let pool = PgPoolOptions::new()
+            .max_connections(4)
+            .connect(&url)
+            .await?;
+        return Ok((pool, None, url));
+    }
     let container = GenericImage::new("postgres", "18")
         .with_exposed_port(5432.tcp())
         .with_wait_for(WaitFor::message_on_stderr(
@@ -42,10 +65,10 @@ async fn database_at() -> anyhow::Result<(PgPool, ContainerAsync<GenericImage>, 
             Err(error) => return Err(error.into()),
         }
     };
-    Ok((pool, container, url))
+    Ok((pool, Some(container), url))
 }
 
-async fn migrated_store() -> anyhow::Result<(PgStore, PgPool, ContainerAsync<GenericImage>)> {
+async fn migrated_store() -> anyhow::Result<(PgStore, PgPool, Container)> {
     let (pool, container) = database().await?;
     let store = PgStore::new(pool.clone());
     store.migrate().await?;
@@ -56,6 +79,14 @@ async fn migrated_store() -> anyhow::Result<(PgStore, PgPool, ContainerAsync<Gen
 async fn postgres_store_passes_the_store_suite() -> anyhow::Result<()> {
     let (store, _pool, _container) = migrated_store().await?;
     store_suite(&store).await;
+    Ok(())
+}
+
+#[tokio::test]
+async fn postgres_store_leases_sessions_to_a_runner() -> anyhow::Result<()> {
+    // As the role the server runs as, so row-level security is in force.
+    let (store, _pool, _container) = app_store().await?;
+    antilog_core::seed::runner_suite(&store).await;
     Ok(())
 }
 
@@ -229,6 +260,10 @@ async fn check_constraints_list_the_values_of_the_enums() -> anyhow::Result<()> 
             texts(SessionStatus::ALL, SessionStatus::as_str),
         ),
         ("spend_kind", texts(SpendKind::ALL, SpendKind::as_str)),
+        (
+            "machines_state",
+            texts(MachineState::ALL, MachineState::as_str),
+        ),
         ("policies_card", texts(CardKind::ALL, CardKind::as_str)),
         ("approvals_card", texts(CardKind::ALL, CardKind::as_str)),
         ("policies_mode", texts(PolicyMode::ALL, PolicyMode::as_str)),
@@ -319,17 +354,29 @@ async fn concurrent_demotions_cannot_orphan_a_project() -> anyhow::Result<()> {
 }
 
 /// A pool that connects as a role that owns nothing and is no superuser, as the server does.
-async fn app_store() -> anyhow::Result<(PgStore, PgPool, ContainerAsync<GenericImage>)> {
+async fn app_store() -> anyhow::Result<(PgStore, PgPool, Container)> {
     let (admin, container, url) = database_at().await?;
     PgStore::new(admin.clone()).migrate().await?;
+    // A role belongs to the whole server, so tests that share one get a role each.
+    let role = if container.is_some() {
+        "antilog_app".to_owned()
+    } else {
+        format!("app_{}", uuid::Uuid::now_v7().simple())
+    };
     for statement in [
-        "create role antilog_app login password 'app' nosuperuser nobypassrls",
-        "grant usage on schema public to antilog_app",
-        "grant select, insert, update, delete, truncate on all tables in schema public to antilog_app",
+        format!("create role {role} login password 'app' nosuperuser nobypassrls"),
+        format!("grant usage on schema public to {role}"),
+        format!(
+            "grant select, insert, update, delete, truncate on all tables in schema public to {role}"
+        ),
     ] {
-        sqlx::query(statement).execute(&admin).await?;
+        sqlx::query(sqlx::AssertSqlSafe(statement))
+            .execute(&admin)
+            .await?;
     }
-    let app_url = url.replace("postgres:pw@", "antilog_app:app@");
+    let app_url = url
+        .replace("postgres:pw@", &format!("{role}:app@"))
+        .replace("//postgres@", &format!("//{role}:app@"));
     let pool = PgPoolOptions::new()
         .max_connections(4)
         .connect(&app_url)
@@ -626,5 +673,114 @@ async fn access_tokens_and_sign_in_sessions_are_found_by_id_alone() -> anyhow::R
         .await?;
     let live = antilog_core::token::authenticate_session(&store, &session.secret, 1).await?;
     assert_eq!(live.map(|row| row.organization_id), Some(organization.id));
+    Ok(())
+}
+
+#[tokio::test]
+async fn the_queue_machine_runs_a_command_through_the_holding_runner() -> anyhow::Result<()> {
+    use std::time::Duration;
+
+    use antilog_core::machine::{Data, MachineError, Run, SessionMachine};
+    use antilog_core::seed::{T0, experiment};
+    use antilog_core::store::{RunnerStore, SessionStore};
+    use antilog_server::queue::QueueMachine;
+    use antilog_types::judge::{CommitRef, DatasetRef};
+    use antilog_types::{Command, MachineState, RunResult, Seed, Session, SessionId};
+
+    let (store, _pool, _container) = app_store().await?;
+    let seed = experiment(&store, 1_000).await;
+    let org = seed.organization.id;
+    let session = Session::new(org, seed.experiment.id, "opencode", T0);
+    let entry = AuditEntry::new(
+        org,
+        Some(seed.owner.id),
+        "session.start",
+        session.id,
+        AuditOutcome::Done,
+        T0,
+    );
+    store.create_session(&session, &entry).await?;
+    store
+        .enqueue_machine(org, session.id, &Seed::default(), T0)
+        .await?;
+    let dataset = DatasetRef {
+        id: "d".into(),
+        version: 1,
+    };
+    let commits = [CommitRef {
+        repo: "app".into(),
+        sha: "abc".into(),
+    }];
+    let run = Run {
+        session: session.id,
+        command: "make bench",
+        commits: &commits,
+        files: &[],
+        data: Data::Holdout(&dataset),
+    };
+    let machine = QueueMachine::new(store.clone(), Duration::from_secs(10))
+        .polling_every(Duration::from_millis(20));
+
+    assert!(matches!(
+        machine
+            .run(&Run {
+                session: SessionId::new(),
+                ..run
+            })
+            .await,
+        Err(MachineError::NoMachine)
+    ));
+
+    // No runner holds it: the command waits, times out, and is not left for a runner that
+    // comes later.
+    let impatient = QueueMachine::new(store.clone(), Duration::from_millis(100))
+        .polling_every(Duration::from_millis(20));
+    assert!(matches!(
+        impatient.run(&run).await,
+        Err(MachineError::Unavailable(_))
+    ));
+    assert_eq!(store.claim("r1", 1, T0, T0 + 60_000).await?.len(), 1);
+    assert!(store.take_commands("r1").await?.is_empty());
+
+    // The holding runner answers; the judge's call returns what it ran.
+    let runner = {
+        let store = store.clone();
+        tokio::spawn(async move {
+            loop {
+                for envelope in store.take_commands("r1").await? {
+                    if let Command::Run { run } = envelope.command {
+                        assert!(run.data.holdout);
+                        let result = RunResult {
+                            command: envelope.id,
+                            exit: 0,
+                            output: format!("ran {}\n{{\"metric\": 1}}\n", run.command),
+                        };
+                        store.put_result(envelope.session, &result).await?;
+                        return anyhow::Ok(());
+                    }
+                }
+                tokio::time::sleep(Duration::from_millis(10)).await;
+            }
+        })
+    };
+    let output = machine.run(&run).await?;
+    runner.await??;
+    assert_eq!(output.exit, 0);
+    assert!(output.output.starts_with("ran make bench"));
+
+    // A machine that was let go is woken to run it, and one that is done refuses.
+    assert!(
+        store
+            .set_machine_state(session.id, "r1", MachineState::Released, T0)
+            .await?
+    );
+    assert!(matches!(
+        impatient.run(&run).await,
+        Err(MachineError::Unavailable(_))
+    ));
+    assert_eq!(
+        store.machine(session.id).await?.map(|m| m.state),
+        Some(MachineState::Queued)
+    );
     Ok(())
 }

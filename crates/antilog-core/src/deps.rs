@@ -2,6 +2,7 @@ use antilog_types::OrganizationId;
 
 use crate::clock::Clock;
 use crate::code_host::CodeHost;
+use crate::credentials::SessionCredentials;
 use crate::machine::SessionMachine;
 use crate::signer::Signer;
 use crate::store::Store;
@@ -15,6 +16,7 @@ pub trait Deps: Send + Sync {
     type Signer: Signer;
     type Clock: Clock;
     type Code: CodeHost;
+    type Credentials: SessionCredentials;
 
     fn store(&self) -> &Self::Store;
     /// The judge's store, scoped to one organization.
@@ -23,4 +25,5 @@ pub trait Deps: Send + Sync {
     fn signer(&self) -> &Self::Signer;
     fn clock(&self) -> &Self::Clock;
     fn code(&self) -> &Self::Code;
+    fn credentials(&self) -> &Self::Credentials;
 }

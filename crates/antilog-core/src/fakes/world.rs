@@ -1,9 +1,9 @@
 use std::collections::HashMap;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 use antilog_types::judge::CommitRef;
 
-use super::{FakeClock, FakeMachine, FakeSigner, FakeStore, locked};
+use super::{FakeClock, FakeCredentials, FakeMachine, FakeSigner, FakeStore, locked};
 use crate::code_host::{CodeHost, CodeHostError, OpenedPullRequest, PullRequestSpec};
 use crate::deps::Deps;
 use crate::store::judge::FakeJudgeStore;
@@ -86,17 +86,20 @@ pub struct FakeDeps {
     pub signer: FakeSigner,
     pub clock: FakeClock,
     pub code: FakeCodeHost,
+    pub credentials: FakeCredentials,
 }
 
 impl FakeDeps {
     pub fn new(machine: FakeMachine, code: FakeCodeHost) -> Self {
         let store = FakeStore::default();
+        let clock = FakeClock::new("2026-11-18T09:00:00Z".parse().unwrap_or_default());
         Self {
             judge: store.judge_store(),
             store,
             machine,
             signer: FakeSigner::new("fake"),
-            clock: FakeClock::new("2026-11-18T09:00:00Z".parse().unwrap_or_default()),
+            credentials: FakeCredentials::new(Arc::new(clock.clone())),
+            clock,
             code,
         }
     }
@@ -109,6 +112,7 @@ impl Deps for FakeDeps {
     type Signer = FakeSigner;
     type Clock = FakeClock;
     type Code = FakeCodeHost;
+    type Credentials = FakeCredentials;
 
     fn store(&self) -> &FakeStore {
         &self.store
@@ -127,5 +131,8 @@ impl Deps for FakeDeps {
     }
     fn code(&self) -> &FakeCodeHost {
         &self.code
+    }
+    fn credentials(&self) -> &FakeCredentials {
+        &self.credentials
     }
 }

@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select result from machine_commands where id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "result",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "machine_commands",
+            "name": "result"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "3e1524d7b80911f3010c5204d4f1f0607b45a24140fb76d41f441e6bf8ea5d9e"
+}

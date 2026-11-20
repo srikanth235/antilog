@@ -122,6 +122,7 @@ fn app() -> Router {
             secure_cookies: true,
             code_host_webhook_secret: None,
             e2e_seed: false,
+            runner: None,
         },
     )
 }

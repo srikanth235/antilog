@@ -72,14 +72,16 @@ pub struct Settings {
     /// `ANTILOG_E2E_SEED=1` mounts `/internal/e2e/win`, which makes a win without an agent. For the
     /// server on its fakes in end-to-end tests only.
     pub e2e_seed: bool,
+    /// With a runner key, `/runner/*` is mounted. From `ANTILOG_RUNNER_KEY`.
+    pub runner: Option<super::runner::RunnerSettings>,
 }
 
-fn setting(name: &str) -> Option<String> {
+pub(super) fn setting(name: &str) -> Option<String> {
     std::env::var(name).ok().filter(|value| !value.is_empty())
 }
 
 /// A secret is read from the environment or, as a reference, from the file the `_FILE` variable names.
-fn secret(name: &str) -> Option<String> {
+pub(super) fn secret(name: &str) -> Option<String> {
     setting(name).or_else(|| {
         let path = setting(&format!("{name}_FILE"))?;
         std::fs::read_to_string(path)
@@ -138,6 +140,7 @@ impl Settings {
             secure_cookies: setting("ANTILOG_INSECURE_COOKIES").as_deref() != Some("1"),
             code_host_webhook_secret: secret("ANTILOG_CODE_HOST_WEBHOOK_SECRET"),
             e2e_seed: setting("ANTILOG_E2E_SEED").as_deref() == Some("1"),
+            runner: super::runner::RunnerSettings::from_env(),
         }
     }
 }

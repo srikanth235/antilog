@@ -7,6 +7,7 @@ mod budget;
 mod card;
 mod code_host;
 mod organization;
+mod runner;
 mod session;
 
 pub use approval::ApprovalStore;
@@ -14,6 +15,7 @@ pub use budget::{BudgetStore, SpendLine, SpendRow, SpendScope, SpendTotal};
 pub use card::CardStore;
 pub use code_host::{CodeHostStore, PullRequestRow};
 pub use organization::{Membership, OrganizationStore, SignInRecord, TokenRecord};
+pub use runner::RunnerStore;
 pub use session::{NewEvent, SessionChange, SessionStore};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
@@ -49,6 +51,7 @@ pub trait Store:
     + ApprovalStore
     + CardStore
     + CodeHostStore
+    + RunnerStore
     + Send
     + Sync
 {

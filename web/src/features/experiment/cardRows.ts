@@ -107,6 +107,11 @@ export function cardRows(approval: Schemas["Approval"], ctx: Context): CardRow[]
     }
     case "open_pull_request":
       return [{ key: "repos", label: r.repos, lines: p.repos, mono: true }];
+    case "ask_first":
+      return [
+        { key: "tool", label: r.tool, lines: [p.tool] },
+        { key: "asked", label: r.asked, lines: [p.detail], mono: true },
+      ];
     case "keep_going": {
       const tried = ctx.history.trials.slice(-6).reverse();
       return tried.length === 0

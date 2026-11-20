@@ -28,16 +28,17 @@ async fn main() -> anyhow::Result<()> {
         .context("connecting to Postgres")?;
     let store = PgStore::new(pool);
     store.migrate().await.context("applying migrations")?;
-    tracing::warn!("no runner or code host is built yet: serving on the fakes for both");
+    tracing::warn!("no real code host or credential store is built yet: serving on the fakes");
+    let settings = api::auth::Settings::from_env();
+    if settings.runner.is_none() {
+        tracing::warn!("ANTILOG_RUNNER_KEY is not set: no runner can claim a session");
+    }
 
     let listener = tokio::net::TcpListener::bind(&listen)
         .await
         .with_context(|| format!("binding {listen}"))?;
     tracing::info!(%listen, "serving");
-    let router = api::router(
-        Arc::new(ServerDeps::on_fakes(store)),
-        api::auth::Settings::from_env(),
-    );
+    let router = api::router(Arc::new(ServerDeps::on_fakes(store)), settings);
     let guard = OriginGuard::from_env();
     let router = if guard.is_on() {
         router.layer(axum::middleware::from_fn(move |request, next| {
