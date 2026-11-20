@@ -7,7 +7,7 @@ use std::collections::BTreeMap;
 use antilog_types::{
     ApprovalStatus, CardKind, CardPayload, Command, EventKind, Item, ItemKind, Machine,
     MachineState, PollRequest, PollResponse, Release, ReleaseOutcome, Reply, RepoSpec, RunResult,
-    SessionId, SessionSpec, SessionStatus, SkillRef,
+    SessionId, SessionSpec, SessionStatus, SkillDownload,
 };
 use jiff::SignedDuration;
 use serde_json::{Value, json};
@@ -17,7 +17,7 @@ use crate::credentials::{CredentialsError, Purpose, SessionCredentials};
 use crate::deps::Deps;
 use crate::organization::Refusal;
 use crate::session::{SessionError, audit, now_ms, record};
-use crate::store::{ApprovalStore, Store};
+use crate::store::{ApprovalStore, CustomizeStore, Store};
 use crate::store::{RunnerStore, SessionChange, SessionStore, StoreError};
 
 /// How a server reaches its runners and what it tells them. From server config.
@@ -35,9 +35,6 @@ pub struct Settings {
     pub lease: SignedDuration,
     /// How long a session's tokens live.
     pub token_ttl: SignedDuration,
-    /// The skill pack versions every session gets, as `(name, version)`, until an experiment
-    /// chooses its own.
-    pub skills: Vec<(String, String)>,
 }
 
 impl Settings {
@@ -50,7 +47,6 @@ impl Settings {
             model: model.to_owned(),
             lease: SignedDuration::from_secs(60),
             token_ttl: SignedDuration::from_hours(12),
-            skills: Vec::new(),
         }
     }
 }
@@ -123,6 +119,21 @@ async fn spec<D: Deps>(
     let model_token = creds.mint(session, Purpose::Model, ttl).await?;
     let mcp_token = creds.mint(session, Purpose::Mcp, ttl).await?;
     let runner_token = creds.mint(session, Purpose::Runner, ttl).await?;
+    // The skill pack versions the experiment selected; the runner downloads each.
+    let skills = deps
+        .store()
+        .experiment_skills(machine.organization, machine.experiment)
+        .await?
+        .into_iter()
+        .map(|skill| SkillDownload {
+            path: format!(
+                "/runner/sessions/{session}/skills/{}/{}",
+                skill.name, skill.version
+            ),
+            name: skill.name,
+            version: skill.version.to_string(),
+        })
+        .collect();
     Ok(SessionSpec {
         session,
         organization: machine.organization,
@@ -141,15 +152,7 @@ async fn spec<D: Deps>(
             .collect(),
         environment: machine.seed.environment.clone(),
         variables: BTreeMap::new(),
-        skills: settings
-            .skills
-            .iter()
-            .map(|(name, version)| SkillRef {
-                name: name.clone(),
-                version: version.clone(),
-                path: format!("/runner/sessions/{session}/skills/{name}/{version}"),
-            })
-            .collect(),
+        skills,
         opencode_config: opencode_config(settings, session, &model_token, &mcp_token),
         model_token,
         mcp_token,

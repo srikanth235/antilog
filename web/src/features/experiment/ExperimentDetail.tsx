@@ -16,6 +16,7 @@ import { dateTime, dollars } from "../../lib/format";
 import { kept, OUTCOME_WORDS, parseHistory } from "../../lib/history";
 import { w } from "../../words";
 import { BudgetDialog } from "./BudgetDialog";
+import { ExperimentUses } from "./ExperimentUses";
 import { ExperimentValueBlock } from "./ExperimentValueBlock";
 import { SpendBreakdown } from "./SpendBreakdown";
 
@@ -139,6 +140,9 @@ export function ExperimentDetail({ experimentId }: { experimentId: string }) {
       </Section>
       <Section title={t.data}>
         <Target text={t.dataTarget} />
+      </Section>
+      <Section title={t.custom} note={t.customNote}>
+        <ExperimentUses experimentId={experimentId} projectId={e.projectId} />
       </Section>
       <Section title={t.value} note={w.value.expSectionNote}>
         <ExperimentValueBlock experimentId={experimentId} />

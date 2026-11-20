@@ -34,6 +34,7 @@ text_enum!(
         KeepGoing => "keep_going",
         ContinueOnAnotherAgent => "continue_on_another_agent",
         AskFirst => "ask_first",
+        UseConnectorTool => "use_connector_tool",
     }
 );
 
@@ -128,6 +129,13 @@ pub enum CardPayload {
         /// The harness's id for the ask; the answer goes back under it.
         permission: String,
     },
+    /// A connector's tool set to "ask first". The digest names the one input approved.
+    #[serde(rename_all = "camelCase")]
+    UseConnectorTool {
+        connector: String,
+        tool: String,
+        input_digest: String,
+    },
 }
 
 impl CardPayload {
@@ -143,6 +151,7 @@ impl CardPayload {
             Self::KeepGoing { .. } => CardKind::KeepGoing,
             Self::ContinueOnAnotherAgent {} => CardKind::ContinueOnAnotherAgent,
             Self::AskFirst { .. } => CardKind::AskFirst,
+            Self::UseConnectorTool { .. } => CardKind::UseConnectorTool,
         }
     }
 }

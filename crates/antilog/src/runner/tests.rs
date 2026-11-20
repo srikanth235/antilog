@@ -716,17 +716,17 @@ async fn a_skill_pack_is_unpacked_into_the_skills_folder() {
         environment: None,
         variables: Default::default(),
         skills: vec![
-            antilog_types::SkillRef {
+            antilog_types::SkillDownload {
                 name: "perf".into(),
                 version: "3".into(),
                 path: format!("/runner/sessions/{}/skills/perf/3", "x"),
             },
-            antilog_types::SkillRef {
+            antilog_types::SkillDownload {
                 name: "escape".into(),
                 version: "1".into(),
                 path: format!("/runner/sessions/{}/skills/escape/1", "x"),
             },
-            antilog_types::SkillRef {
+            antilog_types::SkillDownload {
                 name: "gone".into(),
                 version: "1".into(),
                 path: "/runner/sessions/x/skills/gone/1".into(),

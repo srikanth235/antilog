@@ -210,19 +210,29 @@ async fn export<D: Deps + 'static>(
         .ok_or(RunnerError::NotFound)?)
 }
 
-/// A skill pack at one version. The content is the skill packs' own (Customize); until it is
-/// wired here, no pack is available.
+/// A skill pack at one version: its files as text, from Customize. Only the holding runner may
+/// download, and only a version the session's experiment selected.
 async fn skill<D: Deps + 'static>(
     State(app): Shared<D>,
     headers: HeaderMap,
-    Path((session, _name, _version)): Path<(SessionId, String, String)>,
+    Path((session, name, version)): Path<(SessionId, String, String)>,
 ) -> Result<Response, Fail> {
     holder(&app, &headers, session).await?;
-    Ok(refuse(
+    let Ok(version) = version.parse::<u32>() else {
+        return Ok(unavailable());
+    };
+    match super::customize::session_skill(app.deps.as_ref(), session, &name, version).await {
+        Ok(pack) => Ok(Json(pack).into_response()),
+        Err(_) => Ok(unavailable()),
+    }
+}
+
+fn unavailable() -> Response {
+    refuse(
         StatusCode::NOT_FOUND,
         "skill_unavailable",
         "This skill pack version is not available.",
-    ))
+    )
 }
 
 impl RunnerSettings {
@@ -242,13 +252,6 @@ impl RunnerSettings {
         );
         if let Some(base) = super::auth::setting("ANTILOG_CLONE_BASE") {
             core.clone_base = base;
-        }
-        if let Some(skills) = super::auth::setting("ANTILOG_SKILLS") {
-            core.skills = skills
-                .split(',')
-                .filter_map(|pair| pair.trim().split_once('@'))
-                .map(|(name, version)| (name.to_owned(), version.to_owned()))
-                .collect();
         }
         Some(Self { key, core })
     }

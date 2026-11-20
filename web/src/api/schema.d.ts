@@ -196,6 +196,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/connectors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["connectors_list"];
+        put?: never;
+        post: operations["connector_add"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/connectors/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["connector_get"];
+        put?: never;
+        post?: never;
+        delete: operations["connector_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/connectors/{id}/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["connector_check"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/connectors/{id}/credential": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["connector_credential"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/connectors/{id}/tools/{tool}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["connector_tool"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/environments": {
         parameters: {
             query?: never;
@@ -308,6 +388,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/experiments/{id}/connectors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["experiment_connectors"];
+        put: operations["experiment_set_connectors"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/experiments/{id}/history": {
         parameters: {
             query?: never;
@@ -334,6 +430,22 @@ export interface paths {
         get: operations["sessions"];
         put?: never;
         post: operations["start_session"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/experiments/{id}/skills": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["experiment_skills"];
+        put: operations["experiment_set_skills"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -484,6 +596,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/plugins": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["plugins_list"];
+        put?: never;
+        post: operations["plugin_add"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/plugins/{id}/remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["plugin_remove"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/policies": {
         parameters: {
             query?: never;
@@ -573,6 +717,22 @@ export interface paths {
         };
         get?: never;
         put: operations["set_project_role"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{id}/skills/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["project_skill"];
         post?: never;
         delete?: never;
         options?: never;
@@ -686,6 +846,54 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["stop"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/skills": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["skills_list"];
+        put?: never;
+        post: operations["skill_add"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/skills/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["skill_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/skills/{name}/versions/{version}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["skill_version"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -904,7 +1112,7 @@ export interface components {
             projects: components["schemas"]["ProjectSpend"][];
         };
         /** @enum {string} */
-        CardKind: "seal_experiment" | "raise_budget" | "add_credential" | "attach_repo" | "change_environment" | "open_pull_request" | "keep_going" | "continue_on_another_agent" | "ask_first";
+        CardKind: "seal_experiment" | "raise_budget" | "add_credential" | "attach_repo" | "change_environment" | "open_pull_request" | "keep_going" | "continue_on_another_agent" | "ask_first" | "use_connector_tool";
         /**
          * @description What each kind of card asks, as typed fields. A card shows these, never text parsed out of
          *     its summary, and an action that follows an approval reads what to do from here.
@@ -983,6 +1191,12 @@ export interface components {
             permission: string;
             /** @description The tool, such as `bash`. */
             tool: string;
+        } | {
+            connector: string;
+            inputDigest: string;
+            /** @enum {string} */
+            kind: "use_connector_tool";
+            tool: string;
         };
         /** Format: int64 */
         Cents: number;
@@ -995,6 +1209,32 @@ export interface components {
             environment: string;
             judgeDigest: string;
             judgeImage: string;
+        };
+        /** @description A remote MCP server. The credential is kept sealed on the server and never shown. */
+        Connector: {
+            /** Format: int64 */
+            createdAt: number;
+            createdBy: components["schemas"]["MemberId"];
+            hasCredential: boolean;
+            health: components["schemas"]["ConnectorHealth"];
+            id: components["schemas"]["ConnectorId"];
+            /** @description Also the prefix of its tools' names in a session: `<slug>__<tool>`. */
+            name: string;
+            slug: string;
+            tools: components["schemas"]["ConnectorTool"][];
+            url: string;
+        };
+        /**
+         * @description Never shown as healthy before it was checked.
+         * @enum {string}
+         */
+        ConnectorHealth: "connected" | "reconnect" | "not_checked";
+        /** Format: uuid */
+        ConnectorId: string;
+        ConnectorTool: {
+            description: string;
+            mode: components["schemas"]["ToolMode"];
+            name: string;
         };
         /**
          * @description "$", "$$" or "$$$", set from the agent's price.
@@ -1253,6 +1493,12 @@ export interface components {
             isDefault: boolean;
             name: string;
         };
+        NewConnector: {
+            /** @description Sent to the server as a bearer token. Stored sealed; never returned. */
+            credential?: string | null;
+            name: string;
+            url: string;
+        };
         NewEvaluationTemplate: {
             command: string;
             kind: components["schemas"]["EvaluationKind"];
@@ -1279,9 +1525,22 @@ export interface components {
             name: string;
             state: string;
         };
+        /** @description The bundle an owner or editor adds: a manifest and its parts. */
+        NewPlugin: {
+            connectors?: components["schemas"]["PluginConnector"][];
+            description?: string;
+            evaluations?: components["schemas"]["NewEvaluationTemplate"][];
+            name: string;
+            skills?: components["schemas"]["NewSkill"][];
+            version: string;
+        };
         NewProject: {
             description: string;
             name: string;
+        };
+        NewSkill: {
+            /** @description Text files; `SKILL.md` is required at the top. The name comes from its front matter. */
+            files: components["schemas"]["SkillFile"][];
         };
         NewToken: {
             memberId?: components["schemas"]["MemberId"] | null;
@@ -1334,6 +1593,28 @@ export interface components {
             /** Format: int64 */
             cents: number;
             outcome?: components["schemas"]["Outcome"] | null;
+        };
+        /** @enum {string} */
+        PartKind: "skill" | "connector" | "evaluation";
+        Plugin: {
+            /** Format: int64 */
+            createdAt: number;
+            createdBy: components["schemas"]["MemberId"];
+            description: string;
+            id: string;
+            name: string;
+            parts: components["schemas"]["PluginPart"][];
+            version: string;
+        };
+        /** @description A connector a plugin names. Its credential is added afterwards, on the connector. */
+        PluginConnector: {
+            name: string;
+            url: string;
+        };
+        /** @description What a plugin brought, by kind and name (a skill's name, a connector's id, an evaluation's id). */
+        PluginPart: {
+            kind: components["schemas"]["PartKind"];
+            name: string;
         };
         /** @description What policy does with one card kind. Add credential only ever asks. */
         Policy: {
@@ -1400,6 +1681,10 @@ export interface components {
         };
         /** Format: uuid */
         ReceiptId: string;
+        /** @description What to do with each part when a plugin is removed; a part not named is removed, and one in use refuses. */
+        RemovePlugin: {
+            keep?: components["schemas"]["PluginPart"][];
+        };
         /** @enum {string} */
         RepoAccess: "read" | "push";
         /** @description The monthly Report for the organization or one project. */
@@ -1443,6 +1728,13 @@ export interface components {
         SecondOpinion: {
             flags: string[];
             provider: string;
+        };
+        SelectConnectors: {
+            connectors: components["schemas"]["ConnectorId"][];
+        };
+        SelectSkills: {
+            /** @description Names; each is pinned to its latest version now. */
+            skills: string[];
         };
         SendMessage: {
             text: string;
@@ -1497,12 +1789,21 @@ export interface components {
         };
         /** @enum {string} */
         SessionStatus: "working" | "waiting_for_you" | "done" | "failed";
+        SetCredential: {
+            credential: string;
+        };
+        SetOn: {
+            on: boolean;
+        };
         /** @description `None` returns the member to their organization role in this project. */
         SetProjectRole: {
             role?: components["schemas"]["Role"] | null;
         };
         SetRole: {
             role: components["schemas"]["Role"];
+        };
+        SetToolMode: {
+            mode: components["schemas"]["ToolMode"];
         };
         SignInCallback: {
             code: string;
@@ -1516,8 +1817,42 @@ export interface components {
             authorizeUrl: string;
             state: string;
         };
+        Skill: {
+            description: string;
+            fromPlugin?: string | null;
+            /** Format: int32 */
+            latest: number;
+            name: string;
+            /** @description A project turns it Off to hide it from New experiment there. */
+            on: boolean;
+            versions: number[];
+        };
+        /** @description One text file of a skill pack, by path inside its folder. */
+        SkillFile: {
+            content: string;
+            path: string;
+        };
         SkillPackRef: {
             id: string;
+            /** Format: int32 */
+            version: number;
+        };
+        /** @description The skill versions an experiment selected. */
+        SkillRef: {
+            name: string;
+            /** Format: int32 */
+            version: number;
+        };
+        /** @description One immutable version of an organization skill. */
+        SkillVersion: {
+            /** Format: int64 */
+            createdAt: number;
+            createdBy: components["schemas"]["MemberId"];
+            description: string;
+            files: components["schemas"]["SkillFile"][];
+            name: string;
+            /** Format: int64 */
+            sizeBytes: number;
             /** Format: int32 */
             version: number;
         };
@@ -1564,6 +1899,11 @@ export interface components {
             };
             name: string;
         };
+        /**
+         * @description What a session may do with one tool of a connector.
+         * @enum {string}
+         */
+        ToolMode: "on" | "off" | "ask";
         ToolResult: {
             answer: {
                 [key: string]: unknown;
@@ -2052,6 +2392,221 @@ export interface operations {
             };
         };
     };
+    connectors_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The organization's connectors; a credential is never shown */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Connector"][];
+                };
+            };
+        };
+    };
+    connector_add: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewConnector"];
+            };
+        };
+        responses: {
+            /** @description Added and checked; owners */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Connector"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    connector_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The connector */
+                id: components["schemas"]["ConnectorId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Connector"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    connector_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The connector */
+                id: components["schemas"]["ConnectorId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed with its credential; owners */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description An experiment has it switched on */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    connector_check: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The connector */
+                id: components["schemas"]["ConnectorId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Checked again: Connected, Reconnect or Not checked */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Connector"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    connector_credential: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The connector */
+                id: components["schemas"]["ConnectorId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetCredential"];
+            };
+        };
+        responses: {
+            /** @description Replaced and checked; owners */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Connector"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    connector_tool: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The connector */
+                id: components["schemas"]["ConnectorId"];
+                /** @description The tool's own name */
+                tool: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetToolMode"];
+            };
+        };
+        responses: {
+            /** @description On, off or ask first; owners */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Connector"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
     environments: {
         parameters: {
             query?: never;
@@ -2273,6 +2828,56 @@ export interface operations {
             };
         };
     };
+    experiment_connectors: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The experiment */
+                id: components["schemas"]["ExperimentId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The connectors switched on */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConnectorId"][];
+                };
+            };
+        };
+    };
+    experiment_set_connectors: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The experiment */
+                id: components["schemas"]["ExperimentId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SelectConnectors"];
+            };
+        };
+        responses: {
+            /** @description The connectors now switched on; editors and owners of the project */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConnectorId"][];
+                };
+            };
+        };
+    };
     history: {
         parameters: {
             query?: {
@@ -2372,6 +2977,56 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    experiment_skills: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The experiment */
+                id: components["schemas"]["ExperimentId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The skill versions it selected */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SkillRef"][];
+                };
+            };
+        };
+    };
+    experiment_set_skills: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The experiment */
+                id: components["schemas"]["ExperimentId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SelectSkills"];
+            };
+        };
+        responses: {
+            /** @description Each skill pinned to its latest version now; editors and owners of the project */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SkillRef"][];
                 };
             };
         };
@@ -2673,6 +3328,92 @@ export interface operations {
             };
         };
     };
+    plugins_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The plugins added, oldest first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Plugin"][];
+                };
+            };
+        };
+    };
+    plugin_add: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewPlugin"];
+            };
+        };
+        responses: {
+            /** @description Unpacked into its skills, connectors and evaluation templates; owners */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Plugin"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    plugin_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The plugin */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RemovePlugin"];
+            };
+        };
+        responses: {
+            /** @description Removed; the parts named in keep stay; owners */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description A part is in use */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
     policies: {
         parameters: {
             query?: never;
@@ -2926,6 +3667,33 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ApiError"];
                 };
+            };
+        };
+    };
+    project_skill: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The project */
+                id: components["schemas"]["ProjectId"];
+                /** @description The skill */
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetOn"];
+            };
+        };
+        responses: {
+            /** @description Turned On or Off for the project; project owners */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -3210,6 +3978,123 @@ export interface operations {
                 };
             };
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    skills_list: {
+        parameters: {
+            query?: {
+                /** @description Show each skill On or Off for this project. */
+                project?: components["schemas"]["ProjectId"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The organization's skills, by name */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Skill"][];
+                };
+            };
+        };
+    };
+    skill_add: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewSkill"];
+            };
+        };
+        responses: {
+            /** @description A new version of the skill named in SKILL.md; editors and owners */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SkillVersion"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    skill_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The skill */
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Every version removed; owners */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description An experiment selected it */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    skill_version: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The skill */
+                name: string;
+                /** @description Its version */
+                version: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SkillVersion"];
+                };
+            };
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

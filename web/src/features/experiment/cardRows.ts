@@ -39,6 +39,8 @@ export function cardLead(approval: Schemas["Approval"]): string {
       return w.card.lead.changeEnvironment;
     case "open_pull_request":
       return w.card.lead.openPullRequest(p.hypothesis);
+    case "use_connector_tool":
+      return w.card.lead.askConnectorTool(p.tool, p.connector);
     default:
       return approval.summary;
   }
@@ -105,6 +107,12 @@ export function cardRows(approval: Schemas["Approval"], ctx: Context): CardRow[]
       if (p.network != null) rows.push({ key: "network", label: r.network, lines: [p.network] });
       return rows;
     }
+    case "use_connector_tool":
+      return [
+        { key: "connector", label: r.connector, lines: [p.connector] },
+        { key: "tool", label: r.tool, lines: [p.tool], mono: true },
+        { key: "input", label: r.input, lines: [p.inputDigest], mono: true },
+      ];
     case "open_pull_request":
       return [{ key: "repos", label: r.repos, lines: p.repos, mono: true }];
     case "ask_first":

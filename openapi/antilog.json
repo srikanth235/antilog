@@ -481,6 +481,307 @@
         ]
       }
     },
+    "/connectors": {
+      "get": {
+        "tags": [],
+        "operationId": "connectors_list",
+        "responses": {
+          "200": {
+            "description": "The organization's connectors; a credential is never shown",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Connector"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [],
+        "operationId": "connector_add",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewConnector"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Added and checked; owners",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Connector"
+                }
+              }
+            }
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/connectors/{id}": {
+      "get": {
+        "tags": [],
+        "operationId": "connector_get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The connector",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ConnectorId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Connector"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [],
+        "operationId": "connector_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The connector",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ConnectorId"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Removed with its credential; owners"
+          },
+          "422": {
+            "description": "An experiment has it switched on",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/connectors/{id}/check": {
+      "post": {
+        "tags": [],
+        "operationId": "connector_check",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The connector",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ConnectorId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Checked again: Connected, Reconnect or Not checked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Connector"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/connectors/{id}/credential": {
+      "put": {
+        "tags": [],
+        "operationId": "connector_credential",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The connector",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ConnectorId"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetCredential"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Replaced and checked; owners",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Connector"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/connectors/{id}/tools/{tool}": {
+      "put": {
+        "tags": [],
+        "operationId": "connector_tool",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The connector",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ConnectorId"
+            }
+          },
+          {
+            "name": "tool",
+            "in": "path",
+            "description": "The tool's own name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetToolMode"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "On, off or ask first; owners",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Connector"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/environments": {
       "get": {
         "tags": [],
@@ -789,6 +1090,88 @@
         ]
       }
     },
+    "/experiments/{id}/connectors": {
+      "get": {
+        "tags": [],
+        "operationId": "experiment_connectors",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The experiment",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ExperimentId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The connectors switched on",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ConnectorId"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [],
+        "operationId": "experiment_set_connectors",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The experiment",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ExperimentId"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SelectConnectors"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The connectors now switched on; editors and owners of the project",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ConnectorId"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/experiments/{id}/history": {
       "get": {
         "tags": [],
@@ -950,6 +1333,88 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/experiments/{id}/skills": {
+      "get": {
+        "tags": [],
+        "operationId": "experiment_skills",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The experiment",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ExperimentId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The skill versions it selected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SkillRef"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [],
+        "operationId": "experiment_set_skills",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The experiment",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ExperimentId"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SelectSkills"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Each skill pinned to its latest version now; editors and owners of the project",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SkillRef"
+                  }
                 }
               }
             }
@@ -1361,6 +1826,119 @@
         ]
       }
     },
+    "/plugins": {
+      "get": {
+        "tags": [],
+        "operationId": "plugins_list",
+        "responses": {
+          "200": {
+            "description": "The plugins added, oldest first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Plugin"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [],
+        "operationId": "plugin_add",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewPlugin"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Unpacked into its skills, connectors and evaluation templates; owners",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Plugin"
+                }
+              }
+            }
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/plugins/{id}/remove": {
+      "post": {
+        "tags": [],
+        "operationId": "plugin_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The plugin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemovePlugin"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Removed; the parts named in keep stay; owners"
+          },
+          "422": {
+            "description": "A part is in use",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/policies": {
       "get": {
         "tags": [],
@@ -1708,6 +2286,52 @@
                 }
               }
             }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/projects/{id}/skills/{name}": {
+      "put": {
+        "tags": [],
+        "operationId": "project_skill",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The project",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ProjectId"
+            }
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "description": "The skill",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetOn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Turned On or Off for the project; project owners"
           }
         },
         "security": [
@@ -2138,6 +2762,173 @@
             }
           },
           "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/skills": {
+      "get": {
+        "tags": [],
+        "operationId": "skills_list",
+        "parameters": [
+          {
+            "name": "project",
+            "in": "query",
+            "description": "Show each skill On or Off for this project.",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/ProjectId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The organization's skills, by name",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Skill"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [],
+        "operationId": "skill_add",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewSkill"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "A new version of the skill named in SKILL.md; editors and owners",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillVersion"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/skills/{name}": {
+      "delete": {
+        "tags": [],
+        "operationId": "skill_remove",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "description": "The skill",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Every version removed; owners"
+          },
+          "422": {
+            "description": "An experiment selected it",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/skills/{name}/versions/{version}": {
+      "get": {
+        "tags": [],
+        "operationId": "skill_version",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "description": "The skill",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "version",
+            "in": "path",
+            "description": "Its version",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillVersion"
+                }
+              }
+            }
+          },
+          "404": {
             "content": {
               "application/json": {
                 "schema": {
@@ -2810,7 +3601,8 @@
           "open_pull_request",
           "keep_going",
           "continue_on_another_agent",
-          "ask_first"
+          "ask_first",
+          "use_connector_tool"
         ]
       },
       "CardPayload": {
@@ -3082,6 +3874,33 @@
                 "description": "The tool, such as `bash`."
               }
             }
+          },
+          {
+            "type": "object",
+            "description": "A connector's tool set to \"ask first\". The digest names the one input approved.",
+            "required": [
+              "connector",
+              "tool",
+              "inputDigest",
+              "kind"
+            ],
+            "properties": {
+              "connector": {
+                "type": "string"
+              },
+              "inputDigest": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "use_connector_tool"
+                ]
+              },
+              "tool": {
+                "type": "string"
+              }
+            }
           }
         ],
         "description": "What each kind of card asks, as typed fields. A card shows these, never text parsed out of\nits summary, and an action that follows an approval reads what to do from here."
@@ -3128,6 +3947,89 @@
             "type": "string"
           },
           "judgeImage": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Connector": {
+        "type": "object",
+        "description": "A remote MCP server. The credential is kept sealed on the server and never shown.",
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "url",
+          "hasCredential",
+          "health",
+          "tools",
+          "createdBy",
+          "createdAt"
+        ],
+        "properties": {
+          "createdAt": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "createdBy": {
+            "$ref": "#/components/schemas/MemberId"
+          },
+          "hasCredential": {
+            "type": "boolean"
+          },
+          "health": {
+            "$ref": "#/components/schemas/ConnectorHealth"
+          },
+          "id": {
+            "$ref": "#/components/schemas/ConnectorId"
+          },
+          "name": {
+            "type": "string",
+            "description": "Also the prefix of its tools' names in a session: `<slug>__<tool>`."
+          },
+          "slug": {
+            "type": "string"
+          },
+          "tools": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConnectorTool"
+            }
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ConnectorHealth": {
+        "type": "string",
+        "description": "Never shown as healthy before it was checked.",
+        "enum": [
+          "connected",
+          "reconnect",
+          "not_checked"
+        ]
+      },
+      "ConnectorId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "ConnectorTool": {
+        "type": "object",
+        "required": [
+          "name",
+          "description",
+          "mode"
+        ],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/ToolMode"
+          },
+          "name": {
             "type": "string"
           }
         },
@@ -3980,6 +4882,29 @@
         },
         "additionalProperties": false
       },
+      "NewConnector": {
+        "type": "object",
+        "required": [
+          "name",
+          "url"
+        ],
+        "properties": {
+          "credential": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Sent to the server as a bearer token. Stored sealed; never returned."
+          },
+          "name": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "NewEvaluationTemplate": {
         "type": "object",
         "required": [
@@ -4087,6 +5012,44 @@
         },
         "additionalProperties": false
       },
+      "NewPlugin": {
+        "type": "object",
+        "description": "The bundle an owner or editor adds: a manifest and its parts.",
+        "required": [
+          "name",
+          "version"
+        ],
+        "properties": {
+          "connectors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PluginConnector"
+            }
+          },
+          "description": {
+            "type": "string"
+          },
+          "evaluations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NewEvaluationTemplate"
+            }
+          },
+          "name": {
+            "type": "string"
+          },
+          "skills": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NewSkill"
+            }
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "NewProject": {
         "type": "object",
         "required": [
@@ -4099,6 +5062,22 @@
           },
           "name": {
             "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "NewSkill": {
+        "type": "object",
+        "required": [
+          "files"
+        ],
+        "properties": {
+          "files": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkillFile"
+            },
+            "description": "Text files; `SKILL.md` is required at the top. The name comes from its front matter."
           }
         },
         "additionalProperties": false
@@ -4261,6 +5240,88 @@
                 "type": "null"
               }
             ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "PartKind": {
+        "type": "string",
+        "enum": [
+          "skill",
+          "connector",
+          "evaluation"
+        ]
+      },
+      "Plugin": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "version",
+          "parts",
+          "createdBy",
+          "createdAt"
+        ],
+        "properties": {
+          "createdAt": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "createdBy": {
+            "$ref": "#/components/schemas/MemberId"
+          },
+          "description": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "parts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PluginPart"
+            }
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PluginConnector": {
+        "type": "object",
+        "description": "A connector a plugin names. Its credential is added afterwards, on the connector.",
+        "required": [
+          "name",
+          "url"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PluginPart": {
+        "type": "object",
+        "description": "What a plugin brought, by kind and name (a skill's name, a connector's id, an evaluation's id).",
+        "required": [
+          "kind",
+          "name"
+        ],
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/PartKind"
+          },
+          "name": {
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -4464,6 +5525,19 @@
         "type": "string",
         "format": "uuid"
       },
+      "RemovePlugin": {
+        "type": "object",
+        "description": "What to do with each part when a plugin is removed; a part not named is removed, and one in use refuses.",
+        "properties": {
+          "keep": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PluginPart"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
       "RepoAccess": {
         "type": "string",
         "enum": [
@@ -4590,6 +5664,37 @@
           },
           "provider": {
             "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SelectConnectors": {
+        "type": "object",
+        "required": [
+          "connectors"
+        ],
+        "properties": {
+          "connectors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConnectorId"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "SelectSkills": {
+        "type": "object",
+        "required": [
+          "skills"
+        ],
+        "properties": {
+          "skills": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Names; each is pinned to its latest version now."
           }
         },
         "additionalProperties": false
@@ -4753,6 +5858,30 @@
           "failed"
         ]
       },
+      "SetCredential": {
+        "type": "object",
+        "required": [
+          "credential"
+        ],
+        "properties": {
+          "credential": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SetOn": {
+        "type": "object",
+        "required": [
+          "on"
+        ],
+        "properties": {
+          "on": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
       "SetProjectRole": {
         "type": "object",
         "description": "`None` returns the member to their organization role in this project.",
@@ -4778,6 +5907,18 @@
         "properties": {
           "role": {
             "$ref": "#/components/schemas/Role"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SetToolMode": {
+        "type": "object",
+        "required": [
+          "mode"
+        ],
+        "properties": {
+          "mode": {
+            "$ref": "#/components/schemas/ToolMode"
           }
         },
         "additionalProperties": false
@@ -4840,6 +5981,65 @@
         },
         "additionalProperties": false
       },
+      "Skill": {
+        "type": "object",
+        "required": [
+          "name",
+          "description",
+          "latest",
+          "versions",
+          "on"
+        ],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "fromPlugin": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "latest": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "name": {
+            "type": "string"
+          },
+          "on": {
+            "type": "boolean",
+            "description": "A project turns it Off to hide it from New experiment there."
+          },
+          "versions": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 0
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "SkillFile": {
+        "type": "object",
+        "description": "One text file of a skill pack, by path inside its folder.",
+        "required": [
+          "path",
+          "content"
+        ],
+        "properties": {
+          "content": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "SkillPackRef": {
         "type": "object",
         "required": [
@@ -4849,6 +6049,70 @@
         "properties": {
           "id": {
             "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      },
+      "SkillRef": {
+        "type": "object",
+        "description": "The skill versions an experiment selected.",
+        "required": [
+          "name",
+          "version"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      },
+      "SkillVersion": {
+        "type": "object",
+        "description": "One immutable version of an organization skill.",
+        "required": [
+          "name",
+          "version",
+          "description",
+          "files",
+          "sizeBytes",
+          "createdBy",
+          "createdAt"
+        ],
+        "properties": {
+          "createdAt": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "createdBy": {
+            "$ref": "#/components/schemas/MemberId"
+          },
+          "description": {
+            "type": "string"
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkillFile"
+            }
+          },
+          "name": {
+            "type": "string"
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
           },
           "version": {
             "type": "integer",
@@ -5010,6 +6274,15 @@
           }
         },
         "additionalProperties": false
+      },
+      "ToolMode": {
+        "type": "string",
+        "description": "What a session may do with one tool of a connector.",
+        "enum": [
+          "on",
+          "off",
+          "ask"
+        ]
       },
       "ToolResult": {
         "type": "object",

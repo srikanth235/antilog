@@ -9,7 +9,7 @@ Each session has a machine row (`machines`): `queued`, `claimed`, `running`, `id
 - `claimed`: leased, not yet started. `running` and `idle` follow OpenCode's busy and idle status. `released`: the runner exported the session and let the machine go; a person's message, or a judge command, queues it again with `resume`.
 - A claim returns the session spec: repos, environment variables, skill versions with download paths, the generated OpenCode config, the model, and three tokens (`Model`, `Mcp`, `Runner`) minted for the claim. Claiming revokes the tokens of any earlier holder; releasing revokes all of them.
 - Per-session calls (`/events`, `/results`, `/release`, `/export`, the skills download) carry that session's `Runner` token. None of the `/runner/*` routes is in the public OpenAPI.
-- The routes are mounted only when `ANTILOG_RUNNER_KEY` is set. `ANTILOG_MODEL` (`provider/model`) is required with it; `ANTILOG_PROXY_URL`, `ANTILOG_PUBLIC_URL`, `ANTILOG_CLONE_BASE` and `ANTILOG_SKILLS` (`name@version,...`) tell the machine where things are.
+- The routes are mounted only when `ANTILOG_RUNNER_KEY` is set. `ANTILOG_MODEL` (`provider/model`) is required with it; `ANTILOG_PROXY_URL`, `ANTILOG_PUBLIC_URL`, `ANTILOG_CLONE_BASE` tell the machine where things are.
 
 ## `antilog runner`
 

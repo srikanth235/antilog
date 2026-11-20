@@ -62,6 +62,7 @@ Built: `antilog-core/src/credentials.rs`, with `FakeCredentials` in `fakes/crede
 
 - `/mcp/sessions/{id}`: streamable HTTP with a bearer token for `Purpose::Mcp`. It serves the judge's tools and the switched-on connectors' tools. Each tool is on, off or ask first.
 - Skills are downloaded per version from `GET /runner/sessions/{id}/skills/{name}/{version}`. A ships the route, C supplies the content. The runner unpacks them into `/opt/antilog/skills/<name>/`.
+- Built (C): the endpoint is `antilog_server::api::mcp`, mounted with `api::router_with_reach(app, credentials, Backend)`, which also mounts the Customize routes. The skills handler is `antilog_server::api::customize::session_skill(deps, session, name, version)`: it answers only for a version the session's experiment selected, with `SkillVersion { files: [{path, content}] }` (JSON text files; no zip in v0), and `session_skill_refs(deps, session)` lists the selected `{name, version}` for the claim. A authenticates the runner and mounts both. Connector credentials are sealed with `Sealer` under `connector:<id>`; the server needs `ANTILOG_SECRET_MASTER_KEY` (64 hex) to hold one. `ANTILOG_CONNECTORS_ALLOW_PRIVATE=1` lets a connector sit on a loopback address, for local development and tests only.
 
 ## The sealed test command (judge)
 
@@ -77,7 +78,7 @@ Base and trial runs are interleaved by the judge (`judge/paired.rs`). The number
 
 - A machine row is its own table (`machines`), not columns on `sessions`. Commands wait in `machine_commands` until a runner takes them; a run's outcome is stored on its command; an export is replaced on each release (`machine_exports`).
 - `POST /runner/poll` also takes `held` (the sessions the runner runs now, answered by `lost`) and `done` (command ids it finished). Release outcomes `idle`, `done` and `failed` leave the machine `released`, `done` and `failed`.
-- `GET /runner/sessions/{id}/export` serves the last export for `opencode import`. `GET /runner/sessions/{id}/skills/{name}/{version}` is mounted and answers 404 until session C supplies the content; a pack is JSON, `{files: [{path, content}]}` (session C's `SkillVersion`), written to `/opt/antilog/skills/<name>/<path>`; a path that escapes the folder skips the pack.
+- `GET /runner/sessions/{id}/export` serves the last export for `opencode import`. `GET /runner/sessions/{id}/skills/{name}/{version}` serves the skill versions the session's experiment selected (Customize's `session_skill`; 404 for any other); a claim's skills list is that selection; a pack is JSON, `{files: [{path, content}]}` (session C's `SkillVersion`), written to `/opt/antilog/skills/<name>/<path>`; a path that escapes the folder skips the pack.
 - An OpenCode permission ask becomes an Ask first card (`ask_first`), added to the card kinds.
 - The judge's data (`ANTILOG_DATA_KIND`, `ANTILOG_DATASET_ID`, `ANTILOG_DATASET_VERSION`) is named to the command; delivering the rows is not built.
 - `--pure` stops a repo's plugin code from running; `OPENCODE_DISABLE_PROJECT_CONFIG` also stops its MCP servers, skills and agents. Neither is needed to keep a repo from overriding the provider, permissions or autoupdate: the managed config wins. See [../.claude/skills/session/runner.md](../.claude/skills/session/runner.md).

@@ -34,6 +34,10 @@ export default defineConfig({
               ANTILOG_INSECURE_COOKIES: "1",
               ANTILOG_CODE_HOST_WEBHOOK_SECRET: "e2e-code-host-secret",
               ANTILOG_E2E_SEED: "1",
+              // The connector tests call a mock MCP server on loopback and seal a credential.
+              ANTILOG_CONNECTORS_ALLOW_PRIVATE: "1",
+              ANTILOG_SECRET_MASTER_KEY:
+                "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff",
               ANTILOG_LISTEN: new URL(api).host,
             },
           },

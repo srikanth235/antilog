@@ -7,6 +7,7 @@ mod approval;
 mod budget;
 mod card;
 mod code_host;
+mod customize;
 mod judge;
 mod organization;
 mod runner;

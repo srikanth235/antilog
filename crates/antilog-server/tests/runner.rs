@@ -44,7 +44,6 @@ async fn world() -> World {
         "vendor/model-1",
     );
     core.clone_base = "/srv/git/".to_owned();
-    core.skills = vec![("perf".into(), "3".into())];
     let app = router(
         deps.clone(),
         Settings {
@@ -194,10 +193,7 @@ async fn a_claim_carries_the_spec_the_contract_lists() {
         spec["repos"],
         json!([{"name": "acme/api", "url": "/srv/git/acme/api", "token": null}])
     );
-    assert_eq!(
-        spec["skills"],
-        json!([{"name": "perf", "version": "3", "path": format!("/runner/sessions/{}/skills/perf/3", session.id)}])
-    );
+    assert_eq!(spec["skills"], json!([]));
     assert_eq!(spec["resume"], false);
     let (model, mcp) = (
         spec["modelToken"].as_str().unwrap(),

@@ -45,7 +45,7 @@ pub struct RepoSpec {
 /// A skill pack version to unpack into the skills folder.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct SkillRef {
+pub struct SkillDownload {
     pub name: String,
     pub version: String,
     /// Where to download it, relative to the server.
@@ -66,7 +66,7 @@ pub struct SessionSpec {
     pub environment: Option<String>,
     /// Plain variables of the environment.
     pub variables: BTreeMap<String, String>,
-    pub skills: Vec<SkillRef>,
+    pub skills: Vec<SkillDownload>,
     /// The machine-wide OpenCode config, generated here.
     pub opencode_config: serde_json::Value,
     pub model_token: String,

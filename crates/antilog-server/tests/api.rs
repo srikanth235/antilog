@@ -9,8 +9,11 @@ use std::sync::Arc;
 
 use antilog_core::auth::FakeSignIn;
 use antilog_core::fakes::{FakeCodeHost, FakeDeps, FakeMachine};
+use antilog_server::api::auth::App;
 use antilog_server::api::auth::{Provider, Settings};
-use antilog_server::api::{openapi_json, router};
+use antilog_server::api::customize::Backend;
+use antilog_server::api::{openapi_json, router, router_with_reach};
+use antilog_server::connectors::HttpConnectors;
 use axum::Router;
 use axum::body::Body;
 use axum::http::{Method, Request, StatusCode, header};
@@ -23,18 +26,26 @@ fn app(fake: bool, open: bool) -> Router {
     } else {
         Vec::new()
     };
-    router(
-        Arc::new(FakeDeps::new(
+    let app = Arc::new(App {
+        deps: Arc::new(FakeDeps::new(
             FakeMachine::default(),
             FakeCodeHost::default(),
         )),
-        Settings {
+        settings: Settings {
             providers,
             open_organizations: open,
             secure_cookies: true,
             code_host_webhook_secret: None,
             e2e_seed: false,
             runner: None,
+        },
+    });
+    router_with_reach(
+        app,
+        antilog_core::fakes::FakeCredentials::new(Arc::new(antilog_core::clock::SystemClock)),
+        Backend {
+            client: HttpConnectors::new(false).unwrap_or_else(|_| unreachable!("a client builds")),
+            sealer: None,
         },
     )
 }
@@ -467,7 +478,7 @@ async fn roles_gate_the_writes_and_every_denial_is_audited() {
                 .body
                 .as_array()
                 .map(Vec::len),
-            Some(9)
+            Some(10)
         );
     }
 

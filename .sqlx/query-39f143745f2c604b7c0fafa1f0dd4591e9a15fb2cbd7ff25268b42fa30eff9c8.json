@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select tools from connectors where organization_id = $1 and id = $2 for update",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "tools",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "connectors",
+            "name": "tools"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "39f143745f2c604b7c0fafa1f0dd4591e9a15fb2cbd7ff25268b42fa30eff9c8"
+}
