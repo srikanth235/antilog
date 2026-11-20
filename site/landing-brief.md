@@ -4,7 +4,7 @@ Design and build the landing page for antilog.tech. This brief gives you the fac
 
 ## What Antilog is
 
-Antilog is an autonomous agent platform for business outcomes. A team says what should improve and how it is measured: lower cost, more revenue, fewer errors, less risk. AI agents then work on it on their own, as a team. Every change is tested on the whole running system, an independent judge decides whether it won, and every result arrives with its value in dollars. The team always knows what its AI returned.
+Antilog is an autonomous agent platform for business outcomes. A team says what should improve and how it is measured: lower cost, more revenue, fewer errors, less risk. AI agents then work on it on their own, an independent judge decides whether each change won, and every result arrives with its value in dollars. The team always knows what its AI returned.
 
 ## Who it is for
 
@@ -22,26 +22,23 @@ The settled lines (use them, or improve the wording without changing the meaning
 ## What is true (you may say these)
 
 - **Outcomes, not activity.** A team names a business outcome, how it is measured, what one unit of improvement is worth, and a budget.
-- **Agents work as a team, unattended.** Given a goal, agent sessions do the work, and a session can start others and hand them parts of it, all inside the budget.
-- **People review, then the whole system is tested.** A person reviews the code. Testing deploys the entire solution to a throwaway environment and measures it there, because a few changed lines usually need the whole app running to be tested honestly.
-- **No tie to one agent, model or cloud.** Any coding agent can work on a goal (Claude Code, Codex, OpenCode or Pi, for example), on any model provider.
+- **Agents work unattended.** Given a goal, an agent session does the work inside the budget.
+- **Bring your own model keys.** The team uses its own model provider keys (Anthropic or OpenAI, for example). Antilog meters every model call against the budget and stops calls when the budget is spent.
 - **An independent judge decides.** Agents never grade their own work. The test is fixed before the work starts, and agents can't see or change the data held back for the final check. Only changes that measurably beat what was there before count, and only measured wins become pull requests.
 - **Every win has a receipt and a dollar value.** It is signed by the judge and shows what improved, by how much, what that is worth in dollars a year, and what it cost to find. It ships as a pull request for people to approve.
 - **Return** is one figure, every month: the value delivered divided by everything spent to find it, including the experiments that found nothing.
-- **Control.** A hard budget (agents stop when it runs out). Nothing ships without approval. Every action is logged. Antilog keeps results, never the customer's code or data.
+- **Control.** A hard budget (agents stop when it runs out). Nothing ships without approval. Every action is logged.
 
 ## What is not true yet (don't imply it)
 
 - Today, experiments run on code: cost and speed. Outcomes like conversion, forecast error or fraud loss are where the platform is going. You may show them only as clearly labelled examples.
-- **Most of how the work is done is still being built.** Built today: the judge's measurement and acceptance, receipts, value and Return, approvals and budgets, and the web app. Still being built: agent teams of sessions, support for each coding agent, and testing in throwaway environments. Describe these as how Antilog works, not as a feature list with dates, and make no claim that they are live.
-- **Any cloud is the design, not yet shipped.** Antilog's own service starts on AWS. Say "built to run on any cloud" or "no tie to one cloud", never that it runs on every cloud today.
-- Name coding agents only as examples. Don't show a lineup of AI vendor logos.
+- Don't describe how or where agents run (machines, hosting, clouds, which coding agent), teams of agents, or testing in separate environments. Don't show a lineup of AI vendor logos.
 - There are no customers, logos, testimonials, benchmarks or statistics to show. Don't invent any. Any figure on the page must be visibly labelled **"Illustrative example"**.
 
 ## Words
 
-- Prefer: outcome, experiment, session, judge, win, receipt, throwaway environment, the whole system, Return (with a capital R, never "ROI").
-- Never: RSI, AutoML, self-improving AI, multi-cloud, ROI, leaderboard, sandbox, and the names of agent-hosting platforms.
+- Prefer: outcome, experiment, judge, win, receipt, Return (with a capital R, never "ROI").
+- Never: RSI, AutoML, self-improving AI, multi-cloud, ROI, leaderboard, sandbox.
 - Never mention services, consulting or "we set it up with you".
 
 ## Actions and links
