@@ -20,7 +20,7 @@ use antilog_core::seed::{self, Seed};
 use antilog_core::store::{
     BudgetStore, EnvironmentStore, ModelKeyStore, RunnerStore, SessionStore,
 };
-use antilog_proxy::price::{self, Tokens};
+use antilog_proxy::price::{self, Tokens, ZenPrices};
 use antilog_proxy::{Proxy, SessionNetworks, Upstreams, server};
 use antilog_types::{
     AuditEntry, AuditOutcome, Environment, ModelProvider, NetworkLevel, Seed as MachineSeed,
@@ -43,7 +43,12 @@ use tokio_stream::wrappers::ReceiverStream;
 fn model_of(provider: ModelProvider) -> String {
     price::models(provider)
         .into_iter()
-        .find(|m| price::lookup(provider, Some(m)).0.input > 0)
+        .find(|m| {
+            price::lookup(provider, Some(m), &ZenPrices::default())
+                .0
+                .input
+                > 0
+        })
         .unwrap()
         .to_owned()
 }
@@ -58,7 +63,11 @@ fn om() -> String {
 
 /// What the tokens cost under a model, in cents, as the proxy should book it.
 fn cost(provider: ModelProvider, model: &str, tokens: Tokens) -> i64 {
-    i64::try_from(price::cents(price::lookup(provider, Some(model)).0, tokens)).unwrap()
+    i64::try_from(price::cents(
+        price::lookup(provider, Some(model), &ZenPrices::default()).0,
+        tokens,
+    ))
+    .unwrap()
 }
 
 const A_TOKENS: Tokens = Tokens {
@@ -365,6 +374,7 @@ impl Rig {
             credentials,
             clock: SystemClock,
             networks: SessionNetworks::default(),
+            zen: ZenPrices::default(),
             upstreams: Upstreams {
                 anthropic: upstream.clone(),
                 openai: upstream.clone(),
@@ -500,9 +510,38 @@ async fn an_anthropic_stream_is_relayed_whole_and_books_its_final_usage() {
     );
 }
 
+const ZEN_LIST: &str = r#"{"data":[
+    {"id":"big-pickle","cost":{"text":{"input":{"price":0},"output":{"price":0}}}},
+    {"id":"glm-5.3-flash","cost":{"text":{"input":{"price":0.15,"cache":{"read":0.03}},"output":{"price":0.5}}},"multipliers":[{"hours":"peak","x":2}]}
+]}"#;
+
+/// A fake Zen model list whose status and body a test can change.
+async fn start_zen_list(initial: &str) -> (String, Arc<Mutex<(u16, String)>>) {
+    let state = Arc::new(Mutex::new((200u16, initial.to_owned())));
+    let shared = state.clone();
+    let app = Router::new().route(
+        "/v1/models",
+        any(move || {
+            let (status, body) = shared.lock().unwrap().clone();
+            async move {
+                Response::builder()
+                    .status(status)
+                    .body(Body::from(body))
+                    .unwrap()
+            }
+        }),
+    );
+    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let url = format!("http://{}", listener.local_addr().unwrap());
+    tokio::spawn(async move { axum::serve(listener, app).await });
+    (url, state)
+}
+
 #[tokio::test]
-async fn an_opencode_call_carries_the_zen_key_and_its_headers_and_a_free_model_books_nothing() {
+async fn an_opencode_call_carries_the_zen_key_and_its_headers_and_books_zens_price() {
     let rig = Rig::start(Options::default()).await;
+    let (list, _) = start_zen_list(ZEN_LIST).await;
+    rig.proxy.zen.refresh(&rig.http, &list).await;
     let call = |model: &str| {
         rig.http
             .post(rig.url("/opencode/v1/chat/completions"))
@@ -512,6 +551,7 @@ async fn an_opencode_call_carries_the_zen_key_and_its_headers_and_a_free_model_b
             .json(&json!({"model":model,"messages":[]}))
             .send()
     };
+    // A zero-priced model books nothing.
     assert_eq!(call("big-pickle").await.unwrap().status(), StatusCode::OK);
     let seen = &rig.calls()[0];
     assert_eq!(seen.path, "/v1/chat/completions");
@@ -520,14 +560,51 @@ async fn an_opencode_call_carries_the_zen_key_and_its_headers_and_a_free_model_b
     assert_eq!(seen.headers["x-opencode-project"], "prj_1");
     assert_eq!(rig.booked().await, (0, 2800));
 
-    // A paid Zen model the table does not know is booked at the highest known price.
+    // A priced model books Zen's price: 2000 in at $0.15 and 800 out at $0.50 per million is
+    // 0.07 cents, booked as 1.
+    assert_eq!(
+        call("glm-5.3-flash").await.unwrap().status(),
+        StatusCode::OK
+    );
+    assert_eq!(rig.booked().await, (1, 5600));
+
+    // A model the list does not have is booked at the highest known price.
     assert_eq!(
         call("some-paid-model").await.unwrap().status(),
         StatusCode::OK
     );
     let (cents, tokens) = rig.booked().await;
-    assert!(cents > 0);
-    assert_eq!(tokens, 5600);
+    assert!(cents > 1);
+    assert_eq!(tokens, 8400);
+}
+
+#[tokio::test]
+async fn a_failed_zen_refresh_keeps_the_last_table_and_logs_once() {
+    let rig = Rig::start(Options::default()).await;
+    let (list, state) = start_zen_list(ZEN_LIST).await;
+    let zen = &rig.proxy.zen;
+    let price = |model: &str| price::lookup(ModelProvider::Opencode, Some(model), zen);
+    // No table yet: everything is the highest price.
+    assert_eq!(price("glm-5.3-flash"), (price::highest(), false));
+    zen.refresh(&rig.http, &list).await;
+    let known = price("glm-5.3-flash");
+    assert!(known.1);
+    assert_eq!(known.0.input, 150);
+
+    *state.lock().unwrap() = (500, "down".to_owned());
+    zen.refresh(&rig.http, &list).await;
+    *state.lock().unwrap() = (200, "not json".to_owned());
+    zen.refresh(&rig.http, &list).await;
+    assert_eq!(price("glm-5.3-flash"), known);
+    assert_eq!(
+        rig.logs
+            .text()
+            .matches("could not fetch the Zen model list")
+            .count(),
+        1,
+        "{}",
+        rig.logs.text()
+    );
 }
 
 #[tokio::test]

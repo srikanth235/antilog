@@ -49,6 +49,8 @@ pub struct Proxy<S, C, K> {
     /// What each session's environment lets it reach, looked up in `store` and kept briefly.
     pub networks: SessionNetworks,
     pub upstreams: Upstreams,
+    /// OpenCode Zen's prices, kept fresh by `price::ZenPrices::keep_fresh`.
+    pub zen: price::ZenPrices,
     pub http: reqwest::Client,
     /// Hosts every session reaches whatever its environment says: this proxy's and the server's
     /// public names (the model gateway and the MCP endpoint) and the code host. Without them a

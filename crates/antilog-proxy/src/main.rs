@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 use antilog_core::clock::SystemClock;
 use antilog_core::secrets::EnvSecrets;
+use antilog_proxy::price::ZenPrices;
 use antilog_proxy::{Proxy, SessionNetworks, Upstreams, egress, server};
 use antilog_server::pg::PgStore;
 use anyhow::Context;
@@ -35,16 +36,24 @@ async fn main() -> anyhow::Result<()> {
             .unwrap_or_else(|| Upstreams::default().opencode),
         server: setting("ANTILOG_PROXY_SERVER_URL"),
     };
+    let http = reqwest::Client::builder()
+        .redirect(reqwest::redirect::Policy::none())
+        .build()
+        .context("building the HTTP client")?;
+    let zen = ZenPrices::default();
+    tokio::spawn(zen.clone().keep_fresh(
+        http.clone(),
+        upstreams.opencode.clone(),
+        std::time::Duration::from_secs(3600),
+    ));
     let proxy = Arc::new(Proxy {
         credentials: store.clone(),
         store,
         clock: SystemClock,
         networks: SessionNetworks::default(),
+        zen,
         upstreams,
-        http: reqwest::Client::builder()
-            .redirect(reqwest::redirect::Policy::none())
-            .build()
-            .context("building the HTTP client")?,
+        http,
         platform_hosts: setting("ANTILOG_PROXY_PLATFORM_HOSTS")
             .map(|hosts| egress::platform_hosts(&hosts))
             .unwrap_or_default(),

@@ -426,7 +426,7 @@ where
         tracing::warn!(%session, provider, ?outcome, "the reply reported no usage, so nothing is booked");
         return;
     }
-    let (price, known) = price::lookup(call.provider, usage.model.as_deref());
+    let (price, known) = price::lookup(call.provider, usage.model.as_deref(), &proxy.zen);
     if !known {
         tracing::warn!(%session, provider, model = ?usage.model, "unknown model: booked at the highest known price");
     }

@@ -1,12 +1,14 @@
 //! What a model costs. The table is LiteLLM's price list, trimmed and vendored in
 //! `data/prices.json` (MIT; see `data/prices.header.md` and the README for how it is refreshed),
 //! with the model as the key. A model that is not in it is booked at the highest price in it, so an
-//! unknown model never costs less than a known one.
+//! unknown model never costs less than a known one. OpenCode Zen is the exception: its prices come
+//! from its own model list (`ZenPrices`), loaded at start and refreshed every hour.
 //!
 //! Prices are thousandths of a dollar per million tokens (3000 is $3.00 per million).
 
 use std::collections::BTreeMap;
-use std::sync::OnceLock;
+use std::sync::{Arc, OnceLock, RwLock};
+use std::time::Duration;
 
 use antilog_types::ModelProvider;
 use serde::Deserialize;
@@ -112,30 +114,158 @@ pub fn highest() -> Price {
         .unwrap_or(FALLBACK)
 }
 
-const FREE: Price = Price {
-    input: 0,
-    output: 0,
-    cache_read: 0,
-    cache_write: 0,
-};
+/// OpenCode Zen's prices, read from `GET <upstream>/v1/models`. Cloning shares the table.
+///
+/// The list is the same for any key, so it is fetched without one (the simpler choice: no
+/// organization, no sealed key). If the endpoint ever asks for a key the fetch fails, the table
+/// stays empty and every Zen model is booked at the highest price, which is safe for budgets.
+///
+/// Zen's list also carries `multipliers` (time-of-day surcharges). v0 ignores them: a call is
+/// priced at the base rate, so a surcharged hour is booked a little low.
+#[derive(Debug, Clone, Default)]
+pub struct ZenPrices {
+    table: Arc<RwLock<Option<BTreeMap<String, Price>>>>,
+    failing: Arc<std::sync::atomic::AtomicBool>,
+}
 
-/// OpenCode Zen's free models: an id ending in `-free`, and `big-pickle`. They cost nothing.
-fn is_free_zen(model: &str) -> bool {
-    model.ends_with("-free") || model == "big-pickle"
+#[derive(Deserialize)]
+struct ZenList {
+    data: Vec<ZenModel>,
+}
+
+#[derive(Deserialize)]
+struct ZenModel {
+    id: String,
+    cost: Option<ZenCost>,
+}
+
+#[derive(Deserialize)]
+struct ZenCost {
+    text: Option<ZenText>,
+}
+
+#[derive(Deserialize)]
+struct ZenText {
+    input: ZenSide,
+    output: ZenSide,
+}
+
+#[derive(Deserialize)]
+struct ZenSide {
+    price: f64,
+    cache: Option<ZenCache>,
+}
+
+#[derive(Deserialize)]
+struct ZenCache {
+    read: Option<f64>,
+    write: Option<f64>,
+}
+
+/// US dollars per million tokens to thousandths of a dollar, rounded up.
+fn thousandths(dollars: f64) -> u64 {
+    // A float in a price list is a handful of decimals: the cast cannot lose a real value.
+    #[expect(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+    let value = (dollars.max(0.0) * 1000.0 - 1e-6).ceil().max(0.0) as u64;
+    value
+}
+
+/// Reads Zen's model list. A model with no text prices is left out, so it is unknown.
+fn parse_zen(body: &[u8]) -> Result<BTreeMap<String, Price>, serde_json::Error> {
+    let list: ZenList = serde_json::from_slice(body)?;
+    Ok(list
+        .data
+        .into_iter()
+        .filter_map(|model| {
+            let text = model.cost?.text?;
+            let input = thousandths(text.input.price);
+            let cache = text.input.cache;
+            // A missing cache price is the plain input price: never less than it costs.
+            let cache_read = cache
+                .as_ref()
+                .and_then(|c| c.read)
+                .map_or(input, thousandths);
+            let cache_write = cache
+                .as_ref()
+                .and_then(|c| c.write)
+                .map_or(input, thousandths);
+            Some((
+                model.id,
+                Price {
+                    input,
+                    output: thousandths(text.output.price),
+                    cache_read,
+                    cache_write,
+                },
+            ))
+        })
+        .collect())
+}
+
+impl ZenPrices {
+    fn get(&self, model: &str) -> Option<Price> {
+        let table = self.table.read().unwrap_or_else(|e| e.into_inner());
+        table.as_ref()?.get(model).copied()
+    }
+
+    /// Fetches the list from `<upstream>/v1/models` and replaces the table. On any failure the
+    /// last table stays, and the first failure of a run of them is logged.
+    pub async fn refresh(&self, http: &reqwest::Client, upstream: &str) {
+        let url = format!("{}/v1/models", upstream.trim_end_matches('/'));
+        let fetched = async {
+            let reply = http
+                .get(&url)
+                .timeout(Duration::from_secs(20))
+                .send()
+                .await
+                .map_err(|e| e.to_string())?;
+            if !reply.status().is_success() {
+                return Err(format!("status {}", reply.status()));
+            }
+            let body = reply.bytes().await.map_err(|e| e.to_string())?;
+            parse_zen(&body).map_err(|e| e.to_string())
+        }
+        .await;
+        match fetched {
+            Ok(table) => {
+                tracing::info!(models = table.len(), "loaded the Zen price table");
+                *self.table.write().unwrap_or_else(|e| e.into_inner()) = Some(table);
+                self.failing
+                    .store(false, std::sync::atomic::Ordering::Relaxed);
+            }
+            Err(error) => {
+                if !self
+                    .failing
+                    .swap(true, std::sync::atomic::Ordering::Relaxed)
+                {
+                    tracing::warn!(%error, "could not fetch the Zen model list: keeping the last prices, or the highest price if there are none");
+                }
+            }
+        }
+    }
+
+    /// Loads now, then every `period`, until the task is dropped.
+    pub async fn keep_fresh(self, http: reqwest::Client, upstream: String, period: Duration) {
+        loop {
+            self.refresh(&http, &upstream).await;
+            tokio::time::sleep(period).await;
+        }
+    }
 }
 
 /// The price of a model, and whether the table knew it.
-pub fn lookup(provider: ModelProvider, model: Option<&str>) -> (Price, bool) {
-    if provider == ModelProvider::Opencode && model.is_some_and(is_free_zen) {
-        return (FREE, true);
-    }
-    let found = |name: &str| {
-        table()
-            .get(name)
-            .filter(|(p, _)| *p == provider)
-            .map(|(_, price)| *price)
+pub fn lookup(provider: ModelProvider, model: Option<&str>, zen: &ZenPrices) -> (Price, bool) {
+    let known = if provider == ModelProvider::Opencode {
+        model.and_then(|model| zen.get(model))
+    } else {
+        let found = |name: &str| {
+            table()
+                .get(name)
+                .filter(|(p, _)| *p == provider)
+                .map(|(_, price)| *price)
+        };
+        model.and_then(|model| found(model).or_else(|| undated(model).and_then(found)))
     };
-    let known = model.and_then(|model| found(model).or_else(|| undated(model).and_then(found)));
     match known {
         Some(price) => (price, true),
         None => (highest(), false),
@@ -193,14 +323,15 @@ mod tests {
         // OpenCode Zen has no rows of its own: its models are priced by rule.
         for provider in [ModelProvider::Anthropic, ModelProvider::Openai] {
             let model = models(provider)[0];
-            let (price, known) = lookup(provider, Some(model));
+            let zen = ZenPrices::default();
+            let (price, known) = lookup(provider, Some(model), &zen);
             assert!(known, "{model}");
             assert_eq!(
-                lookup(provider, Some(&format!("{model}-20991231"))),
+                lookup(provider, Some(&format!("{model}-20991231")), &zen),
                 (price, true)
             );
             assert_eq!(
-                lookup(provider, Some(&format!("{model}-2099-12-31"))),
+                lookup(provider, Some(&format!("{model}-2099-12-31")), &zen),
                 (price, true)
             );
             // Under the other provider the same name is not known.
@@ -209,16 +340,23 @@ mod tests {
             } else {
                 ModelProvider::Anthropic
             };
-            assert!(!lookup(other, Some(model)).1);
+            assert!(!lookup(other, Some(model), &zen).1);
         }
     }
 
     #[test]
     fn an_unknown_model_costs_the_most_the_table_has() {
-        let (price, known) = lookup(ModelProvider::Anthropic, Some("no-such-model-9"));
+        let (price, known) = lookup(
+            ModelProvider::Anthropic,
+            Some("no-such-model-9"),
+            &ZenPrices::default(),
+        );
         assert!(!known);
         assert_eq!(price, highest());
-        assert_eq!(lookup(ModelProvider::Openai, None).0, highest());
+        assert_eq!(
+            lookup(ModelProvider::Openai, None, &ZenPrices::default()).0,
+            highest()
+        );
         assert!(
             table()
                 .values()
@@ -227,15 +365,34 @@ mod tests {
     }
 
     #[test]
-    fn zen_free_models_cost_nothing_and_other_zen_models_the_most() {
-        for model in ["grok-code-free", "big-pickle"] {
-            assert_eq!(lookup(ModelProvider::Opencode, Some(model)), (FREE, true));
-        }
-        assert_eq!(lookup(ModelProvider::Openai, Some("x-free")).0, highest());
+    fn zen_prices_are_read_from_the_model_list() {
+        let body = br#"{"data":[
+            {"id":"a","cost":{"text":{"input":{"price":0.15,"cache":{"read":0.03,"write":0.2}},"output":{"price":0.5}}},"multipliers":[]},
+            {"id":"b","cost":{"text":{"input":{"price":2},"output":{"price":8}}}},
+            {"id":"free","cost":{"text":{"input":{"price":0},"output":{"price":0}}}},
+            {"id":"none"}]}"#;
+        let table = parse_zen(body).unwrap();
+        assert_eq!(table.len(), 3);
         assert_eq!(
-            lookup(ModelProvider::Opencode, Some("some-paid-model")),
-            (highest(), false)
+            table["a"],
+            Price {
+                input: 150,
+                output: 500,
+                cache_read: 30,
+                cache_write: 200
+            }
         );
+        // No cache prices: the input price.
+        assert_eq!(
+            table["b"],
+            Price {
+                input: 2000,
+                output: 8000,
+                cache_read: 2000,
+                cache_write: 2000
+            }
+        );
+        assert_eq!(table["free"].output, 0);
     }
 
     #[test]
