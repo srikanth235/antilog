@@ -31,13 +31,14 @@ One Cargo workspace, versions in [libraries.md](../libraries.md):
 
 Shared types (the API's request and response types, ids, states) live in a library crate that all of them use. No gRPC, no Redis: the queue lives in Postgres ([../postgres/antilog.md](../postgres/antilog.md)). Every agent platform is one adapter behind the platform trait; the core does not change for a new one, and depends on none of them. All connections go out over HTTPS.
 
-### Two ways to run, one set of rules (target)
+### Long-lived, but restartable
 
-Scale-to-zero (Lambda on AWS; Cloud Run on GCP and Container Apps on Azure when a client needs them) freezes the process between requests. The core obeys these rules in both setups, so it never knows which one it is in:
+The server and the proxy are long-lived processes, and either may be restarted at any time:
 
-- **Nothing runs after a response is sent.** No spawned tokio task, in-process timer or background loop outlives its request. Work that must happen later is a row in Postgres plus a wake-up.
-- **An invocation is at most 15 minutes.** Long work (waiting on a measurement or a watch) is asked of the session's machine and answered by a later call, never held open in the server. Lambda durable functions are not used: their SDK is TypeScript and Python only.
-- **Event streams end before the cap.** The browser reconnects with `Last-Event-ID` and the stream replays from the events table. See [../../change/live-event.md](../../change/live-event.md).
+- **Durable work is a row in Postgres**, claimed by a poller, never only an in-memory task or timer. A background loop may run, but losing it loses nothing.
+- **Long work is asked of the session's machine** (waiting on a measurement or a watch) and answered by a later call from the runner, never held open in a request.
+- **Event streams end after a few minutes.** The browser reconnects with `Last-Event-ID` and the stream replays from the events table. See [../../change/live-event.md](../../change/live-event.md).
+
 ### The core stays clean
 
 - **`antilog-core` never imports `sqlx`, a cloud SDK or an adapter crate.** Time, ids, storage and the session machine come in through traits that the server implements, so the core is tested with doubles and fixed clocks.

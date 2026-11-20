@@ -1,6 +1,6 @@
 # Postgres and SQL in Antilog
 
-(target) Postgres is the only store, on Antilog cloud (Aurora Serverless v2 at zero when pay-per-use, in-cluster only for local tests) and self-hosted (RDS, Azure Database for PostgreSQL, Cloud SQL, or the client's own), reached through `sqlx` with the `postgres` feature. Queries live behind the `Store` trait in the Postgres store crate; the core never writes SQL. Nothing of it is on this branch. Versions are in [libraries.md](../libraries.md): Postgres 18, `sqlx` 0.9 (and `sqlx-cli`), `testcontainers` for tests.
+Postgres is the only store: managed Postgres on Antilog cloud, and the client's own when self-hosted. It is reached through `sqlx` with the `postgres` feature. Queries live behind the `Store` trait in the Postgres store crate; the core never writes SQL. Nothing of it is on this branch. Versions are in [libraries.md](../libraries.md): Postgres 18, `sqlx` 0.9 (and `sqlx-cli`), `testcontainers` for tests.
 
 ## Workflow and done criteria
 
