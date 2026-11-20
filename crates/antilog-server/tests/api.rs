@@ -2037,3 +2037,95 @@ mod live {
         assert!(ended.is_ok(), "the stream did not end");
     }
 }
+
+#[tokio::test]
+async fn model_keys_are_set_by_an_owner_listed_by_anyone_and_never_returned() {
+    let org = org().await;
+    let (_, editor) = org.member("ed", "editor").await;
+    let (_, viewer) = org.member("vi", "viewer").await;
+    let secret = "sk-ant-test-value";
+
+    assert_eq!(
+        org.call(Method::GET, "/model-keys", &viewer, None)
+            .await
+            .body,
+        json!([])
+    );
+    let denied = org
+        .call(
+            Method::PUT,
+            "/model-keys/anthropic",
+            &editor,
+            Some(json!({"key": secret})),
+        )
+        .await;
+    assert_eq!(denied.status, StatusCode::FORBIDDEN);
+    for bad in ["", "has space", "line\nbreak"] {
+        let refused = org
+            .call(
+                Method::PUT,
+                "/model-keys/anthropic",
+                &org.owner,
+                Some(json!({"key": bad})),
+            )
+            .await;
+        assert_eq!(refused.status, StatusCode::UNPROCESSABLE_ENTITY, "{bad:?}");
+    }
+    let unknown = org
+        .call(
+            Method::PUT,
+            "/model-keys/gemini",
+            &org.owner,
+            Some(json!({"key": secret})),
+        )
+        .await;
+    assert!(unknown.status.is_client_error());
+
+    let set = org
+        .call(
+            Method::PUT,
+            "/model-keys/anthropic",
+            &org.owner,
+            Some(json!({"key": secret})),
+        )
+        .await;
+    assert_eq!(set.status, StatusCode::OK);
+    assert_eq!(set.body["provider"], "anthropic");
+    // Replacing is the same call.
+    let replaced = org
+        .call(
+            Method::PUT,
+            "/model-keys/anthropic",
+            &org.owner,
+            Some(json!({"key": "sk-ant-new"})),
+        )
+        .await;
+    assert_eq!(replaced.status, StatusCode::OK);
+
+    let listed = org.call(Method::GET, "/model-keys", &viewer, None).await;
+    assert_eq!(listed.body.as_array().map(Vec::len), Some(1));
+    assert_eq!(listed.body[0]["provider"], "anthropic");
+    for reply in [&set, &replaced, &listed] {
+        let text = reply.body.to_string();
+        assert!(!text.contains("sk-ant"), "a key came back: {text}");
+    }
+
+    let denied = org
+        .call(Method::DELETE, "/model-keys/anthropic", &editor, None)
+        .await;
+    assert_eq!(denied.status, StatusCode::FORBIDDEN);
+    let removed = org
+        .call(Method::DELETE, "/model-keys/anthropic", &org.owner, None)
+        .await;
+    assert_eq!(removed.status, StatusCode::NO_CONTENT);
+    let again = org
+        .call(Method::DELETE, "/model-keys/anthropic", &org.owner, None)
+        .await;
+    assert_eq!(again.status, StatusCode::NOT_FOUND);
+
+    // The log names the provider and the actor, never the key.
+    let audit = org.call(Method::GET, "/audit", &org.owner, None).await;
+    let log = audit.body.to_string();
+    assert!(log.contains("model_key.set") && log.contains("model_key.remove"));
+    assert!(log.contains("model_key.set") && !log.contains("sk-ant"));
+}

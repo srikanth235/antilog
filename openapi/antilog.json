@@ -1302,6 +1302,131 @@
         ]
       }
     },
+    "/model-keys": {
+      "get": {
+        "tags": [],
+        "operationId": "list_model_keys",
+        "responses": {
+          "200": {
+            "description": "The providers that have a key, with when it was set; never a key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ModelKeyStatus"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/model-keys/{provider}": {
+      "put": {
+        "tags": [],
+        "operationId": "set_model_key",
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "description": "The provider the key is for",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ModelProvider"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewModelKey"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Set or replaced; organization owners only. The key is not returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelKeyStatus"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Not a usable key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The server has no master key to seal it with",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [],
+        "operationId": "remove_model_key",
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "description": "The provider whose key to remove",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ModelProvider"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Removed; organization owners only"
+          },
+          "404": {
+            "description": "There is no key for that provider",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/organization": {
       "get": {
         "tags": [],
@@ -3924,6 +4049,32 @@
           "service"
         ]
       },
+      "ModelKeyStatus": {
+        "type": "object",
+        "description": "Which providers an organization has a key for, and when it was last set. Never the key.",
+        "required": [
+          "provider",
+          "setAt"
+        ],
+        "properties": {
+          "provider": {
+            "$ref": "#/components/schemas/ModelProvider"
+          },
+          "setAt": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ModelProvider": {
+        "type": "string",
+        "description": "A model provider whose key an organization brings. The proxy forwards to it unchanged.",
+        "enum": [
+          "anthropic",
+          "openai"
+        ]
+      },
       "NewAgent": {
         "type": "object",
         "description": "What an owner sets for an agent.",
@@ -4032,6 +4183,19 @@
           },
           "role": {
             "$ref": "#/components/schemas/Role"
+          }
+        },
+        "additionalProperties": false
+      },
+      "NewModelKey": {
+        "type": "object",
+        "description": "A key to set or replace. It is never returned.",
+        "required": [
+          "key"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
           }
         },
         "additionalProperties": false

@@ -62,6 +62,8 @@ pub enum Action {
     OrganizationLimitsSet,
     PolicySet,
     AgentSet,
+    ModelKeySet,
+    ModelKeyRemove,
     EvaluationAdd,
     ExperimentBudgetSet,
     ExperimentCreate,
@@ -89,6 +91,8 @@ impl Action {
         Self::OrganizationLimitsSet,
         Self::PolicySet,
         Self::AgentSet,
+        Self::ModelKeySet,
+        Self::ModelKeyRemove,
         Self::EvaluationAdd,
         Self::ExperimentBudgetSet,
         Self::ExperimentCreate,
@@ -116,6 +120,8 @@ impl Action {
             Self::OrganizationLimitsSet => "organization.set_limits",
             Self::PolicySet => "policy.set",
             Self::AgentSet => "agent.set",
+            Self::ModelKeySet => "model_key.set",
+            Self::ModelKeyRemove => "model_key.remove",
             Self::EvaluationAdd => "evaluation.add",
             Self::ExperimentBudgetSet => "experiment.set_budget",
             Self::ExperimentCreate => "experiment.create",
@@ -154,6 +160,8 @@ impl Action {
             | Self::OrganizationLimitsSet
             | Self::PolicySet
             | Self::AgentSet
+            | Self::ModelKeySet
+            | Self::ModelKeyRemove
             | Self::ApprovalDecideValueModel
             | Self::ValueModelSet
             | Self::TokenCreateForOther

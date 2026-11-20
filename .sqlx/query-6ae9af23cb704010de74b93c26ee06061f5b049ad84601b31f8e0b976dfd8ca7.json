@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from model_keys where organization_id = $1 and provider = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "6ae9af23cb704010de74b93c26ee06061f5b049ad84601b31f8e0b976dfd8ca7"
+}

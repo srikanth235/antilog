@@ -1,3 +1,4 @@
+use antilog_core::sealed::Sealer;
 use antilog_core::store::{Invariant, Store, StoreError};
 use antilog_types::{AuditEntry, OrganizationId};
 use sqlx::migrate::Migrator;
@@ -7,7 +8,9 @@ mod approval;
 mod budget;
 mod card;
 mod code_host;
+mod credentials;
 mod judge;
+mod model_key;
 mod organization;
 mod session;
 
@@ -18,11 +21,20 @@ pub static MIGRATOR: Migrator = sqlx::migrate!("./migrations");
 #[derive(Clone)]
 pub struct PgStore {
     pool: PgPool,
+    /// Seals the organization's model keys; without it they cannot be kept or read.
+    sealer: Option<std::sync::Arc<Sealer>>,
 }
 
 impl PgStore {
     pub fn new(pool: PgPool) -> Self {
-        Self { pool }
+        Self { pool, sealer: None }
+    }
+
+    /// The master key for model keys, from the `Secrets` store.
+    #[must_use]
+    pub fn with_sealer(mut self, sealer: Sealer) -> Self {
+        self.sealer = Some(std::sync::Arc::new(sealer));
+        self
     }
 
     /// A transaction that sees only this organization's rows: the second guard
@@ -53,6 +65,25 @@ impl PgStore {
             .await
             .map_err(map)?;
         Ok(tx)
+    }
+
+    /// Seals model keys with the master key named `model-key-master` in `secrets`. Without one the
+    /// store still runs; saving or reading a model key is refused, and that is logged here once.
+    #[must_use]
+    pub async fn sealed_by(self, secrets: &impl antilog_core::secrets::Secrets) -> Self {
+        match secrets.get("model-key-master").await {
+            Ok(master) => match Sealer::new(&master) {
+                Ok(sealer) => self.with_sealer(sealer),
+                Err(error) => {
+                    tracing::error!(%error, "model-key-master is not a usable master key");
+                    self
+                }
+            },
+            Err(error) => {
+                tracing::warn!(%error, "no master key: model keys cannot be saved or used");
+                self
+            }
+        }
     }
 
     pub async fn migrate(&self) -> Result<(), sqlx::migrate::MigrateError> {

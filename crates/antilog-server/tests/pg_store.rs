@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use antilog_core::store::judge::judge_store_suite;
-use antilog_core::store::{ApprovalStore, OrganizationStore};
+use antilog_core::store::{ApprovalStore, ModelKeyStore, OrganizationStore, SessionStore};
 use antilog_core::testing::store_suite;
 use antilog_server::pg::{MIGRATOR, PgStore};
 use antilog_types::{
@@ -14,12 +14,47 @@ use testcontainers::core::{IntoContainerPort, WaitFor};
 use testcontainers::runners::AsyncRunner;
 use testcontainers::{ContainerAsync, GenericImage, ImageExt};
 
-async fn database() -> anyhow::Result<(PgPool, ContainerAsync<GenericImage>)> {
+/// Keeps the container alive for a test. Without Docker, `ANTILOG_TEST_POSTGRES` names a local
+/// server's admin URL and each test gets a fresh database on it instead.
+struct Container(
+    #[expect(dead_code, reason = "held so the container lives as long as the test")]
+    Option<ContainerAsync<GenericImage>>,
+);
+
+async fn database() -> anyhow::Result<(PgPool, Container)> {
     let (pool, container, _url) = database_at().await?;
     Ok((pool, container))
 }
 
-async fn database_at() -> anyhow::Result<(PgPool, ContainerAsync<GenericImage>, String)> {
+async fn connect(url: &str) -> anyhow::Result<PgPool> {
+    let mut attempts = 0;
+    loop {
+        match PgPoolOptions::new().max_connections(4).connect(url).await {
+            Ok(pool) => return Ok(pool),
+            Err(_) if attempts < 60 => {
+                attempts += 1;
+                tokio::time::sleep(Duration::from_millis(500)).await;
+            }
+            Err(error) => return Err(error.into()),
+        }
+    }
+}
+
+async fn database_at() -> anyhow::Result<(PgPool, Container, String)> {
+    if let Ok(admin) = std::env::var("ANTILOG_TEST_POSTGRES") {
+        let name = format!("antilog_test_{}", uuid::Uuid::now_v7().simple());
+        let pool = connect(&admin).await?;
+        sqlx::query(sqlx::AssertSqlSafe(format!("create database {name}")))
+            .execute(&pool)
+            .await?;
+        let url = format!(
+            "{}/{name}",
+            admin
+                .rsplit_once('/')
+                .map_or(admin.as_str(), |(base, _)| base)
+        );
+        return Ok((connect(&url).await?, Container(None), url));
+    }
     let container = GenericImage::new("postgres", "18")
         .with_exposed_port(5432.tcp())
         .with_wait_for(WaitFor::message_on_stderr(
@@ -30,24 +65,17 @@ async fn database_at() -> anyhow::Result<(PgPool, ContainerAsync<GenericImage>, 
         .await?;
     let port = container.get_host_port_ipv4(5432).await?;
     let url = format!("postgres://postgres:pw@127.0.0.1:{port}/postgres");
-
-    let mut attempts = 0;
-    let pool = loop {
-        match PgPoolOptions::new().max_connections(4).connect(&url).await {
-            Ok(pool) => break pool,
-            Err(_) if attempts < 60 => {
-                attempts += 1;
-                tokio::time::sleep(Duration::from_millis(500)).await;
-            }
-            Err(error) => return Err(error.into()),
-        }
-    };
-    Ok((pool, container, url))
+    Ok((connect(&url).await?, Container(Some(container)), url))
 }
 
-async fn migrated_store() -> anyhow::Result<(PgStore, PgPool, ContainerAsync<GenericImage>)> {
+fn sealer() -> anyhow::Result<antilog_core::sealed::Sealer> {
+    antilog_core::sealed::Sealer::new(&antilog_core::secrets::Secret::new("ab".repeat(32)))
+        .map_err(|e| anyhow::anyhow!("{e}"))
+}
+
+async fn migrated_store() -> anyhow::Result<(PgStore, PgPool, Container)> {
     let (pool, container) = database().await?;
-    let store = PgStore::new(pool.clone());
+    let store = PgStore::new(pool.clone()).with_sealer(sealer()?);
     store.migrate().await?;
     Ok((store, pool, container))
 }
@@ -319,22 +347,26 @@ async fn concurrent_demotions_cannot_orphan_a_project() -> anyhow::Result<()> {
 }
 
 /// A pool that connects as a role that owns nothing and is no superuser, as the server does.
-async fn app_store() -> anyhow::Result<(PgStore, PgPool, ContainerAsync<GenericImage>)> {
+async fn app_store() -> anyhow::Result<(PgStore, PgPool, Container)> {
     let (admin, container, url) = database_at().await?;
     PgStore::new(admin.clone()).migrate().await?;
     for statement in [
-        "create role antilog_app login password 'app' nosuperuser nobypassrls",
+        "do $$ begin if not exists (select from pg_roles where rolname = 'antilog_app') then create role antilog_app login password 'app' nosuperuser nobypassrls; end if; end $$",
         "grant usage on schema public to antilog_app",
         "grant select, insert, update, delete, truncate on all tables in schema public to antilog_app",
     ] {
         sqlx::query(statement).execute(&admin).await?;
     }
-    let app_url = url.replace("postgres:pw@", "antilog_app:app@");
+    let app_url = url.replacen("postgres:pw@", "antilog_app:app@", 1);
     let pool = PgPoolOptions::new()
         .max_connections(4)
         .connect(&app_url)
         .await?;
-    Ok((PgStore::new(pool.clone()), pool, container))
+    Ok((
+        PgStore::new(pool.clone()).with_sealer(sealer()?),
+        pool,
+        container,
+    ))
 }
 
 #[tokio::test]
@@ -626,5 +658,109 @@ async fn access_tokens_and_sign_in_sessions_are_found_by_id_alone() -> anyhow::R
         .await?;
     let live = antilog_core::token::authenticate_session(&store, &session.secret, 1).await?;
     assert_eq!(live.map(|row| row.organization_id), Some(organization.id));
+    Ok(())
+}
+
+#[tokio::test]
+async fn postgres_keeps_session_credentials_as_a_role_without_bypass() -> anyhow::Result<()> {
+    let (store, pool, _container) = app_store().await?;
+    antilog_core::gateway_suite::credentials_suite(&store, &store).await;
+    // Only a hash is kept, and a token is not a column.
+    let token = {
+        use antilog_core::credentials::{Purpose, SessionCredentials};
+        let seed = antilog_core::seed::experiment(&store, 100).await;
+        let session = antilog_types::Session::new(
+            seed.organization.id,
+            seed.experiment.id,
+            "opencode",
+            antilog_core::seed::T0,
+        );
+        store
+            .create_session(
+                &session,
+                &AuditEntry::new(
+                    seed.organization.id,
+                    Some(seed.owner.id),
+                    "session.start",
+                    session.id.to_string(),
+                    AuditOutcome::Done,
+                    antilog_core::seed::T0,
+                ),
+            )
+            .await?;
+        store
+            .mint(
+                session.id,
+                Purpose::Model,
+                jiff::SignedDuration::from_mins(5),
+            )
+            .await?
+    };
+    // The app role, with no organization set, sees no credential row at all.
+    let rows: i64 = sqlx::query_scalar("select count(*) from session_credentials")
+        .fetch_one(&pool)
+        .await?;
+    assert_eq!(rows, 0);
+    assert!(!token.is_empty());
+    Ok(())
+}
+
+#[tokio::test]
+async fn postgres_seals_model_keys_and_scopes_them_to_their_organization() -> anyhow::Result<()> {
+    let (store, pool, _container) = app_store().await?;
+    antilog_core::gateway_suite::model_key_suite(&store).await;
+
+    let seed = antilog_core::seed::experiment(&store, 100).await;
+    let org = seed.organization.id;
+    let audit = AuditEntry::new(
+        org,
+        Some(seed.owner.id),
+        "model_key.set",
+        "anthropic",
+        AuditOutcome::Done,
+        1,
+    );
+    store
+        .put_model_key(
+            org,
+            antilog_types::ModelProvider::Anthropic,
+            &antilog_core::secrets::Secret::new("sk-ant-plain-text-marker"),
+            1,
+            &audit,
+        )
+        .await?;
+    // As the role the server runs as: with no organization set the row is invisible, and with
+    // it set the stored bytes are not the key.
+    let seen: i64 = sqlx::query_scalar("select count(*) from model_keys")
+        .fetch_one(&pool)
+        .await?;
+    assert_eq!(seen, 0);
+    let mut tx = pool.begin().await?;
+    sqlx::query("select set_config('antilog.organization_id', $1, true)")
+        .bind(org.as_uuid().to_string())
+        .execute(&mut *tx)
+        .await?;
+    let sealed: Vec<u8> = sqlx::query_scalar("select sealed from model_keys")
+        .fetch_one(&mut *tx)
+        .await?;
+    assert!(
+        !sealed
+            .windows(b"plain-text-marker".len())
+            .any(|w| w == b"plain-text-marker")
+    );
+
+    // Without a master key the store refuses rather than keep a key in the clear.
+    let bare = PgStore::new(pool.clone());
+    assert!(
+        bare.put_model_key(
+            org,
+            antilog_types::ModelProvider::Openai,
+            &antilog_core::secrets::Secret::new("sk"),
+            1,
+            &audit
+        )
+        .await
+        .is_err()
+    );
     Ok(())
 }

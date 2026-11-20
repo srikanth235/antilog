@@ -6,6 +6,7 @@ mod approval;
 mod budget;
 mod card;
 mod code_host;
+mod model_key;
 mod organization;
 mod session;
 
@@ -13,6 +14,7 @@ pub use approval::ApprovalStore;
 pub use budget::{BudgetStore, SpendLine, SpendRow, SpendScope, SpendTotal};
 pub use card::CardStore;
 pub use code_host::{CodeHostStore, PullRequestRow};
+pub use model_key::{GatewayScope, ModelKeyStore};
 pub use organization::{Membership, OrganizationStore, SignInRecord, TokenRecord};
 pub use session::{NewEvent, SessionChange, SessionStore};
 
@@ -49,6 +51,7 @@ pub trait Store:
     + ApprovalStore
     + CardStore
     + CodeHostStore
+    + ModelKeyStore
     + Send
     + Sync
 {

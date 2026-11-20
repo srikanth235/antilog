@@ -41,7 +41,9 @@ async fn main() -> anyhow::Result<()> {
         .acquire_timeout(Duration::from_secs(45))
         .connect_lazy(&database_url)
         .context("reading the database url")?;
-    let deps = Arc::new(AwsDeps::from_env(PgStore::new(pool)).await?);
+    let deps = Arc::new(
+        AwsDeps::from_env(PgStore::new(pool).sealed_by(&EnvSecrets::from_env()).await).await?,
+    );
 
     lambda::serve(build_router(deps), OriginGuard::required_from_env())
         .await

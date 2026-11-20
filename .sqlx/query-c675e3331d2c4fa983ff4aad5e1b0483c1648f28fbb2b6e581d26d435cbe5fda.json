@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select revoke_session_credentials($1)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "revoke_session_credentials",
+        "type_info": "Void",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "c675e3331d2c4fa983ff4aad5e1b0483c1648f28fbb2b6e581d26d435cbe5fda"
+}

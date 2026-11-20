@@ -26,7 +26,9 @@ async fn main() -> anyhow::Result<()> {
         .connect(&database_url)
         .await
         .context("connecting to Postgres")?;
-    let store = PgStore::new(pool);
+    let store = PgStore::new(pool)
+        .sealed_by(&antilog_core::secrets::EnvSecrets::from_env())
+        .await;
     store.migrate().await.context("applying migrations")?;
     tracing::warn!("no runner or code host is built yet: serving on the fakes for both");
 

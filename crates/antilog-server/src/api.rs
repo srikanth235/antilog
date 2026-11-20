@@ -15,6 +15,7 @@ use utoipa::OpenApi;
 pub mod auth;
 pub mod e2e;
 pub mod live;
+pub mod model_key;
 pub mod organization;
 pub mod value;
 pub mod webhook;
@@ -64,6 +65,7 @@ pub fn router_with<D: Deps + 'static>(app: Arc<auth::App<D>>) -> Router {
         .route("/health", get(health::<D>))
         .merge(auth::routes())
         .merge(organization::routes())
+        .merge(model_key::routes())
         .merge(session::routes())
         .merge(value::routes())
         .merge(live::routes());
@@ -84,6 +86,7 @@ pub fn openapi_json() -> String {
     let mut doc = ApiDoc::openapi();
     doc.merge(auth::ApiDoc::openapi());
     doc.merge(organization::ApiDoc::openapi());
+    doc.merge(model_key::Doc::openapi());
     doc.merge(session::Doc::openapi());
     doc.merge(value::Doc::openapi());
     doc.merge(live::Doc::openapi());

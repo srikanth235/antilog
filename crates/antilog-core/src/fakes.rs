@@ -11,6 +11,7 @@ mod code_host;
 mod credentials;
 pub(crate) mod ledger;
 mod machine;
+mod model_key;
 mod organization;
 mod session;
 mod world;
@@ -72,6 +73,7 @@ pub struct FakeStore {
     ledger: std::sync::Arc<Mutex<ledger::Ledger>>,
     cards: Mutex<card_state::Cards>,
     code_host: Mutex<code_host::State>,
+    vault: Mutex<model_key::Vault>,
 }
 
 impl FakeStore {
@@ -149,6 +151,18 @@ mod tests {
     #[tokio::test]
     async fn fake_store_passes_the_store_suite() {
         store_suite(&FakeStore::default()).await;
+    }
+
+    #[tokio::test]
+    async fn fake_store_keeps_model_keys_and_finds_a_session_for_the_gateway() {
+        crate::gateway_suite::model_key_suite(&FakeStore::default()).await;
+    }
+
+    #[tokio::test]
+    async fn fake_credentials_pass_the_credentials_suite() {
+        let store = FakeStore::default();
+        let creds = FakeCredentials::new(std::sync::Arc::new(crate::clock::SystemClock));
+        crate::gateway_suite::credentials_suite(&store, &creds).await;
     }
 
     #[tokio::test]
