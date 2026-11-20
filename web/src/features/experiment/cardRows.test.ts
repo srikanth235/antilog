@@ -49,6 +49,21 @@ describe("cardRows", () => {
     expect(cardRows(approval, ctx).map((row) => row.key)).toEqual(["size"]);
   });
 
+  it("shows Use a connector tool's connector, tool and input digest", () => {
+    const approval = card({
+      kind: "use_connector_tool",
+      connector: "Orders warehouse",
+      tool: "lookup",
+      inputDigest: "9f2c41ab",
+    });
+    expect(cardLead(approval)).toBe("Use lookup on Orders warehouse");
+    expect(cardRows(approval, ctx).map((row) => [row.key, row.lines])).toEqual([
+      ["connector", ["Orders warehouse"]],
+      ["tool", ["lookup"]],
+      ["input", ["9f2c41ab"]],
+    ]);
+  });
+
   it("falls back to the summary for a card raised before payloads, and parses nothing", () => {
     const approval = card(null);
     expect(cardLead(approval)).toBe("legacy summary: reason");

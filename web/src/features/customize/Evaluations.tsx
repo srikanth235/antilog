@@ -20,7 +20,7 @@ export function Evaluations() {
         <h1 className="t-display">{w.customize.title}</h1>
       </div>
       <div className="ctl">
-        <Tabs />
+        <Tabs active="evaluations" />
         <span className="vdiv" aria-hidden="true" />
         <div className="segs">
           <span className="seg on" aria-current="page">

@@ -556,7 +556,7 @@ export const w = {
       addCredential: (connector: string, scope: string) =>
         `Add a read-only credential for ${connector} (${scope})`,
       changeEnvironment: "Change the environment",
-      useConnectorTool: (tool: string, connector: string) => `Use ${tool} on ${connector}`,
+      askConnectorTool: (tool: string, connector: string) => `Use ${tool} on ${connector}`,
       openPullRequest: (hypothesis: string) => `Open pull requests: ${hypothesis}`,
     },
     whatCost: "What it may cost",
@@ -842,9 +842,12 @@ export const w = {
       "Know-how agents load when it is relevant. Add one SKILL.md, or choose a few text files. The name comes from the front matter of SKILL.md. A name that exists becomes its next version.",
     paste: "Paste SKILL.md",
     choose: "Or choose files",
-    chooseHint:
-      "Text files only. SKILL.md must be among them. Choosing files replaces what is pasted.",
+    chooseHint: "Text files only. SKILL.md must be among them.",
+    chooseFolder: "Or choose a folder",
+    chooseFolderHint:
+      "Its text files are added, with SKILL.md at the top of the folder. Choosing files or a folder replaces what is pasted.",
     chosen: (n: number) => (n === 1 ? "1 file chosen" : `${n} files chosen`),
+    noText: "No text files were found there.",
     save: "Add skill",
     pasteEmpty: "Paste a SKILL.md or choose files.",
   },

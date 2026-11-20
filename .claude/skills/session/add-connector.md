@@ -2,7 +2,7 @@
 
 A connector is a remote MCP server a session may call: a data system's MCP server, an internal tool, a SaaS server. In v0 it is only that ([docs/V0.md](../../../docs/V0.md)). The code host (GitHub, GitLab) is how repos attach and pull requests open, and is added as a code host, not a connector. A cloud account is not a connector.
 
-Connectors live in Customize, Connectors (boards `Connectors`, `ConnectorsEmpty`, `ConnectorDetail`, `AddConnector`, `AddConnectorMcp`, `ConnectorError`; layout in [../design/behaviour.md](../design/behaviour.md)). Built: `antilog-core/src/customize/connectors.rs` (and `reach.rs` for what a session sees), the routes in `antilog-server/src/api/customize.rs`, the client in `antilog-server/src/connectors.rs`.
+Connectors live in Customize, Connectors (boards `Connectors`, `ConnectorsEmpty`, `ConnectorDetail`, `AddConnector`, `ConnectorRemove`, `ConnectorError`; layout in [../design/behaviour.md](../design/behaviour.md)). Built: `antilog-core/src/customize/connectors.rs` (and `reach.rs` for what a session sees), the routes in `antilog-server/src/api/customize.rs`, the client in `antilog-server/src/connectors.rs`.
 
 1. **The server calls it, the machine never does.** A session has one MCP endpoint, `/mcp/sessions/{id}`. It serves the Antilog tools and the tools of every connector switched on for the experiment, each named `<connector>__<tool>`. The server forwards each call to the connector and returns the text. The machine holds no address and no credential of the connector.
 2. **Add it with a URL and an optional credential.** The URL is https and names a public host: a literal private address, `localhost`, an internal name or a redirect is refused (`check_url`). The credential is sent to the connector as a bearer token.

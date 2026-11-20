@@ -340,7 +340,8 @@ export function useSkillVersion(name: string, version: number | undefined) {
   });
 }
 
-const refreshSkills = (client: QueryClient) => client.invalidateQueries({ queryKey: keys.skills() });
+const refreshSkills = (client: QueryClient) =>
+  client.invalidateQueries({ queryKey: keys.skills() });
 
 export function useAddSkill() {
   return useWrite(
@@ -395,9 +396,7 @@ export function useAddPlugin() {
 export function useRemovePlugin(id: string) {
   return useWrite(
     async (keep: Schemas["PluginPart"][]) =>
-      unwrap(
-        await api.POST("/plugins/{id}/remove", { params: { path: { id } }, body: { keep } }),
-      ),
+      unwrap(await api.POST("/plugins/{id}/remove", { params: { path: { id } }, body: { keep } })),
     refreshPlugin,
   );
 }
