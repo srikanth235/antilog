@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from project_skills_off where organization_id = $1 and project_id = $2 and name = $3",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4ab60b97750bc56090e90e8fdb8badea0684bdf46ceb74a39a282902fdd9329f"
+}

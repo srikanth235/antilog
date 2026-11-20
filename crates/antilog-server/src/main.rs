@@ -2,6 +2,8 @@
 
 use std::sync::Arc;
 
+use antilog_core::clock::SystemClock;
+use antilog_core::fakes::FakeCredentials;
 use antilog_server::api;
 use antilog_server::deps::ServerDeps;
 use antilog_server::origin::OriginGuard;
@@ -34,9 +36,15 @@ async fn main() -> anyhow::Result<()> {
         .await
         .with_context(|| format!("binding {listen}"))?;
     tracing::info!(%listen, "serving");
-    let router = api::router(
-        Arc::new(ServerDeps::on_fakes(store)),
-        api::auth::Settings::from_env(),
+    let app = Arc::new(api::auth::App {
+        deps: Arc::new(ServerDeps::on_fakes(store)),
+        settings: api::auth::Settings::from_env(),
+    });
+    tracing::warn!("session tokens are not stored yet: the MCP endpoint refuses every token");
+    let router = api::router_with_reach(
+        app,
+        FakeCredentials::new(Arc::new(SystemClock)),
+        api::customize::Backend::from_env().await?,
     );
     let guard = OriginGuard::from_env();
     let router = if guard.is_on() {

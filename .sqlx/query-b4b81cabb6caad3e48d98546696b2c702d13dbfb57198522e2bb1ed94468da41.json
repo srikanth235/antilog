@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update connectors set sealed = $3, health = 'not_checked' where organization_id = $1 and id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b4b81cabb6caad3e48d98546696b2c702d13dbfb57198522e2bb1ed94468da41"
+}

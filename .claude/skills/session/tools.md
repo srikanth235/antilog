@@ -4,7 +4,7 @@ Built in `antilog-core/src/tools/` and `session/`: the four setup tools (each cr
 
 ## How the tools reach a session
 
-The runner reaches the server over outbound HTTPS only ([docs/V0.md](../../../docs/V0.md)), so a self-hosted server behind a firewall works. Each session gets one MCP endpoint that serves the tools below.
+The runner reaches the server over outbound HTTPS only ([docs/V0.md](../../../docs/V0.md)), so a self-hosted server behind a firewall works. Each session gets one MCP endpoint, `/mcp/sessions/{id}` (built: streamable HTTP on rmcp, `antilog-server/src/api/mcp.rs`), reached with a bearer token for `Purpose::Mcp`. It serves the Antilog tools from `antilog-core/src/tools/` (the same definitions `antilog mcp` serves) and the tools of every connector switched on for the experiment, namespaced `<connector>__<tool>`. Each connector tool is On, Off or Ask first; see [add-connector.md](add-connector.md). The conversation keeps only a tool's name.
 
 `measure` is asynchronous: it returns a ticket at once and the measurement arrives later as a session event, which sidesteps both limits.
 
@@ -17,7 +17,7 @@ Each shows a card in the chat. The agent never sees a credential value.
 | Tool | Inputs | Card | Who approves | Refuses |
 | --- | --- | --- | --- | --- |
 | `attach_repo` | A repo on the code host | Attach repo | An owner or editor of the experiment's project; policy may pre-approve | A repo the code host account cannot reach; a viewer's approval |
-| `request_credential` | A connector, a reason, a scope | Add credential: connector-aware (see [add-connector.md](add-connector.md)), with a secure form whose value goes straight to the platform's credential store | An owner or editor, always; policy can never pre-approve it | A scope that includes the holdout or write rights; a value in chat |
+| `request_credential` | A connector, a reason, a scope | Add credential: with a secure form whose value is sealed on the server (see [add-connector.md](add-connector.md)) | An owner or editor, always; policy can never pre-approve it | A scope that includes the holdout or write rights; a value in chat |
 | `set_environment` | Image or setup script, size, network | Change environment | An owner or editor; policy may pre-approve | A change that would exceed the budget's rate; hosts the platform cannot allow |
 | `request_budget` | An amount and a reason | Raise budget, with what it may cost | An owner or editor; policy may allow up to a limit | An amount that takes the experiment's budget over its project's cap or the organization's monthly cap |
 

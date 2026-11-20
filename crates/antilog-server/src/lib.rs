@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 
 pub mod api;
+pub mod connectors;
 pub mod deps;
 pub mod origin;
 pub mod pg;

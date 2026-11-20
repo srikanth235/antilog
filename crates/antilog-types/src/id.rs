@@ -49,6 +49,7 @@ ids!(
     SpendId,
     ApprovalId,
     AuditId,
+    ConnectorId,
 );
 
 macro_rules! text_enum {

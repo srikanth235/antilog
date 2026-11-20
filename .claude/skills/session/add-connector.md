@@ -1,43 +1,24 @@
 # Add a connector
 
-> Parts of this page still name agent platforms, the judge sandbox or the relay; `docs/V0.md` replaces them: [docs/V0.md](../../../docs/V0.md).
+A connector is a remote MCP server a session may call: a data system's MCP server, an internal tool, a SaaS server. In v0 it is only that ([docs/V0.md](../../../docs/V0.md)). The code host (GitHub, GitLab) is how repos attach and pull requests open, and is added as a code host, not a connector. A cloud account is not a connector.
 
-A connector is a data system or MCP server an agent's code may read: Snowflake, Databricks, DynamoDB, BigQuery, Postgres, Amazon S3 or any MCP server. The code host (GitHub, GitLab) is how repos attach and pull requests open, and is added as a code host, not a connector. A cloud account is not a connector. All steps are target.
+Connectors live in Customize, Connectors (boards `Connectors`, `ConnectorsEmpty`, `ConnectorDetail`, `AddConnector`, `AddConnectorMcp`, `ConnectorError`; layout in [../design/behaviour.md](../design/behaviour.md)). Built: `antilog-core/src/customize/connectors.rs` (and `reach.rs` for what a session sees), the routes in `antilog-server/src/api/customize.rs`, the client in `antilog-server/src/connectors.rs`.
 
-Connectors live in Customize, Connectors (Yours and Discover; boards `Connectors`, `ConnectorsEmpty`, `ConnectorsDiscover`, `ConnectorDetail`, `AddConnector`, `AddConnectorMcp`, `ConnectorError`, `DatasetHoldout`; layout in [../design/behaviour.md](../design/behaviour.md)). A connector is added there with "Add connector", or from the Add credential card in a chat; what a card adds appears in Customize.
+1. **The server calls it, the machine never does.** A session has one MCP endpoint, `/mcp/sessions/{id}`. It serves the Antilog tools and the tools of every connector switched on for the experiment, each named `<connector>__<tool>`. The server forwards each call to the connector and returns the text. The machine holds no address and no credential of the connector.
+2. **Add it with a URL and an optional credential.** The URL is https and names a public host: a literal private address, `localhost`, an internal name or a redirect is refused (`check_url`). The credential is sent to the connector as a bearer token.
+3. **The credential is sealed.** It is stored with `Sealer` (XChaCha20-Poly1305, bound to the row `connector:<id>`), opened only for the one call or check, and never returned by any route, event or log. Without a master key (`ANTILOG_SECRET_MASTER_KEY`) a connector can be added without a credential only.
+4. **Adding runs a check.** The server asks the connector for its tools. The status is Connected, Reconnect or Not checked; an unchecked connector or one that did not answer is never shown as healthy, and keeps the tools it had. `ConnectorError` says "Can't read the credential for NAME." and offers Check again and Update credential.
+5. **Each tool is On, Off or Ask first.** A tool seen for the first time asks first. Off is not offered to a session and a call to it is refused and audited. Ask first raises a Use a connector tool card (`use_connector_tool`, through `approval.rs`), and one approval pays for one call with exactly the input approved; policy may pre-approve the card kind like any other except Add credential rules. On calls go straight through.
+6. **Chosen per experiment.** An editor or owner of the project switches connectors on for an experiment, on the experiment page. A connector an experiment has switched on cannot be removed.
+7. **Audit.** Adding, checking, changing a tool's mode, replacing the credential, removing and every call (`connector.use`, Done or Denied) are audit rows with an actor. The conversation keeps only the tool's name, never its input or answer.
+8. **Roles.** Owners add, check, change and remove. Every member reads (never a credential).
+9. **A plugin may bring one.** It arrives without a credential and Not checked; an owner adds the credential on the connector.
+10. **Tests.** Against a mock MCP server (`antilog-server/tests/reach.rs`) and a scripted fake (`FakeConnectors`): the credential never leaves the server, an Off tool is never forwarded, an Ask first tool waits for a card and then runs once, a down connector is Reconnect, a private address is refused.
 
-1. **One translator.** Write one module that turns the system's vocabulary into datasets and nothing else. The system's words (schema names, project ids, query dialect) stop in that module. A second translator for the same system forks the meaning of a column.
-2. **Give a recipe for each of two credentials.** The connector says how to make, in its own system:
-   - the **agent credential**: read-only, on the views the person lists, holdout tables not granted;
-   - the **judge credential**: a separate read-only credential that also covers the holdout.
+## Not in v0
 
-   The customer makes both and registers them once. A credential with write rights is refused. The recipes are short and per system, shown on the Add connector page and on the Add credential card:
-
-   | System | Agent credential | Judge credential |
-   | --- | --- | --- |
-   | Snowflake | A read-only role granted SELECT on the views you list; holdout tables not granted | A separate read-only role that also covers the holdout |
-   | Databricks | A read-only service principal with SELECT on the views you list | A separate service principal that also covers the holdout |
-   | BigQuery | A service account with the data viewer role on the views you list, not on the holdout dataset | A separate service account that also reads the holdout dataset |
-   | Postgres | A role with SELECT on the views you list; no grant on the holdout schema | A separate role that also reads the holdout schema |
-   | DynamoDB | A role allowed read actions on the tables you list only | A separate role that also reads the holdout table |
-   | Amazon S3 | A role allowed to read the prefixes you list; the holdout prefix denied | A separate role that also reads the holdout prefix |
-   | MCP server | A token that may call only the read-only tools you list | A separate token that may also call the tools that reach the holdout |
-
-3. **The Add connector page.** The per-system fields (for example account and warehouse for Snowflake; the server address and the tools to allow for an MCP server), then the two credentials, each with its recipe, a secure field and a "What each one gets" block: agents read the views listed, holdout excluded; the judge reads those and the holdout. Values go straight to the platform's credential store.
-4. **A card in the chat.** A session asks with `request_credential` ([tools.md](tools.md)). The Add credential card shows the same recipe and "What each one gets", and a "Browse connectors" link to Customize, Connectors, Discover. The value is typed into the secure form, never the chat; Antilog keeps only a credential reference.
-5. **Discover.** A grid of the connectors Antilog can connect to (Snowflake, Databricks, BigQuery, Postgres, DynamoDB, Amazon S3, MCP server), reached from "Add connector" and from the Add credential card.
-6. **No secret in a response or log.** A credential lives only in the platform's credential store, is short-lived and is minted per session. Antilog holds no connector admin secret.
-7. **Check.** Adding a connector runs a check and reports Connected, Reconnect or Not checked; an unchecked connector is never shown as healthy. When a credential cannot be read, `ConnectorError` says "Can't read the credential for NAME.", shows its datasets as "Not checked" (never empty), names the experiments that cannot measure until it is fixed, and offers "Check again" and "Update credential".
-8. **Name the data, never read it.** An experiment names its data by dataset and version ([../judge/model.md](../judge/model.md)). The agent's code reads through the connector with its credential. The server never calls the connector and stores no rows.
-9. **Data stays put.** Reads run in a session's sandbox or a judge sandbox, never through the Antilog server, and a session contacts only the endpoints its experiment and environment allow.
-10. **No transform.** The connector reads tables and files as they are; the customer prepares data in their own warehouse.
-11. **Datasets and the holdout.** The Datasets table on the connector's page shows name, version, size, marking, Agents ("Can read" or "No access") and Judge ("Can read"). The holdout row reads "Restricted to the judge" and has no grant control. See [model.md](model.md).
-12. **Row actions.** Check connection, Update credential and Remove. Remove deletes the values from the platform's credential store, after a confirm that names the experiments that can no longer measure.
-13. **Audit.** Adding, checking, updating, using and removing a credential are named actions with an actor (see [../organization/SKILL.md](../organization/SKILL.md)). Settings, Connections lists the repos, credential references and environments approved in chats and links here for data systems.
-14. **Tests.** Add a mock connector and a test: check states, secret never returned, agent credential read-only, holdout read refused for the agent credential and allowed for the judge's, no rows through the server, a dataset version unchanged after a new one is made.
+The earlier design of connectors as data systems with an agent credential and a judge credential, datasets under them and a holdout marking is not built, and nothing above relies on it. A connector reaches an agent only through the server, so what it returns can still end up in the agent's branch or messages: say so where a connector is added ([threat-model.md](threat-model.md)). Network secrets that the proxy attaches without the key entering the machine come after v0.
 
 ## Proving it
 
 Follow [../land/SKILL.md](../land/SKILL.md).
-
-An agent that reads a dataset can put what it read in its branch, its messages or an allowed endpoint. The Add connector card says so: grant an agent only data the customer would accept in a pull request ([threat-model.md](threat-model.md)).

@@ -10,7 +10,7 @@ What a hijacked agent could do, and what stops it (target). Assume every agent c
 - Connector data: rows, documents and whatever an MCP server returns.
 - Pull request review comments and CI output while a delivered session stays attached.
 - The history of other sessions, whose hypotheses an injected agent may have written.
-- Skill packs and plugins from Discover.
+- Skill packs and plugins an organization added.
 
 A person's own messages in the chat are trusted as that person's, within their role.
 
@@ -19,7 +19,7 @@ A person's own messages in the chat are trusted as that person's, within their r
 | It holds | The limit | What still gets through |
 | --- | --- | --- |
 | A git token for its own branch | Pushes only to the session's branch, short-lived, one per repo | It can push anything to that branch, including data it read. The branch is on the code host |
-| Read-only connector credentials | Read-only, leave the holdout out, short-lived | It can read every row the credential allows |
+| A connector's tools through the session endpoint | The credential stays on the server; each tool is On, Off or Ask first and each call is audited | It can use any On tool with any input, and read what the connector returns |
 | Network from its sandbox | Only the endpoints the environment allows | Any allowed endpoint that accepts writes is a way out |
 | The Antilog tools | Cards ask a person unless policy pre-approved them; Add credential always asks; `deliver` refuses a trial that is not Kept | It can spend the budget on trials, and write misleading hypotheses and pull request text |
 | The conversation | Stored as words only, never tool output | Whatever it writes in a message is stored, including data it read |
@@ -37,4 +37,4 @@ It never holds the holdout credential, a write credential, a model key, a cloud 
 
 ## What this does not stop
 
-Data the agent may read can leave through its branch, its messages or an allowed endpoint. The defence is what the agent may read: connectors give it only what the customer is willing to see in a pull request. Say so where a connector is added ([add-connector.md](add-connector.md)).
+Data the agent may read can leave through its branch, its messages or an allowed endpoint. The defence is what the agent may reach: switch on only connectors, and set On only tools, whose answers the customer is willing to see in a pull request. Say so where a connector is added ([add-connector.md](add-connector.md)).

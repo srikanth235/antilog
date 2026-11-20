@@ -12,6 +12,7 @@ use crate::store::{SessionStore, StoreError};
 
 pub(crate) use judge::issue_receipt;
 pub use judge::seal_approved;
+pub(crate) use setup::{Card, ask, waiting};
 
 /// A tool an agent may call: its name, what it does and the shape of its input.
 #[derive(Debug, Clone, PartialEq)]

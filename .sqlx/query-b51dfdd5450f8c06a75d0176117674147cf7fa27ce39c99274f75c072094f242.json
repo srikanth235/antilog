@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update connectors set health = $3, tools = $4 where organization_id = $1 and id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b51dfdd5450f8c06a75d0176117674147cf7fa27ce39c99274f75c072094f242"
+}

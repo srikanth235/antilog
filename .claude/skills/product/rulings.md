@@ -52,11 +52,11 @@ The settled product, directed by the owner. Everything here is target; nothing i
 - **Projects.** Every experiment belongs to exactly one project. A project has members as owner, editor or viewer; the organization role is the default in every project and a project can set another for that project. Organization owners manage organization settings; project owners manage the project's members, budget, cap and value models. Permission is checked at project scope. See [organization model](../organization/model.md).
 - **Customize** is one sidebar page, a library of reusable things, with tabs Evaluations, Skills, Connectors, Agents and Plugins, each with Yours and Discover. Every item opens the one DetailPage layout. Setting one up with a card works too, and what a card adds appears here.
   - **Evaluations** are reusable templates (kind Speed, Quality, Size or Cost). A sealed experiment starts from a copy, and the seal checks stay the judge's.
-  - **Skills** are versioned skill packs. The judge never reads one, a pack never holds holdout data, and an experiment records the versions read. See [session add-skill-pack](../session/add-skill-pack.md).
-  - **Connectors** are Snowflake, Databricks, BigQuery, Postgres, DynamoDB, Amazon S3 and an MCP server. The code host is not a connector.
+  - **Skills** are versioned `SKILL.md` skill packs. The judge never reads one, a pack never holds holdout data, and an experiment records the versions it selected. See [session add-skill-pack](../session/add-skill-pack.md).
+  - **Connectors** are remote MCP servers (v0, 20 Nov: [docs/V0.md](../../../docs/V0.md)). The code host is not a connector.
   - **Agents** are listed with model and use.
   - **Plugins** bundle the other kinds. A plugin has no powers of its own and can never mark, unmark or grant a dataset. An item in use is never removed.
-- **Two credentials per connector,** registered once and kept by the server, never in a session machine. The agent credential is read-only and leaves out the holdout; the judge credential is separate and also covers it. Both are short-lived and minted per session.
+- **A connector's credential** is kept sealed on the server and never sent to a session machine; each tool is On, Off or Ask first. The earlier two-credential design (agent and judge, per data system) is not built and V0 replaces it.
 - **Datasets and the holdout.** Datasets live under a connector, and a dataset version never changes. A holdout is a marking enforced by the credentials; the grant control is absent, not disabled, and the row reads "Restricted to the judge". A holdout value never appears in history, a message or a receipt shown to an agent. A connector error shows datasets as Not checked, never empty.
 - **Small things.** @-mention of a session in the composer, and a one-time prompt after the first measurement, "Notify me when this experiment needs me".
 
