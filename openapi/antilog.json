@@ -5237,7 +5237,7 @@
       },
       "NetworkLevel": {
         "type": "string",
-        "description": "How much of the network a session's machine may reach (docs/V0.md, Environments). `None`\nis no outbound traffic except the model gateway; `Limited` is `allowed_hosts` plus package\nregistries when allowed; `Full` is any host except private, loopback and metadata addresses.",
+        "description": "How much of the network a session's machine may reach (docs/V0.md, Environments). `None`\nis no outbound traffic except the platform hosts (model gateway, MCP, code host); `Limited` is `allowed_hosts` plus package\nregistries when allowed; `Full` is any host except private, loopback and metadata addresses.",
         "enum": [
           "none",
           "limited",

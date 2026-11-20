@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use antilog_core::clock::SystemClock;
 use antilog_core::secrets::EnvSecrets;
-use antilog_proxy::{Proxy, SessionNetworks, Upstreams, server};
+use antilog_proxy::{Proxy, SessionNetworks, Upstreams, egress, server};
 use antilog_server::pg::PgStore;
 use anyhow::Context;
 use sqlx::postgres::PgPoolOptions;
@@ -42,6 +42,9 @@ async fn main() -> anyhow::Result<()> {
             .redirect(reqwest::redirect::Policy::none())
             .build()
             .context("building the HTTP client")?,
+        platform_hosts: setting("ANTILOG_PROXY_PLATFORM_HOSTS")
+            .map(|hosts| egress::platform_hosts(&hosts))
+            .unwrap_or_default(),
         allow_private_addresses: false,
     });
 

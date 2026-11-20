@@ -74,6 +74,14 @@ impl NetworkAccess {
     }
 }
 
+/// `ANTILOG_PROXY_PLATFORM_HOSTS`: comma-separated host names, lower-cased.
+pub fn platform_hosts(list: &str) -> Vec<String> {
+    list.split(',')
+        .map(normal)
+        .filter(|host| !host.is_empty())
+        .collect()
+}
+
 impl NetworkAccess {
     /// What an environment version lets its sessions reach.
     pub fn of(environment: &EnvironmentSpec) -> Self {
@@ -262,11 +270,16 @@ where
             return reply(StatusCode::SERVICE_UNAVAILABLE);
         }
     };
-    if !proxy
-        .networks
-        .network(&proxy.store, session)
-        .await
-        .allows(&host)
+    let platform = proxy
+        .platform_hosts
+        .iter()
+        .any(|allowed| normal(allowed) == normal(&host));
+    if !platform
+        && !proxy
+            .networks
+            .network(&proxy.store, session)
+            .await
+            .allows(&host)
     {
         tracing::warn!(%session, %host, port, "egress refused: not on the allowlist");
         return reply(StatusCode::FORBIDDEN);

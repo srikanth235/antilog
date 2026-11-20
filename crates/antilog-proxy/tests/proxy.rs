@@ -245,6 +245,7 @@ struct Options {
     network: NetworkLevel,
     registries: bool,
     hosts: Vec<String>,
+    platform_hosts: Vec<String>,
     allow_private: bool,
     keys: bool,
 }
@@ -256,6 +257,7 @@ impl Default for Options {
             network: NetworkLevel::Limited,
             registries: false,
             hosts: Vec::new(),
+            platform_hosts: Vec::new(),
             allow_private: false,
             keys: true,
         }
@@ -366,6 +368,7 @@ impl Rig {
                 openai: upstream,
             },
             http: reqwest::Client::new(),
+            platform_hosts: options.platform_hosts.clone(),
             allow_private_addresses: options.allow_private,
         });
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
@@ -914,6 +917,20 @@ async fn no_network_refuses_every_tunnel_and_the_gateway_still_answers() {
         )
         .await;
     assert_eq!(reply.status(), StatusCode::OK);
+}
+
+#[tokio::test]
+async fn a_platform_host_is_reached_even_with_no_network() {
+    let rig = Rig::start(Options {
+        network: NetworkLevel::None,
+        platform_hosts: vec!["LocalHost.".into()],
+        allow_private: true,
+        ..Options::default()
+    })
+    .await;
+    let port = echo_server().await;
+    assert_eq!(ping(&rig, &format!("localhost:{port}")).await.0, 200);
+    assert_eq!(ping(&rig, &format!("127.0.0.1:{port}")).await.0, 403);
 }
 
 #[tokio::test]

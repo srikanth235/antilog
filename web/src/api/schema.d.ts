@@ -1589,7 +1589,7 @@ export interface components {
         ModelProvider: "anthropic" | "openai";
         /**
          * @description How much of the network a session's machine may reach (docs/V0.md, Environments). `None`
-         *     is no outbound traffic except the model gateway; `Limited` is `allowed_hosts` plus package
+         *     is no outbound traffic except the platform hosts (model gateway, MCP, code host); `Limited` is `allowed_hosts` plus package
          *     registries when allowed; `Full` is any host except private, loopback and metadata addresses.
          * @enum {string}
          */

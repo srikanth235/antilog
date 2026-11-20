@@ -4,7 +4,7 @@
 //!   runner binds a relay on that network's gateway address that carries raw TCP to the proxy, so
 //!   the proxy is the only thing the container can reach; `HTTPS_PROXY` and `HTTP_PROXY` name the
 //!   relay and carry the session's model token as the CONNECT login. What the proxy lets through
-//!   (the environment's hosts, or only the model gateway at `NetworkLevel::None`) is the proxy's
+//!   (the platform hosts always, plus the environment's) is the proxy's
 //!   decision.
 //! - **Docker for the agent.** With the sysbox runtime present on the host the container runs
 //!   under it and a `dockerd` starts inside, so the agent has its own Docker without

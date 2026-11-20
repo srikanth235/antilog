@@ -43,6 +43,10 @@ pub struct Proxy<S, C, K> {
     pub networks: SessionNetworks,
     pub upstreams: Upstreams,
     pub http: reqwest::Client,
+    /// Hosts every session reaches whatever its environment says: this proxy's and the server's
+    /// public names (the model gateway and the MCP endpoint) and the code host. Without them a
+    /// session at `NetworkLevel::None` could not talk to its own model.
+    pub platform_hosts: Vec<String>,
     /// Whether a tunnel may reach a private or loopback address. Only a test turns this on.
     pub allow_private_addresses: bool,
 }
