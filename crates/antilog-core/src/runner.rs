@@ -111,6 +111,9 @@ pub fn opencode_config(
             "url": format!("{}/mcp/sessions/{session}", settings.server_url),
             "headers": {"Authorization": format!("Bearer {mcp_token}")},
         }},
+        // A seal check or a measurement runs trials in a fresh machine and takes minutes; the
+        // default tool timeout is one minute.
+        "experimental": {"mcp_timeout": 1_800_000},
         "skills": {"paths": ["/opt/antilog/skills"]},
         "permission": {"bash": "allow", "edit": "allow"},
     })
