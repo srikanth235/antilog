@@ -229,3 +229,51 @@ pub struct Machine {
     /// An export of an earlier run is stored.
     pub resume: bool,
 }
+
+/// How much of the network a session's machine may reach (docs/V0.md, Environments).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum NetworkLevel {
+    /// No outbound traffic at all, not even through the proxy, except the model gateway.
+    None,
+    /// The proxy allows only `allowed_hosts`, plus package registries when allowed.
+    Limited,
+    /// The proxy allows any host.
+    Full,
+}
+
+/// One version of an environment, as a runner receives it at claim. Every change to an
+/// environment makes a new version, so a setup snapshot is keyed by (`id`, `version`).
+/// Session E fills it into `SessionSpec`; session D builds the machine from it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EnvironmentSpec {
+    pub id: String,
+    pub version: u32,
+    pub network: NetworkLevel,
+    pub allowed_hosts: Vec<String>,
+    pub allow_package_managers: bool,
+    /// Plain variables, readable by the agent; the screen says so.
+    pub variables: BTreeMap<String, String>,
+    /// Runs as root once per (`id`, `version`) before the agent starts; empty for none.
+    pub setup_script: String,
+    pub cpus: u32,
+    pub memory_mb: u32,
+}
+
+impl Default for EnvironmentSpec {
+    /// The built-in environment: limited network with package registries, 2 vCPU, 8 GB.
+    fn default() -> Self {
+        Self {
+            id: "default".into(),
+            version: 1,
+            network: NetworkLevel::Limited,
+            allowed_hosts: Vec::new(),
+            allow_package_managers: true,
+            variables: BTreeMap::new(),
+            setup_script: String::new(),
+            cpus: 2,
+            memory_mb: 8192,
+        }
+    }
+}

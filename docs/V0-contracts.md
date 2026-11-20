@@ -95,3 +95,11 @@ Customer model keys and connector credentials are encrypted in Postgres with `ch
 ## MCP transport (C)
 
 The per-session endpoint uses rmcp's streamable HTTP server feature on the existing `rmcp` dependency (owner, 20 Nov).
+
+## Environments and the session machine (D and E)
+
+`EnvironmentSpec` and `NetworkLevel` are in `antilog-types/src/runner.rs`. Every change to an environment makes a new version.
+
+- **E owns:** environments as data (types, store, migration, routes, the Customize or Settings screen with the warning that variables are readable by the agent), filling `SessionSpec.environment: EnvironmentSpec` (replacing today's `environment: Option<String>` and `variables`), and the proxy reading each session's allowlist from Postgres through its `Purpose::Model` token, in place of `ANTILOG_PROXY_ALLOWED_HOSTS`. `NetworkLevel::None` allows only the model gateway.
+- **D owns:** the runner's `Sandbox` trait (start, stop, run a command), with the plain-process backend kept for tests and a container backend that drives the `docker` command line (no new crate). The container gets the environment's CPU and memory limits, and its only route out is the proxy (an internal Docker network, with `HTTPS_PROXY` set). The setup script runs once per (`id`, `version`) and the result is kept as an image tagged with both, dropped after 7 days unused. D also owns the organization lock: a runner locks to the organization of its first claim, enforced by the server at claim time.
+- Until E lands, D builds its `SandboxSpec` from `EnvironmentSpec::default()` and today's `variables`. The orchestrator switches it to `SessionSpec.environment` at merge.
