@@ -49,7 +49,7 @@ Add each new term to the glossary in the same change that introduces it. Prefer 
 | Overview panel | sections "Environment" (the environment's name, "Attach a repo"), "Context" ("44% used", "88k of 200k"), "Spend" ("$4 of $10", "Change budget"), "Connectors", "Outputs" ("Changes", "Files", "Pull request") |
 | Tool calls | group "Ran 19 commands (1 failed)", "Edited 2 files", "Read 3 files", "Called seal 3 times", "Ran 4 steps"; running "Running… 3 commands"; row "Ran cargo test", "Edited src/a.rs", "Failed"; detail labels "Command", "Input", "Output", "Copy" |
 | Changes panel | "Against the base of BRANCH" |
-| Terminal panel | "Agent machine"; "Type a command and press Return"; viewer: "Read-only. Only editors and owners can type here." |
+| Terminal panel | Title "Terminal" with the working folder beside it (tooltip "user@machine:path"); "New terminal", "Terminal menu" (Clear terminal, Close terminal, Close all terminals), "Open in a new window", "Maximise Terminal panel" / "Restore Terminal panel", "Close Terminal panel"; tabs "Terminal 1", "Close Terminal 1"; "Resume to use the terminal" with Resume (`SessionTerminalResume`); "Starting the machine…"; "The session has ended."; viewer: "Read-only" and "Only editors and owners can use the terminal." |
 | Preview, Files | "Reload", "Open in a new tab", "Port 3000 in the session's machine. Only people in this project can open it."; "In the session's machine", "Read-only" |
 | Share popover | roles "Owner", "Editor", "Viewer" with "From Checkout platform"; "Sharing never gives more than a person's role in the project."; "Copy link" |
 
