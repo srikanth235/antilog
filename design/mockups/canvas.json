@@ -192,6 +192,26 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "AppShell.dc.html": {
+      "x": 0,
+      "y": 12780,
+      "w": 1440,
+      "h": 900,
+      "title": "11 \u00b7 App shell, account menu",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AppShellDark.dc.html": {
+      "x": 0,
+      "y": 12780,
+      "w": 1440,
+      "h": 900,
+      "title": "11 \u00b7 App shell, account menu \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "ConnectorDetail.dc.html": {
       "x": 19760,
       "y": 8350,
@@ -344,6 +364,46 @@
       "w": 1440,
       "h": 900,
       "title": "2 \u00b7 Home, empty \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "NewSession.dc.html": {
+      "x": 1520,
+      "y": 12780,
+      "w": 1440,
+      "h": 900,
+      "title": "11 \u00b7 New session",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "NewSessionDark.dc.html": {
+      "x": 1520,
+      "y": 12780,
+      "w": 1440,
+      "h": 900,
+      "title": "11 \u00b7 New session \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "NewSessionRepos.dc.html": {
+      "x": 5030,
+      "y": 12780,
+      "w": 1440,
+      "h": 900,
+      "title": "11 \u00b7 New session, repo list",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "NewSessionReposDark.dc.html": {
+      "x": 5030,
+      "y": 12780,
+      "w": 1440,
+      "h": 900,
+      "title": "11 \u00b7 New session, repo list \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -704,6 +764,46 @@
       "w": 1440,
       "h": 900,
       "title": "3 \u00b7 Session, files \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionList.dc.html": {
+      "x": 4560,
+      "y": 12780,
+      "w": 390,
+      "h": 844,
+      "title": "11 \u00b7 Session list, phone",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionListCollapsed.dc.html": {
+      "x": 3040,
+      "y": 12780,
+      "w": 1440,
+      "h": 900,
+      "title": "11 \u00b7 Session list, sidebar collapsed",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionListCollapsedDark.dc.html": {
+      "x": 3040,
+      "y": 12780,
+      "w": 1440,
+      "h": 900,
+      "title": "11 \u00b7 Session list, sidebar collapsed \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionListDark.dc.html": {
+      "x": 4560,
+      "y": 12780,
+      "w": 390,
+      "h": 844,
+      "title": "11 \u00b7 Session list, phone \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -1682,6 +1782,24 @@
       "y": 8220,
       "w": 240,
       "maxW": 2960
+    },
+    "web-light11": {
+      "kind": "title1",
+      "page": "web-light",
+      "text": "11 \u00b7 App shell",
+      "x": 0,
+      "y": 12650,
+      "w": 240,
+      "maxW": 2960
+    },
+    "web-dark11": {
+      "kind": "title1",
+      "page": "web-dark",
+      "text": "11 \u00b7 App shell",
+      "x": 0,
+      "y": 12650,
+      "w": 240,
+      "maxW": 2960
     }
   },
   "noteOrder": [
@@ -1704,7 +1822,9 @@
     "web-light10",
     "web-dark10",
     "web-light6b",
-    "web-dark6b"
+    "web-dark6b",
+    "web-light11",
+    "web-dark11"
   ],
   "attachments": {},
   "designSystems": [],
@@ -1725,6 +1845,8 @@
     "AgentsDiscoverDark.dc.html",
     "AgentsEmpty.dc.html",
     "AgentsEmptyDark.dc.html",
+    "AppShell.dc.html",
+    "AppShellDark.dc.html",
     "ConnectorDetail.dc.html",
     "ConnectorDetailDark.dc.html",
     "ConnectorError.dc.html",
@@ -1741,6 +1863,10 @@
     "HomeDark.dc.html",
     "HomeEmpty.dc.html",
     "HomeEmptyDark.dc.html",
+    "NewSession.dc.html",
+    "NewSessionDark.dc.html",
+    "NewSessionRepos.dc.html",
+    "NewSessionReposDark.dc.html",
     "PluginDetail.dc.html",
     "PluginDetailDark.dc.html",
     "PluginRemove.dc.html",
@@ -1777,6 +1903,10 @@
     "SessionFailedDark.dc.html",
     "SessionFiles.dc.html",
     "SessionFilesDark.dc.html",
+    "SessionList.dc.html",
+    "SessionListCollapsed.dc.html",
+    "SessionListCollapsedDark.dc.html",
+    "SessionListDark.dc.html",
     "SessionOverview.dc.html",
     "SessionOverviewDark.dc.html",
     "SessionPreview.dc.html",
