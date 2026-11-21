@@ -65,7 +65,7 @@ Add each new term to the glossary in the same change that introduces it. Prefer 
 | Title menu (button "Session menu") | "Rename", "Pin" or "Unpin", "Experiment details", "Copy link", "Hand off to...", "Stop session" (inline confirm: "Stop session", "Keep working"), "Archive" |
 | Panel toggles | "Overview", "Trials", "Changes", "Terminal", "Preview", "Files", each with a tooltip naming its shortcut ("Terminal (⌘⇧T)"); "Close Overview panel"; "Resize panel" |
 | More menu | "Export conversation", "Keyboard shortcuts", "Report a problem" |
-| Overview panel | sections "Experiment" ("Experiment details"), "Environment" ("Environments", "Attach a repo"), "Context" ("44% used", "88k of 200k"), "Budget" ("$42 of $100", "Change budget"), "Connectors", "Sessions", "Outputs" ("Trials", "14 measured, 3 kept") |
+| Overview panel | sections "Experiment" ("Experiment details"), "Environment" ("Environments", "Attach a repo"), "Context" ("44% used", "88k of 200k"), "Spend" ("$22 this session"), "Connectors", "Sessions", "Outputs" ("Changes", "Files", "Pull request") |
 | Tool calls | group "Ran 19 commands (1 failed)", "Edited 2 files", "Read 3 files", "Called seal 3 times", "Ran 4 steps"; running "Running… 3 commands"; row "Ran cargo test", "Edited src/a.rs", "Failed"; detail labels "Command", "Input", "Output", "Copy" |
 | Trials panel | "14 across 3 sessions"; filter "All sessions"; "Show 6 earlier trials" |
 | Changes panel | "Against the base of BRANCH"; "Trial 12, Kept" or "Working copy"; "Protected: a change here is Rejected." |

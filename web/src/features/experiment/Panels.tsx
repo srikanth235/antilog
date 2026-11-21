@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import type { Schemas } from "../../api/client";
 import { useAgentLabel } from "../../api/queries";
 import { Glyph, Icon } from "../../components/icon/Icon";
-import { dollars, share } from "../../lib/format";
+import { dollars } from "../../lib/format";
 import { type History, OUTCOME_COLOR, OUTCOME_WORDS } from "../../lib/history";
 import { w } from "../../words";
 import type { Panel } from "./Header";
@@ -35,44 +35,24 @@ export function PanelFrame(props: {
 }
 
 /**
- * The overview: a calm list of what the session runs on and has produced. Each section leads to
- * the panel or page that shows it in full. A row the API cannot fill yet is left out: the
- * environment's name, the repos and branch, the context window and the delivered pull request. (target)
+ * The overview of the session on screen: what it runs on, what it spent and what it reaches.
+ * Each section leads to the panel or page that shows it in full. A row the API cannot fill yet is
+ * left out: the environment's name, the repos and branch, the context window, and the outputs
+ * (files, patches and the delivered pull request). (target)
  */
 export function OverviewPanel(props: {
   experiment: Schemas["Experiment"];
   sessions: Schemas["Session"][];
-  history: History;
   spentCents: number | undefined;
   connectors: { id: string; name: string }[];
   onClose: () => void;
-  onPanel: (panel: Panel) => void;
-  onBudget: () => void;
-  canEdit: boolean;
 }) {
   const e = props.experiment;
   const o = w.experiment.overview;
   const agentLabel = useAgentLabel();
-  const spent = props.spentCents;
-  const kept = props.history.trials.filter((row) => row.outcome === "kept").length;
   return (
     <PanelFrame panel="details" onClose={props.onClose}>
       <div className="pane-b scr">
-        <section className="dp-sec">
-          <div className="dp-lh">
-            <span className="t-label">{w.experiment.sections.experiment}</span>
-          </div>
-          <Link
-            className="dp-row"
-            to="/experiments/$experimentId/details"
-            params={{ experimentId: e.id }}
-          >
-            <Glyph name="gauge" />
-            <span className="v">{w.experiment.experimentDetails}</span>
-            <span className="r">{w.state[e.status]}</span>
-            <Icon name="chev" size="s" />
-          </Link>
-        </section>
         <section className="dp-sec">
           <div className="dp-lh">
             <span className="t-label">{w.experiment.sections.environment}</span>
@@ -83,36 +63,17 @@ export function OverviewPanel(props: {
             <Icon name="chev" size="s" />
           </Link>
         </section>
-        <section className="dp-sec">
-          <div className="dp-lh">
-            <span className="t-label">{w.experiment.sections.budget}</span>
-            <button
-              type="button"
-              className="textbtn"
-              style={{ minHeight: 28, fontSize: 12.5 }}
-              disabled={!props.canEdit}
-              onClick={props.onBudget}
-            >
-              {w.projects.changeBudget}
-            </button>
-          </div>
-          {spent === undefined ? (
+        {props.spentCents === undefined ? null : (
+          <section className="dp-sec">
+            <div className="dp-lh">
+              <span className="t-label">{w.experiment.sections.spend}</span>
+            </div>
             <div className="dp-row">
               <Glyph name="gauge" />
-              <span className="v">{dollars(e.budgetCapCents)}</span>
+              <span className="v">{dollars(props.spentCents)}</span>
             </div>
-          ) : (
-            <div className="dp-bar" style={{ paddingLeft: 0 }}>
-              <div className="m">
-                <span>{w.experiment.budgetSpent(spent, e.budgetCapCents)}</span>
-                <span>{`${Math.round(share(spent, e.budgetCapCents) * 100)}%`}</span>
-              </div>
-              <span className="bar" aria-hidden="true">
-                <span style={{ width: `${share(spent, e.budgetCapCents) * 100}%` }} />
-              </span>
-            </div>
-          )}
-        </section>
+          </section>
+        )}
         <section className="dp-sec">
           <div className="dp-lh">
             <span className="t-label">{w.experiment.sections.connectors}</span>
@@ -157,19 +118,6 @@ export function OverviewPanel(props: {
             </Link>
           ))}
         </section>
-        {props.history.trials.length === 0 ? null : (
-          <section className="dp-sec">
-            <div className="dp-lh">
-              <span className="t-label">{w.experiment.sections.outputs}</span>
-            </div>
-            <button type="button" className="dp-row" onClick={() => props.onPanel("trials")}>
-              <Icon name="chart" />
-              <span className="v">{w.experiment.trials}</span>
-              <span className="r">{o.trialsKept(props.history.trials.length, kept)}</span>
-              <Icon name="chev" size="s" />
-            </button>
-          </section>
-        )}
       </div>
     </PanelFrame>
   );

@@ -349,13 +349,9 @@ export function Experiment(props: {
           <OverviewPanel
             experiment={e}
             sessions={list}
-            history={parsed}
-            spentCents={spend.data?.spentCents}
+            spentCents={spend.data?.bySession.find((row) => row.sessionId === active?.id)?.cents}
             connectors={onConnectors}
             onClose={() => props.onPanel(undefined)}
-            onPanel={props.onPanel}
-            onBudget={() => setBudgetOpen(true)}
-            canEdit={editor}
           />
         ) : props.panel === "trials" ? (
           <TrialsPanel history={parsed} sessions={list} onClose={() => props.onPanel(undefined)} />

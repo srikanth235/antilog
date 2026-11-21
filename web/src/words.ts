@@ -388,12 +388,11 @@ export const w = {
       sessions: "Sessions",
       context: "Context",
       connectors: "Connectors",
-      outputs: "Outputs",
+      spend: "Spend",
     },
     overview: {
       environments: "Environments",
       noConnectors: "No connectors switched on",
-      trialsKept: (trials: number, kept: number) => `${trials} measured, ${kept} kept`,
     },
     attachRepo: "Attach a repo",
     changeEnvironment: "Change environment",
