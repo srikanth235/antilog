@@ -21,7 +21,7 @@ The target is a server with a web app as the client of its API. It runs two ways
 1. **A chat in a cloud session.** Every feature belongs to the session or the organization floor, and is shown inside a project, a session or Customize. If it fits neither, question it.
 2. **The agent drives.** The server relays and records. It runs no loop.
 3. **Settings are tools.** Setup happens in the chat as an approved tool call. A settings page lists and revokes.
-4. **Antilog never holds the data.** Ids, states, the conversation's words, spend and audit rows only. Data is read only inside the session's machine.
+4. **Antilog never holds the data.** Ids, states, the conversation's words, spend and audit rows only. Data is read only inside the session's machine. The one exception is the session's own code changes: the runner reports each repo's diff at the end of a turn, the server keeps the latest report (cut to 2 MB per diff) for the Changes panel and replaces it on the next ([../../../docs/V0.md](../../../docs/V0.md), Changes tab).
 5. **Everything is governed.** Approvals by role, every change recorded, spend capped.
 6. **Derive, do not store.** Status and spend totals come from rows already kept.
 7. **Failure is never shown as zero or empty, and nothing unchecked is shown as healthy.**
