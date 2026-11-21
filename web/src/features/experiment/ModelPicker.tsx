@@ -1,4 +1,5 @@
 import {
+  type CSSProperties,
   type FocusEvent,
   type KeyboardEvent,
   type MouseEvent,
@@ -23,6 +24,30 @@ import {
 import { w } from "../../words";
 
 type View = "menu" | "effort" | "more";
+
+const EDGE = 12;
+/** The main menu, the gap and the Effort submenu side by side. */
+const WIDEST = 488;
+
+/** Where the menus open from a button at `rect`: above or below, whichever has more room, and from the side that fits. */
+export type Place = { down: boolean; left: boolean; room: number };
+export function placeOf(
+  rect: { top: number; bottom: number; right: number },
+  view: { width: number; height: number; left: number } = {
+    width: innerWidth,
+    height: innerHeight,
+    left: 0,
+  },
+): Place {
+  const above = rect.top - EDGE;
+  const below = view.height - rect.bottom - EDGE;
+  const down = below > above;
+  return {
+    down,
+    left: rect.right - WIDEST < view.left + EDGE,
+    room: Math.max(0, Math.floor((down ? below : above) - 6)),
+  };
+}
 
 /** The model's name as the button shows it: from the list, else what follows the provider. */
 const focusIt = (element: HTMLElement | null) => element?.focus();
@@ -63,6 +88,21 @@ export function ModelPicker(props: {
     [props.recent, props.models, props.model],
   );
   const levels = levelsOf(current);
+  const [place, setPlace] = useState<Place>({ down: false, left: false, room: 0 });
+  const toggle = () => {
+    if (open) return close();
+    if (root.current !== null) {
+      const page = root.current.closest("main")?.getBoundingClientRect();
+      setPlace(
+        placeOf(root.current.getBoundingClientRect(), {
+          width: innerWidth,
+          height: innerHeight,
+          left: page?.left ?? 0,
+        }),
+      );
+    }
+    setView("menu");
+  };
 
   const close = useCallback(() => {
     setView(null);
@@ -119,7 +159,13 @@ export function ModelPicker(props: {
 
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions: key and focus events bubble up from the menu inside; the wrapper is no control of its own.
-    <span className="mpw" ref={root} onKeyDown={keys} onBlur={leave}>
+    <span
+      className={`mpw${place.down ? " dn" : ""}${place.left ? " lf" : ""}`}
+      style={{ "--mp-room": `${place.room}px` } as CSSProperties}
+      ref={root}
+      onKeyDown={keys}
+      onBlur={leave}
+    >
       {view === "more" ? (
         <section
           className="mp more"
@@ -260,7 +306,7 @@ export function ModelPicker(props: {
         aria-label={w.model.button}
         title={empty ? w.model.noModelsHint : w.model.button}
         disabled={props.disabled === true || empty}
-        onClick={() => (open ? close() : setView("menu"))}
+        onClick={toggle}
       >
         <span>{label}</span>
         {props.effort === null || levels.length === 0 ? null : (
