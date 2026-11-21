@@ -668,6 +668,46 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "SessionEnvironment.dc.html": {
+      "x": 42560,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, change environment",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionEnvironmentCard.dc.html": {
+      "x": 44080,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, change environment card",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionEnvironmentCardDark.dc.html": {
+      "x": 44080,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, change environment card \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionEnvironmentDark.dc.html": {
+      "x": 42560,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, change environment \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "SessionFailed.dc.html": {
       "x": 27360,
       "y": 3370,
@@ -1773,6 +1813,10 @@
     "SessionConnectorToolDark.dc.html",
     "SessionCredential.dc.html",
     "SessionCredentialDark.dc.html",
+    "SessionEnvironment.dc.html",
+    "SessionEnvironmentCard.dc.html",
+    "SessionEnvironmentCardDark.dc.html",
+    "SessionEnvironmentDark.dc.html",
     "SessionFailed.dc.html",
     "SessionFailedDark.dc.html",
     "SessionFiles.dc.html",
