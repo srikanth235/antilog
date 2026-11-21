@@ -34,6 +34,8 @@ async fn main() -> anyhow::Result<()> {
         openai: setting("ANTILOG_PROXY_OPENAI_URL").unwrap_or_else(|| Upstreams::default().openai),
         opencode: setting("ANTILOG_PROXY_OPENCODE_URL")
             .unwrap_or_else(|| Upstreams::default().opencode),
+        opencode_go: setting("ANTILOG_PROXY_OPENCODE_GO_URL")
+            .unwrap_or_else(|| Upstreams::default().opencode_go),
         server: setting("ANTILOG_PROXY_SERVER_URL"),
     };
     let http = reqwest::Client::builder()
@@ -46,12 +48,19 @@ async fn main() -> anyhow::Result<()> {
         upstreams.opencode.clone(),
         std::time::Duration::from_secs(3600),
     ));
+    let go = ZenPrices::default();
+    tokio::spawn(go.clone().keep_fresh(
+        http.clone(),
+        upstreams.opencode_go.clone(),
+        std::time::Duration::from_secs(3600),
+    ));
     let proxy = Arc::new(Proxy {
         credentials: store.clone(),
         store,
         clock: SystemClock,
         networks: SessionNetworks::default(),
         zen,
+        go,
         upstreams,
         http,
         platform_hosts: setting("ANTILOG_PROXY_PLATFORM_HOSTS")

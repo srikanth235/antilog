@@ -86,6 +86,7 @@ const O_TOKENS: Tokens = Tokens {
 const ANTHROPIC_KEY: &str = "sk-ant-real-org-key-0001";
 const OPENAI_KEY: &str = "sk-oai-real-org-key-0002";
 const ZEN_KEY: &str = "zen-real-org-key-0003";
+const GO_KEY: &str = "go-real-org-key-0004";
 
 // ---- the fake providers -------------------------------------------------------------------
 
@@ -320,6 +321,7 @@ impl Rig {
                 (ModelProvider::Anthropic, ANTHROPIC_KEY),
                 (ModelProvider::Openai, OPENAI_KEY),
                 (ModelProvider::Opencode, ZEN_KEY),
+                (ModelProvider::OpencodeGo, GO_KEY),
             ] {
                 store
                     .put_model_key(
@@ -385,10 +387,12 @@ impl Rig {
             clock: SystemClock,
             networks: SessionNetworks::default(),
             zen: ZenPrices::default(),
+            go: ZenPrices::default(),
             upstreams: Upstreams {
                 anthropic: upstream.clone(),
                 openai: upstream.clone(),
                 opencode: upstream.clone(),
+                opencode_go: upstream.clone(),
                 server: Some(upstream),
             },
             http: reqwest::Client::new(),
@@ -520,6 +524,10 @@ async fn an_anthropic_stream_is_relayed_whole_and_books_its_final_usage() {
     );
 }
 
+const GO_LIST: &str = r#"{"data":[
+    {"id":"glm-go","cost":{"text":{"input":{"price":2},"output":{"price":8}}}}
+]}"#;
+
 const ZEN_LIST: &str = r#"{"data":[
     {"id":"big-pickle","cost":{"text":{"input":{"price":0},"output":{"price":0}}}},
     {"id":"glm-5.3-flash","cost":{"text":{"input":{"price":0.15,"cache":{"read":0.03}},"output":{"price":0.5}}},"multipliers":[{"hours":"peak","x":2}]}
@@ -586,6 +594,34 @@ async fn an_opencode_call_carries_the_zen_key_and_its_headers_and_books_zens_pri
     let (cents, tokens) = rig.booked().await;
     assert!(cents > 1);
     assert_eq!(tokens, 8400);
+}
+
+#[tokio::test]
+async fn an_opencode_go_call_carries_the_go_key_and_session_header_and_books_gos_price() {
+    let rig = Rig::start(Options::default()).await;
+    let (list, _) = start_zen_list(GO_LIST).await;
+    rig.proxy.go.refresh(&rig.http, &list).await;
+    let call = |model: &str| {
+        rig.http
+            .post(rig.url("/opencode-go/v1/chat/completions"))
+            .bearer_auth(&rig.token)
+            .header("x-opencode-session", "ses_9")
+            .json(&json!({"model":model,"messages":[]}))
+            .send()
+    };
+    // 2000 in at $2 and 800 out at $8 per million is 1.04 cents, booked as 2. Zen's table is empty,
+    // so a price booked this low came from Go's own list.
+    assert_eq!(call("glm-go").await.unwrap().status(), StatusCode::OK);
+    let seen = &rig.calls()[0];
+    assert_eq!(seen.path, "/v1/chat/completions");
+    assert_eq!(seen.headers["authorization"], format!("Bearer {GO_KEY}"));
+    assert_eq!(seen.headers["x-opencode-session"], "ses_9");
+    assert_eq!(rig.booked().await, (2, 2800));
+
+    // A model Go's list lacks is booked at the highest known price.
+    assert_eq!(call("other").await.unwrap().status(), StatusCode::OK);
+    let (cents, _) = rig.booked().await;
+    assert!(cents > 4);
 }
 
 #[tokio::test]

@@ -25,6 +25,8 @@ pub struct Upstreams {
     pub openai: String,
     /// OpenCode Zen: chat completions, Responses or Messages, by the path called.
     pub opencode: String,
+    /// OpenCode Go: an OpenAI-compatible API, with its own keys and model list.
+    pub opencode_go: String,
     /// The Antilog server, where `/mcp/*` is passed on to; none turns the pass-through off.
     pub server: Option<String>,
 }
@@ -35,6 +37,7 @@ impl Default for Upstreams {
             anthropic: "https://api.anthropic.com".to_owned(),
             openai: "https://api.openai.com".to_owned(),
             opencode: "https://opencode.ai/zen".to_owned(),
+            opencode_go: "https://opencode.ai/zen/go".to_owned(),
             server: None,
         }
     }
@@ -51,6 +54,8 @@ pub struct Proxy<S, C, K> {
     pub upstreams: Upstreams,
     /// OpenCode Zen's prices, kept fresh by `price::ZenPrices::keep_fresh`.
     pub zen: price::ZenPrices,
+    /// OpenCode Go's prices, loaded the same way from Go's own list.
+    pub go: price::ZenPrices,
     pub http: reqwest::Client,
     /// Hosts every session reaches whatever its environment says: this proxy's and the server's
     /// public names (the model gateway and the MCP endpoint) and the code host. Without them a
