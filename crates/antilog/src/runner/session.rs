@@ -466,10 +466,16 @@ impl<S: Sandbox> Live<S> {
     /// After a (re)connect: what the stream missed is read back from the messages, de-duplicated
     /// by message id and part id, with the permissions and the status as they are now.
     async fn rebuild(&mut self) -> Result<()> {
-        for message in self.api.messages(&self.oc_session).await? {
-            let items = self.tracker.message(&message);
-            self.outbox.extend(items);
+        match self.api.context_limits().await {
+            Ok(limits) => self.tracker.set_limits(limits),
+            Err(error) => tracing::warn!(%error, "could not read the models' context windows"),
         }
+        let mut rebuilt = Vec::new();
+        for message in self.api.messages(&self.oc_session).await? {
+            rebuilt.extend(self.tracker.message(&message));
+        }
+        Tracker::latest_context(&mut rebuilt);
+        self.outbox.extend(rebuilt);
         for request in self.api.pending_permissions().await? {
             if request.get("sessionID").and_then(serde_json::Value::as_str)
                 == Some(&self.oc_session)
@@ -529,6 +535,16 @@ impl<S: Sandbox> Live<S> {
                 self.api.reply(&permission, reply).await?;
             }
             Command::Abort => self.api.abort(&self.oc_session).await?,
+            Command::Compact => {
+                // The transcript's note comes from the compaction OpenCode records.
+                if let Err(error) = self.api.compact(&self.oc_session, &self.spec.model).await {
+                    tracing::warn!(%error, "could not compact the conversation");
+                    self.outbox.push(Item::Error {
+                        key: format!("compact:{}", Uuid::now_v7()),
+                        text: "Antilog could not compact the conversation.".to_owned(),
+                    });
+                }
+            }
             Command::Release { outcome } => {
                 self.release(outcome).await?;
                 finish(&self.done, envelope.id);
@@ -652,6 +668,7 @@ impl<S: Sandbox> Live<S> {
                         }
                         self.outbox.extend(items);
                     }
+                    Tracker::latest_context(&mut self.outbox);
                     self.flush().await?;
                     if turn_ended {
                         self.report_changes().await?;
