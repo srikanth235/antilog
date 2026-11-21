@@ -1,6 +1,6 @@
 //! The one MCP endpoint of a session: `/mcp/sessions/{id}`, streamable HTTP, served without
 //! protocol sessions (each request stands alone). A bearer token for `Purpose::Mcp` names the
-//! session; the tools are the Antilog tools and those of the connectors switched on.
+//! session; the tools are the Antilog setup tools and those of the organization's connectors.
 
 use std::sync::Arc;
 
@@ -59,7 +59,7 @@ impl<D: Deps + 'static, C: ConnectorClient + 'static> ServerHandler for SessionM
         ServerConfig::new(ServerCapabilities::builder().enable_tools().build())
             .with_server_info(Implementation::new("antilog", env!("CARGO_PKG_VERSION")))
             .with_instructions(
-                "Antilog measures a change and only its numbers count. Read history, then measure a commit you pushed.",
+                "Antilog sets this session up: attach a repo, ask for a credential, change the environment, ask for more budget. A person approves each request.",
             )
     }
 
@@ -100,9 +100,8 @@ impl<D: Deps + 'static, C: ConnectorClient + 'static> ServerHandler for SessionM
         };
         let caller = Caller {
             organization: self.scope.organization,
-            experiment: self.scope.experiment,
             session: self.session,
-            actor: Some(self.scope.member),
+            actor: self.scope.member,
             call: uuid::Uuid::now_v7().to_string(),
         };
         let input = Value::Object(request.arguments.unwrap_or_default());
@@ -112,12 +111,10 @@ impl<D: Deps + 'static, C: ConnectorClient + 'static> ServerHandler for SessionM
                 if let Some(error) = reply.answer.get("error").and_then(Value::as_str) {
                     (error.to_owned(), true)
                 } else {
-                    let mut text = serde_json::to_string_pretty(&reply.answer).unwrap_or_default();
-                    if let Some(ticket) = &reply.ticket {
-                        text.push_str("\n\n");
-                        text.push_str(&reach.finish(&caller, ticket).await);
-                    }
-                    (text, false)
+                    (
+                        serde_json::to_string_pretty(&reply.answer).unwrap_or_default(),
+                        false,
+                    )
                 }
             }
         };

@@ -1,4 +1,4 @@
-//! Connectors: remote MCP servers an experiment may switch on. Antilog calls them for the
+//! Connectors: remote MCP servers a session may use. Antilog calls them for the
 //! session, so the credential never enters a machine.
 
 use std::future::Future;
@@ -10,7 +10,7 @@ use antilog_types::{
 };
 use serde_json::Value;
 
-use crate::evaluations::slug;
+use super::slug;
 use crate::organization::{Action, Principal, Refusal, entry, member_of, permit};
 use crate::sealed::Sealer;
 use crate::store::{ConnectorRow, Store};
@@ -208,7 +208,7 @@ pub async fn add<S: Store, C: ConnectorClient>(
         ));
     }
     check_url(new.url.trim(), client.allow_private()).map_err(Refusal::Invalid)?;
-    permit(store, who, Action::ConnectorSet, None, &slug, now).await?;
+    permit(store, who, Action::ConnectorSet, &slug, now).await?;
     let id = ConnectorId::new();
     let credential = new.credential.filter(|c| !c.trim().is_empty());
     let sealed = match &credential {
@@ -271,7 +271,7 @@ pub async fn recheck<S: Store, C: ConnectorClient>(
     id: ConnectorId,
 ) -> Result<Connector, Refusal> {
     let connector = get(store, who, id).await?;
-    permit(store, who, Action::ConnectorSet, None, id, now).await?;
+    permit(store, who, Action::ConnectorSet, id, now).await?;
     let (health, tools) = check(store, client, sealer, who.organization, &connector).await;
     store
         .set_connector_check(
@@ -293,7 +293,7 @@ pub async fn set_tool_mode<S: Store>(
     tool: &str,
     change: SetToolMode,
 ) -> Result<Connector, Refusal> {
-    permit(store, who, Action::ConnectorSet, None, id, now).await?;
+    permit(store, who, Action::ConnectorSet, id, now).await?;
     store
         .set_tool_mode(
             who.organization,
@@ -322,7 +322,7 @@ pub async fn update_credential<S: Store, C: ConnectorClient>(
     id: ConnectorId,
     credential: &str,
 ) -> Result<Connector, Refusal> {
-    permit(store, who, Action::ConnectorSet, None, id, now).await?;
+    permit(store, who, Action::ConnectorSet, id, now).await?;
     get(store, who, id).await?;
     let sealer = sealer.ok_or(Refusal::Invalid("this server has no master key"))?;
     if credential.trim().is_empty() || credential.len() > 4000 {
@@ -348,24 +348,15 @@ pub async fn update_credential<S: Store, C: ConnectorClient>(
     recheck(store, client, Some(sealer), who, now, id).await
 }
 
-/// A connector an experiment has switched on is in use and cannot be removed.
+/// Removes a connector and its credential. Owners only.
 pub async fn remove<S: Store>(
     store: &S,
     who: &Principal,
     now: i64,
     id: ConnectorId,
 ) -> Result<(), Refusal> {
-    permit(store, who, Action::ConnectorSet, None, id, now).await?;
+    permit(store, who, Action::ConnectorSet, id, now).await?;
     get(store, who, id).await?;
-    if !store
-        .connector_users(who.organization, id)
-        .await?
-        .is_empty()
-    {
-        return Err(Refusal::Invalid(
-            "an experiment has this connector switched on: switch it off there first",
-        ));
-    }
     store
         .remove_connector(
             who.organization,

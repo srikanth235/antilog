@@ -109,7 +109,7 @@ pub async fn set<S: Store>(
     if new.is_default && !new.enabled {
         return Err(Refusal::Invalid("the default agent must be turned on"));
     }
-    permit(store, who, Action::AgentSet, None, id, now).await?;
+    permit(store, who, Action::AgentSet, id, now).await?;
     let agent = Agent {
         id: id.to_owned(),
         name: new.name.trim().to_owned(),

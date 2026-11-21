@@ -1,5 +1,5 @@
 //! The model gateway. A session's machine calls `/anthropic/v1/*`, `/openai/v1/*` or `/opencode/v1/*` with its
-//! short-lived token where a key would go. The gateway checks the token, checks the experiment's
+//! short-lived token where a key would go. The gateway checks the token, checks the session's
 //! budget, swaps in the organization's key, forwards the call as it came, and books spend from the
 //! usage the provider reports. A key is never logged and never reaches a session.
 
@@ -199,7 +199,7 @@ where
     };
 
     let now = proxy.clock.now().as_millisecond();
-    match budget::ensure_room(&proxy.store, scope.organization, scope.experiment, now).await {
+    match budget::ensure_room(&proxy.store, scope.organization, session, now).await {
         Ok(_) => {}
         Err(Refusal::Spent(spent)) => {
             tracing::info!(%session, provider = provider.as_str(), %spent, "model call refused: budget spent");
@@ -224,7 +224,7 @@ where
                 provider,
                 StatusCode::SERVICE_UNAVAILABLE,
                 "api_error",
-                "Antilog cannot check this experiment's budget right now. Retry shortly.",
+                "Antilog cannot check this session's budget right now. Retry shortly.",
             );
         }
     }

@@ -97,7 +97,6 @@ dependencies = [
  "axum",
  "clap",
  "reqwest 0.13.5",
- "rmcp",
  "serde",
  "serde_json",
  "sha2 0.11.1",
@@ -114,9 +113,7 @@ version = "0.0.0"
 dependencies = [
  "antilog-types",
  "chacha20poly1305",
- "ed25519-dalek",
  "getrandom 0.4.3",
- "hmac 0.13.0",
  "jiff",
  "proptest",
  "serde",

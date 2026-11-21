@@ -41,6 +41,8 @@ pub struct Session {
     pub environment_version: Option<u32>,
     /// What this session alone may spend, in US cents. `None`: only the organization's monthly cap.
     pub budget_cap_cents: Option<i64>,
+    /// The composer's Mode: false asks a person for every card, true lets policy approve.
+    pub follow_policy: bool,
     pub status: SessionStatus,
     /// Why it ended, such as "Stopped by Ada".
     pub note: Option<String>,
@@ -58,6 +60,7 @@ pub struct SessionParams {
     pub environment: Option<String>,
     pub environment_version: Option<u32>,
     pub budget_cap_cents: Option<i64>,
+    pub follow_policy: bool,
 }
 
 impl Session {
@@ -78,6 +81,7 @@ impl Session {
             environment: params.environment,
             environment_version: params.environment_version,
             budget_cap_cents: params.budget_cap_cents,
+            follow_policy: params.follow_policy,
             status: SessionStatus::Working,
             note: None,
             created_at,
@@ -257,6 +261,9 @@ pub struct StartSession {
     /// This session's own cap in US cents; left out, the organization's default, if it has one.
     #[serde(default)]
     pub budget_cap_cents: Option<i64>,
+    /// The composer's Mode: false asks a person for every card, true lets policy approve.
+    #[serde(default)]
+    pub follow_policy: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]

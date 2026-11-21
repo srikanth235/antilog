@@ -7,17 +7,13 @@ use sqlx::{PgConnection, PgPool, Postgres, Transaction};
 mod approval;
 mod budget;
 mod card;
-mod code_host;
 mod credentials;
 mod customize;
 mod environment;
-mod judge;
 mod model_key;
 mod organization;
 mod runner;
 mod session;
-
-pub use judge::PgJudge;
 
 pub static MIGRATOR: Migrator = sqlx::migrate!("./migrations");
 
@@ -116,7 +112,7 @@ fn map(error: sqlx::Error) -> StoreError {
             Some("23514")
                 if matches!(
                     db.constraint(),
-                    Some("organizations_default_within_cap" | "projects_default_within_cap")
+                    Some("organizations_default_within_cap")
                 ) =>
             {
                 Some(Invariant::OverCap)
@@ -124,11 +120,7 @@ fn map(error: sqlx::Error) -> StoreError {
             Some("23514")
                 if matches!(
                     db.constraint(),
-                    Some(
-                        "policies_add_credential_asks"
-                            | "approvals_credential_asks"
-                            | "approvals_owner_asks"
-                    )
+                    Some("policies_add_credential_asks" | "approvals_credential_asks")
                 ) =>
             {
                 Some(Invariant::AlwaysAsk)

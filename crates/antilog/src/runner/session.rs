@@ -13,9 +13,14 @@ use tokio::sync::mpsc;
 use uuid::Uuid;
 
 use super::api::{NotHeld, Server};
-use super::machine::{self, repo_dir};
+
 use super::opencode::{Api, Opencode, Tracker, permission};
 use super::sandbox::{Exec, Machine, Sandbox, SandboxSpec, run as run_in_machine};
+
+/// Where a repo of the session is cloned.
+pub fn repo_dir(workdir: &Path, repo: &str) -> PathBuf {
+    workdir.join(repo.rsplit('/').next().unwrap_or(repo))
+}
 
 /// What the poll loop tells a session's task.
 pub enum Msg {
@@ -167,7 +172,6 @@ fn password() -> Result<String> {
 }
 
 struct Live<S: Sandbox> {
-    sandbox: Arc<S>,
     machine: Arc<S::Machine>,
     opencode: Arc<Opencode>,
     server: Server,
@@ -257,25 +261,6 @@ impl<S: Sandbox> Live<S> {
                 self.api.reply(&permission, reply).await?;
             }
             Command::Abort => self.api.abort(&self.oc_session).await?,
-            Command::Run { run } => {
-                // It can take long, and the conversation goes on meanwhile.
-                let (server, session, token) = (
-                    self.server.clone(),
-                    self.spec.session,
-                    self.spec.runner_token.clone(),
-                );
-                let (sandbox, machine) = (self.sandbox.clone(), self.machine.clone());
-                let spec = self.spec.clone();
-                let (done, id) = (self.done.clone(), envelope.id);
-                tokio::spawn(async move {
-                    let result = machine::run(&*sandbox, &*machine, &spec, id, &run).await;
-                    match server.result(session, &token, &result).await {
-                        Ok(()) => finish(&done, id),
-                        Err(error) => tracing::warn!(%error, "could not return a run's outcome"),
-                    }
-                });
-                return Ok(false);
-            }
             Command::Release { outcome } => {
                 self.release(outcome).await?;
                 finish(&self.done, envelope.id);
@@ -352,7 +337,7 @@ async fn start<S: Sandbox>(
     done: &Done,
 ) -> Result<Live<S>> {
     let machine = Arc::new(sandbox.start(&SandboxSpec::new(spec)).await?);
-    match prepare(sandbox, &machine, opencode, server, spec, done).await {
+    match prepare(&machine, opencode, server, spec, done).await {
         Ok(live) => Ok(live),
         Err(error) => {
             machine.stop().await;
@@ -362,7 +347,6 @@ async fn start<S: Sandbox>(
 }
 
 async fn prepare<S: Sandbox>(
-    sandbox: &Arc<S>,
     machine: &Arc<S::Machine>,
     opencode: &Arc<Opencode>,
     server: &Server,
@@ -404,7 +388,6 @@ async fn prepare<S: Sandbox>(
         None => api.create_session().await?,
     };
     Ok(Live {
-        sandbox: sandbox.clone(),
         machine: machine.clone(),
         opencode: opencode.clone(),
         server: server.clone(),

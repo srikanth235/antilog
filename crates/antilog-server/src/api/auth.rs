@@ -67,11 +67,6 @@ pub struct Settings {
     pub open_organizations: bool,
     /// Cookies are `Secure` unless this server is reached over plain http (local development).
     pub secure_cookies: bool,
-    /// When set, `/webhooks/code-host` is mounted and checks `x-hub-signature-256` against it.
-    pub code_host_webhook_secret: Option<String>,
-    /// `ANTILOG_E2E_SEED=1` mounts `/internal/e2e/win`, which makes a win without an agent. For the
-    /// server on its fakes in end-to-end tests only.
-    pub e2e_seed: bool,
     /// With a runner key, `/runner/*` is mounted. From `ANTILOG_RUNNER_KEY`.
     pub runner: Option<super::runner::RunnerSettings>,
 }
@@ -138,8 +133,6 @@ impl Settings {
             providers,
             open_organizations: setting("ANTILOG_OPEN_ORGANIZATIONS").as_deref() == Some("1"),
             secure_cookies: setting("ANTILOG_INSECURE_COOKIES").as_deref() != Some("1"),
-            code_host_webhook_secret: secret("ANTILOG_CODE_HOST_WEBHOOK_SECRET"),
-            e2e_seed: setting("ANTILOG_E2E_SEED").as_deref() == Some("1"),
             runner: super::runner::RunnerSettings::from_env(),
         }
     }

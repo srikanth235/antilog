@@ -1,7 +1,7 @@
 use antilog_core::store::{Membership, OrganizationStore, SignInRecord, StoreError, TokenRecord};
 use antilog_types::{
     AccessToken, AuditEntry, Identity, Member, MemberId, MemberKind, Organization, OrganizationId,
-    Project, ProjectId, ProjectRole, Role, SignInId, SignInSession, TokenId,
+    Role, SignInId, SignInSession, TokenId,
 };
 use uuid::Uuid;
 
@@ -37,29 +37,6 @@ impl TryFrom<MemberRow> for Member {
     }
 }
 
-struct ProjectRow {
-    id: Uuid,
-    organization_id: Uuid,
-    name: String,
-    description: String,
-    monthly_cap_cents: Option<i64>,
-    default_budget_cents: Option<i64>,
-    created_at: i64,
-}
-
-impl From<ProjectRow> for Project {
-    fn from(row: ProjectRow) -> Self {
-        Project {
-            id: ProjectId::from_uuid(row.id),
-            organization_id: OrganizationId::from_uuid(row.organization_id),
-            name: row.name,
-            description: row.description,
-            monthly_cap_cents: row.monthly_cap_cents,
-            default_budget_cents: row.default_budget_cents,
-            created_at: row.created_at,
-        }
-    }
-}
 
 struct TokenRow {
     id: Uuid,
@@ -276,153 +253,11 @@ impl OrganizationStore for PgStore {
         tx.commit().await.map_err(map)
     }
 
-    async fn create_project(
-        &self,
-        project: &Project,
-        owner: MemberId,
-        entry: &AuditEntry,
-    ) -> Result<(), StoreError> {
-        let mut tx = self.scoped(project.organization_id).await?;
-        sqlx::query!(
-            "insert into projects (id, organization_id, name, description, monthly_cap_cents, default_budget_cents, created_at) values ($1, $2, $3, $4, $5, $6, to_timestamp($7::bigint / 1000.0))",
-            project.id.as_uuid(),
-            project.organization_id.as_uuid(),
-            project.name,
-            project.description,
-            project.monthly_cap_cents,
-            project.default_budget_cents,
-            project.created_at,
-        )
-        .execute(&mut *tx)
-        .await
-        .map_err(map)?;
-        sqlx::query!(
-            "insert into project_roles (organization_id, project_id, member_id, role) values ($1, $2, $3, 'owner')",
-            project.organization_id.as_uuid(),
-            project.id.as_uuid(),
-            owner.as_uuid(),
-        )
-        .execute(&mut *tx)
-        .await
-        .map_err(map)?;
-        audit(&mut tx, entry).await?;
-        tx.commit().await.map_err(map)
-    }
 
-    async fn project(
-        &self,
-        organization: OrganizationId,
-        id: ProjectId,
-    ) -> Result<Option<Project>, StoreError> {
-        let mut tx = self.scoped(organization).await?;
-        Ok(sqlx::query_as!(
-            ProjectRow,
-            "select id, organization_id, name, description, monthly_cap_cents, default_budget_cents, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\" from projects where organization_id = $1 and id = $2",
-            organization.as_uuid(),
-            id.as_uuid(),
-        )
-        .fetch_optional(&mut *tx)
-        .await
-        .map_err(map)?
-        .map(Project::from))
-    }
 
-    async fn projects(&self, organization: OrganizationId) -> Result<Vec<Project>, StoreError> {
-        let mut tx = self.scoped(organization).await?;
-        Ok(sqlx::query_as!(
-            ProjectRow,
-            "select id, organization_id, name, description, monthly_cap_cents, default_budget_cents, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\" from projects where organization_id = $1 order by created_at, id",
-            organization.as_uuid(),
-        )
-        .fetch_all(&mut *tx)
-        .await
-        .map_err(map)?
-        .into_iter()
-        .map(Project::from)
-        .collect())
-    }
 
-    async fn set_project_role(
-        &self,
-        organization: OrganizationId,
-        project: ProjectId,
-        member: MemberId,
-        role: Option<Role>,
-        entry: &AuditEntry,
-    ) -> Result<(), StoreError> {
-        let mut tx = self.scoped(organization).await?;
-        match role {
-            Some(role) => {
-                sqlx::query!(
-                    "insert into project_roles (organization_id, project_id, member_id, role) values ($1, $2, $3, $4) on conflict (project_id, member_id) do update set role = excluded.role",
-                    organization.as_uuid(),
-                    project.as_uuid(),
-                    member.as_uuid(),
-                    role.as_str(),
-                )
-                .execute(&mut *tx)
-                .await
-                .map_err(map)?;
-            }
-            None => {
-                sqlx::query!(
-                    "delete from project_roles where organization_id = $1 and project_id = $2 and member_id = $3",
-                    organization.as_uuid(),
-                    project.as_uuid(),
-                    member.as_uuid(),
-                )
-                .execute(&mut *tx)
-                .await
-                .map_err(map)?;
-            }
-        }
-        audit(&mut tx, entry).await?;
-        tx.commit().await.map_err(map)
-    }
 
-    async fn project_roles(
-        &self,
-        organization: OrganizationId,
-        project: ProjectId,
-    ) -> Result<Vec<ProjectRole>, StoreError> {
-        let mut tx = self.scoped(organization).await?;
-        sqlx::query!(
-            "select member_id, role from project_roles where organization_id = $1 and project_id = $2 order by member_id",
-            organization.as_uuid(),
-            project.as_uuid(),
-        )
-        .fetch_all(&mut *tx)
-        .await
-        .map_err(map)?
-        .into_iter()
-        .map(|row| {
-            Ok(ProjectRole {
-                member_id: MemberId::from_uuid(row.member_id),
-                role: Role::parse(&row.role).ok_or_else(|| corrupt("role", &row.role))?,
-            })
-        })
-        .collect()
-    }
 
-    async fn role_in_project(
-        &self,
-        organization: OrganizationId,
-        project: ProjectId,
-        member: MemberId,
-    ) -> Result<Option<Role>, StoreError> {
-        let mut tx = self.scoped(organization).await?;
-        let role = sqlx::query_scalar!(
-            "select coalesce(r.role, m.role) as \"role!\" from members m join projects p on p.organization_id = m.organization_id and p.id = $2 left join project_roles r on r.project_id = p.id and r.member_id = m.id where m.organization_id = $1 and m.id = $3",
-            organization.as_uuid(),
-            project.as_uuid(),
-            member.as_uuid(),
-        )
-        .fetch_optional(&mut *tx)
-        .await
-        .map_err(map)?;
-        role.map(|role| Role::parse(&role).ok_or_else(|| corrupt("role", &role)))
-            .transpose()
-    }
 
     async fn create_access_token(
         &self,

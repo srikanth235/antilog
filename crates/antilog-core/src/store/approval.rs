@@ -1,8 +1,8 @@
 use std::future::Future;
 
 use antilog_types::{
-    Approval, ApprovalId, AuditEntry, AuditId, Decision, ExperimentId, MemberId, OrganizationId,
-    Policy,
+    Approval, ApprovalId, AuditEntry, AuditId, Decision, MemberId, OrganizationId, Policy,
+    SessionId,
 };
 
 use super::StoreError;
@@ -46,10 +46,11 @@ pub trait ApprovalStore {
         id: ApprovalId,
     ) -> impl Future<Output = Result<Option<Approval>, StoreError>> + Send;
 
+    /// The cards of one session, oldest first.
     fn approvals(
         &self,
         organization: OrganizationId,
-        experiment: ExperimentId,
+        session: SessionId,
     ) -> impl Future<Output = Result<Vec<Approval>, StoreError>> + Send;
 
     /// Every card of the organization still waiting for a person, oldest first.

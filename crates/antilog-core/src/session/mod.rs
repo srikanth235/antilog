@@ -2,25 +2,30 @@ mod settle;
 
 use crate::deps::Deps;
 use crate::environments::{Unavailable, pin};
-use crate::spend::{BudgetError, ensure_budget};
-use crate::store::{NewEvent, RunnerStore, SessionChange, SessionStore, StoreError};
+use crate::store::{
+    NewEvent, OrganizationStore, RunnerStore, SessionChange, SessionStore, StoreError,
+};
 use antilog_types::{
-    AuditEntry, AuditOutcome, Command, EventKind, ExperimentId, MemberId, OrganizationId, Seed,
-    Session, SessionId, SessionStatus,
+    AuditEntry, AuditOutcome, Command, EventKind, MemberId, OrganizationId, Seed, Session,
+    SessionId, SessionParams, SessionStatus,
 };
 
 pub use settle::settle;
 
 #[derive(Debug, thiserror::Error)]
 pub enum SessionError {
-    #[error("no such experiment or session in this organization")]
+    #[error("no such session in this organization")]
     NotFound,
     #[error("the session has ended; start a new one")]
     Ended,
     #[error(transparent)]
     Environment(#[from] Unavailable),
-    #[error(transparent)]
-    Budget(#[from] BudgetError),
+    #[error("{0}")]
+    Invalid(&'static str),
+    #[error(
+        "the organization's monthly cap is reached. An owner raises it in Settings, Budgets"
+    )]
+    OrganizationCapReached,
     #[error(transparent)]
     Store(StoreError),
 }
@@ -80,41 +85,82 @@ pub(crate) fn audit<D: Deps>(
     )
 }
 
+/// What a person gives to start a session. The agent and the model are already resolved.
 #[derive(Debug, Clone, Default)]
 pub struct NewSession {
+    pub title: Option<String>,
     pub agent: String,
+    pub model: String,
     pub prompt: String,
     pub repos: Vec<String>,
     pub environment: Option<String>,
-    pub actor: Option<MemberId>,
+    /// Left out, the organization's default, if it has one.
+    pub budget_cap_cents: Option<i64>,
+    pub follow_policy: bool,
+    pub actor: MemberId,
 }
 
-/// Starts a session in an experiment: its row, its first words and its audit entry. The agent
-/// runs wherever the runner puts it; nothing here starts one.
+/// The title a session shows when its starter gave none: the prompt's first line.
+fn title_of(title: Option<&str>, prompt: &str) -> String {
+    let given = title.map(str::trim).filter(|t| !t.is_empty());
+    let line = given.unwrap_or_else(|| prompt.lines().map(str::trim).find(|l| !l.is_empty()).unwrap_or(""));
+    let line: String = line.chars().take(80).collect();
+    if line.is_empty() {
+        "New session".to_owned()
+    } else {
+        line
+    }
+}
+
+/// Starts a session in the organization: its row, its first words and its audit entry. The
+/// agent runs wherever the runner puts it; nothing here starts one.
 pub async fn start<D: Deps>(
     deps: &D,
     organization: OrganizationId,
-    experiment: ExperimentId,
     new: NewSession,
 ) -> Result<Session, SessionError> {
+    let now = now_ms(deps);
     let row = deps
         .store()
-        .experiment(organization, experiment)
+        .organization(organization)
         .await?
         .ok_or(SessionError::NotFound)?;
-    ensure_budget(
-        deps.store(),
-        deps.clock(),
-        organization,
-        experiment,
-        row.budget_cap_cents,
-    )
-    .await?;
+    let cap = new.budget_cap_cents.or(row.default_budget_cents);
+    if cap.is_some_and(|cap| cap < 0) {
+        return Err(SessionError::Invalid("a budget is not negative"));
+    }
+    if let (Some(cap), Some(monthly)) = (cap, row.monthly_cap_cents)
+        && cap > monthly
+    {
+        return Err(SessionError::Invalid(
+            "a session's budget cannot pass the organization's monthly cap",
+        ));
+    }
+    if !crate::budget::organization_has_room(deps.store(), organization, now)
+        .await
+        .map_err(|_| SessionError::Store(StoreError::Unavailable("budget check".into())))?
+    {
+        return Err(SessionError::OrganizationCapReached);
+    }
     // The environment is pinned at its version now: a later edit does not move a session.
     let (environment, environment_version) =
         pin(deps.store(), organization, new.environment.as_deref()).await?;
-    let session = Session::new(organization, experiment, &new.agent, now_ms(deps));
-    let entry = audit(deps, organization, new.actor, "session.start", session.id);
+    let session = Session::new(
+        organization,
+        new.actor,
+        SessionParams {
+            title: title_of(new.title.as_deref(), &new.prompt),
+            agent: new.agent,
+            model: new.model,
+            repos: new.repos.clone(),
+            environment: environment.clone(),
+            environment_version,
+            budget_cap_cents: cap,
+            follow_policy: new.follow_policy,
+        },
+        now,
+    );
+    let entry = audit(deps, organization, Some(new.actor), "session.start", session.id);
     deps.store().create_session(&session, &entry).await?;
     let seed = Seed {
         repos: new.repos,
@@ -122,7 +168,7 @@ pub async fn start<D: Deps>(
         environment_version,
     };
     deps.store()
-        .enqueue_machine(organization, session.id, &seed, now_ms(deps))
+        .enqueue_machine(organization, session.id, &seed, now)
         .await?;
     if !new.prompt.trim().is_empty() {
         tell(
@@ -139,7 +185,7 @@ pub async fn start<D: Deps>(
             &session,
             "prompt".to_owned(),
             EventKind::Person,
-            new.actor,
+            Some(new.actor),
             &new.prompt,
         )
         .await?;
@@ -147,21 +193,7 @@ pub async fn start<D: Deps>(
     Ok(session)
 }
 
-/// The session an agent on a person's own machine works under.
-pub async fn open_external<D: Deps>(
-    deps: &D,
-    organization: OrganizationId,
-    experiment: ExperimentId,
-    actor: Option<MemberId>,
-) -> Result<Session, SessionError> {
-    let session = Session::new(organization, experiment, "mcp", now_ms(deps));
-    let entry = audit(deps, organization, actor, "session.start", session.id);
-    deps.store().create_session(&session, &entry).await?;
-    Ok(session)
-}
-
-/// Tells the session's machine, if it has one: a session of an agent on a person's own machine
-/// has none.
+/// Tells the session's machine, if it has one yet.
 async fn tell<D: Deps>(
     deps: &D,
     organization: OrganizationId,
@@ -275,19 +307,20 @@ pub async fn stop<D: Deps>(
         .await?)
 }
 
-/// What the experiment has spent; this is its total for an experiment.
+/// What a session may still spend: the least left under its own cap and the organization's
+/// monthly cap, in US cents; `None` when neither limits it.
 pub async fn budget_left<D: Deps>(
     deps: &D,
     organization: OrganizationId,
-    experiment: ExperimentId,
-) -> Result<i64, SessionError> {
-    let row = deps
-        .store()
-        .experiment(organization, experiment)
-        .await?
-        .ok_or(SessionError::NotFound)?;
-    let spent = crate::spend::spent(deps.store(), deps.clock(), organization, experiment).await?;
-    Ok(row.budget_cap_cents.saturating_sub(spent.cents))
+    id: SessionId,
+) -> Result<Option<i64>, SessionError> {
+    crate::budget::headroom(deps.store(), organization, id, now_ms(deps))
+        .await
+        .map(|room| room.remaining())
+        .map_err(|error| match error {
+            crate::organization::Refusal::NotFound => SessionError::NotFound,
+            _ => SessionError::Store(StoreError::Unavailable("budget check".into())),
+        })
 }
 
 /// The default and largest page of a conversation.

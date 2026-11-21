@@ -1,4 +1,4 @@
-//! The organization floor: members, projects, tokens, policy, approvals, budgets, audit.
+//! The organization floor: members, tokens, policy, approvals, budgets, audit.
 //! Handlers decode, call the action layer in `antilog-core` and encode; they test no role.
 
 use std::sync::Arc;
@@ -9,9 +9,8 @@ use antilog_core::store::OrganizationStore;
 use antilog_core::{approval, budget};
 use antilog_types::{
     AccessToken, ApiError, Approval, ApprovalId, AuditCursor, AuditId, AuditPage, BudgetSummary,
-    Decide, ExperimentBudget, ExperimentId, ExperimentSpend, LimitSpend, Limits, Member, MemberId,
-    NewMember, NewProject, NewToken, Organization, Policy, Project, ProjectId, ProjectRole,
-    ProjectSpend, SetProjectRole, SetRole, TokenId, TokenIssued,
+    Decide, LimitSpend, Limits, Member, MemberId, NewMember, NewToken, Organization, Policy,
+    SessionId, SetRole, TokenId, TokenIssued,
 };
 use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
@@ -33,12 +32,6 @@ type Reply<T> = Result<Json<T>, Fail>;
     members,
     add_member,
     set_member_role,
-    projects,
-    create_project,
-    project_roles,
-    set_project_role,
-    set_project_limits,
-    set_experiment_budget,
     tokens,
     create_token,
     revoke_token,
@@ -46,8 +39,6 @@ type Reply<T> = Result<Json<T>, Fail>;
     set_policy,
     approvals,
     pending,
-    experiment_spend,
-    all_spend,
     decide,
     audit
 ))]
@@ -100,15 +91,6 @@ async fn budgets<D: Deps + 'static>(State(app): Shared<D>, authed: Authed) -> Re
             cap_cents: summary.organization.cap_cents,
             spent_cents: summary.organization.spent_cents,
         },
-        projects: summary
-            .projects
-            .into_iter()
-            .map(|(project_id, scope)| ProjectSpend {
-                project_id,
-                cap_cents: scope.cap_cents,
-                spent_cents: scope.spent_cents,
-            })
-            .collect(),
     }))
 }
 
@@ -152,7 +134,7 @@ async fn add_member<D: Deps + 'static>(
     request_body = SetRole,
     responses(
         (status = 204, description = "Set; organization owners only"),
-        (status = 409, description = "The organization or a project would be left without an owner", body = ApiError),
+        (status = 409, description = "The organization would be left without an owner", body = ApiError),
     )
 )]
 async fn set_member_role<D: Deps + 'static>(
@@ -162,129 +144,6 @@ async fn set_member_role<D: Deps + 'static>(
     Json(set): Json<SetRole>,
 ) -> Result<StatusCode, Fail> {
     floor::set_member_role(app.store(), &authed.who, app.now(), id, set.role).await?;
-    Ok(StatusCode::NO_CONTENT)
-}
-
-#[utoipa::path(
-    get, path = "/projects", security(("bearer" = [])),
-    responses((status = 200, description = "The organization's projects", body = Vec<Project>))
-)]
-async fn projects<D: Deps + 'static>(State(app): Shared<D>, authed: Authed) -> Reply<Vec<Project>> {
-    floor::member_of(app.store(), &authed.who).await?;
-    Ok(Json(app.store().projects(authed.who.organization).await?))
-}
-
-#[utoipa::path(
-    post, path = "/projects", security(("bearer" = [])),
-    request_body = NewProject,
-    responses(
-        (status = 201, description = "Created; the caller is its first owner", body = Project),
-        (status = 409, description = "The name is taken", body = ApiError),
-    )
-)]
-async fn create_project<D: Deps + 'static>(
-    State(app): Shared<D>,
-    authed: Authed,
-    Json(new): Json<NewProject>,
-) -> Result<(StatusCode, Json<Project>), Fail> {
-    let project = floor::create_project(
-        app.store(),
-        &authed.who,
-        app.now(),
-        &new.name,
-        &new.description,
-    )
-    .await?;
-    Ok((StatusCode::CREATED, Json(project)))
-}
-
-#[utoipa::path(
-    get, path = "/projects/{id}/roles", security(("bearer" = [])),
-    params(("id" = ProjectId, Path, description = "The project")),
-    responses((status = 200, description = "Roles set for this project; the rest have their organization role", body = Vec<ProjectRole>))
-)]
-async fn project_roles<D: Deps + 'static>(
-    State(app): Shared<D>,
-    authed: Authed,
-    Path(id): Path<ProjectId>,
-) -> Reply<Vec<ProjectRole>> {
-    Ok(Json(
-        floor::project_roles(app.store(), &authed.who, id).await?,
-    ))
-}
-
-#[utoipa::path(
-    put, path = "/projects/{id}/roles/{member}", security(("bearer" = [])),
-    params(
-        ("id" = ProjectId, Path, description = "The project"),
-        ("member" = MemberId, Path, description = "The member"),
-    ),
-    request_body = SetProjectRole,
-    responses(
-        (status = 204, description = "Set; project owners only"),
-        (status = 409, description = "The project would be left without an owner", body = ApiError),
-    )
-)]
-async fn set_project_role<D: Deps + 'static>(
-    State(app): Shared<D>,
-    authed: Authed,
-    Path((id, member)): Path<(ProjectId, MemberId)>,
-    Json(set): Json<SetProjectRole>,
-) -> Result<StatusCode, Fail> {
-    floor::set_project_role(app.store(), &authed.who, app.now(), id, member, set.role).await?;
-    Ok(StatusCode::NO_CONTENT)
-}
-
-#[utoipa::path(
-    put, path = "/projects/{id}/limits", security(("bearer" = [])),
-    params(("id" = ProjectId, Path, description = "The project")),
-    request_body = Limits,
-    responses(
-        (status = 204, description = "Set; project owners only"),
-        (status = 409, description = "The cap would pass the organization's, or a budget inside it", body = ApiError),
-    )
-)]
-async fn set_project_limits<D: Deps + 'static>(
-    State(app): Shared<D>,
-    authed: Authed,
-    Path(id): Path<ProjectId>,
-    Json(limits): Json<Limits>,
-) -> Result<StatusCode, Fail> {
-    budget::set_project_limits(
-        app.store(),
-        &authed.who,
-        app.now(),
-        id,
-        limits.monthly_cap_cents,
-        limits.default_budget_cents,
-    )
-    .await?;
-    Ok(StatusCode::NO_CONTENT)
-}
-
-#[utoipa::path(
-    put, path = "/experiments/{id}/budget", security(("bearer" = [])),
-    params(("id" = ExperimentId, Path, description = "The experiment")),
-    request_body = ExperimentBudget,
-    responses(
-        (status = 204, description = "Set; editors and owners of its project"),
-        (status = 409, description = "The budget would pass the project's cap", body = ApiError),
-    )
-)]
-async fn set_experiment_budget<D: Deps + 'static>(
-    State(app): Shared<D>,
-    authed: Authed,
-    Path(id): Path<ExperimentId>,
-    Json(set): Json<ExperimentBudget>,
-) -> Result<StatusCode, Fail> {
-    budget::set_experiment_budget(
-        app.store(),
-        &authed.who,
-        app.now(),
-        id,
-        set.budget_cap_cents,
-    )
-    .await?;
     Ok(StatusCode::NO_CONTENT)
 }
 
@@ -378,14 +237,14 @@ async fn set_policy<D: Deps + 'static>(
 }
 
 #[utoipa::path(
-    get, path = "/experiments/{id}/approvals", security(("bearer" = [])),
-    params(("id" = ExperimentId, Path, description = "The experiment")),
+    get, path = "/sessions/{id}/approvals", security(("bearer" = [])),
+    params(("id" = SessionId, Path, description = "The session")),
     responses((status = 200, description = "Its cards, oldest first", body = Vec<Approval>))
 )]
 async fn approvals<D: Deps + 'static>(
     State(app): Shared<D>,
     authed: Authed,
-    Path(id): Path<ExperimentId>,
+    Path(id): Path<SessionId>,
 ) -> Reply<Vec<Approval>> {
     Ok(Json(
         approval::approvals(app.store(), &authed.who, id).await?,
@@ -393,37 +252,8 @@ async fn approvals<D: Deps + 'static>(
 }
 
 #[utoipa::path(
-    get, path = "/experiments/{id}/spend", security(("bearer" = [])),
-    params(("id" = ExperimentId, Path, description = "The experiment")),
-    responses(
-        (status = 200, description = "Its spend since it began, against its budget", body = ExperimentSpend),
-        (status = 404, body = ApiError),
-    )
-)]
-async fn experiment_spend<D: Deps + 'static>(
-    State(app): Shared<D>,
-    authed: Authed,
-    Path(id): Path<ExperimentId>,
-) -> Reply<ExperimentSpend> {
-    Ok(Json(
-        budget::experiment_spend(app.store(), &authed.who, id).await?,
-    ))
-}
-
-#[utoipa::path(
-    get, path = "/spend", security(("bearer" = [])),
-    responses((status = 200, description = "The spend of every experiment, since it began", body = Vec<ExperimentSpend>))
-)]
-async fn all_spend<D: Deps + 'static>(
-    State(app): Shared<D>,
-    authed: Authed,
-) -> Reply<Vec<ExperimentSpend>> {
-    Ok(Json(budget::all_spend(app.store(), &authed.who).await?))
-}
-
-#[utoipa::path(
     get, path = "/approvals/pending", security(("bearer" = [])),
-    responses((status = 200, description = "Every card across experiments that the caller may decide, oldest first", body = Vec<Approval>))
+    responses((status = 200, description = "Every pending card in the organization if the caller may decide (an editor or an owner), oldest first", body = Vec<Approval>))
 )]
 async fn pending<D: Deps + 'static>(State(app): Shared<D>, authed: Authed) -> Reply<Vec<Approval>> {
     Ok(Json(approval::pending(app.store(), &authed.who).await?))
@@ -435,7 +265,7 @@ async fn pending<D: Deps + 'static>(State(app): Shared<D>, authed: Authed) -> Re
     request_body = Decide,
     responses(
         (status = 200, description = "Decided", body = Approval),
-        (status = 403, description = "Editors and owners of its project decide; a changed value model needs a project owner", body = ApiError),
+        (status = 403, description = "Editors and owners decide", body = ApiError),
         (status = 409, description = "It was already decided", body = ApiError),
     )
 )]
@@ -447,13 +277,15 @@ async fn decide<D: Deps + 'static>(
 ) -> Reply<Approval> {
     let decided =
         approval::decide(app.store(), &authed.who, app.now(), id, decide.decision).await?;
-    if let Some(session) = decided.session_id {
-        // The decision stands even when applying it fails now. Settling also tells the agent.
-        if let Err(error) =
-            antilog_core::session::settle(&*app.deps, decided.organization_id, session).await
-        {
-            tracing::warn!(%error, "applying a decided card failed");
-        }
+    // The decision stands even when applying it fails now. Settling also tells the agent.
+    if let Err(error) = antilog_core::session::settle(
+        &*app.deps,
+        decided.organization_id,
+        decided.session_id,
+    )
+    .await
+    {
+        tracing::warn!(%error, "applying a decided card failed");
     }
     Ok(Json(decided))
 }
@@ -504,17 +336,10 @@ pub fn routes<D: Deps + 'static>() -> Router<Arc<App<D>>> {
         .route("/budgets", get(budgets::<D>))
         .route("/members", get(members::<D>).post(add_member::<D>))
         .route("/members/{id}/role", put(set_member_role::<D>))
-        .route("/projects", get(projects::<D>).post(create_project::<D>))
-        .route("/projects/{id}/roles", get(project_roles::<D>))
-        .route("/projects/{id}/roles/{member}", put(set_project_role::<D>))
-        .route("/projects/{id}/limits", put(set_project_limits::<D>))
-        .route("/experiments/{id}/budget", put(set_experiment_budget::<D>))
-        .route("/experiments/{id}/approvals", get(approvals::<D>))
+        .route("/sessions/{id}/approvals", get(approvals::<D>))
         .route("/tokens", get(tokens::<D>).post(create_token::<D>))
         .route("/tokens/{id}", delete(revoke_token::<D>))
         .route("/policies", get(policies::<D>).put(set_policy::<D>))
-        .route("/spend", get(all_spend::<D>))
-        .route("/experiments/{id}/spend", get(experiment_spend::<D>))
         .route("/approvals/pending", get(pending::<D>))
         .route("/approvals/{id}/decision", post(decide::<D>))
         .route("/audit", get(audit::<D>))

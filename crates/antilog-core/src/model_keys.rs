@@ -32,7 +32,6 @@ pub async fn set<S: Store>(
         store,
         who,
         Action::ModelKeySet,
-        None,
         provider.as_str(),
         now,
     )
@@ -69,7 +68,6 @@ pub async fn remove<S: Store>(
         store,
         who,
         Action::ModelKeyRemove,
-        None,
         provider.as_str(),
         now,
     )

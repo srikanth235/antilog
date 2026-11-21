@@ -1,6 +1,7 @@
 use antilog_types::{
-    Approval, ApprovalId, ApprovalStatus, AuditEntry, AuditId, CardKind, Decision, ExperimentId,
+    Approval, ApprovalId, ApprovalStatus, AuditEntry, AuditId, CardKind, Decision,
     MemberId, OrganizationId, Policy, PolicyMode,
+    SessionId,
 };
 
 use super::{FakeStore, ledger::not_found, locked};
@@ -50,12 +51,9 @@ impl ApprovalStore for FakeStore {
         audit: &AuditEntry,
     ) -> Result<(), StoreError> {
         let mut ledger = locked(&self.ledger);
-        not_found(ledger.experiment(approval.organization_id, approval.experiment_id))?;
-        if let Some(session) = approval.session_id {
-            not_found(ledger.session(approval.organization_id, session))?;
-        }
+        not_found(ledger.session(approval.organization_id, approval.session_id))?;
         let by_policy = approval.status == ApprovalStatus::ApprovedByPolicy;
-        if by_policy && (approval.card == CardKind::AddCredential || approval.needs_owner) {
+        if by_policy && approval.card == CardKind::AddCredential {
             return Err(Invariant::AlwaysAsk.into());
         }
         if !(by_policy || approval.status == ApprovalStatus::Pending)
@@ -117,12 +115,12 @@ impl ApprovalStore for FakeStore {
     async fn approvals(
         &self,
         organization: OrganizationId,
-        experiment: ExperimentId,
+        session: SessionId,
     ) -> Result<Vec<Approval>, StoreError> {
         Ok(locked(&self.ledger)
             .approvals
             .iter()
-            .filter(|row| row.organization_id == organization && row.experiment_id == experiment)
+            .filter(|row| row.organization_id == organization && row.session_id == session)
             .cloned()
             .collect())
     }

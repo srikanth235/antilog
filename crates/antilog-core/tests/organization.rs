@@ -165,7 +165,6 @@ async fn a_project_role_overrides_the_organization_role_in_that_project_only() {
                 store,
                 &who,
                 Action::ApprovalDecide,
-                Some(project.id),
                 "x",
                 T0,
             )
@@ -246,7 +245,7 @@ async fn policy_pre_approves_but_never_skips_the_audit_row() {
         ApprovalStatus::Pending,
         "nothing is set: always ask"
     );
-    org::permit(&world.store, &world.owner, Action::PolicySet, None, "x", T0)
+    org::permit(&world.store, &world.owner, Action::PolicySet, "x", T0)
         .await
         .unwrap();
     approval::set_policy(

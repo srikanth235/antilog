@@ -1,5 +1,5 @@
 //! What a session's MCP endpoint serves: the Antilog tools and the tools of every connector
-//! switched on for the experiment. Each connector tool is on, off or ask first. Credentials are
+//! of the organization. Each connector tool is on, off or ask first. Credentials are
 //! opened here, on the server, for the one call, and go nowhere else.
 
 use antilog_types::{
@@ -73,18 +73,11 @@ fn text_of(result: &Value) -> (String, bool) {
 
 impl<D: Deps, C: ConnectorClient> Reach<'_, D, C> {
     async fn switched_on(&self, scope: &SessionScope) -> Vec<Connector> {
-        let store = self.deps.store();
-        let ids = store
-            .experiment_connectors(scope.organization, scope.experiment)
+        self.deps
+            .store()
+            .connectors(scope.organization)
             .await
-            .unwrap_or_default();
-        let mut found = Vec::new();
-        for id in ids {
-            if let Ok(Some(connector)) = store.connector(scope.organization, id).await {
-                found.push(connector);
-            }
-        }
-        found
+            .unwrap_or_default()
     }
 
     /// The Antilog tools, then the connectors' tools that are not off, namespaced.
@@ -117,7 +110,7 @@ impl<D: Deps, C: ConnectorClient> Reach<'_, D, C> {
     ) -> AuditEntry {
         AuditEntry::new(
             scope.organization,
-            caller.actor,
+            Some(caller.actor),
             "connector.use",
             target,
             outcome,
@@ -146,11 +139,6 @@ impl<D: Deps, C: ConnectorClient> Reach<'_, D, C> {
             }
             None => Outcome::Antilog(Toolbox(self.deps).call(caller, name, input).await),
         }
-    }
-
-    /// `finish` of an accepted measurement, for the endpoint to await.
-    pub async fn finish(&self, caller: &Caller, ticket: &crate::tools::Ticket) -> String {
-        Toolbox(self.deps).finish(caller, ticket).await
     }
 
     async fn connector_call(
@@ -201,10 +189,7 @@ impl<D: Deps, C: ConnectorClient> Reach<'_, D, C> {
                     Ok(true) => {}
                     Ok(false) => {
                         return match self.raise(caller, connector, tool, wanted).await {
-                            Ok(answer) => Outcome::Antilog(ToolReply {
-                                answer,
-                                ticket: None,
-                            }),
+                            Ok(answer) => Outcome::Antilog(ToolReply { answer }),
                             Err(error) => refused(error),
                         };
                     }
@@ -272,11 +257,11 @@ impl<D: Deps, C: ConnectorClient> Reach<'_, D, C> {
     ) -> Result<bool, String> {
         let store = self.deps.store();
         let cards = store
-            .approvals(scope.organization, scope.experiment)
+            .approvals(scope.organization, caller.session)
             .await
             .map_err(|_| "the approvals are unavailable: retry in a minute".to_owned())?;
         for card in cards {
-            let matches = card.session_id == Some(caller.session)
+            let matches = card.session_id == caller.session
                 && matches!(
                     &card.payload,
                     Some(CardPayload::UseConnectorTool { connector: c, tool: t, input_digest })
@@ -312,12 +297,12 @@ impl<D: Deps, C: ConnectorClient> Reach<'_, D, C> {
         let existing = self
             .deps
             .store()
-            .approvals(caller.organization, caller.experiment)
+            .approvals(caller.organization, caller.session)
             .await
             .unwrap_or_default();
         if let Some(card) = existing.iter().find(|card| {
             card.status == ApprovalStatus::Pending
-                && card.session_id == Some(caller.session)
+                && card.session_id == caller.session
                 && matches!(
                     &card.payload,
                     Some(CardPayload::UseConnectorTool { connector: c, tool: t, input_digest })
@@ -343,7 +328,6 @@ impl<D: Deps, C: ConnectorClient> Reach<'_, D, C> {
                     input_digest: wanted,
                 },
                 cost_cents: None,
-                needs_owner: false,
             },
         )
         .await
