@@ -21,6 +21,7 @@ export type IconName =
   | "kbd"
   | "key"
   | "list"
+  | "max"
   | "lock"
   | "mic"
   | "moon"

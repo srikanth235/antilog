@@ -740,6 +740,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sessions/{id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["resume"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sessions/{id}/spend": {
         parameters: {
             query?: never;
@@ -766,6 +782,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["stop"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/{id}/terminals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["open"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1386,6 +1418,13 @@ export interface components {
             memberId?: components["schemas"]["MemberId"] | null;
             name: string;
         };
+        /** @description A person opens a terminal tab in a session's machine, at the size of the panel. */
+        OpenTerminal: {
+            /** Format: int32 */
+            cols: number;
+            /** Format: int32 */
+            rows: number;
+        };
         Organization: {
             /**
              * Format: int64
@@ -1682,6 +1721,20 @@ export interface components {
             repos?: string[];
             /** @description Left out, the first line of the prompt. */
             title?: string | null;
+        };
+        /**
+         * @description A terminal that was asked for. The browser opens a WebSocket to
+         *     `/terminals/{terminal}/connect?token=` with it within a minute; it works once.
+         */
+        TerminalTicket: {
+            /**
+             * Format: int64
+             * @description Epoch milliseconds.
+             */
+            expiresAt: number;
+            /** Format: uuid */
+            terminal: string;
+            token: string;
         };
         /** Format: uuid */
         TokenId: string;
@@ -3404,6 +3457,38 @@ export interface operations {
             };
         };
     };
+    resume: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The session */
+                id: components["schemas"]["SessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A machine that was let go waits for a runner again (Queued); a held machine is unchanged */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Session"];
+                };
+            };
+            /** @description The session has ended */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
     spend: {
         parameters: {
             query?: never;
@@ -3456,6 +3541,51 @@ export interface operations {
                     "application/json": components["schemas"]["Session"];
                 };
             };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    open: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The session */
+                id: components["schemas"]["SessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OpenTerminal"];
+            };
+        };
+        responses: {
+            /** @description Asked of the machine; editors and owners. Open the WebSocket at /terminals/{terminal}/connect?token= within a minute */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TerminalTicket"];
+                };
+            };
+            /** @description A viewer */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description The machine is not running (code not_running), or the session has ended */
             409: {
                 headers: {
                     [name: string]: unknown;

@@ -3,6 +3,21 @@
 @import "../../design/mockups/logos.css";
 @import "../../design/mockups/components.css";
 
+/* A panel kept mounted while another one is on screen. */
+.pane[hidden],
+.term-tab[hidden] {
+  display: none;
+}
+.term-tab {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.term-tab > .term[hidden] {
+  display: none;
+}
+
 /* The boards are 1440 by 900 boxes; the app fills the window. */
 html,
 body,
