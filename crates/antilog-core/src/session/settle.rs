@@ -36,6 +36,7 @@ pub async fn settle<D: Deps>(
     }
     // Each outcome is the conversation's note from Antilog and a message to the agent, which wakes
     // it: a released machine is requeued first. Applying is guarded above, so it happens once.
+    let mut status = SessionStatus::Working;
     for (id, text) in &told {
         record(
             deps,
@@ -46,7 +47,7 @@ pub async fn settle<D: Deps>(
             text,
         )
         .await?;
-        deps.store().wake_machine(session, now_ms(deps)).await?;
+        status = super::wake(deps, session, now_ms(deps)).await?;
         tell(
             deps,
             organization,
@@ -57,7 +58,7 @@ pub async fn settle<D: Deps>(
     }
     if !told.is_empty() && row.status == SessionStatus::WaitingForYou {
         let change = SessionChange {
-            status: Some(SessionStatus::Working),
+            status: Some(status),
             ..SessionChange::default()
         };
         deps.store()

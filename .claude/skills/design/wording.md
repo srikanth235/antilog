@@ -39,7 +39,7 @@ Add each new term to the glossary in the same change that introduces it. Prefer 
 | Where | Words |
 | --- | --- |
 | Sidebar | "New session", "Search" (hint ⌘K), "Projects", "Customize", "Pinned"; sessions are titled by their prompt |
-| Statuses | Working, Waiting for you, Done, Failed |
+| Statuses | Queued, Working, Waiting for you, Done, Stopped, Failed |
 | Header | breadcrumb "Project / Session title", "More", "Share" |
 | An agent's message | the Antilog mark and "Antilog", then the agent as a quiet label: "Antilog · Claude Code" |
 | Stopped session | Done, with "Stopped by NAME" |

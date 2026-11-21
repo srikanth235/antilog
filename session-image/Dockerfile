@@ -12,16 +12,26 @@ ARG OPENCODE_VERSION=1.19.6
 
 # `docker.io` is the client and the daemon. The runner starts the daemon in the container only
 # when the host runs it under sysbox, so the agent has Docker without `--privileged`.
+# python3, pip and venv are what most repos' tooling expects of a machine.
+# The apt sources are switched to https after ca-certificates is in, so `apt` works in a running
+# session too: the proxy that is its only way out tunnels HTTPS and nothing else.
 # Behind a TLS-inspecting proxy, pass its CA as a build secret (`--secret id=ca,src=ca.crt`):
 # npm trusts it for this step only and it never lands in the image.
 RUN --mount=type=secret,id=ca,required=false \
     apt-get update \
- && apt-get install -y --no-install-recommends ca-certificates git docker.io iptables procps \
+ && apt-get install -y --no-install-recommends ca-certificates \
+ && for list in /etc/apt/sources.list /etc/apt/sources.list.d/*; do \
+        [ -f "$list" ] && sed -i 's|http://|https://|g' "$list"; \
+    done; \
+    apt-get update \
+ && apt-get install -y --no-install-recommends git docker.io iptables procps python3 python3-pip python3-venv \
  && rm -rf /var/lib/apt/lists/* \
  && if [ -s /run/secrets/ca ]; then export NODE_EXTRA_CA_CERTS=/run/secrets/ca; fi \
  && npm install --global "opencode-ai@${OPENCODE_VERSION}" \
  && npm cache clean --force \
- && opencode --version
+ && opencode --version \
+ && python3 --version \
+ && python3 -m pip --version
 
 # Where the runner puts things: the clones, OpenCode's managed config (a repo's own config cannot
 # override it) and the skill packs.

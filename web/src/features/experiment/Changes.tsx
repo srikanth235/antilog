@@ -10,6 +10,7 @@ import {
   unmodifiedBefore,
   withheld,
 } from "../../lib/diff";
+import { headLabel } from "../../lib/domain";
 import { ago } from "../../lib/format";
 import { w } from "../../words";
 import { PanelFrame } from "./Panels";
@@ -91,7 +92,6 @@ function FileSection(props: { file: FileChange; open: boolean; onToggle: () => v
 
 function BranchLine(props: { repo: RepoChanges; repos: string[]; onRepo: (name: string) => void }) {
   const { repo } = props;
-  const sameBranch = repo.baseBranch === repo.headBranch || repo.headBranch === "HEAD";
   return (
     <div className="chg-h">
       {props.repos.length > 1 ? (
@@ -114,16 +114,10 @@ function BranchLine(props: { repo: RepoChanges; repos: string[]; onRepo: (name: 
         </span>
       )}
       <b>{repo.baseBranch}</b>
-      {sameBranch ? (
-        <span className="arr">{t.workingTree}</span>
-      ) : (
-        <>
-          <span className="arr" aria-hidden="true">
-            →
-          </span>
-          <b>{repo.headBranch}</b>
-        </>
-      )}
+      <span className="arr" aria-hidden="true">
+        →
+      </span>
+      <b>{headLabel(repo)}</b>
     </div>
   );
 }

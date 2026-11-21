@@ -142,7 +142,7 @@ async fn from_sign_in_to_a_stopped_session() {
     assert_eq!(status, StatusCode::CREATED, "{session}");
     let sid = session["id"].as_str().unwrap().to_owned();
     assert_eq!(session["title"], "cut p95 on the checkout path");
-    assert_eq!(session["status"], "working");
+    assert_eq!(session["status"], "queued", "no runner holds it yet");
     assert_eq!(session["repos"], json!(["acme/app"]));
     assert_eq!(session["budgetCapCents"], 500);
     assert_eq!(session["model"], "opencode/big-pickle");
@@ -179,7 +179,7 @@ async fn from_sign_in_to_a_stopped_session() {
 
     let (status, stopped) = post(format!("/sessions/{sid}/stop"), json!({})).await;
     assert_eq!(status, StatusCode::OK, "{stopped}");
-    assert_eq!(stopped["status"], "done");
+    assert_eq!(stopped["status"], "stopped");
     let (status, _) = post(
         format!("/sessions/{sid}/messages"),
         json!({"text": "again"}),

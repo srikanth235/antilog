@@ -459,7 +459,11 @@ async fn a_session_runs_from_the_queue_through_opencode_and_back() {
     assert_eq!(config["autoupdate"], false);
     assert_eq!(
         config["permission"],
-        json!({"bash": "allow", "edit": "allow"})
+        json!({
+            "bash": "allow",
+            "edit": "allow",
+            "external_directory": {"/work/**": "allow", "/tmp/**": "allow"},
+        })
     );
     assert_eq!(
         config["provider"]["anthropic"]["options"]["baseURL"],
@@ -808,6 +812,30 @@ async fn a_session_that_cannot_start_is_released_as_failed() {
             .status,
         SessionStatus::Failed
     );
+    let row = world
+        .deps
+        .store
+        .session(org, session.id)
+        .await
+        .unwrap()
+        .unwrap();
+    let note = row.note.unwrap();
+    assert!(note.starts_with("git clone failed"), "{note}");
+    let events = session::transcript(&world.deps.store, org, session.id, None, None)
+        .await
+        .unwrap()
+        .events;
+    let error = events
+        .iter()
+        .find(|event| event.kind == antilog_types::EventKind::Error)
+        .expect("the reason is in the transcript");
+    assert!(
+        error
+            .text
+            .starts_with("The session failed: git clone failed"),
+        "{}",
+        error.text
+    );
 }
 
 /// A second organization's queued session, for a runner that has let its lock go to take.
@@ -1047,6 +1075,21 @@ fn setup_spec(script: &str) -> antilog_types::SessionSpec {
         runner_token: "tok".into(),
         resume: false,
     }
+}
+
+#[test]
+fn a_reason_a_session_did_not_start_is_short_and_has_no_credentials() {
+    let spec = setup_spec("");
+    let long = "x".repeat(2000);
+    let error = anyhow::anyhow!(
+        "git clone failed (128): fatal: unable to access 'https://x-access-token:ghs_secret@host/acme/api/': {long}\nsecond line"
+    );
+    let text = super::session::reason(&error, &spec);
+    assert!(text.starts_with("git clone failed (128): fatal: unable to access"));
+    assert!(!text.contains("ghs_secret"), "{text}");
+    assert!(text.contains("x-access-token:***@host"), "{text}");
+    assert!(text.chars().count() <= 401, "{}", text.chars().count());
+    assert!(text.ends_with('…'));
 }
 
 #[tokio::test]
@@ -1418,6 +1461,168 @@ async fn a_setup_script_that_times_out_does_not_fail_the_session_either() {
         "{note}"
     );
     assert!(note.contains("slow"), "{note}");
+}
+
+#[tokio::test]
+async fn a_runner_holds_as_many_sessions_as_it_has_room_for() {
+    let world = world_with(|config| config.sessions = 2, Arc::default()).await;
+    let org = world.seed.organization.id;
+    let status = async |session: &Session| {
+        world
+            .deps
+            .store
+            .session(org, session.id)
+            .await
+            .unwrap()
+            .unwrap()
+            .status
+    };
+    let first = start(&world, "one").await;
+    let second = start(&world, "two").await;
+    let third = start(&world, "three").await;
+    assert_eq!(status(&third).await, SessionStatus::Queued);
+    until("two claimed", async || {
+        (state(&world, &first).await != MachineState::Queued
+            && state(&world, &second).await != MachineState::Queued)
+            .then_some(())
+    })
+    .await;
+    assert_ne!(status(&first).await, SessionStatus::Queued);
+    assert_ne!(status(&second).await, SessionStatus::Queued);
+    // There is no room for a third until one lets go; until then it reads Queued, not Working.
+    tokio::time::sleep(Duration::from_millis(400)).await;
+    assert_eq!(state(&world, &third).await, MachineState::Queued);
+    assert_eq!(status(&third).await, SessionStatus::Queued);
+
+    let stopped = session::stop(
+        &*world.deps,
+        org,
+        first.id,
+        Some(world.seed.owner.id),
+        "Ada",
+    )
+    .await
+    .unwrap();
+    assert_eq!(stopped.status, SessionStatus::Stopped);
+    until("the third claimed", async || {
+        (state(&world, &third).await != MachineState::Queued).then_some(())
+    })
+    .await;
+    assert_ne!(status(&third).await, SessionStatus::Queued);
+}
+
+#[tokio::test]
+async fn an_idle_session_lets_its_machine_go_and_a_message_brings_it_back() {
+    let world = world_with(
+        |config| config.idle_timeout = Duration::from_secs(1),
+        Arc::default(),
+    )
+    .await;
+    let org = world.seed.organization.id;
+    let session = start(&world, "go").await;
+    until("the first prompt", async || {
+        (!locked(&world.shared).prompts.is_empty()).then_some(())
+    })
+    .await;
+    until("a stream", async || {
+        (locked(&world.shared).streams_opened > 0).then_some(())
+    })
+    .await;
+    emit(
+        &world.shared,
+        json!({"type": "session.status", "properties": {"sessionID": "ses_fake", "status": {"type": "idle"}}}),
+    )
+    .await;
+    until("released", async || {
+        (state(&world, &session).await == MachineState::Released).then_some(())
+    })
+    .await;
+    assert!(world.deps.store.export(session.id).await.unwrap().is_some());
+    let row = world
+        .deps
+        .store
+        .session(org, session.id)
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(row.status, SessionStatus::WaitingForYou);
+
+    let woken = session::message(
+        &*world.deps,
+        org,
+        session.id,
+        Some(world.seed.owner.id),
+        "keep going",
+    )
+    .await
+    .unwrap();
+    assert_eq!(woken.status, SessionStatus::Queued);
+    until("the second prompt", async || {
+        (locked(&world.shared).prompts.len() == 2).then_some(())
+    })
+    .await;
+    assert_eq!(locked(&world.shared).imported.len(), 1);
+}
+
+#[tokio::test]
+async fn a_busy_session_keeps_its_machine() {
+    let world = world_with(
+        |config| config.idle_timeout = Duration::from_secs(1),
+        Arc::default(),
+    )
+    .await;
+    locked(&world.shared).status = Some("busy");
+    let session = start(&world, "go").await;
+    until("the first prompt", async || {
+        (!locked(&world.shared).prompts.is_empty()).then_some(())
+    })
+    .await;
+    tokio::time::sleep(Duration::from_secs(3)).await;
+    assert_ne!(state(&world, &session).await, MachineState::Released);
+}
+
+#[tokio::test]
+async fn a_refused_model_call_is_an_error_in_the_transcript_and_the_session_waits() {
+    let world = world().await;
+    let org = world.seed.organization.id;
+    let session = start(&world, "go").await;
+    until("a stream", async || {
+        (locked(&world.shared).streams_opened > 0).then_some(())
+    })
+    .await;
+    emit(
+        &world.shared,
+        json!({"type": "message.updated", "properties": {"sessionID": "ses_fake", "info": {
+            "id": "msg_err", "role": "assistant",
+            "error": {"name": "APIError", "data": {"message": "Insufficient balance", "statusCode": 402}}}}}),
+    )
+    .await;
+    emit(
+        &world.shared,
+        json!({"type": "session.status", "properties": {"sessionID": "ses_fake", "status": {"type": "idle"}}}),
+    )
+    .await;
+    let error = until("the error", async || {
+        session::transcript(&world.deps.store, org, session.id, None, None)
+            .await
+            .unwrap()
+            .events
+            .into_iter()
+            .find(|event| event.kind == antilog_types::EventKind::Error)
+    })
+    .await;
+    assert_eq!(error.text, "Insufficient balance");
+    until("waiting", async || {
+        let row = world
+            .deps
+            .store
+            .session(org, session.id)
+            .await
+            .unwrap()
+            .unwrap();
+        (row.status == SessionStatus::WaitingForYou).then_some(())
+    })
+    .await;
 }
 
 // ---- the real OpenCode, by hand ---------------------------------------------------------------

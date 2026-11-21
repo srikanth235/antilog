@@ -971,7 +971,7 @@ async fn sessions<S: Store>(store: &S) {
     let stop = world.log("session.stop");
     let done = update(
         SessionChange {
-            status: Some(SessionStatus::Done),
+            status: Some(SessionStatus::Stopped),
             note: Some("Stopped by Ada".into()),
         },
         T0 + 7,
@@ -982,6 +982,7 @@ async fn sessions<S: Store>(store: &S) {
     assert_eq!(done.note.as_deref(), Some("Stopped by Ada"));
     assert!(logged(store, org, stop.id).await);
     for status in [
+        SessionStatus::Queued,
         SessionStatus::Working,
         SessionStatus::Failed,
         SessionStatus::WaitingForYou,
@@ -1040,6 +1041,13 @@ async fn sessions<S: Store>(store: &S) {
             ..say("tool:c1", EventKind::Tool, None, "measure", T0 + 3)
         },
         say("agent:0", EventKind::Agent, None, "On it. (again)", T0 + 4),
+        say(
+            "error:1",
+            EventKind::Error,
+            None,
+            "Insufficient balance",
+            T0 + 5,
+        ),
     ] {
         store.append_event(&event).await.expect("appended");
     }
@@ -1055,6 +1063,7 @@ async fn sessions<S: Store>(store: &S) {
             (EventKind::Person, "make it faster"),
             (EventKind::Agent, "On it."),
             (EventKind::Tool, "measure"),
+            (EventKind::Error, "Insufficient balance"),
         ],
         "a key lands once, and the first word stays"
     );
@@ -1062,7 +1071,7 @@ async fn sessions<S: Store>(store: &S) {
         all.iter()
             .map(|event| event.tool.is_some())
             .collect::<Vec<_>>(),
-        vec![false, false, true],
+        vec![false, false, true, false],
         "only a tool call carries its record"
     );
     assert_eq!(

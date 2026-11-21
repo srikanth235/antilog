@@ -8,16 +8,18 @@ use crate::{EnvironmentSpec, MemberId, NetworkLevel, OrganizationId, ProjectId, 
 
 text_enum!(
     SessionStatus {
+        Queued => "queued",
         Working => "working",
         WaitingForYou => "waiting_for_you",
         Done => "done",
+        Stopped => "stopped",
         Failed => "failed",
     }
 );
 
 impl SessionStatus {
     pub const fn is_active(self) -> bool {
-        matches!(self, Self::Working | Self::WaitingForYou)
+        matches!(self, Self::Queued | Self::Working | Self::WaitingForYou)
     }
 }
 
@@ -45,7 +47,7 @@ pub struct Session {
     /// The composer's Mode: false asks a person for every card, true lets policy approve.
     pub follow_policy: bool,
     pub status: SessionStatus,
-    /// Why it ended, such as "Stopped by Ada".
+    /// Why it ended, such as "Stopped by Ada", or what went wrong when it failed.
     pub note: Option<String>,
     pub created_at: i64,
     pub updated_at: i64,
@@ -85,7 +87,7 @@ impl Session {
             environment_version: params.environment_version,
             budget_cap_cents: params.budget_cap_cents,
             follow_policy: params.follow_policy,
-            status: SessionStatus::Working,
+            status: SessionStatus::Queued,
             note: None,
             created_at,
             updated_at: created_at,
@@ -94,8 +96,9 @@ impl Session {
 }
 
 text_enum!(
-    /// Who spoke: a person, an agent, or the name of a tool an agent called.
-    EventKind { Person => "person", Agent => "agent", Tool => "tool" }
+    /// Who spoke: a person, an agent, the name of a tool an agent called, or an error the model's
+    /// provider or the machine reported.
+    EventKind { Person => "person", Agent => "agent", Tool => "tool", Error => "error" }
 );
 
 text_enum!(

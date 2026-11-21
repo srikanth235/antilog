@@ -41,11 +41,11 @@ async fn lead(deps: &FakeDeps, seed: &Seed) -> Agent {
 }
 
 #[tokio::test]
-async fn a_started_session_is_working_and_spend_is_booked_once() {
+async fn a_started_session_is_queued_and_spend_is_booked_once() {
     let (deps, seed) = world().await;
     let session = lead(&deps, &seed).await.session;
     let org = seed.organization.id;
-    assert_eq!(session.status, SessionStatus::Working);
+    assert_eq!(session.status, SessionStatus::Queued);
     for (seed_name, cents, tokens) in [("a", 120, 5_000), ("b", 30, 1_000), ("a", 120, 5_000)] {
         antilog_core::spend::record_usage(
             &deps.store,
@@ -77,11 +77,15 @@ async fn a_message_resumes_and_stop_is_final() {
     let resumed = session::message(&deps, org, session.id, None, "try caching")
         .await
         .unwrap();
-    assert_eq!(resumed.status, SessionStatus::Working);
+    assert_eq!(
+        resumed.status,
+        SessionStatus::Queued,
+        "no runner holds it yet"
+    );
     let stopped = session::stop(&deps, org, session.id, Some(seed.owner.id), "Grace")
         .await
         .unwrap();
-    assert_eq!(stopped.status, SessionStatus::Done);
+    assert_eq!(stopped.status, SessionStatus::Stopped);
     assert_eq!(stopped.note.as_deref(), Some("Stopped by Grace"));
     assert!(
         session::message(&deps, org, session.id, None, "again")

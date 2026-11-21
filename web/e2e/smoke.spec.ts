@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { createProject, signUp, unique } from "./helpers";
+import { createProject, seedSession, signUp, unique } from "./helpers";
 
 test("signed out, the app asks for sign-in and offers no password", async ({ page }) => {
   await page.goto("/projects");
@@ -90,14 +90,19 @@ test("an owner saves, replaces and removes a model key, and it is never shown ag
   await signUp(page);
   await page.goto("/settings/model-keys");
   await expect(page.getByRole("dialog", { name: "Settings" })).toBeVisible();
-  await expect(page.getByText("No key")).toHaveCount(2);
+  // Every provider the page lists starts without a key; the test counts them, so a new provider needs no edit here.
+  const add = page.getByRole("button", { name: /^Add key / });
+  await expect(add.first()).toBeVisible();
+  const providers = await add.count();
+  expect(providers).toBeGreaterThanOrEqual(3);
+  await expect(page.getByText("No key")).toHaveCount(providers);
 
   await page.getByRole("button", { name: "Add key Anthropic" }).click();
   await page.getByLabel("Anthropic key").fill("sk-ant-e2e-secret-value");
   await page.getByRole("button", { name: "Save key" }).click();
   await expect(page.getByText("Key saved")).toBeVisible();
   await expect(page.getByText("Key set")).toHaveCount(1);
-  await expect(page.getByText("No key")).toHaveCount(1);
+  await expect(page.getByText("No key")).toHaveCount(providers - 1);
   // Nothing on the page carries the key, and a reload still does not.
   await page.reload();
   await expect(page.getByText("Key set")).toHaveCount(1);
@@ -111,9 +116,45 @@ test("an owner saves, replaces and removes a model key, and it is never shown ag
   await page.getByRole("button", { name: "Remove Anthropic" }).click();
   await page.getByRole("button", { name: "Remove", exact: true }).last().click();
   await expect(page.getByText("Key removed")).toBeVisible();
-  await expect(page.getByText("No key")).toHaveCount(2);
+  await expect(page.getByText("No key")).toHaveCount(providers);
 
   await page.getByRole("link", { name: "Audit log" }).click();
   await expect(page.getByText("Model key set").first()).toBeVisible();
   await expect(page.getByText("Model key removed").first()).toBeVisible();
+});
+
+test("creating a project opens its page, and New project is a normal-sized button", async ({
+  page,
+}) => {
+  await signUp(page);
+  await page.goto("/projects");
+  const button = page.getByRole("button", { name: "New project" }).first();
+  const content = await page.locator(".page").boundingBox();
+  const box = await button.boundingBox();
+  expect(box && content && box.width < content.width / 2).toBe(true);
+  expect(box?.height).toBeLessThan(48);
+
+  const name = unique("Launch");
+  await createProject(page, name);
+  await expect(page).toHaveURL(/\/projects\/[0-9a-f-]+$/);
+  await expect(page.getByText("No sessions in this project yet.")).toBeVisible();
+});
+
+test("a session no runner holds reads Queued, and one a person stopped reads Stopped", async ({
+  page,
+}) => {
+  await signUp(page);
+  const path = await seedSession(page, "Wait for a machine");
+  await page.goto(path);
+  await expect(page.getByRole("img", { name: "queued" }).first()).toBeVisible();
+  await expect(page.getByText("Queued").first()).toBeVisible();
+  await expect(page.getByRole("img", { name: "working" })).toHaveCount(0);
+
+  const id = path.split("/").pop();
+  const stopped = await page.request.post(`/api/sessions/${id}/stop`, { data: {} });
+  expect(stopped.ok()).toBe(true);
+  await page.reload();
+  await expect(page.getByRole("img", { name: "stopped" }).first()).toBeVisible();
+  await expect(page.getByText("Stopped").first()).toBeVisible();
+  await expect(page.getByRole("img", { name: "done" })).toHaveCount(0);
 });

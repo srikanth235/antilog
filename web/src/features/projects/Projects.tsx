@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useBudgets, useMember, useProjects, useSessions } from "../../api/queries";
 import { Icon } from "../../components/icon/Icon";
@@ -15,6 +15,7 @@ export function Projects() {
   const budgets = useBudgets();
   const me = useMember();
   const [creating, setCreating] = useState(false);
+  const navigate = useNavigate();
   const p = w.projects;
   const cols = "minmax(0, 1.6fr) 140px 160px";
   const spent = new Map((budgets.data?.projects ?? []).map((x) => [x.projectId, x.spentCents]));
@@ -58,7 +59,13 @@ export function Projects() {
           ))}
         </Table>
       )}
-      <NewProject open={creating} onClose={() => setCreating(false)} />
+      <NewProject
+        open={creating}
+        onClose={() => setCreating(false)}
+        onCreated={(projectId) =>
+          void navigate({ to: "/projects/$projectId", params: { projectId } })
+        }
+      />
     </section>
   );
 }

@@ -7,8 +7,8 @@ use crate::store::{
     NewEvent, OrganizationStore, RunnerStore, SessionChange, SessionStore, StoreError,
 };
 use antilog_types::{
-    AuditEntry, AuditOutcome, Command, EventKind, MemberId, OrganizationId, ProjectId, Seed,
-    Session, SessionId, SessionParams, SessionStatus, ToolRecord,
+    AuditEntry, AuditOutcome, Command, EventKind, MachineState, MemberId, OrganizationId,
+    ProjectId, Seed, Session, SessionId, SessionParams, SessionStatus, ToolRecord,
 };
 
 pub use environment::move_to_environment;
@@ -286,6 +286,22 @@ pub(crate) async fn active<D: Deps>(
     }
 }
 
+/// Puts a released machine back in the queue and says what the session is until a runner holds
+/// it: Queued, or Working when its machine is still held.
+async fn wake<D: Deps>(deps: &D, id: SessionId, now: i64) -> Result<SessionStatus, SessionError> {
+    deps.store().wake_machine(id, now).await?;
+    let queued = deps
+        .store()
+        .machine(id)
+        .await?
+        .is_some_and(|machine| machine.state == MachineState::Queued);
+    Ok(if queued {
+        SessionStatus::Queued
+    } else {
+        SessionStatus::Working
+    })
+}
+
 /// A person talks to the session: their words join the conversation and it is Working again.
 pub async fn message<D: Deps>(
     deps: &D,
@@ -306,7 +322,7 @@ pub async fn message<D: Deps>(
     .await?;
     let now = now_ms(deps);
     // A machine that was let go waits for a runner again; the words reach it once one holds it.
-    deps.store().wake_machine(id, now).await?;
+    let resumed = wake(deps, id, now).await?;
     tell(
         deps,
         organization,
@@ -317,7 +333,7 @@ pub async fn message<D: Deps>(
     )
     .await?;
     let change = SessionChange {
-        status: Some(SessionStatus::Working),
+        status: Some(resumed),
         ..SessionChange::default()
     };
     Ok(deps
@@ -332,7 +348,7 @@ pub async fn message<D: Deps>(
         .await?)
 }
 
-/// A person stops the session: Done, "Stopped by NAME". What it spent until now is kept.
+/// A person stops the session: Stopped, "Stopped by NAME". What it spent until now is kept.
 pub async fn stop<D: Deps>(
     deps: &D,
     organization: OrganizationId,
@@ -351,7 +367,7 @@ pub async fn stop<D: Deps>(
     )
     .await?;
     let change = SessionChange {
-        status: Some(SessionStatus::Done),
+        status: Some(SessionStatus::Stopped),
         note: Some(format!("Stopped by {name}")),
     };
     Ok(deps

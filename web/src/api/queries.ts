@@ -215,7 +215,8 @@ export function useTranscript(session: string, status: Schemas["SessionStatus"] 
     },
     // The poll pauses in a hidden tab (the default), is off while the event stream delivers, and
     // ends once the session is Done or Failed.
-    refetchInterval: status === "done" || status === "failed" ? false : poll,
+    refetchInterval:
+      status === "done" || status === "stopped" || status === "failed" ? false : poll,
   });
 }
 
