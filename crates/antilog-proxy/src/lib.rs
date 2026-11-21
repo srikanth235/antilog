@@ -3,6 +3,7 @@
 //! session's short-lived token for the organization's model key and booking spend from each reply,
 //! and it is the session's outbound allowlist, a CONNECT tunnel that never decrypts what passes.
 
+pub mod context;
 pub mod egress;
 pub mod gateway;
 pub mod mcp;

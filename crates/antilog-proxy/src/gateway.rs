@@ -23,9 +23,9 @@ use serde_json::{Value, json};
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
 
-use crate::price;
 use crate::usage::{EventWatcher, Usage};
 use crate::{Backend, Proxy, Shared, Time, Tokens as TokenStore};
+use crate::{context, price};
 
 /// The largest request a session may send through: a long conversation with files in it.
 const MAX_REQUEST: usize = 64 << 20;
@@ -126,6 +126,8 @@ struct Call {
     provider: ModelProvider,
     session: SessionId,
     scope: GatewayScope,
+    /// What the request was made of, when it is one the agent's conversation makes.
+    measured: Option<context::Measured>,
 }
 
 async fn handle<S, C, K>(
@@ -192,10 +194,11 @@ where
             );
         }
     };
-    let call = Call {
+    let mut call = Call {
         provider,
         session,
         scope,
+        measured: None,
     };
 
     let now = proxy.clock.now().as_millisecond();
@@ -283,6 +286,12 @@ where
             );
         }
     };
+    if is_metered(&parts.method, &path)
+        && let Ok(value) = serde_json::from_slice::<Value>(&body)
+        && context::is_agent_call(&value)
+    {
+        call.measured = context::measure(&value);
+    }
     let body = ask_for_stream_usage(&path, &body).unwrap_or(body);
 
     let mut upstream = proxy.http.request(parts.method.clone(), &url);
@@ -426,6 +435,28 @@ where
     if !usage.seen {
         tracing::warn!(%session, provider, ?outcome, "the reply reported no usage, so nothing is booked");
         return;
+    }
+    // The call's whole input, new and cached, is what sat in the window.
+    if let Some(measured) = call.measured {
+        let window = usage
+            .tokens
+            .input
+            .saturating_add(usage.tokens.cache_read)
+            .saturating_add(usage.tokens.cache_write);
+        let parts = context::scale(measured, window);
+        if !parts.is_empty()
+            && let Err(error) = proxy
+                .store
+                .put_context_parts(
+                    call.scope.organization,
+                    session,
+                    &parts,
+                    proxy.clock.now().as_millisecond(),
+                )
+                .await
+        {
+            tracing::warn!(%session, %error, "the context breakdown could not be kept");
+        }
     }
     let opencode_prices = match call.provider {
         ModelProvider::OpencodeGo => &proxy.go,

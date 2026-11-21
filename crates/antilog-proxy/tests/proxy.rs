@@ -489,6 +489,63 @@ async fn an_anthropic_call_carries_the_organizations_key_and_books_its_usage() {
 }
 
 #[tokio::test]
+async fn a_call_with_tools_books_what_its_request_was_made_of_scaled_to_the_providers_input() {
+    use antilog_core::store::ContextStore;
+    use antilog_types::ContextPartKind;
+
+    let rig = Rig::start(Options::default()).await;
+    let context = async || {
+        rig.proxy
+            .store
+            .context(rig.seed.organization.id, rig.session)
+            .await
+            .unwrap()
+    };
+    // A title asked of a small model has no tools: it is not the agent's conversation.
+    let reply = rig
+        .anthropic(
+            &rig.token,
+            json!({"model":am(),"messages":[{"role":"user","content":"name this"}]}),
+        )
+        .await;
+    assert_eq!(reply.status(), StatusCode::OK);
+    assert!(context().await.parts.is_empty());
+
+    let reply = rig
+        .anthropic(
+            &rig.token,
+            json!({
+                "model": am(),
+                "system": "s".repeat(400),
+                "tools": [
+                    {"name": "bash", "description": "run", "input_schema": {"type": "object"}},
+                    {"name": "antilog_attach_repo", "description": "attach", "input_schema": {}},
+                ],
+                "messages": [{"role": "user", "content": "m".repeat(1600)}],
+            }),
+        )
+        .await;
+    assert_eq!(reply.status(), StatusCode::OK);
+    let parts = context().await.parts;
+    let kinds: Vec<_> = parts.iter().map(|p| p.kind).collect();
+    assert_eq!(
+        kinds,
+        [
+            ContextPartKind::System,
+            ContextPartKind::Tools,
+            ContextPartKind::AntilogTools,
+            ContextPartKind::Messages
+        ]
+    );
+    // The provider reported 1000 input tokens; the parts add up to them.
+    assert_eq!(parts.iter().map(|p| p.tokens).sum::<u64>(), 1000);
+    assert!(
+        parts[3].tokens > parts[0].tokens,
+        "messages outweigh the system prompt"
+    );
+}
+
+#[tokio::test]
 async fn an_anthropic_stream_is_relayed_whole_and_books_its_final_usage() {
     let rig = Rig::start(Options::default()).await;
     let reply = rig
