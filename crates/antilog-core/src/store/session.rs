@@ -1,8 +1,8 @@
 use std::future::Future;
 
 use antilog_types::{
-    Agent, AuditEntry, EventKind, MemberId, OrganizationId, Session, SessionEvent, SessionId,
-    SessionStatus,
+    Agent, AuditEntry, EventKind, MemberId, OrganizationId, ProjectId, Session, SessionEvent,
+    SessionId, SessionStatus,
 };
 
 use super::StoreError;
@@ -40,10 +40,12 @@ pub trait SessionStore {
         id: SessionId,
     ) -> impl Future<Output = Result<Option<Session>, StoreError>> + Send;
 
-    /// The organization's sessions, newest first; `creator` keeps only that member's.
+    /// The organization's sessions, newest first; `project` keeps one project's, `creator` only
+    /// that member's.
     fn sessions(
         &self,
         organization: OrganizationId,
+        project: Option<ProjectId>,
         creator: Option<MemberId>,
     ) -> impl Future<Output = Result<Vec<Session>, StoreError>> + Send;
 

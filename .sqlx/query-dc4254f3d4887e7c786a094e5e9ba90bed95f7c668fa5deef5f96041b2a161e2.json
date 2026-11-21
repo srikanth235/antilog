@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into project_roles (organization_id, project_id, member_id, role) values ($1, $2, $3, $4) on conflict (project_id, member_id) do update set role = excluded.role",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "dc4254f3d4887e7c786a094e5e9ba90bed95f7c668fa5deef5f96041b2a161e2"
+}

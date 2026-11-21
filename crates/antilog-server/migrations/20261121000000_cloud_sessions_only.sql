@@ -1,8 +1,8 @@
--- Owner: session. v0 is cloud sessions only (docs/V0.md, "v0 is cloud sessions only"). Experiments,
--- the judge's tables (seals, trials, receipts, value models, wins, pull requests, evaluation
--- templates) and projects are deleted, not hidden; the last commit that has them is `daa445f`.
--- A session sits directly in its organization with its creator, title, repos, environment,
--- model and its own optional budget. There is no data to keep: v0 has no customers, so the
+-- Owner: session. v0 is cloud sessions only (docs/V0.md, "v0 is cloud sessions only"). Experiments
+-- and the judge's tables (seals, trials, receipts, value models, wins, pull requests, evaluation
+-- templates) are deleted, not hidden; the last commit that has them is `daa445f`. Projects stay:
+-- a session belongs to one project, with its creator, title, repos, environment, model and its
+-- own optional budget. There is no data to keep: v0 has no customers, so the
 -- session area's rows are cleared. Existing migrations stay as they were.
 set local lock_timeout = '5s';
 
@@ -32,9 +32,7 @@ truncate table sessions cascade;
 alter table spend enable trigger spend_append_only;
 alter table session_events enable trigger session_events_append_only;
 
--- Guards that spoke of experiments and projects.
-drop trigger members_keep_owners on members;
-drop function members_role_changed();
+-- The experiment guards go; the project and organization guards now watch sessions.
 drop trigger experiments_guard on experiments;
 drop function experiments_guard();
 drop trigger projects_limits_guard on projects;
@@ -42,16 +40,12 @@ drop function projects_limits_guard();
 drop trigger organizations_limits_guard on organizations;
 drop function organizations_limits_guard();
 
--- Sessions move to the organization.
+-- Sessions move from their experiment to their project.
 drop table experiments cascade;
-drop table project_roles;
-drop table projects;
-drop function assert_project_owners(uuid);
-drop function project_roles_changed();
-drop function projects_have_owner();
 
 alter table sessions
     drop column experiment_id,
+    add column project_id uuid not null,
     add column title text not null check (length(title) between 1 and 200),
     add column created_by uuid not null,
     add column model text not null check (length(model) <= 200),
@@ -60,20 +54,25 @@ alter table sessions
     add column environment_version integer check (environment_version >= 1),
     add column budget_cap_cents bigint check (budget_cap_cents >= 0),
     add column follow_policy boolean not null default false,
+    add constraint sessions_project foreign key (organization_id, project_id)
+        references projects (organization_id, id),
     add constraint sessions_created_by foreign key (organization_id, created_by)
         references members (organization_id, id);
 create index sessions_organization on sessions (organization_id, created_at desc, id desc);
+create index sessions_project on sessions (organization_id, project_id, created_at desc, id desc);
 create index sessions_creator on sessions (organization_id, created_by, created_at desc, id desc);
 
--- A session's own budget sits inside the organization's monthly cap; a monthly cap cannot be
--- lowered under a session's budget.
+-- Caps nest: a session's budget <= its project's cap <= the organization's cap, and a cap cannot
+-- be lowered under what sits inside it.
 create function sessions_budget_guard() returns trigger language plpgsql
     security definer set search_path = public as $$
 declare ceiling bigint;
 begin
-    select monthly_cap_cents into ceiling from organizations where id = new.organization_id;
+    select least(p.monthly_cap_cents, o.monthly_cap_cents) into ceiling
+        from projects p join organizations o on o.id = p.organization_id
+        where p.id = new.project_id and p.organization_id = new.organization_id;
     if new.budget_cap_cents > ceiling then
-        raise exception 'the budget passes the organization cap' using errcode = 'AL002';
+        raise exception 'the budget passes a cap above it' using errcode = 'AL002';
     end if;
     return new;
 end $$;
@@ -81,12 +80,37 @@ end $$;
 create trigger sessions_budget_guard before insert or update of budget_cap_cents on sessions
     for each row execute function sessions_budget_guard();
 
+create function projects_limits_guard() returns trigger language plpgsql
+    security definer set search_path = public as $$
+declare ceiling bigint;
+begin
+    select monthly_cap_cents into ceiling from organizations where id = new.organization_id;
+    if new.monthly_cap_cents > ceiling then
+        raise exception 'the cap passes the organization cap' using errcode = 'AL002';
+    end if;
+    ceiling := least(new.monthly_cap_cents, ceiling);
+    if new.default_budget_cents > ceiling
+       or exists (select 1 from sessions s
+                  where s.project_id = new.id and s.budget_cap_cents > ceiling) then
+        raise exception 'a budget passes the cap' using errcode = 'AL002';
+    end if;
+    return new;
+end $$;
+
+create trigger projects_limits_guard
+    before insert or update of monthly_cap_cents, default_budget_cents on projects
+    for each row execute function projects_limits_guard();
+
 create function organizations_limits_guard() returns trigger language plpgsql
     security definer set search_path = public as $$
 begin
-    if exists (select 1 from sessions s
-               where s.organization_id = new.id and s.budget_cap_cents > new.monthly_cap_cents) then
-        raise exception 'the cap is below the budget of a session' using errcode = 'AL002';
+    if exists (select 1 from projects p
+               where p.organization_id = new.id
+                 and (p.monthly_cap_cents > new.monthly_cap_cents
+                      or p.default_budget_cents > new.monthly_cap_cents))
+       or exists (select 1 from sessions s
+                  where s.organization_id = new.id and s.budget_cap_cents > new.monthly_cap_cents) then
+        raise exception 'the cap is below a cap or budget inside it' using errcode = 'AL002';
     end if;
     return new;
 end $$;

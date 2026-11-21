@@ -4,7 +4,7 @@
 )]
 
 use antilog_types::{
-    AuditEntry, AuditOutcome, Identity, Member, Organization, Role, Session, SessionParams,
+    AuditEntry, AuditOutcome, Identity, Member, Organization, Project, Role, Session, SessionParams,
 };
 
 use crate::store::Store;
@@ -14,12 +14,14 @@ pub const T0: i64 = 1_800_000_000_000;
 pub struct Seed {
     pub organization: Organization,
     pub owner: Member,
+    pub project: Project,
 }
 
 /// A session of this seed's organization, started by its owner.
 pub fn session(seed: &Seed, agent: &str, at: i64) -> Session {
     Session::new(
         seed.organization.id,
+        seed.project.id,
         seed.owner.id,
         SessionParams {
             title: "cut p95".into(),
@@ -31,7 +33,7 @@ pub fn session(seed: &Seed, agent: &str, at: i64) -> Session {
     )
 }
 
-/// An organization with an owner.
+/// An organization with an owner and a project.
 pub async fn organization<S: Store>(store: &S) -> Seed {
     let organization = Organization::new(format!("acme-{}", uuid::Uuid::now_v7()), T0);
     store
@@ -62,9 +64,19 @@ pub async fn organization<S: Store>(store: &S) -> Seed {
         .add_member(&owner, &log("member.add", owner.id.to_string()))
         .await
         .expect("an owner is added");
+    let project = Project::new(organization.id, "checkout", "the checkout path", T0);
+    store
+        .create_project(
+            &project,
+            owner.id,
+            &log("project.create", project.id.to_string()),
+        )
+        .await
+        .expect("a project is created");
     Seed {
         organization,
         owner,
+        project,
     }
 }
 

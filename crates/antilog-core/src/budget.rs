@@ -1,9 +1,11 @@
 //! Budgets and caps: what is left to spend, and the refusal when nothing is.
 
-use antilog_types::{AuditOutcome, KindSpend, OrganizationId, SessionId, SessionSpend};
+use antilog_types::{AuditOutcome, KindSpend, OrganizationId, ProjectId, SessionId, SessionSpend};
 use jiff::Timestamp;
 
-use crate::organization::{Action, Principal, Refusal, entry, member_of, permit};
+use crate::organization::{
+    Action, Principal, Refusal, entry, member_of, permit, permit_in, project_of,
+};
 use crate::store::{SpendScope, Store};
 
 /// Epoch milliseconds of the first instant of the UTC month `now` falls in, and of the next.
@@ -28,13 +30,14 @@ pub fn month_bounds(now: i64) -> Option<(i64, i64)> {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Headroom {
     pub session: Option<i64>,
+    pub project: Option<i64>,
     pub organization: Option<i64>,
 }
 
 impl Headroom {
     /// The least left under any limit; `None` when nothing limits the session.
     pub fn remaining(&self) -> Option<i64> {
-        [self.session, self.organization]
+        [self.session, self.project, self.organization]
             .into_iter()
             .flatten()
             .min()
@@ -49,6 +52,8 @@ impl Headroom {
 pub enum Spent {
     #[error("the session's budget is spent")]
     Session,
+    #[error("the project's monthly cap is reached")]
+    Project,
     #[error("the organization's monthly cap is reached")]
     Organization,
 }
@@ -68,6 +73,10 @@ pub async fn headroom<S: Store>(
         .session(organization, session)
         .await?
         .ok_or(Refusal::NotFound)?;
+    let project = store
+        .project(organization, row.project_id)
+        .await?
+        .ok_or(Refusal::NotFound)?;
     let owner = store
         .organization(organization)
         .await?
@@ -81,23 +90,41 @@ pub async fn headroom<S: Store>(
         )
         .await?
         .cents;
+    let project_spent = store
+        .spend(organization, SpendScope::Project(project.id), from, to)
+        .await?
+        .cents;
     let organization_spent = store
         .spend(organization, SpendScope::Organization, from, to)
         .await?
         .cents;
     Ok(Headroom {
         session: left(row.budget_cap_cents, session_spent),
+        project: left(project.monthly_cap_cents, project_spent),
         organization: left(owner.monthly_cap_cents, organization_spent),
     })
 }
 
-/// Whether the organization's monthly cap, if it has one, still leaves room.
-pub async fn organization_has_room<S: Store>(
+/// Whether the organization's and the project's monthly caps, where they have one, still leave
+/// room for a new session.
+pub async fn has_room<S: Store>(
     store: &S,
     organization: OrganizationId,
+    project: ProjectId,
     now: i64,
 ) -> Result<bool, Refusal> {
     let (from, to) = month_bounds(now).ok_or(Refusal::Invalid("the time is out of range"))?;
+    let row = store
+        .project(organization, project)
+        .await?
+        .ok_or(Refusal::NotFound)?;
+    let project_spent = store
+        .spend(organization, SpendScope::Project(project), from, to)
+        .await?
+        .cents;
+    if left(row.monthly_cap_cents, project_spent).is_some_and(|left| left <= 0) {
+        return Ok(false);
+    }
     let owner = store
         .organization(organization)
         .await?
@@ -120,6 +147,8 @@ pub async fn ensure_room<S: Store>(
     let room = headroom(store, organization, session, now).await?;
     let blocked = if room.session.is_some_and(|left| left <= 0) {
         Some(Spent::Session)
+    } else if room.project.is_some_and(|left| left <= 0) {
+        Some(Spent::Project)
     } else if room.organization.is_some_and(|left| left <= 0) {
         Some(Spent::Organization)
     } else {
@@ -182,7 +211,31 @@ pub async fn set_organization_limits<S: Store>(
     Ok(())
 }
 
-/// An editor or owner changes one session's own cap, inside the organization's monthly cap.
+/// A project owner changes the project's cap and default budget, inside the organization's cap.
+pub async fn set_project_limits<S: Store>(
+    store: &S,
+    who: &Principal,
+    now: i64,
+    project: ProjectId,
+    monthly_cap_cents: Option<i64>,
+    default_budget_cents: Option<i64>,
+) -> Result<(), Refusal> {
+    cents(monthly_cap_cents)?;
+    cents(default_budget_cents)?;
+    permit_in(store, who, Action::ProjectLimitsSet, project, project, now).await?;
+    store
+        .set_project_limits(
+            who.organization,
+            project,
+            monthly_cap_cents,
+            default_budget_cents,
+            &entry(who, "project.set_limits", project, AuditOutcome::Done, now),
+        )
+        .await?;
+    Ok(())
+}
+
+/// An editor or owner of the session's project changes its own cap, inside the project's cap.
 pub async fn set_session_budget<S: Store>(
     store: &S,
     who: &Principal,
@@ -195,7 +248,8 @@ pub async fn set_session_budget<S: Store>(
         .session(who.organization, session)
         .await?
         .ok_or(Refusal::NotFound)?;
-    permit(store, who, Action::SessionBudgetSet, session, now).await?;
+    let project = project_of(store, who, session).await?;
+    permit_in(store, who, Action::SessionBudgetSet, project, session, now).await?;
     store
         .set_session_budget(
             who.organization,
@@ -217,9 +271,10 @@ pub struct Scope {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Summary {
     pub organization: Scope,
+    pub projects: Vec<(ProjectId, Scope)>,
 }
 
-/// The month's spend against the organization's cap.
+/// The month's spend against the organization's cap and each project's.
 pub async fn summary<S: Store>(store: &S, who: &Principal, now: i64) -> Result<Summary, Refusal> {
     member_of(store, who).await?;
     let (from, to) = month_bounds(now).ok_or(Refusal::Invalid("the time is out of range"))?;
@@ -234,7 +289,23 @@ pub async fn summary<S: Store>(store: &S, who: &Principal, now: i64) -> Result<S
             .await?
             .cents,
     };
-    Ok(Summary { organization })
+    let mut projects = Vec::new();
+    for project in store.projects(who.organization).await? {
+        let spent = store
+            .spend(who.organization, SpendScope::Project(project.id), from, to)
+            .await?;
+        projects.push((
+            project.id,
+            Scope {
+                cap_cents: project.monthly_cap_cents,
+                spent_cents: spent.cents,
+            },
+        ));
+    }
+    Ok(Summary {
+        organization,
+        projects,
+    })
 }
 
 /// One session's spend since it began against its own cap, by kind. Every member reads.

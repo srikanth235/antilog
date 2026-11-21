@@ -9,8 +9,9 @@ use antilog_core::store::OrganizationStore;
 use antilog_core::{approval, budget};
 use antilog_types::{
     AccessToken, ApiError, Approval, ApprovalId, AuditCursor, AuditId, AuditPage, BudgetSummary,
-    Decide, LimitSpend, Limits, Member, MemberId, NewMember, NewToken, Organization, Policy,
-    SessionId, SetRole, TokenId, TokenIssued,
+    Decide, LimitSpend, Limits, Member, MemberId, NewMember, NewProject, NewToken, Organization,
+    Policy, Project, ProjectId, ProjectRole, ProjectSpend, SessionId, SetProjectRole, SetRole,
+    TokenId, TokenIssued,
 };
 use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
@@ -32,6 +33,11 @@ type Reply<T> = Result<Json<T>, Fail>;
     members,
     add_member,
     set_member_role,
+    projects,
+    create_project,
+    project_roles,
+    set_project_role,
+    set_project_limits,
     tokens,
     create_token,
     revoke_token,
@@ -91,6 +97,15 @@ async fn budgets<D: Deps + 'static>(State(app): Shared<D>, authed: Authed) -> Re
             cap_cents: summary.organization.cap_cents,
             spent_cents: summary.organization.spent_cents,
         },
+        projects: summary
+            .projects
+            .into_iter()
+            .map(|(project_id, scope)| ProjectSpend {
+                project_id,
+                cap_cents: scope.cap_cents,
+                spent_cents: scope.spent_cents,
+            })
+            .collect(),
     }))
 }
 
@@ -134,7 +149,7 @@ async fn add_member<D: Deps + 'static>(
     request_body = SetRole,
     responses(
         (status = 204, description = "Set; organization owners only"),
-        (status = 409, description = "The organization would be left without an owner", body = ApiError),
+        (status = 409, description = "The organization or a project would be left without an owner", body = ApiError),
     )
 )]
 async fn set_member_role<D: Deps + 'static>(
@@ -144,6 +159,103 @@ async fn set_member_role<D: Deps + 'static>(
     Json(set): Json<SetRole>,
 ) -> Result<StatusCode, Fail> {
     floor::set_member_role(app.store(), &authed.who, app.now(), id, set.role).await?;
+    Ok(StatusCode::NO_CONTENT)
+}
+
+#[utoipa::path(
+    get, path = "/projects", security(("bearer" = [])),
+    responses((status = 200, description = "The organization's projects", body = Vec<Project>))
+)]
+async fn projects<D: Deps + 'static>(State(app): Shared<D>, authed: Authed) -> Reply<Vec<Project>> {
+    floor::member_of(app.store(), &authed.who).await?;
+    Ok(Json(app.store().projects(authed.who.organization).await?))
+}
+
+#[utoipa::path(
+    post, path = "/projects", security(("bearer" = [])),
+    request_body = NewProject,
+    responses(
+        (status = 201, description = "Created; the caller is its first owner", body = Project),
+        (status = 409, description = "The name is taken", body = ApiError),
+    )
+)]
+async fn create_project<D: Deps + 'static>(
+    State(app): Shared<D>,
+    authed: Authed,
+    Json(new): Json<NewProject>,
+) -> Result<(StatusCode, Json<Project>), Fail> {
+    let project = floor::create_project(
+        app.store(),
+        &authed.who,
+        app.now(),
+        &new.name,
+        &new.description,
+    )
+    .await?;
+    Ok((StatusCode::CREATED, Json(project)))
+}
+
+#[utoipa::path(
+    get, path = "/projects/{id}/roles", security(("bearer" = [])),
+    params(("id" = ProjectId, Path, description = "The project")),
+    responses((status = 200, description = "Roles set for this project; the rest have their organization role", body = Vec<ProjectRole>))
+)]
+async fn project_roles<D: Deps + 'static>(
+    State(app): Shared<D>,
+    authed: Authed,
+    Path(id): Path<ProjectId>,
+) -> Reply<Vec<ProjectRole>> {
+    Ok(Json(
+        floor::project_roles(app.store(), &authed.who, id).await?,
+    ))
+}
+
+#[utoipa::path(
+    put, path = "/projects/{id}/roles/{member}", security(("bearer" = [])),
+    params(
+        ("id" = ProjectId, Path, description = "The project"),
+        ("member" = MemberId, Path, description = "The member"),
+    ),
+    request_body = SetProjectRole,
+    responses(
+        (status = 204, description = "Set; project owners only"),
+        (status = 409, description = "The project would be left without an owner", body = ApiError),
+    )
+)]
+async fn set_project_role<D: Deps + 'static>(
+    State(app): Shared<D>,
+    authed: Authed,
+    Path((id, member)): Path<(ProjectId, MemberId)>,
+    Json(set): Json<SetProjectRole>,
+) -> Result<StatusCode, Fail> {
+    floor::set_project_role(app.store(), &authed.who, app.now(), id, member, set.role).await?;
+    Ok(StatusCode::NO_CONTENT)
+}
+
+#[utoipa::path(
+    put, path = "/projects/{id}/limits", security(("bearer" = [])),
+    params(("id" = ProjectId, Path, description = "The project")),
+    request_body = Limits,
+    responses(
+        (status = 204, description = "Set; project owners only"),
+        (status = 409, description = "The cap would pass the organization's, or a budget inside it", body = ApiError),
+    )
+)]
+async fn set_project_limits<D: Deps + 'static>(
+    State(app): Shared<D>,
+    authed: Authed,
+    Path(id): Path<ProjectId>,
+    Json(limits): Json<Limits>,
+) -> Result<StatusCode, Fail> {
+    budget::set_project_limits(
+        app.store(),
+        &authed.who,
+        app.now(),
+        id,
+        limits.monthly_cap_cents,
+        limits.default_budget_cents,
+    )
+    .await?;
     Ok(StatusCode::NO_CONTENT)
 }
 
@@ -332,6 +444,10 @@ pub fn routes<D: Deps + 'static>() -> Router<Arc<App<D>>> {
         .route("/budgets", get(budgets::<D>))
         .route("/members", get(members::<D>).post(add_member::<D>))
         .route("/members/{id}/role", put(set_member_role::<D>))
+        .route("/projects", get(projects::<D>).post(create_project::<D>))
+        .route("/projects/{id}/roles", get(project_roles::<D>))
+        .route("/projects/{id}/roles/{member}", put(set_project_role::<D>))
+        .route("/projects/{id}/limits", put(set_project_limits::<D>))
         .route("/sessions/{id}/approvals", get(approvals::<D>))
         .route("/tokens", get(tokens::<D>).post(create_token::<D>))
         .route("/tokens/{id}", delete(revoke_token::<D>))

@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into projects (id, organization_id, name, description, monthly_cap_cents, default_budget_cents, created_at) values ($1, $2, $3, $4, $5, $6, to_timestamp($7::bigint / 1000.0))",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Text",
+        "Int8",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "89494e4b9fb4462f6f866f80da9cf92e70171b9e419098d9571ac90b9eaee217"
+}

@@ -1,12 +1,13 @@
 use std::future::Future;
 
-use antilog_types::{AuditEntry, OrganizationId, SessionId, Spend, SpendKind};
+use antilog_types::{AuditEntry, OrganizationId, ProjectId, SessionId, Spend, SpendKind};
 
 use super::StoreError;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SpendScope {
     Session(SessionId),
+    Project(ProjectId),
     Organization,
 }
 
@@ -24,8 +25,9 @@ pub struct SpendLine {
     pub tokens: i64,
 }
 
-/// A session's own cap sits inside the organization's monthly cap. Every setter refuses with
-/// `OverCap` what would pass it, and lowering the cap below a session's.
+/// Caps nest: a session's budget sits inside its project's cap, which sits inside the
+/// organization's. Every setter refuses with `OverCap` what would pass one, and lowering a cap
+/// below what sits inside it.
 pub trait BudgetStore {
     fn set_organization_limits(
         &self,
@@ -33,6 +35,15 @@ pub trait BudgetStore {
         monthly_cap_cents: Option<i64>,
         default_budget_cents: Option<i64>,
         max_running_sessions: Option<u32>,
+        audit: &AuditEntry,
+    ) -> impl Future<Output = Result<(), StoreError>> + Send;
+
+    fn set_project_limits(
+        &self,
+        organization: OrganizationId,
+        project: ProjectId,
+        monthly_cap_cents: Option<i64>,
+        default_budget_cents: Option<i64>,
         audit: &AuditEntry,
     ) -> impl Future<Output = Result<(), StoreError>> + Send;
 

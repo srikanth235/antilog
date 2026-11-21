@@ -106,6 +106,7 @@ async fn start(world: &World, prompt: &str) -> Session {
     session::start(
         &*world.deps,
         world.seed.organization.id,
+        world.seed.project.id,
         NewSession {
             agent: "opencode".into(),
             model: "vendor/model-2".into(),
@@ -598,7 +599,7 @@ async fn a_claim_carries_the_environment_version_the_session_started_on() {
         ..NewSession::default()
     };
     let org = world.seed.organization.id;
-    let first = session::start(&*world.deps, org, on(Some("bench")))
+    let first = session::start(&*world.deps, org, world.seed.project.id, on(Some("bench")))
         .await
         .unwrap();
     // An edit after the session started does not move it.
@@ -611,10 +612,12 @@ async fn a_claim_carries_the_environment_version_the_session_started_on() {
     )
     .await
     .unwrap();
-    let second = session::start(&*world.deps, org, on(Some("bench")))
+    let second = session::start(&*world.deps, org, world.seed.project.id, on(Some("bench")))
         .await
         .unwrap();
-    let plain = session::start(&*world.deps, org, on(None)).await.unwrap();
+    let plain = session::start(&*world.deps, org, world.seed.project.id, on(None))
+        .await
+        .unwrap();
 
     let polled = poll(&world.app, "r1", &[]).await;
     let spec = |id: antilog_types::SessionId| -> EnvironmentSpec {

@@ -5,7 +5,7 @@ use utoipa::ToSchema;
 
 use crate::{
     AccessToken, AuditEntry, AuditId, Decision, Identity, Member, MemberId, Organization,
-    OrganizationId, Role,
+    OrganizationId, ProjectId, Role,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
@@ -39,7 +39,7 @@ pub struct SignInCallback {
 pub struct Me {
     pub member: Member,
     pub organization: Organization,
-    /// What they may do in the organization.
+    /// Their organization role, which is their default in every project.
     pub role: Role,
     pub organizations: Vec<OrganizationRef>,
 }
@@ -90,6 +90,20 @@ pub struct SetRole {
     pub role: Role,
 }
 
+/// `None` returns the member to their organization role in this project.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SetProjectRole {
+    pub role: Option<Role>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct NewProject {
+    pub name: String,
+    pub description: String,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Limits {
@@ -137,11 +151,20 @@ pub struct LimitSpend {
     pub spent_cents: i64,
 }
 
-/// This month's spend against the organization's cap.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ProjectSpend {
+    pub project_id: ProjectId,
+    pub cap_cents: Option<i64>,
+    pub spent_cents: i64,
+}
+
+/// This month's spend against the caps.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct BudgetSummary {
     pub organization: LimitSpend,
+    pub projects: Vec<ProjectSpend>,
 }
 
 /// What one kind of spend came to.

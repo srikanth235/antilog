@@ -112,8 +112,15 @@ async fn from_sign_in_to_a_stopped_session() {
         async move { send(&app, Method::GET, &uri, &owner, json!({})).await }
     };
 
+    let (status, project) = post(
+        "/projects".into(),
+        json!({"name": "checkout", "description": "the path"}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::CREATED, "{project}");
+    let project_id = project["id"].as_str().unwrap().to_owned();
     let (status, empty) = post(
-        "/sessions".into(),
+        format!("/projects/{project_id}/sessions"),
         json!({"prompt": "cut p95", "repos": ["acme/app"]}),
     )
     .await;
@@ -123,7 +130,7 @@ async fn from_sign_in_to_a_stopped_session() {
         "this server has no default model: {empty}"
     );
     let (status, session) = post(
-        "/sessions".into(),
+        format!("/projects/{project_id}/sessions"),
         json!({
             "prompt": "cut p95 on the checkout path\nmore detail",
             "repos": ["acme/app"],
@@ -143,8 +150,11 @@ async fn from_sign_in_to_a_stopped_session() {
     let (_, listed) = get("/sessions".into()).await;
     assert_eq!(listed.as_array().unwrap().len(), 1);
     assert_eq!(listed[0]["id"], sid.as_str());
+    assert_eq!(listed[0]["projectId"], project_id.as_str());
     let (_, mine) = get("/sessions?mine=true".into()).await;
     assert_eq!(mine.as_array().unwrap().len(), 1);
+    let (_, in_project) = get(format!("/projects/{project_id}/sessions")).await;
+    assert_eq!(in_project.as_array().unwrap().len(), 1);
 
     let (status, after) = post(
         format!("/sessions/{sid}/messages"),

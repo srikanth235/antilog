@@ -6,8 +6,8 @@
 use antilog_types::{
     Agent, Approval, ApprovalId, ApprovalStatus, AuditEntry, AuditId, AuditOutcome, CardKind,
     CostTier, Decision, Environment, EventKind, Identity, Member, MemberId, NetworkLevel,
-    Organization, OrganizationId, Policy, PolicyMode, Role, Session, SessionId, SessionParams,
-    SessionStatus, Spend, SpendId, SpendKind,
+    Organization, OrganizationId, Policy, PolicyMode, Project, ProjectRole, Role, Session,
+    SessionId, SessionParams, SessionStatus, Spend, SpendId, SpendKind,
 };
 
 use crate::store::{Invariant, NewEvent, SessionChange, SpendScope, SpendTotal, Store, StoreError};
@@ -52,6 +52,7 @@ fn conflict<T>(result: Result<T, StoreError>) {
 struct World {
     organization: Organization,
     owner: Member,
+    project: Project,
 }
 
 impl World {
@@ -89,9 +90,19 @@ async fn world<S: Store>(store: &S) -> World {
         .await
         .expect("an organization is created");
     let owner = person(store, organization.id, Role::Owner).await;
+    let project = Project::new(organization.id, "checkout", "the checkout path", T0);
+    store
+        .create_project(
+            &project,
+            owner.id,
+            &entry(organization.id, owner.id, "project.create"),
+        )
+        .await
+        .expect("a project is created");
     World {
         organization,
         owner,
+        project,
     }
 }
 
@@ -103,6 +114,7 @@ async fn session<S: Store>(
 ) -> Result<Session, StoreError> {
     let session = Session::new(
         world.id(),
+        world.project.id,
         world.owner.id,
         SessionParams {
             title: "cut p95".into(),
@@ -205,7 +217,7 @@ async fn organizations<S: Store>(store: &S) {
 
 async fn members_and_roles<S: Store>(store: &S) {
     let world = world(store).await;
-    let org = world.id();
+    let (org, project) = (world.id(), world.project.id);
     let identity = Identity {
         provider: "fake".into(),
         subject: unique(),
@@ -256,7 +268,29 @@ async fn members_and_roles<S: Store>(store: &S) {
     );
 
     let owner = world.owner.id;
+    let role = |member| store.role_in_project(org, project, member);
+    assert_eq!(role(owner).await.expect("read"), Some(Role::Owner));
+    assert_eq!(role(ada.id).await.expect("read"), Some(Role::Editor));
+    assert_eq!(role(MemberId::new()).await.expect("read"), None);
+    assert_eq!(
+        store
+            .role_in_project(org, antilog_types::ProjectId::new(), owner)
+            .await
+            .expect("read"),
+        None
+    );
+
     let backup = person(store, org, Role::Owner).await;
+    store
+        .set_project_role(
+            org,
+            project,
+            backup.id,
+            Some(Role::Viewer),
+            &world.log("project.role"),
+        )
+        .await
+        .expect("a second organization owner who is a viewer here");
     refused(
         store
             .set_member_role(org, backup.id, Role::Viewer, &world.log("member.role"))
@@ -275,23 +309,105 @@ async fn members_and_roles<S: Store>(store: &S) {
     store
         .set_member_role(org, owner, Role::Viewer, &world.log("member.role"))
         .await
-        .expect("a second owner lets the first step back");
-    let refused_entry = world.log("member.role");
+        .expect("the creator stays the project's owner by its own role");
+    assert_eq!(role(owner).await.expect("read"), Some(Role::Owner));
+    let roles = store.project_roles(org, project).await.expect("read");
+    assert_eq!(roles.len(), 2);
+    assert!(roles.contains(&ProjectRole {
+        member_id: owner,
+        role: Role::Owner
+    }));
+
+    let refused_entry = world.log("project.role");
     refused(
         store
-            .set_member_role(org, backup.id, Role::Editor, &refused_entry)
+            .set_project_role(org, project, owner, None, &refused_entry)
             .await,
         Invariant::LastOwner,
     );
+    refused(
+        store
+            .set_project_role(org, project, owner, Some(Role::Editor), &refused_entry)
+            .await,
+        Invariant::LastOwner,
+    );
+    assert_eq!(role(owner).await.expect("read"), Some(Role::Owner));
     assert!(!logged(store, org, refused_entry.id).await);
+
+    store
+        .set_project_role(
+            org,
+            project,
+            ada.id,
+            Some(Role::Owner),
+            &world.log("project.role"),
+        )
+        .await
+        .expect("a second owner");
+    store
+        .set_project_role(org, project, owner, None, &world.log("project.role"))
+        .await
+        .expect("now the first may step back");
+    assert_eq!(role(owner).await.expect("read"), Some(Role::Viewer));
+    refused(
+        store
+            .set_project_role(org, project, ada.id, Some(Role::Viewer), &refused_entry)
+            .await,
+        Invariant::LastOwner,
+    );
     store
         .set_member_role(org, owner, Role::Owner, &world.log("member.role"))
         .await
-        .expect("restored");
+        .expect("an organization owner is an owner in every project");
+    assert_eq!(role(owner).await.expect("read"), Some(Role::Owner));
+    store
+        .set_project_role(
+            org,
+            project,
+            ada.id,
+            Some(Role::Viewer),
+            &world.log("project.role"),
+        )
+        .await
+        .expect("a project may rank someone lower than the organization does");
+    assert_eq!(role(ada.id).await.expect("read"), Some(Role::Viewer));
+
+    not_found(
+        store
+            .set_project_role(
+                org,
+                project,
+                MemberId::new(),
+                Some(Role::Editor),
+                &refused_entry,
+            )
+            .await,
+    );
     not_found(
         store
             .set_member_role(other, ada.id, Role::Viewer, &refused_entry)
             .await,
+    );
+    let lonely = Project::new(org, "lonely", "", T0);
+    not_found(
+        store
+            .create_project(&lonely, MemberId::new(), &world.log("project.create"))
+            .await,
+    );
+    conflict(
+        store
+            .create_project(
+                &Project::new(org, "checkout", "", T0),
+                owner,
+                &world.log("project.create"),
+            )
+            .await,
+    );
+    assert_eq!(store.projects(org).await.expect("read").len(), 1);
+    assert_eq!(
+        store.project(other, project).await.expect("read"),
+        None,
+        "a project is not reachable through another organization"
     );
 }
 
@@ -463,12 +579,26 @@ async fn budgets_and_spend<S: Store>(store: &S) {
             .await,
         Invariant::OverCap,
     );
+    let limits = async |cap, default| {
+        store
+            .set_project_limits(
+                org,
+                world.project.id,
+                cap,
+                default,
+                &world.log("budget.set"),
+            )
+            .await
+    };
+    refused(limits(Some(20_000), None).await, Invariant::OverCap);
+    refused(limits(Some(5_000), Some(6_000)).await, Invariant::OverCap);
+    limits(Some(9_000), Some(1_000)).await.expect("inside");
 
     let lead = session(store, &world, "claude", Some(3_000))
         .await
         .expect("inside");
     refused(
-        session(store, &world, "claude", Some(10_001)).await,
+        session(store, &world, "claude", Some(9_001)).await,
         Invariant::OverCap,
     );
     let set = async |cents| {
@@ -476,15 +606,15 @@ async fn budgets_and_spend<S: Store>(store: &S) {
             .set_session_budget(org, lead.id, cents, &world.log("budget.set"))
             .await
     };
-    set(10_000).await.expect("up to the cap");
-    refused(set(10_001).await, Invariant::OverCap);
+    set(9_000).await.expect("up to the project's cap");
+    refused(set(9_001).await, Invariant::OverCap);
     assert_eq!(
         store
             .session(org, lead.id)
             .await
             .expect("read")
             .and_then(|row| row.budget_cap_cents),
-        Some(10_000)
+        Some(9_000)
     );
     refused(
         store
@@ -607,6 +737,7 @@ async fn sessions<S: Store>(store: &S) {
     not_found(
         create(&Session::new(
             org,
+            world.project.id,
             MemberId::new(),
             SessionParams {
                 title: "x".into(),
@@ -620,6 +751,7 @@ async fn sessions<S: Store>(store: &S) {
     let other_person = person(store, org, Role::Editor).await;
     let child = Session::new(
         org,
+        world.project.id,
         other_person.id,
         SessionParams {
             title: "second".into(),
@@ -631,20 +763,20 @@ async fn sessions<S: Store>(store: &S) {
     create(&child).await.expect("a second session");
     conflict(create(&lead).await);
     assert_eq!(
-        store.sessions(org, None).await.expect("read"),
+        store.sessions(org, None, None).await.expect("read"),
         vec![child.clone(), lead.clone()],
         "newest first"
     );
     assert_eq!(
         store
-            .sessions(org, Some(world.owner.id))
+            .sessions(org, Some(world.project.id), Some(world.owner.id))
             .await
             .expect("read"),
         vec![lead.clone()]
     );
     assert!(
         store
-            .sessions(world_org(store).await, None)
+            .sessions(world_org(store).await, None, None)
             .await
             .expect("another organization")
             .is_empty()

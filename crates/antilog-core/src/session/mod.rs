@@ -6,15 +6,15 @@ use crate::store::{
     NewEvent, OrganizationStore, RunnerStore, SessionChange, SessionStore, StoreError,
 };
 use antilog_types::{
-    AuditEntry, AuditOutcome, Command, EventKind, MemberId, OrganizationId, Seed, Session,
-    SessionId, SessionParams, SessionStatus,
+    AuditEntry, AuditOutcome, Command, EventKind, MemberId, OrganizationId, ProjectId, Seed,
+    Session, SessionId, SessionParams, SessionStatus,
 };
 
 pub use settle::settle;
 
 #[derive(Debug, thiserror::Error)]
 pub enum SessionError {
-    #[error("no such session in this organization")]
+    #[error("no such project or session in this organization")]
     NotFound,
     #[error("the session has ended; start a new one")]
     Ended,
@@ -22,8 +22,10 @@ pub enum SessionError {
     Environment(#[from] Unavailable),
     #[error("{0}")]
     Invalid(&'static str),
-    #[error("the organization's monthly cap is reached. An owner raises it in Settings, Budgets")]
-    OrganizationCapReached,
+    #[error(
+        "a monthly cap is reached, the project's or the organization's. An owner raises it in Settings, Budgets"
+    )]
+    CapReached,
     #[error(transparent)]
     Store(StoreError),
 }
@@ -116,11 +118,12 @@ fn title_of(title: Option<&str>, prompt: &str) -> String {
     }
 }
 
-/// Starts a session in the organization: its row, its first words and its audit entry. The
+/// Starts a session in a project: its row, its first words and its audit entry. The
 /// agent runs wherever the runner puts it; nothing here starts one.
 pub async fn start<D: Deps>(
     deps: &D,
     organization: OrganizationId,
+    project: ProjectId,
     new: NewSession,
 ) -> Result<Session, SessionError> {
     let now = now_ms(deps);
@@ -129,28 +132,41 @@ pub async fn start<D: Deps>(
         .organization(organization)
         .await?
         .ok_or(SessionError::NotFound)?;
-    let cap = new.budget_cap_cents.or(row.default_budget_cents);
+    let home = deps
+        .store()
+        .project(organization, project)
+        .await?
+        .ok_or(SessionError::NotFound)?;
+    let cap = new
+        .budget_cap_cents
+        .or(home.default_budget_cents)
+        .or(row.default_budget_cents);
     if cap.is_some_and(|cap| cap < 0) {
         return Err(SessionError::Invalid("a budget is not negative"));
     }
-    if let (Some(cap), Some(monthly)) = (cap, row.monthly_cap_cents)
-        && cap > monthly
+    let ceiling = [home.monthly_cap_cents, row.monthly_cap_cents]
+        .into_iter()
+        .flatten()
+        .min();
+    if let (Some(cap), Some(ceiling)) = (cap, ceiling)
+        && cap > ceiling
     {
         return Err(SessionError::Invalid(
-            "a session's budget cannot pass the organization's monthly cap",
+            "a session's budget cannot pass its project's or the organization's monthly cap",
         ));
     }
-    if !crate::budget::organization_has_room(deps.store(), organization, now)
+    if !crate::budget::has_room(deps.store(), organization, project, now)
         .await
         .map_err(|_| SessionError::Store(StoreError::Unavailable("budget check".into())))?
     {
-        return Err(SessionError::OrganizationCapReached);
+        return Err(SessionError::CapReached);
     }
     // The environment is pinned at its version now: a later edit does not move a session.
     let (environment, environment_version) =
         pin(deps.store(), organization, new.environment.as_deref()).await?;
     let session = Session::new(
         organization,
+        project,
         new.actor,
         SessionParams {
             title: title_of(new.title.as_deref(), &new.prompt),

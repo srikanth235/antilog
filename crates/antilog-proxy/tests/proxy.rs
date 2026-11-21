@@ -300,6 +300,7 @@ impl Rig {
         let seed = seed::organization(&store).await;
         let session = Session::new(
             seed.organization.id,
+            seed.project.id,
             seed.owner.id,
             SessionParams {
                 title: "cut p95".into(),

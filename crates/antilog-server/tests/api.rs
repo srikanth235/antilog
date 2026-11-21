@@ -134,21 +134,41 @@ struct Org {
     app: Router,
     owner: String,
     organization: String,
+    project: String,
+}
+
+impl Org {
+    /// Where sessions of the organization's first project are started.
+    fn start_uri(&self) -> String {
+        format!("/projects/{}/sessions", self.project)
+    }
 }
 
 async fn org() -> Org {
     let app = app(true, true);
     let created = create_organization(&app, "acme", "ada").await;
     assert_eq!(created.status, StatusCode::CREATED);
+    let owner = created.body["session"]["secret"]
+        .as_str()
+        .unwrap_or_default()
+        .to_owned();
+    let project = send(
+        &app,
+        Method::POST,
+        "/projects",
+        Some(&owner),
+        None,
+        Some(json!({"name": "checkout", "description": ""})),
+    )
+    .await;
+    assert_eq!(project.status, StatusCode::CREATED);
     Org {
-        owner: created.body["session"]["secret"]
-            .as_str()
-            .unwrap_or_default()
-            .to_owned(),
+        owner,
         organization: created.body["organization"]["id"]
             .as_str()
             .unwrap_or_default()
             .to_owned(),
+        project: project.body["id"].as_str().unwrap_or_default().to_owned(),
         app,
     }
 }
@@ -405,11 +425,11 @@ async fn roles_gate_the_writes_and_every_denial_is_audited() {
 
     let start = json!({"prompt": "cut p95", "model": "opencode/test"});
     let session = org
-        .call(Method::POST, "/sessions", &editor, Some(start.clone()))
+        .call(Method::POST, &org.start_uri(), &editor, Some(start.clone()))
         .await;
     assert_eq!(session.status, StatusCode::CREATED, "an editor starts one");
     assert_eq!(
-        org.call(Method::POST, "/sessions", &viewer, Some(start))
+        org.call(Method::POST, &org.start_uri(), &viewer, Some(start))
             .await
             .status,
         StatusCode::FORBIDDEN
@@ -543,7 +563,7 @@ async fn tokens_act_as_their_member_and_secrets_are_shown_once() {
     assert_eq!(
         org.call(
             Method::POST,
-            "/sessions",
+            &org.start_uri(),
             &secret,
             Some(json!({"prompt": "x", "model": "opencode/test"}))
         )
@@ -698,7 +718,7 @@ async fn policy_budgets_and_the_audit_page() {
     let session = org
         .call(
             Method::POST,
-            "/sessions",
+            &org.start_uri(),
             &org.owner,
             Some(json!({"prompt": "go", "model": "opencode/test", "budgetCapCents": 500})),
         )
@@ -729,7 +749,7 @@ async fn policy_budgets_and_the_audit_page() {
     let defaulted = org
         .call(
             Method::POST,
-            "/sessions",
+            &org.start_uri(),
             &org.owner,
             Some(json!({"prompt": "go", "model": "opencode/test"})),
         )
@@ -920,15 +940,27 @@ async fn org_with_store() -> (Org, Arc<FakeDeps>) {
     );
     let created = create_organization(&app, "acme", "ada").await;
     assert_eq!(created.status, StatusCode::CREATED);
+    let owner = created.body["session"]["secret"]
+        .as_str()
+        .unwrap_or_default()
+        .to_owned();
+    let project = send(
+        &app,
+        Method::POST,
+        "/projects",
+        Some(&owner),
+        None,
+        Some(json!({"name": "checkout", "description": ""})),
+    )
+    .await;
+    assert_eq!(project.status, StatusCode::CREATED);
     let org = Org {
-        owner: created.body["session"]["secret"]
-            .as_str()
-            .unwrap_or_default()
-            .to_owned(),
+        owner,
         organization: created.body["organization"]["id"]
             .as_str()
             .unwrap_or_default()
             .to_owned(),
+        project: project.body["id"].as_str().unwrap_or_default().to_owned(),
         app,
     };
     (org, deps)
@@ -1006,7 +1038,7 @@ async fn pending_cards_the_transcript_and_spend_are_read_across_roles() {
     let made = org
         .call(
             Method::POST,
-            "/sessions",
+            &org.start_uri(),
             &editor,
             Some(json!({"prompt": "make it faster", "model": "opencode/test", "budgetCapCents": 500})),
         )
@@ -1176,7 +1208,7 @@ async fn agents_auto_and_environments_are_read_by_members_and_set_by_owners() {
     let started = org
         .call(
             Method::POST,
-            "/sessions",
+            &org.start_uri(),
             &editor,
             Some(json!({"agent": "auto", "prompt": "go", "repos": [], "model": "opencode/test"})),
         )
@@ -1215,7 +1247,7 @@ async fn agents_auto_and_environments_are_read_by_members_and_set_by_owners() {
     let refused = org
         .call(
             Method::POST,
-            "/sessions",
+            &org.start_uri(),
             &editor,
             Some(json!({"agent": "auto", "prompt": "go", "repos": [], "model": "opencode/test"})),
         )
@@ -1224,7 +1256,7 @@ async fn agents_auto_and_environments_are_read_by_members_and_set_by_owners() {
     let named = org
         .call(
             Method::POST,
-            "/sessions",
+            &org.start_uri(),
             &editor,
             Some(json!({"agent": "gemini", "prompt": "go", "repos": [], "model": "opencode/test"})),
         )
@@ -1473,7 +1505,7 @@ async fn environments_are_read_by_every_member_and_managed_by_owners_and_editors
     assert_eq!(missing.status, StatusCode::NOT_FOUND);
 
     // A session starts on the stored environment, then not once it is archived.
-    let sessions = "/sessions".to_owned();
+    let sessions = org.start_uri();
     let start = |environment: &str| json!({"agent": "auto", "prompt": "go", "repos": [], "environment": environment, "model": "opencode/test"});
     let started = org
         .call(

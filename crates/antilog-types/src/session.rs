@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 use crate::id::text_enum;
-use crate::{EnvironmentSpec, MemberId, NetworkLevel, OrganizationId, SessionId};
+use crate::{EnvironmentSpec, MemberId, NetworkLevel, OrganizationId, ProjectId, SessionId};
 
 text_enum!(
     SessionStatus {
@@ -21,13 +21,14 @@ impl SessionStatus {
     }
 }
 
-/// One agent's work for an organization: a chat that runs in a machine of its own. The repos,
+/// One agent's work in a project: a chat that runs in a machine of its own. The repos,
 /// the environment version and the model are fixed when it starts.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Session {
     pub id: SessionId,
     pub organization_id: OrganizationId,
+    pub project_id: ProjectId,
     pub title: String,
     /// The member who started it; its calls and cards are theirs.
     pub created_by: MemberId,
@@ -66,6 +67,7 @@ pub struct SessionParams {
 impl Session {
     pub fn new(
         organization_id: OrganizationId,
+        project_id: ProjectId,
         created_by: MemberId,
         params: SessionParams,
         created_at: i64,
@@ -73,6 +75,7 @@ impl Session {
         Self {
             id: SessionId::new(),
             organization_id,
+            project_id,
             title: params.title,
             created_by,
             agent: params.agent,
@@ -241,7 +244,7 @@ pub struct NewEnvironment {
     pub memory_mb: u32,
 }
 
-/// What starts a session: `POST /sessions`.
+/// What starts a session in a project: `POST /projects/{id}/sessions`.
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct StartSession {
@@ -258,7 +261,7 @@ pub struct StartSession {
     #[serde(default)]
     pub repos: Vec<String>,
     pub environment: Option<String>,
-    /// This session's own cap in US cents; left out, the organization's default, if it has one.
+    /// This session's own cap in US cents; left out, the project's default, then the organization's.
     #[serde(default)]
     pub budget_cap_cents: Option<i64>,
     /// The composer's Mode: false asks a person for every card, true lets policy approve.

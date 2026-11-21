@@ -21,6 +21,7 @@ async fn lead_with(deps: &FakeDeps, seed: &Seed, budget: Option<i64>) -> Agent {
     let session = session::start(
         deps,
         seed.organization.id,
+        seed.project.id,
         NewSession {
             agent: "opencode".into(),
             model: "opencode/test".into(),
@@ -226,6 +227,7 @@ async fn a_spent_budget_leaves_no_room_and_the_organization_cap_stops_new_sessio
     let again = session::start(
         &deps,
         org,
+        seed.project.id,
         NewSession {
             agent: "opencode".into(),
             model: "opencode/test".into(),
@@ -234,10 +236,7 @@ async fn a_spent_budget_leaves_no_room_and_the_organization_cap_stops_new_sessio
         },
     )
     .await;
-    assert!(matches!(
-        again,
-        Err(session::SessionError::OrganizationCapReached)
-    ));
+    assert!(matches!(again, Err(session::SessionError::CapReached)));
 }
 
 #[tokio::test]

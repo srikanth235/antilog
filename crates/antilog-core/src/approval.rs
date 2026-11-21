@@ -5,7 +5,7 @@ use antilog_types::{
     Decision, MemberId, OrganizationId, Policy, PolicyMode, SessionId,
 };
 
-use crate::organization::{Action, Principal, Refusal, entry, member_of, permit};
+use crate::organization::{Action, Principal, Refusal, entry, member_of, permit, permit_session};
 use crate::store::Store;
 
 /// A card a tool raises. `follow_policy` is the session's Mode: with Ask, nothing is pre-approved.
@@ -111,7 +111,7 @@ pub async fn raise<S: Store>(
     Ok(approval)
 }
 
-/// Owners and editors of the organization decide.
+/// Owners and editors of the card's project decide.
 pub async fn decide<S: Store>(
     store: &S,
     who: &Principal,
@@ -119,11 +119,19 @@ pub async fn decide<S: Store>(
     id: ApprovalId,
     decision: Decision,
 ) -> Result<Approval, Refusal> {
-    store
+    let approval = store
         .approval(who.organization, id)
         .await?
         .ok_or(Refusal::NotFound)?;
-    permit(store, who, Action::ApprovalDecide, id, now).await?;
+    permit_session(
+        store,
+        who,
+        now,
+        Action::ApprovalDecide,
+        approval.session_id,
+        id,
+    )
+    .await?;
     let outcome = match decision {
         Decision::Approve => AuditOutcome::Approved,
         Decision::Decline => AuditOutcome::Declined,
@@ -163,14 +171,30 @@ pub async fn approvals<S: Store>(
     Ok(store.approvals(who.organization, session).await?)
 }
 
-/// Every pending card in the organization, for a member who may decide: an editor or an owner.
-/// A viewer sees none. Reads write no audit row.
+/// Every pending card across the organization's projects that this person may decide: their
+/// role in the card's project is read from the one place and held against the matrix, so a
+/// viewer sees none. Reads write no audit row.
 pub async fn pending<S: Store>(store: &S, who: &Principal) -> Result<Vec<Approval>, Refusal> {
-    let member = member_of(store, who).await?;
-    if member.role < Action::ApprovalDecide.minimum() {
-        return Ok(Vec::new());
+    member_of(store, who).await?;
+    let mut roles = std::collections::HashMap::new();
+    let mut mine = Vec::new();
+    for approval in store.pending_approvals(who.organization).await? {
+        let project = crate::organization::project_of(store, who, approval.session_id).await?;
+        let role = match roles.get(&project) {
+            Some(role) => *role,
+            None => {
+                let role = store
+                    .role_in_project(who.organization, project, who.member)
+                    .await?;
+                roles.insert(project, role);
+                role
+            }
+        };
+        if role.is_some_and(|role| role >= Action::ApprovalDecide.minimum()) {
+            mine.push(approval);
+        }
     }
-    Ok(store.pending_approvals(who.organization).await?)
+    Ok(mine)
 }
 
 pub async fn policies<S: Store>(store: &S, who: &Principal) -> Result<Vec<Policy>, Refusal> {

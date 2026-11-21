@@ -1168,7 +1168,7 @@
             "description": "Set; organization owners only"
           },
           "409": {
-            "description": "The organization would be left without an owner",
+            "description": "The organization or a project would be left without an owner",
             "content": {
               "application/json": {
                 "schema": {
@@ -1541,30 +1541,19 @@
         ]
       }
     },
-    "/sessions": {
+    "/projects": {
       "get": {
         "tags": [],
-        "operationId": "sessions",
-        "parameters": [
-          {
-            "name": "mine",
-            "in": "query",
-            "description": "Only the sessions the caller started.",
-            "required": false,
-            "schema": {
-              "type": "boolean"
-            }
-          }
-        ],
+        "operationId": "projects",
         "responses": {
           "200": {
-            "description": "The organization's sessions, newest first, each with its status; `mine` keeps the caller's",
+            "description": "The organization's projects",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Session"
+                    "$ref": "#/components/schemas/Project"
                   }
                 }
               }
@@ -1579,7 +1568,254 @@
       },
       "post": {
         "tags": [],
+        "operationId": "create_project",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewProject"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created; the caller is its first owner",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The name is taken",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/projects/{id}/limits": {
+      "put": {
+        "tags": [],
+        "operationId": "set_project_limits",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The project",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ProjectId"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Limits"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Set; project owners only"
+          },
+          "409": {
+            "description": "The cap would pass the organization's, or a budget inside it",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/projects/{id}/roles": {
+      "get": {
+        "tags": [],
+        "operationId": "project_roles",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The project",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ProjectId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Roles set for this project; the rest have their organization role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProjectRole"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/projects/{id}/roles/{member}": {
+      "put": {
+        "tags": [],
+        "operationId": "set_project_role",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The project",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ProjectId"
+            }
+          },
+          {
+            "name": "member",
+            "in": "path",
+            "description": "The member",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/MemberId"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetProjectRole"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Set; project owners only"
+          },
+          "409": {
+            "description": "The project would be left without an owner",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/projects/{id}/sessions": {
+      "get": {
+        "tags": [],
+        "operationId": "project_sessions",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The project",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ProjectId"
+            }
+          },
+          {
+            "name": "mine",
+            "in": "query",
+            "description": "Only the sessions the caller started.",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The project's sessions, newest first; `mine` keeps the caller's",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Session"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [],
         "operationId": "start_session",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The project",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ProjectId"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -1616,6 +1852,43 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/sessions": {
+      "get": {
+        "tags": [],
+        "operationId": "sessions",
+        "parameters": [
+          {
+            "name": "mine",
+            "in": "query",
+            "description": "Only the sessions the caller started.",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The organization's sessions across its projects, newest first, each with its status and project; `mine` keeps the caller's",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Session"
+                  }
                 }
               }
             }
@@ -2515,13 +2788,20 @@
       },
       "BudgetSummary": {
         "type": "object",
-        "description": "This month's spend against the organization's cap.",
+        "description": "This month's spend against the caps.",
         "required": [
-          "organization"
+          "organization",
+          "projects"
         ],
         "properties": {
           "organization": {
             "$ref": "#/components/schemas/LimitSpend"
+          },
+          "projects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProjectSpend"
+            }
           }
         },
         "additionalProperties": false
@@ -3221,7 +3501,7 @@
           },
           "role": {
             "$ref": "#/components/schemas/Role",
-            "description": "What they may do in the organization."
+            "description": "Their organization role, which is their default in every project."
           }
         },
         "additionalProperties": false
@@ -3266,7 +3546,7 @@
           },
           "role": {
             "$ref": "#/components/schemas/Role",
-            "description": "What the member may do in the organization."
+            "description": "The organization role, the default in every project."
           }
         },
         "additionalProperties": false
@@ -3511,6 +3791,22 @@
         },
         "additionalProperties": false
       },
+      "NewProject": {
+        "type": "object",
+        "required": [
+          "name",
+          "description"
+        ],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "NewSkill": {
         "type": "object",
         "required": [
@@ -3745,6 +4041,96 @@
           "allow"
         ]
       },
+      "Project": {
+        "type": "object",
+        "required": [
+          "id",
+          "organizationId",
+          "name",
+          "description",
+          "createdAt"
+        ],
+        "properties": {
+          "createdAt": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "defaultBudgetCents": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Default budget per session, in US cents."
+          },
+          "description": {
+            "type": "string"
+          },
+          "id": {
+            "$ref": "#/components/schemas/ProjectId"
+          },
+          "monthlyCapCents": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Monthly cap on the spend of its sessions, in US cents."
+          },
+          "name": {
+            "type": "string"
+          },
+          "organizationId": {
+            "$ref": "#/components/schemas/OrganizationId"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProjectId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "ProjectRole": {
+        "type": "object",
+        "description": "A member's role in one project when it differs from the organization role.",
+        "required": [
+          "memberId",
+          "role"
+        ],
+        "properties": {
+          "memberId": {
+            "$ref": "#/components/schemas/MemberId"
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProjectSpend": {
+        "type": "object",
+        "required": [
+          "projectId",
+          "spentCents"
+        ],
+        "properties": {
+          "capCents": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "projectId": {
+            "$ref": "#/components/schemas/ProjectId"
+          },
+          "spentCents": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false
+      },
       "RemovePlugin": {
         "type": "object",
         "description": "What to do with each part when a plugin is removed; a part not named is removed, and one in use refuses.",
@@ -3788,10 +4174,11 @@
       },
       "Session": {
         "type": "object",
-        "description": "One agent's work for an organization: a chat that runs in a machine of its own. The repos,\nthe environment version and the model are fixed when it starts.",
+        "description": "One agent's work in a project: a chat that runs in a machine of its own. The repos,\nthe environment version and the model are fixed when it starts.",
         "required": [
           "id",
           "organizationId",
+          "projectId",
           "title",
           "createdBy",
           "agent",
@@ -3858,6 +4245,9 @@
           },
           "organizationId": {
             "$ref": "#/components/schemas/OrganizationId"
+          },
+          "projectId": {
+            "$ref": "#/components/schemas/ProjectId"
           },
           "repos": {
             "type": "array",
@@ -4015,6 +4405,23 @@
         "properties": {
           "credential": {
             "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SetProjectRole": {
+        "type": "object",
+        "description": "`None` returns the member to their organization role in this project.",
+        "properties": {
+          "role": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Role"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false
@@ -4209,7 +4616,7 @@
       },
       "StartSession": {
         "type": "object",
-        "description": "What starts a session: `POST /sessions`.",
+        "description": "What starts a session in a project: `POST /projects/{id}/sessions`.",
         "required": [
           "prompt"
         ],
@@ -4227,7 +4634,7 @@
               "null"
             ],
             "format": "int64",
-            "description": "This session's own cap in US cents; left out, the organization's default, if it has one."
+            "description": "This session's own cap in US cents; left out, the project's default, then the organization's."
           },
           "environment": {
             "type": [

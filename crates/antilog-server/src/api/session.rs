@@ -9,8 +9,8 @@ use antilog_core::session::{self, NewSession, SessionError};
 use antilog_core::store::{OrganizationStore, SessionStore};
 use antilog_core::{agents, budget, environments as env};
 use antilog_types::{
-    Agent, ApiError, AutoChoice, Environment, EventPage, NewAgent, NewEnvironment, SendMessage,
-    Session, SessionBudget, SessionId, SessionSpend, StartSession,
+    Agent, ApiError, AutoChoice, Environment, EventPage, NewAgent, NewEnvironment, ProjectId,
+    SendMessage, Session, SessionBudget, SessionId, SessionSpend, StartSession,
 };
 use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
@@ -25,6 +25,7 @@ use super::auth::{App, Authed, Fail};
 #[openapi(paths(
     start,
     sessions,
+    project_sessions,
     read,
     message,
     stop,
@@ -48,16 +49,14 @@ pub fn refuse(error: SessionError) -> Response {
         SessionError::NotFound => (
             StatusCode::NOT_FOUND,
             "not_found",
-            "No such session here: check the id.".to_owned(),
+            "No such project or session here: check the ids.".to_owned(),
         ),
         SessionError::Ended => (
             StatusCode::CONFLICT,
             "session_ended",
             "The session has ended: start a new one.".to_owned(),
         ),
-        SessionError::OrganizationCapReached => {
-            (StatusCode::CONFLICT, "budget_spent", error.to_string())
-        }
+        SessionError::CapReached => (StatusCode::CONFLICT, "budget_spent", error.to_string()),
         SessionError::Invalid(message) => (
             StatusCode::UNPROCESSABLE_ENTITY,
             "invalid",
@@ -102,14 +101,23 @@ async fn permit<D: Deps + 'static>(
     app: &App<D>,
     authed: &Authed,
     action: Action,
-    target: impl ToString,
+    project: ProjectId,
 ) -> Result<(), Fail> {
-    floor::permit(app.store(), &authed.who, action, target, app.now()).await?;
+    floor::permit_in(
+        app.store(),
+        &authed.who,
+        action,
+        project,
+        project,
+        app.now(),
+    )
+    .await?;
     Ok(())
 }
 
 #[utoipa::path(
-    post, path = "/sessions", operation_id = "start_session", security(("bearer" = [])),
+    post, path = "/projects/{id}/sessions", operation_id = "start_session", security(("bearer" = [])),
+    params(("id" = ProjectId, Path, description = "The project")),
     request_body = StartSession,
     responses(
         (status = 201, description = "Started: queued for a runner; editors and owners", body = Session),
@@ -120,9 +128,10 @@ async fn permit<D: Deps + 'static>(
 async fn start<D: Deps + 'static>(
     State(app): Shared<D>,
     authed: Authed,
+    Path(project): Path<ProjectId>,
     Json(body): Json<StartSession>,
 ) -> Result<(StatusCode, Json<Session>), Fail> {
-    permit(&app, &authed, Action::SessionStart, "session").await?;
+    permit(&app, &authed, Action::SessionStart, project).await?;
     if body.prompt.trim().is_empty() {
         return Err(Refusal::Invalid("say what you want done: the prompt is empty").into());
     }
@@ -161,7 +170,7 @@ async fn start<D: Deps + 'static>(
         follow_policy: body.follow_policy,
         actor: authed.who.member,
     };
-    let session = session::start(&*app.deps, authed.who.organization, new)
+    let session = session::start(&*app.deps, authed.who.organization, project, new)
         .await
         .map_err(Fail::Session)?;
     Ok((StatusCode::CREATED, Json(session)))
@@ -176,8 +185,32 @@ struct SessionsQuery {
 }
 
 #[utoipa::path(
+    get, path = "/projects/{id}/sessions", operation_id = "project_sessions", security(("bearer" = [])),
+    params(("id" = ProjectId, Path, description = "The project"), SessionsQuery),
+    responses((status = 200, description = "The project's sessions, newest first; `mine` keeps the caller's", body = Vec<Session>), (status = 404, body = ApiError))
+)]
+async fn project_sessions<D: Deps + 'static>(
+    State(app): Shared<D>,
+    authed: Authed,
+    Path(project): Path<ProjectId>,
+    Query(query): Query<SessionsQuery>,
+) -> Result<Json<Vec<Session>>, Fail> {
+    floor::member_of(app.store(), &authed.who).await?;
+    app.store()
+        .project(authed.who.organization, project)
+        .await?
+        .ok_or(Refusal::NotFound)?;
+    let creator = query.mine.unwrap_or(false).then_some(authed.who.member);
+    Ok(Json(
+        app.store()
+            .sessions(authed.who.organization, Some(project), creator)
+            .await?,
+    ))
+}
+
+#[utoipa::path(
     get, path = "/sessions", security(("bearer" = [])), params(SessionsQuery),
-    responses((status = 200, description = "The organization's sessions, newest first, each with its status; `mine` keeps the caller's", body = Vec<Session>))
+    responses((status = 200, description = "The organization's sessions across its projects, newest first, each with its status and project; `mine` keeps the caller's", body = Vec<Session>))
 )]
 async fn sessions<D: Deps + 'static>(
     State(app): Shared<D>,
@@ -188,7 +221,7 @@ async fn sessions<D: Deps + 'static>(
     let creator = query.mine.unwrap_or(false).then_some(authed.who.member);
     Ok(Json(
         app.store()
-            .sessions(authed.who.organization, creator)
+            .sessions(authed.who.organization, None, creator)
             .await?,
     ))
 }
@@ -218,8 +251,8 @@ async fn message<D: Deps + 'static>(
     Path(id): Path<SessionId>,
     Json(body): Json<SendMessage>,
 ) -> Result<Json<Session>, Fail> {
-    owned(&app, &authed, id).await?;
-    permit(&app, &authed, Action::SessionMessage, id).await?;
+    let row = owned(&app, &authed, id).await?;
+    permit(&app, &authed, Action::SessionMessage, row.project_id).await?;
     session::message(
         &*app.deps,
         authed.who.organization,
@@ -242,8 +275,8 @@ async fn stop<D: Deps + 'static>(
     authed: Authed,
     Path(id): Path<SessionId>,
 ) -> Result<Json<Session>, Fail> {
-    owned(&app, &authed, id).await?;
-    permit(&app, &authed, Action::SessionStop, id).await?;
+    let row = owned(&app, &authed, id).await?;
+    permit(&app, &authed, Action::SessionStop, row.project_id).await?;
     let name = app
         .store()
         .member(authed.who.organization, authed.who.member)
@@ -442,7 +475,11 @@ async fn set_budget<D: Deps + 'static>(
 
 pub fn routes<D: Deps + 'static>() -> Router<Arc<App<D>>> {
     Router::new()
-        .route("/sessions", post(start::<D>).get(sessions::<D>))
+        .route(
+            "/projects/{id}/sessions",
+            post(start::<D>).get(project_sessions::<D>),
+        )
+        .route("/sessions", get(sessions::<D>))
         .route("/sessions/{id}", get(read::<D>))
         .route("/sessions/{id}/messages", post(message::<D>))
         .route("/sessions/{id}/events", get(events::<D>))

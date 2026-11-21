@@ -1,5 +1,5 @@
 use antilog_types::{
-    Agent, AuditEntry, MemberId, OrganizationId, Session, SessionEvent, SessionId,
+    Agent, AuditEntry, MemberId, OrganizationId, ProjectId, Session, SessionEvent, SessionId,
 };
 
 use super::{FakeStore, ledger::not_found, locked};
@@ -33,6 +33,7 @@ impl SessionStore for FakeStore {
     async fn sessions(
         &self,
         organization: OrganizationId,
+        project: Option<ProjectId>,
         creator: Option<MemberId>,
     ) -> Result<Vec<Session>, StoreError> {
         let mut rows: Vec<Session> = locked(&self.ledger)
@@ -40,6 +41,7 @@ impl SessionStore for FakeStore {
             .iter()
             .filter(|row| {
                 row.organization_id == organization
+                    && project.is_none_or(|project| project == row.project_id)
                     && creator.is_none_or(|member| member == row.created_by)
             })
             .cloned()

@@ -1,4 +1,4 @@
-use antilog_types::{AuditEntry, OrganizationId, SessionId, Spend};
+use antilog_types::{AuditEntry, OrganizationId, ProjectId, SessionId, Spend};
 
 use super::{FakeStore, ledger::not_found, locked};
 use crate::store::{BudgetStore, SpendLine, SpendScope, SpendTotal, StoreError};
@@ -25,6 +25,26 @@ impl BudgetStore for FakeStore {
             .iter_mut()
             .find(|row| row.id == organization)
         {
+            *row = next;
+        }
+        ledger.audit.push(audit.clone());
+        Ok(())
+    }
+
+    async fn set_project_limits(
+        &self,
+        organization: OrganizationId,
+        project: ProjectId,
+        monthly_cap_cents: Option<i64>,
+        default_budget_cents: Option<i64>,
+        audit: &AuditEntry,
+    ) -> Result<(), StoreError> {
+        let mut ledger = locked(&self.ledger);
+        let mut next = not_found(ledger.project(organization, project))?.clone();
+        next.monthly_cap_cents = monthly_cap_cents;
+        next.default_budget_cents = default_budget_cents;
+        ledger.project_limits_fit(&next)?;
+        if let Some(row) = ledger.projects.iter_mut().find(|row| row.id == project) {
             *row = next;
         }
         ledger.audit.push(audit.clone());
@@ -101,6 +121,9 @@ impl BudgetStore for FakeStore {
             let inside = match scope {
                 SpendScope::Organization => true,
                 SpendScope::Session(id) => row.session_id == id,
+                SpendScope::Project(id) => ledger
+                    .session(organization, row.session_id)
+                    .is_some_and(|session| session.project_id == id),
             };
             if inside {
                 total.cents += row.amount_cents;

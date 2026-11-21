@@ -387,6 +387,7 @@ async fn start(world: &World, prompt: &str) -> Session {
     session::start(
         &*world.deps,
         world.seed.organization.id,
+        world.seed.project.id,
         NewSession {
             agent: "opencode".into(),
             model: "vendor/model-1".into(),
@@ -712,6 +713,7 @@ async fn a_session_that_cannot_start_is_released_as_failed() {
     let session = session::start(
         &*world.deps,
         org,
+        world.seed.project.id,
         NewSession {
             agent: "opencode".into(),
             model: "opencode/test".into(),
@@ -746,6 +748,7 @@ async fn other_organizations_session(world: &World) -> (antilog_types::Organizat
     let session = session::start(
         &*world.deps,
         other.organization.id,
+        other.project.id,
         NewSession {
             agent: "opencode".into(),
             model: "opencode/test".into(),
@@ -1018,6 +1021,7 @@ async fn real_opencode_runs_a_session_end_to_end() {
     let session = session::start(
         &*deps,
         org,
+        seed.project.id,
         NewSession {
             agent: "opencode".into(),
             model: "opencode/test".into(),

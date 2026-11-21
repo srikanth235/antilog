@@ -1,8 +1,8 @@
 use std::future::Future;
 
 use antilog_types::{
-    AccessToken, AuditEntry, Identity, Member, MemberId, Organization, OrganizationId, Role,
-    SignInId, SignInSession, TokenId,
+    AccessToken, AuditEntry, Identity, Member, MemberId, Organization, OrganizationId, Project,
+    ProjectId, ProjectRole, Role, SignInId, SignInSession, TokenId,
 };
 
 use super::StoreError;
@@ -28,7 +28,7 @@ pub struct Membership {
     pub organization: Organization,
 }
 
-/// Organizations, members and their roles, access tokens.
+/// Organizations, members, projects and their roles, access tokens.
 /// Every write takes the audit entry that is stored with it or not at all.
 pub trait OrganizationStore {
     fn create_organization(
@@ -72,7 +72,7 @@ pub trait OrganizationStore {
         organization: OrganizationId,
     ) -> impl Future<Output = Result<Vec<Member>, StoreError>> + Send;
 
-    /// Refused with `LastOwner` when the organization would be left without an owner.
+    /// Refused with `LastOwner` when the organization or a project would be left without an owner.
     fn set_member_role(
         &self,
         organization: OrganizationId,
@@ -80,6 +80,51 @@ pub trait OrganizationStore {
         role: Role,
         audit: &AuditEntry,
     ) -> impl Future<Output = Result<(), StoreError>> + Send;
+
+    /// The creator becomes the project's first owner.
+    fn create_project(
+        &self,
+        project: &Project,
+        owner: MemberId,
+        audit: &AuditEntry,
+    ) -> impl Future<Output = Result<(), StoreError>> + Send;
+
+    fn project(
+        &self,
+        organization: OrganizationId,
+        id: ProjectId,
+    ) -> impl Future<Output = Result<Option<Project>, StoreError>> + Send;
+
+    fn projects(
+        &self,
+        organization: OrganizationId,
+    ) -> impl Future<Output = Result<Vec<Project>, StoreError>> + Send;
+
+    /// Sets a member's role for one project, or with `None` returns them to the
+    /// organization role. Refused with `LastOwner` as above.
+    fn set_project_role(
+        &self,
+        organization: OrganizationId,
+        project: ProjectId,
+        member: MemberId,
+        role: Option<Role>,
+        audit: &AuditEntry,
+    ) -> impl Future<Output = Result<(), StoreError>> + Send;
+
+    fn project_roles(
+        &self,
+        organization: OrganizationId,
+        project: ProjectId,
+    ) -> impl Future<Output = Result<Vec<ProjectRole>, StoreError>> + Send;
+
+    /// The one place a role is resolved: the project's role for the member if
+    /// set, else their organization role. `None` for an unknown member.
+    fn role_in_project(
+        &self,
+        organization: OrganizationId,
+        project: ProjectId,
+        member: MemberId,
+    ) -> impl Future<Output = Result<Option<Role>, StoreError>> + Send;
 
     fn create_access_token(
         &self,

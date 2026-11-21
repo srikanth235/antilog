@@ -4,12 +4,12 @@ use antilog_core::approval::{self, CardRequest};
 use antilog_core::auth::{self, Challenge, Credential, FakeSignIn, Proven, SignInProvider};
 use antilog_core::budget::{self, Spent, month_bounds};
 use antilog_core::fakes::FakeStore;
-use antilog_core::organization::{self as org, Action, Principal, Refusal};
+use antilog_core::organization::{self as org, Action, Principal, Refusal, permit_in};
 use antilog_core::store::{ApprovalStore, BudgetStore, Invariant, SessionStore, Store};
 use antilog_core::token;
 use antilog_types::{
     ApprovalStatus, AuditOutcome, CardKind, Decision, Identity, Member, Organization, Policy,
-    PolicyMode, Role, Session, SessionParams, Spend, SpendId, SpendKind,
+    PolicyMode, Project, Role, Session, SessionParams, Spend, SpendId, SpendKind,
 };
 
 const T0: i64 = 1_700_000_000_000;
@@ -28,6 +28,7 @@ struct World {
     store: FakeStore,
     organization: Organization,
     owner: Principal,
+    project: Project,
 }
 
 impl World {
@@ -40,10 +41,14 @@ impl World {
             organization: organization.id,
             member: signed.member.id,
         };
+        let project = org::create_project(&store, &owner, T0, "checkout", "")
+            .await
+            .unwrap();
         Self {
             store,
             organization,
             owner,
+            project,
         }
     }
 
@@ -70,6 +75,7 @@ impl World {
     async fn session(&self, cents: Option<i64>) -> Session {
         let session = Session::new(
             self.organization.id,
+            self.project.id,
             self.owner.member,
             SessionParams {
                 title: "cut p95".into(),
@@ -115,13 +121,61 @@ async fn the_permission_matrix_is_applied_in_one_place() {
         let (who, _) = world.member(&format!("{role:?}"), *role).await;
         for action in Action::ALL {
             let before = world.audited(action.name(), AuditOutcome::Denied).await;
-            let result = org::permit(&world.store, &who, *action, "target", T0).await;
+            let result = if action.in_project() {
+                permit_in(&world.store, &who, *action, world.project.id, "target", T0).await
+            } else {
+                org::permit(&world.store, &who, *action, "target", T0).await
+            };
             let allowed = *role >= action.minimum();
             assert_eq!(result.is_ok(), allowed, "{role:?} {action:?}");
             let after = world.audited(action.name(), AuditOutcome::Denied).await;
             assert_eq!(after, before + usize::from(!allowed), "{role:?} {action:?}");
         }
     }
+}
+
+#[tokio::test]
+async fn a_project_role_overrides_the_organization_role_in_that_project_only() {
+    let world = World::new().await;
+    let (editor, editor_member) = world.member("ed", Role::Editor).await;
+    let (viewer, viewer_member) = world.member("vi", Role::Viewer).await;
+    let (a, b) = (world.project.clone(), {
+        org::create_project(&world.store, &world.owner, T0, "search", "")
+            .await
+            .unwrap()
+    });
+    org::set_project_role(
+        &world.store,
+        &world.owner,
+        T0,
+        a.id,
+        editor_member.id,
+        Some(Role::Viewer),
+    )
+    .await
+    .unwrap();
+    org::set_project_role(
+        &world.store,
+        &world.owner,
+        T0,
+        a.id,
+        viewer_member.id,
+        Some(Role::Owner),
+    )
+    .await
+    .unwrap();
+    let can = |who: Principal, project: Project| {
+        let store = &world.store;
+        async move {
+            permit_in(store, &who, Action::ApprovalDecide, project.id, "x", T0)
+                .await
+                .is_ok()
+        }
+    };
+    assert!(!can(editor, a.clone()).await);
+    assert!(can(editor, b.clone()).await);
+    assert!(can(viewer, a).await);
+    assert!(!can(viewer, b).await);
 }
 
 #[tokio::test]
@@ -581,7 +635,7 @@ async fn a_session_budget_sits_inside_the_organization_cap() {
         Err(Refusal::Spent(Spent::Organization))
     ));
     assert!(
-        !budget::organization_has_room(&world.store, id, T0 + 4)
+        !budget::has_room(&world.store, id, world.project.id, T0 + 4)
             .await
             .unwrap(),
         "no new session once the organization's cap is reached"

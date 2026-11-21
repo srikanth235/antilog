@@ -41,6 +41,7 @@ macro_rules! ids {
 ids!(
     OrganizationId,
     MemberId,
+    ProjectId,
     TokenId,
     SignInId,
     SessionId,

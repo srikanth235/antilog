@@ -2,7 +2,7 @@
 
 use antilog_types::{
     AccessToken, AuditEntry, AuditId, AuditOutcome, Identity, Me, Member, MemberId, Organization,
-    OrganizationId, OrganizationRef, Role, TokenId,
+    OrganizationId, OrganizationRef, Project, ProjectId, ProjectRole, Role, SessionId, TokenId,
 };
 
 use crate::store::{Invariant, Store, StoreError};
@@ -55,6 +55,9 @@ pub struct Principal {
 pub enum Action {
     MemberAdd,
     MemberSetRole,
+    ProjectCreate,
+    ProjectRoleSet,
+    ProjectLimitsSet,
     OrganizationLimitsSet,
     PolicySet,
     AgentSet,
@@ -84,6 +87,9 @@ impl Action {
     pub const ALL: &'static [Self] = &[
         Self::MemberAdd,
         Self::MemberSetRole,
+        Self::ProjectCreate,
+        Self::ProjectRoleSet,
+        Self::ProjectLimitsSet,
         Self::OrganizationLimitsSet,
         Self::PolicySet,
         Self::AgentSet,
@@ -113,6 +119,9 @@ impl Action {
         match self {
             Self::MemberAdd => "member.add",
             Self::MemberSetRole => "member.set_role",
+            Self::ProjectCreate => "project.create",
+            Self::ProjectRoleSet => "project.set_role",
+            Self::ProjectLimitsSet => "project.set_limits",
             Self::OrganizationLimitsSet => "organization.set_limits",
             Self::PolicySet => "policy.set",
             Self::AgentSet => "agent.set",
@@ -138,7 +147,8 @@ impl Action {
         }
     }
 
-    /// The one permission matrix, checked against the member's organization role.
+    /// The one permission matrix. Project actions are checked against the member's role in that
+    /// project, the rest against their organization role.
     pub const fn minimum(self) -> Role {
         match self {
             Self::TokenCreateOwn => Role::Viewer,
@@ -154,6 +164,9 @@ impl Action {
             | Self::ApprovalDecide => Role::Editor,
             Self::MemberAdd
             | Self::MemberSetRole
+            | Self::ProjectCreate
+            | Self::ProjectRoleSet
+            | Self::ProjectLimitsSet
             | Self::OrganizationLimitsSet
             | Self::PolicySet
             | Self::AgentSet
@@ -167,6 +180,20 @@ impl Action {
             | Self::TokenRevokeOther
             | Self::AuditRead => Role::Owner,
         }
+    }
+
+    pub const fn in_project(self) -> bool {
+        matches!(
+            self,
+            Self::ProjectRoleSet
+                | Self::ProjectLimitsSet
+                | Self::SessionBudgetSet
+                | Self::SessionStart
+                | Self::SessionMessage
+                | Self::SessionStop
+                | Self::ToolCall
+                | Self::ApprovalDecide
+        )
     }
 }
 
@@ -217,6 +244,39 @@ pub async fn permit<S: Store>(
     }
 }
 
+/// Like `permit` for an action in a project: the member's role in that project decides.
+pub async fn permit_in<S: Store>(
+    store: &S,
+    who: &Principal,
+    action: Action,
+    project: ProjectId,
+    target: impl ToString,
+    now: i64,
+) -> Result<Role, Refusal> {
+    store
+        .project(who.organization, project)
+        .await?
+        .ok_or(Refusal::NotFound)?;
+    let role = store
+        .role_in_project(who.organization, project, who.member)
+        .await?;
+    match role {
+        Some(role) if role >= action.minimum() => Ok(role),
+        _ => {
+            store
+                .append_audit(&entry(
+                    who,
+                    action.name(),
+                    target,
+                    AuditOutcome::Denied,
+                    now,
+                ))
+                .await?;
+            Err(Refusal::Denied)
+        }
+    }
+}
+
 /// Who is signed in, and every organization their identity belongs to.
 pub async fn me<S: Store>(store: &S, who: &Principal) -> Result<Me, Refusal> {
     let member = member_of(store, who).await?;
@@ -250,7 +310,7 @@ pub async fn me<S: Store>(store: &S, who: &Principal) -> Result<Me, Refusal> {
     })
 }
 
-/// A read needs only membership: every member reads every session.
+/// A read needs only membership: every member reads every project.
 pub async fn member_of<S: Store>(store: &S, who: &Principal) -> Result<Member, Refusal> {
     store
         .member(who.organization, who.member)
@@ -308,6 +368,63 @@ pub async fn set_member_role<S: Store>(
         )
         .await?;
     Ok(())
+}
+
+pub async fn create_project<S: Store>(
+    store: &S,
+    who: &Principal,
+    now: i64,
+    name: &str,
+    description: &str,
+) -> Result<Project, Refusal> {
+    name_ok(name, "a project's name is 1 to 200 characters")?;
+    if description.chars().count() > 2000 {
+        return Err(Refusal::Invalid("a description is at most 2000 characters"));
+    }
+    permit(store, who, Action::ProjectCreate, name, now).await?;
+    let project = Project::new(who.organization, name.trim(), description, now);
+    store
+        .create_project(
+            &project,
+            who.member,
+            &entry(who, "project.create", project.id, AuditOutcome::Done, now),
+        )
+        .await?;
+    Ok(project)
+}
+
+pub async fn set_project_role<S: Store>(
+    store: &S,
+    who: &Principal,
+    now: i64,
+    project: ProjectId,
+    member: MemberId,
+    role: Option<Role>,
+) -> Result<(), Refusal> {
+    permit_in(store, who, Action::ProjectRoleSet, project, project, now).await?;
+    store
+        .set_project_role(
+            who.organization,
+            project,
+            member,
+            role,
+            &entry(who, "project.set_role", project, AuditOutcome::Done, now),
+        )
+        .await?;
+    Ok(())
+}
+
+pub async fn project_roles<S: Store>(
+    store: &S,
+    who: &Principal,
+    project: ProjectId,
+) -> Result<Vec<ProjectRole>, Refusal> {
+    member_of(store, who).await?;
+    store
+        .project(who.organization, project)
+        .await?
+        .ok_or(Refusal::NotFound)?;
+    Ok(store.project_roles(who.organization, project).await?)
 }
 
 /// A token for oneself, or for another member (a service account) if an organization owner.
@@ -404,4 +521,37 @@ pub async fn organization<S: Store>(store: &S, who: &Principal) -> Result<Organi
         .organization(who.organization)
         .await?
         .ok_or(Refusal::NotFound)
+}
+
+/// The project a session belongs to, for a permission check at project scope.
+pub async fn project_of<S: Store>(
+    store: &S,
+    who: &Principal,
+    session: SessionId,
+) -> Result<ProjectId, Refusal> {
+    store
+        .session(who.organization, session)
+        .await?
+        .map(|session| session.project_id)
+        .ok_or(Refusal::NotFound)
+}
+
+/// A write on a session: the role in its project decides.
+pub async fn permit_session<S: Store>(
+    store: &S,
+    who: &Principal,
+    now: i64,
+    action: Action,
+    session: SessionId,
+    target: impl ToString,
+) -> Result<(), Refusal> {
+    let project = project_of(store, who, session).await?;
+    permit_in(store, who, action, project, target, now).await?;
+    Ok(())
+}
+
+/// The projects of the organization. Every member reads.
+pub async fn projects<S: Store>(store: &S, who: &Principal) -> Result<Vec<Project>, Refusal> {
+    member_of(store, who).await?;
+    Ok(store.projects(who.organization).await?)
 }

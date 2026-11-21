@@ -178,6 +178,7 @@ impl World {
         antilog_core::session::start(
             &*self.deps,
             self.seed.organization.id,
+            self.seed.project.id,
             antilog_core::session::NewSession {
                 agent: "opencode".into(),
                 model: "opencode/test".into(),
