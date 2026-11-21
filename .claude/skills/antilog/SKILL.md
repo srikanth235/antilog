@@ -52,7 +52,7 @@ The OpenAPI document is `openapi/antilog.json`; it is generated, never edited by
 
 ## `antilog runner`
 
-`antilog runner --server URL --proxy HOST:PORT` with the runner key in `ANTILOG_RUNNER_KEY` polls the server's queue and runs each session in a Docker container. Flags include `--image`, `--docker`, `--state-dir`, `--opencode`, `--exit-after-last-session`, `--drain-grace-sec`, `--disk-gb`, `--poll-secs`, `--pure` and `--disable-project-config`; `antilog runner --help` is the source. What it does is in [../session/runner.md](../session/runner.md).
+`antilog runner --server URL --proxy HOST:PORT` with the runner key in `ANTILOG_RUNNER_KEY` polls the server's queue and runs each session in a Docker container. Flags include `--image`, `--docker`, `--opencode`, `--exit-after-last-session`, `--drain-grace-sec`, `--setup-timeout-sec`, `--disk-gb`, `--poll-secs`, `--pure` and `--disable-project-config`; `antilog runner --help` is the source. What it does is in [../session/runner.md](../session/runner.md).
 
 ## The tools an agent gets
 

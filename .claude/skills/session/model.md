@@ -35,7 +35,7 @@ A session's fields (`antilog-types/src/session.rs`): `id`, `organizationId`, `pr
 | model | `provider/model`. It decides the provider whose key the proxy uses and the harness's `small_model` | an agent |
 | cost tier | "$" to "$$$" on each agent, set when the agent is added ([add-agent.md](add-agent.md)) | a quality ranking |
 | Auto | `auto`: the organization's default agent, else the only agent turned on, and the built-in OpenCode agent while none is set up; it says why in one line. A person can always pick a named agent. No agent is preselected by brand | a favoured agent |
-| environment | What a session runs on: network level (none, limited with exact hosts, full), plain variables, a setup script and a size. An organization manages them in Settings, Connections; every change is a new version and a session keeps the version it started on. An agent proposes a change with `set_environment` | a server, a config file |
+| environment | What a session runs on: default repos, a network level (none, limited with exact hosts, full), write-only network secrets, plain variables, a setup script and a size. An organization manages them in Settings, Connections; every change is a new version and a session keeps the version it started on. An agent proposes a change with `set_environment` | a server, a config file |
 | attached repo | A repo the session works in, any number, cloned into the machine at start or after an approved Attach repo | a clone Antilog keeps |
 
 ## Spend
