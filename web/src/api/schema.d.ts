@@ -660,6 +660,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sessions/{id}/changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["changes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/{id}/changes/commits/{sha}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["commit_changes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sessions/{id}/events": {
         parameters: {
             query?: never;
@@ -952,6 +984,21 @@ export interface components {
             kind: "use_connector_tool";
             tool: string;
         };
+        /** @description The files of one commit. */
+        CommitChanges: {
+            files: components["schemas"]["FileChange"][];
+            sha: string;
+        };
+        /** @description One commit made since the base. */
+        CommitInfo: {
+            sha: string;
+            subject: string;
+            /**
+             * Format: int64
+             * @description When it was committed, epoch milliseconds.
+             */
+            time: number;
+        };
         /** @description A remote MCP server. The credential is kept sealed on the server and never shown. */
         Connector: {
             /** Format: int64 */
@@ -1036,6 +1083,28 @@ export interface components {
             field: string;
             message: string;
         };
+        /**
+         * @description One file of a diff. `patch` is the unified diff text from its first `@@` line on, with
+         *     three lines of context; it is empty for a binary file and for one that is too large.
+         */
+        FileChange: {
+            /** Format: int32 */
+            additions: number;
+            binary: boolean;
+            /** Format: int32 */
+            deletions: number;
+            /** @description The path before a rename; `null` otherwise. */
+            oldPath?: string | null;
+            patch: string;
+            path: string;
+            status: components["schemas"]["FileStatus"];
+            tooLarge: boolean;
+        };
+        /**
+         * @description How a file differs from the base.
+         * @enum {string}
+         */
+        FileStatus: "added" | "modified" | "deleted" | "renamed";
         Health: {
             status: components["schemas"]["HealthStatus"];
         };
@@ -1102,6 +1171,10 @@ export interface components {
             status: components["schemas"]["SessionStatus"];
             /** @enum {string} */
             type: "session";
+        } | {
+            sessionId: components["schemas"]["SessionId"];
+            /** @enum {string} */
+            type: "changes";
         } | {
             /** Format: int32 */
             pending: number;
@@ -1322,6 +1395,23 @@ export interface components {
         };
         /** @enum {string} */
         RepoAccess: "read" | "push";
+        /** @description One repo's changes, as the Changes panel reads them. */
+        RepoChanges: {
+            baseBranch: string;
+            baseSha: string;
+            /** @description Newest first. Each has its own diff at `GET /sessions/{id}/changes/commits/{sha}`. */
+            commits: components["schemas"]["CommitInfo"][];
+            /** @description All changes: the base against the working tree. */
+            files: components["schemas"]["FileChange"][];
+            headBranch: string;
+            headSha: string;
+            repo: string;
+            /**
+             * Format: int64
+             * @description When the runner reported it, epoch milliseconds.
+             */
+            reportedAt: number;
+        };
         /**
          * @description Ordered: a higher role may do what a lower one may.
          * @enum {string}
@@ -1371,6 +1461,10 @@ export interface components {
         SessionBudget: {
             /** Format: int64 */
             budgetCapCents: number;
+        };
+        /** @description The latest report for each repo of the session; empty before the first one. */
+        SessionChanges: {
+            repos: components["schemas"]["RepoChanges"][];
         };
         /**
          * @description One item of a session's conversation. A tool call carries what `ToolRecord` keeps, never more:
@@ -3017,6 +3111,73 @@ export interface operations {
             };
             /** @description It would pass the organization's monthly cap */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    changes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The session */
+                id: components["schemas"]["SessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description What the session changed in each repo against the commit it was cloned at, as of the end of the agent's last turn: commits, files and their unified diffs. Empty before the first report */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionChanges"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    commit_changes: {
+        parameters: {
+            query?: {
+                /** @description The repo, when more than one has the commit. */
+                repo?: string;
+            };
+            header?: never;
+            path: {
+                /** @description The session */
+                id: components["schemas"]["SessionId"];
+                /** @description A commit listed in the session's changes */
+                sha: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The files of that commit against its parent */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommitChanges"];
+                };
+            };
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

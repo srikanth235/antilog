@@ -10,15 +10,24 @@ export function PanelFrame(props: {
   panel: Panel;
   onClose: () => void;
   sub?: string;
+  /** A panel that needs room, such as a diff beside its file list. */
+  wide?: boolean;
+  /** Shown beside the close button. */
+  actions?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const label = w.experiment[props.panel];
   return (
-    <aside className="pane" id={`panel-${props.panel}`} aria-label={label}>
+    <aside
+      className={props.wide ? "pane wide" : "pane"}
+      id={`panel-${props.panel}`}
+      aria-label={label}
+    >
       <div className="pane-h">
         <h2>{label}</h2>
         {props.sub === undefined ? null : <span className="sub">{props.sub}</span>}
         <span className="grow" />
+        {props.actions}
         <button
           type="button"
           className="icon-btn sm"

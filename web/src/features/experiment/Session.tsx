@@ -21,6 +21,7 @@ import { groupEvents } from "../../lib/toolcalls";
 import { w } from "../../words";
 import { ApprovalCard } from "./ApprovalCard";
 import { BudgetDialog } from "./BudgetDialog";
+import { ChangesPanel } from "./Changes";
 import { Composer } from "./Composer";
 import { Header, type Panel } from "./Header";
 import { OverviewPanel, PlatformPanel } from "./Panels";
@@ -230,6 +231,8 @@ export function Session(props: {
             onBudget={() => setBudgetOpen(true)}
             canEdit={editor}
           />
+        ) : props.panel === "changes" ? (
+          <ChangesPanel sessionId={s.id} onClose={() => props.onPanel(undefined)} />
         ) : props.panel === undefined ? null : (
           <PlatformPanel panel={props.panel} onClose={() => props.onPanel(undefined)} />
         )}
