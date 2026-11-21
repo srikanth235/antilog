@@ -579,6 +579,8 @@ async fn a_claim_carries_the_environment_version_the_session_started_on() {
         allow_package_managers: false,
         variables: [("STRIPE_KEY".to_owned(), "sk_test".to_owned())].into(),
         setup_script: "npm ci".into(),
+        repos: vec!["acme/app".into()],
+        network_secrets: Vec::new(),
         cpus: 4,
         memory_mb: 16384,
     };
@@ -618,6 +620,21 @@ async fn a_claim_carries_the_environment_version_the_session_started_on() {
     let plain = session::start(&*world.deps, org, world.seed.project.id, on(None))
         .await
         .unwrap();
+    // The environment's default repos come first; a repo the person picked too is not doubled.
+    let picked = session::start(
+        &*world.deps,
+        org,
+        world.seed.project.id,
+        NewSession {
+            repos: vec!["acme/web".into(), "acme/app".into()],
+            ..on(Some("bench"))
+        },
+    )
+    .await
+    .unwrap();
+    assert_eq!(picked.repos, vec!["acme/app", "acme/web"]);
+    assert_eq!(first.repos, vec!["acme/app"]);
+    assert!(plain.repos.is_empty());
 
     let polled = poll(&world.app, "r1", &[]).await;
     let spec = |id: antilog_types::SessionId| -> EnvironmentSpec {
@@ -642,6 +659,7 @@ async fn a_claim_carries_the_environment_version_the_session_started_on() {
     );
     let two = spec(second.id);
     assert_eq!((two.version, two.network), (2, NetworkLevel::None));
+    assert_eq!(one.repos, vec!["acme/app".to_owned()]);
     assert_eq!(spec(plain.id), EnvironmentSpec::default());
 }
 

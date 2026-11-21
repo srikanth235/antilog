@@ -1012,7 +1012,14 @@ export interface components {
             memoryMb: number;
             name: string;
             network: components["schemas"]["NetworkLevel"];
-            /** @description Runs as root once per version before the agent starts; empty for none. */
+            /** @description What the proxy adds to HTTPS requests to a host. Never a value (write-only). */
+            networkSecrets: components["schemas"]["NetworkSecret"][];
+            /** @description Default repos (`owner/repo`): a new session on this environment starts with them. */
+            repos: string[];
+            /**
+             * @description Runs as root in a fresh container after the repos are cloned, before the agent starts;
+             *     empty for none. A failing script does not fail the session.
+             */
             setupScript: string;
             /** @description Plain variables, readable by the agent. Model keys never go here. */
             variables: {
@@ -1152,6 +1159,16 @@ export interface components {
          * @enum {string}
          */
         NetworkLevel: "none" | "limited" | "full";
+        /**
+         * @description A header the proxy adds to HTTPS requests to `host` from sessions in an environment, so the
+         *     value never enters the machine. The value is not part of this type: it is write-only.
+         */
+        NetworkSecret: {
+            header: string;
+            host: string;
+            /** @description Put before the value, such as `Bearer`; none when empty or left out. */
+            prefix?: string | null;
+        };
         /** @description What an owner sets for an agent. */
         NewAgent: {
             costTier: components["schemas"]["CostTier"];
@@ -1175,6 +1192,10 @@ export interface components {
             memoryMb: number;
             name: string;
             network: components["schemas"]["NetworkLevel"];
+            /** @description On an edit, an entry without a `value` keeps the value the same host and header had. */
+            networkSecrets?: components["schemas"]["NewNetworkSecret"][];
+            /** @description `owner/repo`, at most 50. */
+            repos?: string[];
             /** @description At most 64 KB. */
             setupScript?: string;
             /** @description Readable by the agent: a service key goes here, a model key never does. */
@@ -1190,6 +1211,14 @@ export interface components {
         /** @description A key to set or replace. It is never returned. */
         NewModelKey: {
             key: string;
+        };
+        /** @description A network secret a person writes: the value is sealed at once and never read back. */
+        NewNetworkSecret: {
+            header: string;
+            host: string;
+            prefix?: string | null;
+            /** @description Left out on an edit to keep the stored value. */
+            value?: string | null;
         };
         NewOrganization: {
             code: string;

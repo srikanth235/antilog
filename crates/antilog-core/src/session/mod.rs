@@ -186,8 +186,15 @@ pub async fn start<D: Deps>(
         return Err(SessionError::CapReached);
     }
     // The environment is pinned at its version now: a later edit does not move a session.
-    let (environment, environment_version) =
-        pin(deps.store(), organization, new.environment.as_deref()).await?;
+    let pinned = pin(deps.store(), organization, new.environment.as_deref()).await?;
+    // The environment's default repos come first, then the ones the person picked.
+    let mut repos = pinned.repos;
+    for picked in new.repos {
+        if !repos.contains(&picked) {
+            repos.push(picked);
+        }
+    }
+    let (environment, environment_version) = (pinned.id, pinned.version);
     let session = Session::new(
         organization,
         project,
@@ -196,7 +203,7 @@ pub async fn start<D: Deps>(
             title: title_of(new.title.as_deref(), &new.prompt),
             agent: new.agent,
             model: new.model,
-            repos: new.repos.clone(),
+            repos: repos.clone(),
             environment: environment.clone(),
             environment_version,
             budget_cap_cents: cap,
@@ -213,7 +220,7 @@ pub async fn start<D: Deps>(
     );
     deps.store().create_session(&session, &entry).await?;
     let seed = Seed {
-        repos: new.repos,
+        repos,
         environment,
         environment_version,
     };

@@ -429,6 +429,18 @@ pub async fn ingest<D: Deps>(
                 };
                 record(deps, &row, format!("oc:{key}"), kind, None, text).await?;
             }
+            Item::Note { key, text } => {
+                // As the machine-time and card notes are: Antilog's words, kept as agent text.
+                record(
+                    deps,
+                    &row,
+                    format!("note:{key}"),
+                    EventKind::Agent,
+                    None,
+                    text,
+                )
+                .await?;
+            }
             Item::Permission { id, tool, detail } => {
                 ask_card(deps.store(), now_ms(deps), &machine, id, tool, detail).await?;
             }

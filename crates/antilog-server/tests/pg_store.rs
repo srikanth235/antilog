@@ -166,6 +166,9 @@ async fn audit_log_and_spend_refuse_every_change() -> anyhow::Result<()> {
         "update environment_versions set name = 'x'",
         "delete from environment_versions",
         "truncate environment_versions",
+        "update environment_secrets set host = 'x'",
+        "delete from environment_secrets",
+        "truncate environment_secrets",
     ] {
         let error = sqlx::query(statement).execute(&pool).await.err();
         let code = error.and_then(|error| {
@@ -577,6 +580,7 @@ async fn environments_and_their_versions_see_only_their_organization() -> anyhow
             .add_environment(
                 seed.organization.id,
                 &environment,
+                &[],
                 &AuditEntry::new(
                     seed.organization.id,
                     Some(seed.owner.id),
@@ -621,6 +625,76 @@ async fn environments_and_their_versions_see_only_their_organization() -> anyhow
         code.as_deref(),
         Some("42501"),
         "a write into another organization is refused"
+    );
+    Ok(())
+}
+
+#[tokio::test]
+async fn a_network_secret_is_sealed_at_rest_and_follows_its_version() -> anyhow::Result<()> {
+    use antilog_core::secrets::Secret;
+    use antilog_core::store::{EnvironmentStore, SecretValue};
+    use antilog_types::{Environment, NetworkSecret};
+
+    let (store, pool, _container) = migrated_store().await?;
+    let seed = antilog_core::seed::organization(&store).await;
+    let org = seed.organization.id;
+    let log = |what: &str| {
+        AuditEntry::new(
+            org,
+            Some(seed.owner.id),
+            what,
+            "vault",
+            AuditOutcome::Done,
+            1,
+        )
+    };
+    let mut environment = Environment::built_in();
+    environment.id = "vault".to_owned();
+    environment.built_in = false;
+    environment.network_secrets = vec![NetworkSecret {
+        host: "api.stripe.com".into(),
+        header: "Authorization".into(),
+        prefix: Some("Bearer".into()),
+    }];
+    let value = |value: Option<&str>| {
+        [SecretValue {
+            host: "api.stripe.com".into(),
+            header: "Authorization".into(),
+            value: value.map(Secret::new),
+        }]
+    };
+    store
+        .add_environment(
+            org,
+            &environment,
+            &value(Some("sk_live_secret")),
+            &log("environment.create"),
+        )
+        .await?;
+    environment.version = 2;
+    store
+        .add_environment_version(org, &environment, &value(None), &log("environment.edit"))
+        .await?;
+    // At rest it is ciphertext, in both versions, and it opens only through the store.
+    let sealed: Vec<Vec<u8>> =
+        sqlx::query_scalar("select sealed from environment_secrets order by version")
+            .fetch_all(&pool)
+            .await?;
+    assert_eq!(sealed.len(), 2);
+    for bytes in &sealed {
+        assert!(!bytes.windows(14).any(|w| w == b"sk_live_secret"));
+    }
+    for version in [1, 2] {
+        let opened = store.network_secret_values(org, "vault", version).await?;
+        assert_eq!(opened.len(), 1);
+        assert_eq!(opened[0].1.expose(), "sk_live_secret");
+    }
+    // A stored value is history: it cannot be changed or removed.
+    assert!(
+        sqlx::query("update environment_secrets set host = 'x.example.com'")
+            .execute(&pool)
+            .await
+            .is_err()
     );
     Ok(())
 }

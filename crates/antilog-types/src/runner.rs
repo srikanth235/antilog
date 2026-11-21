@@ -152,6 +152,9 @@ pub enum Item {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         tool: Option<ToolRecord>,
     },
+    /// A note from Antilog for the conversation, such as a failed setup script. It is shown as
+    /// a note in the transcript; `key` is unique within the session.
+    Note { key: String, text: String },
     /// The agent asked for a permission: it becomes an approval card.
     Permission {
         id: String,
@@ -223,8 +226,7 @@ text_enum!(
 );
 
 /// One version of an environment, as a runner receives it at claim. Every change to an
-/// environment makes a new version, so a setup snapshot is keyed by (`id`, `version`).
-/// Session E fills it into `SessionSpec`; session D builds the machine from it.
+/// environment makes a new version. It carries no network secret: a value never reaches a runner.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EnvironmentSpec {
@@ -235,8 +237,12 @@ pub struct EnvironmentSpec {
     pub allow_package_managers: bool,
     /// Plain variables, readable by the agent; the screen says so.
     pub variables: BTreeMap<String, String>,
-    /// Runs as root once per (`id`, `version`) before the agent starts; empty for none.
+    /// Runs as root in a fresh container after the session's repos are cloned and before the
+    /// agent starts, from the folder that holds the checkouts; empty for none.
     pub setup_script: String,
+    /// The environment's default repos (`owner/repo`). The claim's `repos` already include them.
+    #[serde(default)]
+    pub repos: Vec<String>,
     pub cpus: u32,
     pub memory_mb: u32,
 }
@@ -252,6 +258,7 @@ impl Default for EnvironmentSpec {
             allow_package_managers: true,
             variables: BTreeMap::new(),
             setup_script: String::new(),
+            repos: Vec::new(),
             cpus: 2,
             memory_mb: 8192,
         }

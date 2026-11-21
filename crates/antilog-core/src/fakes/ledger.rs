@@ -3,6 +3,7 @@ use antilog_types::{
     Policy, Project, ProjectId, ProjectRole, Role, Session, SessionEvent, SessionId, Spend,
 };
 
+use crate::secrets::Secret;
 use crate::store::{Invariant, SignInRecord, StoreError, TokenRecord};
 
 #[derive(Default)]
@@ -22,6 +23,8 @@ pub(crate) struct Ledger {
     pub agents: Vec<(OrganizationId, Agent)>,
     /// Every version of every environment; `archived` is set on all of an environment's rows.
     pub environments: Vec<(OrganizationId, Environment)>,
+    /// (organization, environment id, version, host, header, value)
+    pub environment_secrets: Vec<(OrganizationId, String, u32, String, String, Secret)>,
 }
 
 pub(super) fn least(a: Option<i64>, b: Option<i64>) -> Option<i64> {

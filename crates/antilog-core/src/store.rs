@@ -14,7 +14,7 @@ pub use approval::ApprovalStore;
 pub use budget::{BudgetStore, SpendLine, SpendScope, SpendTotal};
 pub use card::CardStore;
 pub use customize::{ConnectorRow, CustomizeStore, SessionScope};
-pub use environment::EnvironmentStore;
+pub use environment::{EnvironmentStore, SecretValue};
 pub use model_key::{GatewayScope, ModelKeyStore};
 pub use organization::{Membership, OrganizationStore, SignInRecord, TokenRecord};
 pub use runner::{RUNNER_LOCK_LAPSE_MS, RunnerStore};

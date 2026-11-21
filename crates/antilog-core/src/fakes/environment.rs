@@ -1,13 +1,53 @@
-use antilog_types::{AuditEntry, Environment, OrganizationId};
+use antilog_types::{AuditEntry, Environment, NetworkSecret, OrganizationId};
 
 use super::{FakeStore, ledger::not_found, locked};
-use crate::store::{EnvironmentStore, Invariant, StoreError};
+use crate::secrets::Secret;
+use crate::store::{EnvironmentStore, Invariant, SecretValue, StoreError};
+
+/// Files a version's secret values; one with no value takes the previous version's.
+fn keep_secrets(
+    ledger: &mut super::ledger::Ledger,
+    organization: OrganizationId,
+    environment: &Environment,
+    secrets: &[SecretValue],
+) -> Result<(), StoreError> {
+    let mut filed = Vec::new();
+    for secret in secrets {
+        let value = match &secret.value {
+            Some(value) => value.clone(),
+            None => ledger
+                .environment_secrets
+                .iter()
+                .rev()
+                .find(|(org, id, version, host, header, _)| {
+                    *org == organization
+                        && *id == environment.id
+                        && *version < environment.version
+                        && *host == secret.host
+                        && header.eq_ignore_ascii_case(&secret.header)
+                })
+                .map(|row| row.5.clone())
+                .ok_or(StoreError::NotFound)?,
+        };
+        filed.push((
+            organization,
+            environment.id.clone(),
+            environment.version,
+            secret.host.clone(),
+            secret.header.clone(),
+            value,
+        ));
+    }
+    ledger.environment_secrets.extend(filed);
+    Ok(())
+}
 
 impl EnvironmentStore for FakeStore {
     async fn add_environment(
         &self,
         organization: OrganizationId,
         environment: &Environment,
+        secrets: &[SecretValue],
         audit: &AuditEntry,
     ) -> Result<(), StoreError> {
         let mut ledger = locked(&self.ledger);
@@ -18,6 +58,7 @@ impl EnvironmentStore for FakeStore {
         {
             return Err(StoreError::Conflict);
         }
+        keep_secrets(&mut ledger, organization, environment, secrets)?;
         ledger
             .environments
             .push((organization, environment.clone()));
@@ -29,6 +70,7 @@ impl EnvironmentStore for FakeStore {
         &self,
         organization: OrganizationId,
         environment: &Environment,
+        secrets: &[SecretValue],
         audit: &AuditEntry,
     ) -> Result<(), StoreError> {
         let mut ledger = locked(&self.ledger);
@@ -46,6 +88,7 @@ impl EnvironmentStore for FakeStore {
         if environment.version != newest.version + 1 {
             return Err(StoreError::Conflict);
         }
+        keep_secrets(&mut ledger, organization, environment, secrets)?;
         ledger
             .environments
             .push((organization, environment.clone()));
@@ -108,5 +151,38 @@ impl EnvironmentStore for FakeStore {
             .iter()
             .find(|(org, row)| *org == organization && row.id == id && row.version == version)
             .map(|(_, row)| row.clone()))
+    }
+
+    async fn network_secret_values(
+        &self,
+        organization: OrganizationId,
+        id: &str,
+        version: u32,
+    ) -> Result<Vec<(NetworkSecret, Secret)>, StoreError> {
+        let ledger = locked(&self.ledger);
+        let Some((_, row)) = ledger
+            .environments
+            .iter()
+            .find(|(org, row)| *org == organization && row.id == id && row.version == version)
+        else {
+            return Ok(Vec::new());
+        };
+        Ok(row
+            .network_secrets
+            .iter()
+            .filter_map(|meta| {
+                ledger
+                    .environment_secrets
+                    .iter()
+                    .find(|(org, eid, v, host, header, _)| {
+                        *org == organization
+                            && eid == id
+                            && *v == version
+                            && *host == meta.host
+                            && *header == meta.header
+                    })
+                    .map(|found| (meta.clone(), found.5.clone()))
+            })
+            .collect())
     }
 }

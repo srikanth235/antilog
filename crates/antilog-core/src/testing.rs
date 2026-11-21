@@ -6,11 +6,14 @@
 use antilog_types::{
     Agent, Approval, ApprovalId, ApprovalStatus, AuditEntry, AuditId, AuditOutcome, CardKind,
     CostTier, Decision, Environment, EventKind, Identity, Member, MemberId, NetworkLevel,
-    Organization, OrganizationId, Policy, PolicyMode, Project, ProjectRole, Role, Session,
-    SessionId, SessionParams, SessionStatus, Spend, SpendId, SpendKind,
+    NetworkSecret, Organization, OrganizationId, Policy, PolicyMode, Project, ProjectRole, Role,
+    Session, SessionId, SessionParams, SessionStatus, Spend, SpendId, SpendKind,
 };
 
-use crate::store::{Invariant, NewEvent, SessionChange, SpendScope, SpendTotal, Store, StoreError};
+use crate::secrets::Secret;
+use crate::store::{
+    Invariant, NewEvent, SecretValue, SessionChange, SpendScope, SpendTotal, Store, StoreError,
+};
 use crate::token;
 
 const T0: i64 = 1_700_000_000_000;
@@ -1084,6 +1087,12 @@ async fn environments<S: Store>(store: &S) {
         allow_package_managers: version % 2 == 1,
         variables: [("STRIPE_KEY".to_owned(), "sk_test".to_owned())].into(),
         setup_script: "echo ready".to_owned(),
+        repos: vec!["acme/app".to_owned()],
+        network_secrets: vec![NetworkSecret {
+            host: "api.stripe.com".to_owned(),
+            header: "Authorization".to_owned(),
+            prefix: Some("Bearer".to_owned()),
+        }],
         cpus: 4,
         memory_mb: 16384,
         built_in: false,
@@ -1096,18 +1105,19 @@ async fn environments<S: Store>(store: &S) {
     // A new environment is version 1; its id is taken for good.
     let first = version("bench", 1, NetworkLevel::Limited);
     store
-        .add_environment(org, &first, &world.log("environment.create"))
+        .add_environment(org, &first, &[], &world.log("environment.create"))
         .await
         .expect("created");
     conflict(
         store
-            .add_environment(org, &first, &world.log("environment.create"))
+            .add_environment(org, &first, &[], &world.log("environment.create"))
             .await,
     );
     store
         .add_environment(
             org,
             &version("full", 1, NetworkLevel::Full),
+            &[],
             &world.log("environment.create"),
         )
         .await
@@ -1116,13 +1126,13 @@ async fn environments<S: Store>(store: &S) {
     // An edit is the next version; the old one stays readable as it was.
     let second = version("bench", 2, NetworkLevel::None);
     store
-        .add_environment_version(org, &second, &world.log("environment.edit"))
+        .add_environment_version(org, &second, &[], &world.log("environment.edit"))
         .await
         .expect("edited");
     // Two edits made from one version cannot both land, and a version cannot be skipped.
     conflict(
         store
-            .add_environment_version(org, &second, &world.log("environment.edit"))
+            .add_environment_version(org, &second, &[], &world.log("environment.edit"))
             .await,
     );
     conflict(
@@ -1130,6 +1140,7 @@ async fn environments<S: Store>(store: &S) {
             .add_environment_version(
                 org,
                 &version("bench", 5, NetworkLevel::None),
+                &[],
                 &world.log("environment.edit"),
             )
             .await,
@@ -1139,6 +1150,7 @@ async fn environments<S: Store>(store: &S) {
             .add_environment_version(
                 org,
                 &version("nothing", 2, NetworkLevel::None),
+                &[],
                 &world.log("environment.edit"),
             )
             .await,
@@ -1197,6 +1209,7 @@ async fn environments<S: Store>(store: &S) {
             .add_environment_version(
                 org,
                 &version("bench", 3, NetworkLevel::None),
+                &[],
                 &world.log("environment.edit"),
             )
             .await,
@@ -1222,6 +1235,73 @@ async fn environments<S: Store>(store: &S) {
             .map(|row| (row.id.as_str(), row.archived))
             .collect::<Vec<_>>(),
         vec![("bench", true), ("full", false)]
+    );
+
+    // A network secret's value is kept apart from the version: a later version without a value
+    // keeps the one before it, a replaced value takes over, and a value that was never stored
+    // cannot be kept.
+    let stored = |host: &str, value: Option<&str>| SecretValue {
+        host: host.to_owned(),
+        header: "Authorization".to_owned(),
+        value: value.map(Secret::new),
+    };
+    store
+        .add_environment(
+            org,
+            &version("vault", 1, NetworkLevel::Full),
+            &[stored("api.stripe.com", Some("sk_live_one"))],
+            &world.log("environment.create"),
+        )
+        .await
+        .expect("a secret is kept");
+    store
+        .add_environment_version(
+            org,
+            &version("vault", 2, NetworkLevel::Full),
+            &[stored("api.stripe.com", None)],
+            &world.log("environment.edit"),
+        )
+        .await
+        .expect("a secret is carried over");
+    store
+        .add_environment_version(
+            org,
+            &version("vault", 3, NetworkLevel::Full),
+            &[stored("api.stripe.com", Some("sk_live_two"))],
+            &world.log("environment.edit"),
+        )
+        .await
+        .expect("a secret is replaced");
+    not_found(
+        store
+            .add_environment_version(
+                org,
+                &version("vault", 4, NetworkLevel::Full),
+                &[stored("api.other.com", None)],
+                &world.log("environment.edit"),
+            )
+            .await,
+    );
+    for (number, value) in [(1, "sk_live_one"), (2, "sk_live_one"), (3, "sk_live_two")] {
+        let opened = store
+            .network_secret_values(org, "vault", number)
+            .await
+            .expect("opened");
+        assert_eq!(
+            opened
+                .iter()
+                .map(|(meta, opened)| (meta.host.as_str(), opened.expose()))
+                .collect::<Vec<_>>(),
+            vec![("api.stripe.com", value)],
+            "version {number}"
+        );
+    }
+    assert!(
+        store
+            .network_secret_values(world_org(store).await, "vault", 3)
+            .await
+            .expect("read")
+            .is_empty()
     );
 
     // Another organization sees none of it.

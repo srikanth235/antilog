@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select v.id, e.archived, v.version, v.name, v.network, v.allowed_hosts, v.allow_package_managers, v.variables, v.setup_script, v.cpus, v.memory_mb, v.created_by, (extract(epoch from v.created_at) * 1000)::bigint as \"created_at!\"\n               from environment_versions v join environments e on e.organization_id = v.organization_id and e.id = v.id\n               where v.organization_id = $1 and v.id = $2 and v.version = $3",
+  "query": "select distinct on (v.id) v.id, e.archived, v.version, v.name, v.network, v.allowed_hosts, v.allow_package_managers, v.variables, v.setup_script, v.repos, v.network_secrets, v.cpus, v.memory_mb, v.created_by, (extract(epoch from v.created_at) * 1000)::bigint as \"created_at!\"\n               from environment_versions v join environments e on e.organization_id = v.organization_id and e.id = v.id\n               where v.organization_id = $1 order by v.id, v.version desc",
   "describe": {
     "columns": [
       {
@@ -104,6 +104,28 @@
       },
       {
         "ordinal": 9,
+        "name": "repos",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "environment_versions",
+            "name": "repos"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "network_secrets",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "environment_versions",
+            "name": "network_secrets"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
         "name": "cpus",
         "type_info": "Int4",
         "origin": {
@@ -114,7 +136,7 @@
         }
       },
       {
-        "ordinal": 10,
+        "ordinal": 12,
         "name": "memory_mb",
         "type_info": "Int4",
         "origin": {
@@ -125,7 +147,7 @@
         }
       },
       {
-        "ordinal": 11,
+        "ordinal": 13,
         "name": "created_by",
         "type_info": "Uuid",
         "origin": {
@@ -136,7 +158,7 @@
         }
       },
       {
-        "ordinal": 12,
+        "ordinal": 14,
         "name": "created_at!",
         "type_info": "Int8",
         "origin": "Expression"
@@ -144,12 +166,12 @@
     ],
     "parameters": {
       "Left": [
-        "Uuid",
-        "Text",
-        "Int4"
+        "Uuid"
       ]
     },
     "nullable": [
+      false,
+      false,
       false,
       false,
       false,
@@ -165,5 +187,5 @@
       null
     ]
   },
-  "hash": "36530cd3bdc2738716339f101e70d0b1f8f59a8dbe198cd76ad205293663a329"
+  "hash": "7a80c11abfcedf8baaba0502aa8bec41cfceb56cebc8d15d37d438d43d91cb4c"
 }

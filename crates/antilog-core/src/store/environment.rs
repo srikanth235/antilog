@@ -1,8 +1,18 @@
 use std::future::Future;
 
-use antilog_types::{AuditEntry, Environment, OrganizationId};
+use antilog_types::{AuditEntry, Environment, NetworkSecret, OrganizationId};
 
 use super::StoreError;
+use crate::secrets::Secret;
+
+/// A network secret's value on its way in. `None` keeps the value the same host and header had in
+/// the previous version.
+#[derive(Debug, Clone)]
+pub struct SecretValue {
+    pub host: String,
+    pub header: String,
+    pub value: Option<Secret>,
+}
 
 /// The environments an organization manages. Every change is a new version; the versions are
 /// kept, because a session records the one it ran. The built-in default is not stored.
@@ -13,6 +23,7 @@ pub trait EnvironmentStore {
         &self,
         organization: OrganizationId,
         environment: &Environment,
+        secrets: &[SecretValue],
         audit: &AuditEntry,
     ) -> impl Future<Output = Result<(), StoreError>> + Send;
 
@@ -23,6 +34,7 @@ pub trait EnvironmentStore {
         &self,
         organization: OrganizationId,
         environment: &Environment,
+        secrets: &[SecretValue],
         audit: &AuditEntry,
     ) -> impl Future<Output = Result<(), StoreError>> + Send;
 
@@ -48,4 +60,13 @@ pub trait EnvironmentStore {
         id: &str,
         version: u32,
     ) -> impl Future<Output = Result<Option<Environment>, StoreError>> + Send;
+
+    /// The values of a version's network secrets, opened: what the proxy adds to a request.
+    /// Never served by the API.
+    fn network_secret_values(
+        &self,
+        organization: OrganizationId,
+        id: &str,
+        version: u32,
+    ) -> impl Future<Output = Result<Vec<(NetworkSecret, Secret)>, StoreError>> + Send;
 }

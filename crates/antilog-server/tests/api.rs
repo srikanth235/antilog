@@ -1562,3 +1562,88 @@ async fn environments_are_read_by_every_member_and_managed_by_owners_and_editors
         .await;
     assert_eq!(on_default.status, StatusCode::CREATED);
 }
+
+#[tokio::test]
+async fn an_environment_keeps_default_repos_and_write_only_network_secrets() {
+    let org = org().await;
+    let (_, editor) = org.member("ed", "editor").await;
+    let (_, viewer) = org.member("vi", "viewer").await;
+    let mut body = environment_body("Checkout staging");
+    body["repos"] = json!(["acme/app", "acme/app", "acme/web"]);
+    body["networkSecrets"] = json!([
+        {"host": "API.stripe.com", "header": "Authorization", "prefix": "Bearer", "value": "sk_live_hunter2"}
+    ]);
+    let made = org
+        .call(Method::POST, "/environments", &editor, Some(body.clone()))
+        .await;
+    assert_eq!(made.status, StatusCode::CREATED, "{}", made.body);
+    // Repos are cleaned; a secret is shown as a host, a header and a prefix, never a value.
+    assert_eq!(made.body["repos"], json!(["acme/app", "acme/web"]));
+    assert_eq!(
+        made.body["networkSecrets"],
+        json!([{"host": "api.stripe.com", "header": "Authorization", "prefix": "Bearer"}])
+    );
+    let read = |response: &Value| response.to_string();
+    assert!(!read(&made.body).contains("hunter2"));
+    let listed = org.call(Method::GET, "/environments", &viewer, None).await;
+    assert!(!read(&listed.body).contains("hunter2"));
+    assert_eq!(
+        listed.body[1]["networkSecrets"][0]["host"],
+        "api.stripe.com"
+    );
+
+    // An edit that leaves the value out keeps the stored one; a secret never stored needs one.
+    body["networkSecrets"] =
+        json!([{"host": "api.stripe.com", "header": "authorization", "prefix": "Bearer"}]);
+    let kept = org
+        .call(
+            Method::PUT,
+            "/environments/checkout-staging",
+            &editor,
+            Some(body.clone()),
+        )
+        .await;
+    assert_eq!(kept.status, StatusCode::OK, "{}", kept.body);
+    assert_eq!(kept.body["version"], 2);
+    body["networkSecrets"] = json!([{"host": "api.other.com", "header": "X-Api-Key"}]);
+    let needs_value = org
+        .call(
+            Method::PUT,
+            "/environments/checkout-staging",
+            &editor,
+            Some(body.clone()),
+        )
+        .await;
+    assert_eq!(needs_value.status, StatusCode::UNPROCESSABLE_ENTITY);
+    for bad in [
+        json!({"host": "api.stripe.com", "header": "Host", "value": "x"}),
+        json!({"host": "*.stripe.com", "header": "Authorization", "value": "x"}),
+        json!({"host": "api.stripe.com", "header": "Authorization", "value": "hunter3\nlines"}),
+    ] {
+        body["networkSecrets"] = json!([bad]);
+        let refused = org
+            .call(
+                Method::PUT,
+                "/environments/checkout-staging",
+                &editor,
+                Some(body.clone()),
+            )
+            .await;
+        assert_eq!(refused.status, StatusCode::UNPROCESSABLE_ENTITY, "{bad}");
+        assert!(
+            !read(&refused.body).contains("hunter3"),
+            "a refusal does not echo the value"
+        );
+    }
+    body["repos"] = json!(["not a repo"]);
+    body["networkSecrets"] = json!([]);
+    let refused = org
+        .call(
+            Method::PUT,
+            "/environments/checkout-staging",
+            &editor,
+            Some(body),
+        )
+        .await;
+    assert_eq!(refused.status, StatusCode::UNPROCESSABLE_ENTITY);
+}

@@ -3127,6 +3127,8 @@
           "allowPackageManagers",
           "variables",
           "setupScript",
+          "repos",
+          "networkSecrets",
           "cpus",
           "memoryMb",
           "builtIn",
@@ -3186,9 +3188,23 @@
           "network": {
             "$ref": "#/components/schemas/NetworkLevel"
           },
+          "networkSecrets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NetworkSecret"
+            },
+            "description": "What the proxy adds to HTTPS requests to a host. Never a value (write-only)."
+          },
+          "repos": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Default repos (`owner/repo`): a new session on this environment starts with them."
+          },
           "setupScript": {
             "type": "string",
-            "description": "Runs as root once per version before the agent starts; empty for none."
+            "description": "Runs as root in a fresh container after the repos are cloned, before the agent starts;\nempty for none. A failing script does not fail the session."
           },
           "variables": {
             "type": "object",
@@ -3598,6 +3614,30 @@
           "full"
         ]
       },
+      "NetworkSecret": {
+        "type": "object",
+        "description": "A header the proxy adds to HTTPS requests to `host` from sessions in an environment, so the\nvalue never enters the machine. The value is not part of this type: it is write-only.",
+        "required": [
+          "host",
+          "header"
+        ],
+        "properties": {
+          "header": {
+            "type": "string"
+          },
+          "host": {
+            "type": "string"
+          },
+          "prefix": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Put before the value, such as `Bearer`; none when empty or left out."
+          }
+        },
+        "additionalProperties": false
+      },
       "NewAgent": {
         "type": "object",
         "description": "What an owner sets for an agent.",
@@ -3682,6 +3722,20 @@
           "network": {
             "$ref": "#/components/schemas/NetworkLevel"
           },
+          "networkSecrets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NewNetworkSecret"
+            },
+            "description": "On an edit, an entry without a `value` keeps the value the same host and header had."
+          },
+          "repos": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "`owner/repo`, at most 50."
+          },
           "setupScript": {
             "type": "string",
             "description": "At most 64 KB."
@@ -3735,6 +3789,36 @@
         "properties": {
           "key": {
             "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "NewNetworkSecret": {
+        "type": "object",
+        "description": "A network secret a person writes: the value is sealed at once and never read back.",
+        "required": [
+          "host",
+          "header"
+        ],
+        "properties": {
+          "header": {
+            "type": "string"
+          },
+          "host": {
+            "type": "string"
+          },
+          "prefix": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "value": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Left out on an edit to keep the stored value."
           }
         },
         "additionalProperties": false

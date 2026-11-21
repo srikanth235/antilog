@@ -270,8 +270,13 @@ pub struct Environment {
     pub allow_package_managers: bool,
     /// Plain variables, readable by the agent. Model keys never go here.
     pub variables: BTreeMap<String, String>,
-    /// Runs as root once per version before the agent starts; empty for none.
+    /// Runs as root in a fresh container after the repos are cloned, before the agent starts;
+    /// empty for none. A failing script does not fail the session.
     pub setup_script: String,
+    /// Default repos (`owner/repo`): a new session on this environment starts with them.
+    pub repos: Vec<String>,
+    /// What the proxy adds to HTTPS requests to a host. Never a value (write-only).
+    pub network_secrets: Vec<NetworkSecret>,
     pub cpus: u32,
     pub memory_mb: u32,
     /// The default every organization has; it is not stored and cannot be changed.
@@ -296,6 +301,8 @@ impl Environment {
             allow_package_managers: spec.allow_package_managers,
             variables: spec.variables,
             setup_script: spec.setup_script,
+            repos: spec.repos,
+            network_secrets: Vec::new(),
             cpus: spec.cpus,
             memory_mb: spec.memory_mb,
             built_in: true,
@@ -315,6 +322,7 @@ impl Environment {
             allow_package_managers: self.allow_package_managers,
             variables: self.variables.clone(),
             setup_script: self.setup_script.clone(),
+            repos: self.repos.clone(),
             cpus: self.cpus,
             memory_mb: self.memory_mb,
         }
@@ -336,8 +344,49 @@ pub struct NewEnvironment {
     /// At most 64 KB.
     #[serde(default)]
     pub setup_script: String,
+    /// `owner/repo`, at most 50.
+    #[serde(default)]
+    pub repos: Vec<String>,
+    /// On an edit, an entry without a `value` keeps the value the same host and header had.
+    #[serde(default)]
+    pub network_secrets: Vec<NewNetworkSecret>,
     pub cpus: u32,
     pub memory_mb: u32,
+}
+
+/// A header the proxy adds to HTTPS requests to `host` from sessions in an environment, so the
+/// value never enters the machine. The value is not part of this type: it is write-only.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct NetworkSecret {
+    pub host: String,
+    pub header: String,
+    /// Put before the value, such as `Bearer`; none when empty or left out.
+    #[serde(default)]
+    pub prefix: Option<String>,
+}
+
+/// A network secret a person writes: the value is sealed at once and never read back.
+#[derive(Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct NewNetworkSecret {
+    pub host: String,
+    pub header: String,
+    #[serde(default)]
+    pub prefix: Option<String>,
+    /// Left out on an edit to keep the stored value.
+    #[serde(default)]
+    pub value: Option<String>,
+}
+
+impl std::fmt::Debug for NewNetworkSecret {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("NewNetworkSecret")
+            .field("host", &self.host)
+            .field("header", &self.header)
+            .field("value", &self.value.as_ref().map(|_| "[sealed]"))
+            .finish()
+    }
 }
 
 /// What starts a session in a project: `POST /projects/{id}/sessions`.

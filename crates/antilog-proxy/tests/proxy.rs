@@ -343,6 +343,8 @@ impl Rig {
             allow_package_managers: options.registries,
             variables: Default::default(),
             setup_script: String::new(),
+            repos: Vec::new(),
+            network_secrets: Vec::new(),
             cpus: 2,
             memory_mb: 8192,
             built_in: false,
@@ -354,6 +356,7 @@ impl Rig {
             .add_environment(
                 seed.organization.id,
                 &environment,
+                &[],
                 &audit(&seed, "environment.create"),
             )
             .await
