@@ -317,22 +317,6 @@ pub async fn stop<D: Deps>(
         .await?)
 }
 
-/// What a session may still spend: the least left under its own cap and the organization's
-/// monthly cap, in US cents; `None` when neither limits it.
-pub async fn budget_left<D: Deps>(
-    deps: &D,
-    organization: OrganizationId,
-    id: SessionId,
-) -> Result<Option<i64>, SessionError> {
-    crate::budget::headroom(deps.store(), organization, id, now_ms(deps))
-        .await
-        .map(|room| room.remaining())
-        .map_err(|error| match error {
-            crate::organization::Refusal::NotFound => SessionError::NotFound,
-            _ => SessionError::Store(StoreError::Unavailable("budget check".into())),
-        })
-}
-
 /// The default and largest page of a conversation.
 pub const PAGE: u32 = 100;
 pub const PAGE_MAX: u32 = 500;
