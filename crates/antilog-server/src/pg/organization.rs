@@ -37,7 +37,6 @@ impl TryFrom<MemberRow> for Member {
     }
 }
 
-
 struct TokenRow {
     id: Uuid,
     organization_id: Uuid,
@@ -252,12 +251,6 @@ impl OrganizationStore for PgStore {
         audit(&mut tx, entry).await?;
         tx.commit().await.map_err(map)
     }
-
-
-
-
-
-
 
     async fn create_access_token(
         &self,

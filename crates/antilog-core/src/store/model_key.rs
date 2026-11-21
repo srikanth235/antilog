@@ -1,8 +1,6 @@
 use std::future::Future;
 
-use antilog_types::{
-    AuditEntry, ModelKeyStatus, ModelProvider, OrganizationId, SessionId,
-};
+use antilog_types::{AuditEntry, ModelKeyStatus, ModelProvider, OrganizationId, SessionId};
 
 use super::StoreError;
 use crate::secrets::Secret;

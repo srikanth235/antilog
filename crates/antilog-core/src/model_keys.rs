@@ -28,14 +28,7 @@ pub async fn set<S: Store>(
             "a model key is 1 to 512 characters with no spaces",
         ));
     }
-    permit(
-        store,
-        who,
-        Action::ModelKeySet,
-        provider.as_str(),
-        now,
-    )
-    .await?;
+    permit(store, who, Action::ModelKeySet, provider.as_str(), now).await?;
     store
         .put_model_key(
             who.organization,
@@ -64,14 +57,7 @@ pub async fn remove<S: Store>(
     now: i64,
     provider: ModelProvider,
 ) -> Result<(), Refusal> {
-    permit(
-        store,
-        who,
-        Action::ModelKeyRemove,
-        provider.as_str(),
-        now,
-    )
-    .await?;
+    permit(store, who, Action::ModelKeyRemove, provider.as_str(), now).await?;
     store
         .remove_model_key(
             who.organization,

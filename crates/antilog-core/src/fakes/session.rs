@@ -44,7 +44,7 @@ impl SessionStore for FakeStore {
             })
             .cloned()
             .collect();
-        rows.sort_by(|a, b| (b.created_at, b.id).cmp(&(a.created_at, a.id)));
+        rows.sort_by_key(|row| std::cmp::Reverse((row.created_at, row.id)));
         Ok(rows)
     }
 

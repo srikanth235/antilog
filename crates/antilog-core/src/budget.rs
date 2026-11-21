@@ -34,7 +34,10 @@ pub struct Headroom {
 impl Headroom {
     /// The least left under any limit; `None` when nothing limits the session.
     pub fn remaining(&self) -> Option<i64> {
-        [self.session, self.organization].into_iter().flatten().min()
+        [self.session, self.organization]
+            .into_iter()
+            .flatten()
+            .min()
     }
 
     pub fn spent(&self) -> bool {
@@ -198,13 +201,7 @@ pub async fn set_session_budget<S: Store>(
             who.organization,
             session,
             budget_cap_cents,
-            &entry(
-                who,
-                "session.set_budget",
-                session,
-                AuditOutcome::Done,
-                now,
-            ),
+            &entry(who, "session.set_budget", session, AuditOutcome::Done, now),
         )
         .await?;
     Ok(())

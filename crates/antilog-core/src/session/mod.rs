@@ -22,9 +22,7 @@ pub enum SessionError {
     Environment(#[from] Unavailable),
     #[error("{0}")]
     Invalid(&'static str),
-    #[error(
-        "the organization's monthly cap is reached. An owner raises it in Settings, Budgets"
-    )]
+    #[error("the organization's monthly cap is reached. An owner raises it in Settings, Budgets")]
     OrganizationCapReached,
     #[error(transparent)]
     Store(StoreError),
@@ -103,7 +101,13 @@ pub struct NewSession {
 /// The title a session shows when its starter gave none: the prompt's first line.
 fn title_of(title: Option<&str>, prompt: &str) -> String {
     let given = title.map(str::trim).filter(|t| !t.is_empty());
-    let line = given.unwrap_or_else(|| prompt.lines().map(str::trim).find(|l| !l.is_empty()).unwrap_or(""));
+    let line = given.unwrap_or_else(|| {
+        prompt
+            .lines()
+            .map(str::trim)
+            .find(|l| !l.is_empty())
+            .unwrap_or("")
+    });
     let line: String = line.chars().take(80).collect();
     if line.is_empty() {
         "New session".to_owned()
@@ -160,7 +164,13 @@ pub async fn start<D: Deps>(
         },
         now,
     );
-    let entry = audit(deps, organization, Some(new.actor), "session.start", session.id);
+    let entry = audit(
+        deps,
+        organization,
+        Some(new.actor),
+        "session.start",
+        session.id,
+    );
     deps.store().create_session(&session, &entry).await?;
     let seed = Seed {
         repos: new.repos,

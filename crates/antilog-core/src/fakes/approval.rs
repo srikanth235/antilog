@@ -1,7 +1,6 @@
 use antilog_types::{
-    Approval, ApprovalId, ApprovalStatus, AuditEntry, AuditId, CardKind, Decision,
-    MemberId, OrganizationId, Policy, PolicyMode,
-    SessionId,
+    Approval, ApprovalId, ApprovalStatus, AuditEntry, AuditId, CardKind, Decision, MemberId,
+    OrganizationId, Policy, PolicyMode, SessionId,
 };
 
 use super::{FakeStore, ledger::not_found, locked};

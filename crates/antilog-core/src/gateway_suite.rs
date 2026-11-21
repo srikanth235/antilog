@@ -228,9 +228,7 @@ pub async fn model_key_suite<S: Store>(store: &S) {
     let session = session_of(store, &seed).await;
     assert_eq!(
         store.gateway_scope(session.id).await.expect("scope"),
-        Some(GatewayScope {
-            organization: org,
-        })
+        Some(GatewayScope { organization: org })
     );
     assert_eq!(
         store

@@ -61,9 +61,7 @@ pub async fn reach_suite<D: Deps>(deps: &D) {
         .await
         .expect("the next version");
     assert_eq!(second.version, 2);
-    let listed = skills::list(store, &owner)
-        .await
-        .expect("listed");
+    let listed = skills::list(store, &owner).await.expect("listed");
     assert_eq!(listed.len(), 1);
     assert_eq!(
         (listed[0].latest, listed[0].versions.clone()),

@@ -1,8 +1,6 @@
 use std::collections::HashMap;
 
-use antilog_types::{
-    Command, Envelope, Machine, MachineState, OrganizationId, Seed, SessionId,
-};
+use antilog_types::{Command, Envelope, Machine, MachineState, OrganizationId, Seed, SessionId};
 use uuid::Uuid;
 
 use super::{FakeStore, locked};
@@ -330,9 +328,6 @@ impl RunnerStore for FakeStore {
         }
         Ok(())
     }
-
-
-
 
     async fn put_export(
         &self,

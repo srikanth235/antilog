@@ -5,7 +5,7 @@
 use antilog_types::{
     ApprovalStatus, CardKind, CardPayload, Command, EventKind, Item, ItemKind, Machine,
     MachineState, PollRequest, PollResponse, Release, ReleaseOutcome, Reply, RepoSpec, SessionId,
-     SessionSpec, SessionStatus, SkillDownload,
+    SessionSpec, SessionStatus, SkillDownload,
 };
 use jiff::SignedDuration;
 use serde_json::{Value, json};
@@ -84,6 +84,7 @@ impl From<StoreError> for RunnerError {
 pub fn opencode_config(
     settings: &Settings,
     session: SessionId,
+    model: &str,
     model_token: &str,
     mcp_token: &str,
 ) -> Value {
@@ -91,7 +92,7 @@ pub fn opencode_config(
         "autoupdate": false,
         // Titles and summaries use the session's own model, so a key that pays for one model
         // (or a free one) covers the whole session.
-        "small_model": settings.model,
+        "small_model": model,
         "provider": {
             "anthropic": {"options": {
                 "baseURL": format!("{}/anthropic/v1", settings.proxy_url),
@@ -165,15 +166,16 @@ async fn spec<D: Deps>(
     let environment = environments::of_seed(deps.store(), machine.organization, &machine.seed)
         .await?
         .ok_or(RunnerError::NotFound)?;
+    let model = if row.model.is_empty() {
+        settings.model.clone()
+    } else {
+        row.model.clone()
+    };
     Ok(SessionSpec {
         session,
         organization: machine.organization,
         agent: machine.agent.clone(),
-        model: if row.model.is_empty() {
-            settings.model.clone()
-        } else {
-            row.model.clone()
-        },
+        model: model.clone(),
         repos: machine
             .seed
             .repos
@@ -182,7 +184,7 @@ async fn spec<D: Deps>(
             .collect(),
         environment,
         skills,
-        opencode_config: opencode_config(settings, session, &model_token, &mcp_token),
+        opencode_config: opencode_config(settings, session, &model, &model_token, &mcp_token),
         model_token,
         mcp_token,
         runner_token,

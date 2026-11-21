@@ -453,12 +453,20 @@ async fn budgets_and_spend<S: Store>(store: &S) {
         .expect("set");
     refused(
         store
-            .set_organization_limits(org, Some(1_000), Some(2_000), None, &world.log("budget.set"))
+            .set_organization_limits(
+                org,
+                Some(1_000),
+                Some(2_000),
+                None,
+                &world.log("budget.set"),
+            )
             .await,
         Invariant::OverCap,
     );
 
-    let lead = session(store, &world, "claude", Some(3_000)).await.expect("inside");
+    let lead = session(store, &world, "claude", Some(3_000))
+        .await
+        .expect("inside");
     refused(
         session(store, &world, "claude", Some(10_001)).await,
         Invariant::OverCap,
@@ -494,7 +502,9 @@ async fn budgets_and_spend<S: Store>(store: &S) {
         .set_organization_limits(org, None, None, None, &world.log("budget.set"))
         .await
         .expect("lifting the organization cap");
-    let elsewhere = session(store, &world, "claude", None).await.expect("no cap");
+    let elsewhere = session(store, &world, "claude", None)
+        .await
+        .expect("no cap");
     let spend = |session: &Session, kind, cents, tokens, at| Spend {
         id: SpendId::new(),
         organization_id: org,
@@ -598,7 +608,11 @@ async fn sessions<S: Store>(store: &S) {
         create(&Session::new(
             org,
             MemberId::new(),
-            SessionParams::default(),
+            SessionParams {
+                title: "x".into(),
+                agent: "claude".into(),
+                ..SessionParams::default()
+            },
             T0,
         ))
         .await,

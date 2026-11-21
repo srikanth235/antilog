@@ -119,7 +119,7 @@
         "operationId": "pending",
         "responses": {
           "200": {
-            "description": "Every card across experiments that the caller may decide, oldest first",
+            "description": "Every pending card in the organization if the caller may decide (an editor or an owner), oldest first",
             "content": {
               "application/json": {
                 "schema": {
@@ -176,7 +176,7 @@
             }
           },
           "403": {
-            "description": "Editors and owners of its project decide; a changed value model needs a project owner",
+            "description": "Editors and owners decide",
             "content": {
               "application/json": {
                 "schema": {
@@ -606,8 +606,7 @@
           "204": {
             "description": "Removed with its credential; owners"
           },
-          "422": {
-            "description": "An experiment has it switched on",
+          "404": {
             "content": {
               "application/json": {
                 "schema": {
@@ -964,115 +963,6 @@
         ]
       }
     },
-    "/evaluations": {
-      "get": {
-        "tags": [],
-        "operationId": "evaluations",
-        "responses": {
-          "200": {
-            "description": "The organization's evaluation templates, oldest first",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/EvaluationTemplate"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      },
-      "post": {
-        "tags": [],
-        "operationId": "add_evaluation",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NewEvaluationTemplate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "description": "Added; editors and owners",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EvaluationTemplate"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "A template with that name exists",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      }
-    },
-    "/evaluations/{id}": {
-      "get": {
-        "tags": [],
-        "operationId": "evaluation",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "The template's id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EvaluationTemplate"
-                }
-              }
-            }
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      }
-    },
     "/events/stream": {
       "get": {
         "tags": [],
@@ -1104,634 +994,6 @@
             }
           },
           "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      }
-    },
-    "/experiments/{id}": {
-      "get": {
-        "tags": [],
-        "operationId": "experiment",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "The experiment",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/ExperimentId"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Experiment"
-                }
-              }
-            }
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      }
-    },
-    "/experiments/{id}/approvals": {
-      "get": {
-        "tags": [],
-        "operationId": "approvals",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "The experiment",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/ExperimentId"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Its cards, oldest first",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Approval"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      }
-    },
-    "/experiments/{id}/budget": {
-      "put": {
-        "tags": [],
-        "operationId": "set_experiment_budget",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "The experiment",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/ExperimentId"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ExperimentBudget"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "204": {
-            "description": "Set; editors and owners of its project"
-          },
-          "409": {
-            "description": "The budget would pass the project's cap",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      }
-    },
-    "/experiments/{id}/connectors": {
-      "get": {
-        "tags": [],
-        "operationId": "experiment_connectors",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "The experiment",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/ExperimentId"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The connectors switched on",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ConnectorId"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      },
-      "put": {
-        "tags": [],
-        "operationId": "experiment_set_connectors",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "The experiment",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/ExperimentId"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SelectConnectors"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "The connectors now switched on; editors and owners of the project",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ConnectorId"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      }
-    },
-    "/experiments/{id}/history": {
-      "get": {
-        "tags": [],
-        "operationId": "history",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "The experiment",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/ExperimentId"
-            }
-          },
-          {
-            "name": "session",
-            "in": "query",
-            "description": "Only this session's trials.",
-            "required": false,
-            "schema": {
-              "$ref": "#/components/schemas/SessionId"
-            }
-          },
-          {
-            "name": "outcome",
-            "in": "query",
-            "description": "Only this outcome, by word.",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "description": "At most this many (1 to 50, default 20).",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0
-            }
-          },
-          {
-            "name": "offset",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "What the `history` tool answers; a read that opens no session",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      }
-    },
-    "/experiments/{id}/sessions": {
-      "get": {
-        "tags": [],
-        "operationId": "sessions",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "The experiment",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/ExperimentId"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Session"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      },
-      "post": {
-        "tags": [],
-        "operationId": "start_session",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "The experiment",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/ExperimentId"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/StartSession"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Session"
-                }
-              }
-            }
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      }
-    },
-    "/experiments/{id}/skills": {
-      "get": {
-        "tags": [],
-        "operationId": "experiment_skills",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "The experiment",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/ExperimentId"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The skill versions it selected",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SkillRef"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      },
-      "put": {
-        "tags": [],
-        "operationId": "experiment_set_skills",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "The experiment",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/ExperimentId"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SelectSkills"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Each skill pinned to its latest version now; editors and owners of the project",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SkillRef"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      }
-    },
-    "/experiments/{id}/spend": {
-      "get": {
-        "tags": [],
-        "operationId": "experiment_spend",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "The experiment",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/ExperimentId"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Its spend since it began, against its budget",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ExperimentSpend"
-                }
-              }
-            }
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      }
-    },
-    "/experiments/{id}/tools/{tool}": {
-      "post": {
-        "tags": [],
-        "operationId": "call",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "The experiment",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/ExperimentId"
-            }
-          },
-          {
-            "name": "tool",
-            "in": "path",
-            "description": "A tool from /tools",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ToolCall"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ToolResult"
-                }
-              }
-            }
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      }
-    },
-    "/experiments/{id}/value": {
-      "get": {
-        "tags": [],
-        "operationId": "experiment_value",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "The experiment",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/ExperimentId"
-            }
-          },
-          {
-            "name": "from",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          {
-            "name": "to",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Its value model, its wins and what they are worth, measured offline",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ExperimentValue"
-                }
-              }
-            }
-          },
-          "404": {
             "content": {
               "application/json": {
                 "schema": {
@@ -1906,7 +1168,7 @@
             "description": "Set; organization owners only"
           },
           "409": {
-            "description": "The organization or a project would be left without an owner",
+            "description": "The organization would be left without an owner",
             "content": {
               "application/json": {
                 "schema": {
@@ -2147,7 +1409,7 @@
         },
         "responses": {
           "201": {
-            "description": "Unpacked into its skills, connectors and evaluation templates; owners",
+            "description": "Unpacked into its skills and connectors; owners",
             "content": {
               "application/json": {
                 "schema": {
@@ -2202,8 +1464,7 @@
           "204": {
             "description": "Removed; the parts named in keep stay; owners"
           },
-          "422": {
-            "description": "A part is in use",
+          "404": {
             "content": {
               "application/json": {
                 "schema": {
@@ -2280,19 +1541,30 @@
         ]
       }
     },
-    "/projects": {
+    "/sessions": {
       "get": {
         "tags": [],
-        "operationId": "projects",
+        "operationId": "sessions",
+        "parameters": [
+          {
+            "name": "mine",
+            "in": "query",
+            "description": "Only the sessions the caller started.",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "The organization's projects",
+            "description": "The organization's sessions, newest first, each with its status; `mine` keeps the caller's",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Project"
+                    "$ref": "#/components/schemas/Session"
                   }
                 }
               }
@@ -2307,12 +1579,12 @@
       },
       "post": {
         "tags": [],
-        "operationId": "create_project",
+        "operationId": "start_session",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/NewProject"
+                "$ref": "#/components/schemas/StartSession"
               }
             }
           },
@@ -2320,519 +1592,17 @@
         },
         "responses": {
           "201": {
-            "description": "Created; the caller is its first owner",
+            "description": "Started: queued for a runner; editors and owners",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Project"
+                  "$ref": "#/components/schemas/Session"
                 }
               }
             }
           },
           "409": {
-            "description": "The name is taken",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      }
-    },
-    "/projects/{id}/experiments": {
-      "get": {
-        "tags": [],
-        "operationId": "experiments",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "The project",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/ProjectId"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Its experiments, oldest first",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Experiment"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      },
-      "post": {
-        "tags": [],
-        "operationId": "create_experiment",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "The project",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/ProjectId"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NewExperiment"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "description": "Created; editors and owners of the project",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Experiment"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "The budget would pass a cap",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      }
-    },
-    "/projects/{id}/limits": {
-      "put": {
-        "tags": [],
-        "operationId": "set_project_limits",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "The project",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/ProjectId"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Limits"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "204": {
-            "description": "Set; project owners only"
-          },
-          "409": {
-            "description": "The cap would pass the organization's, or a budget inside it",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      }
-    },
-    "/projects/{id}/roles": {
-      "get": {
-        "tags": [],
-        "operationId": "project_roles",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "The project",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/ProjectId"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Roles set for this project; the rest have their organization role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ProjectRole"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      }
-    },
-    "/projects/{id}/roles/{member}": {
-      "put": {
-        "tags": [],
-        "operationId": "set_project_role",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "The project",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/ProjectId"
-            }
-          },
-          {
-            "name": "member",
-            "in": "path",
-            "description": "The member",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/MemberId"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SetProjectRole"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "204": {
-            "description": "Set; project owners only"
-          },
-          "409": {
-            "description": "The project would be left without an owner",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      }
-    },
-    "/projects/{id}/skills/{name}": {
-      "put": {
-        "tags": [],
-        "operationId": "project_skill",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "The project",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/ProjectId"
-            }
-          },
-          {
-            "name": "name",
-            "in": "path",
-            "description": "The skill",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SetOn"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "204": {
-            "description": "Turned On or Off for the project; project owners"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      }
-    },
-    "/projects/{id}/value": {
-      "get": {
-        "tags": [],
-        "operationId": "project_value",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "The project",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/ProjectId"
-            }
-          },
-          {
-            "name": "from",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          {
-            "name": "to",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Delivered, Pending, At risk and Return of the project, measured offline",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValueFigures"
-                }
-              }
-            }
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      }
-    },
-    "/projects/{id}/value-models": {
-      "get": {
-        "tags": [],
-        "operationId": "value_models",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "The project",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/ProjectId"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The newest version of each metric's value model",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValueModels"
-                }
-              }
-            }
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      },
-      "post": {
-        "tags": [],
-        "operationId": "set_value_model",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "The project",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/ProjectId"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NewValueModel"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "description": "Set: a project owner only, a new version when the metric had one",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProjectValueModel"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Not a project owner",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      }
-    },
-    "/report": {
-      "get": {
-        "tags": [],
-        "operationId": "report",
-        "parameters": [
-          {
-            "name": "month",
-            "in": "query",
-            "description": "The month as `YYYY-MM`, in UTC; the current month when left out.",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "project",
-            "in": "query",
-            "description": "One project; left out, the organization.",
-            "required": false,
-            "schema": {
-              "$ref": "#/components/schemas/ProjectId"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The month's report: spent, Delivered, Pending, At risk, Return, where the spend went, the agent scoreboard, top wins and experiments stopped with no win",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Report"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "The organization report is for owners and editors",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "404": {
+            "description": "The organization's monthly cap is reached",
             "content": {
               "application/json": {
                 "schema": {
@@ -2884,6 +1654,90 @@
             }
           },
           "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/sessions/{id}/approvals": {
+      "get": {
+        "tags": [],
+        "operationId": "approvals",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The session",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/SessionId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Its cards, oldest first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Approval"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/sessions/{id}/budget": {
+      "put": {
+        "tags": [],
+        "operationId": "set_budget",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The session",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/SessionId"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SessionBudget"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Set; editors and owners"
+          },
+          "409": {
+            "description": "It would pass the organization's monthly cap",
             "content": {
               "application/json": {
                 "schema": {
@@ -3016,6 +1870,49 @@
         ]
       }
     },
+    "/sessions/{id}/spend": {
+      "get": {
+        "tags": [],
+        "operationId": "spend",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The session",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/SessionId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "What it spent since it began, against its own cap, by kind",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionSpend"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/sessions/{id}/stop": {
       "post": {
         "tags": [],
@@ -3063,17 +1960,6 @@
       "get": {
         "tags": [],
         "operationId": "skills_list",
-        "parameters": [
-          {
-            "name": "project",
-            "in": "query",
-            "description": "Show each skill On or Off for this project.",
-            "required": false,
-            "schema": {
-              "$ref": "#/components/schemas/ProjectId"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "The organization's skills, by name",
@@ -3155,8 +2041,7 @@
           "204": {
             "description": "Every version removed; owners"
           },
-          "422": {
-            "description": "An experiment selected it",
+          "404": {
             "content": {
               "application/json": {
                 "schema": {
@@ -3214,32 +2099,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      }
-    },
-    "/spend": {
-      "get": {
-        "tags": [],
-        "operationId": "all_spend",
-        "responses": {
-          "200": {
-            "description": "The spend of every experiment, since it began",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ExperimentSpend"
-                  }
                 }
               }
             }
@@ -3346,121 +2205,6 @@
           }
         ]
       }
-    },
-    "/tools": {
-      "get": {
-        "tags": [],
-        "operationId": "tools",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ToolDefinition"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/trials/{id}/receipt": {
-      "get": {
-        "tags": [],
-        "operationId": "receipt",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "A Kept trial that was the win when it ran",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/TrialId"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The judge's signed receipt",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Receipt"
-                }
-              }
-            }
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      }
-    },
-    "/value": {
-      "get": {
-        "tags": [],
-        "operationId": "organization_value",
-        "parameters": [
-          {
-            "name": "from",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          {
-            "name": "to",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Delivered, Pending, At risk and Return of the organization, measured offline; organization owners and editors",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValueFigures"
-                }
-              }
-            }
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      }
     }
   },
   "components": {
@@ -3539,73 +2283,6 @@
         },
         "additionalProperties": false
       },
-      "AgentRow": {
-        "type": "object",
-        "required": [
-          "agent",
-          "trials",
-          "kept",
-          "winsDelivered",
-          "winsPending",
-          "pendingCents",
-          "spentCents",
-          "deliveredCents"
-        ],
-        "properties": {
-          "agent": {
-            "type": "string"
-          },
-          "deliveredCents": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "kept": {
-            "type": "integer",
-            "format": "int32",
-            "minimum": 0
-          },
-          "pendingCents": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "spentCents": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "trials": {
-            "type": "integer",
-            "format": "int32",
-            "minimum": 0
-          },
-          "winsDelivered": {
-            "type": "integer",
-            "format": "int32",
-            "minimum": 0
-          },
-          "winsPending": {
-            "type": "integer",
-            "format": "int32",
-            "minimum": 0
-          }
-        },
-        "additionalProperties": false
-      },
-      "AgentRun": {
-        "type": "object",
-        "required": [
-          "agent",
-          "session"
-        ],
-        "properties": {
-          "agent": {
-            "type": "string"
-          },
-          "session": {
-            "$ref": "#/components/schemas/SessionId"
-          }
-        },
-        "additionalProperties": false
-      },
       "ApiError": {
         "type": "object",
         "required": [
@@ -3634,10 +2311,9 @@
         "required": [
           "id",
           "organizationId",
-          "experimentId",
+          "sessionId",
           "card",
           "summary",
-          "needsOwner",
           "status",
           "createdAt"
         ],
@@ -3673,15 +2349,8 @@
               }
             ]
           },
-          "experimentId": {
-            "$ref": "#/components/schemas/ExperimentId"
-          },
           "id": {
             "$ref": "#/components/schemas/ApprovalId"
-          },
-          "needsOwner": {
-            "type": "boolean",
-            "description": "Only a project owner may decide it, and policy never does: a changed value model."
           },
           "organizationId": {
             "$ref": "#/components/schemas/OrganizationId"
@@ -3698,14 +2367,7 @@
             ]
           },
           "sessionId": {
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/SessionId"
-              },
-              {
-                "type": "null"
-              }
-            ]
+            "$ref": "#/components/schemas/SessionId"
           },
           "status": {
             "$ref": "#/components/schemas/ApprovalStatus"
@@ -3761,7 +2423,7 @@
         "properties": {
           "action": {
             "type": "string",
-            "description": "A registered action name, such as `project.create`."
+            "description": "A registered action name, such as `session.start`."
           },
           "actor": {
             "oneOf": [
@@ -3853,20 +2515,13 @@
       },
       "BudgetSummary": {
         "type": "object",
-        "description": "This month's spend against the caps.",
+        "description": "This month's spend against the organization's cap.",
         "required": [
-          "organization",
-          "projects"
+          "organization"
         ],
         "properties": {
           "organization": {
             "$ref": "#/components/schemas/LimitSpend"
-          },
-          "projects": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ProjectSpend"
-            }
           }
         },
         "additionalProperties": false
@@ -3874,69 +2529,16 @@
       "CardKind": {
         "type": "string",
         "enum": [
-          "seal_experiment",
           "raise_budget",
           "add_credential",
           "attach_repo",
           "change_environment",
-          "open_pull_request",
-          "keep_going",
-          "continue_on_another_agent",
           "ask_first",
           "use_connector_tool"
         ]
       },
       "CardPayload": {
         "oneOf": [
-          {
-            "type": "object",
-            "required": [
-              "version",
-              "metric",
-              "unit",
-              "baseline",
-              "noise",
-              "cheatsRejected",
-              "valueNote",
-              "kind"
-            ],
-            "properties": {
-              "baseline": {
-                "type": "number",
-                "format": "double"
-              },
-              "cheatsRejected": {
-                "type": "integer",
-                "format": "int32",
-                "minimum": 0
-              },
-              "kind": {
-                "type": "string",
-                "enum": [
-                  "seal_experiment"
-                ]
-              },
-              "metric": {
-                "type": "string"
-              },
-              "noise": {
-                "type": "number",
-                "format": "double"
-              },
-              "unit": {
-                "type": "string"
-              },
-              "valueNote": {
-                "type": "string",
-                "description": "\"No value set\", or what one unit is worth, measured offline."
-              },
-              "version": {
-                "type": "integer",
-                "format": "int32",
-                "minimum": 0
-              }
-            }
-          },
           {
             "type": "object",
             "required": [
@@ -3955,7 +2557,7 @@
               "nowCents": {
                 "type": "integer",
                 "format": "int64",
-                "description": "The experiment's budget when the card was raised."
+                "description": "The session's budget when the card was raised."
               },
               "requestedCents": {
                 "type": "integer",
@@ -4064,70 +2666,6 @@
           },
           {
             "type": "object",
-            "required": [
-              "trial",
-              "hypothesis",
-              "repos",
-              "kind"
-            ],
-            "properties": {
-              "hypothesis": {
-                "type": "string"
-              },
-              "kind": {
-                "type": "string",
-                "enum": [
-                  "open_pull_request"
-                ]
-              },
-              "repos": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                },
-                "description": "One pull request per repo changed."
-              },
-              "trial": {
-                "$ref": "#/components/schemas/TrialId"
-              }
-            }
-          },
-          {
-            "type": "object",
-            "required": [
-              "tried",
-              "kind"
-            ],
-            "properties": {
-              "kind": {
-                "type": "string",
-                "enum": [
-                  "keep_going"
-                ]
-              },
-              "tried": {
-                "type": "integer",
-                "format": "int32",
-                "minimum": 0
-              }
-            }
-          },
-          {
-            "type": "object",
-            "required": [
-              "kind"
-            ],
-            "properties": {
-              "kind": {
-                "type": "string",
-                "enum": [
-                  "continue_on_another_agent"
-                ]
-              }
-            }
-          },
-          {
-            "type": "object",
             "description": "The agent asked to use a tool that is set to ask first.",
             "required": [
               "tool",
@@ -4185,53 +2723,6 @@
           }
         ],
         "description": "What each kind of card asks, as typed fields. A card shows these, never text parsed out of\nits summary, and an action that follows an approval reads what to do from here."
-      },
-      "Cents": {
-        "type": "integer",
-        "format": "int64"
-      },
-      "CommitRef": {
-        "type": "object",
-        "required": [
-          "repo",
-          "sha"
-        ],
-        "properties": {
-          "repo": {
-            "type": "string"
-          },
-          "sha": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
-      "ComputeSection": {
-        "type": "object",
-        "required": [
-          "environment",
-          "judgeImage",
-          "judgeDigest",
-          "agents"
-        ],
-        "properties": {
-          "agents": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AgentRun"
-            }
-          },
-          "environment": {
-            "type": "string"
-          },
-          "judgeDigest": {
-            "type": "string"
-          },
-          "judgeImage": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
       },
       "Connector": {
         "type": "object",
@@ -4325,83 +2816,6 @@
           "high"
         ]
       },
-      "CredentialHolder": {
-        "type": "string",
-        "enum": [
-          "agent",
-          "judge"
-        ]
-      },
-      "CredentialScope": {
-        "type": "object",
-        "required": [
-          "holder",
-          "scope"
-        ],
-        "properties": {
-          "holder": {
-            "$ref": "#/components/schemas/CredentialHolder"
-          },
-          "scope": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
-      "DataSection": {
-        "type": "object",
-        "required": [
-          "datasets",
-          "skillPacks",
-          "commits",
-          "credentialScopes"
-        ],
-        "properties": {
-          "commits": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CommitRef"
-            }
-          },
-          "credentialScopes": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CredentialScope"
-            }
-          },
-          "datasets": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/DatasetRef"
-            }
-          },
-          "skillPacks": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SkillPackRef"
-            }
-          }
-        },
-        "additionalProperties": false
-      },
-      "DatasetRef": {
-        "type": "object",
-        "required": [
-          "id",
-          "version"
-        ],
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "version": {
-            "type": "integer",
-            "format": "int32",
-            "minimum": 0
-          }
-        },
-        "additionalProperties": false
-      },
       "Decide": {
         "type": "object",
         "required": [
@@ -4419,13 +2833,6 @@
         "enum": [
           "approve",
           "decline"
-        ]
-      },
-      "Direction": {
-        "type": "string",
-        "enum": [
-          "minimize",
-          "maximize"
         ]
       },
       "Environment": {
@@ -4521,71 +2928,6 @@
         },
         "additionalProperties": false
       },
-      "EvaluationKind": {
-        "type": "string",
-        "description": "What an evaluation measures.",
-        "enum": [
-          "speed",
-          "quality",
-          "size",
-          "cost"
-        ]
-      },
-      "EvaluationTemplate": {
-        "type": "object",
-        "description": "A starting point for an experiment's evaluation in Customize, Evaluations. An experiment starts\nfrom a copy; the template holds a command and paths, never a credential or data.",
-        "required": [
-          "id",
-          "name",
-          "summary",
-          "kind",
-          "metric",
-          "lowerIsBetter",
-          "command",
-          "protectedPaths",
-          "createdBy",
-          "createdAt"
-        ],
-        "properties": {
-          "command": {
-            "type": "string"
-          },
-          "createdAt": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "createdBy": {
-            "$ref": "#/components/schemas/MemberId"
-          },
-          "id": {
-            "type": "string"
-          },
-          "kind": {
-            "$ref": "#/components/schemas/EvaluationKind"
-          },
-          "lowerIsBetter": {
-            "type": "boolean"
-          },
-          "metric": {
-            "type": "string",
-            "description": "What is measured, as a dotted path in the command's JSON output."
-          },
-          "name": {
-            "type": "string"
-          },
-          "protectedPaths": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "Files an agent may never change, each as `repo:path`."
-          },
-          "summary": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
       "EventKind": {
         "type": "string",
         "description": "Who spoke: a person, an agent, or the name of a tool an agent called.",
@@ -4614,253 +2956,6 @@
               "null"
             ],
             "format": "int64"
-          }
-        },
-        "additionalProperties": false
-      },
-      "Experiment": {
-        "type": "object",
-        "description": "The row of an experiment; its sealed definition belongs to the judge.",
-        "required": [
-          "id",
-          "organizationId",
-          "projectId",
-          "goal",
-          "status",
-          "budgetCapCents",
-          "createdBy",
-          "createdAt",
-          "followPolicy"
-        ],
-        "properties": {
-          "budgetCapCents": {
-            "type": "integer",
-            "format": "int64",
-            "description": "What all its sessions and judge time may spend, in US cents."
-          },
-          "createdAt": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "createdBy": {
-            "$ref": "#/components/schemas/MemberId"
-          },
-          "followPolicy": {
-            "type": "boolean",
-            "description": "The composer's Mode: false asks a person for every card, true lets policy approve."
-          },
-          "goal": {
-            "type": "string"
-          },
-          "id": {
-            "$ref": "#/components/schemas/ExperimentId"
-          },
-          "organizationId": {
-            "$ref": "#/components/schemas/OrganizationId"
-          },
-          "projectId": {
-            "$ref": "#/components/schemas/ProjectId"
-          },
-          "status": {
-            "$ref": "#/components/schemas/ExperimentStatus"
-          }
-        },
-        "additionalProperties": false
-      },
-      "ExperimentBudget": {
-        "type": "object",
-        "required": [
-          "budgetCapCents"
-        ],
-        "properties": {
-          "budgetCapCents": {
-            "type": "integer",
-            "format": "int64"
-          }
-        },
-        "additionalProperties": false
-      },
-      "ExperimentId": {
-        "type": "string",
-        "format": "uuid"
-      },
-      "ExperimentSection": {
-        "type": "object",
-        "required": [
-          "experiment",
-          "version",
-          "seal",
-          "trial",
-          "baseline",
-          "value",
-          "repeats",
-          "noise",
-          "trialsTried",
-          "holdout",
-          "spend",
-          "costOfWin"
-        ],
-        "properties": {
-          "baseline": {
-            "type": "number",
-            "format": "double"
-          },
-          "costOfWin": {
-            "$ref": "#/components/schemas/Cents"
-          },
-          "experiment": {
-            "$ref": "#/components/schemas/ExperimentId"
-          },
-          "holdout": {
-            "$ref": "#/components/schemas/HoldoutResult"
-          },
-          "noise": {
-            "type": "number",
-            "format": "double"
-          },
-          "repeats": {
-            "type": "integer",
-            "format": "int32",
-            "minimum": 0
-          },
-          "seal": {
-            "$ref": "#/components/schemas/SealHash"
-          },
-          "secondOpinion": {
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/SecondOpinion"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "spend": {
-            "$ref": "#/components/schemas/Cents"
-          },
-          "trial": {
-            "$ref": "#/components/schemas/TrialId"
-          },
-          "trialsTried": {
-            "type": "integer",
-            "format": "int32",
-            "minimum": 0
-          },
-          "value": {
-            "type": "number",
-            "format": "double"
-          },
-          "valueModel": {
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/ValueModel"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "version": {
-            "type": "integer",
-            "format": "int32",
-            "minimum": 0
-          },
-          "winReturn": {
-            "type": [
-              "number",
-              "null"
-            ],
-            "format": "double"
-          }
-        },
-        "additionalProperties": false
-      },
-      "ExperimentSpend": {
-        "type": "object",
-        "description": "All the spend of one experiment since it began, against its budget. Spend rows name a session\nand a kind, not a trial, so it is split by kind and by session, never by a trial's outcome.",
-        "required": [
-          "experimentId",
-          "projectId",
-          "budgetCapCents",
-          "spentCents",
-          "tokens",
-          "byKind",
-          "bySession"
-        ],
-        "properties": {
-          "budgetCapCents": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "byKind": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/KindSpend"
-            }
-          },
-          "bySession": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SessionSpend"
-            }
-          },
-          "experimentId": {
-            "$ref": "#/components/schemas/ExperimentId"
-          },
-          "projectId": {
-            "$ref": "#/components/schemas/ProjectId"
-          },
-          "spentCents": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "tokens": {
-            "type": "integer",
-            "format": "int64"
-          }
-        },
-        "additionalProperties": false
-      },
-      "ExperimentStatus": {
-        "type": "string",
-        "description": "Sealing is the judge's; Watching and Regressed are derived, never stored.",
-        "enum": [
-          "not_sealed",
-          "sealed"
-        ]
-      },
-      "ExperimentValue": {
-        "type": "object",
-        "description": "An experiment's value: the model it was sealed with, its wins and what they add up to.",
-        "required": [
-          "experimentId",
-          "wins",
-          "figures"
-        ],
-        "properties": {
-          "experimentId": {
-            "$ref": "#/components/schemas/ExperimentId"
-          },
-          "figures": {
-            "$ref": "#/components/schemas/ValueFigures"
-          },
-          "valueModel": {
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/ProjectValueModel",
-                "description": "The model of the newest sealed version; `null` is \"No value set\"."
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "wins": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/WinView"
-            }
           }
         },
         "additionalProperties": false
@@ -4897,13 +2992,6 @@
         "type": "string",
         "enum": [
           "ok"
-        ]
-      },
-      "HoldoutResult": {
-        "type": "string",
-        "enum": [
-          "passed",
-          "failed"
         ]
       },
       "Identity": {
@@ -4946,23 +3034,6 @@
         },
         "additionalProperties": false
       },
-      "KindSpendLine": {
-        "type": "object",
-        "required": [
-          "kind",
-          "cents"
-        ],
-        "properties": {
-          "cents": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "kind": {
-            "$ref": "#/components/schemas/SpendKind"
-          }
-        },
-        "additionalProperties": false
-      },
       "LimitSpend": {
         "type": "object",
         "required": [
@@ -4991,7 +3062,8 @@
               "integer",
               "null"
             ],
-            "format": "int64"
+            "format": "int64",
+            "description": "The cap a new session gets when its request names none."
           },
           "maxRunningSessions": {
             "type": [
@@ -5059,14 +3131,10 @@
             "description": "A conversation item was added to a session. Fetch `GET /sessions/{id}/events?after=`.",
             "required": [
               "sessionId",
-              "experimentId",
               "seq",
               "type"
             ],
             "properties": {
-              "experimentId": {
-                "$ref": "#/components/schemas/ExperimentId"
-              },
               "seq": {
                 "type": "integer",
                 "format": "int64"
@@ -5087,14 +3155,10 @@
             "description": "A session's status changed.",
             "required": [
               "sessionId",
-              "experimentId",
               "status",
               "type"
             ],
             "properties": {
-              "experimentId": {
-                "$ref": "#/components/schemas/ExperimentId"
-              },
               "sessionId": {
                 "$ref": "#/components/schemas/SessionId"
               },
@@ -5157,7 +3221,7 @@
           },
           "role": {
             "$ref": "#/components/schemas/Role",
-            "description": "Their organization role, which is their default in every project."
+            "description": "What they may do in the organization."
           }
         },
         "additionalProperties": false
@@ -5202,7 +3266,7 @@
           },
           "role": {
             "$ref": "#/components/schemas/Role",
-            "description": "The organization role, the default in every project."
+            "description": "What the member may do in the organization."
           }
         },
         "additionalProperties": false
@@ -5355,66 +3419,6 @@
         },
         "additionalProperties": false
       },
-      "NewEvaluationTemplate": {
-        "type": "object",
-        "required": [
-          "name",
-          "kind",
-          "metric",
-          "lowerIsBetter",
-          "command"
-        ],
-        "properties": {
-          "command": {
-            "type": "string"
-          },
-          "kind": {
-            "$ref": "#/components/schemas/EvaluationKind"
-          },
-          "lowerIsBetter": {
-            "type": "boolean"
-          },
-          "metric": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "protectedPaths": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "summary": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
-      "NewExperiment": {
-        "type": "object",
-        "description": "What starts an experiment in a project. The budget defaults to the project's, then the organization's.",
-        "required": [
-          "goal"
-        ],
-        "properties": {
-          "budgetCapCents": {
-            "type": [
-              "integer",
-              "null"
-            ],
-            "format": "int64"
-          },
-          "followPolicy": {
-            "type": "boolean"
-          },
-          "goal": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
       "NewMember": {
         "type": "object",
         "required": [
@@ -5492,12 +3496,6 @@
           "description": {
             "type": "string"
           },
-          "evaluations": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/NewEvaluationTemplate"
-            }
-          },
           "name": {
             "type": "string"
           },
@@ -5508,22 +3506,6 @@
             }
           },
           "version": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
-      "NewProject": {
-        "type": "object",
-        "required": [
-          "name",
-          "description"
-        ],
-        "properties": {
-          "description": {
-            "type": "string"
-          },
-          "name": {
             "type": "string"
           }
         },
@@ -5568,33 +3550,6 @@
         },
         "additionalProperties": false
       },
-      "NewValueModel": {
-        "type": "object",
-        "description": "What a project owner sets: the model without its id, version or who set it.",
-        "required": [
-          "metric",
-          "unit",
-          "centsPerUnit",
-          "source"
-        ],
-        "properties": {
-          "centsPerUnit": {
-            "type": "number",
-            "format": "double",
-            "description": "Cents a year that one unit of the metric is worth; more than zero."
-          },
-          "metric": {
-            "type": "string"
-          },
-          "source": {
-            "$ref": "#/components/schemas/ValueSource"
-          },
-          "unit": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
       "Organization": {
         "type": "object",
         "required": [
@@ -5615,7 +3570,7 @@
               "null"
             ],
             "format": "int64",
-            "description": "Default budget per experiment, in US cents."
+            "description": "The cap a new session gets when its request names none, in US cents."
           },
           "id": {
             "$ref": "#/components/schemas/OrganizationId"
@@ -5676,50 +3631,11 @@
         },
         "additionalProperties": false
       },
-      "Outcome": {
-        "type": "string",
-        "enum": [
-          "measuring",
-          "kept",
-          "withinNoise",
-          "worse",
-          "guardrailFailed",
-          "failedHoldout",
-          "rejected",
-          "failed"
-        ]
-      },
-      "OutcomeSpendLine": {
-        "type": "object",
-        "description": "What was spent on trials that ended one way, or on none.",
-        "required": [
-          "cents"
-        ],
-        "properties": {
-          "cents": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "outcome": {
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/Outcome",
-                "description": "`null` is Not measured: agent work that never reached `measure`."
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "additionalProperties": false
-      },
       "PartKind": {
         "type": "string",
         "enum": [
           "skill",
-          "connector",
-          "evaluation"
+          "connector"
         ]
       },
       "Plugin": {
@@ -5781,7 +3697,7 @@
       },
       "PluginPart": {
         "type": "object",
-        "description": "What a plugin brought, by kind and name (a skill's name, a connector's id, an evaluation's id).",
+        "description": "What a plugin brought, by kind and name (a skill's name, a connector's id).",
         "required": [
           "kind",
           "name"
@@ -5829,172 +3745,6 @@
           "allow"
         ]
       },
-      "Project": {
-        "type": "object",
-        "required": [
-          "id",
-          "organizationId",
-          "name",
-          "description",
-          "createdAt"
-        ],
-        "properties": {
-          "createdAt": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "defaultBudgetCents": {
-            "type": [
-              "integer",
-              "null"
-            ],
-            "format": "int64",
-            "description": "Default budget per experiment, in US cents."
-          },
-          "description": {
-            "type": "string"
-          },
-          "id": {
-            "$ref": "#/components/schemas/ProjectId"
-          },
-          "monthlyCapCents": {
-            "type": [
-              "integer",
-              "null"
-            ],
-            "format": "int64",
-            "description": "Monthly cap on the spend of its experiments, in US cents."
-          },
-          "name": {
-            "type": "string"
-          },
-          "organizationId": {
-            "$ref": "#/components/schemas/OrganizationId"
-          }
-        },
-        "additionalProperties": false
-      },
-      "ProjectId": {
-        "type": "string",
-        "format": "uuid"
-      },
-      "ProjectRole": {
-        "type": "object",
-        "description": "A member's role in one project when it differs from the organization role.",
-        "required": [
-          "memberId",
-          "role"
-        ],
-        "properties": {
-          "memberId": {
-            "$ref": "#/components/schemas/MemberId"
-          },
-          "role": {
-            "$ref": "#/components/schemas/Role"
-          }
-        },
-        "additionalProperties": false
-      },
-      "ProjectSpend": {
-        "type": "object",
-        "required": [
-          "projectId",
-          "spentCents"
-        ],
-        "properties": {
-          "capCents": {
-            "type": [
-              "integer",
-              "null"
-            ],
-            "format": "int64"
-          },
-          "projectId": {
-            "$ref": "#/components/schemas/ProjectId"
-          },
-          "spentCents": {
-            "type": "integer",
-            "format": "int64"
-          }
-        },
-        "additionalProperties": false
-      },
-      "ProjectValueModel": {
-        "type": "object",
-        "description": "A value model as a project holds it: one per metric, a new version on every change.",
-        "required": [
-          "projectId",
-          "model",
-          "setAt"
-        ],
-        "properties": {
-          "model": {
-            "$ref": "#/components/schemas/ValueModel"
-          },
-          "projectId": {
-            "$ref": "#/components/schemas/ProjectId"
-          },
-          "setAt": {
-            "type": "integer",
-            "format": "int64"
-          }
-        },
-        "additionalProperties": false
-      },
-      "Receipt": {
-        "type": "object",
-        "description": "A body and the judge's signature over it. There is no unsigned receipt.",
-        "required": [
-          "body",
-          "keyId",
-          "signature"
-        ],
-        "properties": {
-          "body": {
-            "$ref": "#/components/schemas/ReceiptBody"
-          },
-          "keyId": {
-            "type": "string"
-          },
-          "signature": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32",
-              "minimum": 0
-            }
-          }
-        },
-        "additionalProperties": false
-      },
-      "ReceiptBody": {
-        "type": "object",
-        "required": [
-          "id",
-          "experiment",
-          "data",
-          "compute"
-        ],
-        "properties": {
-          "compute": {
-            "$ref": "#/components/schemas/ComputeSection"
-          },
-          "data": {
-            "$ref": "#/components/schemas/DataSection"
-          },
-          "experiment": {
-            "$ref": "#/components/schemas/ExperimentSection"
-          },
-          "id": {
-            "$ref": "#/components/schemas/ReceiptId"
-          }
-        },
-        "additionalProperties": false
-      },
-      "ReceiptId": {
-        "type": "string",
-        "format": "uuid"
-      },
       "RemovePlugin": {
         "type": "object",
         "description": "What to do with each part when a plugin is removed; a part not named is removed, and one in use refuses.",
@@ -6015,98 +3765,6 @@
           "push"
         ]
       },
-      "Report": {
-        "type": "object",
-        "description": "The monthly Report for the organization or one project.",
-        "required": [
-          "month",
-          "from",
-          "to",
-          "figures",
-          "spendByKind",
-          "spendByOutcome",
-          "spentWithWinCents",
-          "spentNoWinCents",
-          "spentNotSealedCents",
-          "agents",
-          "topWins",
-          "stopped"
-        ],
-        "properties": {
-          "agents": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AgentRow"
-            }
-          },
-          "figures": {
-            "$ref": "#/components/schemas/ValueFigures"
-          },
-          "from": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "month": {
-            "type": "string",
-            "description": "`YYYY-MM`, in UTC."
-          },
-          "projectId": {
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/ProjectId"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "spendByKind": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/KindSpendLine"
-            }
-          },
-          "spendByOutcome": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/OutcomeSpendLine"
-            },
-            "description": "By what became of the trial each dollar paid for; Not measured is `outcome: null`."
-          },
-          "spentNoWinCents": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Spent on sealed experiments with no win, stopped or still going."
-          },
-          "spentNotSealedCents": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Spent on experiments that are not sealed yet."
-          },
-          "spentWithWinCents": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Spent on experiments that have a win."
-          },
-          "stopped": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/StoppedExperiment"
-            }
-          },
-          "to": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "topWins": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/TopWin"
-            }
-          }
-        },
-        "additionalProperties": false
-      },
       "Role": {
         "type": "string",
         "description": "Ordered: a higher role may do what a lower one may.",
@@ -6115,59 +3773,6 @@
           "editor",
           "owner"
         ]
-      },
-      "SealHash": {
-        "type": "string"
-      },
-      "SecondOpinion": {
-        "type": "object",
-        "required": [
-          "provider",
-          "flags"
-        ],
-        "properties": {
-          "flags": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "provider": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
-      "SelectConnectors": {
-        "type": "object",
-        "required": [
-          "connectors"
-        ],
-        "properties": {
-          "connectors": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ConnectorId"
-            }
-          }
-        },
-        "additionalProperties": false
-      },
-      "SelectSkills": {
-        "type": "object",
-        "required": [
-          "skills"
-        ],
-        "properties": {
-          "skills": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "Names; each is pinned to its latest version now."
-          }
-        },
-        "additionalProperties": false
       },
       "SendMessage": {
         "type": "object",
@@ -6183,12 +3788,16 @@
       },
       "Session": {
         "type": "object",
-        "description": "One agent's work inside an experiment.",
+        "description": "One agent's work for an organization: a chat that runs in a machine of its own. The repos,\nthe environment version and the model are fixed when it starts.",
         "required": [
           "id",
           "organizationId",
-          "experimentId",
+          "title",
+          "createdBy",
           "agent",
+          "model",
+          "repos",
+          "followPolicy",
           "status",
           "createdAt",
           "updatedAt"
@@ -6197,30 +3806,86 @@
           "agent": {
             "type": "string"
           },
+          "budgetCapCents": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "What this session alone may spend, in US cents. `None`: only the organization's monthly cap."
+          },
           "createdAt": {
             "type": "integer",
             "format": "int64"
           },
-          "experimentId": {
-            "$ref": "#/components/schemas/ExperimentId"
+          "createdBy": {
+            "$ref": "#/components/schemas/MemberId",
+            "description": "The member who started it; its calls and cards are theirs."
+          },
+          "environment": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The stored environment it runs on; `None` is the built-in default."
+          },
+          "environmentVersion": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "description": "The version of that environment, pinned when the session started.",
+            "minimum": 0
+          },
+          "followPolicy": {
+            "type": "boolean",
+            "description": "The composer's Mode: false asks a person for every card, true lets policy approve."
           },
           "id": {
             "$ref": "#/components/schemas/SessionId"
+          },
+          "model": {
+            "type": "string",
+            "description": "`provider/model`, as the harness names it."
           },
           "note": {
             "type": [
               "string",
               "null"
             ],
-            "description": "Why it ended, such as \"Stopped by Ada\" or \"Handed off to Codex\"."
+            "description": "Why it ended, such as \"Stopped by Ada\"."
           },
           "organizationId": {
             "$ref": "#/components/schemas/OrganizationId"
           },
+          "repos": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "status": {
             "$ref": "#/components/schemas/SessionStatus"
           },
+          "title": {
+            "type": "string"
+          },
           "updatedAt": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SessionBudget": {
+        "type": "object",
+        "description": "A session's own cap, in US cents.",
+        "required": [
+          "budgetCapCents"
+        ],
+        "properties": {
+          "budgetCapCents": {
             "type": "integer",
             "format": "int64"
           }
@@ -6298,19 +3963,33 @@
       },
       "SessionSpend": {
         "type": "object",
-        "description": "What one session spent.",
+        "description": "All the spend of one session since it began, against its own cap, if it has one. Spend rows\nname a session and a kind.",
         "required": [
           "sessionId",
-          "cents",
-          "tokens"
+          "spentCents",
+          "tokens",
+          "byKind"
         ],
         "properties": {
-          "cents": {
-            "type": "integer",
+          "budgetCapCents": {
+            "type": [
+              "integer",
+              "null"
+            ],
             "format": "int64"
+          },
+          "byKind": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/KindSpend"
+            }
           },
           "sessionId": {
             "$ref": "#/components/schemas/SessionId"
+          },
+          "spentCents": {
+            "type": "integer",
+            "format": "int64"
           },
           "tokens": {
             "type": "integer",
@@ -6336,35 +4015,6 @@
         "properties": {
           "credential": {
             "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
-      "SetOn": {
-        "type": "object",
-        "required": [
-          "on"
-        ],
-        "properties": {
-          "on": {
-            "type": "boolean"
-          }
-        },
-        "additionalProperties": false
-      },
-      "SetProjectRole": {
-        "type": "object",
-        "description": "`None` returns the member to their organization role in this project.",
-        "properties": {
-          "role": {
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/Role"
-              },
-              {
-                "type": "null"
-              }
-            ]
           }
         },
         "additionalProperties": false
@@ -6457,8 +4107,7 @@
           "name",
           "description",
           "latest",
-          "versions",
-          "on"
+          "versions"
         ],
         "properties": {
           "description": {
@@ -6477,10 +4126,6 @@
           },
           "name": {
             "type": "string"
-          },
-          "on": {
-            "type": "boolean",
-            "description": "A project turns it Off to hide it from New experiment there."
           },
           "versions": {
             "type": "array",
@@ -6506,43 +4151,6 @@
           },
           "path": {
             "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
-      "SkillPackRef": {
-        "type": "object",
-        "required": [
-          "id",
-          "version"
-        ],
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "version": {
-            "type": "integer",
-            "format": "int32",
-            "minimum": 0
-          }
-        },
-        "additionalProperties": false
-      },
-      "SkillRef": {
-        "type": "object",
-        "description": "The skill versions an experiment selected.",
-        "required": [
-          "name",
-          "version"
-        ],
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "version": {
-            "type": "integer",
-            "format": "int32",
-            "minimum": 0
           }
         },
         "additionalProperties": false
@@ -6596,26 +4204,47 @@
         "type": "string",
         "enum": [
           "tokens",
-          "machine",
-          "judge"
+          "machine"
         ]
       },
       "StartSession": {
         "type": "object",
-        "description": "What starts a session in an experiment.",
+        "description": "What starts a session: `POST /sessions`.",
         "required": [
-          "agent",
           "prompt"
         ],
         "properties": {
           "agent": {
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Left out or `auto`: the agent Auto chooses."
+          },
+          "budgetCapCents": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "This session's own cap in US cents; left out, the organization's default, if it has one."
           },
           "environment": {
             "type": [
               "string",
               "null"
             ]
+          },
+          "followPolicy": {
+            "type": "boolean",
+            "description": "The composer's Mode: false asks a person for every card, true lets policy approve."
+          },
+          "model": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "`provider/model`; left out, the server's default model."
           },
           "prompt": {
             "type": "string"
@@ -6625,42 +4254,13 @@
             "items": {
               "type": "string"
             }
-          }
-        },
-        "additionalProperties": false
-      },
-      "StoppedExperiment": {
-        "type": "object",
-        "required": [
-          "experimentId",
-          "projectId",
-          "goal",
-          "trials",
-          "spentCents",
-          "budgetSpent"
-        ],
-        "properties": {
-          "budgetSpent": {
-            "type": "boolean",
-            "description": "True when the experiment spent all of its budget."
           },
-          "experimentId": {
-            "$ref": "#/components/schemas/ExperimentId"
-          },
-          "goal": {
-            "type": "string"
-          },
-          "projectId": {
-            "$ref": "#/components/schemas/ProjectId"
-          },
-          "spentCents": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "trials": {
-            "type": "integer",
-            "format": "int32",
-            "minimum": 0
+          "title": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Left out, the first line of the prompt."
           }
         },
         "additionalProperties": false
@@ -6686,65 +4286,6 @@
         },
         "additionalProperties": false
       },
-      "ToolCall": {
-        "type": "object",
-        "description": "A call of one Antilog tool from an agent that is not in an Antilog session, such as `antilog mcp`.",
-        "required": [
-          "input"
-        ],
-        "properties": {
-          "call": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Unique per call; sending a call again with the same id changes nothing twice."
-          },
-          "input": {
-            "type": "object",
-            "additionalProperties": {},
-            "propertyNames": {
-              "type": "string"
-            }
-          },
-          "session": {
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/SessionId",
-                "description": "The session the calls belong to; the first call without one opens it."
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "additionalProperties": false
-      },
-      "ToolDefinition": {
-        "type": "object",
-        "required": [
-          "name",
-          "description",
-          "inputSchema"
-        ],
-        "properties": {
-          "description": {
-            "type": "string"
-          },
-          "inputSchema": {
-            "type": "object",
-            "additionalProperties": {},
-            "propertyNames": {
-              "type": "string"
-            }
-          },
-          "name": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
       "ToolMode": {
         "type": "string",
         "description": "What a session may do with one tool of a connector.",
@@ -6753,324 +4294,6 @@
           "off",
           "ask"
         ]
-      },
-      "ToolResult": {
-        "type": "object",
-        "required": [
-          "session",
-          "answer"
-        ],
-        "properties": {
-          "answer": {
-            "type": "object",
-            "additionalProperties": {},
-            "propertyNames": {
-              "type": "string"
-            }
-          },
-          "followup": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "A measurement that was accepted: how it ended, in words. Never a holdout value."
-          },
-          "session": {
-            "$ref": "#/components/schemas/SessionId"
-          }
-        },
-        "additionalProperties": false
-      },
-      "TopWin": {
-        "type": "object",
-        "required": [
-          "win",
-          "projectId",
-          "goal",
-          "spentCents"
-        ],
-        "properties": {
-          "agent": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "goal": {
-            "type": "string"
-          },
-          "projectId": {
-            "$ref": "#/components/schemas/ProjectId"
-          },
-          "sessionId": {
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/SessionId"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "spentCents": {
-            "type": "integer",
-            "format": "int64",
-            "description": "What the experiment spent in the range."
-          },
-          "win": {
-            "$ref": "#/components/schemas/WinView"
-          }
-        },
-        "additionalProperties": false
-      },
-      "TrialId": {
-        "type": "string",
-        "format": "uuid"
-      },
-      "ValueBasis": {
-        "type": "string",
-        "description": "How a dollar figure was measured, said wherever one is shown.",
-        "enum": [
-          "measuredOffline"
-        ]
-      },
-      "ValueFigures": {
-        "type": "object",
-        "description": "Delivered, Pending, At risk and Return for one scope and time range, in US cents a year.",
-        "required": [
-          "basis",
-          "deliveredCents",
-          "pendingCents",
-          "atRiskCents",
-          "spentCents",
-          "mergedWins",
-          "pendingWins",
-          "unvaluedWins"
-        ],
-        "properties": {
-          "atRiskCents": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "basis": {
-            "$ref": "#/components/schemas/ValueBasis"
-          },
-          "deliveredCents": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "mergedWins": {
-            "type": "integer",
-            "format": "int32",
-            "description": "Wins whose pull request is merged and that count in Delivered or At risk.",
-            "minimum": 0
-          },
-          "pendingCents": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "pendingWins": {
-            "type": "integer",
-            "format": "int32",
-            "description": "Wins in an open pull request.",
-            "minimum": 0
-          },
-          "returnX": {
-            "type": [
-              "number",
-              "null"
-            ],
-            "format": "double",
-            "description": "Delivered over spent; `null` when nothing was spent."
-          },
-          "spentCents": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Everything spent in the scope and range, experiments with no win included."
-          },
-          "unvaluedWins": {
-            "type": "integer",
-            "format": "int32",
-            "description": "Wins with no value model: they count in no dollar figure.",
-            "minimum": 0
-          }
-        },
-        "additionalProperties": false
-      },
-      "ValueModel": {
-        "type": "object",
-        "required": [
-          "id",
-          "version",
-          "metric",
-          "unit",
-          "centsPerUnit",
-          "source",
-          "setBy"
-        ],
-        "properties": {
-          "centsPerUnit": {
-            "type": "number",
-            "format": "double",
-            "description": "Cents a year that one unit of the metric is worth."
-          },
-          "id": {
-            "$ref": "#/components/schemas/ValueModelId"
-          },
-          "metric": {
-            "type": "string"
-          },
-          "setBy": {
-            "type": "string",
-            "format": "uuid",
-            "description": "The project owner who set it; never an agent."
-          },
-          "source": {
-            "$ref": "#/components/schemas/ValueSource"
-          },
-          "unit": {
-            "type": "string",
-            "description": "What one unit of the metric is called, such as `ms`."
-          },
-          "version": {
-            "type": "integer",
-            "format": "int32",
-            "minimum": 0
-          }
-        },
-        "additionalProperties": false
-      },
-      "ValueModelId": {
-        "type": "string",
-        "format": "uuid"
-      },
-      "ValueModels": {
-        "type": "object",
-        "description": "The newest version of each metric's model in a project.",
-        "required": [
-          "models"
-        ],
-        "properties": {
-          "models": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ProjectValueModel"
-            }
-          }
-        },
-        "additionalProperties": false
-      },
-      "ValueSource": {
-        "type": "object",
-        "required": [
-          "text"
-        ],
-        "properties": {
-          "link": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "text": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
-      "WinState": {
-        "type": "string",
-        "enum": [
-          "notOpened",
-          "pending",
-          "delivered",
-          "atRisk"
-        ]
-      },
-      "WinView": {
-        "type": "object",
-        "description": "One win of one experiment version: its best Kept trial.",
-        "required": [
-          "experimentId",
-          "version",
-          "trialId",
-          "metric",
-          "unit",
-          "direction",
-          "baseline",
-          "best",
-          "state"
-        ],
-        "properties": {
-          "atRiskCents": {
-            "type": [
-              "integer",
-              "null"
-            ],
-            "format": "int64"
-          },
-          "baseline": {
-            "type": "number",
-            "format": "double"
-          },
-          "best": {
-            "type": "number",
-            "format": "double"
-          },
-          "deliveredCents": {
-            "type": [
-              "integer",
-              "null"
-            ],
-            "format": "int64"
-          },
-          "direction": {
-            "$ref": "#/components/schemas/Direction"
-          },
-          "experimentId": {
-            "$ref": "#/components/schemas/ExperimentId"
-          },
-          "mergedAt": {
-            "type": [
-              "integer",
-              "null"
-            ],
-            "format": "int64",
-            "description": "When its pull request was merged."
-          },
-          "metric": {
-            "type": "string"
-          },
-          "pullRequest": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "state": {
-            "$ref": "#/components/schemas/WinState"
-          },
-          "trialId": {
-            "$ref": "#/components/schemas/TrialId"
-          },
-          "unit": {
-            "type": "string"
-          },
-          "version": {
-            "type": "integer",
-            "format": "int32",
-            "minimum": 0
-          },
-          "yearlyCents": {
-            "type": [
-              "integer",
-              "null"
-            ],
-            "format": "int64",
-            "description": "What the whole win is worth a year; `null` with no value model."
-          }
-        },
-        "additionalProperties": false
       }
     },
     "securitySchemes": {

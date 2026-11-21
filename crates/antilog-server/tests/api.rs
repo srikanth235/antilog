@@ -8,7 +8,7 @@
 use std::sync::Arc;
 
 use antilog_core::auth::FakeSignIn;
-use antilog_core::fakes::{FakeCodeHost, FakeDeps, FakeMachine};
+use antilog_core::fakes::FakeDeps;
 use antilog_server::api::auth::App;
 use antilog_server::api::auth::{Provider, Settings};
 use antilog_server::api::customize::Backend;
@@ -27,16 +27,11 @@ fn app(fake: bool, open: bool) -> Router {
         Vec::new()
     };
     let app = Arc::new(App {
-        deps: Arc::new(FakeDeps::new(
-            FakeMachine::default(),
-            FakeCodeHost::default(),
-        )),
+        deps: Arc::new(FakeDeps::new()),
         settings: Settings {
             providers,
             open_organizations: open,
             secure_cookies: true,
-            code_host_webhook_secret: None,
-            e2e_seed: false,
             runner: None,
         },
     });
@@ -408,25 +403,15 @@ async fn roles_gate_the_writes_and_every_denial_is_audited() {
     let (_, viewer) = org.member("vi", "viewer").await;
     let (editor_id, editor) = org.member("ed", "editor").await;
 
-    let project = org
-        .call(
-            Method::POST,
-            "/projects",
-            &org.owner,
-            Some(json!({"name": "checkout", "description": ""})),
-        )
+    let start = json!({"prompt": "cut p95", "model": "opencode/test"});
+    let session = org
+        .call(Method::POST, "/sessions", &editor, Some(start.clone()))
         .await;
-    assert_eq!(project.status, StatusCode::CREATED);
-    let project_id = project.body["id"].as_str().unwrap_or_default().to_owned();
+    assert_eq!(session.status, StatusCode::CREATED, "an editor starts one");
     assert_eq!(
-        org.call(
-            Method::POST,
-            "/projects",
-            &viewer,
-            Some(json!({"name": "x", "description": ""}))
-        )
-        .await
-        .status,
+        org.call(Method::POST, "/sessions", &viewer, Some(start))
+            .await
+            .status,
         StatusCode::FORBIDDEN
     );
     assert_eq!(
@@ -445,7 +430,7 @@ async fn roles_gate_the_writes_and_every_denial_is_audited() {
             Method::PUT,
             "/policies",
             &editor,
-            Some(json!({"card": "keep_going", "mode": "allow", "limitCents": null}))
+            Some(json!({"card": "change_environment", "mode": "allow", "limitCents": null}))
         )
         .await
         .status,
@@ -458,7 +443,7 @@ async fn roles_gate_the_writes_and_every_denial_is_audited() {
     assert_eq!(
         org.call(
             Method::PUT,
-            &format!("/projects/{project_id}/limits"),
+            "/organization/limits",
             &editor,
             Some(json!({"monthlyCapCents": 5, "defaultBudgetCents": null}))
         )
@@ -468,7 +453,7 @@ async fn roles_gate_the_writes_and_every_denial_is_audited() {
     );
     for who in [&viewer, &editor] {
         assert_eq!(
-            org.call(Method::GET, "/projects", who, None).await.status,
+            org.call(Method::GET, "/sessions", who, None).await.status,
             StatusCode::OK,
             "every member reads"
         );
@@ -478,7 +463,7 @@ async fn roles_gate_the_writes_and_every_denial_is_audited() {
                 .body
                 .as_array()
                 .map(Vec::len),
-            Some(10)
+            Some(6)
         );
     }
 
@@ -491,11 +476,11 @@ async fn roles_gate_the_writes_and_every_denial_is_audited() {
         .filter_map(|e| e["action"].as_str())
         .collect();
     for action in [
-        "project.create",
+        "session.start",
         "member.set_role",
         "policy.set",
         "audit.read",
-        "project.set_limits",
+        "organization.set_limits",
     ] {
         assert!(denied.contains(&action), "{action} in {denied:?}");
     }
@@ -503,13 +488,13 @@ async fn roles_gate_the_writes_and_every_denial_is_audited() {
         .as_array()
         .into_iter()
         .flatten()
-        .filter(|e| e["action"] == "project.create" && e["outcome"] == "done")
+        .filter(|e| e["action"] == "session.start" && e["outcome"] == "done")
         .count();
     assert_eq!(done, 1);
 }
 
 #[tokio::test]
-async fn an_organization_and_its_projects_keep_an_owner() {
+async fn an_organization_keeps_an_owner() {
     let org = org().await;
     let me = org.call(Method::GET, "/members", &org.owner, None).await;
     let owner_id = me.body[0]["id"].as_str().unwrap_or_default().to_owned();
@@ -525,36 +510,6 @@ async fn an_organization_and_its_projects_keep_an_owner() {
         (demote.status, demote.body["code"].as_str()),
         (StatusCode::CONFLICT, Some("last_owner"))
     );
-    let project = org
-        .call(
-            Method::POST,
-            "/projects",
-            &org.owner,
-            Some(json!({"name": "p", "description": ""})),
-        )
-        .await;
-    let id = project.body["id"].as_str().unwrap_or_default().to_owned();
-    let step_back = org
-        .call(
-            Method::PUT,
-            &format!("/projects/{id}/roles/{owner_id}"),
-            &org.owner,
-            Some(json!({"role": "viewer"})),
-        )
-        .await;
-    assert_eq!(
-        (step_back.status, step_back.body["code"].as_str()),
-        (StatusCode::CONFLICT, Some("last_owner"))
-    );
-    let roles = org
-        .call(
-            Method::GET,
-            &format!("/projects/{id}/roles"),
-            &org.owner,
-            None,
-        )
-        .await;
-    assert_eq!(roles.body.as_array().map(Vec::len), Some(1));
 }
 
 #[tokio::test]
@@ -588,9 +543,9 @@ async fn tokens_act_as_their_member_and_secrets_are_shown_once() {
     assert_eq!(
         org.call(
             Method::POST,
-            "/projects",
+            "/sessions",
             &secret,
-            Some(json!({"name": "x", "description": ""}))
+            Some(json!({"prompt": "x", "model": "opencode/test"}))
         )
         .await
         .status,
@@ -674,7 +629,7 @@ async fn policy_budgets_and_the_audit_page() {
         (StatusCode::CONFLICT, Some("always_ask"))
     );
     assert_eq!(
-        put(json!({"card": "keep_going", "mode": "allow_up_to", "limitCents": null}))
+        put(json!({"card": "change_environment", "mode": "allow_up_to", "limitCents": null}))
             .await
             .status,
         StatusCode::UNPROCESSABLE_ENTITY
@@ -740,33 +695,54 @@ async fn policy_budgets_and_the_audit_page() {
         )
         .await;
     assert_eq!(zero.status, StatusCode::UNPROCESSABLE_ENTITY);
-    let project = org
+    let session = org
         .call(
             Method::POST,
-            "/projects",
+            "/sessions",
             &org.owner,
-            Some(json!({"name": "p", "description": ""})),
+            Some(json!({"prompt": "go", "model": "opencode/test", "budgetCapCents": 500})),
         )
         .await;
-    let id = project.body["id"].as_str().unwrap_or_default().to_owned();
+    let id = session.body["id"].as_str().unwrap_or_default().to_owned();
     let over = org
         .call(
             Method::PUT,
-            &format!("/projects/{id}/limits"),
+            &format!("/sessions/{id}/budget"),
             &org.owner,
-            Some(json!({"monthlyCapCents": 20_000, "defaultBudgetCents": null})),
+            Some(json!({"budgetCapCents": 20_000})),
         )
         .await;
     assert_eq!(
         (over.status, over.body["code"].as_str()),
-        (StatusCode::CONFLICT, Some("over_cap"))
+        (StatusCode::CONFLICT, Some("over_cap")),
+        "a session's budget stays inside the organization's cap"
+    );
+    let own = org
+        .call(
+            Method::PUT,
+            &format!("/sessions/{id}/budget"),
+            &org.owner,
+            Some(json!({"budgetCapCents": 2_000})),
+        )
+        .await;
+    assert_eq!(own.status, StatusCode::NO_CONTENT);
+    let defaulted = org
+        .call(
+            Method::POST,
+            "/sessions",
+            &org.owner,
+            Some(json!({"prompt": "go", "model": "opencode/test"})),
+        )
+        .await;
+    assert_eq!(
+        defaulted.body["budgetCapCents"], 1_000,
+        "the organization's default per-session cap"
     );
     let summary = org.call(Method::GET, "/budgets", &org.owner, None).await;
     assert_eq!(
         summary.body["organization"],
         json!({"capCents": 10_000, "spentCents": 0})
     );
-    assert_eq!(summary.body["projects"].as_array().map(Vec::len), Some(1));
     assert_eq!(
         org.call(
             Method::PUT,
@@ -815,7 +791,7 @@ async fn unknown_ids_are_not_found_and_leak_nothing() {
     assert_eq!(
         org.call(
             Method::GET,
-            &format!("/experiments/{nobody}/approvals"),
+            &format!("/sessions/{nobody}/approvals"),
             &org.owner,
             None
         )
@@ -837,7 +813,7 @@ async fn unknown_ids_are_not_found_and_leak_nothing() {
     assert_eq!(
         org.call(
             Method::PUT,
-            &format!("/experiments/{nobody}/budget"),
+            &format!("/sessions/{nobody}/budget"),
             &org.owner,
             Some(json!({"budgetCapCents": 1}))
         )
@@ -932,18 +908,13 @@ fn openapi_operation_ids_are_unique_and_path_parameters_are_in_the_path() {
 
 /// An organization on a store the test can also reach, for what only a tool writes.
 async fn org_with_store() -> (Org, Arc<FakeDeps>) {
-    let deps = Arc::new(FakeDeps::new(
-        FakeMachine::default(),
-        FakeCodeHost::default(),
-    ));
+    let deps = Arc::new(FakeDeps::new());
     let app = router(
         deps.clone(),
         Settings {
             providers: vec![Provider::Fake(FakeSignIn)],
             open_organizations: true,
             secure_cookies: true,
-            code_host_webhook_secret: None,
-            e2e_seed: false,
             runner: None,
         },
     );
@@ -1027,50 +998,34 @@ async fn me_names_the_member_and_signing_in_needs_no_organization_id() {
 async fn pending_cards_the_transcript_and_spend_are_read_across_roles() {
     use antilog_core::approval::{self, CardRequest};
     use antilog_core::store::{BudgetStore, NewEvent, SessionStore};
-    use antilog_types::{
-        CardKind, ExperimentId, OrganizationId, Session, Spend, SpendId, SpendKind,
-    };
+    use antilog_types::{CardKind, OrganizationId, SessionId, Spend, SpendId, SpendKind};
 
     let (org, deps) = org_with_store().await;
     let (_, viewer) = org.member("vi", "viewer").await;
     let (_, editor) = org.member("ed", "editor").await;
-    let project = org
+    let made = org
         .call(
             Method::POST,
-            "/projects",
-            &org.owner,
-            Some(json!({"name": "checkout", "description": ""})),
-        )
-        .await;
-    let project_id = project.body["id"].as_str().unwrap_or_default().to_owned();
-    let experiment = org
-        .call(
-            Method::POST,
-            &format!("/projects/{project_id}/experiments"),
+            "/sessions",
             &editor,
-            Some(json!({"goal": "cut p95", "budgetCapCents": 500})),
+            Some(json!({"prompt": "make it faster", "model": "opencode/test", "budgetCapCents": 500})),
         )
         .await;
-    assert_eq!(experiment.status, StatusCode::CREATED);
-    let experiment_id = experiment.body["id"]
-        .as_str()
-        .unwrap_or_default()
-        .to_owned();
+    assert_eq!(made.status, StatusCode::CREATED);
+    let session_id = made.body["id"].as_str().unwrap_or_default().to_owned();
+    let session_uuid = SessionId::from_uuid(session_id.parse().unwrap_or_default());
     let organization = OrganizationId::from_uuid(org.organization.parse().unwrap_or_default());
-    let experiment_uuid = ExperimentId::from_uuid(experiment_id.parse().unwrap_or_default());
     let card = approval::raise(
         &deps.store,
         1_700_000_000_000,
         None,
         CardRequest {
             organization,
-            experiment: experiment_uuid,
-            session: None,
+            session: session_uuid,
             card: CardKind::RaiseBudget,
             summary: "Raise the budget by $5".into(),
             payload: None,
             cost_cents: Some(500),
-            needs_owner: false,
             follow_policy: false,
         },
     )
@@ -1111,22 +1066,13 @@ async fn pending_cards_the_transcript_and_spend_are_read_across_roles() {
         .await;
     assert!(seen(&after).is_empty());
 
-    // A session with a conversation and spend.
-    let session = Session::new(organization, experiment_uuid, "claude", 1_700_000_000_000);
-    deps.store
-        .create_session(
-            &session,
-            &antilog_types::AuditEntry::new(
-                organization,
-                None,
-                "session.start",
-                session.id,
-                antilog_types::AuditOutcome::Done,
-                1_700_000_000_000,
-            ),
-        )
+    // The session's conversation and spend.
+    let session = deps
+        .store
+        .session(organization, session_uuid)
         .await
-        .unwrap_or_else(|e| unreachable!("{e}"));
+        .unwrap_or_else(|e| unreachable!("{e}"))
+        .unwrap_or_else(|| unreachable!("the session exists"));
     for (i, (kind, text)) in [
         (antilog_types::EventKind::Person, "make it faster"),
         (antilog_types::EventKind::Agent, "Profiling."),
@@ -1151,13 +1097,13 @@ async fn pending_cards_the_transcript_and_spend_are_read_across_roles() {
     let page = org
         .call(
             Method::GET,
-            &format!("/sessions/{}/events?limit=2", session.id),
+            &format!("/sessions/{}/events?limit=4", session.id),
             &viewer,
             None,
         )
         .await;
     assert_eq!(page.status, StatusCode::OK);
-    assert_eq!(page.body["events"].as_array().map(Vec::len), Some(2));
+    assert_eq!(page.body["events"].as_array().map(Vec::len), Some(4));
     let next = page.body["next"].as_i64().unwrap_or_default();
     let rest = org
         .call(
@@ -1180,7 +1126,7 @@ async fn pending_cards_the_transcript_and_spend_are_read_across_roles() {
         .await;
     assert_eq!(missing.status, StatusCode::NOT_FOUND);
 
-    for (kind, cents) in [(SpendKind::Tokens, 40), (SpendKind::Judge, 25)] {
+    for (kind, cents) in [(SpendKind::Tokens, 40), (SpendKind::Machine, 25)] {
         deps.store
             .record_spend(&Spend {
                 id: SpendId::new(),
@@ -1190,7 +1136,6 @@ async fn pending_cards_the_transcript_and_spend_are_read_across_roles() {
                 amount_cents: cents,
                 tokens: 0,
                 occurred_at: 1_700_000_000_000,
-                trial_id: None,
             })
             .await
             .unwrap_or_else(|e| unreachable!("{e}"));
@@ -1198,21 +1143,19 @@ async fn pending_cards_the_transcript_and_spend_are_read_across_roles() {
     let spend = org
         .call(
             Method::GET,
-            &format!("/experiments/{experiment_id}/spend"),
+            &format!("/sessions/{session_id}/spend"),
             &viewer,
             None,
         )
         .await;
     assert_eq!(spend.status, StatusCode::OK);
     assert_eq!(spend.body["spentCents"], 65);
-    assert_eq!(spend.body["budgetCapCents"], 500);
-    assert_eq!(spend.body["byKind"].as_array().map(Vec::len), Some(2));
     assert_eq!(
-        spend.body["bySession"][0]["sessionId"],
-        json!(session.id.to_string())
+        spend.body["budgetCapCents"], 1_000,
+        "the approved card raised the budget by $5"
     );
-    let all = org.call(Method::GET, "/spend", &viewer, None).await;
-    assert_eq!(all.body[0]["spentCents"], 65);
+    assert_eq!(spend.body["byKind"].as_array().map(Vec::len), Some(2));
+    assert_eq!(spend.body["sessionId"], json!(session.id.to_string()));
 }
 
 #[tokio::test]
@@ -1220,27 +1163,6 @@ async fn agents_auto_and_environments_are_read_by_members_and_set_by_owners() {
     let org = org().await;
     let (_, viewer) = org.member("vi", "viewer").await;
     let (_, editor) = org.member("ed", "editor").await;
-    let project = org
-        .call(
-            Method::POST,
-            "/projects",
-            &org.owner,
-            Some(json!({"name": "checkout", "description": ""})),
-        )
-        .await;
-    let project_id = project.body["id"].as_str().unwrap_or_default().to_owned();
-    let experiment = org
-        .call(
-            Method::POST,
-            &format!("/projects/{project_id}/experiments"),
-            &editor,
-            Some(json!({"goal": "cut p95", "budgetCapCents": 500})),
-        )
-        .await;
-    let experiment_id = experiment.body["id"]
-        .as_str()
-        .unwrap_or_default()
-        .to_owned();
 
     let listed = org.call(Method::GET, "/agents", &viewer, None).await;
     assert_eq!(listed.body[0]["id"], "opencode");
@@ -1254,9 +1176,9 @@ async fn agents_auto_and_environments_are_read_by_members_and_set_by_owners() {
     let started = org
         .call(
             Method::POST,
-            &format!("/experiments/{experiment_id}/sessions"),
+            "/sessions",
             &editor,
-            Some(json!({"agent": "auto", "prompt": "go", "repos": []})),
+            Some(json!({"agent": "auto", "prompt": "go", "repos": [], "model": "opencode/test"})),
         )
         .await;
     assert_eq!(
@@ -1293,18 +1215,18 @@ async fn agents_auto_and_environments_are_read_by_members_and_set_by_owners() {
     let refused = org
         .call(
             Method::POST,
-            &format!("/experiments/{experiment_id}/sessions"),
+            "/sessions",
             &editor,
-            Some(json!({"agent": "auto", "prompt": "go", "repos": []})),
+            Some(json!({"agent": "auto", "prompt": "go", "repos": [], "model": "opencode/test"})),
         )
         .await;
     assert_eq!(refused.status, StatusCode::UNPROCESSABLE_ENTITY);
     let named = org
         .call(
             Method::POST,
-            &format!("/experiments/{experiment_id}/sessions"),
+            "/sessions",
             &editor,
-            Some(json!({"agent": "gemini", "prompt": "go", "repos": []})),
+            Some(json!({"agent": "gemini", "prompt": "go", "repos": [], "model": "opencode/test"})),
         )
         .await;
     assert_eq!(named.status, StatusCode::CREATED);
@@ -1317,782 +1239,6 @@ async fn agents_auto_and_environments_are_read_by_members_and_set_by_owners() {
         )
         .await;
     assert_eq!(bad.status, StatusCode::UNPROCESSABLE_ENTITY);
-}
-
-#[tokio::test]
-async fn evaluations_are_listed_read_and_added_by_role() {
-    let org = org().await;
-    let (_, viewer) = org.member("vi", "viewer").await;
-    let (_, editor) = org.member("ed", "editor").await;
-    let body = json!({"name": "Load test", "summary": "Replays traffic", "kind": "speed", "metric": "p95", "lowerIsBetter": true, "command": "k6 run bench/load.js", "protectedPaths": ["app:bench/"]});
-
-    let empty = org.call(Method::GET, "/evaluations", &viewer, None).await;
-    assert_eq!(
-        (empty.status, empty.body.as_array().map(Vec::len)),
-        (StatusCode::OK, Some(0))
-    );
-    let denied = org
-        .call(Method::POST, "/evaluations", &viewer, Some(body.clone()))
-        .await;
-    assert_eq!(denied.status, StatusCode::FORBIDDEN);
-    let added = org
-        .call(Method::POST, "/evaluations", &editor, Some(body.clone()))
-        .await;
-    assert_eq!(
-        (added.status, &added.body["id"]),
-        (StatusCode::CREATED, &json!("load-test"))
-    );
-    let again = org
-        .call(Method::POST, "/evaluations", &editor, Some(body))
-        .await;
-    assert_eq!(again.status, StatusCode::CONFLICT);
-    let one = org
-        .call(Method::GET, "/evaluations/load-test", &viewer, None)
-        .await;
-    assert_eq!(one.body["protectedPaths"][0], "app:bench/");
-    let missing = org
-        .call(Method::GET, "/evaluations/nope", &viewer, None)
-        .await;
-    assert_eq!(missing.status, StatusCode::NOT_FOUND);
-    let log = org.call(Method::GET, "/audit", &org.owner, None).await;
-    let actions: Vec<_> = log.body["entries"]
-        .as_array()
-        .into_iter()
-        .flatten()
-        .filter(|e| e["action"] == "evaluation.add")
-        .map(|e| e["outcome"].clone())
-        .collect();
-    assert_eq!(actions.len(), 2);
-}
-
-#[tokio::test]
-async fn value_models_are_set_by_project_owners_and_value_and_return_are_read_by_all() {
-    use antilog_core::judge::fixtures;
-    use antilog_core::store::judge::JudgeStore;
-    use antilog_core::value::record_win_event;
-    use antilog_types::judge::*;
-
-    let (org, deps) = org_with_store().await;
-    let (_, editor) = org.member("ed", "editor").await;
-    let (_, viewer) = org.member("vi", "viewer").await;
-    let project = org
-        .call(
-            Method::POST,
-            "/projects",
-            &org.owner,
-            Some(json!({"name": "Checkout", "description": "the path"})),
-        )
-        .await;
-    let project = project.body["id"].as_str().unwrap_or_default().to_owned();
-    let model = json!({"metric": "p95", "unit": "ms", "centsPerUnit": 360.0, "source": {"text": "Finance study, Q3", "link": "https://example.com/q3"}});
-
-    // Only a project owner sets one; the refusal is audited.
-    let uri = format!("/projects/{project}/value-models");
-    for who in [&editor, &viewer] {
-        let denied = org.call(Method::POST, &uri, who, Some(model.clone())).await;
-        assert_eq!(denied.status, StatusCode::FORBIDDEN);
-    }
-    let set = org
-        .call(Method::POST, &uri, &org.owner, Some(model.clone()))
-        .await;
-    assert_eq!(set.status, StatusCode::CREATED);
-    assert_eq!(set.body["model"]["version"], 1);
-    assert_eq!(set.body["model"]["centsPerUnit"], 360.0);
-    let again = org
-        .call(Method::POST, &uri, &org.owner, Some(json!({"metric": "p95", "unit": "ms", "centsPerUnit": 720.0, "source": {"text": "Re-estimated", "link": null}})))
-        .await;
-    assert_eq!(
-        (
-            again.body["model"]["version"].clone(),
-            again.body["model"]["id"].clone()
-        ),
-        (json!(2), set.body["model"]["id"].clone())
-    );
-    for bad in [
-        json!({"metric": "p95", "unit": "ms", "centsPerUnit": 0, "source": {"text": "x", "link": null}}),
-        json!({"metric": "", "unit": "ms", "centsPerUnit": 1, "source": {"text": "x", "link": null}}),
-        json!({"metric": "p95", "unit": "ms", "centsPerUnit": 1, "source": {"text": "", "link": null}}),
-        json!({"metric": "p95", "unit": "ms", "centsPerUnit": 1, "source": {"text": "x", "link": "javascript:1"}}),
-    ] {
-        let reply = org.call(Method::POST, &uri, &org.owner, Some(bad)).await;
-        assert_eq!(reply.status, StatusCode::UNPROCESSABLE_ENTITY);
-    }
-    let listed = org.call(Method::GET, &uri, &viewer, None).await;
-    assert_eq!(listed.body["models"].as_array().map(Vec::len), Some(1));
-    assert_eq!(listed.body["models"][0]["model"]["version"], 2);
-    let log = org.call(Method::GET, "/audit", &org.owner, None).await;
-    let actions: Vec<_> = log.body["entries"]
-        .as_array()
-        .into_iter()
-        .flatten()
-        .filter(|entry| entry["action"] == "value_model.set")
-        .map(|entry| entry["outcome"].clone())
-        .collect();
-    assert_eq!(
-        actions.len(),
-        4,
-        "two refusals and two versions: {actions:?}"
-    );
-
-    // With no win there is nothing delivered, and every figure says it is measured offline.
-    let none = org
-        .call(
-            Method::GET,
-            &format!("/projects/{project}/value"),
-            &viewer,
-            None,
-        )
-        .await;
-    assert_eq!(none.status, StatusCode::OK);
-    assert_eq!(
-        (
-            none.body["basis"].clone(),
-            none.body["deliveredCents"].clone(),
-            none.body["returnX"].clone()
-        ),
-        (json!("measuredOffline"), json!(0), Value::Null)
-    );
-
-    // An experiment, sealed with the owner's model and one Kept trial.
-    let made = org
-        .call(
-            Method::POST,
-            &format!("/projects/{project}/experiments"),
-            &editor,
-            Some(json!({"goal": "cut p95", "budgetCapCents": 100_000})),
-        )
-        .await;
-    assert_eq!(made.status, StatusCode::CREATED, "{:?}", made.body);
-    let experiment: antilog_types::ExperimentId =
-        serde_json::from_value(made.body["id"].clone()).unwrap_or_else(|e| unreachable!("{e}"));
-    let organization: antilog_types::OrganizationId =
-        serde_json::from_value(json!(org.organization)).unwrap_or_else(|e| unreachable!("{e}"));
-    let judge = deps.judge.clone();
-    let mut definition = fixtures::definition();
-    definition.value_model = Some(ValueModelRef {
-        id: serde_json::from_value(set.body["model"]["id"].clone())
-            .unwrap_or_else(|e| unreachable!("{e}")),
-        version: 2,
-    });
-    let sealed = SealedExperiment::seal(experiment, 1, definition, vec![], fixtures::checks(), 1)
-        .unwrap_or_else(|e| unreachable!("{e}"));
-    judge
-        .put_sealed(&sealed)
-        .await
-        .unwrap_or_else(|e| unreachable!("{e}"));
-    let trial = fixtures::trial(&sealed, None, "a");
-    judge
-        .begin_trial(&trial)
-        .await
-        .unwrap_or_else(|e| unreachable!("{e}"));
-    judge
-        .finish_trial(
-            trial.id,
-            &Finished {
-                measurement: Some(Measurement {
-                    trial: trial.id,
-                    experiment,
-                    version: 1,
-                    seal: sealed.seal_hash().clone(),
-                    stage: Stage::Full,
-                    k: 1,
-                    noise: 2.0,
-                    parent_value: 100.0,
-                    value: 90.0,
-                    gain: None,
-                    confirmation: None,
-                    guardrails: vec![],
-                    holdout: Some(HoldoutResult::Passed),
-                }),
-                decision: Decision {
-                    outcome: Outcome::Kept,
-                    reasons: vec![],
-                    criteria: 1,
-                },
-            },
-        )
-        .await
-        .unwrap_or_else(|e| unreachable!("{e}"));
-    let now = 1_000;
-    for kind in [WinEventKind::Opened, WinEventKind::Merged] {
-        record_win_event(
-            &deps.store,
-            &judge,
-            organization,
-            WinEvent {
-                experiment,
-                version: 1,
-                trial: trial.id,
-                kind,
-                value: None,
-                link: None,
-                at: now,
-            },
-        )
-        .await
-        .unwrap_or_else(|e| unreachable!("{e:?}"));
-    }
-
-    let seen = org
-        .call(
-            Method::GET,
-            &format!("/experiments/{experiment}/value"),
-            &viewer,
-            None,
-        )
-        .await;
-    assert_eq!(seen.status, StatusCode::OK, "{:?}", seen.body);
-    assert_eq!(seen.body["valueModel"]["model"]["version"], 2);
-    assert_eq!(seen.body["wins"][0]["state"], "delivered");
-    // 10 ms at 720 cents a year per ms.
-    assert_eq!(seen.body["wins"][0]["yearlyCents"], 7_200);
-    assert_eq!(seen.body["figures"]["deliveredCents"], 7_200);
-    // The organization's figures and report are for owners and editors; a viewer reads a project's.
-    for uri in ["/value", "/report?month=2026-11"] {
-        let denied = org.call(Method::GET, uri, &viewer, None).await;
-        assert_eq!(denied.status, StatusCode::FORBIDDEN, "{uri}");
-    }
-    let everything = org.call(Method::GET, "/value", &editor, None).await;
-    assert_eq!(everything.body["deliveredCents"], 7_200);
-    let outside = org
-        .call(Method::GET, "/value?from=5000&to=9000", &editor, None)
-        .await;
-    assert_eq!(outside.body["deliveredCents"], 0);
-    let backwards = org
-        .call(Method::GET, "/value?from=9&to=3", &editor, None)
-        .await;
-    assert_eq!(backwards.status, StatusCode::UNPROCESSABLE_ENTITY);
-
-    let report = org
-        .call(Method::GET, "/report?month=2026-11", &editor, None)
-        .await;
-    assert_eq!(report.status, StatusCode::OK, "{:?}", report.body);
-    assert_eq!(report.body["month"], "2026-11");
-    let current = org.call(Method::GET, "/report", &editor, None).await;
-    assert_eq!(current.status, StatusCode::OK);
-    let scoped = org
-        .call(
-            Method::GET,
-            &format!("/report?month=2026-11&project={project}"),
-            &viewer,
-            None,
-        )
-        .await;
-    assert_eq!(scoped.body["projectId"], json!(project));
-    for bad in ["2026-13", "nov", "2026-1"] {
-        let reply = org
-            .call(Method::GET, &format!("/report?month={bad}"), &editor, None)
-            .await;
-        assert_eq!(reply.status, StatusCode::UNPROCESSABLE_ENTITY, "{bad}");
-    }
-    let missing = org
-        .call(
-            Method::GET,
-            "/projects/018f3b1e-0000-7000-8000-000000000000/value",
-            &viewer,
-            None,
-        )
-        .await;
-    assert_eq!(missing.status, StatusCode::NOT_FOUND);
-}
-
-// ---- live updates: GET /events/stream ----
-
-mod live {
-    use std::time::Duration;
-
-    use antilog_core::approval::{self, CardRequest};
-    use antilog_core::clock::Clock;
-    use antilog_core::deps::Deps;
-    use antilog_core::store::{NewEvent, SessionStore};
-    use antilog_server::api::auth::App;
-    use antilog_server::api::live::{self, Options};
-    use antilog_types::{
-        AuditEntry, AuditOutcome, CardKind, EventKind, ExperimentId, LiveEvent, OrganizationId,
-        Session, SessionId,
-    };
-    use tokio_stream::StreamExt;
-
-    use super::*;
-
-    /// One open `GET /events/stream`, parsed into (event name, id, data).
-    struct Sse {
-        body: axum::body::BodyDataStream,
-        pending: String,
-    }
-
-    impl Sse {
-        async fn open(
-            org: &Org,
-            token: &str,
-            last: Option<&str>,
-        ) -> (StatusCode, axum::http::HeaderMap, Self) {
-            let mut request = Request::get("/events/stream")
-                .header(header::AUTHORIZATION, format!("Bearer {token}"));
-            if let Some(last) = last {
-                request = request.header("last-event-id", last);
-            }
-            let response = org
-                .app
-                .clone()
-                .oneshot(
-                    request
-                        .body(Body::empty())
-                        .unwrap_or_else(|e| unreachable!("{e}")),
-                )
-                .await
-                .unwrap_or_else(|e| unreachable!("{e}"));
-            let (parts, body) = response.into_parts();
-            (
-                parts.status,
-                parts.headers,
-                Self {
-                    body: body.into_data_stream(),
-                    pending: String::new(),
-                },
-            )
-        }
-
-        /// The next event, skipping keep-alive comments. Fails the test if none comes in 15 s.
-        async fn next(&mut self) -> (String, Option<String>, Value) {
-            loop {
-                if let Some(end) = self.pending.find("\n\n") {
-                    let block: String = self.pending.drain(..end + 2).collect();
-                    let (mut name, mut id, mut data) = (String::new(), None, String::new());
-                    for line in block.lines() {
-                        if let Some(v) = line.strip_prefix("event: ") {
-                            name = v.to_owned();
-                        } else if let Some(v) = line.strip_prefix("id: ") {
-                            id = Some(v.to_owned());
-                        } else if let Some(v) = line.strip_prefix("data: ") {
-                            data.push_str(v);
-                        }
-                    }
-                    if name.is_empty() {
-                        continue;
-                    }
-                    return (name, id, serde_json::from_str(&data).unwrap_or(Value::Null));
-                }
-                let chunk = tokio::time::timeout(Duration::from_secs(15), self.body.next())
-                    .await
-                    .unwrap_or_else(|_| unreachable!("no event within 15 seconds"))
-                    .unwrap_or_else(|| unreachable!("the stream ended"))
-                    .unwrap_or_else(|e| unreachable!("{e}"));
-                self.pending.push_str(&String::from_utf8_lossy(&chunk));
-            }
-        }
-
-        /// Reads until an event named `name` arrives and returns it, with everything before it.
-        async fn until(&mut self, name: &str) -> Vec<(String, Option<String>, Value)> {
-            let mut seen = Vec::new();
-            loop {
-                let got = self.next().await;
-                let done = got.0 == name;
-                seen.push(got);
-                if done {
-                    return seen;
-                }
-            }
-        }
-    }
-
-    struct World {
-        org: Org,
-        deps: Arc<FakeDeps>,
-        organization: OrganizationId,
-        experiment: ExperimentId,
-    }
-
-    async fn world() -> World {
-        let (org, deps) = org_with_store().await;
-        let organization = OrganizationId::from_uuid(org.organization.parse().unwrap_or_default());
-        let (experiment, _) = experiment_in(&org, &org.owner).await;
-        World {
-            org,
-            deps,
-            organization,
-            experiment,
-        }
-    }
-
-    async fn experiment_in(org: &Org, token: &str) -> (ExperimentId, String) {
-        let project = org
-            .call(
-                Method::POST,
-                "/projects",
-                token,
-                Some(json!({"name": "checkout", "description": ""})),
-            )
-            .await;
-        let project_id = project.body["id"].as_str().unwrap_or_default().to_owned();
-        let experiment = org
-            .call(
-                Method::POST,
-                &format!("/projects/{project_id}/experiments"),
-                token,
-                Some(json!({"goal": "cut p95", "budgetCapCents": 500})),
-            )
-            .await;
-        assert_eq!(experiment.status, StatusCode::CREATED);
-        (
-            ExperimentId::from_uuid(
-                experiment.body["id"]
-                    .as_str()
-                    .unwrap_or_default()
-                    .parse()
-                    .unwrap_or_default(),
-            ),
-            project_id,
-        )
-    }
-
-    impl World {
-        fn now(&self) -> i64 {
-            self.deps.clock().now().as_millisecond()
-        }
-
-        async fn session(&self, organization: OrganizationId, experiment: ExperimentId) -> Session {
-            let session = Session::new(organization, experiment, "claude", self.now());
-            self.deps
-                .store
-                .create_session(
-                    &session,
-                    &AuditEntry::new(
-                        organization,
-                        None,
-                        "session.start",
-                        session.id,
-                        AuditOutcome::Done,
-                        self.now(),
-                    ),
-                )
-                .await
-                .unwrap_or_else(|e| unreachable!("{e}"));
-            session
-        }
-
-        async fn say(&self, organization: OrganizationId, session: SessionId, key: &str) {
-            self.deps
-                .store
-                .append_event(&NewEvent {
-                    organization,
-                    session,
-                    key: key.to_owned(),
-                    kind: EventKind::Agent,
-                    member: None,
-                    text: "Profiling.".into(),
-                    at: self.now(),
-                })
-                .await
-                .unwrap_or_else(|e| unreachable!("{e}"));
-        }
-    }
-
-    #[tokio::test]
-    async fn a_stream_ends_soon_after_its_token_is_revoked() {
-        let world = world().await;
-        let created = world
-            .org
-            .call(
-                Method::POST,
-                "/tokens",
-                &world.org.owner,
-                Some(json!({"memberId": null, "name": "tab"})),
-            )
-            .await;
-        let secret = created.body["secret"]
-            .as_str()
-            .unwrap_or_default()
-            .to_owned();
-        let id = created.body["token"]["id"]
-            .as_str()
-            .unwrap_or_default()
-            .to_owned();
-        let me = world.org.call(Method::GET, "/me", &secret, None).await;
-        let who = antilog_core::organization::Principal {
-            organization: world.organization,
-            member: antilog_types::MemberId::from_uuid(
-                me.body["member"]["id"]
-                    .as_str()
-                    .unwrap_or_default()
-                    .parse()
-                    .unwrap_or_default(),
-            ),
-        };
-        let app = Arc::new(App {
-            deps: world.deps.clone(),
-            settings: Settings {
-                providers: Vec::new(),
-                open_organizations: false,
-                secure_cookies: true,
-                code_host_webhook_secret: None,
-                e2e_seed: false,
-                runner: None,
-            },
-        });
-        let options = Options {
-            poll: Duration::from_millis(5),
-            recheck: Duration::from_millis(50),
-            max_age: Duration::from_secs(60),
-            ..Options::default()
-        };
-        let mut events = live::open(app, who, secret, None, options);
-        assert!(matches!(events.recv().await, Some(LiveEvent::Hello { .. })));
-        let quiet = tokio::time::timeout(Duration::from_millis(300), events.recv()).await;
-        assert!(quiet.is_err(), "a valid credential keeps the stream open");
-        assert_eq!(
-            world
-                .org
-                .call(
-                    Method::DELETE,
-                    &format!("/tokens/{id}"),
-                    &world.org.owner,
-                    None
-                )
-                .await
-                .status,
-            StatusCode::NO_CONTENT
-        );
-        let ended = tokio::time::timeout(Duration::from_secs(5), async {
-            while events.recv().await.is_some() {}
-        })
-        .await;
-        assert!(ended.is_ok(), "the stream outlived its revoked token");
-    }
-
-    #[tokio::test]
-    async fn reading_history_opens_no_session() {
-        let world = world().await;
-        let path = format!("/experiments/{}/history", world.experiment);
-        for _ in 0..5 {
-            let read = world
-                .org
-                .call(Method::GET, &path, &world.org.owner, None)
-                .await;
-            assert_eq!(read.status, StatusCode::OK);
-            assert_eq!(read.body["trials"], json!([]));
-        }
-        let sessions = world
-            .org
-            .call(
-                Method::GET,
-                &format!("/experiments/{}/sessions", world.experiment),
-                &world.org.owner,
-                None,
-            )
-            .await;
-        assert_eq!(sessions.body, json!([]), "no session from a read");
-        let nobody = send(&world.org.app, Method::GET, &path, None, None, None).await;
-        assert_eq!(nobody.status, StatusCode::UNAUTHORIZED);
-    }
-
-    #[tokio::test]
-    async fn a_stream_needs_sign_in_and_is_an_uncached_event_stream() {
-        let world = world().await;
-        let unauthenticated = send(
-            &world.org.app,
-            Method::GET,
-            "/events/stream",
-            None,
-            None,
-            None,
-        )
-        .await;
-        assert_eq!(unauthenticated.status, StatusCode::UNAUTHORIZED);
-
-        let (status, headers, mut stream) = Sse::open(&world.org, &world.org.owner, None).await;
-        assert_eq!(status, StatusCode::OK);
-        assert_eq!(headers[header::CONTENT_TYPE], "text/event-stream");
-        assert_eq!(headers[header::CACHE_CONTROL], "no-cache");
-        let (name, id, data) = stream.next().await;
-        assert_eq!((name.as_str(), id.as_deref()), ("hello", Some("0")));
-        assert_eq!(data, json!({"type": "hello", "cursor": 0}));
-    }
-
-    #[tokio::test]
-    async fn another_organizations_events_never_arrive() {
-        let world = world().await;
-        let globex = create_organization(&world.org.app, "globex", "grace").await;
-        let globex_token = globex.body["session"]["secret"]
-            .as_str()
-            .unwrap_or_default()
-            .to_owned();
-        let globex_org = OrganizationId::from_uuid(
-            globex.body["organization"]["id"]
-                .as_str()
-                .unwrap_or_default()
-                .parse()
-                .unwrap_or_default(),
-        );
-        let (globex_experiment, _) = experiment_in(&world.org, &globex_token).await;
-
-        let (_, _, mut acme) = Sse::open(&world.org, &world.org.owner, None).await;
-        let (_, _, mut globex_stream) = Sse::open(&world.org, &globex_token, None).await;
-        assert_eq!(acme.next().await.0, "hello");
-        assert_eq!(globex_stream.next().await.0, "hello");
-
-        // Globex speaks first, acme after. Events arrive in `seq` order, so if globex's leaked
-        // into acme's stream it would come before acme's own message.
-        let theirs = world.session(globex_org, globex_experiment).await;
-        world.say(globex_org, theirs.id, "a").await;
-        let ours = world.session(world.organization, world.experiment).await;
-        world.say(world.organization, ours.id, "a").await;
-
-        let heard = acme.until("message").await;
-        for (name, _, data) in &heard {
-            assert_ne!(data["sessionId"], json!(theirs.id), "{name} leaked");
-            assert_ne!(data["experimentId"], json!(globex_experiment));
-        }
-        let (_, _, message) = heard.last().cloned().unwrap_or_default();
-        assert_eq!(message["sessionId"], json!(ours.id));
-        assert_eq!(message["experimentId"], json!(world.experiment));
-        // The session itself was announced to acme, and its status too.
-        assert!(heard.iter().all(|(name, ..)| name != "cards"));
-
-        let heard = globex_stream.until("message").await;
-        let (_, _, message) = heard.last().cloned().unwrap_or_default();
-        assert_eq!(message["sessionId"], json!(theirs.id));
-        for (_, _, data) in &heard {
-            assert_ne!(data["sessionId"], json!(ours.id));
-        }
-    }
-
-    #[tokio::test]
-    async fn a_reconnect_replays_from_last_event_id_and_resyncs_when_it_cannot() {
-        let world = world().await;
-        let session = world.session(world.organization, world.experiment).await;
-        for key in ["one", "two", "three"] {
-            world.say(world.organization, session.id, key).await;
-        }
-        let owner = &world.org.owner;
-
-        // No Last-Event-ID: start at now, no replay.
-        let (_, _, mut fresh) = Sse::open(&world.org, owner, None).await;
-        let (name, id, _) = fresh.next().await;
-        assert_eq!((name.as_str(), id.as_deref()), ("hello", Some("3")));
-
-        // After seq 1: hello at 1, then 2 and 3, in order, each with its seq as the id.
-        let (_, _, mut resumed) = Sse::open(&world.org, owner, Some("1")).await;
-        let (name, id, _) = resumed.next().await;
-        assert_eq!((name.as_str(), id.as_deref()), ("hello", Some("1")));
-        for want in ["2", "3"] {
-            let (name, id, data) = resumed.next().await;
-            assert_eq!((name.as_str(), id.as_deref()), ("message", Some(want)));
-            assert_eq!(data["seq"], json!(want.parse::<i64>().unwrap_or_default()));
-            assert_eq!(data["sessionId"], json!(session.id));
-        }
-        // What arrives after the gap continues the same stream.
-        world.say(world.organization, session.id, "four").await;
-        let heard = resumed.until("message").await;
-        assert_eq!(heard.last().and_then(|e| e.1.as_deref()), Some("4"));
-
-        // A cursor from a different ledger: resync, then continue from the latest.
-        let (_, _, mut ahead) = Sse::open(&world.org, owner, Some("99999")).await;
-        let (name, id, data) = ahead.next().await;
-        assert_eq!((name.as_str(), id.as_deref()), ("resync", Some("4")));
-        assert_eq!(data["type"], "resync");
-    }
-
-    #[tokio::test]
-    async fn cards_and_session_status_are_announced() {
-        let world = world().await;
-        let (_, _, mut stream) = Sse::open(&world.org, &world.org.owner, None).await;
-        assert_eq!(stream.next().await.0, "hello");
-
-        let session = world.session(world.organization, world.experiment).await;
-        let heard = stream.until("session").await;
-        let (_, id, data) = heard.last().cloned().unwrap_or_default();
-        assert_eq!(id, None);
-        assert_eq!(data["sessionId"], json!(session.id));
-        assert_eq!(data["status"], "working");
-
-        let card = approval::raise(
-            &world.deps.store,
-            world.now(),
-            None,
-            CardRequest {
-                organization: world.organization,
-                experiment: world.experiment,
-                session: Some(session.id),
-                card: CardKind::RaiseBudget,
-                summary: "Raise the budget by $5".into(),
-                cost_cents: Some(500),
-                needs_owner: false,
-                follow_policy: false,
-                payload: None,
-            },
-        )
-        .await
-        .unwrap_or_else(|e| unreachable!("{e}"));
-        let heard = stream.until("cards").await;
-        assert_eq!(
-            heard.last().map(|e| e.2.clone()),
-            Some(json!({"type": "cards", "pending": 1}))
-        );
-        // Never the card's words.
-        assert!(!format!("{heard:?}").contains("Raise the budget"));
-
-        let decided = world
-            .org
-            .call(
-                Method::POST,
-                &format!("/approvals/{}/decision", card.id),
-                &world.org.owner,
-                Some(json!({"decision": "approve"})),
-            )
-            .await;
-        assert_eq!(decided.status, StatusCode::OK);
-        let heard = stream.until("cards").await;
-        assert_eq!(
-            heard.last().map(|e| e.2.clone()),
-            Some(json!({"type": "cards", "pending": 0}))
-        );
-    }
-
-    #[tokio::test]
-    async fn a_stream_ends_at_its_age_limit_so_the_browser_can_reconnect() {
-        let world = world().await;
-        let who = antilog_core::organization::Principal {
-            organization: world.organization,
-            member: {
-                let me = world
-                    .org
-                    .call(Method::GET, "/me", &world.org.owner, None)
-                    .await;
-                antilog_types::MemberId::from_uuid(
-                    me.body["member"]["id"]
-                        .as_str()
-                        .unwrap_or_default()
-                        .parse()
-                        .unwrap_or_default(),
-                )
-            },
-        };
-        let app = Arc::new(App {
-            deps: world.deps.clone(),
-            settings: Settings {
-                providers: Vec::new(),
-                open_organizations: false,
-                secure_cookies: true,
-                code_host_webhook_secret: None,
-                e2e_seed: false,
-                runner: None,
-            },
-        });
-        let options = Options {
-            poll: Duration::from_millis(5),
-            max_age: Duration::from_millis(60),
-            ..Options::default()
-        };
-        let mut events = live::open(app, who, String::new(), None, options);
-        let first = events.recv().await;
-        assert_eq!(first, Some(LiveEvent::Hello { cursor: 0 }));
-        let ended = tokio::time::timeout(Duration::from_secs(10), async {
-            while events.recv().await.is_some() {}
-        })
-        .await;
-        assert!(ended.is_ok(), "the stream did not end");
-    }
 }
 
 #[tokio::test]
@@ -2327,28 +1473,8 @@ async fn environments_are_read_by_every_member_and_managed_by_owners_and_editors
     assert_eq!(missing.status, StatusCode::NOT_FOUND);
 
     // A session starts on the stored environment, then not once it is archived.
-    let project = org
-        .call(
-            Method::POST,
-            "/projects",
-            &org.owner,
-            Some(json!({"name": "checkout", "description": ""})),
-        )
-        .await;
-    let project_id = project.body["id"].as_str().unwrap_or_default().to_owned();
-    let experiment = org
-        .call(
-            Method::POST,
-            &format!("/projects/{project_id}/experiments"),
-            &editor,
-            Some(json!({"goal": "cut p95", "budgetCapCents": 500})),
-        )
-        .await;
-    let sessions = format!(
-        "/experiments/{}/sessions",
-        experiment.body["id"].as_str().unwrap_or_default()
-    );
-    let start = |environment: &str| json!({"agent": "auto", "prompt": "go", "repos": [], "environment": environment});
+    let sessions = "/sessions".to_owned();
+    let start = |environment: &str| json!({"agent": "auto", "prompt": "go", "repos": [], "environment": environment, "model": "opencode/test"});
     let started = org
         .call(
             Method::POST,

@@ -278,12 +278,8 @@ async fn decide<D: Deps + 'static>(
     let decided =
         approval::decide(app.store(), &authed.who, app.now(), id, decide.decision).await?;
     // The decision stands even when applying it fails now. Settling also tells the agent.
-    if let Err(error) = antilog_core::session::settle(
-        &*app.deps,
-        decided.organization_id,
-        decided.session_id,
-    )
-    .await
+    if let Err(error) =
+        antilog_core::session::settle(&*app.deps, decided.organization_id, decided.session_id).await
     {
         tracing::warn!(%error, "applying a decided card failed");
     }

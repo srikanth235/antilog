@@ -24,7 +24,7 @@ use antilog_proxy::price::{self, Tokens, ZenPrices};
 use antilog_proxy::{Proxy, SessionNetworks, Upstreams, server};
 use antilog_types::{
     AuditEntry, AuditOutcome, Environment, ModelProvider, NetworkLevel, Seed as MachineSeed,
-    Session, SessionId,
+    Session, SessionId, SessionParams,
 };
 use axum::Router;
 use axum::body::Body;
@@ -297,11 +297,17 @@ impl Rig {
         );
         let (upstream, log) = start_provider().await;
         let store = FakeStore::default();
-        let seed = seed::experiment(&store, options.budget_cents).await;
+        let seed = seed::organization(&store).await;
         let session = Session::new(
             seed.organization.id,
-            seed.experiment.id,
-            "opencode",
+            seed.owner.id,
+            SessionParams {
+                title: "cut p95".into(),
+                agent: "opencode".into(),
+                model: "opencode/test".into(),
+                budget_cap_cents: Some(options.budget_cents),
+                ..SessionParams::default()
+            },
             seed::T0,
         );
         store
@@ -426,12 +432,12 @@ impl Rig {
             .unwrap()
     }
 
-    /// What the experiment has been booked: cents and tokens.
+    /// What the session has been booked: cents and tokens.
     async fn booked(&self) -> (i64, i64) {
         let lines = self
             .proxy
             .store
-            .spend_lines(self.seed.organization.id, Some(self.seed.experiment.id))
+            .spend_lines(self.seed.organization.id, self.session)
             .await
             .unwrap();
         (
@@ -1126,13 +1132,8 @@ async fn a_session_with_no_machine_gets_no_network() {
         ..Options::default()
     })
     .await;
-    // A session of an agent on a person's own machine has no machine row here.
-    let other = Session::new(
-        rig.seed.organization.id,
-        rig.seed.experiment.id,
-        "mcp",
-        seed::T0,
-    );
+    // A session no runner has claimed has no machine row here.
+    let other = seed::session(&rig.seed, "opencode", seed::T0);
     rig.proxy
         .store
         .create_session(&other, &audit(&rig.seed, "session.start"))

@@ -118,12 +118,6 @@ impl OrganizationStore for FakeStore {
         Ok(())
     }
 
-
-
-
-
-
-
     async fn create_access_token(
         &self,
         record: &TokenRecord,

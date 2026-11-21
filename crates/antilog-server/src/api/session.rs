@@ -55,11 +55,9 @@ pub fn refuse(error: SessionError) -> Response {
             "session_ended",
             "The session has ended: start a new one.".to_owned(),
         ),
-        SessionError::OrganizationCapReached => (
-            StatusCode::CONFLICT,
-            "budget_spent",
-            error.to_string(),
-        ),
+        SessionError::OrganizationCapReached => {
+            (StatusCode::CONFLICT, "budget_spent", error.to_string())
+        }
         SessionError::Invalid(message) => (
             StatusCode::UNPROCESSABLE_ENTITY,
             "invalid",
@@ -411,7 +409,9 @@ async fn spend<D: Deps + 'static>(
     authed: Authed,
     Path(id): Path<SessionId>,
 ) -> Result<Json<SessionSpend>, Fail> {
-    Ok(Json(budget::session_spend(app.store(), &authed.who, id).await?))
+    Ok(Json(
+        budget::session_spend(app.store(), &authed.who, id).await?,
+    ))
 }
 
 #[utoipa::path(

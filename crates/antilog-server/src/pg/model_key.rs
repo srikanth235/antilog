@@ -1,9 +1,7 @@
 use antilog_core::sealed::Sealer;
 use antilog_core::secrets::Secret;
 use antilog_core::store::{GatewayScope, ModelKeyStore, StoreError};
-use antilog_types::{
-    AuditEntry, ModelKeyStatus, ModelProvider, OrganizationId, SessionId,
-};
+use antilog_types::{AuditEntry, ModelKeyStatus, ModelProvider, OrganizationId, SessionId};
 
 use super::{PgStore, audit, corrupt, map};
 

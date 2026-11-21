@@ -195,14 +195,7 @@ pub async fn set_policy<S: Store>(
         (_, None) => {}
         (_, Some(_)) => return Err(Refusal::Invalid("only allow up to takes a limit")),
     }
-    permit(
-        store,
-        who,
-        Action::PolicySet,
-        policy.card.as_str(),
-        now,
-    )
-    .await?;
+    permit(store, who, Action::PolicySet, policy.card.as_str(), now).await?;
     store
         .set_policy(
             who.organization,

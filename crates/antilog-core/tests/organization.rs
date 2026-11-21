@@ -8,8 +8,8 @@ use antilog_core::organization::{self as org, Action, Principal, Refusal};
 use antilog_core::store::{ApprovalStore, BudgetStore, Invariant, SessionStore, Store};
 use antilog_core::token;
 use antilog_types::{
-    ApprovalStatus, AuditOutcome, CardKind, Decision, Experiment, Identity, Member, Organization,
-    Policy, PolicyMode, Project, Role, Session, Spend, SpendId, SpendKind,
+    ApprovalStatus, AuditOutcome, CardKind, Decision, Identity, Member, Organization, Policy,
+    PolicyMode, Role, Session, SessionParams, Spend, SpendId, SpendKind,
 };
 
 const T0: i64 = 1_700_000_000_000;
@@ -67,36 +67,34 @@ impl World {
         )
     }
 
-    async fn project(&self) -> Project {
-        org::create_project(&self.store, &self.owner, T0, "checkout", "")
-            .await
-            .unwrap()
-    }
-
-    async fn experiment(&self, project: &Project, cents: i64) -> Experiment {
-        let experiment = Experiment::new(
+    async fn session(&self, cents: Option<i64>) -> Session {
+        let session = Session::new(
             self.organization.id,
-            project.id,
-            "cut p95",
-            cents,
             self.owner.member,
+            SessionParams {
+                title: "cut p95".into(),
+                agent: "opencode".into(),
+                model: "opencode/test".into(),
+                budget_cap_cents: cents,
+                ..SessionParams::default()
+            },
             T0,
         );
         self.store
-            .create_experiment(
-                &experiment,
+            .create_session(
+                &session,
                 &antilog_types::AuditEntry::new(
                     self.organization.id,
                     Some(self.owner.member),
-                    "experiment.create",
-                    experiment.id,
+                    "session.start",
+                    session.id,
                     AuditOutcome::Done,
                     T0,
                 ),
             )
             .await
             .unwrap();
-        experiment
+        session
     }
 
     async fn audited(&self, action: &str, outcome: AuditOutcome) -> usize {
@@ -113,69 +111,17 @@ impl World {
 #[tokio::test]
 async fn the_permission_matrix_is_applied_in_one_place() {
     let world = World::new().await;
-    let project = world.project().await;
     for role in Role::ALL {
         let (who, _) = world.member(&format!("{role:?}"), *role).await;
         for action in Action::ALL {
-            let scope = action.in_project().then_some(project.id);
             let before = world.audited(action.name(), AuditOutcome::Denied).await;
-            let result = org::permit(&world.store, &who, *action, scope, "target", T0).await;
+            let result = org::permit(&world.store, &who, *action, "target", T0).await;
             let allowed = *role >= action.minimum();
             assert_eq!(result.is_ok(), allowed, "{role:?} {action:?}");
             let after = world.audited(action.name(), AuditOutcome::Denied).await;
             assert_eq!(after, before + usize::from(!allowed), "{role:?} {action:?}");
         }
     }
-}
-
-#[tokio::test]
-async fn a_project_role_overrides_the_organization_role_in_that_project_only() {
-    let world = World::new().await;
-    let (editor, editor_member) = world.member("ed", Role::Editor).await;
-    let (viewer, viewer_member) = world.member("vi", Role::Viewer).await;
-    let (a, b) = (world.project().await, {
-        org::create_project(&world.store, &world.owner, T0, "search", "")
-            .await
-            .unwrap()
-    });
-    org::set_project_role(
-        &world.store,
-        &world.owner,
-        T0,
-        a.id,
-        editor_member.id,
-        Some(Role::Viewer),
-    )
-    .await
-    .unwrap();
-    org::set_project_role(
-        &world.store,
-        &world.owner,
-        T0,
-        a.id,
-        viewer_member.id,
-        Some(Role::Owner),
-    )
-    .await
-    .unwrap();
-    let can = |who: Principal, project: Project| {
-        let store = &world.store;
-        async move {
-            org::permit(
-                store,
-                &who,
-                Action::ApprovalDecide,
-                "x",
-                T0,
-            )
-            .await
-            .is_ok()
-        }
-    };
-    assert!(!can(editor, a.clone()).await);
-    assert!(can(editor, b.clone()).await);
-    assert!(can(viewer, a).await);
-    assert!(!can(viewer, b).await);
 }
 
 #[tokio::test]
@@ -201,11 +147,10 @@ async fn an_organization_keeps_an_owner_through_the_action_layer() {
 
 async fn raised(
     world: &World,
-    experiment: &Experiment,
+    session: &Session,
     card: CardKind,
     cost: i64,
     follow: bool,
-    needs_owner: bool,
 ) -> antilog_types::Approval {
     approval::raise(
         &world.store,
@@ -213,13 +158,11 @@ async fn raised(
         Some(world.owner.member),
         CardRequest {
             organization: world.organization.id,
-            experiment: experiment.id,
-            session: None,
+            session: session.id,
             card,
             summary: "Raise the budget by $5".into(),
             payload: None,
             cost_cents: Some(cost),
-            needs_owner,
             follow_policy: follow,
         },
     )
@@ -230,8 +173,7 @@ async fn raised(
 #[tokio::test]
 async fn policy_pre_approves_but_never_skips_the_audit_row() {
     let world = World::new().await;
-    let project = world.project().await;
-    let experiment = world.experiment(&project, 1_000).await;
+    let session = world.session(Some(1_000)).await;
     let policy = |card, mode, limit| Policy {
         card,
         mode,
@@ -239,7 +181,7 @@ async fn policy_pre_approves_but_never_skips_the_audit_row() {
     };
 
     assert_eq!(
-        raised(&world, &experiment, CardKind::RaiseBudget, 100, true, false)
+        raised(&world, &session, CardKind::RaiseBudget, 100, true)
             .await
             .status,
         ApprovalStatus::Pending,
@@ -264,28 +206,23 @@ async fn policy_pre_approves_but_never_skips_the_audit_row() {
     )
     .await
     .unwrap();
-    let step = |card, cost, follow, owner| raised(&world, &experiment, card, cost, follow, owner);
+    let step = |card, cost, follow| raised(&world, &session, card, cost, follow);
     assert_eq!(
-        step(CardKind::RaiseBudget, 500, true, false).await.status,
+        step(CardKind::RaiseBudget, 500, true).await.status,
         ApprovalStatus::ApprovedByPolicy
     );
     assert_eq!(
-        step(CardKind::RaiseBudget, 501, true, false).await.status,
+        step(CardKind::RaiseBudget, 501, true).await.status,
         ApprovalStatus::Pending
     );
     assert_eq!(
-        step(CardKind::RaiseBudget, 100, false, false).await.status,
+        step(CardKind::RaiseBudget, 100, false).await.status,
         ApprovalStatus::Pending,
         "Ask mode asks"
     );
     assert_eq!(
-        step(CardKind::AttachRepo, 0, true, false).await.status,
+        step(CardKind::AttachRepo, 0, true).await.status,
         ApprovalStatus::ApprovedByPolicy
-    );
-    assert_eq!(
-        step(CardKind::AttachRepo, 0, true, true).await.status,
-        ApprovalStatus::Pending,
-        "a value model is never pre-approved"
     );
     assert_eq!(
         world
@@ -306,13 +243,13 @@ async fn policy_pre_approves_but_never_skips_the_audit_row() {
         Err(Refusal::Invariant(Invariant::AlwaysAsk))
     ));
     assert_eq!(
-        step(CardKind::AddCredential, 0, true, false).await.status,
+        step(CardKind::AddCredential, 0, true).await.status,
         ApprovalStatus::Pending
     );
 
     for bad in [
-        policy(CardKind::KeepGoing, PolicyMode::AllowUpTo, None),
-        policy(CardKind::KeepGoing, PolicyMode::Allow, Some(5)),
+        policy(CardKind::ChangeEnvironment, PolicyMode::AllowUpTo, None),
+        policy(CardKind::ChangeEnvironment, PolicyMode::Allow, Some(5)),
     ] {
         assert!(matches!(
             approval::set_policy(&world.store, &world.owner, T0, bad).await,
@@ -325,7 +262,7 @@ async fn policy_pre_approves_but_never_skips_the_audit_row() {
             &world.store,
             &editor,
             T0,
-            policy(CardKind::KeepGoing, PolicyMode::Allow, None)
+            policy(CardKind::ChangeEnvironment, PolicyMode::Allow, None)
         )
         .await,
         Err(Refusal::Denied)
@@ -337,20 +274,11 @@ async fn policy_pre_approves_but_never_skips_the_audit_row() {
 #[tokio::test]
 async fn who_may_decide_a_card() {
     let world = World::new().await;
-    let project = world.project().await;
-    let experiment = world.experiment(&project, 1_000).await;
+    let session = world.session(Some(1_000)).await;
     let (editor, _) = world.member("ed", Role::Editor).await;
     let (viewer, _) = world.member("vi", Role::Viewer).await;
 
-    let plain = raised(
-        &world,
-        &experiment,
-        CardKind::RaiseBudget,
-        100,
-        false,
-        false,
-    )
-    .await;
+    let plain = raised(&world, &session, CardKind::RaiseBudget, 100, false).await;
     assert!(matches!(
         approval::decide(&world.store, &viewer, T0, plain.id, Decision::Approve).await,
         Err(Refusal::Denied)
@@ -380,15 +308,6 @@ async fn who_may_decide_a_card() {
         1
     );
 
-    let model = raised(&world, &experiment, CardKind::SealExperiment, 0, true, true).await;
-    assert!(matches!(
-        approval::decide(&world.store, &editor, T0, model.id, Decision::Approve).await,
-        Err(Refusal::Denied)
-    ));
-    let by_owner = approval::decide(&world.store, &world.owner, T0, model.id, Decision::Approve)
-        .await
-        .unwrap();
-    assert_eq!(by_owner.status, ApprovalStatus::Approved);
     assert!(matches!(
         approval::decide(
             &world.store,
@@ -401,41 +320,25 @@ async fn who_may_decide_a_card() {
         Err(Refusal::NotFound)
     ));
     assert_eq!(
-        approval::approvals(&world.store, &viewer, experiment.id)
+        approval::approvals(&world.store, &viewer, session.id)
             .await
             .unwrap()
             .len(),
-        2
+        1
     );
 }
 
 #[tokio::test]
-async fn pending_cards_are_the_ones_this_person_may_decide_across_experiments() {
+async fn pending_cards_are_the_ones_this_person_may_decide_across_sessions() {
     let world = World::new().await;
-    let one = world.project().await;
-    let two = org::create_project(&world.store, &world.owner, T0, "search", "")
-        .await
-        .unwrap();
-    let first = world.experiment(&one, 1_000).await;
-    let second = world.experiment(&two, 1_000).await;
-    let (editor, editor_member) = world.member("ed", Role::Editor).await;
+    let first = world.session(Some(1_000)).await;
+    let second = world.session(None).await;
+    let (editor, _) = world.member("ed", Role::Editor).await;
     let (viewer, _) = world.member("vi", Role::Viewer).await;
-    // Ed is only a viewer in the second project.
-    org::set_project_role(
-        &world.store,
-        &world.owner,
-        T0,
-        two.id,
-        editor_member.id,
-        Some(Role::Viewer),
-    )
-    .await
-    .unwrap();
 
-    let plain = raised(&world, &first, CardKind::RaiseBudget, 100, false, false).await;
-    let elsewhere = raised(&world, &second, CardKind::RaiseBudget, 100, false, false).await;
-    let model = raised(&world, &first, CardKind::SealExperiment, 0, true, true).await;
-    let decided = raised(&world, &first, CardKind::KeepGoing, 0, false, false).await;
+    let plain = raised(&world, &first, CardKind::RaiseBudget, 100, false).await;
+    let elsewhere = raised(&world, &second, CardKind::AttachRepo, 0, false).await;
+    let decided = raised(&world, &first, CardKind::ChangeEnvironment, 0, false).await;
     approval::decide(
         &world.store,
         &world.owner,
@@ -450,18 +353,19 @@ async fn pending_cards_are_the_ones_this_person_may_decide_across_experiments() 
         |cards: Vec<antilog_types::Approval>| cards.into_iter().map(|c| c.id).collect::<Vec<_>>();
     assert_eq!(
         ids(approval::pending(&world.store, &world.owner).await.unwrap()),
-        vec![plain.id, elsewhere.id, model.id]
+        vec![plain.id, elsewhere.id]
     );
     assert_eq!(
         ids(approval::pending(&world.store, &editor).await.unwrap()),
-        vec![plain.id],
-        "an editor of one project, a viewer of the other, and no value-model card"
+        vec![plain.id, elsewhere.id],
+        "an editor decides too"
     );
     assert!(
         approval::pending(&world.store, &viewer)
             .await
             .unwrap()
-            .is_empty()
+            .is_empty(),
+        "a viewer decides nothing, so sees nothing to decide"
     );
     let stranger = Principal {
         organization: world.organization.id,
@@ -560,51 +464,31 @@ async fn signing_in_without_an_organization_finds_the_oldest_membership() {
 }
 
 #[tokio::test]
-async fn spend_is_read_by_experiment_kind_and_session() {
+async fn spend_is_read_by_session_and_kind() {
     let world = World::new().await;
-    let project = world.project().await;
-    let first = world.experiment(&project, 1_000).await;
-    let second = world.experiment(&project, 1_000).await;
+    let first = world.session(Some(1_000)).await;
+    let second = world.session(None).await;
     spend(&world, &first, 40, T0).await;
     spend(&world, &first, 5, T0 + 1).await;
     spend(&world, &second, 7, T0).await;
     let (viewer, _) = world.member("vi", Role::Viewer).await;
 
-    let one = budget::experiment_spend(&world.store, &viewer, first.id)
+    let one = budget::session_spend(&world.store, &viewer, first.id)
         .await
         .unwrap();
-    assert_eq!((one.spent_cents, one.budget_cap_cents), (45, 1_000));
-    assert_eq!(one.by_session.len(), 2);
+    assert_eq!((one.spent_cents, one.budget_cap_cents), (45, Some(1_000)));
     assert_eq!(one.by_kind.iter().map(|k| k.cents).sum::<i64>(), 45);
-    let all = budget::all_spend(&world.store, &viewer).await.unwrap();
-    assert_eq!(
-        all.iter().map(|s| s.spent_cents).sum::<i64>(),
-        52,
-        "every experiment of the organization"
-    );
+    let other = budget::session_spend(&world.store, &viewer, second.id)
+        .await
+        .unwrap();
+    assert_eq!((other.spent_cents, other.budget_cap_cents), (7, None));
     assert!(matches!(
-        budget::experiment_spend(&world.store, &viewer, antilog_types::ExperimentId::new()).await,
+        budget::session_spend(&world.store, &viewer, antilog_types::SessionId::new()).await,
         Err(Refusal::NotFound)
     ));
 }
 
-async fn spend(world: &World, experiment: &Experiment, cents: i64, at: i64) {
-    let session = Session::new(world.organization.id, experiment.id, "claude", at);
-    world
-        .store
-        .create_session(
-            &session,
-            &antilog_types::AuditEntry::new(
-                world.organization.id,
-                None,
-                "session.create",
-                session.id,
-                AuditOutcome::Done,
-                at,
-            ),
-        )
-        .await
-        .unwrap();
+async fn spend(world: &World, session: &Session, cents: i64, at: i64) {
     world
         .store
         .record_spend(&Spend {
@@ -615,17 +499,15 @@ async fn spend(world: &World, experiment: &Experiment, cents: i64, at: i64) {
             amount_cents: cents,
             tokens: 1,
             occurred_at: at,
-            trial_id: None,
         })
         .await
         .unwrap();
 }
 
 #[tokio::test]
-async fn budgets_and_caps_are_enforced_and_nested() {
+async fn a_session_budget_sits_inside_the_organization_cap() {
     let world = World::new().await;
-    let project = world.project().await;
-    let experiment = world.experiment(&project, 1_000).await;
+    let session = world.session(Some(1_000)).await;
     let id = world.organization.id;
     let (editor, _) = world.member("ed", Role::Editor).await;
 
@@ -639,89 +521,78 @@ async fn budgets_and_caps_are_enforced_and_nested() {
     )
     .await
     .unwrap();
-    budget::set_project_limits(
-        &world.store,
-        &world.owner,
-        T0,
-        project.id,
-        Some(3_000),
-        Some(500),
-    )
-    .await
-    .unwrap();
     assert!(matches!(
         budget::set_organization_limits(&world.store, &editor, T0, None, None, None).await,
         Err(Refusal::Denied)
     ));
     assert!(matches!(
-        budget::set_project_limits(
-            &world.store,
-            &world.owner,
-            T0,
-            project.id,
-            Some(6_000),
-            None
-        )
-        .await,
+        budget::set_organization_limits(&world.store, &world.owner, T0, Some(500), None, None)
+            .await,
         Err(Refusal::Invariant(Invariant::OverCap))
     ));
     assert!(matches!(
-        budget::set_experiment_budget(&world.store, &editor, T0, experiment.id, 3_001).await,
+        budget::set_session_budget(&world.store, &editor, T0, session.id, 5_001).await,
         Err(Refusal::Invariant(Invariant::OverCap))
     ));
     assert!(matches!(
         budget::set_organization_limits(&world.store, &world.owner, T0, Some(-1), None, None).await,
         Err(Refusal::Invalid(_))
     ));
-    budget::set_experiment_budget(&world.store, &editor, T0, experiment.id, 2_000)
+    budget::set_session_budget(&world.store, &editor, T0, session.id, 2_000)
         .await
         .unwrap();
 
-    let room = budget::ensure_room(&world.store, id, experiment.id, T0)
+    let room = budget::ensure_room(&world.store, id, session.id, T0)
         .await
         .unwrap();
     assert_eq!(
-        (room.experiment, room.project, room.organization),
-        (2_000, Some(3_000), Some(5_000))
+        (room.session, room.organization),
+        (Some(2_000), Some(5_000))
     );
 
-    spend(&world, &experiment, 1_500, T0).await;
+    spend(&world, &session, 1_500, T0).await;
     assert_eq!(
-        budget::headroom(&world.store, id, experiment.id, T0 + 1)
+        budget::headroom(&world.store, id, session.id, T0 + 1)
             .await
             .unwrap()
             .remaining(),
-        500
+        Some(500)
     );
-    spend(&world, &experiment, 500, T0 + 1).await;
+    spend(&world, &session, 500, T0 + 1).await;
     assert!(matches!(
-        budget::ensure_room(&world.store, id, experiment.id, T0 + 2).await,
-        Err(Refusal::Spent(Spent::Experiment))
+        budget::ensure_room(&world.store, id, session.id, T0 + 2).await,
+        Err(Refusal::Spent(Spent::Session))
     ));
-    budget::set_experiment_budget(&world.store, &editor, T0, experiment.id, 2_500)
+    budget::set_session_budget(&world.store, &editor, T0, session.id, 2_500)
         .await
         .unwrap();
     assert_eq!(
-        budget::ensure_room(&world.store, id, experiment.id, T0 + 2)
+        budget::ensure_room(&world.store, id, session.id, T0 + 2)
             .await
             .unwrap()
             .remaining(),
-        500
+        Some(500)
     );
 
-    let sibling = world.experiment(&project, 2_000).await;
-    spend(&world, &sibling, 1_000, T0 + 3).await;
+    let sibling = world.session(None).await;
+    spend(&world, &sibling, 3_000, T0 + 3).await;
     assert!(matches!(
         budget::ensure_room(&world.store, id, sibling.id, T0 + 4).await,
-        Err(Refusal::Spent(Spent::Project))
+        Err(Refusal::Spent(Spent::Organization))
     ));
+    assert!(
+        !budget::organization_has_room(&world.store, id, T0 + 4)
+            .await
+            .unwrap(),
+        "no new session once the organization's cap is reached"
+    );
 
     let (_, next_month) = month_bounds(T0).unwrap();
     assert!(
         budget::headroom(&world.store, id, sibling.id, next_month)
             .await
             .unwrap()
-            .project
+            .organization
             .unwrap()
             > 0,
         "a cap resets with the month"
@@ -734,35 +605,8 @@ async fn budgets_and_caps_are_enforced_and_nested() {
             summary.organization.cap_cents,
             summary.organization.spent_cents
         ),
-        (Some(5_000), 3_000)
+        (Some(5_000), 5_000)
     );
-    assert_eq!(summary.projects.len(), 1);
-
-    let other = world.project_second().await;
-    budget::set_project_limits(&world.store, &world.owner, T0, other.id, Some(4_000), None)
-        .await
-        .unwrap();
-    let elsewhere = world.experiment(&other, 3_000).await;
-    spend(&world, &elsewhere, 2_000, T0 + 5).await;
-    let room = budget::headroom(&world.store, id, elsewhere.id, T0 + 6)
-        .await
-        .unwrap();
-    assert_eq!(
-        (room.experiment, room.project, room.organization),
-        (1_000, Some(2_000), Some(0))
-    );
-    assert!(matches!(
-        budget::ensure_room(&world.store, id, elsewhere.id, T0 + 6).await,
-        Err(Refusal::Spent(Spent::Organization))
-    ));
-}
-
-impl World {
-    async fn project_second(&self) -> Project {
-        org::create_project(&self.store, &self.owner, T0, "search", "")
-            .await
-            .unwrap()
-    }
 }
 
 #[tokio::test]

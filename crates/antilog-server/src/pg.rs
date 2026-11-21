@@ -110,10 +110,7 @@ fn map(error: sqlx::Error) -> StoreError {
             Some("AL003") => Some(Invariant::IllegalTransition),
             Some("AL005") => Some(Invariant::AppendOnly),
             Some("23514")
-                if matches!(
-                    db.constraint(),
-                    Some("organizations_default_within_cap")
-                ) =>
+                if matches!(db.constraint(), Some("organizations_default_within_cap")) =>
             {
                 Some(Invariant::OverCap)
             }

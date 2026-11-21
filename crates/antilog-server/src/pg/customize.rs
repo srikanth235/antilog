@@ -1,8 +1,8 @@
 use antilog_core::store::{ConnectorRow, CustomizeStore, SessionScope, StoreError};
 use antilog_types::{
-    ApprovalId, AuditEntry, Connector, ConnectorHealth, ConnectorId, ConnectorTool,
-    MemberId, OrganizationId, PartKind, Plugin, PluginPart, SessionId, Skill, SkillFile,
-    SkillVersion, ToolMode,
+    ApprovalId, AuditEntry, Connector, ConnectorHealth, ConnectorId, ConnectorTool, MemberId,
+    OrganizationId, PartKind, Plugin, PluginPart, SessionId, Skill, SkillFile, SkillVersion,
+    ToolMode,
 };
 use sqlx::PgConnection;
 use uuid::Uuid;
@@ -329,9 +329,6 @@ impl CustomizeStore for PgStore {
         tx.commit().await.map_err(map)
     }
 
-
-
-
     async fn add_skill_version(
         &self,
         organization: OrganizationId,
@@ -417,11 +414,6 @@ impl CustomizeStore for PgStore {
         audit(&mut tx, entry).await?;
         tx.commit().await.map_err(map)
     }
-
-
-
-
-
 
     async fn add_plugin(
         &self,

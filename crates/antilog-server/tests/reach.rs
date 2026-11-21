@@ -8,7 +8,7 @@ use std::time::Duration;
 
 use antilog_core::clock::{Clock, SystemClock};
 use antilog_core::credentials::{Purpose, SessionCredentials};
-use antilog_core::fakes::{FakeCodeHost, FakeCredentials, FakeDeps, FakeMachine};
+use antilog_core::fakes::{FakeCredentials, FakeDeps};
 use antilog_core::sealed::Sealer;
 use antilog_core::secrets::Secret;
 use antilog_core::seed;
@@ -120,11 +120,8 @@ async fn world() -> World {
             .with_state(seen.clone()),
     )
     .await;
-    let deps = Arc::new(FakeDeps::new(
-        FakeMachine::default(),
-        FakeCodeHost::default(),
-    ));
-    let seed = seed::experiment(&deps.store, 1_000).await;
+    let deps = Arc::new(FakeDeps::new());
+    let seed = seed::organization(&deps.store).await;
     let now = deps.clock.now().as_millisecond();
     let issued = antilog_core::token::issue(seed.organization.id, seed.owner.id, "t", now).unwrap();
     let entry = antilog_types::AuditEntry::new(
@@ -149,8 +146,6 @@ async fn world() -> World {
             providers: Vec::new(),
             open_organizations: false,
             secure_cookies: true,
-            code_host_webhook_secret: None,
-            e2e_seed: false,
             runner: None,
         },
     });
@@ -178,6 +173,23 @@ async fn world() -> World {
 }
 
 impl World {
+    /// A session of the seeded organization, started by its owner.
+    async fn session(&self) -> antilog_types::Session {
+        antilog_core::session::start(
+            &*self.deps,
+            self.seed.organization.id,
+            antilog_core::session::NewSession {
+                agent: "opencode".into(),
+                model: "opencode/test".into(),
+                prompt: "look things up".into(),
+                actor: self.seed.owner.id,
+                ..antilog_core::session::NewSession::default()
+            },
+        )
+        .await
+        .unwrap()
+    }
+
     async fn api(
         &self,
         method: reqwest::Method,
@@ -227,7 +239,7 @@ impl World {
 }
 
 #[tokio::test]
-async fn a_connector_is_added_switched_on_and_served_to_a_session_without_its_credential() {
+async fn a_connector_is_added_and_served_to_a_session_without_its_credential() {
     let w = world().await;
     let (status, added) = w
         .api(
@@ -259,24 +271,7 @@ async fn a_connector_is_added_switched_on_and_served_to_a_session_without_its_cr
         )
         .await;
     assert_eq!(status, StatusCode::OK);
-    let experiment = w.seed.experiment.id;
-    let (status, _) = w
-        .api(
-            reqwest::Method::PUT,
-            &format!("/experiments/{experiment}/connectors"),
-            Some(json!({"connectors": [id]})),
-        )
-        .await;
-    assert_eq!(status, StatusCode::OK);
-
-    let session = antilog_core::session::open_external(
-        &*w.deps,
-        w.seed.organization.id,
-        experiment,
-        Some(w.seed.owner.id),
-    )
-    .await
-    .unwrap();
+    let session = w.session().await;
     let token = w
         .credentials
         .mint(session.id, Purpose::Mcp, SignedDuration::from_secs(600))
@@ -289,10 +284,7 @@ async fn a_connector_is_added_switched_on_and_served_to_a_session_without_its_cr
         .mint(session.id, Purpose::Model, SignedDuration::from_secs(600))
         .await
         .unwrap();
-    let other =
-        antilog_core::session::open_external(&*w.deps, w.seed.organization.id, experiment, None)
-            .await
-            .unwrap();
+    let other = w.session().await;
     let other_token = w
         .credentials
         .mint(other.id, Purpose::Mcp, SignedDuration::from_secs(600))
@@ -312,8 +304,12 @@ async fn a_connector_is_added_switched_on_and_served_to_a_session_without_its_cr
         .filter_map(|t| t["name"].as_str())
         .collect();
     assert!(
-        names.contains(&"seal") && names.contains(&"measure"),
+        names.contains(&"attach_repo") && names.contains(&"request_budget"),
         "{names:?}"
+    );
+    assert!(
+        !names.contains(&"seal") && !names.contains(&"measure"),
+        "the judge's tools are gone: {names:?}"
     );
     assert!(names.contains(&"lookup__lookup"), "{names:?}");
     assert!(
@@ -340,17 +336,6 @@ async fn a_connector_is_added_switched_on_and_served_to_a_session_without_its_cr
         "the server sent the credential: {seen:?}"
     );
 
-    let (_, history) = w
-        .rpc(
-            session.id,
-            &token,
-            3,
-            "tools/call",
-            json!({"name": "history", "arguments": {}}),
-        )
-        .await;
-    assert_eq!(history["result"]["isError"], json!(false), "{history}");
-
     let (_, wiped) = w
         .rpc(
             session.id,
@@ -368,7 +353,7 @@ async fn a_connector_is_added_switched_on_and_served_to_a_session_without_its_cr
 }
 
 #[tokio::test]
-async fn a_skill_is_uploaded_selected_and_downloaded_by_version() {
+async fn a_skill_is_uploaded_and_downloaded_by_version() {
     let w = world().await;
     let body = json!({"files": [
         {"path": "SKILL.md", "content": "---\nname: pg-tuning\ndescription: Tunes Postgres\n---\n# Tuning"},
@@ -386,43 +371,11 @@ async fn a_skill_is_uploaded_selected_and_downloaded_by_version() {
         )
         .await;
     assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY, "{bad}");
-    let experiment = w.seed.experiment.id;
-    let (status, chosen) = w
-        .api(
-            reqwest::Method::PUT,
-            &format!("/experiments/{experiment}/skills"),
-            Some(json!({"skills": ["pg-tuning"]})),
-        )
-        .await;
-    assert_eq!(status, StatusCode::OK, "{chosen}");
-    assert_eq!(chosen[0]["version"], 1);
-    let project = w.seed.experiment.project_id;
-    let (status, _) = w
-        .api(
-            reqwest::Method::PUT,
-            &format!("/projects/{project}/skills/pg-tuning"),
-            Some(json!({"on": false})),
-        )
-        .await;
-    assert_eq!(status, StatusCode::NO_CONTENT);
-    let (_, skills) = w
-        .api(
-            reqwest::Method::GET,
-            &format!("/skills?project={project}"),
-            None,
-        )
-        .await;
-    assert_eq!(skills[0]["on"], false);
-    let (status, refused) = w
-        .api(reqwest::Method::DELETE, "/skills/pg-tuning", None)
-        .await;
-    assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY, "{refused}");
+    let (_, skills) = w.api(reqwest::Method::GET, "/skills", None).await;
+    assert_eq!(skills[0]["latest"], 1);
 
-    // The runner's route reads what its session's experiment selected, and nothing else.
-    let session =
-        antilog_core::session::open_external(&*w.deps, w.seed.organization.id, experiment, None)
-            .await
-            .unwrap();
+    // The runner's route serves any version of the session's organization's skills.
+    let session = w.session().await;
     let got = api::customize::session_skill(&*w.deps, session.id, "pg-tuning", 1)
         .await
         .unwrap();
@@ -437,6 +390,10 @@ async fn a_skill_is_uploaded_selected_and_downloaded_by_version() {
             .await
             .is_err()
     );
+    let (status, _) = w
+        .api(reqwest::Method::DELETE, "/skills/pg-tuning", None)
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
 }
 
 #[tokio::test]
@@ -446,8 +403,7 @@ async fn a_plugin_is_unpacked_and_removed_by_part() {
         .api(reqwest::Method::POST, "/plugins", Some(json!({
             "name": "Kit", "version": "1", "description": "d",
             "skills": [{"files": [{"path": "SKILL.md", "content": "---\nname: kit-skill\ndescription: d\n---\n"}]}],
-            "connectors": [{"name": "Kit MCP", "url": w.mock_url}],
-            "evaluations": []})))
+            "connectors": [{"name": "Kit MCP", "url": w.mock_url}]})))
         .await;
     assert_eq!(status, StatusCode::CREATED, "{plugin}");
     let (_, connectors) = w.api(reqwest::Method::GET, "/connectors", None).await;

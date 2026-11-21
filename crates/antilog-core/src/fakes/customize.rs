@@ -1,8 +1,8 @@
 use std::collections::HashSet;
 
 use antilog_types::{
-    ApprovalId, AuditEntry, Connector, ConnectorHealth, ConnectorId, ConnectorTool,
-    OrganizationId, Plugin, PluginPart, SessionId, Skill, SkillVersion, ToolMode,
+    ApprovalId, AuditEntry, Connector, ConnectorHealth, ConnectorId, ConnectorTool, OrganizationId,
+    Plugin, PluginPart, SessionId, Skill, SkillVersion, ToolMode,
 };
 
 use super::{FakeStore, locked};
@@ -179,9 +179,6 @@ impl CustomizeStore for FakeStore {
         Ok(())
     }
 
-
-
-
     async fn add_skill_version(
         &self,
         organization: OrganizationId,
@@ -264,11 +261,6 @@ impl CustomizeStore for FakeStore {
         self.audit_one(audit);
         Ok(())
     }
-
-
-
-
-
 
     async fn add_plugin(
         &self,

@@ -113,9 +113,7 @@ pub async fn card_suite<S: Store>(store: &S) {
 /// What every `RunnerStore` must do: lease sessions to a runner, hand each
 /// command over once, send an unfinished one again after a requeue, and keep exports.
 pub async fn runner_suite<S: Store>(store: &S) {
-    use antilog_types::{
-        Command, MachineState, Seed, SessionId, SessionStatus,
-    };
+    use antilog_types::{Command, MachineState, Seed, SessionId, SessionStatus};
     use uuid::Uuid;
 
     use crate::store::{SessionChange, StoreError};
@@ -488,7 +486,7 @@ pub async fn runner_lock_suite<S: Store>(store: &S) {
 /// A queued session for `seed`'s organization.
 async fn queue_session<S: Store>(store: &S, seed: &Seed, at: i64) -> antilog_types::SessionId {
     let org = seed.organization.id;
-    let session = session(&seed, "opencode", at);
+    let session = session(seed, "opencode", at);
     let log = AuditEntry::new(
         org,
         Some(seed.owner.id),

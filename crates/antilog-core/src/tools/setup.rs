@@ -155,10 +155,7 @@ pub(super) async fn request_credential<D: Deps>(
         ToolError::new("send connector, reason and scope only: never a secret value; a person enters it on the card")
     })?;
     let lower = scope.to_lowercase();
-    if ["write", "admin"]
-        .iter()
-        .any(|word| lower.contains(word))
-    {
+    if ["write", "admin"].iter().any(|word| lower.contains(word)) {
         return Err(ToolError::new(
             "a credential is read-only: ask for a read scope",
         ));

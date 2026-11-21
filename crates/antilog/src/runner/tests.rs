@@ -7,17 +7,16 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use antilog_core::approval;
-use antilog_core::fakes::{FakeCodeHost, FakeDeps, FakeMachine};
+use antilog_core::fakes::FakeDeps;
 use antilog_core::organization::Principal;
 use antilog_core::runner::Settings as CoreSettings;
-use antilog_core::seed::{Seed, experiment};
+use antilog_core::seed::{Seed, organization};
 use antilog_core::session::{self, NewSession};
 use antilog_core::store::{ApprovalStore, RunnerStore, SessionStore};
 use antilog_server::api::auth::Settings;
 use antilog_server::api::router;
 use antilog_server::api::runner::RunnerSettings;
-use antilog_types::judge::{CommitRef, DatasetRef};
-use antilog_types::{Command, DataSpec, Decision, MachineState, RunSpec, Session, SessionStatus};
+use antilog_types::{Command, Decision, MachineState, Session, SessionStatus};
 use axum::body::{Body, Bytes};
 use axum::extract::{Path as UrlPath, State};
 use axum::http::{HeaderMap, HeaderValue};
@@ -315,11 +314,8 @@ async fn backend(proxy: &str, model: &str) -> (Arc<FakeDeps>, Seed, String, Path
         "git init -q . && git config user.email a@b && git config user.name n && echo lib > lib.txt && git add . && git commit -qm lib",
     );
 
-    let deps = Arc::new(FakeDeps::new(
-        FakeMachine::default(),
-        FakeCodeHost::default(),
-    ));
-    let seed = experiment(&deps.store, 10_000).await;
+    let deps = Arc::new(FakeDeps::new());
+    let seed = organization(&deps.store).await;
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let server = format!("http://{}", listener.local_addr().unwrap());
     let mut core = CoreSettings::new(proxy, &server, model);
@@ -330,8 +326,6 @@ async fn backend(proxy: &str, model: &str) -> (Arc<FakeDeps>, Seed, String, Path
             providers: Vec::new(),
             open_organizations: false,
             secure_cookies: true,
-            code_host_webhook_secret: None,
-            e2e_seed: false,
             runner: Some(RunnerSettings {
                 key: KEY.to_owned(),
                 core,
@@ -393,13 +387,13 @@ async fn start(world: &World, prompt: &str) -> Session {
     session::start(
         &*world.deps,
         world.seed.organization.id,
-        world.seed.experiment.id,
         NewSession {
             agent: "opencode".into(),
+            model: "vendor/model-1".into(),
             prompt: prompt.into(),
             repos: vec!["acme/api".into()],
-            environment: None,
-            actor: Some(world.seed.owner.id),
+            actor: world.seed.owner.id,
+            ..NewSession::default()
         },
     )
     .await
@@ -622,41 +616,6 @@ async fn a_session_runs_from_the_queue_through_opencode_and_back() {
         .join("lib/lib.txt");
     until("the attached repo", async || lib.exists().then_some(())).await;
 
-    // The judge's command runs in the machine on the commit asked for, and its output comes back.
-    let repo = world.workdir.join(session.id.to_string()).join("api");
-    let sha = sh(&repo, "git rev-parse HEAD");
-    let run = Command::Run {
-        run: RunSpec {
-            command: "cat file.txt; echo '{\"metric\": 1.5}'".into(),
-            commits: vec![CommitRef {
-                repo: "acme/api".into(),
-                sha,
-            }],
-            files: vec![],
-            data: DataSpec {
-                holdout: false,
-                dataset: DatasetRef {
-                    id: "d".into(),
-                    version: 1,
-                },
-            },
-        },
-    };
-    let id = world
-        .deps
-        .store
-        .push_command(org, session.id, &run, 4)
-        .await
-        .unwrap();
-    let result = until("the run", async || {
-        world.deps.store.result(id).await.unwrap()
-    })
-    .await;
-    assert_eq!(
-        (result.exit, result.output.as_str()),
-        (0, "base\n{\"metric\": 1.5}\n")
-    );
-
     // Stopping releases it: exported, stopped, done.
     session::stop(
         &*world.deps,
@@ -753,13 +712,13 @@ async fn a_session_that_cannot_start_is_released_as_failed() {
     let session = session::start(
         &*world.deps,
         org,
-        world.seed.experiment.id,
         NewSession {
             agent: "opencode".into(),
+            model: "opencode/test".into(),
             prompt: "go".into(),
             repos: vec!["acme/missing".into()],
-            environment: None,
-            actor: Some(world.seed.owner.id),
+            actor: world.seed.owner.id,
+            ..NewSession::default()
         },
     )
     .await
@@ -783,17 +742,16 @@ async fn a_session_that_cannot_start_is_released_as_failed() {
 
 /// A second organization's queued session, for a runner that has let its lock go to take.
 async fn other_organizations_session(world: &World) -> (antilog_types::OrganizationId, Session) {
-    let other = experiment(&world.deps.store, 10_000).await;
+    let other = organization(&world.deps.store).await;
     let session = session::start(
         &*world.deps,
         other.organization.id,
-        other.experiment.id,
         NewSession {
             agent: "opencode".into(),
+            model: "opencode/test".into(),
             prompt: "go".into(),
-            repos: vec![],
-            environment: None,
-            actor: Some(other.owner.id),
+            actor: other.owner.id,
+            ..NewSession::default()
         },
     )
     .await
@@ -934,7 +892,6 @@ async fn a_skill_pack_is_unpacked_into_the_skills_folder() {
     let spec = antilog_types::SessionSpec {
         session: antilog_types::SessionId::new(),
         organization: antilog_types::OrganizationId::new(),
-        experiment: antilog_types::ExperimentId::new(),
         agent: "opencode".into(),
         model: "v/m".into(),
         repos: vec![],
@@ -1061,13 +1018,13 @@ async fn real_opencode_runs_a_session_end_to_end() {
     let session = session::start(
         &*deps,
         org,
-        seed.experiment.id,
         NewSession {
             agent: "opencode".into(),
+            model: "opencode/test".into(),
             prompt: "say hi with bash".into(),
             repos: vec!["acme/api".into()],
-            environment: None,
-            actor: Some(seed.owner.id),
+            actor: seed.owner.id,
+            ..NewSession::default()
         },
     )
     .await

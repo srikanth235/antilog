@@ -1,8 +1,6 @@
 use std::future::Future;
 
-use antilog_types::{
-    Command, Envelope, Machine, MachineState, OrganizationId, Seed, SessionId,
-};
+use antilog_types::{Command, Envelope, Machine, MachineState, OrganizationId, Seed, SessionId};
 use uuid::Uuid;
 
 use super::StoreError;

@@ -1,7 +1,5 @@
 use antilog_core::store::{RUNNER_LOCK_LAPSE_MS, RunnerStore, StoreError};
-use antilog_types::{
-    Command, Envelope, Machine, MachineState, OrganizationId, Seed, SessionId,
-};
+use antilog_types::{Command, Envelope, Machine, MachineState, OrganizationId, Seed, SessionId};
 use sqlx::{Postgres, Transaction};
 use uuid::Uuid;
 
@@ -320,9 +318,6 @@ impl RunnerStore for PgStore {
         .map_err(map)?;
         tx.commit().await.map_err(map)
     }
-
-
-
 
     async fn put_export(
         &self,

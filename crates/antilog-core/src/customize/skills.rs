@@ -1,9 +1,7 @@
 //! Skills (skill packs): organization `SKILL.md` folders with fixed versions. Text only, read by
 //! agents and never by the judge.
 
-use antilog_types::{
-    AuditOutcome, MemberId, NewSkill, Skill, SkillFile, SkillVersion,
-};
+use antilog_types::{AuditOutcome, MemberId, NewSkill, Skill, SkillFile, SkillVersion};
 
 use crate::organization::{Action, Principal, Refusal, entry, member_of, permit};
 use crate::store::{Store, StoreError};

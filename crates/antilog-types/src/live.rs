@@ -18,10 +18,7 @@ pub enum LiveEvent {
     Resync { cursor: i64 },
     /// A conversation item was added to a session. Fetch `GET /sessions/{id}/events?after=`.
     #[serde(rename_all = "camelCase")]
-    Message {
-        session_id: SessionId,
-        seq: i64,
-    },
+    Message { session_id: SessionId, seq: i64 },
     /// A session's status changed.
     #[serde(rename_all = "camelCase")]
     Session {

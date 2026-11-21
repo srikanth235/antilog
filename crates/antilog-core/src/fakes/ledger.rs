@@ -63,8 +63,7 @@ impl Ledger {
         let cap = organization.monthly_cap_cents;
         let over = exceeds(organization.default_budget_cents, cap)
             || self.sessions.iter().any(|session| {
-                session.organization_id == organization.id
-                    && exceeds(session.budget_cap_cents, cap)
+                session.organization_id == organization.id && exceeds(session.budget_cap_cents, cap)
             });
         if over {
             Err(Invariant::OverCap.into())
