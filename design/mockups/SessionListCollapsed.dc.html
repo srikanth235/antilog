@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Session list, sidebar collapsed</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="./tokens.css">
+<link rel="stylesheet" href="./icons.css">
+<link rel="stylesheet" href="./components.css">
+<link rel="stylesheet" href="./logos.css">
+</helmet>
+<div class="board app" style="width: 1440px; height: 900px;">
+  <nav class="side rail" aria-label="Main">
+    <div class="side-top">
+      <button class="icon-btn" aria-label="Open sidebar" title="Open sidebar"><i class="ic i-list"></i></button>
+      <a class="icon-btn fill" href="NewSession.dc.html" aria-label="New session" title="New session"><i class="ic i-plus"></i></a>
+      <a class="icon-btn" href="SearchStart.dc.html" aria-label="Search sessions" title="Search sessions"><i class="ic i-search"></i></a>
+    </div>
+    <div class="side-scroll" style="align-items: center; padding: 8px 0; gap: 14px;">
+      <a class="icon-btn" href="SessionWorking.dc.html" aria-label="Fix flaky checkout tests, Working" title="Fix flaky checkout tests, Working"><span role="img" aria-label="Working" class="st gi st-work run" style="color: var(--accent);"></span></a>
+      <a class="icon-btn" href="SessionCredential.dc.html" aria-label="Add retries to the webhook sender, Waiting for you" title="Add retries to the webhook sender, Waiting for you"><span role="img" aria-label="Waiting for you" class="st gi st-wait" style="color: var(--warn);"></span></a>
+    </div>
+    <div class="side-foot">
+      <button class="icon-btn" aria-haspopup="menu" aria-label="Acme, Priya Raman, account menu"><span aria-hidden="true" class="avatar round" style="width: 30px; height: 30px; font-size: 14px;">P</span></button>
+    </div>
+  </nav>
+  <main class="main">
+    <div class="scroll">
+      <div class="hw hw-c" style="padding-top: 112px;">
+        <h1 class="t-title hw-t">New session</h1>
+        <div class="cmpw" style="margin: 0;">
+          <div class="cmp big">
+            <textarea class="cmp-in" rows="3" aria-label="Task" placeholder="What should the agent do?"></textarea>
+            <div class="cmp-bar">
+              <button class="ib" aria-label="Attach files or images"><i class="ic i-plus"></i></button>
+              <span class="go"><button class="ib" aria-label="Dictate"><i class="ic i-mic"></i></button><button class="ib send" aria-label="Start session"><i class="ic i-return"></i></button></span>
+            </div>
+          </div>
+        </div>
+        <div class="pkrow" role="group" aria-label="Session settings">
+          <button class="pk" aria-haspopup="listbox" aria-label="Repos"><i class="ic g-git"></i><span>acme/checkout-api</span><i class="ic s i-chev"></i></button>
+          <button class="pk" aria-haspopup="listbox" aria-label="Environment"><i class="ic g-box"></i><span>default</span><i class="ic s i-chev"></i></button>
+          <button class="pk" aria-haspopup="listbox" aria-label="Model"><i class="ic g-spark"></i><span>Default model</span><i class="ic s i-chev"></i></button>
+          <button class="pk" aria-haspopup="dialog" aria-label="Budget, optional"><span class="ring" style="--p: 0;" role="img" aria-label="No budget set"></span><span class="k">Budget</span><span>None</span></button>
+        </div>
+        <div class="rc">
+          <span class="t-label">Recent repos</span>
+          <button class="chip"><i class="ic g-git"></i>acme/checkout-api</button>
+          <button class="chip"><i class="ic g-git"></i>acme/payments</button>
+          <button class="chip"><i class="ic g-git"></i>acme/web</button>
+          <button class="chip"><i class="ic g-git"></i>acme/platform</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+</body>
+</html>
