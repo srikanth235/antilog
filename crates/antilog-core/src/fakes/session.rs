@@ -80,6 +80,27 @@ impl SessionStore for FakeStore {
         Ok(updated)
     }
 
+    async fn set_session_environment(
+        &self,
+        organization: OrganizationId,
+        session: SessionId,
+        environment: Option<&str>,
+        version: Option<u32>,
+        audit: &AuditEntry,
+    ) -> Result<(), StoreError> {
+        {
+            let mut ledger = locked(&self.ledger);
+            not_found(ledger.session(organization, session))?;
+            if let Some(row) = ledger.sessions.iter_mut().find(|row| row.id == session) {
+                row.environment = environment.map(str::to_owned);
+                row.environment_version = version;
+            }
+            ledger.audit.push(audit.clone());
+        }
+        self.move_seed(session, environment, version);
+        Ok(())
+    }
+
     async fn append_event(&self, event: &NewEvent) -> Result<(), StoreError> {
         let mut ledger = locked(&self.ledger);
         not_found(ledger.session(event.organization, event.session))?;

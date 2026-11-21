@@ -20,7 +20,7 @@ Built: `antilog-types` (`Environment`, `NewEnvironment`, and `EnvironmentSpec` w
 1. Types and validation: `antilog-core/src/environments.rs`; run `cargo run -q -p antilog-server -- openapi > openapi/antilog.json` and `pnpm generate:api` in `web/`.
 2. A new column: [../change/ledger-table.md](../change/ledger-table.md); `cargo sqlx prepare --workspace`.
 3. The screen: a board first ([../change/screen.md](../change/screen.md)); `SettingsConnections` is the list, `SettingsEnvironment` and `SettingsEnvironmentSecrets` the edit dialog.
-4. A change an agent proposes arrives as a Change environment card; a person approves it ([tools.md](tools.md)).
+4. A change an agent proposes arrives as a Change environment card; a person approves it and the session moves to the environment's next version ([tools.md](tools.md)). `environments::changed` applies a change to a version with the same checks as an edit, and `save_for_session` writes the version; a new field an environment holds must be carried there, in `CardPayload::ChangeEnvironment`'s views and in the runner's `ApplyEnvironment` if it can apply live.
 
 ## Proving it
 

@@ -2131,6 +2131,70 @@
         ]
       }
     },
+    "/sessions/{id}/environment": {
+      "put": {
+        "tags": [],
+        "operationId": "set_environment",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The session",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/SessionId"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SessionEnvironment"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The session, on the newest version of that environment. The network applies at once; variables, repos and the setup script reach a running machine now and a stopped one when it next starts. Editors and owners of the project",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Session"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The session has ended",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "No such environment, or it is archived",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/sessions/{id}/events": {
       "get": {
         "tags": [],
@@ -3009,44 +3073,27 @@
             }
           },
           {
-            "type": "object",
-            "required": [
-              "kind"
-            ],
-            "properties": {
-              "image": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EnvironmentProposal",
+                "description": "A change to the environment the session runs on, in full: what the agent asked for, the\nenvironment as it was and as it would be. It holds no network secret value."
               },
-              "kind": {
-                "type": "string",
-                "enum": [
-                  "change_environment"
-                ]
-              },
-              "network": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
-              "setupScriptLines": {
-                "type": [
-                  "integer",
-                  "null"
+              {
+                "type": "object",
+                "required": [
+                  "kind"
                 ],
-                "format": "int32",
-                "minimum": 0
-              },
-              "size": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "change_environment"
+                    ]
+                  }
+                }
               }
-            }
+            ],
+            "description": "A change to the environment the session runs on, in full: what the agent asked for, the\nenvironment as it was and as it would be. It holds no network secret value."
           },
           {
             "type": "object",
@@ -3365,6 +3412,164 @@
             "type": "integer",
             "format": "int32",
             "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      },
+      "EnvironmentChange": {
+        "type": "object",
+        "description": "What an agent proposes to change in its session's environment. A field left out changes\nnothing.",
+        "properties": {
+          "addHosts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "addRepos": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "network": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/NetworkLevel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "removeHosts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "removeRepos": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "setVariables": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          },
+          "setupScript": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The whole new script; an empty one removes it."
+          },
+          "unsetVariables": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "EnvironmentProposal": {
+        "type": "object",
+        "description": "The body of a Change environment card.",
+        "required": [
+          "environment",
+          "environmentName",
+          "sessionVersion",
+          "baseVersion",
+          "createsEnvironment",
+          "change",
+          "before",
+          "after"
+        ],
+        "properties": {
+          "after": {
+            "$ref": "#/components/schemas/EnvironmentView"
+          },
+          "baseVersion": {
+            "type": "integer",
+            "format": "int32",
+            "description": "The newest version now, which the change is applied to; the approval makes the next.",
+            "minimum": 0
+          },
+          "before": {
+            "$ref": "#/components/schemas/EnvironmentView"
+          },
+          "change": {
+            "$ref": "#/components/schemas/EnvironmentChange"
+          },
+          "createsEnvironment": {
+            "type": "boolean",
+            "description": "The session is on the built-in default, which cannot change: approving makes a new\nenvironment of its own and moves the session to it."
+          },
+          "environment": {
+            "type": "string",
+            "description": "The environment the session is on; `default` is the built-in one."
+          },
+          "environmentName": {
+            "type": "string"
+          },
+          "sessionVersion": {
+            "type": "integer",
+            "format": "int32",
+            "description": "The version the session runs on now, which `before` shows.",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      },
+      "EnvironmentView": {
+        "type": "object",
+        "description": "What an environment holds that a session's own change can touch: the network, the variables,\nthe setup script and the default repos. Network secrets and the machine size are not here.",
+        "required": [
+          "network",
+          "allowedHosts",
+          "allowPackageManagers",
+          "variables",
+          "setupScript",
+          "repos"
+        ],
+        "properties": {
+          "allowPackageManagers": {
+            "type": "boolean"
+          },
+          "allowedHosts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "network": {
+            "$ref": "#/components/schemas/NetworkLevel"
+          },
+          "repos": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "setupScript": {
+            "type": "string"
+          },
+          "variables": {
+            "type": "object",
+            "description": "Plain variables with their values, readable by the agent.",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "propertyNames": {
+              "type": "string"
+            }
           }
         },
         "additionalProperties": false
@@ -4652,6 +4857,20 @@
             }
           }
         }
+      },
+      "SessionEnvironment": {
+        "type": "object",
+        "description": "The environment to move a session to: its newest version.",
+        "required": [
+          "environment"
+        ],
+        "properties": {
+          "environment": {
+            "type": "string",
+            "description": "An environment's id; `default` is the built-in one."
+          }
+        },
+        "additionalProperties": false
       },
       "SessionEvent": {
         "type": "object",

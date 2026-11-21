@@ -77,7 +77,7 @@ Add each new term to the glossary in the same change that introduces it. Prefer 
 | Raise budget | Now, Requested, What it may cost, Why | "Raise budget", "Decline" | "Budget raised to $20 by NAME · 14:02" |
 | Add credential | Connector, Scope, Why, the secure field | "Add credential", "Decline" | "Credential added by NAME · 14:02" |
 | Attach repo | Repo, Branch, Access | "Attach repo", "Decline" | "Repo attached by NAME · 14:02" |
-| Change environment | Image, Setup script, Size, Network, What changes | "Change environment", "Decline" | "Environment changed by NAME · 14:02" |
+| Change environment | Environment (with what approving does to the version), Change (a diff grouped Network, Variables, Setup script, Repositories, each saying when it applies) | "Change environment", "Decline" | "Environment changed by NAME · 14:02" |
 | Allow this tool? | Tool, What it would do | "Allow once", "Decline" | "Tool allowed by NAME · 14:02" |
 | Use a connector tool | Connector, Tool, Input | "Allow once", "Decline" | "Tool allowed by NAME · 14:02" |
 

@@ -1859,3 +1859,70 @@ async fn an_open_stream_announces_a_report_of_changes() {
         .unwrap_or_else(|_| unreachable!("no changes event arrived: {seen}"));
     assert!(seen.contains(&id), "the event names the session: {seen}");
 }
+
+#[tokio::test]
+async fn an_editor_moves_a_session_to_another_environment_and_a_viewer_cannot() {
+    let org = org().await;
+    let (_, viewer) = org.member("vi", "viewer").await;
+    let (_, editor) = org.member("ed", "editor").await;
+    let made = org
+        .call(
+            Method::POST,
+            "/environments",
+            &org.owner,
+            Some(json!({
+                "name": "Bench", "network": "limited", "allowedHosts": ["api.stripe.com"],
+                "allowPackageManagers": false, "variables": {}, "setupScript": "",
+                "repos": [], "networkSecrets": [], "cpus": 2, "memoryMb": 4096
+            })),
+        )
+        .await;
+    assert_eq!(made.status, StatusCode::CREATED);
+    let session = org
+        .call(
+            Method::POST,
+            &org.start_uri(),
+            &editor,
+            Some(json!({"prompt": "go", "model": "opencode/test"})),
+        )
+        .await;
+    let id = session.body["id"].as_str().unwrap_or_default().to_owned();
+    let uri = format!("/sessions/{id}/environment");
+    let denied = org
+        .call(
+            Method::PUT,
+            &uri,
+            &viewer,
+            Some(json!({"environment": "bench"})),
+        )
+        .await;
+    assert_eq!(denied.status, StatusCode::FORBIDDEN);
+    let moved = org
+        .call(
+            Method::PUT,
+            &uri,
+            &editor,
+            Some(json!({"environment": "bench"})),
+        )
+        .await;
+    assert_eq!(moved.status, StatusCode::OK, "{:?}", moved.body);
+    assert_eq!(moved.body["environment"], "bench");
+    assert_eq!(moved.body["environmentVersion"], 1);
+    let unknown = org
+        .call(
+            Method::PUT,
+            &uri,
+            &editor,
+            Some(json!({"environment": "nope"})),
+        )
+        .await;
+    assert_eq!(unknown.status, StatusCode::UNPROCESSABLE_ENTITY);
+    // Both the denial and the move are in the audit log.
+    let log = org.call(Method::GET, "/audit", &org.owner, None).await;
+    let rows = log.body["entries"].as_array().cloned().unwrap_or_default();
+    let has = |outcome: &str| {
+        rows.iter()
+            .any(|e| e["action"] == "session.set_environment" && e["outcome"] == outcome)
+    };
+    assert!(has("done") && has("denied"), "{rows:?}");
+}

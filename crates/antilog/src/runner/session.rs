@@ -1,6 +1,7 @@
 //! One session on this machine: clone, configure, start OpenCode, carry the conversation to the
 //! server and the server's commands to OpenCode, and let go.
 
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -209,22 +210,36 @@ pub(super) async fn run_setup<M: Machine>(
     if ran {
         return Setup::Skipped;
     }
-    // `timeout` ends the script and what it started; the second timer is for a machine that
-    // cannot be asked. stderr is folded into stdout so the tail reads as it happened.
+    let result = run_script(machine, root, script, &[], spec, limit).await;
+    // Whatever happened, this container has had its turn.
+    machine.put(&marker, b"").await.ok();
+    result
+}
+
+/// Runs `script` as root from `root`, under `timeout`, with `env` added to the machine's own.
+/// `timeout` ends the script and what it started; the second timer is for a machine that cannot
+/// be asked. stderr is folded into stdout so the tail reads as it happened.
+async fn run_script<M: Machine>(
+    machine: &M,
+    root: &Path,
+    script: &str,
+    env: &[(String, String)],
+    spec: &SessionSpec,
+    limit: Duration,
+) -> Setup {
     let secs = limit.as_secs().max(1);
-    let exec = Exec::new([
+    let mut exec = Exec::new([
         "sh".to_owned(),
         "-c".to_owned(),
         "exec timeout -k 10 \"$1\" bash -c \"$2\" 2>&1".to_owned(),
         "sh".to_owned(),
         secs.to_string(),
-        script.clone(),
+        script.to_owned(),
     ])
     .dir(root);
+    exec.env = env.to_vec();
     let started = Instant::now();
     let result = tokio::time::timeout(limit + Duration::from_secs(30), machine.exec(exec)).await;
-    // Whatever happened, this container has had its turn.
-    machine.put(&marker, b"").await.ok();
     match result {
         Err(_) => Setup::Failed(Failure {
             exit: None,
@@ -244,6 +259,29 @@ pub(super) async fn run_setup<M: Machine>(
             tail: tail(&out.stdout, spec),
         }),
     }
+}
+
+/// The variables of an environment as a shell script that new bash processes source: each name
+/// set, and each name an earlier version set that this one does not unset. A name the machine
+/// cannot hold is left out, as the container's own start leaves it out.
+fn env_script(variables: &BTreeMap<String, String>, removed: &[String]) -> String {
+    let quote = |value: &str| format!("'{}'", value.replace('\'', "'\\''"));
+    let ok = |name: &str| {
+        let mut chars = name.chars();
+        chars
+            .next()
+            .is_some_and(|c| c.is_ascii_alphabetic() || c == '_')
+            && chars.all(|c| c.is_ascii_alphanumeric() || c == '_')
+            && !name.starts_with("ANTILOG_")
+    };
+    let mut text = String::from("# The session's environment variables, written by Antilog.\n");
+    for name in removed.iter().filter(|name| ok(name)) {
+        text.push_str(&format!("unset {name}\n"));
+    }
+    for (name, value) in variables.iter().filter(|(name, _)| ok(name)) {
+        text.push_str(&format!("export {name}={}\n", quote(value)));
+    }
+    text
 }
 
 /// Where OpenCode works: the clone when there is one, else the folder of clones.
@@ -336,6 +374,7 @@ struct Live<S: Sandbox> {
     heads_up: Option<String>,
     /// Each repo of the machine with where it was cloned from, for the Changes panel.
     repos: Vec<(String, PathBuf, Base)>,
+    setup_timeout: Duration,
 }
 
 impl<S: Sandbox> Live<S> {
@@ -441,6 +480,9 @@ impl<S: Sandbox> Live<S> {
                     Err(error) => tracing::warn!(%error, "could not clone an attached repo"),
                 }
             }
+            Command::ApplyEnvironment { environment } => {
+                self.apply_environment(*environment).await;
+            }
             Command::Approval { permission, reply } => {
                 self.api.reply(&permission, reply).await?;
             }
@@ -453,6 +495,65 @@ impl<S: Sandbox> Live<S> {
         }
         finish(&self.done, envelope.id);
         Ok(false)
+    }
+
+    /// The session moved to another version of its environment. The network is the proxy's and
+    /// needs nothing here. The variables go into the file new bash processes source (the
+    /// container's own environment is fixed at its start, so a process already running keeps its
+    /// old one), and the setup script runs now if it changed, with the new variables, as at the
+    /// start: a failure is a note and a line for the agent, never the session's end.
+    async fn apply_environment(&mut self, environment: antilog_types::EnvironmentSpec) {
+        let removed: Vec<String> = self
+            .spec
+            .environment
+            .variables
+            .keys()
+            .filter(|name| !environment.variables.contains_key(*name))
+            .cloned()
+            .collect();
+        let file = self.machine.paths().env.clone();
+        if let Err(error) = self
+            .machine
+            .put(
+                &file,
+                env_script(&environment.variables, &removed).as_bytes(),
+            )
+            .await
+        {
+            tracing::warn!(%error, "could not write the session's variables");
+        }
+        let script = environment.setup_script.clone();
+        let changed = script != self.spec.environment.setup_script && !script.trim().is_empty();
+        let mut next = self.spec.clone();
+        next.environment = environment;
+        if changed {
+            let root = self.machine.paths().work.clone();
+            let env: Vec<(String, String)> = next
+                .environment
+                .variables
+                .iter()
+                .map(|(name, value)| (name.clone(), value.clone()))
+                .collect();
+            if let Setup::Failed(failure) = run_script(
+                &*self.machine,
+                &root,
+                &script,
+                &env,
+                &next,
+                self.setup_timeout,
+            )
+            .await
+            {
+                tracing::warn!(session = %self.spec.session, exit = ?failure.exit, timed_out = failure.timed_out, "the setup script failed after an environment change");
+                self.outbox.push(Item::Note {
+                    key: format!("setup:{}", Uuid::now_v7()),
+                    text: failure.note(self.setup_timeout),
+                });
+                self.heads_up = Some(failure.line());
+                self.flush().await.ok();
+            }
+        }
+        self.spec = next;
     }
 
     /// Exports the session for a later claim, stops OpenCode and lets the machine go.
@@ -558,6 +659,14 @@ async fn prepare<S: Sandbox>(
         });
         heads_up = Some(failure.line());
     }
+    let file = machine.paths().env.clone();
+    machine
+        .put(
+            &file,
+            env_script(&spec.environment.variables, &[]).as_bytes(),
+        )
+        .await
+        .with_context(|| format!("writing {}", file.display()))?;
     let config = machine.paths().config.clone();
     machine
         .put(&config, &serde_json::to_vec_pretty(&spec.opencode_config)?)
@@ -614,6 +723,7 @@ async fn prepare<S: Sandbox>(
         done: done.clone(),
         heads_up,
         repos,
+        setup_timeout,
     })
 }
 

@@ -76,7 +76,7 @@ It follows Claude Code's: a rounded box with a soft shadow and a quiet row of se
 A card is a frame: a title, what would happen, what it may cost, two buttons; every new kind reuses it. The preview comes before Approve, and nothing is created or spent until a person decides. A pre-approved card collapses at once to "Allowed by policy". The six kinds and their policies are in [approvals](../organization/approvals.md); their fields and words are in [wording](wording.md#cards). What a card does:
 
 - **Raise budget** (`SessionBudget`), **Add credential** (`SessionCredential`), **Attach repo** (`SessionRepo`): the card appears the moment the agent needs it. Add credential is never pre-approved: a person types each value into a secure field, never in the chat.
-- **Change environment**: the change from now, as a diff of image, setup script, size and network.
+- **Change environment** (`SessionEnvironmentCard`): the change as a diff against the version the session runs, in groups that say when each applies (network now, variables for new commands, setup script now, repositories cloned now), and what approving does to the environment's version. A person can move the session to another environment from the Overview's Environment row (Change, `SessionEnvironment`; Edit opens the environment's own dialog).
 - **Allow this tool?** (`ask_first`): the harness asked for a tool set to ask first; Allow once or Decline.
 - **Use a connector tool** (`SessionConnectorTool`): the connector, the tool and the exact input; one approval pays for one call.
 - **Failed** (`SessionFailed`) is a calm line, not a card: where it failed and how to start again.

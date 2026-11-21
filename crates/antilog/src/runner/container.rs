@@ -34,6 +34,9 @@ use super::sandbox::{Exec, Listener, Machine, Output, Paths, Sandbox, SandboxSpe
 const WORK: &str = "/work";
 const CONFIG: &str = "/etc/opencode/opencode.json";
 const SKILLS: &str = "/opt/antilog/skills";
+/// Sourced by every new non-interactive bash (`BASH_ENV`); the runner rewrites it when the session's
+/// environment changes (`session::apply_environment`).
+const ENV_FILE: &str = "/etc/antilog/env.sh";
 /// The port OpenCode listens on inside the container.
 const OPENCODE_PORT: u16 = 4096;
 const SYSBOX: &str = "sysbox-runc";
@@ -152,8 +155,9 @@ fn machine_env(spec: &SandboxSpec, proxy: Vec<(String, String)>) -> Vec<(String,
         .filter(|(name, _)| valid_name(name))
         .map(|(k, v)| (k.clone(), v.clone()))
         .collect();
-    env.retain(|(name, _)| !proxy.iter().any(|(p, _)| p == name));
+    env.retain(|(name, _)| !proxy.iter().any(|(p, _)| p == name) && name != "BASH_ENV");
     env.extend(proxy);
+    env.push(("BASH_ENV".to_owned(), ENV_FILE.to_owned()));
     env
 }
 
@@ -426,6 +430,7 @@ impl<C: Cli> Sandbox for ContainerSandbox<C> {
                 work: PathBuf::from(WORK),
                 config: PathBuf::from(CONFIG),
                 skills: PathBuf::from(SKILLS),
+                env: PathBuf::from(ENV_FILE),
             },
             address: Mutex::new(None),
         };

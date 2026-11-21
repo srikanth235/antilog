@@ -554,6 +554,23 @@ export function useSetSessionBudget(session: string) {
   );
 }
 
+/** Moves the session to the newest version of an environment: the network applies at once. */
+export function useSetSessionEnvironment(session: string) {
+  return useWrite(
+    async (environment: string) =>
+      unwrap(
+        await api.PUT("/sessions/{id}/environment", {
+          params: { path: { id: session } },
+          body: { environment },
+        }),
+      ),
+    async (client) => {
+      await client.invalidateQueries({ queryKey: keys.session(session) });
+      await client.invalidateQueries({ queryKey: keys.transcript(session) });
+    },
+  );
+}
+
 export function useAddMember() {
   return useWrite(
     async (body: Schemas["NewMember"]) => unwrap(await api.POST("/members", { body })),

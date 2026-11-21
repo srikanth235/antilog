@@ -414,6 +414,14 @@ pub struct StartSession {
     pub follow_policy: bool,
 }
 
+/// The environment to move a session to: its newest version.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SessionEnvironment {
+    /// An environment's id; `default` is the built-in one.
+    pub environment: String,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SendMessage {

@@ -26,7 +26,7 @@ It never holds a model key or a cloud credential.
 
 - Treat every tool argument from an agent as untrusted input, checked by the action layer like a request from outside.
 - Show the agent's text on a card as the agent's, never as Antilog's or a person's. A card shows exactly what will happen, not the agent's summary of it.
-- Keep allowed endpoints narrow: an environment that allows a host that accepts writes says so on the Change environment card.
+- Keep allowed endpoints narrow: an environment that allows a host that accepts writes says so on the Change environment card (the card shows the added and removed hosts).
 - When a session acts against its limits (reaches a blocked host, spends to a cap), record it in the audit log and tell a person.
 
 ## What this does not stop

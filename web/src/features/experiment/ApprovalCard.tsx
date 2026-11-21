@@ -54,11 +54,38 @@ export function ApprovalCard(props: {
           <div key={row.key} className="ap-r">
             <span className="k">{row.label}</span>
             <span className="v">
-              {row.lines.map((line) => (
-                <span key={line} className={row.mono ? "mono" : undefined}>
+              {row.lines.map((line, at) => (
+                <span
+                  // biome-ignore lint/suspicious/noArrayIndexKey: a row's lines are fixed text, never reordered
+                  key={at}
+                  className={
+                    row.mono ? "mono" : at > 0 && row.key === "environment" ? "xs mut" : undefined
+                  }
+                >
                   {line}
                 </span>
               ))}
+              {row.diff === undefined ? null : (
+                <section className="diff" aria-label={row.label}>
+                  {row.diff.map((group) => (
+                    <div key={group.title}>
+                      <div className="hk">{group.title}</div>
+                      {group.lines.map((line, at) => (
+                        <div
+                          // biome-ignore lint/suspicious/noArrayIndexKey: a diff's lines are fixed, never reordered
+                          key={at}
+                          className={line.sign === "+" ? "l add" : "l del"}
+                        >
+                          <span />
+                          <span />
+                          <span className="sg">{line.sign === "+" ? "+" : "−"}</span>
+                          <span>{line.text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </section>
+              )}
             </span>
           </div>
         ))}

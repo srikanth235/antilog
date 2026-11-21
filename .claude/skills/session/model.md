@@ -25,6 +25,7 @@ A session's fields (`antilog-types/src/session.rs`): `id`, `organizationId`, `pr
 | `GET /sessions/{id}/events` | The conversation |
 | `GET /sessions/{id}/spend` | `SessionSpend`: `budgetCapCents` or null, `spentCents`, tokens, `byKind` |
 | `PUT /sessions/{id}/budget` | `{budgetCapCents}`: editors and owners of the project; 409 `over_cap` above the project's or the organization's cap |
+| `PUT /sessions/{id}/environment` | `{environment}` (an id, `default` for the built-in): moves the session to its newest version, network at once, variables, default repos and setup script to a running machine now; editors and owners of the project; 422 for an unknown or archived one |
 | `GET /sessions/{id}/approvals`, `GET /approvals/pending`, `POST /approvals/{id}/decision` | Cards of a session; the cards the caller may decide by their role in the card's project; a decision |
 
 ## Agents
@@ -35,7 +36,7 @@ A session's fields (`antilog-types/src/session.rs`): `id`, `organizationId`, `pr
 | model | `provider/model`. It decides the provider whose key the proxy uses and the harness's `small_model` | an agent |
 | cost tier | "$" to "$$$" on each agent, set when the agent is added ([add-agent.md](add-agent.md)) | a quality ranking |
 | Auto | `auto`: the organization's default agent, else the only agent turned on, and the built-in OpenCode agent while none is set up; it says why in one line. A person can always pick a named agent. No agent is preselected by brand | a favoured agent |
-| environment | What a session runs on: default repos, a network level (none, limited with exact hosts, full), write-only network secrets, plain variables, a setup script and a size. An organization manages them in Settings, Connections; every change is a new version and a session keeps the version it started on. An agent proposes a change with `set_environment` | a server, a config file |
+| environment | What a session runs on: default repos, a network level (none, limited with exact hosts, full), write-only network secrets, plain variables, a setup script and a size. An organization manages them in Settings, Connections; every change is a new version and a session keeps the version it started on. An agent proposes a change with `set_environment` and a person approves it: that is a new version of the environment and the session moves to it, live ([tools.md](tools.md)); a person can also move a session to another environment from its Overview | a server, a config file |
 | attached repo | A repo the session works in, any number, cloned into the machine at start or after an approved Attach repo | a clone Antilog keeps |
 
 ## Spend

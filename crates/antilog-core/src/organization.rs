@@ -72,6 +72,7 @@ pub enum Action {
     PluginAdd,
     PluginRemove,
     SessionBudgetSet,
+    SessionEnvironmentSet,
     SessionStart,
     SessionMessage,
     SessionStop,
@@ -104,6 +105,7 @@ impl Action {
         Self::PluginAdd,
         Self::PluginRemove,
         Self::SessionBudgetSet,
+        Self::SessionEnvironmentSet,
         Self::SessionStart,
         Self::SessionMessage,
         Self::SessionStop,
@@ -136,6 +138,7 @@ impl Action {
             Self::PluginAdd => "plugin.add",
             Self::PluginRemove => "plugin.remove",
             Self::SessionBudgetSet => "session.set_budget",
+            Self::SessionEnvironmentSet => "session.set_environment",
             Self::SessionStart => "session.start",
             Self::SessionMessage => "session.message",
             Self::SessionStop => "session.stop",
@@ -153,6 +156,7 @@ impl Action {
         match self {
             Self::TokenCreateOwn => Role::Viewer,
             Self::SessionBudgetSet
+            | Self::SessionEnvironmentSet
             | Self::EnvironmentCreate
             | Self::EnvironmentEdit
             | Self::EnvironmentArchive
@@ -188,6 +192,7 @@ impl Action {
             Self::ProjectRoleSet
                 | Self::ProjectLimitsSet
                 | Self::SessionBudgetSet
+                | Self::SessionEnvironmentSet
                 | Self::SessionStart
                 | Self::SessionMessage
                 | Self::SessionStop

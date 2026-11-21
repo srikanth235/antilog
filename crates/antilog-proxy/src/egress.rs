@@ -5,11 +5,10 @@
 use std::collections::HashMap;
 use std::net::IpAddr;
 use std::sync::{Mutex, PoisonError};
-use std::time::{Duration, Instant};
 
 use antilog_core::credentials::Purpose;
 use antilog_core::environments;
-use antilog_types::{EnvironmentSpec, NetworkLevel, SessionId};
+use antilog_types::{EnvironmentSpec, NetworkLevel, OrganizationId, SessionId};
 use axum::body::Body;
 use axum::http::{HeaderMap, Request, Response, StatusCode, header};
 use hyper::body::Incoming;
@@ -97,56 +96,62 @@ impl NetworkAccess {
 }
 
 /// What each session's environment lets it reach. The answer is the environment version the
-/// session's machine was started on, read from the store and kept for a short while: a
-/// session's version never changes, so a kept answer is only ever as old as the cache.
+/// session's machine row names, which changes when the session moves to another version
+/// (`session::move_to_environment`, an approved Change environment card). A version never
+/// changes, so what a version allows is kept for good; which version the session is on is read
+/// from its machine row on every call, so a move applies at once, with no wait for a cache to
+/// expire.
+#[derive(Default)]
 pub struct SessionNetworks {
-    ttl: Duration,
-    kept: Mutex<HashMap<SessionId, (Instant, NetworkAccess)>>,
+    kept: Mutex<HashMap<(OrganizationId, String, u32), NetworkAccess>>,
 }
 
 impl SessionNetworks {
-    /// The longest an answer is kept.
-    pub const MAX_TTL: Duration = Duration::from_secs(60);
-
-    pub fn new(ttl: Duration) -> Self {
-        Self {
-            ttl: ttl.min(Self::MAX_TTL),
-            kept: Mutex::new(HashMap::new()),
-        }
+    pub fn new() -> Self {
+        Self::default()
     }
 
     /// The session's network. A session with no machine, an environment version that is gone or
     /// a store that does not answer gets `None`: it fails closed, and the failure is not kept.
     pub async fn network<S: Backend>(&self, store: &S, session: SessionId) -> NetworkAccess {
-        if let Some((at, access)) = self
+        let machine = match store.machine(session).await {
+            Ok(Some(machine)) => machine,
+            Ok(None) => {
+                tracing::warn!(%session, "egress: the session has no environment to take a network from");
+                return NetworkAccess::None;
+            }
+            Err(error) => {
+                tracing::error!(%error, "egress: the machine could not be read");
+                return NetworkAccess::None;
+            }
+        };
+        let (Some(id), Some(version)) = (
+            machine.seed.environment.clone(),
+            machine.seed.environment_version,
+        ) else {
+            return NetworkAccess::of(&EnvironmentSpec::default());
+        };
+        let key = (machine.organization, id, version);
+        if let Some(access) = self
             .kept
             .lock()
             .unwrap_or_else(PoisonError::into_inner)
-            .get(&session)
-            && at.elapsed() < self.ttl
+            .get(&key)
         {
             return access.clone();
         }
-        let found = match store.machine(session).await {
-            Ok(Some(machine)) => {
-                environments::of_seed(store, machine.organization, &machine.seed).await
-            }
-            Ok(None) => Ok(None),
-            Err(error) => Err(error),
-        };
-        match found {
+        match environments::of_seed(store, machine.organization, &machine.seed).await {
             Ok(Some(spec)) => {
                 let access = NetworkAccess::of(&spec);
                 let mut kept = self.kept.lock().unwrap_or_else(PoisonError::into_inner);
                 if kept.len() >= 4096 {
-                    let ttl = self.ttl;
-                    kept.retain(|_, (at, _)| at.elapsed() < ttl);
+                    kept.clear();
                 }
-                kept.insert(session, (Instant::now(), access.clone()));
+                kept.insert(key, access.clone());
                 access
             }
             Ok(None) => {
-                tracing::warn!(%session, "egress: the session has no environment to take a network from");
+                tracing::warn!(%session, "egress: the session's environment version is gone");
                 NetworkAccess::None
             }
             Err(error) => {
@@ -154,12 +159,6 @@ impl SessionNetworks {
                 NetworkAccess::None
             }
         }
-    }
-}
-
-impl Default for SessionNetworks {
-    fn default() -> Self {
-        Self::new(Self::MAX_TTL)
     }
 }
 
@@ -348,7 +347,7 @@ mod tests {
     }
 
     #[test]
-    fn an_environment_gives_its_level_and_a_kept_answer_is_never_older_than_a_minute() {
+    fn an_environment_gives_its_level() {
         let mut spec = EnvironmentSpec {
             allowed_hosts: vec!["api.stripe.com".into()],
             ..EnvironmentSpec::default()
@@ -364,10 +363,6 @@ mod tests {
         assert_eq!(NetworkAccess::of(&spec), NetworkAccess::None);
         spec.network = NetworkLevel::Full;
         assert_eq!(NetworkAccess::of(&spec), NetworkAccess::Full);
-        assert_eq!(
-            SessionNetworks::new(Duration::from_secs(3600)).ttl,
-            SessionNetworks::MAX_TTL
-        );
     }
 
     #[test]
