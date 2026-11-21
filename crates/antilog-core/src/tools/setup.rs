@@ -1,10 +1,16 @@
-use antilog_types::{Approval, ApprovalStatus, CardKind, CardPayload, RepoAccess, SessionStatus};
+use std::collections::BTreeMap;
+
+use antilog_types::{
+    Approval, ApprovalStatus, CardKind, CardPayload, EnvironmentChange, EnvironmentProposal,
+    EnvironmentView, NetworkLevel, RepoAccess, SessionStatus,
+};
 use serde::Deserialize;
 use serde_json::json;
 
 use super::{Caller, Done, ToolError, input};
 use crate::approval::{self, CardRequest};
 use crate::deps::Deps;
+use crate::environments;
 use crate::organization::Refusal;
 use crate::session::now_ms;
 use crate::store::{SessionChange, SessionStore};
@@ -184,10 +190,27 @@ pub(super) async fn request_credential<D: Deps>(
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Environment {
-    image: Option<String>,
-    setup_script: Option<String>,
-    size: Option<String>,
     network: Option<String>,
+    #[serde(default)]
+    add_hosts: Vec<String>,
+    #[serde(default)]
+    remove_hosts: Vec<String>,
+    #[serde(default)]
+    set_variables: BTreeMap<String, String>,
+    #[serde(default)]
+    unset_variables: Vec<String>,
+    setup_script: Option<String>,
+    #[serde(default)]
+    add_repos: Vec<String>,
+    #[serde(default)]
+    remove_repos: Vec<String>,
+}
+
+/// The built-in default cannot change, so a session on it gets an environment of its own, named
+/// from its id.
+pub(crate) fn own_name(session: antilog_types::SessionId) -> String {
+    let id = session.to_string();
+    format!("Session {}", id.get(..8).unwrap_or(&id))
 }
 
 pub(super) async fn set_environment<D: Deps>(
@@ -196,37 +219,97 @@ pub(super) async fn set_environment<D: Deps>(
     value: serde_json::Value,
 ) -> Done {
     let env: Environment = input(value)?;
-    let payload = CardPayload::ChangeEnvironment {
-        image: env.image.clone(),
-        setup_script_lines: env
-            .setup_script
-            .as_ref()
-            .map(|script| u32::try_from(script.lines().count()).unwrap_or(u32::MAX)),
-        size: env.size.clone(),
-        network: env.network.clone(),
+    let network = match env.network.as_deref() {
+        None => None,
+        Some(level) => Some(
+            NetworkLevel::parse(level)
+                .ok_or_else(|| ToolError::new("network is none, limited or full"))?,
+        ),
     };
-    let mut parts = Vec::new();
-    if let Some(image) = env.image {
-        parts.push(format!("image {image}"));
+    let change = EnvironmentChange {
+        network,
+        add_hosts: env.add_hosts,
+        remove_hosts: env.remove_hosts,
+        set_variables: env.set_variables,
+        unset_variables: env.unset_variables,
+        setup_script: env.setup_script,
+        add_repos: env.add_repos,
+        remove_repos: env.remove_repos,
+    };
+    if change.is_empty() {
+        return Err(ToolError::new(
+            "name what to change: network, add_hosts, remove_hosts, set_variables, unset_variables, setup_script, add_repos or remove_repos",
+        ));
     }
-    if let Some(script) = env.setup_script {
+    let session = deps
+        .store()
+        .session(caller.organization, caller.session)
+        .await?
+        .ok_or_else(|| ToolError::new("this session is unknown"))?;
+    let refused = |error: Refusal| match error {
+        Refusal::Invalid(message) => ToolError::new(message),
+        _ => ToolError::new("the session's environment cannot be read now: retry in a minute"),
+    };
+    let current = environments::of_session(deps.store(), caller.organization, &session)
+        .await
+        .map_err(refused)?;
+    let newest = environments::newest_of_session(deps.store(), caller.organization, &session)
+        .await
+        .map_err(refused)?;
+    let creates_environment = newest.built_in;
+    let name = if creates_environment {
+        own_name(session.id)
+    } else {
+        newest.name.clone()
+    };
+    let after = environments::changed(&newest, &change, &name).map_err(refused)?;
+    let after = EnvironmentView {
+        network: after.network,
+        allowed_hosts: after.allowed_hosts,
+        allow_package_managers: after.allow_package_managers,
+        variables: after.variables,
+        setup_script: after.setup_script,
+        repos: after.repos,
+    };
+    let before = environments::view(&current);
+    if after == before {
+        return Err(ToolError::new(
+            "the session's environment already has all of that: nothing would change",
+        ));
+    }
+    let mut parts = Vec::new();
+    if let Some(network) = change.network {
+        parts.push(format!("network {}", network.as_str()));
+    }
+    for (what, count) in [
+        ("host added", change.add_hosts.len()),
+        ("host removed", change.remove_hosts.len()),
+        ("variable set", change.set_variables.len()),
+        ("variable removed", change.unset_variables.len()),
+        ("repo added", change.add_repos.len()),
+        ("repo removed", change.remove_repos.len()),
+    ] {
+        if count > 0 {
+            parts.push(format!("{count} {what}"));
+        }
+    }
+    if let Some(script) = &change.setup_script {
         parts.push(format!(
             "a setup script of {} lines",
             script.lines().count()
         ));
     }
-    if let Some(size) = env.size {
-        parts.push(format!("size {size}"));
-    }
-    if let Some(network) = env.network {
-        parts.push(format!("network {network}"));
-    }
-    if parts.is_empty() {
-        return Err(ToolError::new(
-            "name what to change: image, setup_script, size or network",
-        ));
-    }
-    let summary = format!("Change environment: {}", parts.join(", "));
+    let summary = format!("Change environment {name}: {}", parts.join(", "));
+    let payload = CardPayload::ChangeEnvironment(Box::new(EnvironmentProposal {
+        environment: newest.id.clone(),
+        environment_name: name,
+        session_version: current.version,
+        base_version: newest.version,
+        creates_environment,
+        change,
+        before,
+        after,
+    }));
     let approval = ask(
         deps,
         caller,

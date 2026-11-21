@@ -1,8 +1,10 @@
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
+use std::collections::BTreeMap;
+
 use crate::id::text_enum;
-use crate::{ApprovalId, AuditId, MemberId, OrganizationId, SessionId, SpendId};
+use crate::{ApprovalId, AuditId, MemberId, NetworkLevel, OrganizationId, SessionId, SpendId};
 
 text_enum!(SpendKind { Tokens => "tokens", Machine => "machine" });
 
@@ -55,6 +57,67 @@ text_enum!(
 
 text_enum!(RepoAccess { Read => "read", Push => "push" });
 
+/// What an environment holds that a session's own change can touch: the network, the variables,
+/// the setup script and the default repos. Network secrets and the machine size are not here.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct EnvironmentView {
+    pub network: NetworkLevel,
+    pub allowed_hosts: Vec<String>,
+    pub allow_package_managers: bool,
+    /// Plain variables with their values, readable by the agent.
+    pub variables: BTreeMap<String, String>,
+    pub setup_script: String,
+    pub repos: Vec<String>,
+}
+
+/// The body of a Change environment card.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct EnvironmentProposal {
+    /// The environment the session is on; `default` is the built-in one.
+    pub environment: String,
+    pub environment_name: String,
+    /// The version the session runs on now, which `before` shows.
+    pub session_version: u32,
+    /// The newest version now, which the change is applied to; the approval makes the next.
+    pub base_version: u32,
+    /// The session is on the built-in default, which cannot change: approving makes a new
+    /// environment of its own and moves the session to it.
+    pub creates_environment: bool,
+    pub change: EnvironmentChange,
+    pub before: EnvironmentView,
+    pub after: EnvironmentView,
+}
+
+/// What an agent proposes to change in its session's environment. A field left out changes
+/// nothing.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct EnvironmentChange {
+    pub network: Option<NetworkLevel>,
+    #[serde(default)]
+    pub add_hosts: Vec<String>,
+    #[serde(default)]
+    pub remove_hosts: Vec<String>,
+    #[serde(default)]
+    pub set_variables: BTreeMap<String, String>,
+    #[serde(default)]
+    pub unset_variables: Vec<String>,
+    /// The whole new script; an empty one removes it.
+    pub setup_script: Option<String>,
+    #[serde(default)]
+    pub add_repos: Vec<String>,
+    #[serde(default)]
+    pub remove_repos: Vec<String>,
+}
+
+impl EnvironmentChange {
+    pub fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
 /// What each kind of card asks, as typed fields. A card shows these, never text parsed out of
 /// its summary, and an action that follows an approval reads what to do from here.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
@@ -81,13 +144,9 @@ pub enum CardPayload {
         /// `None`: the agent pushes to a branch of its own.
         branch: Option<String>,
     },
-    #[serde(rename_all = "camelCase")]
-    ChangeEnvironment {
-        image: Option<String>,
-        setup_script_lines: Option<u32>,
-        size: Option<String>,
-        network: Option<String>,
-    },
+    /// A change to the environment the session runs on, in full: what the agent asked for, the
+    /// environment as it was and as it would be. It holds no network secret value.
+    ChangeEnvironment(Box<EnvironmentProposal>),
     /// The agent asked to use a tool that is set to ask first.
     #[serde(rename_all = "camelCase")]
     AskFirst {

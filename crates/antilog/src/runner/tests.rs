@@ -957,6 +957,7 @@ async fn a_skill_pack_is_unpacked_into_the_skills_folder() {
             work: temp.join("work"),
             config: temp.join("opencode.json"),
             skills: skills_dir.clone(),
+            env: temp.join("env.sh"),
         },
         Vec::new(),
     );
@@ -1014,6 +1015,7 @@ fn setup_machine(variables: &[(&str, &str)]) -> (PlainMachine, PathBuf) {
             work: work.clone(),
             config: temp.join("opencode.json"),
             skills: temp.join("skills"),
+            env: temp.join("env.sh"),
         },
         variables
             .iter()
@@ -1256,6 +1258,135 @@ async fn a_failing_setup_script_does_not_fail_the_session_and_everyone_is_told()
     })
     .await;
     assert_eq!(locked(&world.shared).prompts[1]["parts"][0]["text"], "next");
+}
+
+/// Another environment to move a session to: no `GREETING`, one variable with a quote in it, and
+/// the given script.
+async fn make_other_environment(world: &World, script: &str) {
+    use antilog_types::{NetworkLevel, NewEnvironment};
+    let who = Principal {
+        organization: world.seed.organization.id,
+        member: world.seed.owner.id,
+    };
+    antilog_core::environments::create(
+        &world.deps.store,
+        &who,
+        2,
+        NewEnvironment {
+            name: "Other".into(),
+            network: NetworkLevel::Limited,
+            allowed_hosts: Vec::new(),
+            allow_package_managers: true,
+            variables: [("EXTRA".to_owned(), "it's \"fine\" $HOME".to_owned())].into(),
+            setup_script: script.into(),
+            repos: Vec::new(),
+            network_secrets: Vec::new(),
+            cpus: 2,
+            memory_mb: 4096,
+        },
+    )
+    .await
+    .unwrap();
+}
+
+#[tokio::test]
+async fn a_session_moved_to_another_environment_gets_its_variables_and_runs_the_changed_script() {
+    let world = world().await;
+    let session = start_on_environment(&world, "", &[]).await;
+    until("the first prompt", async || {
+        (!locked(&world.shared).prompts.is_empty()).then_some(())
+    })
+    .await;
+    make_other_environment(&world, "echo \"$EXTRA\" > moved.txt").await;
+    session::move_to_environment(
+        &*world.deps,
+        world.seed.organization.id,
+        session.id,
+        Some(world.seed.owner.id),
+        "other",
+    )
+    .await
+    .unwrap();
+
+    // The script ran now, from the folder of the checkouts, with the new variables.
+    let folder = world.workdir.join(session.id.to_string());
+    let moved = folder.join("moved.txt");
+    until("the script", async || moved.exists().then_some(())).await;
+    assert_eq!(
+        std::fs::read_to_string(&moved).unwrap().trim(),
+        "it's \"fine\" $HOME"
+    );
+    // New bash processes source the file: the new variable is set verbatim and the one the new
+    // version lacks is gone, though the machine's own environment still has it.
+    let file = world.workdir.join(format!("{}.env.sh", session.id));
+    let out = std::process::Command::new("bash")
+        .args(["-c", "echo \"[$GREETING][$EXTRA]\""])
+        .env("BASH_ENV", &file)
+        .env("GREETING", "hello")
+        .output()
+        .unwrap();
+    assert_eq!(
+        String::from_utf8_lossy(&out.stdout).trim(),
+        "[][it's \"fine\" $HOME]"
+    );
+    // The agent is told, once, and the session carries on.
+    until("the agent's message", async || {
+        locked(&world.shared)
+            .prompts
+            .iter()
+            .any(|p| {
+                p["parts"][0]["text"]
+                    .as_str()
+                    .is_some_and(|t| t.contains("moved this session to the environment Other"))
+            })
+            .then_some(())
+    })
+    .await;
+    assert_ne!(state(&world, &session).await, MachineState::Failed);
+}
+
+#[tokio::test]
+async fn a_failing_script_after_a_move_is_a_note_and_a_line_for_the_agent_not_a_failure() {
+    let world = world().await;
+    let session = start_on_environment(&world, "", &[]).await;
+    until("the first prompt", async || {
+        (!locked(&world.shared).prompts.is_empty()).then_some(())
+    })
+    .await;
+    make_other_environment(&world, "echo nope >&2; exit 5").await;
+    session::move_to_environment(
+        &*world.deps,
+        world.seed.organization.id,
+        session.id,
+        Some(world.seed.owner.id),
+        "other",
+    )
+    .await
+    .unwrap();
+    let note = until("the note", async || {
+        transcript(&world, &session)
+            .await
+            .into_iter()
+            .find(|text| text.contains("setup script failed"))
+    })
+    .await;
+    assert!(
+        note.contains("exit code 5") && note.contains("nope"),
+        "{note}"
+    );
+    let told = until("the agent's message", async || {
+        locked(&world.shared)
+            .prompts
+            .iter()
+            .filter_map(|p| p["parts"][0]["text"].as_str().map(str::to_owned))
+            .find(|t| t.contains("moved this session"))
+    })
+    .await;
+    assert!(
+        told.starts_with("[Antilog] The environment's setup script failed"),
+        "{told}"
+    );
+    assert_ne!(state(&world, &session).await, MachineState::Failed);
 }
 
 #[tokio::test]

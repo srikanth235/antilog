@@ -3,8 +3,8 @@
 //! offered, so a first session starts without a visit to settings.
 
 use antilog_types::{
-    AuditOutcome, Environment, EnvironmentSpec, NetworkSecret, NewEnvironment, NewNetworkSecret,
-    OrganizationId,
+    AuditEntry, AuditOutcome, Environment, EnvironmentChange, EnvironmentSpec, EnvironmentView,
+    MemberId, NetworkLevel, NetworkSecret, NewEnvironment, NewNetworkSecret, OrganizationId,
 };
 
 use crate::organization::{Action, Principal, Refusal, entry, member_of, permit};
@@ -241,7 +241,7 @@ fn checked(mut new: NewEnvironment) -> Result<NewEnvironment, Refusal> {
 
 /// The version to store and the secret values that go with it. `None` keeps a stored value.
 fn build(
-    who: &Principal,
+    created_by: Option<MemberId>,
     now: i64,
     id: String,
     version: u32,
@@ -280,7 +280,7 @@ fn build(
         memory_mb: new.memory_mb,
         built_in: false,
         archived,
-        created_by: Some(who.member),
+        created_by,
         created_at: now,
     };
     (made, values)
@@ -321,7 +321,7 @@ pub async fn create<S: Store>(
     {
         return Err(Refusal::Invalid("a new network secret needs a value"));
     }
-    let (made, values) = build(who, now, id.clone(), 1, new, false);
+    let (made, values) = build(Some(who.member), now, id.clone(), 1, new, false);
     store
         .add_environment(
             who.organization,
@@ -369,7 +369,14 @@ pub async fn edit<S: Store>(
     }) {
         return Err(Refusal::Invalid("a new network secret needs a value"));
     }
-    let (made, values) = build(who, now, id.to_owned(), current.version + 1, new, false);
+    let (made, values) = build(
+        Some(who.member),
+        now,
+        id.to_owned(),
+        current.version + 1,
+        new,
+        false,
+    );
     store
         .add_environment_version(
             who.organization,
@@ -378,6 +385,171 @@ pub async fn edit<S: Store>(
             &entry(who, "environment.edit", id, AuditOutcome::Done, now),
         )
         .await?;
+    Ok(made)
+}
+
+/// The version a session runs on, or the built-in default. `NotFound` when the stored version has
+/// gone missing.
+pub async fn of_session<S: Store>(
+    store: &S,
+    organization: OrganizationId,
+    session: &antilog_types::Session,
+) -> Result<Environment, Refusal> {
+    let (Some(id), Some(version)) = (&session.environment, session.environment_version) else {
+        return Ok(Environment::built_in());
+    };
+    store
+        .environment_version(organization, id, version)
+        .await?
+        .ok_or(Refusal::NotFound)
+}
+
+/// The newest version of the session's environment, which is what a change is built on: others
+/// may have edited it since the session started. The built-in default is its own newest.
+pub async fn newest_of_session<S: Store>(
+    store: &S,
+    organization: OrganizationId,
+    session: &antilog_types::Session,
+) -> Result<Environment, Refusal> {
+    let Some(id) = &session.environment else {
+        return Ok(Environment::built_in());
+    };
+    store
+        .environments(organization)
+        .await?
+        .into_iter()
+        .find(|row| row.id == *id)
+        .ok_or(Refusal::NotFound)
+}
+
+/// What a change can touch, of one version.
+pub fn view(environment: &Environment) -> EnvironmentView {
+    EnvironmentView {
+        network: environment.network,
+        allowed_hosts: environment.allowed_hosts.clone(),
+        allow_package_managers: environment.allow_package_managers,
+        variables: environment.variables.clone(),
+        setup_script: environment.setup_script.clone(),
+        repos: environment.repos.clone(),
+    }
+}
+
+/// A version with a session's change applied, checked as any edit is: the proposal an agent makes
+/// is held to the rules a person's edit is (reserved variable names, exact host names, sizes).
+/// Network secrets and the size carry over unchanged; the name is the caller's.
+pub fn changed(
+    current: &Environment,
+    change: &EnvironmentChange,
+    name: &str,
+) -> Result<NewEnvironment, Refusal> {
+    let network = change.network.unwrap_or(current.network);
+    let mut hosts = current.allowed_hosts.clone();
+    for raw in &change.remove_hosts {
+        let gone = host(raw).ok_or(Refusal::Invalid(
+            "a host to remove is an exact host name such as api.example.com",
+        ))?;
+        hosts.retain(|have| *have != gone);
+    }
+    if !change.add_hosts.is_empty() && network != NetworkLevel::Limited {
+        return Err(Refusal::Invalid(
+            "allowed hosts apply at the limited network level: set network to limited too",
+        ));
+    }
+    hosts.extend(change.add_hosts.iter().cloned());
+    let mut variables = current.variables.clone();
+    for name in &change.unset_variables {
+        variables.remove(name);
+    }
+    variables.extend(change.set_variables.clone());
+    let mut repos = current.repos.clone();
+    for raw in &change.remove_repos {
+        let gone = repo(raw).ok_or(Refusal::Invalid("a repo looks like owner/name"))?;
+        repos.retain(|have| *have != gone);
+    }
+    repos.extend(change.add_repos.iter().cloned());
+    checked(NewEnvironment {
+        name: name.to_owned(),
+        network,
+        allowed_hosts: hosts,
+        allow_package_managers: current.allow_package_managers,
+        variables,
+        setup_script: change
+            .setup_script
+            .clone()
+            .unwrap_or_else(|| current.setup_script.clone()),
+        repos,
+        network_secrets: current
+            .network_secrets
+            .iter()
+            .map(|secret| NewNetworkSecret {
+                host: secret.host.clone(),
+                header: secret.header.clone(),
+                prefix: secret.prefix.clone(),
+                value: None,
+            })
+            .collect(),
+        cpus: current.cpus,
+        memory_mb: current.memory_mb,
+    })
+}
+
+/// The next version of an environment, or a new environment at version 1, made for a session's
+/// approved change: the approval already checked who may. A value left out of a network secret
+/// keeps the one stored. `actor` is whoever approved (none: policy).
+pub async fn save_for_session<S: Store>(
+    store: &S,
+    organization: OrganizationId,
+    actor: Option<MemberId>,
+    now: i64,
+    current: Option<&Environment>,
+    new: NewEnvironment,
+) -> Result<Environment, Refusal> {
+    let who = |action: &str, id: &str| {
+        AuditEntry::new(organization, actor, action, id, AuditOutcome::Done, now)
+    };
+    let made;
+    match current {
+        Some(current) if !current.built_in => {
+            if current.archived {
+                return Err(Refusal::Invalid(
+                    "an archived environment cannot be changed",
+                ));
+            }
+            let (version, values) = build(
+                actor,
+                now,
+                current.id.clone(),
+                current.version + 1,
+                new,
+                false,
+            );
+            made = version;
+            store
+                .add_environment_version(
+                    organization,
+                    &made,
+                    &values,
+                    &who("environment.edit", &current.id),
+                )
+                .await?;
+        }
+        _ => {
+            let id = slug(&new.name);
+            if id.is_empty() || id == DEFAULT {
+                return Err(Refusal::Conflict);
+            }
+            let (version, values) = build(actor, now, id.clone(), 1, new, false);
+            made = version;
+            store
+                .add_environment(
+                    organization,
+                    &made,
+                    &values,
+                    &who("environment.create", &id),
+                )
+                .await?;
+        }
+    }
     Ok(made)
 }
 

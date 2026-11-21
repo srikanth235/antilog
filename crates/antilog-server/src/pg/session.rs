@@ -157,6 +157,58 @@ impl SessionStore for PgStore {
         row.try_into()
     }
 
+    async fn set_session_environment(
+        &self,
+        organization: OrganizationId,
+        session: SessionId,
+        environment: Option<&str>,
+        version: Option<u32>,
+        entry: &AuditEntry,
+    ) -> Result<(), StoreError> {
+        let mut tx = self.scoped(organization).await?;
+        let version = version.map(|version| i32::try_from(version).unwrap_or(i32::MAX));
+        let changed = sqlx::query!(
+            "update sessions set environment = $3, environment_version = $4 where organization_id = $1 and id = $2",
+            organization.as_uuid(),
+            session.as_uuid(),
+            environment,
+            version,
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(map)?
+        .rows_affected();
+        if changed == 0 {
+            return Err(StoreError::NotFound);
+        }
+        // The machine's seed names the environment a claim and the proxy read.
+        let machine = sqlx::query!(
+            "select seed from machines where session_id = $1 and organization_id = $2 for update",
+            session.as_uuid(),
+            organization.as_uuid(),
+        )
+        .fetch_optional(&mut *tx)
+        .await
+        .map_err(map)?;
+        if let Some(machine) = machine {
+            let mut seed: antilog_types::Seed = serde_json::from_str(&machine.seed)
+                .map_err(|error| StoreError::Unavailable(Box::new(error)))?;
+            seed.environment = environment.map(str::to_owned);
+            seed.environment_version = version.map(|version| u32::try_from(version).unwrap_or(0));
+            sqlx::query!(
+                "update machines set seed = $2 where session_id = $1",
+                session.as_uuid(),
+                serde_json::to_string(&seed)
+                    .map_err(|error| StoreError::Unavailable(Box::new(error)))?,
+            )
+            .execute(&mut *tx)
+            .await
+            .map_err(map)?;
+        }
+        audit(&mut tx, entry).await?;
+        tx.commit().await.map_err(map)
+    }
+
     async fn append_event(&self, event: &NewEvent) -> Result<(), StoreError> {
         let mut tx = self.scoped(event.organization).await?;
         sqlx::query!(

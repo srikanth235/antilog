@@ -54,6 +54,22 @@ impl State {
     }
 }
 
+impl FakeStore {
+    /// The machine's seed follows the session's environment, as the real store does it in one
+    /// transaction.
+    pub(super) fn move_seed(
+        &self,
+        session: SessionId,
+        environment: Option<&str>,
+        version: Option<u32>,
+    ) {
+        if let Some(row) = locked(&self.runner).row(session) {
+            row.machine.seed.environment = environment.map(str::to_owned);
+            row.machine.seed.environment_version = version;
+        }
+    }
+}
+
 impl RunnerStore for FakeStore {
     async fn enqueue_machine(
         &self,

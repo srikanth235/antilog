@@ -8,7 +8,7 @@ use serde_json::{Value, json};
 use crate::deps::Deps;
 use crate::store::{SessionStore, StoreError};
 
-pub(crate) use setup::{Card, ask, waiting};
+pub(crate) use setup::{Card, ask, own_name, waiting};
 
 /// A tool an agent may call: its name, what it does and the shape of its input.
 #[derive(Debug, Clone, PartialEq)]
@@ -180,8 +180,16 @@ pub fn definitions() -> Vec<ToolDef> {
         ),
         tool(
             "set_environment",
-            "Propose a change to the session's environment: image or setup script, size, network.",
-            json!({"type":"object","properties":{"image":{"type":"string"},"setup_script":{"type":"string"},"size":{"type":"string"},"network":{"type":"string"}}}),
+            "Propose a change to the environment this session runs on; a person approves it. Name only what changes: network (none, limited or full), add_hosts and remove_hosts (exact host names, which apply at the limited level), set_variables (name to value, plain text the agent can read, never a secret) and unset_variables, setup_script (the whole new script), add_repos and remove_repos (owner/name, default repos). The network applies within seconds of approval; the variables reach new commands and the setup script runs once now. The environment is shared: other sessions on it get the change when they start. Names ANTILOG_* and proxy variables are refused.",
+            json!({"type":"object","properties":{
+                "network":{"type":"string","enum":["none","limited","full"]},
+                "add_hosts":{"type":"array","items":{"type":"string"}},
+                "remove_hosts":{"type":"array","items":{"type":"string"}},
+                "set_variables":{"type":"object","additionalProperties":{"type":"string"}},
+                "unset_variables":{"type":"array","items":{"type":"string"}},
+                "setup_script":{"type":"string"},
+                "add_repos":{"type":"array","items":{"type":"string"}},
+                "remove_repos":{"type":"array","items":{"type":"string"}}}}),
         ),
         tool(
             "request_budget",

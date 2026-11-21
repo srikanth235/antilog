@@ -77,6 +77,7 @@ async fn outcome_text<D: Deps>(deps: &D, approval: &Approval) -> String {
     let applied = match approval.card {
         CardKind::RaiseBudget => raise_budget(deps, approval).await,
         CardKind::AttachRepo => attach_repo(deps, approval).await,
+        CardKind::ChangeEnvironment => super::environment::change_environment(deps, approval).await,
         _ => "Done.".to_owned(),
     };
     format!("Approved: {what}. {applied}")
@@ -121,8 +122,16 @@ async fn attach_repo<D: Deps>(deps: &D, approval: &Approval) -> String {
     let Some(CardPayload::AttachRepo { repo, .. }) = &approval.payload else {
         return "Done.".to_owned();
     };
-    let session = approval.session_id;
-    let org = approval.organization_id;
+    attach_named(deps, approval.organization_id, approval.session_id, repo).await
+}
+
+/// Adds `repo` to the session's seed and has a running machine clone it.
+pub(super) async fn attach_named<D: Deps>(
+    deps: &D,
+    org: OrganizationId,
+    session: SessionId,
+    repo: &str,
+) -> String {
     let name = repo.rsplit('/').next().unwrap_or(repo);
     let store = deps.store();
     match store.add_seed_repo(session, repo).await {
@@ -143,7 +152,7 @@ async fn attach_repo<D: Deps>(deps: &D, approval: &Approval) -> String {
     }
     let command = Command::AttachRepo {
         repo: RepoSpec {
-            name: repo.clone(),
+            name: repo.to_owned(),
             url: String::new(),
             token: None,
         },

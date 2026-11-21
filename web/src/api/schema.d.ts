@@ -692,6 +692,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sessions/{id}/environment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["set_environment"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sessions/{id}/events": {
         parameters: {
             query?: never;
@@ -960,15 +976,10 @@ export interface components {
             /** @enum {string} */
             kind: "attach_repo";
             repo: string;
-        } | {
-            image?: string | null;
+        } | (components["schemas"]["EnvironmentProposal"] & {
             /** @enum {string} */
             kind: "change_environment";
-            network?: string | null;
-            /** Format: int32 */
-            setupScriptLines?: number | null;
-            size?: string | null;
-        } | {
+        }) | {
             /** @description What it would do, as the harness described it. */
             detail: string;
             /** @enum {string} */
@@ -1074,6 +1085,62 @@ export interface components {
             };
             /** Format: int32 */
             version: number;
+        };
+        /**
+         * @description What an agent proposes to change in its session's environment. A field left out changes
+         *     nothing.
+         */
+        EnvironmentChange: {
+            addHosts?: string[];
+            addRepos?: string[];
+            network?: components["schemas"]["NetworkLevel"] | null;
+            removeHosts?: string[];
+            removeRepos?: string[];
+            setVariables?: {
+                [key: string]: string;
+            };
+            /** @description The whole new script; an empty one removes it. */
+            setupScript?: string | null;
+            unsetVariables?: string[];
+        };
+        /** @description The body of a Change environment card. */
+        EnvironmentProposal: {
+            after: components["schemas"]["EnvironmentView"];
+            /**
+             * Format: int32
+             * @description The newest version now, which the change is applied to; the approval makes the next.
+             */
+            baseVersion: number;
+            before: components["schemas"]["EnvironmentView"];
+            change: components["schemas"]["EnvironmentChange"];
+            /**
+             * @description The session is on the built-in default, which cannot change: approving makes a new
+             *     environment of its own and moves the session to it.
+             */
+            createsEnvironment: boolean;
+            /** @description The environment the session is on; `default` is the built-in one. */
+            environment: string;
+            environmentName: string;
+            /**
+             * Format: int32
+             * @description The version the session runs on now, which `before` shows.
+             */
+            sessionVersion: number;
+        };
+        /**
+         * @description What an environment holds that a session's own change can touch: the network, the variables,
+         *     the setup script and the default repos. Network secrets and the machine size are not here.
+         */
+        EnvironmentView: {
+            allowPackageManagers: boolean;
+            allowedHosts: string[];
+            network: components["schemas"]["NetworkLevel"];
+            repos: string[];
+            setupScript: string;
+            /** @description Plain variables with their values, readable by the agent. */
+            variables: {
+                [key: string]: string;
+            };
         };
         /**
          * @description Who spoke: a person, an agent, or the name of a tool an agent called.
@@ -1494,6 +1561,11 @@ export interface components {
         /** @description The latest report for each repo of the session; empty before the first one. */
         SessionChanges: {
             repos: components["schemas"]["RepoChanges"][];
+        };
+        /** @description The environment to move a session to: its newest version. */
+        SessionEnvironment: {
+            /** @description An environment's id; `default` is the built-in one. */
+            environment: string;
         };
         /**
          * @description One item of a session's conversation. A tool call carries what `ToolRecord` keeps, never more:
@@ -3207,6 +3279,51 @@ export interface operations {
                 };
             };
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    set_environment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The session */
+                id: components["schemas"]["SessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SessionEnvironment"];
+            };
+        };
+        responses: {
+            /** @description The session, on the newest version of that environment. The network applies at once; variables, repos and the setup script reach a running machine now and a stopped one when it next starts. Editors and owners of the project */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Session"];
+                };
+            };
+            /** @description The session has ended */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description No such environment, or it is archived */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };

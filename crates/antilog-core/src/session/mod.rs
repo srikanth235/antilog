@@ -1,3 +1,4 @@
+mod environment;
 mod settle;
 
 use crate::deps::Deps;
@@ -10,6 +11,7 @@ use antilog_types::{
     Session, SessionId, SessionParams, SessionStatus, ToolRecord,
 };
 
+pub use environment::move_to_environment;
 pub use settle::settle;
 
 #[derive(Debug, thiserror::Error)]
@@ -251,7 +253,7 @@ pub async fn start<D: Deps>(
 }
 
 /// Tells the session's machine, if it has one yet.
-async fn tell<D: Deps>(
+pub(crate) async fn tell<D: Deps>(
     deps: &D,
     organization: OrganizationId,
     id: SessionId,
@@ -267,7 +269,7 @@ async fn tell<D: Deps>(
     }
 }
 
-async fn active<D: Deps>(
+pub(crate) async fn active<D: Deps>(
     deps: &D,
     organization: OrganizationId,
     id: SessionId,

@@ -1198,3 +1198,71 @@ async fn no_key_or_token_appears_in_a_log_line() {
     // The log does say who and what, so a person can follow a session.
     assert!(logs.contains(&rig.session.to_string()));
 }
+
+#[tokio::test]
+async fn moving_a_session_to_another_version_changes_its_allowlist_at_once() {
+    use antilog_core::environments;
+    use antilog_core::store::{EnvironmentStore, SessionStore};
+    use antilog_types::NewEnvironment;
+
+    let rig = Rig::start(Options {
+        hosts: Vec::new(),
+        allow_private: true,
+        ..Options::default()
+    })
+    .await;
+    let port = echo_server().await;
+    let target = format!("127.0.0.1:{port}");
+    assert_eq!(ping(&rig, &target).await.0, 403, "version 1 allows nothing");
+
+    let org = rig.seed.organization.id;
+    let store = &rig.proxy.store;
+    let move_to = async |network, hosts: &[&str]| {
+        let current = store
+            .environments(org)
+            .await
+            .unwrap()
+            .into_iter()
+            .find(|e| e.id == "bench")
+            .unwrap();
+        let new = NewEnvironment {
+            name: "Bench".into(),
+            network,
+            allowed_hosts: hosts.iter().map(|h| (*h).to_owned()).collect(),
+            allow_package_managers: false,
+            variables: Default::default(),
+            setup_script: String::new(),
+            repos: Vec::new(),
+            network_secrets: Vec::new(),
+            cpus: 2,
+            memory_mb: 8192,
+        };
+        let made = environments::save_for_session(
+            store,
+            org,
+            Some(rig.seed.owner.id),
+            seed::T0,
+            Some(&current),
+            new,
+        )
+        .await
+        .unwrap();
+        store
+            .set_session_environment(
+                org,
+                rig.session,
+                Some("bench"),
+                Some(made.version),
+                &audit(&rig.seed, "session.set_environment"),
+            )
+            .await
+            .unwrap();
+        made.version
+    };
+    // Adding a host applies on the very next tunnel, with no wait for a cache to lapse.
+    assert_eq!(move_to(NetworkLevel::Limited, &["127.0.0.1"]).await, 2);
+    assert_eq!(ping(&rig, &target).await, (200, Some(*b"pong")));
+    // So does taking the network away.
+    assert_eq!(move_to(NetworkLevel::None, &[]).await, 3);
+    assert_eq!(ping(&rig, &target).await.0, 403);
+}

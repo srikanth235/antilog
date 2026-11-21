@@ -60,6 +60,18 @@ pub trait SessionStore {
         audit: Option<&AuditEntry>,
     ) -> impl Future<Output = Result<Session, StoreError>> + Send;
 
+    /// Moves the session to a version of an environment (`None`: the built-in default): the
+    /// session's record and, when it has one, its machine's seed, with the audit entry, together.
+    /// The proxy reads the seed, so the network follows at once. `NotFound` for no such session.
+    fn set_session_environment(
+        &self,
+        organization: OrganizationId,
+        session: SessionId,
+        environment: Option<&str>,
+        version: Option<u32>,
+        audit: &AuditEntry,
+    ) -> impl Future<Output = Result<(), StoreError>> + Send;
+
     /// Idempotent on (session, key). Refused with `NotFound` for a session that is not there.
     fn append_event(&self, event: &NewEvent)
     -> impl Future<Output = Result<(), StoreError>> + Send;

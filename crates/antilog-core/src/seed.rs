@@ -183,6 +183,63 @@ pub async fn runner_suite<S: Store>(store: &S) {
         None
     );
 
+    // Moving a session to an environment version moves its record and its machine's seed together,
+    // and `None` is the built-in default again.
+    let move_log = || {
+        AuditEntry::new(
+            *org,
+            Some(seed.owner.id),
+            "session.set_environment",
+            second.id,
+            AuditOutcome::Done,
+            T0,
+        )
+    };
+    store
+        .set_session_environment(*org, second.id, Some("bench"), Some(2), &move_log())
+        .await
+        .expect("the session moves");
+    let moved = store
+        .machine(second.id)
+        .await
+        .expect("read")
+        .expect("a machine");
+    assert_eq!(moved.seed.environment.as_deref(), Some("bench"));
+    assert_eq!(moved.seed.environment_version, Some(2));
+    assert_eq!(
+        moved.seed.repos,
+        vec!["acme/api".to_owned()],
+        "its repos stay"
+    );
+    let row = store
+        .session(*org, second.id)
+        .await
+        .expect("read")
+        .expect("a session");
+    assert_eq!(
+        (row.environment.as_deref(), row.environment_version),
+        (Some("bench"), Some(2))
+    );
+    store
+        .set_session_environment(*org, second.id, None, None, &move_log())
+        .await
+        .expect("and back");
+    let back = store
+        .machine(second.id)
+        .await
+        .expect("read")
+        .expect("a machine");
+    assert_eq!(
+        (back.seed.environment, back.seed.environment_version),
+        (None, None)
+    );
+    assert!(matches!(
+        store
+            .set_session_environment(*org, SessionId::new(), None, None, &move_log())
+            .await,
+        Err(StoreError::NotFound)
+    ));
+
     // One runner takes work up to its limit, once each.
     let claimed = store.claim("r1", 1, 1_000, 61_000).await.expect("claim");
     assert_eq!(claimed.len(), 1);

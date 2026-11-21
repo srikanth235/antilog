@@ -88,6 +88,10 @@ pub enum Command {
     Message { text: String },
     /// A repo a person approved: clone it into the live machine if it is not there yet.
     AttachRepo { repo: RepoSpec },
+    /// The session moved to another version of its environment (or another environment): the
+    /// machine applies the variables for new processes and runs the setup script if it changed.
+    /// The network needs nothing here, the proxy reads it from the session.
+    ApplyEnvironment { environment: Box<EnvironmentSpec> },
     /// A person's answer to a permission the agent asked.
     Approval { permission: String, reply: Reply },
     /// Interrupt the agent's current turn.

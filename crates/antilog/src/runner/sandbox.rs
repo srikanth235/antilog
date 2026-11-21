@@ -82,6 +82,10 @@ pub struct Paths {
     pub config: PathBuf,
     /// Where the skill packs are unpacked.
     pub skills: PathBuf,
+    /// A shell script every new non-interactive bash in the machine sources (`BASH_ENV` names
+    /// it): the variables of the session's environment as they are now, which the container's
+    /// own environment cannot be changed to.
+    pub env: PathBuf,
 }
 
 /// An address a process in the machine can listen on, and the URL the runner reaches it by.
@@ -237,6 +241,7 @@ pub mod plain {
                     work: self.workdir.join(spec.name()),
                     config: self.config.clone(),
                     skills: self.skills.clone(),
+                    env: self.workdir.join(format!("{}.env.sh", spec.name())),
                 },
                 spec.environment
                     .variables

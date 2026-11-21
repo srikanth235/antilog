@@ -10,8 +10,8 @@ use antilog_core::store::{ChangesStore, OrganizationStore, SessionStore};
 use antilog_core::{agents, budget, environments as env};
 use antilog_types::{
     Agent, ApiError, AutoChoice, CommitChanges, Environment, EventPage, NewAgent, NewEnvironment,
-    ProjectId, SendMessage, Session, SessionBudget, SessionChanges, SessionId, SessionSpend,
-    StartSession,
+    ProjectId, SendMessage, Session, SessionBudget, SessionChanges, SessionEnvironment, SessionId,
+    SessionSpend, StartSession,
 };
 use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
@@ -35,6 +35,7 @@ use super::auth::{App, Authed, Fail};
     commit_changes,
     spend,
     set_budget,
+    set_environment,
     agents,
     auto_agent,
     set_agent,
@@ -528,6 +529,36 @@ async fn set_budget<D: Deps + 'static>(
     Ok(StatusCode::NO_CONTENT)
 }
 
+#[utoipa::path(
+    put, path = "/sessions/{id}/environment", security(("bearer" = [])),
+    params(("id" = SessionId, Path, description = "The session")),
+    request_body = SessionEnvironment,
+    responses(
+        (status = 200, description = "The session, on the newest version of that environment. The network applies at once; variables, repos and the setup script reach a running machine now and a stopped one when it next starts. Editors and owners of the project", body = Session),
+        (status = 409, description = "The session has ended", body = ApiError),
+        (status = 422, description = "No such environment, or it is archived", body = ApiError),
+    )
+)]
+async fn set_environment<D: Deps + 'static>(
+    State(app): Shared<D>,
+    authed: Authed,
+    Path(id): Path<SessionId>,
+    Json(body): Json<SessionEnvironment>,
+) -> Result<Json<Session>, Fail> {
+    let row = owned(&app, &authed, id).await?;
+    permit(&app, &authed, Action::SessionEnvironmentSet, row.project_id).await?;
+    session::move_to_environment(
+        &*app.deps,
+        authed.who.organization,
+        id,
+        Some(authed.who.member),
+        &body.environment,
+    )
+    .await
+    .map(Json)
+    .map_err(Fail::Session)
+}
+
 pub fn routes<D: Deps + 'static>() -> Router<Arc<App<D>>> {
     Router::new()
         .route(
@@ -546,6 +577,7 @@ pub fn routes<D: Deps + 'static>() -> Router<Arc<App<D>>> {
         .route("/sessions/{id}/stop", post(stop::<D>))
         .route("/sessions/{id}/spend", get(spend::<D>))
         .route("/sessions/{id}/budget", put(set_budget::<D>))
+        .route("/sessions/{id}/environment", put(set_environment::<D>))
         .route("/agents", get(agents::<D>))
         .route("/agents/auto", get(auto_agent::<D>))
         .route("/agents/{id}", put(set_agent::<D>))
