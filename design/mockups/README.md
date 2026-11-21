@@ -27,7 +27,7 @@ Every light board, by canvas row (each has a generated `XDark` twin except the r
 | 5 Search | `SearchStart`, `Search`, `SearchEmpty` |
 | 6 Projects | `Projects`, `Project`, `ProjectEmpty` |
 | 6 Customize | `Skills`, `SkillsEmpty`, `SkillDetail`, `AddSkill`, `Connectors`, `ConnectorsEmpty`, `ConnectorDetail`, `AddConnector`, `ConnectorError`, `ConnectorRemove`, `Agents`, `AgentsEmpty`, `AgentsDiscover`, `AgentDetail`, `AddAgent`, `Plugins`, `PluginsEmpty`, `PluginDetail`, `AddPlugin`, `PluginRemove` |
-| 8 Approvals, budgets, connections | `SettingsBudgets`, `SettingsApprovals`, `SettingsConnections`, `SettingsEnvironment` |
+| 8 Approvals, budgets, connections | `SettingsBudgets`, `SettingsApprovals`, `SettingsConnections`, `SettingsEnvironment`, `SettingsEnvironmentSecrets` |
 | 9 Organization | `SettingsProfile`, `SettingsAppearance`, `SettingsTokens`, `SettingsTokensEmpty`, `SettingsDevice`, `SettingsGeneral`, `SettingsMembers`, `SettingsSso`, `SettingsModelKeys`, `SettingsModelKeysAdd`, `SettingsAudit`, `SettingsReadOnly` |
 | 10 Installed web app | `WebInstalled`, `WebNotification`, `WebOffline` |
 

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Settings, Connections, change environment · dark</title>
+<title>Settings, Connections, edit environment · dark</title>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -93,38 +93,24 @@
     </div>
   </main>
   <div class="sd-back"></div>
-  <div class="sd" role="dialog" aria-modal="true" aria-labelledby="sd-t">
-    <div class="sd-top"><h2 id="sd-t" class="t-section">Settings</h2><a class="icon-btn" href="HomeDark.dc.html" aria-label="Close settings"><i class="ic i-close"></i></a></div>
+  <div class="sd edit" role="dialog" aria-modal="true" aria-labelledby="sd-t" style="width: min(600px, calc(100% - 48px)); height: min(820px, calc(100% - 48px));">
+    <div class="sd-top"><h2 id="sd-t" class="t-section">Edit environment</h2><a class="icon-btn" href="SettingsConnectionsDark.dc.html" aria-label="Close"><i class="ic i-close"></i></a></div>
     <div class="sd-body">
-      <!-- part:SettingsRail active="connections" -->
-      <div class="sd-rail">
-        <label class="sfield"><i class="ic i-search" aria-hidden="true"></i><input placeholder="Search settings" aria-label="Search settings" autocomplete="off" spellcheck="false"></label>
-        <nav class="sd-groups" aria-label="Settings sections">
-          <div class="sd-grp" role="group" aria-label="You"><span class="t-label">You</span>
-            <a class="sd-nav" data-item="profile" href="SettingsProfileDark.dc.html"><i class="ic g-user" aria-hidden="true"></i><span class="grow ell">Profile</span></a>
-            <a class="sd-nav" data-item="appearance" href="SettingsAppearanceDark.dc.html"><i class="ic i-sun" aria-hidden="true"></i><span class="grow ell">Appearance</span></a>
-            <a class="sd-nav" data-item="access-tokens" href="SettingsTokensDark.dc.html"><i class="ic i-key" aria-hidden="true"></i><span class="grow ell">Access tokens</span></a>
-            <a class="sd-nav" data-item="device" href="SettingsDeviceDark.dc.html"><i class="ic i-device" aria-hidden="true"></i><span class="grow ell">This device</span></a>
-          </div>
-          <div class="sd-grp" role="group" aria-label="Organization"><span class="t-label">Organization</span>
-            <a class="sd-nav" data-item="general" href="SettingsGeneralDark.dc.html"><i class="ic i-org" aria-hidden="true"></i><span class="grow ell">General</span></a>
-            <a class="sd-nav" data-item="members" href="SettingsMembersDark.dc.html"><i class="ic i-users" aria-hidden="true"></i><span class="grow ell">Members</span></a>
-            <a class="sd-nav" data-item="single-sign-on" href="SettingsSsoDark.dc.html"><i class="ic i-lock" aria-hidden="true"></i><span class="grow ell">Single sign-on</span></a>
-            <a class="sd-nav" data-item="model-keys" href="SettingsModelKeysDark.dc.html"><i class="ic i-key" aria-hidden="true"></i><span class="grow ell">Model keys</span></a>
-            <a class="sd-nav" data-item="approvals" href="SettingsApprovalsDark.dc.html"><i class="ic i-verify" aria-hidden="true"></i><span class="grow ell">Approvals</span></a>
-            <a class="sd-nav" data-item="budgets" href="SettingsBudgetsDark.dc.html"><i class="ic g-gauge" aria-hidden="true"></i><span class="grow ell">Budgets</span></a>
-            <a class="sd-nav" data-item="connections" href="SettingsConnectionsDark.dc.html" aria-current="page"><i class="ic g-blocks" aria-hidden="true"></i><span class="grow ell">Connections</span></a>
-            <a class="sd-nav" data-item="audit-log" href="SettingsAuditDark.dc.html"><i class="ic g-hist" aria-hidden="true"></i><span class="grow ell">Audit log</span></a>
-          </div>
-        </nav>
-      </div>
-      <!-- /part -->
       <div class="sd-main"><div class="sd-sec">
-<h3 class="t-section">Change Checkout staging</h3><p class="sd-lead">Saving makes version 4. Sessions already running keep the version they started on.</p><div class="col g12" style="margin-top: 16px;"><label class="fld"><span class="cap" style="font-size: 13px; color: var(--ink2);">Name</span><input class="in" value="Checkout staging" aria-label="Name"></label><div class="fld"><span class="cap" style="font-size: 13px; color: var(--ink2);">Network</span><div class="segs" role="group" aria-label="Network"><button class="seg">No network</button><button class="seg on">Limited</button><button class="seg">Full</button></div><span class="xs mut">Limited reaches only the hosts below. Full reaches any public host, never a private or loopback address.</span></div><label class="fld"><span class="cap" style="font-size: 13px; color: var(--ink2);">Allowed hosts</span><textarea class="in mono" rows="3" aria-label="Allowed hosts" spellcheck="false">api.stripe.com
-staging.acme.example
-ghcr.io</textarea><span class="xs mut">One exact host name per line. No wildcard, port or address.</span></label><div class="card" style="padding: 2px 16px;"><div class="stg" style="padding: 8px 0;"><div class="tx" style="flex-direction: row; align-items: baseline; gap: 10px;"><span class="t-item">Package registries</span><span class="dd">npm, PyPI, crates.io, Go, Maven and system packages</span></div><span class="ct"><button class="sw on" role="switch" aria-checked="true" aria-label="Package registries"></button></span></div></div><label class="fld"><span class="cap" style="font-size: 13px; color: var(--ink2);">Variables</span><textarea class="in mono" rows="3" aria-label="Variables" spellcheck="false">STRIPE_TEST_KEY=sk_test_placeholder
-CHECKOUT_ENV=staging</textarea><span class="xs mut">One NAME=value per line.</span></label><p class="ap-sec"><i class="ic s i-lock"></i>The agent can read these variables. Put a service key here only if a session needs it. A model key never goes here: Antilog keeps those and never sends them into a session.</p><label class="fld"><span class="cap" style="font-size: 13px; color: var(--ink2);">Setup script</span><textarea class="in mono" rows="4" aria-label="Setup script" spellcheck="false">npm ci
-npm run build</textarea><span class="xs mut">Runs once as root before the agent starts, again only when the version changes. At most 64 KB.</span></label><div class="rw g12 wrap" style="align-items: flex-start;"><div class="col" style="flex: 1 1 220px;"><label class="fld"><span class="cap" style="font-size: 13px; color: var(--ink2);">CPUs</span><span class="selw fill"><select aria-label="CPUs"><option>1 vCPU</option><option>2 vCPU</option><option selected>4 vCPU</option><option>8 vCPU</option><option>16 vCPU</option></select><i class="ic s i-chev" aria-hidden="true"></i></span></label></div><div class="col" style="flex: 1 1 220px;"><label class="fld"><span class="cap" style="font-size: 13px; color: var(--ink2);">Memory</span><span class="selw fill"><select aria-label="Memory"><option>4 GiB</option><option>8 GiB</option><option selected>16 GiB</option><option>32 GiB</option><option>64 GiB</option></select><i class="ic s i-chev" aria-hidden="true"></i></span></label></div></div></div><div class="rw g12" style="margin-top: 20px;"><a class="btn primary" href="SettingsConnectionsDark.dc.html">Save as version 4</a><a class="btn" href="SettingsConnectionsDark.dc.html">Cancel</a></div>
+<p class="sd-lead" style="margin-top: 0;">Saving makes version 4. Sessions already running keep the version they started on.</p>
+<div class="col g12" style="margin-top: 16px;">
+<label class="fld"><span class="cap" style="font-size: 13px; color: var(--ink2);">Name</span><input class="in" value="Checkout staging" aria-label="Name"></label>
+<div class="fld"><span class="cap" style="font-size: 13px; color: var(--ink2);">Repositories</span><span class="xs mut">New sessions in this environment start with these repositories.</span>
+<ul class="rl" aria-label="Repositories"><li class="rli"><i class="ic g-git" aria-hidden="true"></i><span class="mono grow ell">acme/checkout</span><button class="ib" aria-label="Remove acme/checkout"><i class="ic s i-close"></i></button></li><li class="rli"><i class="ic g-git" aria-hidden="true"></i><span class="mono grow ell">acme/payments-sdk</span><button class="ib" aria-label="Remove acme/payments-sdk"><i class="ic s i-close"></i></button></li></ul>
+<div><button class="btn sm"><i class="ic s i-plus"></i>Add</button></div></div>
+<div class="card" style="padding: 2px 16px;">
+<button class="stg nv" aria-expanded="false"><span class="tx"><span class="t-item">Network access</span></span><span class="ct"><span class="val">Full</span><i class="ic s mut i-chev" aria-hidden="true"></i></span></button>
+<button class="stg nv" aria-expanded="false"><span class="tx"><span class="t-item">Network secrets</span></span><span class="ct"><span class="val">None</span><i class="ic s mut i-chev" aria-hidden="true"></i></span></button>
+<button class="stg nv" aria-expanded="false"><span class="tx"><span class="t-item">Setup script</span></span><span class="ct"><span class="val">8 lines</span><i class="ic s mut i-chev" aria-hidden="true"></i></span></button>
+<button class="stg nv" aria-expanded="false"><span class="tx"><span class="t-item">Environment variables</span></span><span class="ct"><span class="val">8 variables</span><i class="ic s mut i-chev" aria-hidden="true"></i></span></button>
+</div>
+</div>
+<div class="rw g12 sp" style="margin-top: 20px;"><button class="btn danger">Archive environment</button><span class="rw g12"><a class="btn" href="SettingsConnectionsDark.dc.html">Cancel</a><a class="btn primary" href="SettingsConnectionsDark.dc.html">Save changes</a></span></div>
       </div></div>
     </div>
   </div>

@@ -1009,3 +1009,15 @@ a.tr-r:hover{background:var(--hover)}
 .dp-leg{display:flex;flex-wrap:wrap;gap:4px 14px;padding:0 0 4px 28px;font-size:12px;color:var(--ink3)}
 .dp-leg i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;background:var(--ink3)}
 .dp-leg i.a{background:var(--accent)}.dp-leg i.b{background:var(--ink2)}
+
+/* Edit environment: a row that opens its editor, and a list of removable rows. */
+.stg.nv{width:100%;background:none;border:0;border-bottom:1px solid var(--line);font:inherit;color:inherit;text-align:left;cursor:pointer;border-radius:0}
+.stg.nv:last-of-type{border-bottom:0}
+.stg.nv:hover .t-item{color:var(--ink)}
+.stg.nv .chev,.stg.nv .i-chev{transition:transform .14s}
+.stg.nv[aria-expanded="true"] .i-chev{transform:rotate(90deg)}
+.nvp{display:flex;flex-direction:column;gap:12px;padding:4px 0 16px}
+.rl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.rli{display:flex;align-items:center;gap:10px;padding:6px 8px 6px 12px;border:1px solid var(--line);border-radius:var(--r2)}
+.rli>.ic{color:var(--ink3);flex:none}
+.rw.sp{justify-content:space-between}
