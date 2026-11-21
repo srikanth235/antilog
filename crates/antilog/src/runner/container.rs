@@ -10,22 +10,20 @@
 //!   under it and a `dockerd` starts inside, so the agent has its own Docker without
 //!   `--privileged`. Without sysbox the container has no Docker daemon; it is never started
 //!   privileged.
-//! - **Setup scripts** run once per environment (`id`, `version`) in a container of the session
-//!   image; the result is committed as an image tagged with both and reused by later sessions. A
-//!   tag not used for seven days is removed.
+//! - **Variables** are set when the container starts, so every `docker exec` in it, the setup
+//!   script included, sees them. The setup script itself is the session's to run, after the
+//!   clones (`session.rs`): the container is always the session image.
 //! - **Secrets stay out of the process list**: values reach `docker` through its own environment
 //!   (`-e NAME`), never as arguments.
 
-use std::collections::BTreeMap;
 use std::net::IpAddr;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::Stdio;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use anyhow::{Context, Result, bail};
-use serde::{Deserialize, Serialize};
 use tokio::io::AsyncWriteExt;
 use tokio::process::Command;
 use tokio::task::JoinHandle;
@@ -39,8 +37,6 @@ const SKILLS: &str = "/opt/antilog/skills";
 /// The port OpenCode listens on inside the container.
 const OPENCODE_PORT: u16 = 4096;
 const SYSBOX: &str = "sysbox-runc";
-/// A setup image not used for this long is removed.
-const SETUP_TTL: Duration = Duration::from_secs(7 * 24 * 60 * 60);
 
 /// One `docker` call. Values in `env` reach the command through the `docker` process's own
 /// environment.
@@ -95,8 +91,6 @@ pub struct ContainerConfig {
     pub image: String,
     /// `host:port` of the proxy, which the per-session relay carries traffic to.
     pub proxy_addr: String,
-    /// Where the runner keeps what it must remember between sessions.
-    pub state_dir: PathBuf,
     /// The most disk one container may write, in GiB; 0 for no limit. Docker enforces it only
     /// where the storage driver supports `--storage-opt size=` (`probe_disk`).
     pub disk_gb: u64,
@@ -113,78 +107,6 @@ fn supports_disk_size(driver: &str, status: &str) -> bool {
             .contains("\"BackingFilesystem\",\"xfs\""),
         _ => false,
     }
-}
-
-/// The setup images this runner made and when each was last used.
-#[derive(Debug, Default, Serialize, Deserialize)]
-struct Images {
-    used: BTreeMap<String, i64>,
-}
-
-impl Images {
-    fn load(path: &Path) -> Self {
-        std::fs::read(path)
-            .ok()
-            .and_then(|bytes| serde_json::from_slice(&bytes).ok())
-            .unwrap_or_default()
-    }
-
-    fn save(&self, path: &Path) {
-        if let Some(parent) = path.parent() {
-            std::fs::create_dir_all(parent).ok();
-        }
-        if let Ok(bytes) = serde_json::to_vec(self) {
-            std::fs::write(path, bytes).ok();
-        }
-    }
-
-    fn touch(&mut self, tag: &str, now: i64) {
-        self.used.insert(tag.to_owned(), now);
-    }
-
-    fn expired(&self, now: i64, ttl: Duration) -> Vec<String> {
-        let ttl = i64::try_from(ttl.as_millis()).unwrap_or(i64::MAX);
-        self.used
-            .iter()
-            .filter(|(_, used)| now.saturating_sub(**used) >= ttl)
-            .map(|(tag, _)| tag.clone())
-            .collect()
-    }
-}
-
-fn now_ms() -> i64 {
-    std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map_or(0, |since| {
-            i64::try_from(since.as_millis()).unwrap_or(i64::MAX)
-        })
-}
-
-/// The image of an environment's setup: tagged with the environment's id and version.
-fn setup_tag(id: &str, version: u32) -> String {
-    let clean: String = id
-        .to_ascii_lowercase()
-        .chars()
-        .map(|c| {
-            if c.is_ascii_alphanumeric() || c == '.' || c == '_' {
-                c
-            } else {
-                '-'
-            }
-        })
-        .collect();
-    let mut tag = format!("antilog-env:{clean}-v{version}");
-    if clean != id {
-        // A name changed by cleaning could clash with another: tell them apart.
-        use sha2::{Digest, Sha256};
-        let hash: String = Sha256::digest(id.as_bytes())
-            .iter()
-            .take(4)
-            .map(|byte| format!("{byte:02x}"))
-            .collect();
-        tag = format!("antilog-env:{clean}-{hash}-v{version}");
-    }
-    tag
 }
 
 fn encode(part: &str) -> String {
@@ -263,7 +185,6 @@ async fn relay(bind: IpAddr, upstream: String) -> Result<(u16, JoinHandle<()>)> 
 pub struct ContainerSandbox<C: Cli> {
     cli: Arc<C>,
     config: ContainerConfig,
-    images: Mutex<Images>,
     /// Containers get `--storage-opt size=`: the storage driver was found able (`probe_disk`) and
     /// has not refused it since.
     disk_limited: AtomicBool,
@@ -271,11 +192,9 @@ pub struct ContainerSandbox<C: Cli> {
 
 impl<C: Cli> ContainerSandbox<C> {
     pub fn new(cli: C, config: ContainerConfig) -> Self {
-        let images = Images::load(&config.state_dir.join("setup-images.json"));
         Self {
             cli: Arc::new(cli),
             config,
-            images: Mutex::new(images),
             disk_limited: AtomicBool::new(false),
         }
     }
@@ -349,18 +268,6 @@ impl<C: Cli> ContainerSandbox<C> {
             .await
     }
 
-    fn images(&self) -> std::sync::MutexGuard<'_, Images> {
-        self.images
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner)
-    }
-
-    fn remember(&self, edit: impl FnOnce(&mut Images)) {
-        let mut images = self.images();
-        edit(&mut images);
-        images.save(&self.config.state_dir.join("setup-images.json"));
-    }
-
     async fn docker(&self, args: impl AsRef<[&str]>) -> Result<Output> {
         self.cli
             .run(Call {
@@ -368,27 +275,6 @@ impl<C: Cli> ContainerSandbox<C> {
                 ..Call::default()
             })
             .await
-    }
-
-    /// Removes the setup images nobody has used for seven days.
-    async fn reap(&self) {
-        let expired = self.images().expired(now_ms(), SETUP_TTL);
-        for tag in expired {
-            match self.docker(["rmi", &tag]).await {
-                Ok(out) if out.status == 0 => {
-                    self.remember(|images| {
-                        images.used.remove(&tag);
-                    });
-                    tracing::info!(%tag, "removed a setup image unused for 7 days");
-                }
-                Ok(out) if String::from_utf8_lossy(&out.stderr).contains("No such image") => {
-                    self.remember(|images| {
-                        images.used.remove(&tag);
-                    });
-                }
-                _ => tracing::warn!(%tag, "could not remove an unused setup image"),
-            }
-        }
     }
 
     /// The session's own internal network, and the relay on its gateway.
@@ -465,71 +351,8 @@ impl<C: Cli> ContainerSandbox<C> {
         ]
     }
 
-    /// The image a session starts from: the environment's setup snapshot when it has a script,
-    /// made now if this runner has not made it yet.
-    async fn image_for(
-        &self,
-        spec: &SandboxSpec,
-        net: &Net,
-        env: &[(String, String)],
-    ) -> Result<String> {
-        let environment = &spec.environment;
-        if environment.setup_script.trim().is_empty() {
-            return Ok(self.config.image.clone());
-        }
-        let tag = setup_tag(&environment.id, environment.version);
-        let present = self.docker(["image", "inspect", &tag]).await?.status == 0;
-        if !present {
-            let name = format!("antilog-setup-{}", spec.name());
-            let mut args = vec![
-                "run".to_owned(),
-                "--name".to_owned(),
-                name.clone(),
-                "--network".to_owned(),
-                net.name.clone(),
-            ];
-            args.extend(Self::limits(spec));
-            args.extend(env_flags(env));
-            args.extend([
-                self.config.image.clone(),
-                "sh".to_owned(),
-                "-c".to_owned(),
-                environment.setup_script.clone(),
-            ]);
-            let built = async {
-                let out = self.run_sized(args, env.to_vec()).await?;
-                if out.status != 0 {
-                    let log = String::from_utf8_lossy(&out.stderr);
-                    let tail: String = log
-                        .chars()
-                        .rev()
-                        .take(2000)
-                        .collect::<Vec<_>>()
-                        .into_iter()
-                        .rev()
-                        .collect();
-                    bail!(
-                        "the environment's setup script failed ({}): {}",
-                        out.status,
-                        tail.trim()
-                    );
-                }
-                self.docker(["commit", &name, &tag])
-                    .await?
-                    .ok("saving the setup image")?;
-                anyhow::Ok(())
-            }
-            .await;
-            self.docker(["rm", "-f", "-v", &name]).await.ok();
-            built?;
-        }
-        self.remember(|images| images.touch(&tag, now_ms()));
-        Ok(tag)
-    }
-
     async fn boot(&self, spec: &SandboxSpec, net: &Net) -> Result<Booted> {
         let env = machine_env(spec, proxy_env(&net.gateway, net.port, &spec.proxy_token));
-        let image = self.image_for(spec, net, &env).await?;
         let name = format!("antilog-{}", spec.name());
         let sysbox = self
             .docker(["info", "--format", "{{json .Runtimes}}"])
@@ -556,7 +379,11 @@ impl<C: Cli> ContainerSandbox<C> {
             args.push(format!("--runtime={SYSBOX}"));
         }
         args.extend(env_flags(&env));
-        args.extend([image, "sleep".to_owned(), "infinity".to_owned()]);
+        args.extend([
+            self.config.image.clone(),
+            "sleep".to_owned(),
+            "infinity".to_owned(),
+        ]);
         self.run_sized(args, env.clone())
             .await?
             .ok("starting the container")?;
@@ -580,7 +407,6 @@ impl<C: Cli> Sandbox for ContainerSandbox<C> {
     type Machine = ContainerMachine<C>;
 
     async fn start(&self, spec: &SandboxSpec) -> Result<ContainerMachine<C>> {
-        self.reap().await;
         let net = self.network(spec).await?;
         let booted = match self.boot(spec, &net).await {
             Ok(booted) => booted,
@@ -757,6 +583,7 @@ impl<C: Cli> Machine for ContainerMachine<C> {
 #[cfg(test)]
 mod tests {
     use std::collections::VecDeque;
+    use std::path::Path;
 
     use antilog_types::{EnvironmentSpec, SessionId};
 
@@ -807,17 +634,12 @@ mod tests {
         }
     }
 
-    fn temp() -> PathBuf {
-        std::env::temp_dir().join(format!("antilog-container-{}", uuid::Uuid::now_v7()))
-    }
-
-    fn sandbox(recorder: &Arc<Recorder>, state: &Path) -> ContainerSandbox<Arc<Recorder>> {
+    fn sandbox(recorder: &Arc<Recorder>) -> ContainerSandbox<Arc<Recorder>> {
         ContainerSandbox::new(
             recorder.clone(),
             ContainerConfig {
                 image: "antilog-session:test".into(),
                 proxy_addr: "127.0.0.1:9".into(),
-                state_dir: state.to_path_buf(),
                 disk_gb: 20,
             },
         )
@@ -853,7 +675,6 @@ mod tests {
         info: Option<(i32, &str, &str)>,
         run_answer: Option<(i32, &str)>,
     ) -> Vec<String> {
-        let state = temp();
         let recorder = Arc::new(Recorder::default());
         network_answers(&recorder, "172.20.0.2");
         if let Some((status, driver, details)) = info {
@@ -862,7 +683,7 @@ mod tests {
         if let Some((status, stderr)) = run_answer {
             recorder.answer("run ", status, "", stderr);
         }
-        let sandbox = sandbox(&recorder, &state);
+        let sandbox = sandbox(&recorder);
         sandbox.probe_disk().await;
         let _machine = sandbox.start(&spec(EnvironmentSpec::default())).await;
         recorder.lines()
@@ -907,10 +728,9 @@ mod tests {
 
     #[tokio::test]
     async fn a_container_starts_with_limits_an_internal_network_and_the_proxy() {
-        let state = temp();
         let recorder = Arc::new(Recorder::default());
         network_answers(&recorder, "172.20.0.2");
-        let sandbox = sandbox(&recorder, &state);
+        let sandbox = sandbox(&recorder);
         let mut environment = EnvironmentSpec {
             cpus: 3,
             memory_mb: 4096,
@@ -989,15 +809,13 @@ mod tests {
             Path::new("/etc/opencode/opencode.json")
         );
         assert_eq!(machine.paths().skills, Path::new("/opt/antilog/skills"));
-        std::fs::remove_dir_all(&state).ok();
     }
 
     #[tokio::test]
     async fn commands_run_through_docker_exec_and_secrets_stay_out_of_the_arguments() {
-        let state = temp();
         let recorder = Arc::new(Recorder::default());
         network_answers(&recorder, "172.20.0.2");
-        let sandbox = sandbox(&recorder, &state);
+        let sandbox = sandbox(&recorder);
         let machine = sandbox
             .start(&spec(EnvironmentSpec::default()))
             .await
@@ -1044,12 +862,10 @@ mod tests {
                 .iter()
                 .any(|l| l.contains("pw") && l.contains("OPENCODE") && l.contains("=pw"))
         );
-        std::fs::remove_dir_all(&state).ok();
     }
 
     #[tokio::test]
     async fn with_sysbox_the_agent_gets_docker_without_privileges() {
-        let state = temp();
         let recorder = Arc::new(Recorder::default());
         recorder.answer(
             "info",
@@ -1058,7 +874,7 @@ mod tests {
             "",
         );
         network_answers(&recorder, "172.20.0.2");
-        let sandbox = sandbox(&recorder, &state);
+        let sandbox = sandbox(&recorder);
         let spec = spec(EnvironmentSpec::default());
         let machine = sandbox.start(&spec).await.unwrap();
         let lines = recorder.lines();
@@ -1074,15 +890,13 @@ mod tests {
             lines.contains(&format!("exec {name} docker info")),
             "{lines:?}"
         );
-        std::fs::remove_dir_all(&state).ok();
     }
 
     #[tokio::test]
     async fn stopping_removes_the_container_its_disk_and_its_network_once() {
-        let state = temp();
         let recorder = Arc::new(Recorder::default());
         network_answers(&recorder, "172.20.0.2");
-        let sandbox = sandbox(&recorder, &state);
+        let sandbox = sandbox(&recorder);
         let spec = spec(EnvironmentSpec::default());
         let machine = sandbox.start(&spec).await.unwrap();
         let before = recorder.lines().len();
@@ -1095,151 +909,51 @@ mod tests {
                 format!("network rm antilog-{}", spec.session),
             ]
         );
-        std::fs::remove_dir_all(&state).ok();
     }
 
     #[tokio::test]
     async fn a_container_that_will_not_start_leaves_nothing_behind() {
-        let state = temp();
         let recorder = Arc::new(Recorder::default());
         recorder.answer("network inspect", 0, "127.0.0.1\n", "");
         recorder.answer("run -d", 125, "", "no such image");
-        let sandbox = sandbox(&recorder, &state);
+        let sandbox = sandbox(&recorder);
         let spec = spec(EnvironmentSpec::default());
         let error = sandbox.start(&spec).await.err().unwrap();
         assert!(format!("{error:#}").contains("no such image"), "{error:#}");
         let lines = recorder.lines();
         assert!(lines.contains(&format!("rm -f -v antilog-{}", spec.session)));
         assert!(lines.contains(&format!("network rm antilog-{}", spec.session)));
-        std::fs::remove_dir_all(&state).ok();
     }
 
     #[tokio::test]
-    async fn a_setup_script_runs_once_per_id_and_version_and_the_image_is_reused() {
-        let state = temp();
+    async fn the_container_is_always_the_session_image_with_the_variables_set_and_no_setup() {
         let recorder = Arc::new(Recorder::default());
-        let sandbox = sandbox(&recorder, &state);
-        let environment = EnvironmentSpec {
+        network_answers(&recorder, "172.20.0.2");
+        let sandbox = sandbox(&recorder);
+        let mut environment = EnvironmentSpec {
             id: "py".into(),
             version: 4,
             setup_script: "pip install numpy".into(),
             ..EnvironmentSpec::default()
         };
-
-        // First session: no image yet (inspect fails), so the script runs and is committed.
-        network_answers(&recorder, "172.20.0.2");
-        recorder.answer("image inspect", 1, "", "No such image");
-        let first = spec(environment.clone());
-        let machine = sandbox.start(&first).await.unwrap();
+        environment.variables.insert("TOKEN".into(), "v".into());
+        sandbox.start(&spec(environment)).await.unwrap();
         let lines = recorder.lines();
-        let setup = lines
-            .iter()
-            .find(|l| l.starts_with("run --name antilog-setup-"))
-            .expect("the script ran in a container of the session image");
+        // The script is the session's to run after the clones: no setup container, no commit, no
+        // tagged image, and the container starts from the session image with the variables set.
         assert!(
-            setup.contains("--network") && setup.contains("--cpus 2"),
-            "{setup}"
-        );
-        assert!(
-            setup.ends_with("antilog-session:test sh -c pip install numpy"),
-            "{setup}"
-        );
-        assert!(lines.contains(&format!(
-            "commit antilog-setup-{} antilog-env:py-v4",
-            first.session
-        )));
-        assert!(lines.contains(&format!("rm -f -v antilog-setup-{}", first.session)));
-        let run = lines.iter().find(|l| l.starts_with("run -d")).unwrap();
-        assert!(
-            run.contains("antilog-env:py-v4 sleep infinity"),
-            "the session starts from the snapshot: {run}"
-        );
-        machine.stop().await;
-
-        // Second session, same id and version: the image is there, the script does not run.
-        let before = recorder.lines().len();
-        network_answers(&recorder, "172.20.0.3");
-        let second = sandbox.start(&spec_for(&environment)).await.unwrap();
-        let lines = recorder.lines();
-        assert!(
-            !lines[before..]
+            !lines
                 .iter()
                 .any(|l| l.contains("antilog-setup-") || l.starts_with("commit")),
-            "{:?}",
-            &lines[before..]
+            "{lines:?}"
         );
+        let run = lines.iter().find(|l| l.starts_with("run -d")).unwrap();
         assert!(
-            lines[before..]
-                .iter()
-                .any(|l| l.contains("antilog-env:py-v4 sleep infinity"))
+            run.ends_with("antilog-session:test sleep infinity"),
+            "{run}"
         );
-        second.stop().await;
-
-        // A new version is another image.
-        let before = recorder.lines().len();
-        network_answers(&recorder, "172.20.0.4");
-        recorder.answer("image inspect", 1, "", "No such image");
-        let bumped = EnvironmentSpec {
-            version: 5,
-            ..environment
-        };
-        sandbox.start(&spec_for(&bumped)).await.unwrap();
-        assert!(
-            recorder.lines()[before..]
-                .iter()
-                .any(|l| l.contains("antilog-env:py-v5") && l.starts_with("commit"))
-        );
-        std::fs::remove_dir_all(&state).ok();
-    }
-
-    fn spec_for(environment: &EnvironmentSpec) -> SandboxSpec {
-        spec(environment.clone())
-    }
-
-    #[tokio::test]
-    async fn a_failed_setup_script_fails_the_start_and_keeps_no_image() {
-        let state = temp();
-        let recorder = Arc::new(Recorder::default());
-        network_answers(&recorder, "172.20.0.2");
-        recorder.answer("image inspect", 1, "", "");
-        recorder.answer("run --name antilog-setup-", 7, "", "boom");
-        let sandbox = sandbox(&recorder, &state);
-        let environment = EnvironmentSpec {
-            setup_script: "false".into(),
-            ..EnvironmentSpec::default()
-        };
-        let error = sandbox.start(&spec(environment)).await.err().unwrap();
-        assert!(format!("{error:#}").contains("setup script failed (7): boom"));
-        let lines = recorder.lines();
-        assert!(!lines.iter().any(|l| l.starts_with("commit")));
-        assert!(
-            lines
-                .iter()
-                .any(|l| l.starts_with("rm -f -v antilog-setup-"))
-        );
-        assert!(!sandbox.images().used.contains_key("antilog-env:default-v1"));
-        std::fs::remove_dir_all(&state).ok();
-    }
-
-    #[tokio::test]
-    async fn a_setup_image_unused_for_seven_days_is_removed() {
-        let state = temp();
-        let recorder = Arc::new(Recorder::default());
-        let sandbox = sandbox(&recorder, &state);
-        let day = 24 * 60 * 60 * 1000;
-        sandbox.remember(|images| {
-            images.touch("antilog-env:old-v1", now_ms() - 8 * day);
-            images.touch("antilog-env:fresh-v1", now_ms() - 6 * day);
-        });
-        // What the runner remembers survives a restart.
-        let sandbox = self::sandbox(&recorder, &state);
-        sandbox.reap().await;
-        assert_eq!(recorder.lines(), ["rmi antilog-env:old-v1"]);
-        assert_eq!(
-            sandbox.images().used.keys().collect::<Vec<_>>(),
-            ["antilog-env:fresh-v1"]
-        );
-        std::fs::remove_dir_all(&state).ok();
+        assert!(run.contains("-e TOKEN"), "{run}");
+        assert!(!run.contains("pip install"), "{run}");
     }
 
     #[tokio::test]
@@ -1263,12 +977,5 @@ mod tests {
         client.read_exact(&mut answer).await.unwrap();
         assert_eq!(&answer, b"CONNECT");
         task.abort();
-    }
-
-    #[test]
-    fn a_setup_tag_carries_the_id_and_the_version() {
-        assert_eq!(setup_tag("default", 1), "antilog-env:default-v1");
-        assert_ne!(setup_tag("Py 3", 2), setup_tag("py-3", 2));
-        assert!(setup_tag("Py 3", 2).starts_with("antilog-env:py-3-"));
     }
 }

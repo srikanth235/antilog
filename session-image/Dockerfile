@@ -1,7 +1,7 @@
 # The image every session's container starts from (`antilog runner --image`). It holds the harness
 # (OpenCode, one pinned version), git and Docker for the agent. It holds no infrastructure tool:
 # no OpenTofu, Terraform or cloud CLI (docs/V0.md). An environment's setup script adds what a
-# project needs on top, once per environment version.
+# project needs on top: the runner runs it in each fresh container after cloning the repos.
 #
 #   docker build -t antilog-session:latest session-image
 #   (behind a TLS-inspecting proxy add: --secret id=ca,src=/path/to/ca.crt)

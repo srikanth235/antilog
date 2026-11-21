@@ -934,6 +934,293 @@ async fn a_skill_pack_is_unpacked_into_the_skills_folder() {
     std::fs::remove_dir_all(&temp).ok();
 }
 
+// ---- the setup script -------------------------------------------------------------------------
+
+/// A machine of the plain backend in a folder of its own, with the variables given.
+fn setup_machine(variables: &[(&str, &str)]) -> (PlainMachine, PathBuf) {
+    let temp = std::env::temp_dir().join(format!("antilog-setup-{}", Uuid::now_v7()));
+    let work = temp.join("work");
+    std::fs::create_dir_all(&work).unwrap();
+    let machine = PlainMachine::new(
+        Paths {
+            work: work.clone(),
+            config: temp.join("opencode.json"),
+            skills: temp.join("skills"),
+        },
+        variables
+            .iter()
+            .map(|(k, v)| ((*k).to_owned(), (*v).to_owned()))
+            .collect(),
+    );
+    (machine, work)
+}
+
+fn setup_spec(script: &str) -> antilog_types::SessionSpec {
+    antilog_types::SessionSpec {
+        session: antilog_types::SessionId::new(),
+        organization: antilog_types::OrganizationId::new(),
+        agent: "opencode".into(),
+        model: "v/m".into(),
+        repos: vec![antilog_types::RepoSpec {
+            name: "acme/api".into(),
+            url: "x".into(),
+            token: Some("ghs_secret".into()),
+        }],
+        environment: antilog_types::EnvironmentSpec {
+            setup_script: script.into(),
+            ..antilog_types::EnvironmentSpec::default()
+        },
+        skills: vec![],
+        opencode_config: json!({}),
+        model_token: String::new(),
+        mcp_token: String::new(),
+        runner_token: "tok".into(),
+        resume: false,
+    }
+}
+
+#[tokio::test]
+async fn the_setup_script_runs_in_the_folder_of_the_checkouts_with_the_variables() {
+    use super::session::{Setup, run_setup};
+    let (machine, work) = setup_machine(&[("GREETING", "hello")]);
+    std::fs::create_dir_all(work.join("api")).unwrap();
+    std::fs::write(work.join("api/file.txt"), "base").unwrap();
+    let spec = setup_spec("echo \"$GREETING $(cat api/file.txt) $(basename \"$PWD\")\" > ran.txt");
+    let outcome = run_setup(&machine, &work, &spec, Duration::from_secs(30)).await;
+    assert_eq!(outcome, Setup::Done);
+    assert_eq!(
+        std::fs::read_to_string(work.join("ran.txt"))
+            .unwrap()
+            .trim(),
+        "hello base work"
+    );
+    // Once per container: the same machine does not run it again.
+    std::fs::remove_file(work.join("ran.txt")).unwrap();
+    assert_eq!(
+        run_setup(&machine, &work, &spec, Duration::from_secs(30)).await,
+        Setup::Skipped
+    );
+    assert!(!work.join("ran.txt").exists());
+    // No script, nothing to run.
+    assert_eq!(
+        run_setup(
+            &machine,
+            &work,
+            &setup_spec("  \n"),
+            Duration::from_secs(30)
+        )
+        .await,
+        Setup::Skipped
+    );
+    std::fs::remove_dir_all(work.parent().unwrap()).ok();
+}
+
+#[tokio::test]
+async fn a_failing_setup_script_is_reported_with_its_exit_code_and_the_end_of_its_output() {
+    use super::session::{Setup, run_setup};
+    let (machine, work) = setup_machine(&[]);
+    // Ten kilobytes first, so only the end can be kept; the clone credential is taken out.
+    let spec = setup_spec(
+        "head -c 10000 /dev/zero | tr '\\0' 'x'; echo; echo building ghs_secret; echo oops >&2; exit 7",
+    );
+    let Setup::Failed(failure) = run_setup(&machine, &work, &spec, Duration::from_secs(30)).await
+    else {
+        panic!("it failed");
+    };
+    assert_eq!((failure.exit, failure.timed_out), (Some(7), false));
+    assert!(failure.tail.len() <= 2048, "{}", failure.tail.len());
+    assert!(failure.tail.contains("building ***") && failure.tail.ends_with("oops"));
+    assert!(!failure.tail.contains("ghs_secret"));
+    let note = failure.note(Duration::from_secs(600));
+    assert!(note.contains("failed (exit code 7)"), "{note}");
+    assert!(note.contains("tools it installs may be missing"), "{note}");
+    assert!(failure.line().contains("setup script failed"));
+    std::fs::remove_dir_all(work.parent().unwrap()).ok();
+}
+
+#[tokio::test]
+async fn a_setup_script_that_runs_out_of_time_is_stopped_and_reported_like_a_failure() {
+    use super::session::{Setup, run_setup};
+    let (machine, work) = setup_machine(&[]);
+    let spec = setup_spec("echo started; sleep 60; echo never");
+    let began = std::time::Instant::now();
+    let Setup::Failed(failure) = run_setup(&machine, &work, &spec, Duration::from_secs(1)).await
+    else {
+        panic!("it timed out");
+    };
+    assert!(
+        began.elapsed() < Duration::from_secs(20),
+        "{:?}",
+        began.elapsed()
+    );
+    assert!(failure.timed_out);
+    assert_eq!(failure.exit, Some(124));
+    assert!(failure.tail.contains("started") && !failure.tail.contains("never"));
+    let note = failure.note(Duration::from_secs(1));
+    assert!(
+        note.contains("did not finish in 1 seconds and was stopped (exit code 124)"),
+        "{note}"
+    );
+    assert!(failure.line().contains("timed out"));
+    std::fs::remove_dir_all(work.parent().unwrap()).ok();
+}
+
+/// A session on a stored environment with a setup script and default repos.
+async fn start_on_environment(world: &World, script: &str, repos: &[&str]) -> Session {
+    use antilog_types::{NetworkLevel, NewEnvironment};
+    let who = Principal {
+        organization: world.seed.organization.id,
+        member: world.seed.owner.id,
+    };
+    antilog_core::environments::create(
+        &world.deps.store,
+        &who,
+        1,
+        NewEnvironment {
+            name: "Bench".into(),
+            network: NetworkLevel::Limited,
+            allowed_hosts: Vec::new(),
+            allow_package_managers: true,
+            variables: [("GREETING".to_owned(), "hello".to_owned())].into(),
+            setup_script: script.into(),
+            repos: repos.iter().map(|repo| (*repo).to_owned()).collect(),
+            network_secrets: Vec::new(),
+            cpus: 2,
+            memory_mb: 4096,
+        },
+    )
+    .await
+    .unwrap();
+    session::start(
+        &*world.deps,
+        world.seed.organization.id,
+        world.seed.project.id,
+        NewSession {
+            agent: "opencode".into(),
+            model: "vendor/model-1".into(),
+            prompt: "go".into(),
+            repos: vec!["acme/api".into()],
+            environment: Some("bench".into()),
+            actor: world.seed.owner.id,
+            ..NewSession::default()
+        },
+    )
+    .await
+    .unwrap()
+}
+
+#[tokio::test]
+async fn a_session_runs_the_setup_script_after_the_clones_and_before_the_agent() {
+    let world = world().await;
+    // The script sees the default repo and the picked one, and the environment's variable.
+    let session = start_on_environment(
+        &world,
+        "echo \"$GREETING $(cat api/file.txt) $(cat lib/lib.txt)\" > ran.txt",
+        &["acme/lib"],
+    )
+    .await;
+    assert_eq!(session.repos, vec!["acme/lib", "acme/api"]);
+    until("the first prompt", async || {
+        (!locked(&world.shared).prompts.is_empty()).then_some(())
+    })
+    .await;
+    let folder = world.workdir.join(session.id.to_string());
+    assert_eq!(
+        std::fs::read_to_string(folder.join("ran.txt"))
+            .unwrap()
+            .trim(),
+        "hello base lib"
+    );
+    // It worked: nothing to tell.
+    assert_eq!(locked(&world.shared).prompts[0]["parts"][0]["text"], "go");
+    assert!(
+        transcript(&world, &session)
+            .await
+            .iter()
+            .all(|text| !text.contains("setup script"))
+    );
+}
+
+#[tokio::test]
+async fn a_failing_setup_script_does_not_fail_the_session_and_everyone_is_told() {
+    let world = world().await;
+    let session = start_on_environment(&world, "echo installing; echo boom >&2; exit 3", &[]).await;
+    until("the first prompt", async || {
+        (!locked(&world.shared).prompts.is_empty()).then_some(())
+    })
+    .await;
+    // The agent starts, and its first message says what went wrong with the machine.
+    let prompt = locked(&world.shared).prompts[0]["parts"][0]["text"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    assert!(
+        prompt.starts_with("[Antilog] The environment's setup script failed"),
+        "{prompt}"
+    );
+    assert!(prompt.ends_with("\n\ngo"), "{prompt}");
+    // The person reads a note with the exit code and the end of the output.
+    let note = until("the note", async || {
+        transcript(&world, &session)
+            .await
+            .into_iter()
+            .find(|text| text.contains("setup script"))
+    })
+    .await;
+    assert!(note.contains("exit code 3"), "{note}");
+    assert!(
+        note.contains("installing") && note.contains("boom"),
+        "{note}"
+    );
+    assert_ne!(state(&world, &session).await, MachineState::Failed);
+    // Only the first message carries the line.
+    session::message(
+        &*world.deps,
+        world.seed.organization.id,
+        session.id,
+        Some(world.seed.owner.id),
+        "next",
+    )
+    .await
+    .unwrap();
+    until("the second prompt", async || {
+        (locked(&world.shared).prompts.len() == 2).then_some(())
+    })
+    .await;
+    assert_eq!(locked(&world.shared).prompts[1]["parts"][0]["text"], "next");
+}
+
+#[tokio::test]
+async fn a_setup_script_that_times_out_does_not_fail_the_session_either() {
+    let world = world_with(
+        |config| config.setup_timeout = Duration::from_secs(1),
+        Arc::default(),
+    )
+    .await;
+    let session = start_on_environment(&world, "echo slow; sleep 60", &[]).await;
+    until("the first prompt", async || {
+        (!locked(&world.shared).prompts.is_empty()).then_some(())
+    })
+    .await;
+    let prompt = locked(&world.shared).prompts[0]["parts"][0]["text"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    assert!(prompt.contains("setup script timed out"), "{prompt}");
+    let note = until("the note", async || {
+        transcript(&world, &session)
+            .await
+            .into_iter()
+            .find(|text| text.contains("setup script"))
+    })
+    .await;
+    assert!(
+        note.contains("did not finish in 1 seconds and was stopped (exit code 124)"),
+        "{note}"
+    );
+    assert!(note.contains("slow"), "{note}");
+}
+
 // ---- the real OpenCode, by hand ---------------------------------------------------------------
 //
 // `ANTILOG_OPENCODE=/path/to/opencode ANTILOG_OPENCODE_MODEL=provider/model \

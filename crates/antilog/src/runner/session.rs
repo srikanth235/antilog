@@ -3,7 +3,7 @@
 
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use antilog_types::{
     Command, Envelope, Item, Release, ReleaseOutcome, RepoSpec, SessionId, SessionSpec,
@@ -98,6 +98,153 @@ pub(super) async fn clone_all<M: Machine>(
     Ok(())
 }
 
+/// What the setup script left behind, in a file in the session's folder: a machine that is
+/// started again in the same container does not run the script a second time.
+const SETUP_MARKER: &str = ".antilog-setup";
+/// How much of the script's output the note keeps: the end, where the reason is.
+const NOTE_BYTES: usize = 2048;
+
+/// How the environment's setup script went.
+#[derive(Debug, PartialEq, Eq)]
+pub(super) enum Setup {
+    /// There is none, or it already ran in this container.
+    Skipped,
+    Done,
+    /// It failed or timed out: the session goes on without it, and the person and the agent are
+    /// told.
+    Failed(Failure),
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub(super) struct Failure {
+    /// The exit status; `None` when the script could not be run at all.
+    pub exit: Option<i32>,
+    pub timed_out: bool,
+    /// The last 2 KB of what it printed.
+    pub tail: String,
+}
+
+impl Failure {
+    /// The conversation's note: what happened, the exit code and the end of the output.
+    pub(super) fn note(&self, limit: Duration) -> String {
+        let how = if self.timed_out {
+            format!("did not finish in {} and was stopped", span(limit))
+        } else {
+            "failed".to_owned()
+        };
+        let code = self.exit.map_or_else(
+            || "it could not be run".to_owned(),
+            |code| format!("exit code {code}"),
+        );
+        let mut text = format!(
+            "The environment's setup script {how} ({code}). The session started without it, so tools it installs may be missing."
+        );
+        if !self.tail.is_empty() {
+            text.push_str("\n\nLast output:\n");
+            text.push_str(&self.tail);
+        }
+        text
+    }
+
+    /// The line the agent reads before the person's first message.
+    pub(super) fn line(&self) -> String {
+        let how = if self.timed_out {
+            "timed out"
+        } else {
+            "failed"
+        };
+        format!(
+            "[Antilog] The environment's setup script {how}, so tools it installs may be missing."
+        )
+    }
+}
+
+fn span(limit: Duration) -> String {
+    let secs = limit.as_secs();
+    if secs >= 60 && secs.is_multiple_of(60) {
+        format!("{} minutes", secs / 60)
+    } else {
+        format!("{secs} seconds")
+    }
+}
+
+/// The last `NOTE_BYTES` bytes of `bytes` as text, from a whole character, with each repo's
+/// clone credential taken out.
+fn tail(bytes: &[u8], spec: &SessionSpec) -> String {
+    let start = bytes.len().saturating_sub(NOTE_BYTES);
+    let mut text = String::from_utf8_lossy(bytes.get(start..).unwrap_or_default())
+        .trim_start_matches('\u{FFFD}')
+        .trim()
+        .to_owned();
+    for token in spec.repos.iter().filter_map(|repo| repo.token.as_deref()) {
+        text = text.replace(token, "***");
+    }
+    text
+}
+
+/// Runs the environment's setup script as root, from the folder that holds the repo checkouts
+/// (each repo a subfolder named after it), with the environment's variables set in the machine.
+/// It runs once per container, after the clones and before the agent starts. A script that fails
+/// or runs out of time is not the session's end: the caller says so and goes on.
+pub(super) async fn run_setup<M: Machine>(
+    machine: &M,
+    root: &Path,
+    spec: &SessionSpec,
+    limit: Duration,
+) -> Setup {
+    let script = &spec.environment.setup_script;
+    if script.trim().is_empty() {
+        return Setup::Skipped;
+    }
+    let marker = root.join(SETUP_MARKER);
+    let ran = machine
+        .exec(Exec::new([
+            "test".to_owned(),
+            "-e".to_owned(),
+            marker.to_string_lossy().into_owned(),
+        ]))
+        .await
+        .is_ok_and(|out| out.status == 0);
+    if ran {
+        return Setup::Skipped;
+    }
+    // `timeout` ends the script and what it started; the second timer is for a machine that
+    // cannot be asked. stderr is folded into stdout so the tail reads as it happened.
+    let secs = limit.as_secs().max(1);
+    let exec = Exec::new([
+        "sh".to_owned(),
+        "-c".to_owned(),
+        "exec timeout -k 10 \"$1\" bash -c \"$2\" 2>&1".to_owned(),
+        "sh".to_owned(),
+        secs.to_string(),
+        script.clone(),
+    ])
+    .dir(root);
+    let started = Instant::now();
+    let result = tokio::time::timeout(limit + Duration::from_secs(30), machine.exec(exec)).await;
+    // Whatever happened, this container has had its turn.
+    machine.put(&marker, b"").await.ok();
+    match result {
+        Err(_) => Setup::Failed(Failure {
+            exit: None,
+            timed_out: true,
+            tail: String::new(),
+        }),
+        Ok(Err(error)) => Setup::Failed(Failure {
+            exit: None,
+            timed_out: false,
+            tail: tail(format!("{error:#}").as_bytes(), spec),
+        }),
+        Ok(Ok(out)) if out.status == 0 => Setup::Done,
+        Ok(Ok(out)) => Setup::Failed(Failure {
+            exit: Some(out.status),
+            // 124 is `timeout`'s own answer; 137 is its follow-up kill.
+            timed_out: out.status == 124 || (out.status == 137 && started.elapsed() >= limit),
+            tail: tail(&out.stdout, spec),
+        }),
+    }
+}
+
 /// Where OpenCode works: the clone when there is one, else the folder of clones.
 fn work_dir(dir: &Path, spec: &SessionSpec) -> PathBuf {
     match spec.repos.as_slice() {
@@ -184,6 +331,8 @@ struct Live<S: Sandbox> {
     tracker: Tracker,
     outbox: Vec<Item>,
     done: Done,
+    /// Said to the agent ahead of the first message it is sent: the setup script failed.
+    heads_up: Option<String>,
 }
 
 impl<S: Sandbox> Live<S> {
@@ -238,6 +387,10 @@ impl<S: Sandbox> Live<S> {
     async fn command(&mut self, envelope: Envelope) -> Result<bool> {
         match envelope.command {
             Command::Message { text } => {
+                let text = match self.heads_up.take() {
+                    Some(line) => format!("{line}\n\n{text}"),
+                    None => text,
+                };
                 self.api
                     .prompt(&self.oc_session, &text, &self.spec.model)
                     .await?;
@@ -335,9 +488,10 @@ async fn start<S: Sandbox>(
     server: &Server,
     spec: &SessionSpec,
     done: &Done,
+    setup_timeout: Duration,
 ) -> Result<Live<S>> {
     let machine = Arc::new(sandbox.start(&SandboxSpec::new(spec)).await?);
-    match prepare(&machine, opencode, server, spec, done).await {
+    match prepare(&machine, opencode, server, spec, done, setup_timeout).await {
         Ok(live) => Ok(live),
         Err(error) => {
             machine.stop().await;
@@ -352,9 +506,21 @@ async fn prepare<S: Sandbox>(
     server: &Server,
     spec: &SessionSpec,
     done: &Done,
+    setup_timeout: Duration,
 ) -> Result<Live<S>> {
     let root = machine.paths().work.clone();
     clone_all(&**machine, &root, spec).await?;
+    // The container has its variables and the repos are in: the setup script can use both.
+    let mut outbox = Vec::new();
+    let mut heads_up = None;
+    if let Setup::Failed(failure) = run_setup(&**machine, &root, spec, setup_timeout).await {
+        tracing::warn!(session = %spec.session, exit = ?failure.exit, timed_out = failure.timed_out, "the setup script failed: the session starts without it");
+        outbox.push(Item::Note {
+            key: format!("setup:{}", Uuid::now_v7()),
+            text: failure.note(setup_timeout),
+        });
+        heads_up = Some(failure.line());
+    }
     let config = machine.paths().config.clone();
     machine
         .put(&config, &serde_json::to_vec_pretty(&spec.opencode_config)?)
@@ -397,8 +563,9 @@ async fn prepare<S: Sandbox>(
         api,
         tracker: Tracker::new(&oc_session),
         oc_session,
-        outbox: Vec::new(),
+        outbox,
         done: done.clone(),
+        heads_up,
     })
 }
 
@@ -410,9 +577,10 @@ pub async fn drive<S: Sandbox>(
     spec: SessionSpec,
     mut commands: mpsc::UnboundedReceiver<Msg>,
     done: Done,
+    setup_timeout: Duration,
 ) {
     let session: SessionId = spec.session;
-    let mut live = match start(&sandbox, &opencode, &server, &spec, &done).await {
+    let mut live = match start(&sandbox, &opencode, &server, &spec, &done, setup_timeout).await {
         Ok(live) => live,
         Err(error) => {
             tracing::error!(%session, error = %format!("{error:#}"), "the session did not start");

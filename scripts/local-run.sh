@@ -23,7 +23,6 @@ BIN="target/$PROFILE"
 RUN=.local-run
 PG_PORT="${PG_PORT:-55432}"
 SERVER="http://127.0.0.1:8080"
-mkdir -p "$RUN/state"
 umask 077
 
 step() { printf '\n== %s\n' "$*"; }
@@ -92,8 +91,7 @@ field() { python3 -c "import json,sys; d=json.load(sys.stdin); print(eval('d'+sy
 
 if [ -n "${SERVE_ONLY:-}" ]; then
   step "Serving for the web app (Ctrl-C stops everything)"
-  "$BIN"/antilog runner --server "$SERVER" --name local --proxy 127.0.0.1:8081 \
-    --state-dir "$RUN/state" >"$RUN/runner.log" 2>&1 &
+  "$BIN"/antilog runner --server "$SERVER" --name local --proxy 127.0.0.1:8081 >"$RUN/runner.log" 2>&1 &
   pids+=($!)
   echo "API on $SERVER. Run the web app: cd web && ANTILOG_API=$SERVER pnpm dev, then open"
   echo "http://localhost:5173, sign in with a test account, and add the model key under Settings."
@@ -111,8 +109,7 @@ step "Saving the model key (sealed) for provider $PROVIDER"
 api PUT "/model-keys/$PROVIDER" "{\"key\":\"$ZEN_KEY\"}" >/dev/null
 
 step "Starting the runner"
-"$BIN"/antilog runner --server "$SERVER" --name local --proxy 127.0.0.1:8081 \
-  --state-dir "$RUN/state" >"$RUN/runner.log" 2>&1 &
+"$BIN"/antilog runner --server "$SERVER" --name local --proxy 127.0.0.1:8081 >"$RUN/runner.log" 2>&1 &
 pids+=($!)
 
 step "Starting a session on $MODEL with a \$5 budget"

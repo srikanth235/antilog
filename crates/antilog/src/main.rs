@@ -34,9 +34,6 @@ enum Command {
         /// The Docker command line.
         #[arg(long, default_value = "docker")]
         docker: String,
-        /// Where this runner remembers its setup images between sessions.
-        #[arg(long, default_value = "/var/lib/antilog/runner")]
-        state_dir: std::path::PathBuf,
         /// The OpenCode binary inside the session image.
         #[arg(long, default_value = "opencode")]
         opencode: String,
@@ -48,6 +45,10 @@ enum Command {
         /// --exit-after-last-session) waits for its sessions to be let go before it stops them.
         #[arg(long, default_value_t = 30)]
         drain_grace_sec: u64,
+        /// How long an environment's setup script may run before it is stopped. A script that
+        /// fails or times out does not fail the session; the agent and the person are told.
+        #[arg(long, default_value_t = 600)]
+        setup_timeout_sec: u64,
         /// The most disk one session's container may write, in GiB (0: no limit); defaults to
         /// the ANTILOG_DISK_GB environment variable, then 20. Docker enforces it only where the
         /// storage driver supports `--storage-opt size=`; elsewhere the runner says so once at
@@ -77,10 +78,10 @@ async fn main() -> anyhow::Result<()> {
             image,
             proxy,
             docker,
-            state_dir,
             opencode,
             exit_after_last_session,
             drain_grace_sec,
+            setup_timeout_sec,
             disk_gb,
             poll_secs,
             pure,
@@ -99,6 +100,7 @@ async fn main() -> anyhow::Result<()> {
             config.poll = std::time::Duration::from_secs(poll_secs.max(1));
             config.exit_after_last_session = exit_after_last_session;
             config.drain_grace = std::time::Duration::from_secs(drain_grace_sec);
+            config.setup_timeout = std::time::Duration::from_secs(setup_timeout_sec.max(1));
             let proxy_addr = proxy
                 .or_else(|| std::env::var("ANTILOG_PROXY_ADDR").ok())
                 .ok_or_else(|| anyhow::anyhow!("give --proxy or set ANTILOG_PROXY_ADDR"))?;
@@ -116,7 +118,6 @@ async fn main() -> anyhow::Result<()> {
                 runner::ContainerConfig {
                     image,
                     proxy_addr,
-                    state_dir,
                     disk_gb,
                 },
             );

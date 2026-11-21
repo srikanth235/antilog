@@ -33,6 +33,9 @@ pub struct Config {
     /// exits. A runner drains on SIGTERM or SIGINT, and after its last session with
     /// `exit_after_last_session`. It claims nothing new while it drains.
     pub drain_grace: Duration,
+    /// How long an environment's setup script may run before it is stopped. A script that fails
+    /// or times out does not fail the session.
+    pub setup_timeout: Duration,
 }
 
 impl Config {
@@ -44,6 +47,7 @@ impl Config {
             poll: Duration::from_secs(5),
             exit_after_last_session: false,
             drain_grace: Duration::from_secs(30),
+            setup_timeout: Duration::from_secs(600),
         }
     }
 }
@@ -168,6 +172,7 @@ async fn run_until<S: Sandbox>(
                         spec,
                         receiver,
                         done.clone(),
+                        config.setup_timeout,
                     ));
                     held.insert(
                         id,
