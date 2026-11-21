@@ -93,13 +93,16 @@ pub(super) async fn clone_all<M: Machine>(
         }
         run_in_machine(
             machine,
-            Exec::new([
-                "git".to_owned(),
-                "clone".to_owned(),
-                "--quiet".to_owned(),
-                clone_url(repo),
-                target.clone(),
-            ])
+            Exec::new(
+                ["git".to_owned(), "clone".to_owned(), "--quiet".to_owned()]
+                    .into_iter()
+                    .chain(
+                        repo.branch
+                            .iter()
+                            .flat_map(|branch| ["--branch".to_owned(), branch.clone()]),
+                    )
+                    .chain([clone_url(repo), target.clone()]),
+            )
             .dir(dir),
             "git clone",
         )

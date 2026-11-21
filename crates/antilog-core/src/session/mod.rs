@@ -124,10 +124,21 @@ pub struct NewSession {
     pub prompt: String,
     pub repos: Vec<String>,
     pub environment: Option<String>,
+    /// The branch to check out in the repos picked here.
+    pub branch: Option<String>,
     /// Left out, the organization's default, if it has one.
     pub budget_cap_cents: Option<i64>,
     pub follow_policy: bool,
     pub actor: MemberId,
+}
+
+fn branch_ok(branch: &str) -> bool {
+    branch.len() <= 200
+        && !branch.starts_with(['-', '/'])
+        && !branch.contains("..")
+        && branch
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || matches!(b, b'.' | b'-' | b'_' | b'/'))
 }
 
 /// The title a session shows when its starter gave none: the prompt's first line.
@@ -195,7 +206,19 @@ pub async fn start<D: Deps>(
     let pinned = pin(deps.store(), organization, new.environment.as_deref()).await?;
     // The environment's default repos come first, then the ones the person picked.
     let mut repos = pinned.repos;
+    let mut branches = std::collections::BTreeMap::new();
+    let branch = new
+        .branch
+        .as_deref()
+        .map(str::trim)
+        .filter(|b| !b.is_empty());
+    if branch.is_some_and(|b| !branch_ok(b)) {
+        return Err(SessionError::Invalid("a branch name has no spaces or .."));
+    }
     for picked in new.repos {
+        if let Some(branch) = branch {
+            branches.insert(picked.clone(), branch.to_owned());
+        }
         if !repos.contains(&picked) {
             repos.push(picked);
         }
@@ -230,6 +253,7 @@ pub async fn start<D: Deps>(
         repos,
         environment,
         environment_version,
+        branches,
     };
     deps.store()
         .enqueue_machine(organization, session.id, &seed, now)

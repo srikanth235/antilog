@@ -185,6 +185,7 @@ async fn start<D: Deps + 'static>(
         prompt: body.prompt,
         repos: body.repos,
         environment: body.environment,
+        branch: body.branch,
         budget_cap_cents: body.budget_cap_cents,
         follow_policy: body.follow_policy,
         actor: authed.who.member,

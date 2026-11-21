@@ -8,7 +8,6 @@ import {
   defaultBudgetCents,
   headLabel,
   leadSession,
-  parseRepos,
 } from "./domain";
 
 const session = (status: Schemas["SessionStatus"], createdAt = 1): Schemas["Session"] =>
@@ -51,12 +50,6 @@ describe("domain", () => {
       2000,
     );
     expect(defaultBudgetCents(undefined, undefined)).toBeNull();
-  });
-  it("keeps only owner/name repos", () => {
-    expect(parseRepos("acme/checkout, nope,acme/pricing")).toEqual([
-      "acme/checkout",
-      "acme/pricing",
-    ]);
   });
   it("names agents by their display name, never by their id", () => {
     const agents = [{ id: "opencode", name: "OpenCode" }];

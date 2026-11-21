@@ -91,7 +91,7 @@ test("create an environment, change it into a new version, see it offered to a n
 
   // The new session's Environment chip offers it.
   await page.goto("/");
-  await page.getByRole("combobox", { name: "Environment" }).click();
+  await page.getByRole("button", { name: "Environment" }).click();
   await expect(page.getByRole("option", { name })).toBeVisible();
   await page.keyboard.press("Escape");
 
@@ -106,6 +106,6 @@ test("create an environment, change it into a new version, see it offered to a n
   await expect(mine).toContainText("Archived");
   await expect(mine.getByRole("button", { name: `Edit ${name}` })).toHaveCount(0);
   await page.goto("/");
-  await page.getByRole("combobox", { name: "Environment" }).click();
+  await page.getByRole("button", { name: "Environment" }).click();
   await expect(page.getByRole("option", { name })).toHaveCount(0);
 });

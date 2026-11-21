@@ -57,7 +57,7 @@ Add each new term to the glossary in the same change that introduces it. Prefer 
 
 | Where | Words |
 | --- | --- |
-| New session | placeholder "What should the agent do? Type / for commands"; "Send"; "Attach files, images, repos or connectors"; "Dictate"; options "Project", "Repos", "Agent" ("Auto"), "Environment", "Mode" ("Ask") and the budget ring ("$0 of $10") |
+| New session (home) | "Good to see you, NAME. What's next?"; placeholder "Ask anything, @ to mention, / for actions"; suggestions "Fix a failing test", "Add a feature to my app", "Bring over my setup from another tool"; pickers "Repos" ("Search repos", "Use owner/repo", "No repository"), "Branch" ("Default branch", "Branch name"), "Project", "Environment"; "Attach files or images"; "Permission mode" ("Ask", "Follow policy"); "Start session". No budget here. The session's own composer keeps "Attach files, images, repos or connectors" and the budget ring ("$0 of $10") |
 | Working | placeholder "Steer, or / for commands"; stop button "Interrupt"; icon buttons "Agent: Claude Code · Default", "Environment: Checkout staging", "Mode: Follow policy", "Budget: $4 of $10" |
 | Mode values | "Ask" (every card asks), "Follow policy" (cards that policy allows go through). Never "Auto" |
 | Other placeholders | Waiting for you "Answer, or approve the card above"; Done or Failed "Continue this session"; read-only "Viewers read sessions. Only editors and owners can send." |

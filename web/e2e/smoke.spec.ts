@@ -28,13 +28,13 @@ test("start a session from home, then read the settings", async ({ page }, info)
 
   // Home: the composer is the page; it cannot send until a model key makes a model available.
   await page.getByRole("link", { name: "New session" }).first().click();
-  await page.getByLabel("New session").fill("Cut checkout p95 latency");
-  await expect(page.getByRole("button", { name: "Send" })).toBeDisabled();
+  await page.getByLabel("Task").fill("Cut checkout p95 latency");
+  await expect(page.getByRole("button", { name: "Start session" })).toBeDisabled();
   const key = await page.request.put("/api/model-keys/anthropic", { data: { key: "sk-ant-e2e" } });
   expect(key.ok()).toBe(true);
   await page.reload();
-  await page.getByLabel("New session").fill("Cut checkout p95 latency");
-  await page.getByRole("button", { name: "Send" }).click();
+  await page.getByLabel("Task").fill("Cut checkout p95 latency");
+  await page.getByRole("button", { name: "Start session" }).click();
   await expect(page.getByText(/Started a session with/)).toBeVisible();
   // The conversation comes from the server: the prompt is there once, not twice.
   await expect(page.locator(".bubble", { hasText: "Cut checkout p95 latency" })).toHaveCount(1);
@@ -77,8 +77,8 @@ test("a viewer can read but not send", async ({ page, browser }) => {
   const form = other.getByRole("form", { name: "Test sign-in" });
   await form.getByLabel("Account name").fill(viewer);
   await form.getByRole("button", { name: "Continue with a test account" }).click();
-  await expect(other.getByRole("heading", { name: "What should the agent do?" })).toBeVisible();
-  await expect(other.getByLabel("New session")).toBeDisabled();
+  await expect(other.getByRole("heading", { name: "Good to see you" })).toBeVisible();
+  await expect(other.getByLabel("Task")).toBeDisabled();
   await expect(
     other.getByText("Viewers read sessions. Only editors and owners can send."),
   ).toBeVisible();

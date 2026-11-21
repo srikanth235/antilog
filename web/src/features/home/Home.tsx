@@ -1,17 +1,17 @@
 import { useNavigate } from "@tanstack/react-router";
 import { type FormEvent, useState } from "react";
 import {
-  useAgents,
   useEnvironments,
   useMember,
   useModels,
   useProjects,
+  useSessions,
   useStartSession,
 } from "../../api/queries";
+import { Mark } from "../../components/brand/Brand";
 import { Glyph, Icon } from "../../components/icon/Icon";
-import { Select } from "../../components/select/Select";
 import { reason } from "../../components/state/State";
-import { canEdit, isOwner, parseRepos } from "../../lib/domain";
+import { canEdit, isOwner } from "../../lib/domain";
 import { defaultEffort } from "../../lib/models";
 import {
   rememberModel,
@@ -21,33 +21,42 @@ import {
   useLastProject,
   useRecentModels,
 } from "../../lib/prefs";
+import { recentRepos, reposLabel, validBranch } from "../../lib/repos";
 import { w } from "../../words";
 import { ModelPicker } from "../experiment/ModelPicker";
 import { NewProject } from "../projects/NewProject";
-import { useSidebarData } from "../shell/useSidebarData";
-import { Waiting } from "./Waiting";
+import { BranchPicker, ListPicker, RepoPicker } from "./Pickers";
 
-/** Home starts a session: the goal, the project it belongs to, and the model; the session page follows. */
+/** The first word of a name, for the greeting. */
+function firstName(name: string | undefined): string | null {
+  const first = name?.trim().split(/\s+/)[0];
+  return first === undefined || first === "" ? null : first;
+}
+
+/**
+ * The new session page: a greeting, three starting points and the composer with its context
+ * pickers. Sending starts a session in the chosen project and opens it.
+ */
 export function Home({ project: preferred }: { project: string | undefined }) {
   const projects = useProjects();
   const me = useMember();
   const navigate = useNavigate();
-  const data = useSidebarData();
   const lastProject = useLastProject();
   const lastModel = useLastModel();
   const lastEffort = useLastEffort();
   const recent = useRecentModels();
   const models = useModels();
+  const sessions = useSessions();
+  const environments = useEnvironments();
   const [text, setText] = useState("");
-  const [repos, setRepos] = useState("");
+  const [repos, setRepos] = useState<string[]>([]);
+  const [branch, setBranch] = useState("");
   const [chosen, setChosen] = useState<string | null>(null);
+  const [environment, setEnvironment] = useState<string | null>(null);
+  const [followPolicy, setFollowPolicy] = useState(false);
   const [picked, setPicked] = useState<{ model: string; effort: string | null } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
-  const agents = useAgents();
-  const environments = useEnvironments();
-  const [agent, setAgent] = useState("auto");
-  const [environment, setEnvironment] = useState<string | null>(null);
   // An archived environment is not offered to a new session.
   const offered = (environments.data ?? []).filter((item) => !item.archived);
 
@@ -76,19 +85,24 @@ export function Home({ project: preferred }: { project: string | undefined }) {
         : defaultEffort(fallback);
   const allowed = canEdit(me?.role);
   const start = useStartSession(project?.id ?? "");
+  const known_repos = recentRepos(sessions.data ?? [], environments.data ?? []);
+  const branchOk = branch === "" || validBranch(branch);
+  const ready =
+    !start.isPending && text.trim() !== "" && project !== undefined && model !== "" && branchOk;
 
   const send = async (event: FormEvent) => {
     event.preventDefault();
-    if (project === undefined || text.trim() === "" || model === "") return;
+    if (project === undefined || !ready) return;
     setError(null);
     try {
       const session = await start.mutateAsync({
-        agent,
         model,
         ...(effort === null ? {} : { effort }),
         prompt: text.trim(),
-        repos: parseRepos(repos),
+        repos,
+        ...(branch === "" || repos.length === 0 ? {} : { branch }),
         ...(environment === null ? {} : { environment }),
+        followPolicy,
       });
       setLastProject(project.id);
       rememberModel(model, effort);
@@ -101,7 +115,7 @@ export function Home({ project: preferred }: { project: string | undefined }) {
   if (projects.isSuccess && list.length === 0)
     return (
       <div className="hw hw-c">
-        <h1 className="t-title hw-t">{w.home.title}</h1>
+        <h1 className="t-title hw-t">{w.home.greeting(firstName(me?.name))}</h1>
         <p className="ink2 sm">{w.home.needProject}</p>
         {isOwner(me?.role) ? (
           <button type="button" className="btn primary" onClick={() => setCreating(true)}>
@@ -109,20 +123,70 @@ export function Home({ project: preferred }: { project: string | undefined }) {
             {w.home.createProject}
           </button>
         ) : me === undefined ? null : (
-          <p className="target-note">{w.home.needProjectViewer}</p>
+          <p className="target-note">{w.readOnly.viewersRead}</p>
         )}
         <NewProject open={creating} onClose={() => setCreating(false)} onCreated={setChosen} />
       </div>
     );
 
+  const mode = [
+    { value: "ask", label: w.home.modeAsk },
+    { value: "follow", label: w.home.modeFollow },
+  ] as const;
+
   return (
-    <div className="hw hw-c">
-      <h1 className="t-title hw-t">{w.home.title}</h1>
-      <form className="cmpw" onSubmit={(event) => void send(event)}>
-        <div className="cmp big">
+    <div className="nh">
+      <div className="nh-c">
+        <span className="nh-mark">
+          <Mark width={112} />
+        </span>
+        <h1 className="nh-t">{w.home.greeting(firstName(me?.name))}</h1>
+      </div>
+      <form className="nh-b" onSubmit={(event) => void send(event)}>
+        <fieldset className="nh-s" aria-label={w.home.suggestions}>
+          <button type="button" onClick={() => setText(w.home.suggestFix)}>
+            <Glyph name="term" />
+            {w.home.suggestFix}
+          </button>
+          <button type="button" onClick={() => setText(w.home.suggestFeature)}>
+            <Glyph name="code" />
+            {w.home.suggestFeature}
+          </button>
+          <button type="button" onClick={() => setText(w.home.suggestSetup)}>
+            <Icon name="dl" />
+            {w.home.suggestSetup}
+          </button>
+        </fieldset>
+        <div className="cmp nh-cmp">
+          <fieldset className="pkrow" aria-label={w.home.context}>
+            <RepoPicker
+              repos={known_repos}
+              chosen={repos}
+              disabled={!allowed}
+              label={reposLabel(repos, { none: w.home.noRepository, more: w.home.reposMore })}
+              onChange={setRepos}
+            />
+            <BranchPicker branch={branch} disabled={!allowed} onChange={setBranch} />
+            <ListPicker
+              label={w.home.project}
+              lead={{ glyph: "blocks" }}
+              value={selectedId}
+              options={list.map((p) => ({ value: p.id, label: p.name }))}
+              disabled={!allowed}
+              onChange={setChosen}
+            />
+            <ListPicker
+              label={w.home.environment}
+              lead={{ glyph: "box" }}
+              value={environment ?? offered[0]?.id ?? null}
+              options={offered.map((item) => ({ value: item.id, label: item.name }))}
+              disabled={!allowed}
+              onChange={setEnvironment}
+            />
+          </fieldset>
           <textarea
             className="cmp-in"
-            rows={3}
+            rows={2}
             aria-label={w.home.composerLabel}
             placeholder={w.home.placeholder}
             value={text}
@@ -137,74 +201,40 @@ export function Home({ project: preferred }: { project: string | undefined }) {
             <button
               type="button"
               className="ib"
-              aria-label={w.home.attach}
+              aria-label={w.home.attachFiles}
               disabled
               title={w.experiment.notYet}
             >
               <Icon name="plus" />
             </button>
+            <ModelPicker
+              models={reachable}
+              model={model === "" ? null : model}
+              effort={effort}
+              recent={recent}
+              disabled={!allowed}
+              onChange={(next, level) => setPicked({ model: next, effort: level })}
+            />
             <span className="go">
+              <ListPicker
+                variant="opt"
+                label={w.home.mode}
+                lead={{ icon: "verify" }}
+                value={followPolicy ? "follow" : "ask"}
+                options={mode}
+                disabled={!allowed}
+                onChange={(value) => setFollowPolicy(value === "follow")}
+              />
               <button
                 type="submit"
-                className="ib send"
+                className={`ib send${ready ? " on" : ""}`}
                 aria-label={w.home.send}
-                disabled={
-                  start.isPending || text.trim() === "" || project === undefined || model === ""
-                }
+                disabled={!ready}
               >
                 <Icon name="return" />
               </button>
             </span>
           </div>
-        </div>
-        <div className="cmp-opt">
-          <Select
-            variant="chip"
-            label={w.home.project}
-            value={selectedId}
-            options={list.map((p) => ({ value: p.id, label: p.name }))}
-            onChange={setChosen}
-          />
-          <label className="opt" title={w.home.reposHint}>
-            <Glyph name="git" />
-            <input
-              className="sr-input"
-              aria-label={w.home.repos}
-              placeholder={w.home.reposPlaceholder}
-              value={repos}
-              onChange={(event) => setRepos(event.target.value)}
-            />
-          </label>
-          <Select
-            variant="chip"
-            label={w.home.agent}
-            value={agent}
-            options={[
-              { value: "auto", label: w.home.auto },
-              ...(agents.data ?? [])
-                .filter((item) => item.enabled)
-                .map((item) => ({ value: item.id, label: item.name })),
-            ]}
-            onChange={setAgent}
-          />
-          <Select
-            variant="chip"
-            label={w.home.environment}
-            value={environment ?? offered[0]?.id ?? null}
-            options={offered.map((item) => ({
-              value: item.id,
-              label: item.name,
-            }))}
-            onChange={setEnvironment}
-          />
-          <ModelPicker
-            models={reachable}
-            model={model === "" ? null : model}
-            effort={effort}
-            recent={recent}
-            disabled={!allowed}
-            onChange={(next, level) => setPicked({ model: next, effort: level })}
-          />
         </div>
         {error === null ? null : (
           <p className="error-line" role="alert">
@@ -215,10 +245,6 @@ export function Home({ project: preferred }: { project: string | undefined }) {
           <p className="target-note">{w.readOnly.viewersRead}</p>
         ) : null}
       </form>
-      {data.all.length === 0 && !data.loading ? (
-        <p className="ink2 sm">{w.home.noSessions}</p>
-      ) : null}
-      <Waiting data={data} />
     </div>
   );
 }

@@ -43,8 +43,8 @@ test("pick a model and effort at the start, then switch both mid-session", async
   await expect(picker).toContainText("O3");
 
   // Start a session with it; the session composer carries the same choice.
-  await page.getByLabel("New session").fill("Cut the p95");
-  await page.getByRole("button", { name: "Send" }).click();
+  await page.getByLabel("Task").fill("Cut the p95");
+  await page.getByRole("button", { name: "Start session" }).click();
   await expect(page).toHaveURL(/\/sessions\//);
   const inSession = page.getByRole("button", { name: "Model and effort" });
   await expect(inSession).toContainText("O3");

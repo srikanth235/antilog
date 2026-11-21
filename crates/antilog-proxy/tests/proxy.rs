@@ -371,6 +371,7 @@ impl Rig {
                     repos: Vec::new(),
                     environment: Some("bench".into()),
                     environment_version: Some(1),
+                    branches: Default::default(),
                 },
                 seed::T0,
             )

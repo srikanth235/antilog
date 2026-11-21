@@ -112,8 +112,15 @@ const app = createRoute({
   },
 });
 
-function Scroll({ children }: { children: React.ReactNode }) {
-  return <div className="scroll">{children}</div>;
+function Scroll({ children, column }: { children: React.ReactNode; column?: boolean }) {
+  return (
+    <div
+      className="scroll"
+      {...(column === true ? { style: { display: "flex", flexDirection: "column" } } : {})}
+    >
+      {children}
+    </div>
+  );
 }
 
 const home = createRoute({
@@ -126,7 +133,7 @@ const home = createRoute({
   component: function HomePage() {
     const { project } = home.useSearch();
     return (
-      <Scroll>
+      <Scroll column>
         <Home project={project} />
       </Scroll>
     );
@@ -318,7 +325,7 @@ const settings = createRoute({
       return <Navigate to="/settings/$section" params={{ section: "profile" }} replace />;
     return (
       <>
-        <Scroll>
+        <Scroll column>
           <Home project={undefined} />
         </Scroll>
         <SettingsDialog section={known} />

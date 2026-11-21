@@ -66,14 +66,6 @@ export function defaultBudgetCents(
   return project?.defaultBudgetCents ?? organization?.defaultBudgetCents ?? null;
 }
 
-/** Repos typed as "owner/name, owner/name". Anything that is not owner/name is dropped. */
-export function parseRepos(text: string): string[] {
-  return text
-    .split(/[,\s]+/)
-    .map((repo) => repo.trim())
-    .filter((repo) => /^[\w.-]+\/[\w.-]+$/.test(repo));
-}
-
 /** Which composer placeholder to show: "approve the card above" only while a card is showing. */
 export function composerPlaceholderKey(
   status: Schemas["SessionStatus"] | "none",

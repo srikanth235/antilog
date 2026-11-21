@@ -262,6 +262,7 @@ pub async fn runner_suite<S: Store>(store: &S) {
             repos: vec!["acme/api".into()],
             environment: None,
             environment_version: None,
+            branches: Default::default(),
         };
         store
             .enqueue_machine(org, session.id, &seed_of, T0)
@@ -545,6 +546,7 @@ pub async fn runner_lock_suite<S: Store>(store: &S) {
                 repos: Vec::new(),
                 environment: None,
                 environment_version: None,
+                branches: Default::default(),
             };
             store
                 .enqueue_machine(org, session.id, &seed_of, T0)
@@ -682,6 +684,7 @@ async fn queue_session<S: Store>(store: &S, seed: &Seed, at: i64) -> antilog_typ
         repos: Vec::new(),
         environment: None,
         environment_version: None,
+        branches: Default::default(),
     };
     store
         .enqueue_machine(org, session.id, &machine_seed, at)

@@ -196,7 +196,7 @@ async fn a_claim_carries_the_spec_the_contract_lists() {
     assert_eq!(spec["model"], "vendor/model-2", "the session's own model");
     assert_eq!(
         spec["repos"],
-        json!([{"name": "acme/api", "url": "/srv/git/acme/api", "token": null}])
+        json!([{"name": "acme/api", "url": "/srv/git/acme/api", "token": null, "branch": null}])
     );
     assert_eq!(spec["skills"], json!([]));
     assert_eq!(spec["resume"], false);
@@ -637,6 +637,43 @@ async fn a_claim_carries_the_environment_version_the_session_started_on() {
     .await
     .unwrap();
     assert_eq!(picked.repos, vec!["acme/app", "acme/web"]);
+    // A branch applies to the repos the person picked, not to the environment's default repos.
+    let on_branch = session::start(
+        &*world.deps,
+        org,
+        world.seed.project.id,
+        NewSession {
+            repos: vec!["acme/web".into()],
+            branch: Some(" release/1 ".into()),
+            ..on(Some("bench"))
+        },
+    )
+    .await
+    .unwrap();
+    let seed = world
+        .deps
+        .store
+        .machine(on_branch.id)
+        .await
+        .unwrap()
+        .unwrap()
+        .seed;
+    assert_eq!(
+        seed.branches.into_iter().collect::<Vec<_>>(),
+        vec![("acme/web".to_owned(), "release/1".to_owned())]
+    );
+    let bad = session::start(
+        &*world.deps,
+        org,
+        world.seed.project.id,
+        NewSession {
+            repos: vec!["acme/web".into()],
+            branch: Some("a b".into()),
+            ..on(None)
+        },
+    )
+    .await;
+    assert!(bad.is_err(), "a branch name with a space is refused");
     assert_eq!(first.repos, vec!["acme/app"]);
     assert!(plain.repos.is_empty());
 

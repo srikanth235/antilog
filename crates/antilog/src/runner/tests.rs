@@ -392,7 +392,7 @@ async fn backend(proxy: &str, model: &str) -> (Arc<FakeDeps>, Seed, String, Path
     std::fs::create_dir_all(&lib).unwrap();
     sh(
         &lib,
-        "git init -q . && git config user.email a@b && git config user.name n && echo lib > lib.txt && git add . && git commit -qm lib",
+        "git init -q . && git config user.email a@b && git config user.name n && echo lib > lib.txt && git add . && git commit -qm lib && git checkout -qb release && echo r > release.txt && git add . && git commit -qm release && git checkout -q -",
     );
 
     let deps = Arc::new(FakeDeps::new());
@@ -693,6 +693,7 @@ async fn a_session_runs_from_the_queue_through_opencode_and_back() {
                     name: "acme/lib".into(),
                     url: String::new(),
                     token: None,
+                    branch: None,
                 },
             },
             3,
@@ -1149,6 +1150,7 @@ fn setup_spec(script: &str) -> antilog_types::SessionSpec {
             name: "acme/api".into(),
             url: "x".into(),
             token: Some("ghs_secret".into()),
+            branch: None,
         }],
         environment: antilog_types::EnvironmentSpec {
             setup_script: script.into(),
@@ -1306,6 +1308,33 @@ async fn start_on_environment(world: &World, script: &str, repos: &[&str]) -> Se
     )
     .await
     .unwrap()
+}
+
+#[tokio::test]
+async fn a_session_clones_the_branch_it_was_started_with_for_the_repos_picked() {
+    let world = world().await;
+    let session = session::start(
+        &*world.deps,
+        world.seed.organization.id,
+        world.seed.project.id,
+        NewSession {
+            agent: "opencode".into(),
+            model: "vendor/model-1".into(),
+            prompt: "go".into(),
+            repos: vec!["acme/lib".into()],
+            branch: Some("release".into()),
+            actor: world.seed.owner.id,
+            ..NewSession::default()
+        },
+    )
+    .await
+    .unwrap();
+    until("the first prompt", async || {
+        (!locked(&world.shared).prompts.is_empty()).then_some(())
+    })
+    .await;
+    let folder = world.workdir.join(session.id.to_string());
+    assert!(folder.join("lib/release.txt").exists(), "lib is on release");
 }
 
 #[tokio::test]

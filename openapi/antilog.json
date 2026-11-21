@@ -5712,6 +5712,13 @@
             ],
             "description": "Left out or `auto`: the agent Auto chooses."
           },
+          "branch": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The branch to check out in the repos picked here (not the environment's default repos);\nleft out, each repo's default branch."
+          },
           "budgetCapCents": {
             "type": [
               "integer",

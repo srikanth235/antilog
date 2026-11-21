@@ -416,6 +416,10 @@ pub struct StartSession {
     #[serde(default)]
     pub repos: Vec<String>,
     pub environment: Option<String>,
+    /// The branch to check out in the repos picked here (not the environment's default repos);
+    /// left out, each repo's default branch.
+    #[serde(default)]
+    pub branch: Option<String>,
     /// This session's own cap in US cents; left out, the project's default, then the organization's.
     #[serde(default)]
     pub budget_cap_cents: Option<i64>,

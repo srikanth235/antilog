@@ -39,6 +39,9 @@ pub struct RepoSpec {
     pub url: String,
     /// A short-lived clone credential, when the code host needs one.
     pub token: Option<String>,
+    /// The branch to check out; left out, the repo's default.
+    #[serde(default)]
+    pub branch: Option<String>,
 }
 
 /// A skill pack version to unpack into the skills folder.
@@ -227,6 +230,9 @@ pub struct Seed {
     /// The version of that environment, pinned when the session started.
     #[serde(default)]
     pub environment_version: Option<u32>,
+    /// The branch to check out per repo (`owner/name`); a repo not listed gets its default.
+    #[serde(default)]
+    pub branches: std::collections::BTreeMap<String, String>,
 }
 
 /// A session's machine row.

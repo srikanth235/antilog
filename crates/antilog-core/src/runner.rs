@@ -136,11 +136,12 @@ pub fn opencode_config(
     })
 }
 
-fn repo_spec(settings: &Settings, name: &str) -> RepoSpec {
+fn repo_spec(settings: &Settings, name: &str, branch: Option<&String>) -> RepoSpec {
     RepoSpec {
         name: name.to_owned(),
         url: format!("{}{name}", settings.clone_base),
         token: None,
+        branch: branch.cloned(),
     }
 }
 
@@ -197,7 +198,7 @@ async fn spec<D: Deps>(
             .seed
             .repos
             .iter()
-            .map(|name| repo_spec(settings, name))
+            .map(|name| repo_spec(settings, name, machine.seed.branches.get(name)))
             .collect(),
         environment,
         skills,
@@ -266,7 +267,7 @@ pub async fn poll<D: Deps>(
     // The queue holds only the name of an attached repo; where to clone it from is the server's.
     for envelope in &mut commands {
         if let Command::AttachRepo { repo } = &mut envelope.command {
-            *repo = repo_spec(settings, &repo.name);
+            *repo = repo_spec(settings, &repo.name, None);
         }
     }
     Ok(PollResponse {

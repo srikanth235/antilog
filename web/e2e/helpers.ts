@@ -19,7 +19,7 @@ export async function signUp(
   await form.getByLabel("Create a new organization").check();
   await form.getByLabel("Organization name").fill(organization);
   await form.getByRole("button", { name: "Continue with a test account" }).click();
-  await expect(page.getByRole("heading", { name: "What should the agent do?" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Good to see you" })).toBeVisible();
   return { name, organization };
 }
 

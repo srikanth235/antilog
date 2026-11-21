@@ -1850,6 +1850,11 @@ export interface components {
             /** @description Left out or `auto`: the agent Auto chooses. */
             agent?: string | null;
             /**
+             * @description The branch to check out in the repos picked here (not the environment's default repos);
+             *     left out, each repo's default branch.
+             */
+            branch?: string | null;
+            /**
              * Format: int64
              * @description This session's own cap in US cents; left out, the project's default, then the organization's.
              */

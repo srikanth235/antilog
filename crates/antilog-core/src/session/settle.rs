@@ -156,6 +156,7 @@ pub(super) async fn attach_named<D: Deps>(
             name: repo.to_owned(),
             url: String::new(),
             token: None,
+            branch: None,
         },
     };
     match store
