@@ -1,18 +1,17 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { type Activity, Icon, StatusIcon } from "../../components/icon/Icon";
 import { Menu, MenuItem } from "../../components/menu/Menu";
 import { Tip } from "../../components/tooltip/Tooltip";
 import { w } from "../../words";
 
-export type Panel = "details" | "trials" | "changes" | "terminal" | "preview" | "files";
+export type Panel = "details" | "changes" | "terminal" | "preview" | "files";
 
 const PANELS: {
   id: Panel;
-  icon: "list" | "chart" | "diff" | "shell" | "globe" | "folder";
+  icon: "list" | "diff" | "shell" | "globe" | "folder";
   keys: string;
 }[] = [
   { id: "details", icon: "list", keys: "D" },
-  { id: "trials", icon: "chart", keys: "R" },
   { id: "changes", icon: "diff", keys: "G" },
   { id: "terminal", icon: "shell", keys: "T" },
   { id: "preview", icon: "globe", keys: "P" },
@@ -22,8 +21,6 @@ const PANELS: {
 export function Header(props: {
   project: { id: string; name: string } | undefined;
   title: string;
-  experimentId: string;
-  state: "not_sealed" | "sealed";
   activity: Activity | null;
   panel: Panel | undefined;
   onPanel: (panel: Panel | undefined) => void;
@@ -31,7 +28,6 @@ export function Header(props: {
   onStop: () => void;
   readOnly: boolean;
 }) {
-  const navigate = useNavigate();
   return (
     <header className="hdr">
       <div className="hbar">
@@ -58,16 +54,6 @@ export function Header(props: {
           >
             <MenuItem
               onSelect={() =>
-                void navigate({
-                  to: "/experiments/$experimentId/details",
-                  params: { experimentId: props.experimentId },
-                })
-              }
-            >
-              {w.experiment.experimentDetails}
-            </MenuItem>
-            <MenuItem
-              onSelect={() =>
                 void navigator.clipboard.writeText(window.location.href).catch(() => undefined)
               }
             >
@@ -86,9 +72,6 @@ export function Header(props: {
               {w.experiment.archive}
             </MenuItem>
           </Menu>
-          <span className="spill" style={{ ["--c" as string]: "var(--ink3)" }}>
-            {w.state[props.state]}
-          </span>
           {props.activity === null ? null : (
             <span className="spill" style={{ ["--c" as string]: "var(--accent)" }}>
               <StatusIcon activity={props.activity} />
@@ -124,9 +107,6 @@ export function Header(props: {
             </MenuItem>
             <MenuItem disabled onSelect={() => undefined}>
               {w.experiment.shortcuts}
-            </MenuItem>
-            <MenuItem disabled onSelect={() => undefined}>
-              {w.experiment.report}
             </MenuItem>
           </Menu>
           <button type="button" className="btn sm ghost" disabled title={w.experiment.notYet}>

@@ -19,7 +19,7 @@ export async function signUp(
   await form.getByLabel("Create a new organization").check();
   await form.getByLabel("Organization name").fill(organization);
   await form.getByRole("button", { name: "Continue with a test account" }).click();
-  await expect(page.getByRole("heading", { name: "What do you want to improve?" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "What should the agent do?" })).toBeVisible();
   return { name, organization };
 }
 
@@ -30,4 +30,19 @@ export async function createProject(page: Page, name: string): Promise<void> {
   await dialog.getByLabel("Name").fill(name);
   await dialog.getByRole("button", { name: "Create project" }).click();
   await expect(page.getByRole("heading", { name, level: 1 })).toBeVisible();
+}
+
+/** Creates a project and a session in it through the API, as the signed-in person; returns the session's page path. */
+export async function seedSession(page: Page, title: string): Promise<string> {
+  const made = await page.request.post("/api/projects", {
+    data: { name: unique("Seed"), description: "" },
+  });
+  expect(made.ok()).toBe(true);
+  const project = (await made.json()) as { id: string };
+  const started = await page.request.post(`/api/projects/${project.id}/sessions`, {
+    data: { title, prompt: title, model: "opencode/e2e", repos: [] },
+  });
+  expect(started.ok()).toBe(true);
+  const session = (await started.json()) as { id: string };
+  return `/sessions/${session.id}`;
 }
