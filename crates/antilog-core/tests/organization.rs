@@ -787,7 +787,7 @@ async fn auto_picks_the_default_the_only_agent_or_asks_and_only_an_owner_sets_ag
     };
     let (editor, _) = world.member("ed", Role::Editor).await;
 
-    // Nothing set up: the built-in agent keeps a first experiment from waiting on a settings visit.
+    // Nothing set up: the built-in agent keeps a first session from waiting on a settings visit.
     let (agent, reason) = agents::auto(&world.store, org).await.unwrap();
     assert_eq!((agent.id.as_str(), agent.built_in), ("opencode", true));
     assert!(reason.contains("No agent is set up yet"));

@@ -9,7 +9,7 @@ use crate::store::Store;
 pub const AUTO: &str = "auto";
 
 /// The one built-in agent: the OpenCode harness (see `docs/V0.md`).
-/// Offered only while the organization has set up no agent of its own, so a first experiment
+/// Offered only while the organization has set up no agent of its own, so a first session
 /// starts without a settings visit. An owner's list replaces it, and Auto says it is the reason.
 fn built_in() -> Agent {
     Agent {
@@ -37,9 +37,8 @@ pub async fn list<S: Store>(store: &S, who: &Principal) -> Result<Vec<Agent>, Re
     known(store, who.organization).await
 }
 
-/// The agent Auto picks and why. Cost per win needs the judge's history of this project and
-/// evaluation kind, which is not recorded yet, so before it exists Auto uses the owner's default,
-/// or the only agent turned on, and never one by brand.
+/// The agent Auto picks and why: the owner's default, or the only agent turned on, and never one
+/// by brand.
 pub async fn auto<S: Store>(
     store: &S,
     organization: OrganizationId,
@@ -49,8 +48,7 @@ pub async fn auto<S: Store>(
     if let Some(default) = enabled.iter().find(|agent| agent.is_default) {
         return Ok((
             (*default).clone(),
-            "Your organization's default agent: there is no measured cost per win here yet."
-                .to_owned(),
+            "Your organization's default agent.".to_owned(),
         ));
     }
     match enabled.as_slice() {

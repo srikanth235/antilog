@@ -1,5 +1,5 @@
 //! Skills (skill packs): organization `SKILL.md` folders with fixed versions. Text only, read by
-//! agents and never by the judge.
+//! agents.
 
 use antilog_types::{AuditOutcome, MemberId, NewSkill, Skill, SkillFile, SkillVersion};
 
