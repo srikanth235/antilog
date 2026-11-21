@@ -26,8 +26,8 @@ impl Usage {
         match provider {
             ModelProvider::Anthropic => self.absorb_anthropic(value),
             ModelProvider::Openai => self.absorb_openai(value),
-            // Zen answers in either shape; Anthropic's replies and events are typed "message".
-            ModelProvider::Opencode => {
+            // Zen and Go answer in either shape; Anthropic's replies and events are typed "message".
+            ModelProvider::Opencode | ModelProvider::OpencodeGo => {
                 let kind = value.get("type").and_then(Value::as_str).unwrap_or("");
                 if kind == "message" || kind.starts_with("message_") {
                     self.absorb_anthropic(value)

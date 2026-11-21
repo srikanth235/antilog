@@ -1224,7 +1224,7 @@ export interface components {
          * @description A model provider whose key an organization brings. The proxy forwards to it unchanged.
          * @enum {string}
          */
-        ModelProvider: "anthropic" | "openai" | "opencode";
+        ModelProvider: "anthropic" | "openai" | "opencode" | "opencode-go";
         /**
          * @description How much of the network a session's machine may reach (docs/V0.md, Environments). `None`
          *     is no outbound traffic except the platform hosts (model gateway, MCP, code host); `Limited` is `allowed_hosts` plus package

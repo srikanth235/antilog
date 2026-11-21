@@ -1,4 +1,4 @@
-//! The model gateway. A session's machine calls `/anthropic/v1/*`, `/openai/v1/*` or `/opencode/v1/*` with its
+//! The model gateway. A session's machine calls `/anthropic/v1/*`, `/openai/v1/*`, `/opencode/v1/*` or `/opencode-go/v1/*` with its
 //! short-lived token where a key would go. The gateway checks the token, checks the session's
 //! budget, swaps in the organization's key, forwards the call as it came, and books spend from the
 //! usage the provider reports. A key is never logged and never reaches a session.
@@ -67,7 +67,7 @@ fn provider_error(
         ModelProvider::Anthropic => {
             json!({"type": "error", "error": {"type": kind, "message": message}})
         }
-        ModelProvider::Openai | ModelProvider::Opencode => {
+        ModelProvider::Openai | ModelProvider::Opencode | ModelProvider::OpencodeGo => {
             json!({"error": {"message": message, "type": kind, "param": null, "code": kind}})
         }
     };
@@ -77,7 +77,7 @@ fn provider_error(
 fn token_of(provider: ModelProvider, headers: &HeaderMap) -> Option<String> {
     match provider {
         ModelProvider::Anthropic => headers.get("x-api-key")?.to_str().ok().map(str::to_owned),
-        ModelProvider::Openai | ModelProvider::Opencode => headers
+        ModelProvider::Openai | ModelProvider::Opencode | ModelProvider::OpencodeGo => headers
             .get(header::AUTHORIZATION)?
             .to_str()
             .ok()?
@@ -205,7 +205,7 @@ where
             tracing::info!(%session, provider = provider.as_str(), %spent, "model call refused: budget spent");
             let (kind, status) = match provider {
                 ModelProvider::Anthropic => ("billing_error", StatusCode::PAYMENT_REQUIRED),
-                ModelProvider::Openai | ModelProvider::Opencode => {
+                ModelProvider::Openai | ModelProvider::Opencode | ModelProvider::OpencodeGo => {
                     ("insufficient_quota", StatusCode::PAYMENT_REQUIRED)
                 }
             };
@@ -265,6 +265,7 @@ where
         ModelProvider::Anthropic => &proxy.upstreams.anthropic,
         ModelProvider::Openai => &proxy.upstreams.openai,
         ModelProvider::Opencode => &proxy.upstreams.opencode,
+        ModelProvider::OpencodeGo => &proxy.upstreams.opencode_go,
     };
     let url = match parts.uri.query() {
         Some(query) => format!("{}{path}?{query}", base.trim_end_matches('/')),
@@ -293,7 +294,7 @@ where
     upstream = upstream.header(header::ACCEPT_ENCODING, "identity");
     upstream = match provider {
         ModelProvider::Anthropic => upstream.header("x-api-key", key.expose()),
-        ModelProvider::Openai | ModelProvider::Opencode => {
+        ModelProvider::Openai | ModelProvider::Opencode | ModelProvider::OpencodeGo => {
             upstream.header(header::AUTHORIZATION, format!("Bearer {}", key.expose()))
         }
     };
@@ -426,7 +427,11 @@ where
         tracing::warn!(%session, provider, ?outcome, "the reply reported no usage, so nothing is booked");
         return;
     }
-    let (price, known) = price::lookup(call.provider, usage.model.as_deref(), &proxy.zen);
+    let opencode_prices = match call.provider {
+        ModelProvider::OpencodeGo => &proxy.go,
+        _ => &proxy.zen,
+    };
+    let (price, known) = price::lookup(call.provider, usage.model.as_deref(), opencode_prices);
     if !known {
         tracing::warn!(%session, provider, model = ?usage.model, "unknown model: booked at the highest known price");
     }
@@ -472,6 +477,12 @@ where
     ) -> Response {
         handle(proxy, ModelProvider::Openai, request).await
     }
+    async fn opencode_go<S: Backend, C: TokenStore, K: Time>(
+        State(proxy): State<Shared<S, C, K>>,
+        request: Request,
+    ) -> Response {
+        handle(proxy, ModelProvider::OpencodeGo, request).await
+    }
     async fn opencode<S: Backend, C: TokenStore, K: Time>(
         State(proxy): State<Shared<S, C, K>>,
         request: Request,
@@ -483,6 +494,7 @@ where
         .route("/anthropic/v1/{*rest}", any(anthropic::<S, C, K>))
         .route("/openai/v1/{*rest}", any(openai::<S, C, K>))
         .route("/opencode/v1/{*rest}", any(opencode::<S, C, K>))
+        .route("/opencode-go/v1/{*rest}", any(opencode_go::<S, C, K>))
         .route("/mcp/{*rest}", any(crate::mcp::forward::<S, C, K>))
         .with_state(proxy)
 }

@@ -106,6 +106,16 @@ pub fn opencode_config(
                 "baseURL": format!("{}/opencode/v1", settings.proxy_url),
                 "apiKey": model_token,
             }},
+            // OpenCode Go is not one of OpenCode's own providers in this version's catalogue
+            // (its model list is not fetched), so it is a custom OpenAI-compatible one.
+            "opencode-go": {
+                "npm": "@ai-sdk/openai-compatible",
+                "name": "OpenCode Go",
+                "options": {
+                    "baseURL": format!("{}/opencode-go/v1", settings.proxy_url),
+                    "apiKey": model_token,
+                },
+            },
         },
         "mcp": {"antilog": {
             "type": "remote",

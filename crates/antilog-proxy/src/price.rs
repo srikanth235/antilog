@@ -114,7 +114,8 @@ pub fn highest() -> Price {
         .unwrap_or(FALLBACK)
 }
 
-/// OpenCode Zen's prices, read from `GET <upstream>/v1/models`. Cloning shares the table.
+/// OpenCode Zen's or Go's prices, read from `GET <upstream>/v1/models` (one table each; the Go
+/// list has the same shape). Cloning shares the table.
 ///
 /// The list is the same for any key, so it is fetched without one (the simpler choice: no
 /// organization, no sealed key). If the endpoint ever asks for a key the fetch fails, the table
@@ -247,7 +248,7 @@ impl ZenPrices {
         .await;
         match fetched {
             Ok(table) => {
-                tracing::info!(models = table.len(), "loaded the Zen price table");
+                tracing::info!(models = table.len(), upstream = %upstream, "loaded an OpenCode price table");
                 *self.table.write().unwrap_or_else(|e| e.into_inner()) = Some(table);
                 self.failing
                     .store(false, std::sync::atomic::Ordering::Relaxed);
@@ -273,8 +274,14 @@ impl ZenPrices {
 }
 
 /// The price of a model, and whether the table knew it.
+///
+/// `zen` is the table of the provider's own list when it is OpenCode Zen or Go (the caller picks
+/// it); it is not read for the others.
 pub fn lookup(provider: ModelProvider, model: Option<&str>, zen: &ZenPrices) -> (Price, bool) {
-    let known = if provider == ModelProvider::Opencode {
+    let known = if matches!(
+        provider,
+        ModelProvider::Opencode | ModelProvider::OpencodeGo
+    ) {
         model.and_then(|model| zen.get(model))
     } else {
         let found = |name: &str| {

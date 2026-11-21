@@ -211,6 +211,7 @@ async fn a_claim_carries_the_spec_the_contract_lists() {
                 "anthropic": {"options": {"baseURL": "https://proxy.example/anthropic/v1", "apiKey": model}},
                 "openai": {"options": {"baseURL": "https://proxy.example/openai/v1", "apiKey": model}},
                 "opencode": {"options": {"baseURL": "https://proxy.example/opencode/v1", "apiKey": model}},
+                "opencode-go": {"npm": "@ai-sdk/openai-compatible", "name": "OpenCode Go", "options": {"baseURL": "https://proxy.example/opencode-go/v1", "apiKey": model}},
             },
             "mcp": {"antilog": {"type": "remote", "url": format!("https://antilog.example/mcp/sessions/{}", session.id), "headers": {"Authorization": format!("Bearer {mcp}")}}},
             "skills": {"paths": ["/opt/antilog/skills"]},

@@ -176,16 +176,25 @@ pub enum ModelProvider {
     Anthropic,
     Openai,
     Opencode,
+    /// OpenCode Go, a subscription plan with its own keys. The wire name is `opencode-go`.
+    #[serde(rename = "opencode-go")]
+    OpencodeGo,
 }
 
 impl ModelProvider {
-    pub const ALL: [Self; 3] = [Self::Anthropic, Self::Openai, Self::Opencode];
+    pub const ALL: [Self; 4] = [
+        Self::Anthropic,
+        Self::Openai,
+        Self::Opencode,
+        Self::OpencodeGo,
+    ];
 
     pub const fn as_str(self) -> &'static str {
         match self {
             Self::Anthropic => "anthropic",
             Self::Openai => "openai",
             Self::Opencode => "opencode",
+            Self::OpencodeGo => "opencode-go",
         }
     }
 
