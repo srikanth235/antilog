@@ -12,6 +12,8 @@ export function Dialog(props: {
   title: string;
   description?: string;
   size?: "narrow" | "settings";
+  /** A wider popup than the narrow one, in pixels, for a form with rows. */
+  width?: number;
   children: ReactNode;
 }) {
   const settings = props.size === "settings";
@@ -28,6 +30,11 @@ export function Dialog(props: {
         <BaseDialog.Popup
           ref={popup}
           className={settings ? `sd ${styles.settings}` : styles.popup}
+          style={
+            props.width === undefined
+              ? undefined
+              : { width: `min(${props.width}px, calc(100% - 32px))` }
+          }
           // Focus goes to the first field, never to the close button (stack/web dialog: initial focus).
           initialFocus={() =>
             popup.current?.querySelector<HTMLElement>("[data-autofocus], input, textarea") ?? true
