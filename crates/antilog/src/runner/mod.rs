@@ -1,4 +1,5 @@
 mod api;
+mod changes;
 mod container;
 pub mod opencode;
 mod sandbox;

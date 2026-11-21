@@ -149,6 +149,7 @@ pub async fn store_suite<S: Store>(store: &S) {
     owners_and_sign_ins(store).await;
     budgets_and_spend(store).await;
     sessions(store).await;
+    session_changes(store).await;
     agents(store).await;
     environments(store).await;
     approvals(store).await;
@@ -709,6 +710,163 @@ async fn budgets_and_spend<S: Store>(store: &S) {
             .await
             .expect("another organization")
             .is_empty()
+    );
+}
+
+fn file_change(path: &str, patch: &str) -> antilog_types::FileChange {
+    antilog_types::FileChange {
+        path: path.into(),
+        old_path: None,
+        status: antilog_types::FileStatus::Modified,
+        additions: 1,
+        deletions: 0,
+        binary: false,
+        too_large: false,
+        patch: patch.into(),
+    }
+}
+
+fn repo_report(name: &str, sha: &str) -> antilog_types::RepoReport {
+    antilog_types::RepoReport {
+        repo: name.into(),
+        base_branch: "main".into(),
+        head_branch: "antilog/p95".into(),
+        base_sha: "a".repeat(40),
+        head_sha: sha.repeat(40),
+        commits: vec![antilog_types::CommitInfo {
+            sha: sha.repeat(40),
+            subject: "raise the pool".into(),
+            time: 1_700_000_000_000,
+        }],
+        files: vec![file_change("src/pool.ts", "@@ -1 +1 @@\n+x\n")],
+        commit_diffs: vec![antilog_types::CommitDiff {
+            sha: sha.repeat(40),
+            files: vec![file_change("src/pool.ts", "@@ -0,0 +1 @@\n+x\n")],
+        }],
+    }
+}
+
+async fn session_changes<S: Store>(store: &S) {
+    let world = world(store).await;
+    let org = world.id();
+    let other = world_org(store).await;
+    let session = session(store, &world, "claude", None)
+        .await
+        .expect("created");
+    assert!(
+        store
+            .changes(org, session.id)
+            .await
+            .expect("read")
+            .is_empty()
+    );
+
+    let report = |repos: Vec<antilog_types::RepoReport>| antilog_types::ChangesReport { repos };
+    store
+        .put_changes(
+            org,
+            session.id,
+            &report(vec![
+                repo_report("acme/api", "b"),
+                repo_report("acme/lib", "c"),
+            ]),
+            T0 + 10,
+        )
+        .await
+        .expect("a report is kept");
+    let read = store.changes(org, session.id).await.expect("read");
+    assert_eq!(
+        read.iter()
+            .map(|repo| repo.repo.as_str())
+            .collect::<Vec<_>>(),
+        ["acme/api", "acme/lib"]
+    );
+    let first = read.first().expect("the first repo");
+    assert_eq!(first.reported_at, T0 + 10);
+    assert_eq!(
+        first.files.first().map(|file| file.patch.as_str()),
+        Some("@@ -1 +1 @@\n+x\n")
+    );
+    assert_eq!(
+        first.commits.first().map(|commit| commit.subject.as_str()),
+        Some("raise the pool")
+    );
+
+    let marks = store.changes_marks(org, T0, 10).await.expect("marks");
+    assert_eq!(
+        marks
+            .iter()
+            .map(|mark| (mark.session, mark.reported_at))
+            .collect::<Vec<_>>(),
+        [(session.id, T0 + 10)]
+    );
+    assert!(
+        store
+            .changes_marks(org, T0 + 11, 10)
+            .await
+            .expect("marks")
+            .is_empty()
+    );
+
+    let commit = store
+        .commit_changes(org, session.id, Some("acme/lib"), &"c".repeat(40))
+        .await
+        .expect("read")
+        .expect("the commit is kept");
+    assert_eq!(
+        commit.files.first().map(|file| file.patch.as_str()),
+        Some("@@ -0,0 +1 @@\n+x\n")
+    );
+    assert!(
+        store
+            .commit_changes(org, session.id, Some("acme/api"), &"c".repeat(40))
+            .await
+            .expect("read")
+            .is_none()
+    );
+
+    store
+        .put_changes(
+            org,
+            session.id,
+            &report(vec![repo_report("acme/api", "d")]),
+            T0 + 20,
+        )
+        .await
+        .expect("replaced");
+    let read = store.changes(org, session.id).await.expect("read");
+    assert_eq!(read.len(), 1, "a repo left out of the report is dropped");
+    assert_eq!(
+        read.first().map(|repo| repo.head_sha.clone()),
+        Some("d".repeat(40))
+    );
+    assert!(
+        store
+            .commit_changes(org, session.id, None, &"b".repeat(40))
+            .await
+            .expect("read")
+            .is_none(),
+        "so is a commit it no longer lists"
+    );
+
+    assert!(
+        store
+            .changes(other, session.id)
+            .await
+            .expect("read")
+            .is_empty()
+    );
+    assert!(
+        store
+            .changes_marks(other, T0, 10)
+            .await
+            .expect("marks")
+            .is_empty()
+    );
+    not_found(
+        store
+            .put_changes(other, session.id, &report(Vec::new()), T0)
+            .await,
     );
 }
 

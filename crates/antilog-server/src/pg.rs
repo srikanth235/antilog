@@ -7,6 +7,7 @@ use sqlx::{PgConnection, PgPool, Postgres, Transaction};
 mod approval;
 mod budget;
 mod card;
+mod changes;
 mod credentials;
 mod customize;
 mod environment;

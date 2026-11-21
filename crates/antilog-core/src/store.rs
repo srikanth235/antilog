@@ -3,6 +3,7 @@ use std::future::Future;
 mod approval;
 mod budget;
 mod card;
+mod changes;
 mod customize;
 mod environment;
 mod model_key;
@@ -13,6 +14,7 @@ mod session;
 pub use approval::ApprovalStore;
 pub use budget::{BudgetStore, SpendLine, SpendScope, SpendTotal};
 pub use card::CardStore;
+pub use changes::ChangesStore;
 pub use customize::{ConnectorRow, CustomizeStore, SessionScope};
 pub use environment::EnvironmentStore;
 pub use model_key::{GatewayScope, ModelKeyStore};
@@ -52,6 +54,7 @@ pub trait Store:
     + BudgetStore
     + ApprovalStore
     + CardStore
+    + ChangesStore
     + RunnerStore
     + ModelKeyStore
     + CustomizeStore

@@ -1562,3 +1562,189 @@ async fn environments_are_read_by_every_member_and_managed_by_owners_and_editors
         .await;
     assert_eq!(on_default.status, StatusCode::CREATED);
 }
+
+fn repo_report(name: &str) -> antilog_types::RepoReport {
+    use antilog_types::{CommitDiff, CommitInfo, FileChange, FileStatus, RepoReport};
+    let file = |path: &str, patch: &str| FileChange {
+        path: path.into(),
+        old_path: None,
+        status: FileStatus::Modified,
+        additions: 1,
+        deletions: 1,
+        binary: false,
+        too_large: false,
+        patch: patch.into(),
+    };
+    RepoReport {
+        repo: name.into(),
+        base_branch: "main".into(),
+        head_branch: "antilog/p95".into(),
+        base_sha: "a".repeat(40),
+        head_sha: "b".repeat(40),
+        commits: vec![CommitInfo {
+            sha: "b".repeat(40),
+            subject: "raise the pool".into(),
+            time: 1_700_000_000_000,
+        }],
+        files: vec![
+            file("src/pool.ts", "@@ -1 +1 @@\n-max: 16\n+max: 48\n"),
+            file("src/big.ts", ""),
+        ],
+        commit_diffs: vec![CommitDiff {
+            sha: "b".repeat(40),
+            files: vec![file("src/pool.ts", "@@ -1 +1 @@\n-max: 16\n+max: 48\n")],
+        }],
+    }
+}
+
+#[tokio::test]
+async fn a_session_serves_its_latest_changes_and_each_commit_to_any_member() {
+    use antilog_core::store::ChangesStore;
+    use antilog_types::{ChangesReport, OrganizationId, SessionId};
+
+    let (org, deps) = org_with_store().await;
+    let (_, viewer) = org.member("vi", "viewer").await;
+    let (_, editor) = org.member("ed", "editor").await;
+    let made = org
+        .call(
+            Method::POST,
+            &org.start_uri(),
+            &editor,
+            Some(json!({"prompt": "make it faster", "model": "opencode/test"})),
+        )
+        .await;
+    let id = made.body["id"].as_str().unwrap_or_default().to_owned();
+    let session = SessionId::from_uuid(id.parse().unwrap_or_default());
+    let organization = OrganizationId::from_uuid(org.organization.parse().unwrap_or_default());
+
+    let before = org
+        .call(
+            Method::GET,
+            &format!("/sessions/{id}/changes"),
+            &viewer,
+            None,
+        )
+        .await;
+    assert_eq!(before.status, StatusCode::OK);
+    assert_eq!(before.body["repos"], json!([]));
+
+    let report = |name: &str| ChangesReport {
+        repos: vec![repo_report(name)],
+    };
+    deps.store
+        .put_changes(organization, session, &report("acme/old"), 10)
+        .await
+        .unwrap_or_else(|e| unreachable!("{e}"));
+    deps.store
+        .put_changes(organization, session, &report("acme/api"), 20)
+        .await
+        .unwrap_or_else(|e| unreachable!("{e}"));
+    let read = org
+        .call(
+            Method::GET,
+            &format!("/sessions/{id}/changes"),
+            &viewer,
+            None,
+        )
+        .await;
+    assert_eq!(
+        read.body["repos"].as_array().map(Vec::len),
+        Some(1),
+        "a report replaces the last"
+    );
+    let repo = &read.body["repos"][0];
+    assert_eq!(repo["repo"], "acme/api");
+    assert_eq!(repo["headBranch"], "antilog/p95");
+    assert_eq!(repo["reportedAt"], 20);
+    assert_eq!(repo["commits"][0]["subject"], "raise the pool");
+    assert_eq!(
+        repo["files"][0]["patch"],
+        "@@ -1 +1 @@\n-max: 16\n+max: 48\n"
+    );
+    assert_eq!(repo["files"][1]["tooLarge"], false);
+
+    let sha = "b".repeat(40);
+    let commit = org
+        .call(
+            Method::GET,
+            &format!("/sessions/{id}/changes/commits/{sha}?repo=acme/api"),
+            &viewer,
+            None,
+        )
+        .await;
+    assert_eq!(commit.status, StatusCode::OK);
+    assert_eq!(commit.body["files"][0]["path"], "src/pool.ts");
+    for uri in [
+        format!("/sessions/{id}/changes/commits/{}", "c".repeat(40)),
+        format!("/sessions/{id}/changes/commits/{sha}?repo=acme/other"),
+        "/sessions/018f3b1e-0000-7000-8000-000000000000/changes".to_owned(),
+    ] {
+        assert_eq!(
+            org.call(Method::GET, &uri, &viewer, None).await.status,
+            StatusCode::NOT_FOUND,
+            "{uri}"
+        );
+    }
+}
+
+#[tokio::test]
+async fn an_open_stream_announces_a_report_of_changes() {
+    use antilog_core::store::ChangesStore;
+    use antilog_types::{ChangesReport, OrganizationId, SessionId};
+    use tokio_stream::StreamExt;
+
+    let (org, deps) = org_with_store().await;
+    let made = org
+        .call(
+            Method::POST,
+            &org.start_uri(),
+            &org.owner,
+            Some(json!({"prompt": "make it faster", "model": "opencode/test"})),
+        )
+        .await;
+    let id = made.body["id"].as_str().unwrap_or_default().to_owned();
+    let session = SessionId::from_uuid(id.parse().unwrap_or_default());
+    let organization = OrganizationId::from_uuid(org.organization.parse().unwrap_or_default());
+
+    let response = org
+        .app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .uri("/events/stream")
+                .header(header::AUTHORIZATION, format!("Bearer {}", org.owner))
+                .body(Body::empty())
+                .unwrap_or_else(|e| unreachable!("{e}")),
+        )
+        .await
+        .unwrap_or_else(|e| unreachable!("{e}"));
+    let mut stream = response.into_body().into_data_stream();
+    let mut seen = String::new();
+    let wait = async {
+        let mut reported = false;
+        while let Some(Ok(chunk)) = stream.next().await {
+            seen.push_str(&String::from_utf8_lossy(&chunk));
+            if !reported && seen.contains("event: hello") {
+                reported = true;
+                deps.store
+                    .put_changes(
+                        organization,
+                        session,
+                        &ChangesReport {
+                            repos: vec![repo_report("acme/api")],
+                        },
+                        4_000_000_000_000,
+                    )
+                    .await
+                    .unwrap_or_else(|e| unreachable!("{e}"));
+            }
+            if seen.contains("event: changes") {
+                return;
+            }
+        }
+    };
+    tokio::time::timeout(std::time::Duration::from_secs(10), wait)
+        .await
+        .unwrap_or_else(|_| unreachable!("no changes event arrived: {seen}"));
+    assert!(seen.contains(&id), "the event names the session: {seen}");
+}

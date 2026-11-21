@@ -6,6 +6,7 @@ use jiff::{SignedDuration, Timestamp};
 mod approval;
 mod budget;
 mod card;
+mod changes;
 mod connectors;
 mod credentials;
 mod customize;
@@ -74,6 +75,7 @@ pub struct FakeStore {
     ledger: std::sync::Arc<Mutex<ledger::Ledger>>,
     cards: Mutex<card_state::Cards>,
     runner: Mutex<runner::State>,
+    changes: Mutex<changes::State>,
     vault: Mutex<model_key::Vault>,
     customize: Mutex<customize::State>,
 }

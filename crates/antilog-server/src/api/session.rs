@@ -6,11 +6,12 @@ use std::sync::Arc;
 use antilog_core::deps::Deps;
 use antilog_core::organization::{self as floor, Action, Refusal};
 use antilog_core::session::{self, NewSession, SessionError};
-use antilog_core::store::{OrganizationStore, SessionStore};
+use antilog_core::store::{ChangesStore, OrganizationStore, SessionStore};
 use antilog_core::{agents, budget, environments as env};
 use antilog_types::{
-    Agent, ApiError, AutoChoice, Environment, EventPage, NewAgent, NewEnvironment, ProjectId,
-    SendMessage, Session, SessionBudget, SessionId, SessionSpend, StartSession,
+    Agent, ApiError, AutoChoice, CommitChanges, Environment, EventPage, NewAgent, NewEnvironment,
+    ProjectId, SendMessage, Session, SessionBudget, SessionChanges, SessionId, SessionSpend,
+    StartSession,
 };
 use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
@@ -30,6 +31,8 @@ use super::auth::{App, Authed, Fail};
     message,
     stop,
     events,
+    changes,
+    commit_changes,
     spend,
     set_budget,
     agents,
@@ -433,6 +436,58 @@ async fn events<D: Deps + 'static>(
 }
 
 #[utoipa::path(
+    get, path = "/sessions/{id}/changes", security(("bearer" = [])),
+    params(("id" = SessionId, Path, description = "The session")),
+    responses(
+        (status = 200, description = "What the session changed in each repo against the commit it was cloned at, as of the end of the agent's last turn: commits, files and their unified diffs. Empty before the first report", body = SessionChanges),
+        (status = 404, body = ApiError),
+    )
+)]
+async fn changes<D: Deps + 'static>(
+    State(app): Shared<D>,
+    authed: Authed,
+    Path(id): Path<SessionId>,
+) -> Result<Json<SessionChanges>, Fail> {
+    owned(&app, &authed, id).await?;
+    Ok(Json(SessionChanges {
+        repos: app.store().changes(authed.who.organization, id).await?,
+    }))
+}
+
+#[derive(serde::Deserialize, utoipa::IntoParams)]
+#[into_params(parameter_in = Query)]
+struct CommitQuery {
+    /// The repo, when more than one has the commit.
+    repo: Option<String>,
+}
+
+#[utoipa::path(
+    get, path = "/sessions/{id}/changes/commits/{sha}", security(("bearer" = [])),
+    params(
+        ("id" = SessionId, Path, description = "The session"),
+        ("sha" = String, Path, description = "A commit listed in the session's changes"),
+        CommitQuery,
+    ),
+    responses(
+        (status = 200, description = "The files of that commit against its parent", body = CommitChanges),
+        (status = 404, body = ApiError),
+    )
+)]
+async fn commit_changes<D: Deps + 'static>(
+    State(app): Shared<D>,
+    authed: Authed,
+    Path((id, sha)): Path<(SessionId, String)>,
+    Query(query): Query<CommitQuery>,
+) -> Result<Json<CommitChanges>, Fail> {
+    owned(&app, &authed, id).await?;
+    let found = app
+        .store()
+        .commit_changes(authed.who.organization, id, query.repo.as_deref(), &sha)
+        .await?;
+    Ok(Json(found.ok_or(Refusal::NotFound)?))
+}
+
+#[utoipa::path(
     get, path = "/sessions/{id}/spend", security(("bearer" = [])),
     params(("id" = SessionId, Path, description = "The session")),
     responses((status = 200, description = "What it spent since it began, against its own cap, by kind", body = SessionSpend), (status = 404, body = ApiError))
@@ -483,6 +538,11 @@ pub fn routes<D: Deps + 'static>() -> Router<Arc<App<D>>> {
         .route("/sessions/{id}", get(read::<D>))
         .route("/sessions/{id}/messages", post(message::<D>))
         .route("/sessions/{id}/events", get(events::<D>))
+        .route("/sessions/{id}/changes", get(changes::<D>))
+        .route(
+            "/sessions/{id}/changes/commits/{sha}",
+            get(commit_changes::<D>),
+        )
         .route("/sessions/{id}/stop", post(stop::<D>))
         .route("/sessions/{id}/spend", get(spend::<D>))
         .route("/sessions/{id}/budget", put(set_budget::<D>))
