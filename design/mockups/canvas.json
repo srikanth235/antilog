@@ -708,6 +708,26 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "SessionContext.dc.html": {
+      "x": 47120,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, context nearly full",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionContextDark.dc.html": {
+      "x": 47120,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, context nearly full \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "SessionCredential.dc.html": {
       "x": 22800,
       "y": 3370,
@@ -1937,6 +1957,8 @@
     "SessionComposerExpandedDark.dc.html",
     "SessionConnectorTool.dc.html",
     "SessionConnectorToolDark.dc.html",
+    "SessionContext.dc.html",
+    "SessionContextDark.dc.html",
     "SessionCredential.dc.html",
     "SessionCredentialDark.dc.html",
     "SessionEnvironment.dc.html",
