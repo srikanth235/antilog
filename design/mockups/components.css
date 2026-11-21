@@ -1032,3 +1032,34 @@ a.tr-r:hover{background:var(--hover)}
 .ph-body .ph{height:34px;font-size:13px;padding-left:12px}
 .ph-body .rec.ses{height:48px;padding:0 12px;font-size:15px}
 .rec .pr.st.gi{width:16px;height:16px}
+
+/* ===== Sidebar as Claude Code's desktop one: a top row, a Pinned pill, a muted label per project, plain rows with a right-edge status. ===== */
+.side.cs{background:var(--side);border-right:0}
+.cs .cs-top{flex:none;display:flex;justify-content:flex-end;gap:2px;padding:12px 12px 4px}
+.cs .side-scroll{gap:18px;padding:8px 8px 12px}
+.cs-g{display:flex;flex-direction:column;gap:2px}
+.cs-pill{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px 0 12px;margin:0 0 4px 2px;border:0;border-radius:999px;background:var(--sel);color:var(--ink2);font-size:13px;font-weight:500;cursor:pointer}
+.cs-ph{align-self:flex-start;display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 10px;border:0;background:none;color:var(--ink3);font-size:13px;cursor:pointer}
+.cs-ph:hover,.cs-pill:hover{color:var(--ink)}
+.cs-ph .ic,.cs-pill .ic{width:12px;height:12px;transform:rotate(90deg)}
+.cs-ph[aria-expanded="false"] .ic,.cs-pill[aria-expanded="false"] .ic{transform:none}
+.cs-r{position:relative;display:flex;align-items:center;gap:10px;height:34px;padding:0 8px 0 10px;border-radius:10px;color:var(--ink);font-size:15px}
+.cs-r:hover{background:var(--hover)}
+.cs-r:has(.cs-a[aria-current]){background:var(--sel)}
+.cs-a{position:absolute;inset:0;border-radius:10px}
+.cs-r>.ic{width:14px;height:14px;color:var(--ink3);flex:none}
+.cs-t{flex:1;min-width:0;overflow:hidden;white-space:nowrap;-webkit-mask-image:linear-gradient(to right,var(--ink) calc(100% - 28px),transparent);mask-image:linear-gradient(to right,var(--ink) calc(100% - 28px),transparent)}
+.cs-tail{display:flex;align-items:center;justify-content:center;width:20px;height:20px;flex:none}
+.cs-d{width:8px;height:8px;border-radius:50%;background:var(--ink3)}
+.cs-d.work{background:var(--accent);animation:pulse 1.6s ease-in-out infinite}
+.cs-d.wait{background:var(--infra)}
+.cs-d.fail{background:var(--bad)}
+.cs-pr{width:16px;height:16px;color:var(--good)}
+.cs-more{position:relative;display:none;place-items:center;width:24px;height:24px;border:0;border-radius:6px;background:none;color:var(--ink2);cursor:pointer;flex:none}
+.cs-more:hover{background:var(--sel);color:var(--ink)}
+.cs-r:has(.cs-a[aria-current]) .cs-tail,.cs-r:hover .cs-tail{display:none}
+.cs-r:has(.cs-a[aria-current]) .cs-more,.cs-r:hover .cs-more{display:grid}
+.cs .side-foot{border-top:0;padding:8px 8px 12px}
+.ph-body .cs-r{height:48px;font-size:16px;padding:0 12px}
+.ph-body .cs-ph{height:32px;padding:0 12px}
+.ph-body .cs-pill{margin-left:8px}

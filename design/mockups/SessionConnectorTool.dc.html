@@ -16,36 +16,36 @@
 </helmet>
 <div class="board app" style="width: 1440px; height: 900px;">
   <!-- part:Sidebar active="reduce-forecast-error" -->
-  <nav class="side" aria-label="Main">
-        <div class="side-top">
-          <div class="oh"><button class="nav org" aria-haspopup="menu" aria-label="Organization Acme"><span class="org-tile" aria-hidden="true">A</span><span class="t">Acme</span></button><a class="icon-btn" data-item="new" href="NewSession.dc.html" aria-label="New session" title="New session"><i class="ic i-plus"></i></a><button class="icon-btn" aria-haspopup="menu" aria-label="Sort sessions" title="Sort sessions"><i class="ic i-sort"></i></button></div>
-          <label class="nav sqf" data-item="search"><i class="ic i-search"></i><input class="sqin" type="search" placeholder="Search sessions" aria-label="Search sessions"><span class="kc" aria-hidden="true">⌘K</span></label>
+  <nav class="side cs" aria-label="Main">
+        <div class="cs-top">
+          <button class="icon-btn" aria-haspopup="menu" aria-label="Sort sessions" title="Sort sessions"><i class="ic i-sort"></i></button><a class="icon-btn" data-item="new" href="NewSession.dc.html" aria-label="New session" title="New session"><i class="ic i-plus"></i></a>
         </div>
       <div class="side-scroll">
-        <div class="col" style="gap: 8px;">
-          <div class="pg">
-            <div class="srow"><button class="ph" aria-expanded="true"><i class="ic s i-chev chev"></i><span class="t">Checkout platform</span></button><button class="pinb" aria-label="Project menu, Checkout platform"><i class="ic s i-more"></i></button></div>
-            <div class="srow"><a class="rec ses" data-item="cut-checkout-p95" href="SessionWorking.dc.html"><span role="img" aria-label="Working" title="Working" class="st gi st-work run" style="color: var(--accent);"></span><span class="t">Fix flaky checkout tests</span></a></div>
-            <div class="srow"><a class="rec ses" data-item="reduce-forecast-error" href="SessionCredential.dc.html" aria-current="page"><span role="img" aria-label="Waiting for you" title="Waiting for you" class="st gi st-wait" style="color: var(--warn);"></span><span class="t">Add retries to the webhook sender</span></a></div>
-            <div class="srow"><a class="rec ses" href="SessionWorking.dc.html"><span role="img" aria-label="Done" title="Done" class="st gi st-done" style="color: var(--good);"></span><span class="t">Remove the legacy feature flags</span><span role="img" aria-label="Pull request opened" title="Pull request opened" class="st gi st-pr pr"></span></a></div>
-          </div>
-          <div class="pg">
-            <div class="srow"><button class="ph" aria-expanded="true"><i class="ic s i-chev chev"></i><span class="t">Web</span></button><button class="pinb" aria-label="Project menu, Web"><i class="ic s i-more"></i></button></div>
-            <div class="srow"><a class="rec ses" data-item="shrink-production-bundle" href="SessionWorking.dc.html"><span role="img" aria-label="Done" title="Done" class="st gi st-done" style="color: var(--good);"></span><span class="t">Upgrade to React 19</span><span role="img" aria-label="Pull request opened" title="Pull request opened" class="st gi st-pr pr"></span></a></div>
-            <div class="srow"><a class="rec ses" href="SessionWorking.dc.html"><span role="img" aria-label="Done" title="Done" class="st gi st-done" style="color: var(--good);"></span><span class="t">Rename the settings tabs</span><span role="img" aria-label="Pull request opened" title="Pull request opened" class="st gi st-pr pr"></span></a></div>
-          </div>
-          <div class="pg">
-            <div class="srow"><button class="ph" aria-expanded="true"><i class="ic s i-chev chev"></i><span class="t">Platform</span></button><button class="pinb" aria-label="Project menu, Platform"><i class="ic s i-more"></i></button></div>
-            <div class="srow"><a class="rec ses" data-item="autocomplete-latency" href="SessionFailed.dc.html"><span role="img" aria-label="Failed" title="Failed" class="st gi st-fail" style="color: var(--bad);"></span><span class="t">Move cron jobs to the queue</span></a></div>
-          </div>
-          <div class="pg">
-            <div class="srow"><button class="ph" aria-expanded="true"><i class="ic s i-chev chev"></i><span class="t">Docs</span></button><button class="pinb" aria-label="Project menu, Docs"><i class="ic s i-more"></i></button></div>
-            <div class="srow"><a class="rec ses" href="SessionWorking.dc.html"><span role="img" aria-label="Done" title="Done" class="st gi st-done" style="color: var(--good);"></span><span class="t">Document the billing API</span><span role="img" aria-label="Pull request opened" title="Pull request opened" class="st gi st-pr pr"></span></a></div>
-          </div>
+        <div class="cs-g">
+          <button class="cs-pill" aria-expanded="true">Pinned<i class="ic s i-chev"></i></button>
+          <div class="cs-r"><i class="ic i-pin" aria-hidden="true"></i><span class="cs-t">Fix flaky checkout tests</span><span class="cs-tail"><span role="img" aria-label="Working" title="Working" class="cs-d work"></span></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Fix flaky checkout tests"><i class="ic s i-more"></i></button><a class="cs-a" data-item="cut-checkout-p95" href="SessionWorking.dc.html" aria-label="Fix flaky checkout tests"></a></div>
+        </div>
+        <div class="cs-g">
+          <button class="cs-ph" aria-expanded="true">Checkout platform<i class="ic s i-chev"></i></button>
+          <div class="cs-r"><span class="cs-t">Add retries to the webhook sender</span><span class="cs-tail"><span role="img" aria-label="Waiting for you" title="Waiting for you" class="cs-d wait"></span></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Add retries to the webhook sender"><i class="ic s i-more"></i></button><a class="cs-a" data-item="reduce-forecast-error" href="SessionCredential.dc.html" aria-label="Add retries to the webhook sender" aria-current="page"></a></div>
+          <div class="cs-r"><span class="cs-t">Remove the legacy feature flags</span><span class="cs-tail"><i role="img" aria-label="Pull request opened" class="ic cs-pr st-pr"></i></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Remove the legacy feature flags"><i class="ic s i-more"></i></button><a class="cs-a" href="SessionWorking.dc.html" aria-label="Remove the legacy feature flags"></a></div>
+        </div>
+        <div class="cs-g">
+          <button class="cs-ph" aria-expanded="true">Web<i class="ic s i-chev"></i></button>
+          <div class="cs-r"><span class="cs-t">Upgrade to React 19</span><span class="cs-tail"><i role="img" aria-label="Pull request opened" class="ic cs-pr st-pr"></i></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Upgrade to React 19"><i class="ic s i-more"></i></button><a class="cs-a" data-item="shrink-production-bundle" href="SessionWorking.dc.html" aria-label="Upgrade to React 19"></a></div>
+          <div class="cs-r"><span class="cs-t">Rename the settings tabs</span><span class="cs-tail"><i role="img" aria-label="Pull request opened" class="ic cs-pr st-pr"></i></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Rename the settings tabs"><i class="ic s i-more"></i></button><a class="cs-a" href="SessionWorking.dc.html" aria-label="Rename the settings tabs"></a></div>
+        </div>
+        <div class="cs-g">
+          <button class="cs-ph" aria-expanded="true">Platform<i class="ic s i-chev"></i></button>
+          <div class="cs-r"><span class="cs-t">Move cron jobs to the queue</span><span class="cs-tail"><span role="img" aria-label="Failed" title="Failed" class="cs-d fail"></span></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Move cron jobs to the queue"><i class="ic s i-more"></i></button><a class="cs-a" data-item="autocomplete-latency" href="SessionFailed.dc.html" aria-label="Move cron jobs to the queue"></a></div>
+        </div>
+        <div class="cs-g">
+          <button class="cs-ph" aria-expanded="true">Docs<i class="ic s i-chev"></i></button>
+          <div class="cs-r"><span class="cs-t">Document the billing API</span><span class="cs-tail"><span role="img" aria-label="Done" title="Done" class="cs-d "></span></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Document the billing API"><i class="ic s i-more"></i></button><a class="cs-a" href="SessionWorking.dc.html" aria-label="Document the billing API"></a></div>
         </div>
       </div>
       <div class="side-foot">
-        <button class="nav acct" aria-haspopup="menu" aria-expanded="false" aria-label="Acme, Priya Raman, account menu"><span aria-hidden="true" class="avatar round" style="width: 30px; height: 30px; font-size: 14px;">P</span><span class="col grow" style="line-height: 1.25;"><span style="color: var(--ink);">Priya Raman</span><span class="xs mut">Acme</span></span><i class="ic s mut i-more"></i></button>
+        <button class="nav acct" aria-haspopup="menu" aria-expanded="false" aria-label="Priya Raman, Acme, account and settings"><span aria-hidden="true" class="avatar round" style="width: 30px; height: 30px; font-size: 14px;">P</span><span class="col grow" style="line-height: 1.25;"><span style="color: var(--ink);">Priya Raman</span><span class="xs mut">Acme · Settings</span></span><i class="ic s mut i-more"></i></button>
       </div>
   </nav>
   <!-- /part -->
