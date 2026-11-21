@@ -150,6 +150,25 @@ pub async fn model_key_suite<S: Store>(store: &S) {
         )
         .await
         .expect("put");
+    store
+        .put_model_key(
+            org,
+            ModelProvider::OpencodeGo,
+            &Secret::new("oc_sk_go"),
+            T0 + 2,
+            &audit("model_key.set"),
+        )
+        .await
+        .expect("put");
+    assert_eq!(
+        store
+            .model_key(org, ModelProvider::OpencodeGo)
+            .await
+            .expect("read")
+            .map(|key| key.expose().to_owned())
+            .as_deref(),
+        Some("oc_sk_go")
+    );
     let listed = store.model_keys(org).await.expect("list");
     assert_eq!(
         listed
@@ -158,7 +177,8 @@ pub async fn model_key_suite<S: Store>(store: &S) {
             .collect::<Vec<_>>(),
         vec![
             (ModelProvider::Anthropic, T0),
-            (ModelProvider::Openai, T0 + 1)
+            (ModelProvider::Openai, T0 + 1),
+            (ModelProvider::OpencodeGo, T0 + 2)
         ]
     );
 
@@ -181,7 +201,7 @@ pub async fn model_key_suite<S: Store>(store: &S) {
         got.map(|s| s.expose().to_owned()).as_deref(),
         Some("sk-ant-two")
     );
-    assert_eq!(store.model_keys(org).await.expect("list").len(), 2);
+    assert_eq!(store.model_keys(org).await.expect("list").len(), 3);
 
     // Another organization sees none of it.
     let foreign = other.organization.id;
@@ -215,7 +235,7 @@ pub async fn model_key_suite<S: Store>(store: &S) {
     let log = store.audit_log(org, None, 1000).await.expect("audit");
     assert_eq!(
         log.iter().filter(|e| e.action == "model_key.set").count(),
-        3
+        4
     );
     assert_eq!(
         log.iter()

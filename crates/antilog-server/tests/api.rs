@@ -1346,6 +1346,32 @@ async fn model_keys_are_set_by_an_owner_listed_by_anyone_and_never_returned() {
         assert!(!text.contains("sk-ant"), "a key came back: {text}");
     }
 
+    // OpenCode Go is a provider of its own, set under its wire name and listed by it.
+    let go = org
+        .call(
+            Method::PUT,
+            "/model-keys/opencode-go",
+            &org.owner,
+            Some(json!({"key": "oc_sk_go"})),
+        )
+        .await;
+    assert_eq!(go.status, StatusCode::OK);
+    assert_eq!(go.body["provider"], "opencode-go");
+    let listed_go = org.call(Method::GET, "/model-keys", &viewer, None).await;
+    let names: Vec<&str> = listed_go
+        .body
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|key| key["provider"].as_str().unwrap())
+        .collect();
+    assert_eq!(names, ["anthropic", "opencode-go"]);
+    assert!(!listed_go.body.to_string().contains("oc_sk_go"));
+    let removed_go = org
+        .call(Method::DELETE, "/model-keys/opencode-go", &org.owner, None)
+        .await;
+    assert_eq!(removed_go.status, StatusCode::NO_CONTENT);
+
     let denied = org
         .call(Method::DELETE, "/model-keys/anthropic", &editor, None)
         .await;
