@@ -24,6 +24,7 @@ export const keys = {
   sessionApprovals: (id: string) => ["sessions", id, "approvals"] as const,
   sessionSpend: (id: string) => ["sessions", id, "spend"] as const,
   changes: (id: string) => ["sessions", id, "changes"] as const,
+  context: (id: string) => ["sessions", id, "context"] as const,
   commitChanges: (id: string, repo: string, sha: string) =>
     ["sessions", id, "changes", repo, sha] as const,
   agents: () => ["agents"] as const,
@@ -162,6 +163,29 @@ export function useChanges(id: string) {
       unwrap(await api.GET("/sessions/{id}/changes", { params: { path: { id } } })),
     refetchInterval: poll,
   });
+}
+
+/** How full the model's context window is, as of the latest call. */
+export function useSessionContext(id: string) {
+  const poll = usePoll();
+  return useQuery({
+    queryKey: keys.context(id),
+    queryFn: async () =>
+      unwrap(await api.GET("/sessions/{id}/context", { params: { path: { id } } })),
+    refetchInterval: poll,
+  });
+}
+
+/** Asks the agent's harness to compact the conversation; the transcript says when it has. */
+export function useCompact(session: string) {
+  return useWrite(
+    async () =>
+      unwrap(await api.POST("/sessions/{id}/compact", { params: { path: { id: session } } })),
+    async (client) => {
+      await client.invalidateQueries({ queryKey: keys.session(session) });
+      await client.invalidateQueries({ queryKey: keys.transcript(session) });
+    },
+  );
 }
 
 /** The files of one commit; a commit never changes, so it is fetched once. */

@@ -205,6 +205,7 @@ export function Session(props: {
             hasCard={waiting.length > 0}
             canSend={editor}
             agent={agentLabel(s.agent)}
+            sessionId={s.id}
             budgetCents={s.budgetCapCents ?? null}
             onInterrupt={() => setConfirmStop(true)}
             onSend={async (text) => {
@@ -230,6 +231,7 @@ export function Session(props: {
             onClose={() => props.onPanel(undefined)}
             onBudget={() => setBudgetOpen(true)}
             canEdit={editor}
+            onOpenChanges={() => props.onPanel("changes")}
           />
         ) : props.panel === "changes" ? (
           <ChangesPanel sessionId={s.id} onClose={() => props.onPanel(undefined)} />
