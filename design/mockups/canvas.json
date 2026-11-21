@@ -548,6 +548,26 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "NewSessionRepos.dc.html": {
+      "x": 5030,
+      "y": 12780,
+      "w": 1440,
+      "h": 900,
+      "title": "11 \u00b7 New session, repo list",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "NewSessionReposDark.dc.html": {
+      "x": 5030,
+      "y": 12780,
+      "w": 1440,
+      "h": 900,
+      "title": "11 \u00b7 New session, repo list \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "PluginDetail.dc.html": {
       "x": 39520,
       "y": 8350,
@@ -2201,6 +2221,8 @@
     "HomeEmptyDark.dc.html",
     "NewSession.dc.html",
     "NewSessionDark.dc.html",
+    "NewSessionRepos.dc.html",
+    "NewSessionReposDark.dc.html",
     "PluginDetail.dc.html",
     "PluginDetailDark.dc.html",
     "PluginRemove.dc.html",

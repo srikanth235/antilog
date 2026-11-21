@@ -1063,3 +1063,24 @@ a.tr-r:hover{background:var(--hover)}
 .ph-body .cs-r{height:48px;font-size:16px;padding:0 12px}
 .ph-body .cs-ph{height:32px;padding:0 12px}
 .ph-body .cs-pill{margin-left:8px}
+.nh{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;padding:0 24px 28px}
+.nh-c{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;text-align:center}
+.nh-mark{opacity:.22}
+.nh-t{margin:0;font-weight:500;font-size:32px;line-height:1.2;letter-spacing:-.01em;color:var(--ink)}
+.nh-b{width:100%;max-width:760px;display:flex;flex-direction:column;gap:16px;position:relative}
+.nh-s{display:flex;flex-direction:column;gap:2px}
+.nh-s button{display:flex;align-items:center;gap:12px;height:36px;padding:0 12px;border:0;border-radius:var(--r2);background:none;color:var(--ink2);font-size:14.5px;text-align:left;cursor:pointer}
+.nh-s button:hover{background:var(--hover);color:var(--ink)}
+.nh-s .ic{color:var(--ink3)}
+.cmp.nh-cmp{padding:10px 14px 10px 14px;gap:10px;border-radius:24px}
+.nh-cmp .pkrow{gap:4px}
+.nh-cmp .pk{min-height:30px;padding:0 10px;border-color:transparent;background:var(--sunk);font-size:12.5px}
+.nh-cmp .pk:hover{border-color:var(--line2)}
+.nh-cmp .cmp-in{min-height:56px;font-size:15.5px;padding:4px 4px 0}
+.nh-cmp .cmp-bar{gap:6px}
+.nh-cmp .cmp-bar .opt{min-height:30px;padding:0 8px;font-size:12.5px}
+.nh-cmp .cmp-bar .go{gap:6px}
+.menu.nh-m{position:absolute;left:0;bottom:172px;width:340px;padding:8px;z-index:60}
+.menu.nh-m .sqf{height:34px;border:1px solid var(--line2);background:var(--sunk);margin-bottom:4px}
+.menu.nh-m .mi{min-height:34px}
+.menu.nh-m .mi .nh-ck{width:16px;color:var(--accent);flex:none}
