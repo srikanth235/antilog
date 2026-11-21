@@ -6,6 +6,7 @@ version = 2
 ignore = [
     { id = "RUSTSEC-2023-0071", reason = "owner-approved 18 Nov: rsa is reached only through openidconnect, which verifies ID-token signatures with the provider public key; Antilog never signs or decrypts with an RSA private key; no fixed rsa 0.9 exists; revisit when openidconnect updates" },
     { id = "RUSTSEC-2026-0440", reason = "astral-tokio-tar is reached only through testcontainers, a dev-dependency of antilog-server tests" },
+    { id = "RUSTSEC-2026-0543", reason = "owner-approved 21 Nov: chrono is unmaintained, not vulnerable; it is reached only through oauth2, openidconnect, rmcp and schemars, and Antilog has no direct dependency on it; revisit when those move off it" },
 ]
 
 [licenses]
