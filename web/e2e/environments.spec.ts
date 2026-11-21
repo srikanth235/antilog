@@ -1,10 +1,12 @@
 import { expect, test } from "@playwright/test";
-import { signUp, unique } from "./helpers";
+import { createProject, signUp, unique } from "./helpers";
 
 test("create an environment, change it into a new version, see it offered to a new session, then archive it", async ({
   page,
 }) => {
   await signUp(page);
+  // A new session needs a project; without one the composer, and its Environment chip, is not offered.
+  await createProject(page, unique("Bench project"));
   const name = unique("Bench");
   await page.goto("/settings/connections");
   const rows = page.locator("[data-environment]");

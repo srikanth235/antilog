@@ -84,6 +84,7 @@ label.nav{cursor:text}
 .page{width:100%;max-width:1040px;margin:0 auto;padding:32px 32px 48px;display:flex;flex-direction:column;gap:24px}
 .sub{margin:0;color:var(--ink2);max-width:640px}
 .hd{display:flex;flex-direction:column;gap:8px}
+.hd>.btn{align-self:flex-start}
 .head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px}
 .card{background:var(--raised);border:1px solid var(--line);border-radius:var(--r3);padding:16px 20px}
 .card.flush{padding:0;overflow:hidden}
