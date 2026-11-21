@@ -58,6 +58,7 @@ async fn world_with(lifetime: Option<jiff::SignedDuration>) -> World {
             runner: Some(RunnerSettings {
                 key: KEY.to_owned(),
                 core,
+                hold: std::time::Duration::ZERO,
             }),
         },
     );

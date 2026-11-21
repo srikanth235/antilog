@@ -11,6 +11,7 @@ use antilog_core::store::RunnerStore;
 use antilog_types::{
     ApiError, ChangesReport, Items, PollRequest, PollResponse, Release, SessionId,
 };
+use axum::extract::ws::WebSocketUpgrade;
 use axum::extract::{DefaultBodyLimit, Path, State};
 use axum::http::{HeaderMap, StatusCode, header};
 use axum::response::{IntoResponse, Response};
@@ -18,6 +19,7 @@ use axum::routing::{get, post};
 use axum::{Json, Router};
 use jiff::SignedDuration;
 use subtle::ConstantTimeEq;
+use uuid::Uuid;
 
 use super::auth::App;
 
@@ -28,7 +30,13 @@ const EXPORT_LIMIT: usize = 100 * 1024 * 1024;
 pub struct RunnerSettings {
     pub key: String,
     pub core: runner::Settings,
+    /// How long an idle poll waits for a terminal to be asked for before it answers empty, so a
+    /// person's new terminal does not wait for the runner's next poll. Zero answers at once.
+    pub hold: std::time::Duration,
 }
+
+/// The default `hold`: a poll that has nothing to say waits this long for a terminal.
+pub const POLL_HOLD: std::time::Duration = std::time::Duration::from_secs(4);
 
 type Shared<D> = State<Arc<App<D>>>;
 
@@ -39,6 +47,10 @@ pub fn routes<D: Deps + 'static>() -> Router<Arc<App<D>>> {
         .route("/runner/sessions/{id}/changes", post(changes::<D>))
         .route("/runner/sessions/{id}/release", post(release::<D>))
         .route("/runner/sessions/{id}/export", get(export::<D>))
+        .route(
+            "/runner/sessions/{id}/terminals/{terminal}",
+            get(terminal::<D>),
+        )
         .route(
             "/runner/sessions/{id}/skills/{name}/{version}",
             get(skill::<D>),
@@ -160,9 +172,44 @@ async fn poll<D: Deps + 'static>(
     if request.runner.is_empty() || request.runner.len() > 200 {
         return Err(Fail::Unauthenticated);
     }
-    Ok(Json(
-        runner::poll(&*app.deps, &settings.core, &request).await?,
-    ))
+    // Armed before the queue is read, so a terminal asked for meanwhile is not missed.
+    let woken = app.terminals.woken();
+    tokio::pin!(woken);
+    woken.as_mut().enable();
+    let mut answer = runner::poll(&*app.deps, &settings.core, &request).await?;
+    if !settings.hold.is_zero()
+        && !request.exiting
+        && !request.held.is_empty()
+        && answer.claims.is_empty()
+        && answer.commands.is_empty()
+        && answer.lost.is_empty()
+        && tokio::time::timeout(settings.hold, woken).await.is_ok()
+    {
+        answer = runner::poll(&*app.deps, &settings.core, &request).await?;
+    }
+    for session in &answer.lost {
+        app.terminals.close_session(*session);
+    }
+    Ok(Json(answer))
+}
+
+/// The runner's outbound WebSocket for one terminal: it was asked for by `OpenTerminal`, and
+/// this takes the machine's end, once.
+async fn terminal<D: Deps + 'static>(
+    State(app): Shared<D>,
+    headers: HeaderMap,
+    Path((session, terminal)): Path<(SessionId, Uuid)>,
+    upgrade: WebSocketUpgrade,
+) -> Result<Response, Fail> {
+    holder(&app, &headers, session).await?;
+    let ticket = app
+        .terminals
+        .runner(terminal, session)
+        .ok_or(RunnerError::NotFound)?;
+    let terminals = app.terminals.clone();
+    Ok(upgrade.on_upgrade(move |socket| async move {
+        terminals.carry(terminal, socket, ticket, false).await;
+    }))
 }
 
 async fn events<D: Deps + 'static>(
@@ -195,6 +242,7 @@ async fn release<D: Deps + 'static>(
 ) -> Result<StatusCode, Fail> {
     let holder = holder(&app, &headers, session).await?;
     runner::release(&*app.deps, session, &holder, &release).await?;
+    app.terminals.close_session(session);
     Ok(StatusCode::NO_CONTENT)
 }
 
@@ -264,6 +312,18 @@ impl RunnerSettings {
                 ),
             }
         }
-        Some(Self { key, core })
+        let hold = match super::auth::setting("ANTILOG_POLL_HOLD_MS") {
+            Some(ms) => match ms.parse::<u64>() {
+                Ok(ms) => std::time::Duration::from_millis(ms),
+                Err(_) => {
+                    tracing::warn!(
+                        "ANTILOG_POLL_HOLD_MS is not a number of milliseconds; keeping 4000"
+                    );
+                    POLL_HOLD
+                }
+            },
+            None => POLL_HOLD,
+        };
+        Some(Self { key, core, hold })
     }
 }

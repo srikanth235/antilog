@@ -148,6 +148,7 @@ async fn world() -> World {
             secure_cookies: true,
             runner: None,
         },
+        terminals: Arc::default(),
     });
     let router = api::router_with_reach(
         app,

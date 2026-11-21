@@ -430,6 +430,26 @@ pub struct SessionEnvironment {
 pub struct SendMessage {
     pub text: String,
 }
+
+/// A person opens a terminal tab in a session's machine, at the size of the panel.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct OpenTerminal {
+    pub cols: u16,
+    pub rows: u16,
+}
+
+/// A terminal that was asked for. The browser opens a WebSocket to
+/// `/terminals/{terminal}/connect?token=` with it within a minute; it works once.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TerminalTicket {
+    pub terminal: uuid::Uuid,
+    pub token: String,
+    /// Epoch milliseconds.
+    pub expires_at: i64,
+}
+
 #[cfg(test)]
 mod tool_tests {
     use super::*;

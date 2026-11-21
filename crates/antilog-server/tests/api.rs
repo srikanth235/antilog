@@ -34,6 +34,7 @@ fn app(fake: bool, open: bool) -> Router {
             secure_cookies: true,
             runner: None,
         },
+        terminals: Arc::default(),
     });
     router_with_reach(
         app,

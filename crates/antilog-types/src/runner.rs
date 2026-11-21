@@ -96,6 +96,13 @@ pub enum Command {
     Approval { permission: String, reply: Reply },
     /// Interrupt the agent's current turn.
     Abort,
+    /// A person opened a terminal tab: create a shell (a PTY) in OpenCode at this size and carry
+    /// it over an outbound WebSocket to `/runner/sessions/{id}/terminals/{terminal}`.
+    OpenTerminal {
+        terminal: Uuid,
+        cols: u16,
+        rows: u16,
+    },
     /// Export, stop OpenCode and let the machine go.
     Release { outcome: ReleaseOutcome },
 }

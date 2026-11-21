@@ -5,3 +5,4 @@ pub mod connectors;
 pub mod deps;
 pub mod pg;
 pub mod signin;
+pub mod terminal;

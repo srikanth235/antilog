@@ -19,6 +19,7 @@ pub mod mcp;
 pub mod model_key;
 pub mod organization;
 pub mod runner;
+pub mod terminal;
 
 #[derive(OpenApi)]
 #[openapi(
@@ -57,7 +58,11 @@ async fn health<D: Deps + 'static>(
 }
 
 pub fn router<D: Deps + 'static>(deps: Arc<D>, settings: auth::Settings) -> Router {
-    router_with(Arc::new(auth::App { deps, settings }))
+    router_with(Arc::new(auth::App {
+        deps,
+        settings,
+        terminals: Arc::default(),
+    }))
 }
 
 pub fn router_with<D: Deps + 'static>(app: Arc<auth::App<D>>) -> Router {
@@ -71,6 +76,7 @@ fn base<D: Deps + 'static>(app: &auth::App<D>) -> Router<Arc<auth::App<D>>> {
         .merge(organization::routes())
         .merge(model_key::routes())
         .merge(session::routes())
+        .merge(terminal::routes())
         .merge(live::routes());
     if app.settings.runner.is_some() {
         router.merge(runner::routes())
@@ -108,6 +114,7 @@ pub fn openapi_json() -> String {
     doc.merge(organization::ApiDoc::openapi());
     doc.merge(model_key::Doc::openapi());
     doc.merge(session::Doc::openapi());
+    doc.merge(terminal::Doc::openapi());
     doc.merge(live::Doc::openapi());
     doc.merge(customize::Doc::openapi());
     doc.to_pretty_json()

@@ -2311,6 +2311,50 @@
         ]
       }
     },
+    "/sessions/{id}/resume": {
+      "post": {
+        "tags": [],
+        "operationId": "resume",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The session",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/SessionId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A machine that was let go waits for a runner again (Queued); a held machine is unchanged",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Session"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The session has ended",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/sessions/{id}/spend": {
       "get": {
         "tags": [],
@@ -2381,6 +2425,70 @@
             }
           },
           "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/sessions/{id}/terminals": {
+      "post": {
+        "tags": [],
+        "operationId": "open",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The session",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/SessionId"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OpenTerminal"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Asked of the machine; editors and owners. Open the WebSocket at /terminals/{terminal}/connect?token= within a minute",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TerminalTicket"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "A viewer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The machine is not running (code not_running), or the session has ended",
             "content": {
               "application/json": {
                 "schema": {
@@ -4358,6 +4466,27 @@
         },
         "additionalProperties": false
       },
+      "OpenTerminal": {
+        "type": "object",
+        "description": "A person opens a terminal tab in a session's machine, at the size of the panel.",
+        "required": [
+          "cols",
+          "rows"
+        ],
+        "properties": {
+          "cols": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "rows": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      },
       "Organization": {
         "type": "object",
         "required": [
@@ -5272,6 +5401,30 @@
               "null"
             ],
             "description": "Left out, the first line of the prompt."
+          }
+        },
+        "additionalProperties": false
+      },
+      "TerminalTicket": {
+        "type": "object",
+        "description": "A terminal that was asked for. The browser opens a WebSocket to\n`/terminals/{terminal}/connect?token=` with it within a minute; it works once.",
+        "required": [
+          "terminal",
+          "token",
+          "expiresAt"
+        ],
+        "properties": {
+          "expiresAt": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Epoch milliseconds."
+          },
+          "terminal": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "token": {
+            "type": "string"
           }
         },
         "additionalProperties": false
