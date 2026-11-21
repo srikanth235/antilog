@@ -41,10 +41,8 @@ macro_rules! ids {
 ids!(
     OrganizationId,
     MemberId,
-    ProjectId,
     TokenId,
     SignInId,
-    ExperimentId,
     SessionId,
     SpendId,
     ApprovalId,
@@ -111,9 +109,7 @@ mod text_enum_schema {
         schema_matches_wire(CardKind::ALL);
         schema_matches_wire(CostTier::ALL);
         schema_matches_wire(Decision::ALL);
-        schema_matches_wire(EvaluationKind::ALL);
         schema_matches_wire(EventKind::ALL);
-        schema_matches_wire(ExperimentStatus::ALL);
         schema_matches_wire(MemberKind::ALL);
         schema_matches_wire(PolicyMode::ALL);
         schema_matches_wire(Role::ALL);

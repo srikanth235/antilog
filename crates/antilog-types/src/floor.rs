@@ -5,7 +5,7 @@ use utoipa::ToSchema;
 
 use crate::{
     AccessToken, AuditEntry, AuditId, Decision, Identity, Member, MemberId, Organization,
-    OrganizationId, ProjectId, Role,
+    OrganizationId, Role,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
@@ -39,7 +39,7 @@ pub struct SignInCallback {
 pub struct Me {
     pub member: Member,
     pub organization: Organization,
-    /// Their organization role, which is their default in every project.
+    /// What they may do in the organization.
     pub role: Role,
     pub organizations: Vec<OrganizationRef>,
 }
@@ -90,33 +90,21 @@ pub struct SetRole {
     pub role: Role,
 }
 
-/// `None` returns the member to their organization role in this project.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct SetProjectRole {
-    pub role: Option<Role>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct NewProject {
-    pub name: String,
-    pub description: String,
-}
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Limits {
     pub monthly_cap_cents: Option<i64>,
+    /// The cap a new session gets when its request names none.
     pub default_budget_cents: Option<i64>,
     /// Most sessions running on machines at once; omitted: unchanged.
     #[serde(default)]
     pub max_running_sessions: Option<u32>,
 }
 
+/// A session's own cap, in US cents.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct ExperimentBudget {
+pub struct SessionBudget {
     pub budget_cap_cents: i64,
 }
 
@@ -149,20 +137,11 @@ pub struct LimitSpend {
     pub spent_cents: i64,
 }
 
+/// This month's spend against the organization's cap.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct ProjectSpend {
-    pub project_id: ProjectId,
-    pub cap_cents: Option<i64>,
-    pub spent_cents: i64,
-}
-
-/// This month's spend against the caps.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct BudgetSummary {
     pub organization: LimitSpend,
-    pub projects: Vec<ProjectSpend>,
 }
 
 /// What one kind of spend came to.
@@ -174,27 +153,16 @@ pub struct KindSpend {
     pub tokens: i64,
 }
 
-/// What one session spent.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+/// All the spend of one session since it began, against its own cap, if it has one. Spend rows
+/// name a session and a kind.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SessionSpend {
     pub session_id: crate::SessionId,
-    pub cents: i64,
-    pub tokens: i64,
-}
-
-/// All the spend of one experiment since it began, against its budget. Spend rows name a session
-/// and a kind, not a trial, so it is split by kind and by session, never by a trial's outcome.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct ExperimentSpend {
-    pub experiment_id: crate::ExperimentId,
-    pub project_id: ProjectId,
-    pub budget_cap_cents: i64,
+    pub budget_cap_cents: Option<i64>,
     pub spent_cents: i64,
     pub tokens: i64,
     pub by_kind: Vec<KindSpend>,
-    pub by_session: Vec<SessionSpend>,
 }
 
 /// Newest first; `next` is the cursor for the page after this one.

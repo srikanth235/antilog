@@ -2,9 +2,9 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 use crate::id::text_enum;
-use crate::{ApprovalId, AuditId, ExperimentId, MemberId, OrganizationId, SessionId, SpendId};
+use crate::{ApprovalId, AuditId, MemberId, OrganizationId, SessionId, SpendId};
 
-text_enum!(SpendKind { Tokens => "tokens", Machine => "machine", Judge => "judge" });
+text_enum!(SpendKind { Tokens => "tokens", Machine => "machine" });
 
 /// One append-only row of spend, in US cents.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
@@ -17,22 +17,14 @@ pub struct Spend {
     pub amount_cents: i64,
     pub tokens: i64,
     pub occurred_at: i64,
-    /// The trial this paid for, when the meter knows it. Spend that names none is attributed to
-    /// the session's next trial by time, or counts as not measured.
-    #[serde(default)]
-    pub trial_id: Option<crate::judge::TrialId>,
 }
 
 text_enum!(
     CardKind {
-        SealExperiment => "seal_experiment",
         RaiseBudget => "raise_budget",
         AddCredential => "add_credential",
         AttachRepo => "attach_repo",
         ChangeEnvironment => "change_environment",
-        OpenPullRequest => "open_pull_request",
-        KeepGoing => "keep_going",
-        ContinueOnAnotherAgent => "continue_on_another_agent",
         AskFirst => "ask_first",
         UseConnectorTool => "use_connector_tool",
     }
@@ -69,19 +61,8 @@ text_enum!(RepoAccess { Read => "read", Push => "push" });
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum CardPayload {
     #[serde(rename_all = "camelCase")]
-    SealExperiment {
-        version: u32,
-        metric: String,
-        unit: String,
-        baseline: f64,
-        noise: f64,
-        cheats_rejected: u32,
-        /// "No value set", or what one unit is worth, measured offline.
-        value_note: String,
-    },
-    #[serde(rename_all = "camelCase")]
     RaiseBudget {
-        /// The experiment's budget when the card was raised.
+        /// The session's budget when the card was raised.
         now_cents: i64,
         /// How much more is asked.
         requested_cents: i64,
@@ -107,18 +88,6 @@ pub enum CardPayload {
         size: Option<String>,
         network: Option<String>,
     },
-    #[serde(rename_all = "camelCase")]
-    OpenPullRequest {
-        trial: crate::judge::TrialId,
-        hypothesis: String,
-        /// One pull request per repo changed.
-        repos: Vec<String>,
-    },
-    #[serde(rename_all = "camelCase")]
-    KeepGoing {
-        tried: u32,
-    },
-    ContinueOnAnotherAgent {},
     /// The agent asked to use a tool that is set to ask first.
     #[serde(rename_all = "camelCase")]
     AskFirst {
@@ -142,14 +111,10 @@ impl CardPayload {
     /// The card kind this payload belongs to.
     pub fn card(&self) -> CardKind {
         match self {
-            Self::SealExperiment { .. } => CardKind::SealExperiment,
             Self::RaiseBudget { .. } => CardKind::RaiseBudget,
             Self::AddCredential { .. } => CardKind::AddCredential,
             Self::AttachRepo { .. } => CardKind::AttachRepo,
             Self::ChangeEnvironment { .. } => CardKind::ChangeEnvironment,
-            Self::OpenPullRequest { .. } => CardKind::OpenPullRequest,
-            Self::KeepGoing { .. } => CardKind::KeepGoing,
-            Self::ContinueOnAnotherAgent {} => CardKind::ContinueOnAnotherAgent,
             Self::AskFirst { .. } => CardKind::AskFirst,
             Self::UseConnectorTool { .. } => CardKind::UseConnectorTool,
         }
@@ -161,16 +126,13 @@ impl CardPayload {
 pub struct Approval {
     pub id: ApprovalId,
     pub organization_id: OrganizationId,
-    pub experiment_id: ExperimentId,
-    pub session_id: Option<SessionId>,
+    pub session_id: SessionId,
     pub card: CardKind,
     /// What would happen; never a secret.
     pub summary: String,
     /// The card's own fields. `None` only for a card raised before payloads existed.
     pub payload: Option<CardPayload>,
     pub cost_cents: Option<i64>,
-    /// Only a project owner may decide it, and policy never does: a changed value model.
-    pub needs_owner: bool,
     pub status: ApprovalStatus,
     pub decided_by: Option<MemberId>,
     pub created_at: i64,
@@ -195,7 +157,7 @@ pub struct AuditEntry {
     pub organization_id: OrganizationId,
     /// `None`: Antilog itself.
     pub actor: Option<MemberId>,
-    /// A registered action name, such as `project.create`.
+    /// A registered action name, such as `session.start`.
     pub action: String,
     /// The id of what it touched.
     pub target: String,

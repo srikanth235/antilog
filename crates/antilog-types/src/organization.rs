@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 use crate::id::text_enum;
-use crate::{MemberId, OrganizationId, ProjectId, SignInId, TokenId};
+use crate::{MemberId, OrganizationId, SignInId, TokenId};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -13,7 +13,7 @@ pub struct Organization {
     pub created_at: i64,
     /// Monthly cap on all spend, in US cents. `None`: no cap.
     pub monthly_cap_cents: Option<i64>,
-    /// Default budget per experiment, in US cents.
+    /// The cap a new session gets when its request names none, in US cents.
     pub default_budget_cents: Option<i64>,
     /// Most sessions this organization has on machines at once; queued ones wait.
     pub max_running_sessions: u32,
@@ -60,7 +60,7 @@ pub struct Member {
     pub name: String,
     /// A person has one; a service account has none.
     pub identity: Option<Identity>,
-    /// The organization role, the default in every project.
+    /// What the member may do in the organization.
     pub role: Role,
     pub created_at: i64,
 }
@@ -100,47 +100,6 @@ impl Member {
             created_at,
         }
     }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct Project {
-    pub id: ProjectId,
-    pub organization_id: OrganizationId,
-    pub name: String,
-    pub description: String,
-    /// Monthly cap on the spend of its experiments, in US cents.
-    pub monthly_cap_cents: Option<i64>,
-    /// Default budget per experiment, in US cents.
-    pub default_budget_cents: Option<i64>,
-    pub created_at: i64,
-}
-
-impl Project {
-    pub fn new(
-        organization_id: OrganizationId,
-        name: impl Into<String>,
-        description: impl Into<String>,
-        created_at: i64,
-    ) -> Self {
-        Self {
-            id: ProjectId::new(),
-            organization_id,
-            name: name.into(),
-            description: description.into(),
-            monthly_cap_cents: None,
-            default_budget_cents: None,
-            created_at,
-        }
-    }
-}
-
-/// A member's role in one project when it differs from the organization role.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct ProjectRole {
-    pub member_id: MemberId,
-    pub role: Role,
 }
 
 /// What may be shown of an access token; the secret is shown once, at creation.

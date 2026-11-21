@@ -91,18 +91,10 @@ pub struct Skill {
     pub description: String,
     pub latest: u32,
     pub versions: Vec<u32>,
-    /// A project turns it Off to hide it from New experiment there.
-    pub on: bool,
     pub from_plugin: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct SetOn {
-    pub on: bool,
-}
-
-/// The skill versions an experiment selected.
+/// A skill version a session starts with.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SkillRef {
@@ -110,22 +102,9 @@ pub struct SkillRef {
     pub version: u32,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct SelectSkills {
-    /// Names; each is pinned to its latest version now.
-    pub skills: Vec<String>,
-}
+text_enum!(PartKind { Skill => "skill", Connector => "connector" });
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct SelectConnectors {
-    pub connectors: Vec<ConnectorId>,
-}
-
-text_enum!(PartKind { Skill => "skill", Connector => "connector", Evaluation => "evaluation" });
-
-/// What a plugin brought, by kind and name (a skill's name, a connector's id, an evaluation's id).
+/// What a plugin brought, by kind and name (a skill's name, a connector's id).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PluginPart {
@@ -165,8 +144,6 @@ pub struct NewPlugin {
     pub skills: Vec<NewSkill>,
     #[serde(default)]
     pub connectors: Vec<PluginConnector>,
-    #[serde(default)]
-    pub evaluations: Vec<crate::NewEvaluationTemplate>,
 }
 
 /// What to do with each part when a plugin is removed; a part not named is removed, and one in use refuses.
