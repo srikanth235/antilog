@@ -14,10 +14,14 @@ Each shows a card in the chat. The agent never sees a credential value.
 | --- | --- | --- | --- | --- |
 | `attach_repo` | `repo` (owner/name) | Attach repo | An owner or editor of the session's project; policy may pre-approve | A name that is not owner/name; a viewer's approval |
 | `request_credential` | `connector`, `reason`, `scope` | Add credential: with a secure form whose value is sealed on the server | An owner or editor, always; policy can never pre-approve it | A scope with write or admin rights; a value in chat |
-| `set_environment` | `image`, `setup_script`, `size`, `network` | Change environment | An owner or editor; policy may pre-approve | A call that names nothing to change |
+| `set_environment` | `network`, `add_hosts`, `remove_hosts`, `set_variables`, `unset_variables`, `setup_script`, `add_repos`, `remove_repos` | Change environment: the change as a diff against the version the session runs, with what applies now and what at the next start | An owner or editor; policy may pre-approve | A call that names nothing to change or changes nothing; a variable named `ANTILOG_*` or a proxy name; a host that is not an exact name; hosts at a level other than limited |
 | `request_budget` | `amount_cents`, `reason` | Raise budget, with what it may cost | An owner or editor; policy may allow up to a limit | A session with no cap of its own (it says so and points to Settings); an amount of zero or less |
 
 An editor or owner can also change a session's cap at any time without a card (`PUT /sessions/{id}/budget`), inside its project's and the organization's caps. Each refusal reaches the agent as a plain reason, and the session shows a calm one-line card, never a blank.
+
+## Changing the session's environment
+
+Approving a Change environment card makes the environment's next version (built on its newest version; a session on the built-in default gets an environment of its own, `Session <id>`), moves the session to it and tells the agent what applied. The environment is shared: other sessions on it get the version when they start, and the card says so ("only this session" is not built). The network applies on the next tunnel, since the proxy reads the session's version on every one. A running machine is sent the version (`Command::ApplyEnvironment`): its variables reach commands run from then on (`BASH_ENV`, see [runner.md](runner.md)) and a changed setup script runs now, a failure being a note and a line for the agent; a machine no runner holds applies both when it next starts. Default repos the new version brings are cloned now. A person can do the same from the Overview (`PUT /sessions/{id}/environment`, `session.set_environment`, editors and owners), and the agent is told as it is of a decided card. Both write `environment.edit` or `environment.create` and `session.set_environment` to the audit log. Code: `antilog-core/src/session/environment.rs`.
 
 ## Rules for a new tool
 

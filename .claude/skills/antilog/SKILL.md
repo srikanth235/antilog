@@ -43,6 +43,7 @@ curl -s -H "$H" -H 'content-type: application/json' \
 | `POST /sessions/{id}/stop` | Stop it. It is Done, "Stopped by NAME" |
 | `GET /sessions/{id}/spend` | `budgetCapCents` or null, `spentCents`, tokens, `byKind` |
 | `PUT /sessions/{id}/budget` | `{budgetCapCents}`: change the session's cap (409 `over_cap` above the project's or the organization's) |
+| `PUT /sessions/{id}/environment` | `{environment}`: move the session to the newest version of that environment (`default` for the built-in one) |
 | `GET /approvals/pending`, `POST /approvals/{id}/decision` | The cards the caller may decide; a decision |
 | `GET /budgets` | The organization's cap and spend, and each project's |
 | `PUT /projects/{id}/limits`, `PUT /organization/limits` | `{monthlyCapCents, defaultBudgetCents}` for a project (project owners); the organization's limits (owners) |

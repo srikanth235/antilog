@@ -13,7 +13,7 @@ An approval card has a title, what would happen, what it may cost, and Approve a
 | Raise budget (`raise_budget`) | `request_budget` | The amount asked, the session's budget now, the reason | Allow up to a limit: asks above the limit set in Settings, Approvals. Approving raises that session's cap |
 | Add credential (`add_credential`) | `request_credential` | The connector, the scope and why. A secure form: the value is typed there, never into the chat, and goes straight to the server's secret store. The agent never sees it | Always ask, and can never be pre-approved |
 | Attach repo (`attach_repo`) | `attach_repo` | The repo and the access asked. Approving clones it into the live machine | Always ask |
-| Change environment (`change_environment`) | `set_environment` | Image, setup script, size and network, as a change from now | Always ask |
+| Change environment (`change_environment`) | `set_environment` | The environment it changes and the versions, then a diff against what the session runs: network and hosts (apply now), variables (new commands now), setup script (runs now), default repos (cloned now). Approving makes the environment's next version, which other sessions on it also get, and moves the session to it | Always ask |
 | Allow this tool? (`ask_first`) | The harness asked to use a tool that is set to ask first | The tool and what it would do, as the harness described it. Actions: Allow once, Decline. The answer goes back to the machine that asked | Always ask |
 | Use a connector tool (`use_connector_tool`) | A connector tool set to Ask first | The tool and the exact input. One approval pays for one call | Always ask |
 
@@ -33,7 +33,7 @@ Roles are checked at project scope ([model.md](model.md)). Owners and editors of
 
 ## Recorded
 
-Every approval is an audit row (`approval.decide`): who, which card, what it would do, when, the outcome (approved, declined, approved by policy). So is every tool call that changes something (`tool.call`). Audit names include `session.start`, `session.message`, `session.stop`, `session.set_budget`, `project.create`, `project.set_role`, `project.set_limits`, `organization.set_limits`, `policy.set`, `model_key.set` and `connector.set`.
+Every approval is an audit row (`approval.decide`): who, which card, what it would do, when, the outcome (approved, declined, approved by policy). So is every tool call that changes something (`tool.call`). Audit names include `session.set_environment` (a person's move or an approved Change environment card; the new version itself is `environment.edit` or `environment.create`), `session.start`, `session.message`, `session.stop`, `session.set_budget`, `project.create`, `project.set_role`, `project.set_limits`, `organization.set_limits`, `policy.set`, `model_key.set` and `connector.set`.
 
 ## Settings pages
 
