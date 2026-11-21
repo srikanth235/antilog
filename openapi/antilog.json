@@ -2131,6 +2131,93 @@
         ]
       }
     },
+    "/sessions/{id}/compact": {
+      "post": {
+        "tags": [],
+        "operationId": "compact",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The session",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/SessionId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The agent's harness was told to compact the conversation; the transcript shows a note when it has. Editors and owners of the project, as for a message",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Session"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The session has ended",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/sessions/{id}/context": {
+      "get": {
+        "tags": [],
+        "operationId": "context",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The session",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/SessionId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "How full the model's context window is: what the latest call used, the model's window and what the request was made of. Empty before the first call",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionContext"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/sessions/{id}/environment": {
       "put": {
         "tags": [],
@@ -3279,6 +3366,34 @@
         },
         "additionalProperties": false
       },
+      "ContextPart": {
+        "type": "object",
+        "description": "One measured part of the latest model request, in tokens.",
+        "required": [
+          "kind",
+          "tokens"
+        ],
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/ContextPartKind"
+          },
+          "tokens": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          }
+        }
+      },
+      "ContextPartKind": {
+        "type": "string",
+        "description": "What a part of a model request is made of.",
+        "enum": [
+          "system",
+          "tools",
+          "antilog_tools",
+          "messages"
+        ]
+      },
       "CostTier": {
         "type": "string",
         "description": "\"$\", \"$$\" or \"$$$\", set from the agent's price.",
@@ -3892,6 +4007,25 @@
                 "type": "string",
                 "enum": [
                   "changes"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "A session's context use changed: refetch `GET /sessions/{id}/context`.",
+            "required": [
+              "sessionId",
+              "type"
+            ],
+            "properties": {
+              "sessionId": {
+                "$ref": "#/components/schemas/SessionId"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "context"
                 ]
               }
             }
@@ -4856,6 +4990,48 @@
             "items": {
               "$ref": "#/components/schemas/RepoChanges"
             }
+          }
+        }
+      },
+      "SessionContext": {
+        "type": "object",
+        "description": "A session's context window as the Overview reads it. A field the server has not been told\nyet is `null` (or an empty list); a session that has made no call has all of them empty.",
+        "required": [
+          "parts"
+        ],
+        "properties": {
+          "parts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContextPart"
+            },
+            "description": "What the latest request was made of, scaled to the provider's own input count. Empty\nuntil the gateway has measured one."
+          },
+          "reportedAt": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "When anything last changed, epoch milliseconds; `null` before the first report."
+          },
+          "used": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Tokens the latest model call filled: input plus cache reads and writes.",
+            "minimum": 0
+          },
+          "window": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "The model's context window, in tokens.",
+            "minimum": 0
           }
         }
       },

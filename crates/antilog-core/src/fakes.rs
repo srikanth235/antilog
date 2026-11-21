@@ -8,6 +8,7 @@ mod budget;
 mod card;
 mod changes;
 mod connectors;
+mod context;
 mod credentials;
 mod customize;
 mod environment;
@@ -76,6 +77,7 @@ pub struct FakeStore {
     cards: Mutex<card_state::Cards>,
     runner: Mutex<runner::State>,
     changes: Mutex<changes::State>,
+    context: Mutex<context::State>,
     vault: Mutex<model_key::Vault>,
     customize: Mutex<customize::State>,
 }
@@ -145,6 +147,11 @@ mod tests {
     #[tokio::test]
     async fn fake_store_keeps_the_card_state() {
         crate::seed::card_suite(&FakeStore::default()).await;
+    }
+
+    #[tokio::test]
+    async fn fake_store_keeps_the_context_window() {
+        crate::seed::context_suite(&FakeStore::default()).await;
     }
 
     #[test]

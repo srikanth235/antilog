@@ -81,6 +81,116 @@ pub async fn organization<S: Store>(store: &S) -> Seed {
 }
 
 /// What every `CardStore` must do: apply a card once.
+/// The context window's store contract: the runner's use and the gateway's parts each replace
+/// their own half and leave the other's alone; another organization sees nothing.
+pub async fn context_suite<S: Store>(store: &S) {
+    use antilog_types::{ContextPart, ContextPartKind, ContextUse};
+
+    let seed = organization(store).await;
+    let other = organization(store).await;
+    let org = seed.organization.id;
+    let entry = AuditEntry::new(
+        org,
+        Some(seed.owner.id),
+        "session.start",
+        "x",
+        AuditOutcome::Done,
+        T0,
+    );
+    let session = session(&seed, "claude", T0);
+    store
+        .create_session(&session, &entry)
+        .await
+        .expect("a session is created");
+
+    let empty = store.context(org, session.id).await.expect("read");
+    assert_eq!(empty.used, None);
+    assert!(empty.parts.is_empty());
+    assert_eq!(empty.reported_at, None);
+
+    let parts = [
+        ContextPart {
+            kind: ContextPartKind::System,
+            tokens: 10,
+        },
+        ContextPart {
+            kind: ContextPartKind::Messages,
+            tokens: 90,
+        },
+    ];
+    store
+        .put_context_parts(org, session.id, &parts, T0 + 1)
+        .await
+        .expect("parts");
+    store
+        .put_context_use(
+            org,
+            session.id,
+            ContextUse {
+                used: 100,
+                window: Some(1000),
+            },
+            T0 + 2,
+        )
+        .await
+        .expect("use");
+    store
+        .put_context_use(
+            org,
+            session.id,
+            ContextUse {
+                used: 150,
+                window: None,
+            },
+            T0 + 3,
+        )
+        .await
+        .expect("use again");
+    let read = store.context(org, session.id).await.expect("read");
+    assert_eq!(read.used, Some(150));
+    assert_eq!(read.window, Some(1000), "a use without a window keeps it");
+    assert_eq!(read.parts, parts, "a use leaves the parts alone");
+    assert_eq!(read.reported_at, Some(T0 + 3));
+
+    let marks = store.context_marks(org, T0 + 3, 10).await.expect("marks");
+    assert_eq!(marks.len(), 1);
+    assert_eq!(marks.first().map(|mark| mark.session), Some(session.id));
+    assert!(
+        store
+            .context_marks(org, T0 + 4, 10)
+            .await
+            .expect("marks")
+            .is_empty()
+    );
+
+    let other_org = other.organization.id;
+    assert_eq!(
+        store.context(other_org, session.id).await.expect("read"),
+        antilog_types::SessionContext::default()
+    );
+    assert!(
+        store
+            .context_marks(other_org, 0, 10)
+            .await
+            .expect("marks")
+            .is_empty()
+    );
+    assert!(matches!(
+        store
+            .put_context_use(
+                other_org,
+                session.id,
+                ContextUse {
+                    used: 1,
+                    window: None
+                },
+                T0
+            )
+            .await,
+        Err(crate::store::StoreError::NotFound)
+    ));
+}
+
 pub async fn card_suite<S: Store>(store: &S) {
     use antilog_types::{Approval, ApprovalId, ApprovalStatus, CardKind};
 

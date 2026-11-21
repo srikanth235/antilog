@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 
 mod changes;
+mod context;
 mod customize;
 mod floor;
 mod id;
@@ -11,6 +12,7 @@ mod runner;
 mod session;
 
 pub use changes::*;
+pub use context::*;
 pub use customize::*;
 pub use floor::*;
 pub use id::*;

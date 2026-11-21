@@ -4,6 +4,7 @@ mod approval;
 mod budget;
 mod card;
 mod changes;
+mod context;
 mod customize;
 mod environment;
 mod model_key;
@@ -15,6 +16,7 @@ pub use approval::ApprovalStore;
 pub use budget::{BudgetStore, SpendLine, SpendScope, SpendTotal};
 pub use card::CardStore;
 pub use changes::ChangesStore;
+pub use context::ContextStore;
 pub use customize::{ConnectorRow, CustomizeStore, SessionScope};
 pub use environment::{EnvironmentStore, SecretValue};
 pub use model_key::{GatewayScope, ModelKeyStore};
@@ -55,6 +57,7 @@ pub trait Store:
     + ApprovalStore
     + CardStore
     + ChangesStore
+    + ContextStore
     + RunnerStore
     + ModelKeyStore
     + CustomizeStore

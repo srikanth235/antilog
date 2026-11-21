@@ -8,7 +8,7 @@ use utoipa::ToSchema;
 use uuid::Uuid;
 
 use crate::id::text_enum;
-use crate::{OrganizationId, SessionId, ToolRecord};
+use crate::{ContextUse, OrganizationId, SessionId, ToolRecord};
 
 text_enum!(
     /// Where a session's machine is. A claim holds a lease; a lapsed lease is `Queued` again.
@@ -96,6 +96,8 @@ pub enum Command {
     Approval { permission: String, reply: Reply },
     /// Interrupt the agent's current turn.
     Abort,
+    /// Summarise the conversation so far to free the window (OpenCode's compact).
+    Compact,
     /// Export, stop OpenCode and let the machine go.
     Release { outcome: ReleaseOutcome },
 }
@@ -169,6 +171,8 @@ pub enum Item {
     Error { key: String, text: String },
     /// The agent is busy again or has stopped.
     Status { busy: bool },
+    /// A model call finished: how much of the window it filled. Only the latest is kept.
+    Context { context: ContextUse },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
