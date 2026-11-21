@@ -1,17 +1,17 @@
 ---
 name: session
 description: >-
-  How does the chat work, and where does an agent run? Use for sessions and their status (Working, Waiting for you, Done, Failed), the conversation and what the server stores of it, agents, attaching repos, environments, connectors and credentials, sessions inside an experiment and its project, skill packs, the setup tools (attach_repo, request_credential, set_environment, request_budget), what agents are told, spend, cost tier, Auto, hand off, failover, compaction and clean-up, and adding an agent, an environment, a connector or a skill pack.
+  How does the chat work, and where does an agent run? Use for sessions and their status (Working, Waiting for you, Done, Failed), the conversation and what the server stores of it, a session's project, model and agent, attaching repos, environments, connectors and credentials, skill packs, the setup tools (attach_repo, request_credential, set_environment, request_budget), what agents are told, spend and a session's budget, the runner, clean-up, and adding an agent, an environment, a connector or a skill pack.
 ---
 
 # Session
 
-A session is one agent's work inside an experiment: a chat with one agent in one machine, with any number of repos attached. It belongs to an experiment, which belongs to a project, and is named on screen by its agent ("Claude Code session"). The agent drives the work. The server keeps a ledger of the session and runs the judge, and runs no loop. A runner polls the server's queue and runs the agent's harness in one machine per session ([docs/V0.md](../../../docs/V0.md)); how it works is in [runner.md](runner.md). The judge, and what counts as a win, is in [../judge/SKILL.md](../judge/SKILL.md).
+A session is one agent's work in a project: a chat with one agent in one machine, with any number of repos attached. It belongs to one project, and its repos, environment version, agent and model are fixed when it starts. The agent drives the work. The server keeps a ledger of the session and runs no loop. A runner polls the server's queue and runs the agent's harness in one machine per session ([docs/V0.md](../../../docs/V0.md)); how it works is in [runner.md](runner.md). Experiments and the judge are parked ([../judge/SKILL.md](../judge/SKILL.md)).
 
 | If you are doing | Read |
 | --- | --- |
 | Deciding what this area promises | [owes.md](owes.md) |
-| Looking up a word (session, agent, cost tier, Auto, hand off, failover, agent scoreboard, environment, attached repo, connector, tool mode, session endpoint, skill pack, plugin, dataset, dataset version, marking, holdout, session event) | [model.md](model.md) |
+| Looking up a word or a field (session, agent, model, environment, attached repo, budget, connector, tool mode, session endpoint, skill pack, plugin, session event) or a route | [model.md](model.md) |
 | Checking a change against the rules that never bend | [rules.md](rules.md) |
 | What a prompt-injected agent could do, and what stops it | [threat-model.md](threat-model.md) |
 | Changing the queue, the leases, `/runner/*`, `antilog runner` or how OpenCode is driven | [runner.md](runner.md) |
@@ -20,8 +20,7 @@ A session is one agent's work inside an experiment: a chat with one agent in one
 | Supporting a new agent (a model run by a harness) | [add-agent.md](add-agent.md) |
 | Adding or changing an environment (network, variables, setup script, size) | [add-environment.md](add-environment.md) |
 | Adding a connector (a remote MCP server the session endpoint calls for an agent), its sealed credential and each tool's On, Off or Ask first | [add-connector.md](add-connector.md) |
-| Adding a skill pack (a versioned `SKILL.md` folder agents load on demand, never read by the judge), or a plugin that brings them | [add-skill-pack.md](add-skill-pack.md) |
-| `seal`, `measure`, `history`, `deliver`, `watch`, the experiment and the holdout | [../judge/SKILL.md](../judge/SKILL.md) |
+| Adding a skill pack (a versioned `SKILL.md` folder agents load on demand), or a plugin that brings them | [add-skill-pack.md](add-skill-pack.md) |
 | Cards, policy, roles, budgets, who may approve | [../organization/SKILL.md](../organization/SKILL.md) |
 | How the chat and its cards look and read | [../design/behaviour.md](../design/behaviour.md) |
 | Deciding whether a change belongs in the product | [../product/SKILL.md](../product/SKILL.md) |

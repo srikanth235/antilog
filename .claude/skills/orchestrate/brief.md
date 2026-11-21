@@ -2,7 +2,7 @@
 
 A brief states:
 
-- **The goal**, in one or two sentences, and which area owns it (the session, the judge or the organization floor).
+- **The goal**, in one or two sentences, and which area owns it (the session or the organization floor).
 - **The rulings already made.** Link the [product](../product/SKILL.md) skill and the area's `owes.md` and `rules.md`. Do not restate them, and do not let a session reopen them.
 - **The files** to read and the files to change.
 - **The checks to run.** Link [land/checks.md](../land/checks.md) and name the commands for this kind of change. Git rules: [land/git.md](../land/git.md).
