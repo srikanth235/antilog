@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update machines set state = $3, holder = case when $4 then holder else null end, lease_until = case when $4 then lease_until else null end, updated_at = to_timestamp($5::bigint / 1000.0) where session_id = $1 and holder = $2 and state in ('claimed', 'running', 'idle')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Bool",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8b8c291067d080fb78ce10f3e452c033580c0cf115428a1ffda03fc71525ad25"
+}

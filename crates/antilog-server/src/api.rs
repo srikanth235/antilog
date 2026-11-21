@@ -1,0 +1,165 @@
+pub mod session;
+
+use std::sync::Arc;
+
+use antilog_core::deps::Deps;
+use antilog_core::store::Store;
+use antilog_types::{ApiError, Health, HealthStatus};
+use axum::Json;
+use axum::Router;
+use axum::extract::State;
+use axum::http::StatusCode;
+use axum::routing::get;
+use utoipa::OpenApi;
+
+pub mod auth;
+pub mod customize;
+pub mod live;
+pub mod mcp;
+pub mod model_key;
+pub mod organization;
+pub mod runner;
+pub mod terminal;
+
+#[derive(OpenApi)]
+#[openapi(
+    info(title = "Antilog API", version = env!("CARGO_PKG_VERSION")),
+    paths(health)
+)]
+struct ApiDoc;
+
+#[utoipa::path(
+    get,
+    path = "/health",
+    responses(
+        (status = 200, description = "The server and its store are up", body = Health),
+        (status = 503, description = "The store does not answer", body = ApiError),
+    )
+)]
+async fn health<D: Deps + 'static>(
+    State(app): State<Arc<auth::App<D>>>,
+) -> Result<Json<Health>, (StatusCode, Json<ApiError>)> {
+    match app.store().ping().await {
+        Ok(()) => Ok(Json(Health {
+            status: HealthStatus::Ok,
+        })),
+        Err(error) => {
+            tracing::error!(%error, "store ping failed");
+            Err((
+                StatusCode::SERVICE_UNAVAILABLE,
+                Json(ApiError {
+                    code: "store_unavailable".to_owned(),
+                    message: "The store does not answer; retry shortly.".to_owned(),
+                    fields: Vec::new(),
+                }),
+            ))
+        }
+    }
+}
+
+pub fn router<D: Deps + 'static>(deps: Arc<D>, settings: auth::Settings) -> Router {
+    router_with(Arc::new(auth::App {
+        deps,
+        settings,
+        terminals: Arc::default(),
+    }))
+}
+
+pub fn router_with<D: Deps + 'static>(app: Arc<auth::App<D>>) -> Router {
+    base(&app).with_state(app)
+}
+
+fn base<D: Deps + 'static>(app: &auth::App<D>) -> Router<Arc<auth::App<D>>> {
+    let router = Router::new()
+        .route("/health", get(health::<D>))
+        .merge(auth::routes())
+        .merge(organization::routes())
+        .merge(model_key::routes())
+        .merge(session::routes())
+        .merge(terminal::routes())
+        .merge(live::routes());
+    if app.settings.runner.is_some() {
+        router.merge(runner::routes())
+    } else {
+        router
+    }
+}
+
+/// The server with the routes that reach beyond a session's machine: Customize, and the MCP
+/// endpoint of each session. `credentials` verifies the sessions' MCP tokens.
+pub fn router_with_reach<D, V, C>(
+    app: Arc<auth::App<D>>,
+    credentials: V,
+    backend: customize::Backend<C>,
+) -> Router
+where
+    D: Deps + 'static,
+    V: antilog_core::credentials::SessionCredentials + 'static,
+    C: antilog_core::customize::ConnectorClient + 'static,
+{
+    let backend = Arc::new(backend);
+    let mcp = Arc::new(mcp::Mcp {
+        credentials,
+        backend: backend.clone(),
+    });
+    base(&app)
+        .merge(customize::routes(backend))
+        .merge(mcp::routes(mcp))
+        .with_state(app)
+}
+
+pub fn openapi_json() -> String {
+    let mut doc = ApiDoc::openapi();
+    doc.merge(auth::ApiDoc::openapi());
+    doc.merge(organization::ApiDoc::openapi());
+    doc.merge(model_key::Doc::openapi());
+    doc.merge(session::Doc::openapi());
+    doc.merge(terminal::Doc::openapi());
+    doc.merge(live::Doc::openapi());
+    doc.merge(customize::Doc::openapi());
+    doc.to_pretty_json()
+        .unwrap_or_else(|error| unreachable!("the document serializes: {error}"))
+}
+
+#[cfg(test)]
+mod tests {
+    use antilog_core::fakes::FakeDeps;
+    use axum::body::Body;
+    use axum::http::Request;
+    use tower::ServiceExt;
+
+    use super::*;
+
+    #[tokio::test]
+    async fn health_answers_ok_from_the_fake_store() {
+        let app = router(
+            Arc::new(FakeDeps::new()),
+            auth::Settings {
+                providers: Vec::new(),
+                open_organizations: false,
+                secure_cookies: true,
+                runner: None,
+                models: crate::models::ModelLists::offline(),
+            },
+        );
+        let response = app
+            .oneshot(Request::get("/health").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = axum::body::to_bytes(response.into_body(), 1024)
+            .await
+            .unwrap();
+        assert_eq!(body.as_ref(), br#"{"status":"ok"}"#);
+    }
+
+    #[test]
+    fn committed_openapi_document_is_current() {
+        let committed = include_str!("../../../openapi/antilog.json");
+        assert_eq!(
+            committed.trim_end(),
+            openapi_json(),
+            "run `cargo run -p antilog-server -- openapi > openapi/antilog.json`"
+        );
+    }
+}

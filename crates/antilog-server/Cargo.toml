@@ -1,0 +1,40 @@
+[package]
+name = "antilog-server"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+sha2.workspace = true
+antilog-core.workspace = true
+antilog-types.workspace = true
+anyhow.workspace = true
+axum.workspace = true
+jiff.workspace = true
+oauth2.workspace = true
+rmcp.workspace = true
+reqwest.workspace = true
+openidconnect.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+subtle.workspace = true
+thiserror.workspace = true
+sqlx.workspace = true
+tokio.workspace = true
+tokio-stream.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+utoipa.workspace = true
+uuid.workspace = true
+
+[dev-dependencies]
+futures-util.workspace = true
+serde_json.workspace = true
+testcontainers.workspace = true
+tokio-tungstenite.workspace = true
+tower.workspace = true
+
+[lints]
+workspace = true

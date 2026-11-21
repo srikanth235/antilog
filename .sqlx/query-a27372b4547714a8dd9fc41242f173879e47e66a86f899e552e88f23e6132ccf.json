@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select coalesce(sum(amount_cents), 0)::bigint as \"cents!\", coalesce(sum(tokens), 0)::bigint as \"tokens!\" from spend where organization_id = $1 and occurred_at >= to_timestamp($2::bigint / 1000.0) and occurred_at < to_timestamp($3::bigint / 1000.0)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "cents!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "a27372b4547714a8dd9fc41242f173879e47e66a86f899e552e88f23e6132ccf"
+}

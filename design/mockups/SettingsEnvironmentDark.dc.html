@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Settings, Connections, edit environment · dark</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="./tokens.css">
+<link rel="stylesheet" href="./icons.css">
+<link rel="stylesheet" href="./components.css">
+<link rel="stylesheet" href="./logos.css">
+</helmet>
+<div data-theme="dark" class="board app" style="width: 1440px; height: 900px;">
+  <!-- part:Sidebar -->
+  <nav class="side cs" aria-label="Main">
+        <div class="cs-top">
+          <button class="icon-btn" aria-haspopup="menu" aria-label="Sort sessions" title="Sort sessions"><i class="ic i-sort"></i></button><a class="icon-btn" data-item="new" href="NewSessionDark.dc.html" aria-label="New session" title="New session"><i class="ic i-plus"></i></a>
+        </div>
+      <div class="side-scroll">
+        <div class="cs-g">
+          <button class="cs-pill" aria-expanded="true">Pinned<i class="ic s i-chev"></i></button>
+          <div class="cs-r"><i class="ic i-pin" aria-hidden="true"></i><span class="cs-t">Fix flaky checkout tests</span><span class="cs-tail"><span role="img" aria-label="Working" title="Working" class="cs-d work"></span></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Fix flaky checkout tests"><i class="ic s i-more"></i></button><a class="cs-a" data-item="cut-checkout-p95" href="SessionWorkingDark.dc.html" aria-label="Fix flaky checkout tests"></a></div>
+        </div>
+        <div class="cs-g">
+          <button class="cs-ph" aria-expanded="true">Checkout platform<i class="ic s i-chev"></i></button>
+          <div class="cs-r"><span class="cs-t">Add retries to the webhook sender</span><span class="cs-tail"><span role="img" aria-label="Waiting for you" title="Waiting for you" class="cs-d wait"></span></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Add retries to the webhook sender"><i class="ic s i-more"></i></button><a class="cs-a" data-item="reduce-forecast-error" href="SessionCredentialDark.dc.html" aria-label="Add retries to the webhook sender"></a></div>
+          <div class="cs-r"><span class="cs-t">Remove the legacy feature flags</span><span class="cs-tail"><i role="img" aria-label="Pull request opened" class="ic cs-pr st-pr"></i></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Remove the legacy feature flags"><i class="ic s i-more"></i></button><a class="cs-a" href="SessionWorkingDark.dc.html" aria-label="Remove the legacy feature flags"></a></div>
+        </div>
+        <div class="cs-g">
+          <button class="cs-ph" aria-expanded="true">Web<i class="ic s i-chev"></i></button>
+          <div class="cs-r"><span class="cs-t">Upgrade to React 19</span><span class="cs-tail"><i role="img" aria-label="Pull request opened" class="ic cs-pr st-pr"></i></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Upgrade to React 19"><i class="ic s i-more"></i></button><a class="cs-a" data-item="shrink-production-bundle" href="SessionWorkingDark.dc.html" aria-label="Upgrade to React 19"></a></div>
+          <div class="cs-r"><span class="cs-t">Rename the settings tabs</span><span class="cs-tail"><i role="img" aria-label="Pull request opened" class="ic cs-pr st-pr"></i></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Rename the settings tabs"><i class="ic s i-more"></i></button><a class="cs-a" href="SessionWorkingDark.dc.html" aria-label="Rename the settings tabs"></a></div>
+        </div>
+        <div class="cs-g">
+          <button class="cs-ph" aria-expanded="true">Platform<i class="ic s i-chev"></i></button>
+          <div class="cs-r"><span class="cs-t">Move cron jobs to the queue</span><span class="cs-tail"><span role="img" aria-label="Failed" title="Failed" class="cs-d fail"></span></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Move cron jobs to the queue"><i class="ic s i-more"></i></button><a class="cs-a" data-item="autocomplete-latency" href="SessionFailedDark.dc.html" aria-label="Move cron jobs to the queue"></a></div>
+        </div>
+        <div class="cs-g">
+          <button class="cs-ph" aria-expanded="true">Docs<i class="ic s i-chev"></i></button>
+          <div class="cs-r"><span class="cs-t">Document the billing API</span><span class="cs-tail"><span role="img" aria-label="Done" title="Done" class="cs-d "></span></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Document the billing API"><i class="ic s i-more"></i></button><a class="cs-a" href="SessionWorkingDark.dc.html" aria-label="Document the billing API"></a></div>
+        </div>
+      </div>
+      <div class="side-foot">
+        <button class="nav acct" aria-haspopup="menu" aria-expanded="false" aria-label="Priya Raman, Acme, account and settings"><span aria-hidden="true" class="avatar round" style="width: 30px; height: 30px; font-size: 14px;">P</span><span class="col grow" style="line-height: 1.25;"><span style="color: var(--ink);">Priya Raman</span><span class="xs mut">Acme · Settings</span></span><i class="ic s mut i-more"></i></button>
+      </div>
+  </nav>
+  <!-- /part -->
+  <main class="main">
+    <div class="scroll">
+      <div class="hw hw-c">
+        <h1 class="t-title hw-t">What do you want to improve?</h1>
+        <div class="cmpw">
+    <div class="cmp big">
+      <textarea class="cmp-in" rows="3" aria-label="New experiment" placeholder="What do you want to improve? Type / for commands"></textarea>
+      <div class="cmp-bar">
+        <button class="ib" aria-label="Attach files, images, repos or connectors"><i class="ic i-plus"></i></button>
+        <span class="go"><button class="ib" aria-label="Dictate"><i class="ic i-mic"></i></button><button class="ib send" aria-label="Send"><i class="ic i-return"></i></button></span>
+      </div>
+    </div>
+    <div class="cmp-opt">
+      <button class="opt" aria-label="Project"><i class="ic i-folder"></i><span>Checkout platform</span></button>
+      <button class="opt" aria-label="Repos"><i class="ic g-git"></i><span>acme/checkout +1</span></button>
+      <button class="opt" aria-label="Agent"><span class="lg lg-claude" role="img" aria-label="Claude Code"></span><span>Claude Code · Default</span></button>
+      <button class="opt" aria-label="Environment"><i class="ic g-box"></i><span>bench-std</span></button>
+      <button class="opt" aria-label="Mode"><i class="ic i-sliders"></i><span>Ask</span></button>
+      <button class="opt" aria-label="Budget"><span class="ring" style="--p: 0;" role="img" aria-label="Budget used"></span><span>$0 of $10</span></button>
+    </div>
+  </div>
+        <div class="sugs">
+          <button class="sug"><i class="ic s i-verify"></i>Cut checkout p95 latency</button>
+          <button class="sug"><i class="ic s i-verify"></i>Reduce forecast error</button>
+          <button class="sug"><i class="ic s i-verify"></i>Shrink the production bundle</button>
+        </div>
+        <section class="wl" aria-labelledby="wait-h">
+          <div class="wl-h"><h2 class="t-label" id="wait-h">Waiting for you</h2><span class="xs mut">1</span></div>
+          <a class="wr" href="SessionRepoDark.dc.html"><span role="img" aria-label="Waiting for you" title="Waiting for you" class="st gi st-wait" style="color: var(--warn);"></span><span class="t">Reduce forecast error</span><span class="w">Attach repo</span><span class="a">4 min ago</span><i class="ic s mut i-chev"></i></a>
+        </section>
+      </div>
+    </div>
+  </main>
+  <div class="sd-back"></div>
+  <div class="sd edit" role="dialog" aria-modal="true" aria-labelledby="sd-t" style="width: min(600px, calc(100% - 48px)); height: min(820px, calc(100% - 48px));">
+    <div class="sd-top"><h2 id="sd-t" class="t-section">Edit environment</h2><a class="icon-btn" href="SettingsConnectionsDark.dc.html" aria-label="Close"><i class="ic i-close"></i></a></div>
+    <div class="sd-body">
+      <div class="sd-main"><div class="sd-sec">
+<p class="sd-lead" style="margin-top: 0;">Saving makes version 4. Sessions already running keep the version they started on.</p>
+<div class="col g12" style="margin-top: 16px;">
+<label class="fld"><span class="cap" style="font-size: 13px; color: var(--ink2);">Name</span><input class="in" value="Checkout staging" aria-label="Name"></label>
+<div class="fld"><span class="cap" style="font-size: 13px; color: var(--ink2);">Repositories</span><span class="xs mut">New sessions in this environment start with these repositories.</span>
+<ul class="rl" aria-label="Repositories"><li class="rli"><i class="ic g-git" aria-hidden="true"></i><span class="mono grow ell">acme/checkout</span><button class="ib" aria-label="Remove acme/checkout"><i class="ic s i-close"></i></button></li><li class="rli"><i class="ic g-git" aria-hidden="true"></i><span class="mono grow ell">acme/payments-sdk</span><button class="ib" aria-label="Remove acme/payments-sdk"><i class="ic s i-close"></i></button></li></ul>
+<div><button class="btn sm"><i class="ic s i-plus"></i>Add</button></div></div>
+<div class="card" style="padding: 2px 16px;">
+<button class="stg nv" aria-expanded="false"><span class="tx"><span class="t-item">Network access</span></span><span class="ct"><span class="val">Full</span><i class="ic s mut i-chev" aria-hidden="true"></i></span></button>
+<button class="stg nv" aria-expanded="false"><span class="tx"><span class="t-item">Network secrets</span></span><span class="ct"><span class="val">None</span><i class="ic s mut i-chev" aria-hidden="true"></i></span></button>
+<button class="stg nv" aria-expanded="false"><span class="tx"><span class="t-item">Setup script</span></span><span class="ct"><span class="val">8 lines</span><i class="ic s mut i-chev" aria-hidden="true"></i></span></button>
+<button class="stg nv" aria-expanded="false"><span class="tx"><span class="t-item">Environment variables</span></span><span class="ct"><span class="val">8 variables</span><i class="ic s mut i-chev" aria-hidden="true"></i></span></button>
+</div>
+</div>
+<div class="rw g12 sp" style="margin-top: 20px;"><button class="btn danger">Archive environment</button><span class="rw g12"><a class="btn" href="SettingsConnectionsDark.dc.html">Cancel</a><a class="btn primary" href="SettingsConnectionsDark.dc.html">Save changes</a></span></div>
+      </div></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

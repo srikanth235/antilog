@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select agent from sessions where organization_id = $1 and id = $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "agent",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "sessions",
+            "name": "agent"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "6e4dfa8c41438410955637656ef085709adfd1492911ade9aff8018fcfc87a59"
+}

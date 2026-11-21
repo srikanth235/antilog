@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Settings, Model keys · dark</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="./tokens.css">
+<link rel="stylesheet" href="./icons.css">
+<link rel="stylesheet" href="./components.css">
+<link rel="stylesheet" href="./logos.css">
+</helmet>
+<div data-theme="dark" class="board app" style="width: 1440px; height: 900px;">
+  <!-- part:Sidebar -->
+  <nav class="side cs" aria-label="Main">
+        <div class="cs-top">
+          <button class="icon-btn" aria-haspopup="menu" aria-label="Sort sessions" title="Sort sessions"><i class="ic i-sort"></i></button><a class="icon-btn" data-item="new" href="NewSessionDark.dc.html" aria-label="New session" title="New session"><i class="ic i-plus"></i></a>
+        </div>
+      <div class="side-scroll">
+        <div class="cs-g">
+          <button class="cs-pill" aria-expanded="true">Pinned<i class="ic s i-chev"></i></button>
+          <div class="cs-r"><i class="ic i-pin" aria-hidden="true"></i><span class="cs-t">Fix flaky checkout tests</span><span class="cs-tail"><span role="img" aria-label="Working" title="Working" class="cs-d work"></span></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Fix flaky checkout tests"><i class="ic s i-more"></i></button><a class="cs-a" data-item="cut-checkout-p95" href="SessionWorkingDark.dc.html" aria-label="Fix flaky checkout tests"></a></div>
+        </div>
+        <div class="cs-g">
+          <button class="cs-ph" aria-expanded="true">Checkout platform<i class="ic s i-chev"></i></button>
+          <div class="cs-r"><span class="cs-t">Add retries to the webhook sender</span><span class="cs-tail"><span role="img" aria-label="Waiting for you" title="Waiting for you" class="cs-d wait"></span></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Add retries to the webhook sender"><i class="ic s i-more"></i></button><a class="cs-a" data-item="reduce-forecast-error" href="SessionCredentialDark.dc.html" aria-label="Add retries to the webhook sender"></a></div>
+          <div class="cs-r"><span class="cs-t">Remove the legacy feature flags</span><span class="cs-tail"><i role="img" aria-label="Pull request opened" class="ic cs-pr st-pr"></i></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Remove the legacy feature flags"><i class="ic s i-more"></i></button><a class="cs-a" href="SessionWorkingDark.dc.html" aria-label="Remove the legacy feature flags"></a></div>
+        </div>
+        <div class="cs-g">
+          <button class="cs-ph" aria-expanded="true">Web<i class="ic s i-chev"></i></button>
+          <div class="cs-r"><span class="cs-t">Upgrade to React 19</span><span class="cs-tail"><i role="img" aria-label="Pull request opened" class="ic cs-pr st-pr"></i></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Upgrade to React 19"><i class="ic s i-more"></i></button><a class="cs-a" data-item="shrink-production-bundle" href="SessionWorkingDark.dc.html" aria-label="Upgrade to React 19"></a></div>
+          <div class="cs-r"><span class="cs-t">Rename the settings tabs</span><span class="cs-tail"><i role="img" aria-label="Pull request opened" class="ic cs-pr st-pr"></i></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Rename the settings tabs"><i class="ic s i-more"></i></button><a class="cs-a" href="SessionWorkingDark.dc.html" aria-label="Rename the settings tabs"></a></div>
+        </div>
+        <div class="cs-g">
+          <button class="cs-ph" aria-expanded="true">Platform<i class="ic s i-chev"></i></button>
+          <div class="cs-r"><span class="cs-t">Move cron jobs to the queue</span><span class="cs-tail"><span role="img" aria-label="Failed" title="Failed" class="cs-d fail"></span></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Move cron jobs to the queue"><i class="ic s i-more"></i></button><a class="cs-a" data-item="autocomplete-latency" href="SessionFailedDark.dc.html" aria-label="Move cron jobs to the queue"></a></div>
+        </div>
+        <div class="cs-g">
+          <button class="cs-ph" aria-expanded="true">Docs<i class="ic s i-chev"></i></button>
+          <div class="cs-r"><span class="cs-t">Document the billing API</span><span class="cs-tail"><span role="img" aria-label="Done" title="Done" class="cs-d "></span></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Document the billing API"><i class="ic s i-more"></i></button><a class="cs-a" href="SessionWorkingDark.dc.html" aria-label="Document the billing API"></a></div>
+        </div>
+      </div>
+      <div class="side-foot">
+        <button class="nav acct" aria-haspopup="menu" aria-expanded="false" aria-label="Priya Raman, Acme, account and settings"><span aria-hidden="true" class="avatar round" style="width: 30px; height: 30px; font-size: 14px;">P</span><span class="col grow" style="line-height: 1.25;"><span style="color: var(--ink);">Priya Raman</span><span class="xs mut">Acme · Settings</span></span><i class="ic s mut i-more"></i></button>
+      </div>
+  </nav>
+  <!-- /part -->
+  <main class="main">
+    <div class="scroll">
+      <div class="hw hw-c">
+        <h1 class="t-title hw-t">What do you want to improve?</h1>
+        <div class="cmpw">
+    <div class="cmp big">
+      <textarea class="cmp-in" rows="3" aria-label="New experiment" placeholder="What do you want to improve? Type / for commands"></textarea>
+      <div class="cmp-bar">
+        <button class="ib" aria-label="Attach files, images, repos or connectors"><i class="ic i-plus"></i></button>
+        <span class="go"><button class="ib" aria-label="Dictate"><i class="ic i-mic"></i></button><button class="ib send" aria-label="Send"><i class="ic i-return"></i></button></span>
+      </div>
+    </div>
+    <div class="cmp-opt">
+      <button class="opt" aria-label="Project"><i class="ic i-folder"></i><span>Checkout platform</span></button>
+      <button class="opt" aria-label="Repos"><i class="ic g-git"></i><span>acme/checkout +1</span></button>
+      <button class="opt" aria-label="Agent"><span class="lg lg-claude" role="img" aria-label="Claude Code"></span><span>Claude Code · Default</span></button>
+      <button class="opt" aria-label="Environment"><i class="ic g-box"></i><span>bench-std</span></button>
+      <button class="opt" aria-label="Mode"><i class="ic i-sliders"></i><span>Ask</span></button>
+      <button class="opt" aria-label="Budget"><span class="ring" style="--p: 0;" role="img" aria-label="Budget used"></span><span>$0 of $10</span></button>
+    </div>
+  </div>
+        <div class="sugs">
+          <button class="sug"><i class="ic s i-verify"></i>Cut checkout p95 latency</button>
+          <button class="sug"><i class="ic s i-verify"></i>Reduce forecast error</button>
+          <button class="sug"><i class="ic s i-verify"></i>Shrink the production bundle</button>
+        </div>
+        <section class="wl" aria-labelledby="wait-h">
+          <div class="wl-h"><h2 class="t-label" id="wait-h">Waiting for you</h2><span class="xs mut">1</span></div>
+          <a class="wr" href="SessionRepoDark.dc.html"><span role="img" aria-label="Waiting for you" title="Waiting for you" class="st gi st-wait" style="color: var(--warn);"></span><span class="t">Reduce forecast error</span><span class="w">Attach repo</span><span class="a">4 min ago</span><i class="ic s mut i-chev"></i></a>
+        </section>
+      </div>
+    </div>
+  </main>
+  <div class="sd-back"></div>
+  <div class="sd" role="dialog" aria-modal="true" aria-labelledby="sd-t">
+    <div class="sd-top"><h2 id="sd-t" class="t-section">Settings</h2><a class="icon-btn" href="HomeDark.dc.html" aria-label="Close settings"><i class="ic i-close"></i></a></div>
+    <div class="sd-body">
+      <!-- part:SettingsRail active="model-keys" -->
+      <div class="sd-rail">
+        <label class="sfield"><i class="ic i-search" aria-hidden="true"></i><input placeholder="Search settings" aria-label="Search settings" autocomplete="off" spellcheck="false"></label>
+        <nav class="sd-groups" aria-label="Settings sections">
+          <div class="sd-grp" role="group" aria-label="You"><span class="t-label">You</span>
+            <a class="sd-nav" data-item="profile" href="SettingsProfileDark.dc.html"><i class="ic g-user" aria-hidden="true"></i><span class="grow ell">Profile</span></a>
+            <a class="sd-nav" data-item="appearance" href="SettingsAppearanceDark.dc.html"><i class="ic i-sun" aria-hidden="true"></i><span class="grow ell">Appearance</span></a>
+            <a class="sd-nav" data-item="access-tokens" href="SettingsTokensDark.dc.html"><i class="ic i-key" aria-hidden="true"></i><span class="grow ell">Access tokens</span></a>
+            <a class="sd-nav" data-item="device" href="SettingsDeviceDark.dc.html"><i class="ic i-device" aria-hidden="true"></i><span class="grow ell">This device</span></a>
+          </div>
+          <div class="sd-grp" role="group" aria-label="Organization"><span class="t-label">Organization</span>
+            <a class="sd-nav" data-item="general" href="SettingsGeneralDark.dc.html"><i class="ic i-org" aria-hidden="true"></i><span class="grow ell">General</span></a>
+            <a class="sd-nav" data-item="members" href="SettingsMembersDark.dc.html"><i class="ic i-users" aria-hidden="true"></i><span class="grow ell">Members</span></a>
+            <a class="sd-nav" data-item="single-sign-on" href="SettingsSsoDark.dc.html"><i class="ic i-lock" aria-hidden="true"></i><span class="grow ell">Single sign-on</span></a>
+            <a class="sd-nav" data-item="model-keys" href="SettingsModelKeysDark.dc.html" aria-current="page"><i class="ic i-key" aria-hidden="true"></i><span class="grow ell">Model keys</span></a>
+            <a class="sd-nav" data-item="approvals" href="SettingsApprovalsDark.dc.html"><i class="ic i-verify" aria-hidden="true"></i><span class="grow ell">Approvals</span></a>
+            <a class="sd-nav" data-item="budgets" href="SettingsBudgetsDark.dc.html"><i class="ic g-gauge" aria-hidden="true"></i><span class="grow ell">Budgets</span></a>
+            <a class="sd-nav" data-item="connections" href="SettingsConnectionsDark.dc.html"><i class="ic g-blocks" aria-hidden="true"></i><span class="grow ell">Connections</span></a>
+            <a class="sd-nav" data-item="audit-log" href="SettingsAuditDark.dc.html"><i class="ic g-hist" aria-hidden="true"></i><span class="grow ell">Audit log</span></a>
+          </div>
+        </nav>
+      </div>
+      <!-- /part -->
+      <div class="sd-main"><div class="sd-sec"><h3 class="t-section">Model keys</h3><p class="sd-lead">Your own keys for the model providers. Antilog keeps each one sealed and never sends it into a session. A session gets a short-lived token instead, and every call is paid from your account at your provider&rsquo;s price.</p><h4 class="sd-gh">Providers</h4><div class="stg"><div class="tx"><span class="t-item rw g8"><span class="lg lg-anthropic" role="img" aria-label="Anthropic"></span>Anthropic</span><span class="dd">Claude models. Needed for any session that runs a Claude model.</span></div><div class="ct"><span class="stc"><i class="ic s i-check" style="color: var(--good);" aria-hidden="true"></i><b>Key set</b></span><span class="val xs mut">14 Nov 2026</span><button class="btn sm">Replace key</button><button class="btn sm">Remove</button></div></div><div class="stg"><div class="tx"><span class="t-item rw g8"><span class="lg lg-openai" role="img" aria-label="OpenAI"></span>OpenAI</span><span class="dd">GPT models. Needed for any session that runs a GPT model.</span></div><div class="ct"><span class="val mut">No key</span><button class="btn primary sm">Add key</button></div></div><div class="stg"><div class="tx"><span class="t-item rw g8">OpenCode Zen</span><span class="dd">OpenCode&rsquo;s own models, some free. Needed for any session that runs an opencode model.</span></div><div class="ct"><span class="val mut">No key</span><button class="btn primary sm">Add key</button></div></div><div class="stg"><div class="tx"><span class="t-item rw g8">OpenCode Go</span><span class="dd">OpenCode&rsquo;s subscription models. Go is a subscription, so spend shown is at Go&rsquo;s list prices.</span></div><div class="ct"><span class="val mut">No key</span><button class="btn primary sm">Add key</button></div></div><p class="ap-sec" style="margin-top: 12px;"><i class="ic s i-lock"></i>Only an owner can add, replace or remove a key. Each change is in the audit log with the provider and who made it, never the key.</p></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

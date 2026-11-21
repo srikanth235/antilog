@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update access_tokens set revoked_at = coalesce(revoked_at, to_timestamp($3::bigint / 1000.0)) where organization_id = $1 and id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "98aa63b9f37b75b10662f876b33ac5dad112ed76092b9db8547cf35d53068d0a"
+}

@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Customize, Remove plugin · dark</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="./tokens.css">
+<link rel="stylesheet" href="./icons.css">
+<link rel="stylesheet" href="./components.css">
+<link rel="stylesheet" href="./logos.css">
+</helmet>
+<div data-theme="dark" class="board app" style="width: 1440px; height: 900px;">
+  <!-- part:Sidebar -->
+  <nav class="side cs" aria-label="Main">
+        <div class="cs-top">
+          <button class="icon-btn" aria-haspopup="menu" aria-label="Sort sessions" title="Sort sessions"><i class="ic i-sort"></i></button><a class="icon-btn" data-item="new" href="NewSessionDark.dc.html" aria-label="New session" title="New session"><i class="ic i-plus"></i></a>
+        </div>
+      <div class="side-scroll">
+        <div class="cs-g">
+          <button class="cs-pill" aria-expanded="true">Pinned<i class="ic s i-chev"></i></button>
+          <div class="cs-r"><i class="ic i-pin" aria-hidden="true"></i><span class="cs-t">Fix flaky checkout tests</span><span class="cs-tail"><span role="img" aria-label="Working" title="Working" class="cs-d work"></span></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Fix flaky checkout tests"><i class="ic s i-more"></i></button><a class="cs-a" data-item="cut-checkout-p95" href="SessionWorkingDark.dc.html" aria-label="Fix flaky checkout tests"></a></div>
+        </div>
+        <div class="cs-g">
+          <button class="cs-ph" aria-expanded="true">Checkout platform<i class="ic s i-chev"></i></button>
+          <div class="cs-r"><span class="cs-t">Add retries to the webhook sender</span><span class="cs-tail"><span role="img" aria-label="Waiting for you" title="Waiting for you" class="cs-d wait"></span></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Add retries to the webhook sender"><i class="ic s i-more"></i></button><a class="cs-a" data-item="reduce-forecast-error" href="SessionCredentialDark.dc.html" aria-label="Add retries to the webhook sender"></a></div>
+          <div class="cs-r"><span class="cs-t">Remove the legacy feature flags</span><span class="cs-tail"><i role="img" aria-label="Pull request opened" class="ic cs-pr st-pr"></i></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Remove the legacy feature flags"><i class="ic s i-more"></i></button><a class="cs-a" href="SessionWorkingDark.dc.html" aria-label="Remove the legacy feature flags"></a></div>
+        </div>
+        <div class="cs-g">
+          <button class="cs-ph" aria-expanded="true">Web<i class="ic s i-chev"></i></button>
+          <div class="cs-r"><span class="cs-t">Upgrade to React 19</span><span class="cs-tail"><i role="img" aria-label="Pull request opened" class="ic cs-pr st-pr"></i></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Upgrade to React 19"><i class="ic s i-more"></i></button><a class="cs-a" data-item="shrink-production-bundle" href="SessionWorkingDark.dc.html" aria-label="Upgrade to React 19"></a></div>
+          <div class="cs-r"><span class="cs-t">Rename the settings tabs</span><span class="cs-tail"><i role="img" aria-label="Pull request opened" class="ic cs-pr st-pr"></i></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Rename the settings tabs"><i class="ic s i-more"></i></button><a class="cs-a" href="SessionWorkingDark.dc.html" aria-label="Rename the settings tabs"></a></div>
+        </div>
+        <div class="cs-g">
+          <button class="cs-ph" aria-expanded="true">Platform<i class="ic s i-chev"></i></button>
+          <div class="cs-r"><span class="cs-t">Move cron jobs to the queue</span><span class="cs-tail"><span role="img" aria-label="Failed" title="Failed" class="cs-d fail"></span></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Move cron jobs to the queue"><i class="ic s i-more"></i></button><a class="cs-a" data-item="autocomplete-latency" href="SessionFailedDark.dc.html" aria-label="Move cron jobs to the queue"></a></div>
+        </div>
+        <div class="cs-g">
+          <button class="cs-ph" aria-expanded="true">Docs<i class="ic s i-chev"></i></button>
+          <div class="cs-r"><span class="cs-t">Document the billing API</span><span class="cs-tail"><span role="img" aria-label="Done" title="Done" class="cs-d "></span></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Document the billing API"><i class="ic s i-more"></i></button><a class="cs-a" href="SessionWorkingDark.dc.html" aria-label="Document the billing API"></a></div>
+        </div>
+      </div>
+      <div class="side-foot">
+        <button class="nav acct" aria-haspopup="menu" aria-expanded="false" aria-label="Priya Raman, Acme, account and settings"><span aria-hidden="true" class="avatar round" style="width: 30px; height: 30px; font-size: 14px;">P</span><span class="col grow" style="line-height: 1.25;"><span style="color: var(--ink);">Priya Raman</span><span class="xs mut">Acme · Settings</span></span><i class="ic s mut i-more"></i></button>
+      </div>
+  </nav>
+  <!-- /part -->
+  <main class="main">
+    <div class="top">
+      <div class="crumbs"><a class="textbtn" href="PluginsDark.dc.html">Customize</a><span class="mut">/</span><span class="ell" style="font-weight: 500;">Backend latency</span></div>
+      <div class="rw g8"><a class="tsearch" href="SearchDark.dc.html" aria-label="Search"><i class="ic s i-search"></i>Search<span class="kc" aria-hidden="true">⌘K</span></a></div>
+    </div>
+    <div class="scroll">
+      <section class="page">
+<a class="textbtn" href="PluginsDark.dc.html" style="align-self: flex-start;"><i class="ic s i-back"></i>Plugins</a><div class="rw between wrap g16"><div class="rw g16" style="min-width: 0; flex: 1 1 360px;"><span class="tile lg"><span class="gi g-blocks"></span></span><div class="col g4" style="min-width: 0;"><h1 class="t-title">Backend latency</h1><span class="ink2">Replay real traffic, find the slow call, tune queries and caches.</span><span class="rw g8 sm"><span class="mono xs">v1.2</span></span></div></div><div class="rw g8 wrap"><a class="btn danger" href="PluginRemoveDark.dc.html">Remove plugin</a></div></div>
+<div style="display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 24px; align-items: start;"><div class="col g24"><div class="col g8"><h2 class="sech">Skill packs (2)</h2><div class="table"><div style="min-width: 380px;"><a class="grid" href="SkillDetailDark.dc.html" style="grid-template-columns: 44px minmax(0, 1fr) auto;"><span class="tile"><span class="gi g-book"></span></span><span class="col" style="gap: 1px; min-width: 0;"><span class="t-item ell">Postgres query tuning</span></span><span class="sm ink2">v1</span></a><a class="grid" href="SkillDetailDark.dc.html" style="grid-template-columns: 44px minmax(0, 1fr) auto;"><span class="tile"><span class="gi g-book"></span></span><span class="col" style="gap: 1px; min-width: 0;"><span class="t-item ell">Cache design</span></span><span class="sm ink2">v1</span></a></div></div></div><div class="col g8"><h2 class="sech">Connectors (1)</h2><div class="table"><div style="min-width: 380px;"><a class="grid" href="ConnectorDetailDark.dc.html" style="grid-template-columns: 44px minmax(0, 1fr) auto;"><span class="tile"><span class="gi g-cloud"></span></span><span class="col" style="gap: 1px; min-width: 0;"><span class="t-item ell">Orders warehouse</span></span><span class="sm ink2">Connected</span></a></div></div></div></div><div class="col g24"><div class="col g8"><h2 class="sech">Evaluation templates (2)</h2><div class="table"><div style="min-width: 380px;"><a class="grid" href="SkillsDark.dc.html" style="grid-template-columns: 44px minmax(0, 1fr) auto;"><span class="tile"><span class="gi g-gauge"></span></span><span class="col" style="gap: 1px; min-width: 0;"><span class="t-item ell">Checkout load test</span></span><span class="sm ink2">Speed</span></a><a class="grid" href="SkillsDark.dc.html" style="grid-template-columns: 44px minmax(0, 1fr) auto;"><span class="tile"><span class="gi g-gauge"></span></span><span class="col" style="gap: 1px; min-width: 0;"><span class="t-item ell">Query latency</span></span><span class="sm ink2">Speed</span></a></div></div><span class="xs mut">Evaluation templates always stay when a plugin is removed.</span></div><div class="col g8"><h2 class="sech">About</h2><div class="card" style="padding: 4px 20px;"><div class="kv"><span>Version</span><span>1.2</span></div><div class="kv"><span>Added</span><span>Nov 12 by Priya Raman</span></div></div></div><span class="lock"><i class="ic s i-lock"></i>A plugin never changes who can read the holdout.</span></div></div>
+      </section>
+    </div>
+  </main>
+  <div class="sd-back"></div>
+  <div class="sd" role="dialog" aria-modal="true" aria-labelledby="sd-t" style="width: min(560px, calc(100% - 48px)); height: min(440px, calc(100% - 48px));">
+    <div class="sd-top"><h2 id="sd-t" class="t-section">Remove Backend latency?</h2><a class="icon-btn" href="PluginDetailDark.dc.html" aria-label="Close"><i class="ic i-close"></i></a></div>
+    <div class="sd-body">
+      <div class="sd-main"><div class="sd-sec">
+<p class="sd-lead" style="margin-top: 0;">Backend latency is removed. Choose what stays. A part an experiment uses is never removed.</p>
+<div class="col g4" style="margin-top: 16px;">
+<span class="t-label">Skill packs</span><label class="rw g8" style="min-height: 32px;"><input type="checkbox" checked aria-label="Keep Postgres query tuning"><span>Keep Postgres query tuning</span></label><label class="rw g8" style="min-height: 32px;"><input type="checkbox" aria-label="Keep Cache design"><span>Keep Cache design</span></label>
+<span class="t-label" style="margin-top: 8px;">Connectors</span><label class="rw g8" style="min-height: 32px;"><input type="checkbox" aria-label="Keep Orders warehouse"><span>Keep Orders warehouse</span></label>
+<span class="sm ink2" style="margin-top: 8px;">Its 2 evaluation templates stay.</span>
+</div>
+<div class="rw g12" style="margin-top: 20px;"><a class="btn primary" href="PluginsDark.dc.html">Remove plugin</a><a class="btn" href="PluginDetailDark.dc.html">Keep plugin</a></div>
+      </div></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

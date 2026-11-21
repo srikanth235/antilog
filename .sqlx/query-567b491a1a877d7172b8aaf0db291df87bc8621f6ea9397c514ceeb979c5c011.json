@@ -1,0 +1,36 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select e.archived as \"archived!\", coalesce((select max(v.version) from environment_versions v where v.organization_id = e.organization_id and v.id = e.id), 0) as \"newest!\"\n               from environments e where e.organization_id = $1 and e.id = $2 for update",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "archived!",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "environments",
+            "name": "archived"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "newest!",
+        "type_info": "Int4",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "567b491a1a877d7172b8aaf0db291df87bc8621f6ea9397c514ceeb979c5c011"
+}

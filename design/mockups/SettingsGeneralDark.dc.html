@@ -16,46 +16,36 @@
 </helmet>
 <div data-theme="dark" class="board app" style="width: 1440px; height: 900px;">
   <!-- part:Sidebar -->
-  <nav class="side" aria-label="Main">
-        <div class="side-top">
-          <a class="brand" href="HomeDark.dc.html"><svg aria-hidden="true" width="36" height="22" viewBox="218 338 600 369" data-keep><defs><linearGradient id="brass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F8E4B8"/><stop offset=".6" stop-color="#E2BE7C"/><stop offset="1" stop-color="#BE8F49"/></linearGradient></defs><path d="M397.8 434.8L397.8 466.2A31.5 31.5 0 0 1 366.4 434.8Z" style="fill:var(--mark)" fill-opacity="0.12"/><path d="M407.7 434.8L407.7 466.2A31.5 31.5 0 0 0 439.2 434.8Z" style="fill:var(--mark)" fill-opacity="0.18"/><path d="M361.6 424.9L439.2 424.9A77.6 77.6 0 0 0 361.6 347.3Z" style="fill:var(--mark)" fill-opacity="0.28"/><path d="M351.7 471.0L227.9 471.0A123.8 123.8 0 0 1 351.7 347.3Z" style="fill:var(--mark)" fill-opacity="0.42"/><path d="M444.0 480.9L444.0 697.0A216.1 216.1 0 0 1 227.9 480.9Z" style="fill:var(--mark)" fill-opacity="0.6"/><path d="M453.9 342.5L453.9 697.0A354.5 354.5 0 0 0 808.4 342.5Z" fill="url(#brass)"/></svg>Antilog</a>
-          <a class="btn primary full" data-item="new" href="HomeDark.dc.html"><i class="ic s i-plus"></i>New experiment</a>
-          <div class="col" style="gap: 2px;">
-            <a class="nav" data-item="search" href="SearchStartDark.dc.html"><i class="ic i-search"></i>Search<span class="kc" aria-hidden="true" style="margin-left: auto;">⌘K</span></a>
-            <a class="nav" data-item="projects" href="ProjectsDark.dc.html"><i class="ic i-folder"></i>Projects</a>
-            <a class="nav" data-item="customize" href="EvaluationsDark.dc.html"><i class="ic i-sliders"></i>Customize</a>
-          </div>
+  <nav class="side cs" aria-label="Main">
+        <div class="cs-top">
+          <button class="icon-btn" aria-haspopup="menu" aria-label="Sort sessions" title="Sort sessions"><i class="ic i-sort"></i></button><a class="icon-btn" data-item="new" href="NewSessionDark.dc.html" aria-label="New session" title="New session"><i class="ic i-plus"></i></a>
         </div>
       <div class="side-scroll">
-        <div class="col" style="gap: 2px;">
-          <span class="t-label sl">Pinned</span>
-          <div class="srow"><a class="rec ses" href="SessionWorkingDark.dc.html"><span role="img" aria-label="Working" title="Working" class="st gi st-work run" style="color: var(--accent);"></span><span class="t">Cut checkout p95 latency</span></a><button class="pinb" aria-label="Unpin Cut checkout p95 latency"><i class="ic s i-pin"></i></button></div>
+        <div class="cs-g">
+          <button class="cs-pill" aria-expanded="true">Pinned<i class="ic s i-chev"></i></button>
+          <div class="cs-r"><i class="ic i-pin" aria-hidden="true"></i><span class="cs-t">Fix flaky checkout tests</span><span class="cs-tail"><span role="img" aria-label="Working" title="Working" class="cs-d work"></span></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Fix flaky checkout tests"><i class="ic s i-more"></i></button><a class="cs-a" data-item="cut-checkout-p95" href="SessionWorkingDark.dc.html" aria-label="Fix flaky checkout tests"></a></div>
         </div>
-        <div class="col" style="gap: 8px;">
-          <div class="pg">
-            <button class="ph" aria-expanded="true"><i class="ic s i-chev chev"></i><span class="t">Checkout platform</span></button>
-            <div class="srow"><a class="rec ses" data-item="cut-checkout-p95" href="SessionWorkingDark.dc.html"><span role="img" aria-label="Working" title="Working" class="st gi st-work run" style="color: var(--accent);"></span><span class="t">Cut checkout p95 latency</span></a><button class="pinb" aria-label="Pin Cut checkout p95 latency"><i class="ic s i-pin"></i></button></div>
-            <div class="sx-l">
-              <a class="rec ses sx" data-item="claude-session" href="SessionWorkingDark.dc.html"><span role="img" aria-label="Working" title="Working" class="st gi st-work run" style="color: var(--accent);"></span><span class="t">Claude Code session</span></a>
-              <a class="rec ses sx" data-item="codex-session" href="SessionSpawnedDark.dc.html"><span role="img" aria-label="Working" title="Working" class="st gi st-work run" style="color: var(--accent);"></span><span class="t">Codex session</span></a>
-              <a class="rec ses sx" data-item="gemini-session" href="SessionWorkingDark.dc.html"><span role="img" aria-label="Done" title="Done" class="st gi st-done" style="color: var(--good);"></span><span class="t">Gemini session</span></a>
-            </div>
-            <div class="srow"><a class="rec ses" data-item="speed-up-smoke-suite" href="SessionNoWinDark.dc.html"><span role="img" aria-label="Done" title="Done" class="st gi st-done" style="color: var(--good);"></span><span class="t">Speed up the smoke suite</span></a><button class="pinb" aria-label="Pin Speed up the smoke suite"><i class="ic s i-pin"></i></button></div>
-            <div class="srow"><a class="rec ses" data-item="shrink-production-bundle" href="SessionNoWinDark.dc.html"><span role="img" aria-label="Done" title="Done" class="st gi st-done" style="color: var(--good);"></span><span class="t">Shrink the production bundle</span></a><button class="pinb" aria-label="Pin Shrink the production bundle"><i class="ic s i-pin"></i></button></div>
-          </div>
-          <div class="pg">
-            <button class="ph" aria-expanded="true"><i class="ic s i-chev chev"></i><span class="t">Search</span></button>
-            <div class="srow"><a class="rec ses" data-item="autocomplete-latency" href="SessionFailedDark.dc.html"><span role="img" aria-label="Failed" title="Failed" class="st gi st-fail" style="color: var(--bad);"></span><span class="t">Autocomplete latency</span></a><button class="pinb" aria-label="Pin Autocomplete latency"><i class="ic s i-pin"></i></button></div>
-          </div>
-          <div class="pg">
-            <button class="ph" aria-expanded="true"><i class="ic s i-chev chev"></i><span class="t">Data science forecasts</span></button>
-            <div class="srow"><a class="rec ses" data-item="reduce-forecast-error" href="SessionSealDark.dc.html"><span role="img" aria-label="Waiting for you" title="Waiting for you" class="st gi st-wait" style="color: var(--warn);"></span><span class="t">Reduce forecast error</span></a><button class="pinb" aria-label="Pin Reduce forecast error"><i class="ic s i-pin"></i></button></div>
-            <div class="srow"><a class="rec ses" data-item="feature-pipeline-cost" href="SessionDeliveredDark.dc.html"><span role="img" aria-label="Done" title="Done" class="st gi st-done" style="color: var(--good);"></span><span class="t">Feature pipeline cost</span></a><button class="pinb" aria-label="Pin Feature pipeline cost"><i class="ic s i-pin"></i></button></div>
-          </div>
+        <div class="cs-g">
+          <button class="cs-ph" aria-expanded="true">Checkout platform<i class="ic s i-chev"></i></button>
+          <div class="cs-r"><span class="cs-t">Add retries to the webhook sender</span><span class="cs-tail"><span role="img" aria-label="Waiting for you" title="Waiting for you" class="cs-d wait"></span></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Add retries to the webhook sender"><i class="ic s i-more"></i></button><a class="cs-a" data-item="reduce-forecast-error" href="SessionCredentialDark.dc.html" aria-label="Add retries to the webhook sender"></a></div>
+          <div class="cs-r"><span class="cs-t">Remove the legacy feature flags</span><span class="cs-tail"><i role="img" aria-label="Pull request opened" class="ic cs-pr st-pr"></i></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Remove the legacy feature flags"><i class="ic s i-more"></i></button><a class="cs-a" href="SessionWorkingDark.dc.html" aria-label="Remove the legacy feature flags"></a></div>
+        </div>
+        <div class="cs-g">
+          <button class="cs-ph" aria-expanded="true">Web<i class="ic s i-chev"></i></button>
+          <div class="cs-r"><span class="cs-t">Upgrade to React 19</span><span class="cs-tail"><i role="img" aria-label="Pull request opened" class="ic cs-pr st-pr"></i></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Upgrade to React 19"><i class="ic s i-more"></i></button><a class="cs-a" data-item="shrink-production-bundle" href="SessionWorkingDark.dc.html" aria-label="Upgrade to React 19"></a></div>
+          <div class="cs-r"><span class="cs-t">Rename the settings tabs</span><span class="cs-tail"><i role="img" aria-label="Pull request opened" class="ic cs-pr st-pr"></i></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Rename the settings tabs"><i class="ic s i-more"></i></button><a class="cs-a" href="SessionWorkingDark.dc.html" aria-label="Rename the settings tabs"></a></div>
+        </div>
+        <div class="cs-g">
+          <button class="cs-ph" aria-expanded="true">Platform<i class="ic s i-chev"></i></button>
+          <div class="cs-r"><span class="cs-t">Move cron jobs to the queue</span><span class="cs-tail"><span role="img" aria-label="Failed" title="Failed" class="cs-d fail"></span></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Move cron jobs to the queue"><i class="ic s i-more"></i></button><a class="cs-a" data-item="autocomplete-latency" href="SessionFailedDark.dc.html" aria-label="Move cron jobs to the queue"></a></div>
+        </div>
+        <div class="cs-g">
+          <button class="cs-ph" aria-expanded="true">Docs<i class="ic s i-chev"></i></button>
+          <div class="cs-r"><span class="cs-t">Document the billing API</span><span class="cs-tail"><span role="img" aria-label="Done" title="Done" class="cs-d "></span></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Document the billing API"><i class="ic s i-more"></i></button><a class="cs-a" href="SessionWorkingDark.dc.html" aria-label="Document the billing API"></a></div>
         </div>
       </div>
       <div class="side-foot">
-        <a class="nav" href="SettingsProfileDark.dc.html" aria-label="Priya Raman, user menu" style="height: 48px; gap: 12px;"><span aria-hidden="true" class="avatar round" style="width: 30px; height: 30px; font-size: 14px;">P</span><span class="col grow" style="line-height: 1.25;"><span style="color: var(--ink);">Priya Raman</span><span class="xs mut">via Okta</span></span><i class="ic s mut i-more"></i></a>
+        <button class="nav acct" aria-haspopup="menu" aria-expanded="false" aria-label="Priya Raman, Acme, account and settings"><span aria-hidden="true" class="avatar round" style="width: 30px; height: 30px; font-size: 14px;">P</span><span class="col grow" style="line-height: 1.25;"><span style="color: var(--ink);">Priya Raman</span><span class="xs mut">Acme · Settings</span></span><i class="ic s mut i-more"></i></button>
       </div>
   </nav>
   <!-- /part -->
@@ -87,7 +77,7 @@
         </div>
         <section class="wl" aria-labelledby="wait-h">
           <div class="wl-h"><h2 class="t-label" id="wait-h">Waiting for you</h2><span class="xs mut">1</span></div>
-          <a class="wr" href="SessionSealDark.dc.html"><span role="img" aria-label="Waiting for you" title="Waiting for you" class="st gi st-wait" style="color: var(--warn);"></span><span class="t">Reduce forecast error</span><span class="w">Seal experiment</span><span class="a">4 min ago</span><i class="ic s mut i-chev"></i></a>
+          <a class="wr" href="SessionRepoDark.dc.html"><span role="img" aria-label="Waiting for you" title="Waiting for you" class="st gi st-wait" style="color: var(--warn);"></span><span class="t">Reduce forecast error</span><span class="w">Attach repo</span><span class="a">4 min ago</span><i class="ic s mut i-chev"></i></a>
         </section>
       </div>
     </div>
@@ -110,7 +100,7 @@
             <a class="sd-nav" data-item="general" href="SettingsGeneralDark.dc.html" aria-current="page"><i class="ic i-org" aria-hidden="true"></i><span class="grow ell">General</span></a>
             <a class="sd-nav" data-item="members" href="SettingsMembersDark.dc.html"><i class="ic i-users" aria-hidden="true"></i><span class="grow ell">Members</span></a>
             <a class="sd-nav" data-item="single-sign-on" href="SettingsSsoDark.dc.html"><i class="ic i-lock" aria-hidden="true"></i><span class="grow ell">Single sign-on</span></a>
-            <a class="sd-nav" data-item="agent-platforms" href="SettingsPlatformsDark.dc.html"><i class="ic g-cloud" aria-hidden="true"></i><span class="grow ell">Agent platforms</span></a>
+            <a class="sd-nav" data-item="model-keys" href="SettingsModelKeysDark.dc.html"><i class="ic i-key" aria-hidden="true"></i><span class="grow ell">Model keys</span></a>
             <a class="sd-nav" data-item="approvals" href="SettingsApprovalsDark.dc.html"><i class="ic i-verify" aria-hidden="true"></i><span class="grow ell">Approvals</span></a>
             <a class="sd-nav" data-item="budgets" href="SettingsBudgetsDark.dc.html"><i class="ic g-gauge" aria-hidden="true"></i><span class="grow ell">Budgets</span></a>
             <a class="sd-nav" data-item="connections" href="SettingsConnectionsDark.dc.html"><i class="ic g-blocks" aria-hidden="true"></i><span class="grow ell">Connections</span></a>
@@ -123,7 +113,7 @@
         <h3 class="t-section">General</h3><p class="sd-lead">Settings for everyone in Acme.</p>
         <h4 class="sd-gh">Details</h4>
         <div class="stg"><div class="tx"><span class="t-item">Organization</span><span class="dd">The name people see.</span></div><div class="ct"><span class="val">Acme</span></div></div>
-        <div class="stg"><div class="tx"><span class="t-item">Deployment</span><span class="dd">Antilog cloud runs every session for you, on Antilog’s platform accounts.</span></div><div class="ct"><span class="val">Antilog cloud</span></div></div>
+        <div class="stg"><div class="tx"><span class="t-item">Deployment</span><span class="dd">Antilog cloud runs every session for you, on Antilog’s hosts.</span></div><div class="ct"><span class="val">Antilog cloud</span></div></div>
         <div class="stg"><div class="tx"><span class="t-item">Server</span><span class="dd">The address of this Antilog server.</span></div><div class="ct"><span class="val mono xs">acme.antilog.tech</span></div></div>
         <div class="stg"><div class="tx"><span class="t-item">Data location</span><span class="dd">Where Antilog keeps the ledger: ids, numbers, states and audit rows.</span></div><div class="ct"><span class="val">United States</span></div></div>
       </div></div>

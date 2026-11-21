@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from skill_versions where organization_id = $1 and name = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c94225f06ecdf54fcd1917ff929212ca5e89f5429f5a49f3485a5da0a42a481f"
+}

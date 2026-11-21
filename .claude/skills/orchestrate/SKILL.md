@@ -13,4 +13,3 @@ The orchestrator decides and answers; implementation goes to other sessions.
 | Writing a brief for a session | [brief.md](brief.md) |
 | Reviewing a session's report or diff | [review.md](review.md) |
 | Putting a call to the owner, or reporting to them | [owner.md](owner.md) |
-| Which session builds what, and in what order, for the first release on AWS | [plan.md](plan.md) |

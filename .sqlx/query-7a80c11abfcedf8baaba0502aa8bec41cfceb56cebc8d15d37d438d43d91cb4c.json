@@ -1,0 +1,191 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select distinct on (v.id) v.id, e.archived, v.version, v.name, v.network, v.allowed_hosts, v.allow_package_managers, v.variables, v.setup_script, v.repos, v.network_secrets, v.cpus, v.memory_mb, v.created_by, (extract(epoch from v.created_at) * 1000)::bigint as \"created_at!\"\n               from environment_versions v join environments e on e.organization_id = v.organization_id and e.id = v.id\n               where v.organization_id = $1 order by v.id, v.version desc",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "environment_versions",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "archived",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "environments",
+            "name": "archived"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "version",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "environment_versions",
+            "name": "version"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "environment_versions",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "network",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "environment_versions",
+            "name": "network"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "allowed_hosts",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "environment_versions",
+            "name": "allowed_hosts"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "allow_package_managers",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "environment_versions",
+            "name": "allow_package_managers"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "variables",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "environment_versions",
+            "name": "variables"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "setup_script",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "environment_versions",
+            "name": "setup_script"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "repos",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "environment_versions",
+            "name": "repos"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "network_secrets",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "environment_versions",
+            "name": "network_secrets"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "cpus",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "environment_versions",
+            "name": "cpus"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "memory_mb",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "environment_versions",
+            "name": "memory_mb"
+          }
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "created_by",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "environment_versions",
+            "name": "created_by"
+          }
+        }
+      },
+      {
+        "ordinal": 14,
+        "name": "created_at!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      null
+    ]
+  },
+  "hash": "7a80c11abfcedf8baaba0502aa8bec41cfceb56cebc8d15d37d438d43d91cb4c"
+}

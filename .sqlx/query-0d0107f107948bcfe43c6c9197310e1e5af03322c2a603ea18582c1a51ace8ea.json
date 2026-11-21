@@ -1,0 +1,60 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select used_tokens, window_tokens, parts, (extract(epoch from reported_at) * 1000)::bigint as \"reported_at!\" from session_context where session_id = $1 and organization_id = $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "used_tokens",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "session_context",
+            "name": "used_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "window_tokens",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "session_context",
+            "name": "window_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "parts",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "session_context",
+            "name": "parts"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "reported_at!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      false,
+      null
+    ]
+  },
+  "hash": "0d0107f107948bcfe43c6c9197310e1e5af03322c2a603ea18582c1a51ace8ea"
+}

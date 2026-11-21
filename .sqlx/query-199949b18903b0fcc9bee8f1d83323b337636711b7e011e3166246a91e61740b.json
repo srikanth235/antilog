@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select seed from machines where session_id = $1 and organization_id = $2 for update",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "seed",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "machines",
+            "name": "seed"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "199949b18903b0fcc9bee8f1d83323b337636711b7e011e3166246a91e61740b"
+}

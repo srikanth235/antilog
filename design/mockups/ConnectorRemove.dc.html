@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Customize, Remove connector</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="./tokens.css">
+<link rel="stylesheet" href="./icons.css">
+<link rel="stylesheet" href="./components.css">
+<link rel="stylesheet" href="./logos.css">
+</helmet>
+<div class="board app" style="width: 1440px; height: 900px;">
+  <!-- part:Sidebar -->
+  <nav class="side cs" aria-label="Main">
+        <div class="cs-top">
+          <button class="icon-btn" aria-haspopup="menu" aria-label="Sort sessions" title="Sort sessions"><i class="ic i-sort"></i></button><a class="icon-btn" data-item="new" href="NewSession.dc.html" aria-label="New session" title="New session"><i class="ic i-plus"></i></a>
+        </div>
+      <div class="side-scroll">
+        <div class="cs-g">
+          <button class="cs-pill" aria-expanded="true">Pinned<i class="ic s i-chev"></i></button>
+          <div class="cs-r"><i class="ic i-pin" aria-hidden="true"></i><span class="cs-t">Fix flaky checkout tests</span><span class="cs-tail"><span role="img" aria-label="Working" title="Working" class="cs-d work"></span></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Fix flaky checkout tests"><i class="ic s i-more"></i></button><a class="cs-a" data-item="cut-checkout-p95" href="SessionWorking.dc.html" aria-label="Fix flaky checkout tests"></a></div>
+        </div>
+        <div class="cs-g">
+          <button class="cs-ph" aria-expanded="true">Checkout platform<i class="ic s i-chev"></i></button>
+          <div class="cs-r"><span class="cs-t">Add retries to the webhook sender</span><span class="cs-tail"><span role="img" aria-label="Waiting for you" title="Waiting for you" class="cs-d wait"></span></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Add retries to the webhook sender"><i class="ic s i-more"></i></button><a class="cs-a" data-item="reduce-forecast-error" href="SessionCredential.dc.html" aria-label="Add retries to the webhook sender"></a></div>
+          <div class="cs-r"><span class="cs-t">Remove the legacy feature flags</span><span class="cs-tail"><i role="img" aria-label="Pull request opened" class="ic cs-pr st-pr"></i></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Remove the legacy feature flags"><i class="ic s i-more"></i></button><a class="cs-a" href="SessionWorking.dc.html" aria-label="Remove the legacy feature flags"></a></div>
+        </div>
+        <div class="cs-g">
+          <button class="cs-ph" aria-expanded="true">Web<i class="ic s i-chev"></i></button>
+          <div class="cs-r"><span class="cs-t">Upgrade to React 19</span><span class="cs-tail"><i role="img" aria-label="Pull request opened" class="ic cs-pr st-pr"></i></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Upgrade to React 19"><i class="ic s i-more"></i></button><a class="cs-a" data-item="shrink-production-bundle" href="SessionWorking.dc.html" aria-label="Upgrade to React 19"></a></div>
+          <div class="cs-r"><span class="cs-t">Rename the settings tabs</span><span class="cs-tail"><i role="img" aria-label="Pull request opened" class="ic cs-pr st-pr"></i></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Rename the settings tabs"><i class="ic s i-more"></i></button><a class="cs-a" href="SessionWorking.dc.html" aria-label="Rename the settings tabs"></a></div>
+        </div>
+        <div class="cs-g">
+          <button class="cs-ph" aria-expanded="true">Platform<i class="ic s i-chev"></i></button>
+          <div class="cs-r"><span class="cs-t">Move cron jobs to the queue</span><span class="cs-tail"><span role="img" aria-label="Failed" title="Failed" class="cs-d fail"></span></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Move cron jobs to the queue"><i class="ic s i-more"></i></button><a class="cs-a" data-item="autocomplete-latency" href="SessionFailed.dc.html" aria-label="Move cron jobs to the queue"></a></div>
+        </div>
+        <div class="cs-g">
+          <button class="cs-ph" aria-expanded="true">Docs<i class="ic s i-chev"></i></button>
+          <div class="cs-r"><span class="cs-t">Document the billing API</span><span class="cs-tail"><span role="img" aria-label="Done" title="Done" class="cs-d "></span></span><button class="cs-more" aria-haspopup="menu" aria-label="Options for Document the billing API"><i class="ic s i-more"></i></button><a class="cs-a" href="SessionWorking.dc.html" aria-label="Document the billing API"></a></div>
+        </div>
+      </div>
+      <div class="side-foot">
+        <button class="nav acct" aria-haspopup="menu" aria-expanded="false" aria-label="Priya Raman, Acme, account and settings"><span aria-hidden="true" class="avatar round" style="width: 30px; height: 30px; font-size: 14px;">P</span><span class="col grow" style="line-height: 1.25;"><span style="color: var(--ink);">Priya Raman</span><span class="xs mut">Acme · Settings</span></span><i class="ic s mut i-more"></i></button>
+      </div>
+  </nav>
+  <!-- /part -->
+  <main class="main">
+    <div class="top">
+      <div class="crumbs"><a class="textbtn" href="Connectors.dc.html">Customize</a><span class="mut">/</span><span class="ell" style="font-weight: 500;">Orders warehouse</span></div>
+      <div class="rw g8"><a class="tsearch" href="Search.dc.html" aria-label="Search"><i class="ic s i-search"></i>Search<span class="kc" aria-hidden="true">⌘K</span></a></div>
+    </div>
+    <div class="scroll">
+      <section class="page">
+<a class="textbtn" href="Connectors.dc.html" style="align-self: flex-start;"><i class="ic s i-back"></i>Connectors</a><div class="rw between wrap g16"><div class="rw g16" style="min-width: 0; flex: 1 1 360px;"><span class="tile lg"><span class="gi g-cloud"></span></span><div class="col g4" style="min-width: 0;"><h1 class="t-title">Orders warehouse</h1><span class="ink2">A remote MCP server.</span><span class="rw g8 sm" style="color: var(--good);"><i class="dot" style="background: var(--good);"></i>Connected</span></div></div><div class="rw g8 wrap"><button class="btn sm">Check again</button><button class="btn sm primary">Update credential</button><a class="btn sm danger" href="ConnectorRemove.dc.html" aria-label="Remove Orders warehouse">Remove</a></div></div>
+<div style="display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 24px; align-items: start;"><div class="col g24"><div class="col g8"><h2 class="sech">Tools</h2><div class="table qt"><div style="min-width: 420px;"><div class="grid th" style="grid-template-columns: minmax(0, 1fr) 170px;"><span>Tool</span><span>Mode</span></div><div class="grid" style="grid-template-columns: minmax(0, 1fr) 170px;"><span class="col" style="gap: 1px; min-width: 0;"><span class="t-item ell mono">lookup</span><span class="xs mut ell">Look up an order by id</span></span><label class="selw"><select aria-label="Mode for lookup" style="min-width: 150px;"><option selected>On</option><option>Off</option><option>Ask first</option></select><i class="ic s i-chev" aria-hidden="true"></i></label></div><div class="grid" style="grid-template-columns: minmax(0, 1fr) 170px;"><span class="col" style="gap: 1px; min-width: 0;"><span class="t-item ell mono">search_orders</span><span class="xs mut ell">Find orders by customer or date</span></span><label class="selw"><select aria-label="Mode for search_orders" style="min-width: 150px;"><option>On</option><option>Off</option><option selected>Ask first</option></select><i class="ic s i-chev" aria-hidden="true"></i></label></div><div class="grid" style="grid-template-columns: minmax(0, 1fr) 170px;"><span class="col" style="gap: 1px; min-width: 0;"><span class="t-item ell mono">refund</span><span class="xs mut ell">Refund an order</span></span><label class="selw"><select aria-label="Mode for refund" style="min-width: 150px;"><option>On</option><option selected>Off</option><option>Ask first</option></select><i class="ic s i-chev" aria-hidden="true"></i></label></div></div></div><span class="xs mut">A new tool starts as Ask first: a session that calls it raises an approval card. Tools appear in a session as <span class="mono">orders__lookup</span>.</span></div></div><div class="col g24"><div class="col g8"><h2 class="sech">Access</h2><div class="card" style="padding: 4px 20px;"><div class="kv"><span>Address</span><span><span class="mono xs">https://mcp.acme.example/orders</span></span></div><div class="kv"><span>Credential</span><span>Kept sealed on the server. It is never shown and never sent to a session.</span></div><div class="kv"><span>Used by</span><span>Experiments that switch it on. It cannot be removed until each has switched it off.</span></div></div></div></div></div>
+      </section>
+    </div>
+  </main>
+  <div class="sd-back"></div>
+  <div class="sd" role="dialog" aria-modal="true" aria-labelledby="sd-t" style="width: min(520px, calc(100% - 48px)); height: min(300px, calc(100% - 48px));">
+    <div class="sd-top"><h2 id="sd-t" class="t-section">Remove Orders warehouse?</h2><a class="icon-btn" href="ConnectorDetail.dc.html" aria-label="Close"><i class="ic i-close"></i></a></div>
+    <div class="sd-body">
+      <div class="sd-main"><div class="sd-sec">
+<p class="sd-lead" style="margin-top: 0;">Orders warehouse and its tools are removed, and its sealed credential is deleted. An experiment that uses it must switch it off first.</p>
+<div class="rw g12" style="margin-top: 20px;"><a class="btn primary" href="Connectors.dc.html">Remove connector</a><a class="btn" href="ConnectorDetail.dc.html">Keep connector</a></div>
+      </div></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

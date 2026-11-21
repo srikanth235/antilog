@@ -1,0 +1,1541 @@
+{
+ "chat-latest": {
+  "cache_read": 500,
+  "cache_write": 5000,
+  "context": 400000,
+  "input": 5000,
+  "output": 30000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": true
+ },
+ "claude-fable-5": {
+  "cache_read": 1000,
+  "cache_write": 12500,
+  "context": 1000000,
+  "input": 10000,
+  "output": 50000,
+  "provider": "anthropic",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh",
+   "max"
+  ],
+  "tools": true
+ },
+ "claude-fable-5-1": {
+  "cache_read": 250,
+  "cache_write": 12500,
+  "context": 1000000,
+  "input": 10000,
+  "output": 50000,
+  "provider": "anthropic",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh",
+   "max"
+  ],
+  "tools": true
+ },
+ "claude-fable-5-2": {
+  "cache_read": 200,
+  "cache_write": 10000,
+  "context": 1000000,
+  "input": 8000,
+  "output": 40000,
+  "provider": "anthropic",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh",
+   "max"
+  ],
+  "tools": true
+ },
+ "claude-haiku-4-5": {
+  "cache_read": 100,
+  "cache_write": 1250,
+  "context": 200000,
+  "input": 1000,
+  "output": 5000,
+  "provider": "anthropic",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": true
+ },
+ "claude-haiku-4-5-20251001": {
+  "cache_read": 100,
+  "cache_write": 1250,
+  "context": 200000,
+  "input": 1000,
+  "output": 5000,
+  "provider": "anthropic",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": true
+ },
+ "claude-haiku-5-5": {
+  "cache_read": 10,
+  "cache_write": 125,
+  "context": 1000000,
+  "input": 100,
+  "output": 500,
+  "provider": "anthropic",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh",
+   "max"
+  ],
+  "tools": true
+ },
+ "claude-mythos-5": {
+  "cache_read": 1000,
+  "cache_write": 12500,
+  "context": 1000000,
+  "input": 10000,
+  "output": 50000,
+  "provider": "anthropic",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh",
+   "max"
+  ],
+  "tools": true
+ },
+ "claude-mythos-5-1": {
+  "cache_read": 250,
+  "cache_write": 12500,
+  "context": 1000000,
+  "input": 10000,
+  "output": 50000,
+  "provider": "anthropic",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh",
+   "max"
+  ],
+  "tools": true
+ },
+ "claude-mythos-5-2": {
+  "cache_read": 200,
+  "cache_write": 10000,
+  "context": 1000000,
+  "input": 8000,
+  "output": 40000,
+  "provider": "anthropic",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh",
+   "max"
+  ],
+  "tools": true
+ },
+ "claude-mythos-preview": {
+  "cache_read": 1000,
+  "cache_write": 12500,
+  "context": 1000000,
+  "input": 10000,
+  "output": 50000,
+  "provider": "anthropic",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh",
+   "max"
+  ],
+  "tools": true
+ },
+ "claude-opus-4-5": {
+  "cache_read": 500,
+  "cache_write": 6250,
+  "context": 200000,
+  "input": 5000,
+  "output": 25000,
+  "provider": "anthropic",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": true
+ },
+ "claude-opus-4-5-20251101": {
+  "cache_read": 500,
+  "cache_write": 6250,
+  "context": 200000,
+  "input": 5000,
+  "output": 25000,
+  "provider": "anthropic",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": true
+ },
+ "claude-opus-4-6": {
+  "cache_read": 500,
+  "cache_write": 6250,
+  "context": 1000000,
+  "input": 5000,
+  "output": 25000,
+  "provider": "anthropic",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "max"
+  ],
+  "tools": true
+ },
+ "claude-opus-4-6-20260205": {
+  "cache_read": 500,
+  "cache_write": 6250,
+  "context": 1000000,
+  "input": 5000,
+  "output": 25000,
+  "provider": "anthropic",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "max"
+  ],
+  "tools": true
+ },
+ "claude-opus-4-7": {
+  "cache_read": 500,
+  "cache_write": 6250,
+  "context": 1000000,
+  "input": 5000,
+  "output": 25000,
+  "provider": "anthropic",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh",
+   "max"
+  ],
+  "tools": true
+ },
+ "claude-opus-4-7-20260416": {
+  "cache_read": 500,
+  "cache_write": 6250,
+  "context": 1000000,
+  "input": 5000,
+  "output": 25000,
+  "provider": "anthropic",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh",
+   "max"
+  ],
+  "tools": true
+ },
+ "claude-opus-4-8": {
+  "cache_read": 500,
+  "cache_write": 6250,
+  "context": 1000000,
+  "input": 5000,
+  "output": 25000,
+  "provider": "anthropic",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh",
+   "max"
+  ],
+  "tools": true
+ },
+ "claude-opus-5": {
+  "cache_read": 500,
+  "cache_write": 6250,
+  "context": 1000000,
+  "input": 5000,
+  "output": 25000,
+  "provider": "anthropic",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh",
+   "max"
+  ],
+  "tools": true
+ },
+ "claude-opus-5-5": {
+  "cache_read": 200,
+  "cache_write": 5000,
+  "context": 1000000,
+  "input": 4000,
+  "output": 20000,
+  "provider": "anthropic",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh",
+   "max"
+  ],
+  "tools": true
+ },
+ "claude-sonnet-4-5": {
+  "cache_read": 300,
+  "cache_write": 3750,
+  "context": 200000,
+  "input": 3000,
+  "output": 15000,
+  "provider": "anthropic",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": true
+ },
+ "claude-sonnet-4-5-20250929": {
+  "cache_read": 300,
+  "cache_write": 3750,
+  "context": 200000,
+  "input": 3000,
+  "output": 15000,
+  "provider": "anthropic",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": true
+ },
+ "claude-sonnet-4-6": {
+  "cache_read": 300,
+  "cache_write": 3750,
+  "context": 1000000,
+  "input": 3000,
+  "output": 15000,
+  "provider": "anthropic",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "max"
+  ],
+  "tools": true
+ },
+ "claude-sonnet-5": {
+  "cache_read": 200,
+  "cache_write": 2500,
+  "context": 1000000,
+  "input": 2000,
+  "output": 10000,
+  "provider": "anthropic",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh",
+   "max"
+  ],
+  "tools": true
+ },
+ "claude-sonnet-5-5": {
+  "cache_read": 100,
+  "cache_write": 2500,
+  "context": 1000000,
+  "input": 2000,
+  "output": 10000,
+  "provider": "anthropic",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh",
+   "max"
+  ],
+  "tools": true
+ },
+ "computer-use-preview": {
+  "cache_read": 3000,
+  "cache_write": 3000,
+  "context": 8192,
+  "input": 3000,
+  "output": 12000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": true
+ },
+ "computer-use-preview-2025-03-11": {
+  "cache_read": 3000,
+  "cache_write": 3000,
+  "context": 8192,
+  "input": 3000,
+  "output": 12000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": true
+ },
+ "daybreak-blue-latest": {
+  "cache_read": 400,
+  "cache_write": 5000,
+  "context": 922000,
+  "input": 4000,
+  "output": 20000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": true
+ },
+ "daybreak-red-latest": {
+  "cache_read": 1250,
+  "cache_write": 15625,
+  "context": 272000,
+  "input": 12500,
+  "output": 75000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": true
+ },
+ "gpt-3.5-turbo": {
+  "cache_read": 500,
+  "cache_write": 500,
+  "context": 16385,
+  "input": 500,
+  "output": 1500,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": true
+ },
+ "gpt-3.5-turbo-0125": {
+  "cache_read": 500,
+  "cache_write": 500,
+  "context": 16385,
+  "input": 500,
+  "output": 1500,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": true
+ },
+ "gpt-3.5-turbo-1106": {
+  "cache_read": 1000,
+  "cache_write": 1000,
+  "context": 16385,
+  "input": 1000,
+  "output": 2000,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": true
+ },
+ "gpt-3.5-turbo-16k": {
+  "cache_read": 3000,
+  "cache_write": 3000,
+  "context": 16385,
+  "input": 3000,
+  "output": 4000,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": false
+ },
+ "gpt-4": {
+  "cache_read": 30000,
+  "cache_write": 30000,
+  "context": 8192,
+  "input": 30000,
+  "output": 60000,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": true
+ },
+ "gpt-4-0613": {
+  "cache_read": 30000,
+  "cache_write": 30000,
+  "context": 8192,
+  "input": 30000,
+  "output": 60000,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": true
+ },
+ "gpt-4-1106-preview": {
+  "cache_read": 10000,
+  "cache_write": 10000,
+  "context": 128000,
+  "input": 10000,
+  "output": 30000,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": true
+ },
+ "gpt-4-turbo": {
+  "cache_read": 10000,
+  "cache_write": 10000,
+  "context": 128000,
+  "input": 10000,
+  "output": 30000,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": true
+ },
+ "gpt-4-turbo-2024-04-09": {
+  "cache_read": 10000,
+  "cache_write": 10000,
+  "context": 128000,
+  "input": 10000,
+  "output": 30000,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": true
+ },
+ "gpt-4.1": {
+  "cache_read": 500,
+  "cache_write": 2000,
+  "context": 1047576,
+  "input": 2000,
+  "output": 8000,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": true
+ },
+ "gpt-4.1-2025-04-14": {
+  "cache_read": 500,
+  "cache_write": 2000,
+  "context": 1047576,
+  "input": 2000,
+  "output": 8000,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": true
+ },
+ "gpt-4.1-mini": {
+  "cache_read": 100,
+  "cache_write": 400,
+  "context": 1047576,
+  "input": 400,
+  "output": 1600,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": true
+ },
+ "gpt-4.1-mini-2025-04-14": {
+  "cache_read": 100,
+  "cache_write": 400,
+  "context": 1047576,
+  "input": 400,
+  "output": 1600,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": true
+ },
+ "gpt-4.1-nano": {
+  "cache_read": 25,
+  "cache_write": 100,
+  "context": 1047576,
+  "input": 100,
+  "output": 400,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": true
+ },
+ "gpt-4.1-nano-2025-04-14": {
+  "cache_read": 25,
+  "cache_write": 100,
+  "context": 1047576,
+  "input": 100,
+  "output": 400,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": true
+ },
+ "gpt-4o": {
+  "cache_read": 1250,
+  "cache_write": 2500,
+  "context": 128000,
+  "input": 2500,
+  "output": 10000,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": true
+ },
+ "gpt-4o-2024-05-13": {
+  "cache_read": 5000,
+  "cache_write": 5000,
+  "context": 128000,
+  "input": 5000,
+  "output": 15000,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": true
+ },
+ "gpt-4o-2024-08-06": {
+  "cache_read": 1250,
+  "cache_write": 2500,
+  "context": 128000,
+  "input": 2500,
+  "output": 10000,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": true
+ },
+ "gpt-4o-2024-11-20": {
+  "cache_read": 1250,
+  "cache_write": 2500,
+  "context": 128000,
+  "input": 2500,
+  "output": 10000,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": true
+ },
+ "gpt-4o-audio-preview-2024-12-17": {
+  "cache_read": 2500,
+  "cache_write": 2500,
+  "context": 128000,
+  "input": 2500,
+  "output": 10000,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": true
+ },
+ "gpt-4o-audio-preview-2025-06-03": {
+  "cache_read": 2500,
+  "cache_write": 2500,
+  "context": 128000,
+  "input": 2500,
+  "output": 10000,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": true
+ },
+ "gpt-4o-mini": {
+  "cache_read": 75,
+  "cache_write": 150,
+  "context": 128000,
+  "input": 150,
+  "output": 600,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": true
+ },
+ "gpt-4o-mini-2024-07-18": {
+  "cache_read": 75,
+  "cache_write": 150,
+  "context": 128000,
+  "input": 150,
+  "output": 600,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": true
+ },
+ "gpt-4o-mini-audio-preview-2024-12-17": {
+  "cache_read": 150,
+  "cache_write": 150,
+  "context": 128000,
+  "input": 150,
+  "output": 600,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": true
+ },
+ "gpt-4o-mini-search-preview": {
+  "cache_read": 75,
+  "cache_write": 150,
+  "context": 128000,
+  "input": 150,
+  "output": 600,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": true
+ },
+ "gpt-4o-mini-search-preview-2025-03-11": {
+  "cache_read": 75,
+  "cache_write": 150,
+  "context": 128000,
+  "input": 150,
+  "output": 600,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": true
+ },
+ "gpt-4o-search-preview": {
+  "cache_read": 1250,
+  "cache_write": 2500,
+  "context": 128000,
+  "input": 2500,
+  "output": 10000,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": true
+ },
+ "gpt-4o-search-preview-2025-03-11": {
+  "cache_read": 1250,
+  "cache_write": 2500,
+  "context": 128000,
+  "input": 2500,
+  "output": 10000,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": true
+ },
+ "gpt-5": {
+  "cache_read": 125,
+  "cache_write": 1250,
+  "context": 272000,
+  "input": 1250,
+  "output": 10000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": true
+ },
+ "gpt-5-2025-08-07": {
+  "cache_read": 125,
+  "cache_write": 1250,
+  "context": 272000,
+  "input": 1250,
+  "output": 10000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": true
+ },
+ "gpt-5-chat": {
+  "cache_read": 125,
+  "cache_write": 1250,
+  "context": 128000,
+  "input": 1250,
+  "output": 10000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": false
+ },
+ "gpt-5-chat-latest": {
+  "cache_read": 125,
+  "cache_write": 1250,
+  "context": 128000,
+  "input": 1250,
+  "output": 10000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": true
+ },
+ "gpt-5-mini": {
+  "cache_read": 25,
+  "cache_write": 250,
+  "context": 272000,
+  "input": 250,
+  "output": 2000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": true
+ },
+ "gpt-5-mini-2025-08-07": {
+  "cache_read": 25,
+  "cache_write": 250,
+  "context": 272000,
+  "input": 250,
+  "output": 2000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": true
+ },
+ "gpt-5-nano": {
+  "cache_read": 5,
+  "cache_write": 50,
+  "context": 272000,
+  "input": 50,
+  "output": 400,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": true
+ },
+ "gpt-5-nano-2025-08-07": {
+  "cache_read": 5,
+  "cache_write": 50,
+  "context": 272000,
+  "input": 50,
+  "output": 400,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": true
+ },
+ "gpt-5-search-api": {
+  "cache_read": 125,
+  "cache_write": 1250,
+  "context": 272000,
+  "input": 1250,
+  "output": 10000,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": true
+ },
+ "gpt-5-search-api-2025-10-14": {
+  "cache_read": 125,
+  "cache_write": 1250,
+  "context": 272000,
+  "input": 1250,
+  "output": 10000,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": true
+ },
+ "gpt-5.1": {
+  "cache_read": 125,
+  "cache_write": 1250,
+  "context": 272000,
+  "input": 1250,
+  "output": 10000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": true
+ },
+ "gpt-5.1-2025-11-13": {
+  "cache_read": 125,
+  "cache_write": 1250,
+  "context": 272000,
+  "input": 1250,
+  "output": 10000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": true
+ },
+ "gpt-5.1-chat-latest": {
+  "cache_read": 125,
+  "cache_write": 1250,
+  "context": 128000,
+  "input": 1250,
+  "output": 10000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": true
+ },
+ "gpt-5.2": {
+  "cache_read": 175,
+  "cache_write": 1750,
+  "context": 272000,
+  "input": 1750,
+  "output": 14000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh"
+  ],
+  "tools": true
+ },
+ "gpt-5.2-2025-12-11": {
+  "cache_read": 175,
+  "cache_write": 1750,
+  "context": 272000,
+  "input": 1750,
+  "output": 14000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh"
+  ],
+  "tools": true
+ },
+ "gpt-5.2-chat-latest": {
+  "cache_read": 175,
+  "cache_write": 1750,
+  "context": 128000,
+  "input": 1750,
+  "output": 14000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": true
+ },
+ "gpt-5.3-chat-latest": {
+  "cache_read": 175,
+  "cache_write": 1750,
+  "context": 128000,
+  "input": 1750,
+  "output": 14000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": true
+ },
+ "gpt-5.4": {
+  "cache_read": 250,
+  "cache_write": 2500,
+  "context": 1050000,
+  "input": 2500,
+  "output": 15000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh"
+  ],
+  "tools": true
+ },
+ "gpt-5.4-2026-03-05": {
+  "cache_read": 250,
+  "cache_write": 2500,
+  "context": 1050000,
+  "input": 2500,
+  "output": 15000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh"
+  ],
+  "tools": true
+ },
+ "gpt-5.4-mini": {
+  "cache_read": 75,
+  "cache_write": 750,
+  "context": 272000,
+  "input": 750,
+  "output": 4500,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh"
+  ],
+  "tools": true
+ },
+ "gpt-5.4-mini-2026-03-17": {
+  "cache_read": 75,
+  "cache_write": 750,
+  "context": 272000,
+  "input": 750,
+  "output": 4500,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh"
+  ],
+  "tools": true
+ },
+ "gpt-5.4-nano": {
+  "cache_read": 20,
+  "cache_write": 200,
+  "context": 272000,
+  "input": 200,
+  "output": 1250,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh"
+  ],
+  "tools": true
+ },
+ "gpt-5.4-nano-2026-03-17": {
+  "cache_read": 20,
+  "cache_write": 200,
+  "context": 272000,
+  "input": 200,
+  "output": 1250,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh"
+  ],
+  "tools": true
+ },
+ "gpt-5.5": {
+  "cache_read": 500,
+  "cache_write": 5000,
+  "context": 1050000,
+  "input": 5000,
+  "output": 30000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh"
+  ],
+  "tools": true
+ },
+ "gpt-5.5-2026-04-23": {
+  "cache_read": 500,
+  "cache_write": 5000,
+  "context": 1050000,
+  "input": 5000,
+  "output": 30000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh"
+  ],
+  "tools": true
+ },
+ "gpt-5.5-cyber": {
+  "cache_read": 1250,
+  "cache_write": 12500,
+  "context": 0,
+  "input": 12500,
+  "output": 75000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": false
+ },
+ "gpt-5.5-cyber-preview": {
+  "cache_read": 1250,
+  "cache_write": 12500,
+  "context": 0,
+  "input": 12500,
+  "output": 75000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": false
+ },
+ "gpt-5.6": {
+  "cache_read": 400,
+  "cache_write": 5000,
+  "context": 922000,
+  "input": 4000,
+  "output": 20000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh"
+  ],
+  "tools": true
+ },
+ "gpt-5.6-cyber": {
+  "cache_read": 1250,
+  "cache_write": 15625,
+  "context": 272000,
+  "input": 12500,
+  "output": 75000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": true
+ },
+ "gpt-5.6-luna": {
+  "cache_read": 20,
+  "cache_write": 250,
+  "context": 922000,
+  "input": 200,
+  "output": 1200,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh"
+  ],
+  "tools": true
+ },
+ "gpt-5.6-sol": {
+  "cache_read": 400,
+  "cache_write": 5000,
+  "context": 922000,
+  "input": 4000,
+  "output": 20000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh"
+  ],
+  "tools": true
+ },
+ "gpt-5.6-terra": {
+  "cache_read": 200,
+  "cache_write": 2500,
+  "context": 922000,
+  "input": 2000,
+  "output": 12000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh"
+  ],
+  "tools": true
+ },
+ "gpt-6-astra": {
+  "cache_read": 1000,
+  "cache_write": 12500,
+  "context": 922000,
+  "input": 10000,
+  "output": 50000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh",
+   "max"
+  ],
+  "tools": true
+ },
+ "gpt-6-astra-law": {
+  "cache_read": 1000,
+  "cache_write": 10000,
+  "context": 922000,
+  "input": 10000,
+  "output": 50000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh",
+   "max"
+  ],
+  "tools": true
+ },
+ "gpt-6-cyber": {
+  "cache_read": 2000,
+  "cache_write": 25000,
+  "context": 922000,
+  "input": 20000,
+  "output": 100000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": true
+ },
+ "gpt-6-luna": {
+  "cache_read": 10,
+  "cache_write": 125,
+  "context": 922000,
+  "input": 100,
+  "output": 500,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh",
+   "max"
+  ],
+  "tools": true
+ },
+ "gpt-6-rosalind": {
+  "cache_read": 1000,
+  "cache_write": 12500,
+  "context": 922000,
+  "input": 10000,
+  "output": 50000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh",
+   "max"
+  ],
+  "tools": true
+ },
+ "gpt-6-sol": {
+  "cache_read": 200,
+  "cache_write": 2500,
+  "context": 922000,
+  "input": 2000,
+  "output": 10000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh",
+   "max"
+  ],
+  "tools": true
+ },
+ "gpt-6.1-sol": {
+  "cache_read": 100,
+  "cache_write": 2500,
+  "context": 922000,
+  "input": 2000,
+  "output": 10000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh",
+   "max"
+  ],
+  "tools": true
+ },
+ "gpt-6.1-terra": {
+  "cache_read": 50,
+  "cache_write": 1250,
+  "context": 922000,
+  "input": 1000,
+  "output": 5000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh",
+   "max"
+  ],
+  "tools": true
+ },
+ "gpt-6.2-astra": {
+  "cache_read": 400,
+  "cache_write": 10000,
+  "context": 922000,
+  "input": 8000,
+  "output": 40000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh",
+   "max"
+  ],
+  "tools": true
+ },
+ "gpt-6.2-astra-law": {
+  "cache_read": 400,
+  "cache_write": 10000,
+  "context": 922000,
+  "input": 8000,
+  "output": 40000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh",
+   "max"
+  ],
+  "tools": true
+ },
+ "gpt-6.2-sol": {
+  "cache_read": 100,
+  "cache_write": 2500,
+  "context": 922000,
+  "input": 2000,
+  "output": 10000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high",
+   "xhigh",
+   "max"
+  ],
+  "tools": true
+ },
+ "gpt-audio": {
+  "cache_read": 2500,
+  "cache_write": 2500,
+  "context": 128000,
+  "input": 2500,
+  "output": 10000,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": true
+ },
+ "gpt-audio-1.5": {
+  "cache_read": 2500,
+  "cache_write": 2500,
+  "context": 128000,
+  "input": 2500,
+  "output": 10000,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": true
+ },
+ "gpt-audio-2025-08-28": {
+  "cache_read": 2500,
+  "cache_write": 2500,
+  "context": 128000,
+  "input": 2500,
+  "output": 10000,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": true
+ },
+ "gpt-audio-mini": {
+  "cache_read": 600,
+  "cache_write": 600,
+  "context": 128000,
+  "input": 600,
+  "output": 2400,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": true
+ },
+ "gpt-audio-mini-2025-10-06": {
+  "cache_read": 600,
+  "cache_write": 600,
+  "context": 128000,
+  "input": 600,
+  "output": 2400,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": true
+ },
+ "gpt-audio-mini-2025-12-15": {
+  "cache_read": 600,
+  "cache_write": 600,
+  "context": 128000,
+  "input": 600,
+  "output": 2400,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": true
+ },
+ "gpt-rosalind-discovery": {
+  "cache_read": 500,
+  "cache_write": 5000,
+  "context": 0,
+  "input": 5000,
+  "output": 25000,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": false
+ },
+ "gpt-rosalind-research": {
+  "cache_read": 500,
+  "cache_write": 5000,
+  "context": 0,
+  "input": 5000,
+  "output": 25000,
+  "provider": "openai",
+  "reasoning": [],
+  "tools": false
+ },
+ "o1": {
+  "cache_read": 7500,
+  "cache_write": 15000,
+  "context": 200000,
+  "input": 15000,
+  "output": 60000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": true
+ },
+ "o1-2024-12-17": {
+  "cache_read": 7500,
+  "cache_write": 15000,
+  "context": 200000,
+  "input": 15000,
+  "output": 60000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": true
+ },
+ "o3": {
+  "cache_read": 500,
+  "cache_write": 2000,
+  "context": 200000,
+  "input": 2000,
+  "output": 8000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": true
+ },
+ "o3-2025-04-16": {
+  "cache_read": 500,
+  "cache_write": 2000,
+  "context": 200000,
+  "input": 2000,
+  "output": 8000,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": true
+ },
+ "o3-mini": {
+  "cache_read": 550,
+  "cache_write": 1100,
+  "context": 200000,
+  "input": 1100,
+  "output": 4400,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": true
+ },
+ "o3-mini-2025-01-31": {
+  "cache_read": 550,
+  "cache_write": 1100,
+  "context": 200000,
+  "input": 1100,
+  "output": 4400,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": true
+ },
+ "o4-mini": {
+  "cache_read": 275,
+  "cache_write": 1100,
+  "context": 200000,
+  "input": 1100,
+  "output": 4400,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": true
+ },
+ "o4-mini-2025-04-16": {
+  "cache_read": 275,
+  "cache_write": 1100,
+  "context": 200000,
+  "input": 1100,
+  "output": 4400,
+  "provider": "openai",
+  "reasoning": [
+   "low",
+   "medium",
+   "high"
+  ],
+  "tools": true
+ }
+}

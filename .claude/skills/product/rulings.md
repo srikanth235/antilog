@@ -1,105 +1,62 @@
 # Rulings
 
-The settled product, directed by the owner. Everything here is target; nothing is built on this branch. Cut features are in [non-goals](non-goals.md), the words in [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md).
+The settled product, directed by the owner, as [docs/V0.md](../../../docs/V0.md) shapes it: v0 is cloud sessions only, copying Claude Code's cloud sessions (a runner, OpenCode, one proxy, no infrastructure tool, customers bring model keys). The runner, proxy, environments and the org lock are built; the real code host is not. Cut features are in [non-goals](non-goals.md), the words in [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md).
 
-## A chat and a judge
+## A chat in a cloud session
 
-- **Antilog is a chat and a judge.** The chat works like Claude Code on the web: a person talks to a coding agent in a sandbox with repos attached. The judge is a set of tools every session gets. Only the judge's numbers count, and only a measured win becomes a pull request.
-- **No modes, no plan step, no orchestration loop on the server.** The agent drives. The only server-side state machines are the judge's queue and the budget meter.
-- **Four things.** A **project** groups the experiments for one area of the code. An **experiment** is the sealed goal and everything measured against it. A **session** is one agent's work inside an experiment. A **measurement** is the judge's signed result for one trial. Everything else (scoreboard, wins, receipts, value, Return) is a view over measurements. Reusable setup lives in one Customize page.
-- **Experiment.** Its definition of better (metric and direction, evaluation and protected files, guardrails, data and holdout, repeats, acceptance criteria, quick check, patience, value model) is immutable once sealed; a change makes a new version and numbers never carry across. State: Not sealed, Sealed, Watching or Regressed.
-- **Session.** A chat with one agent in one sandbox on one agent platform. It always belongs to an experiment. Status: Working, Waiting for you, Done or Failed; a stopped one is Done, "Stopped by NAME". On screen it is named by its agent.
-- **Trial.** One `measure` call: a set of commits (one per repo changed), the trial it started from and a one-line hypothesis.
-- **Tools.** Every session gets the Antilog tools, and `antilog mcp` (target) serves them to an agent on a person's own machine. Work tools: `seal`, `measure` (asynchronous: a ticket now, the measurement later as an event), `history`, `spawn`, `deliver`, `watch`. Setup tools, each a card: `attach_repo`, `request_credential`, `set_environment`, `request_budget`. See [session tools](../session/tools.md) and [judge tools](../judge/tools.md).
-- **Memory is `history`.** Each trial carries its hypothesis, so a later session reads what was tried and what failed. There is no notes feature. Skill packs are written know-how a person adds, not a record of trials.
+- **Antilog is a chat with a coding agent in a cloud session.** A person talks to an agent that runs in a machine of its own with repos attached, started in a project. The agent asks for setup through Antilog's tools and a person approves each request.
+- **No modes, no plan step, no orchestration loop on the server.** The agent drives. The only server-side state machines are the runner's queue and the budget meter.
+- **Three things.** A **project** groups sessions for one area of the code. A **session** is one agent's work in one machine and belongs to one project. A **card** is a tool call a person approves. Reusable setup lives in one Customize page.
+- **Session.** Its fields and routes are in [session model](../session/model.md). Status: Queued, Working, Waiting for you, Done, Stopped or Failed; a stopped one is Stopped, "Stopped by NAME". The sidebar lists projects, each with its sessions.
+- **Tools.** A session's MCP endpoint (`/mcp/sessions/{id}`) serves the setup tools, each a card: `attach_repo`, `request_credential`, `set_environment`, `request_budget`, plus the tools of every organization connector (On, Off or Ask first). See [session tools](../session/tools.md). There is no `antilog mcp` and no REST tool endpoint.
 
 ## Settings are tools
 
 - A person approves the tool calls that matter, and settings pages list and revoke what was approved. Setup happens in the chat, at the moment it is needed, as a card.
-- Eight card kinds: Seal experiment, Raise budget, Add credential, Attach repo, Change environment, Open pull request, Keep going?, Continue on another agent?. Defaults, policy, Mode and who may approve are in [organization approvals](../organization/approvals.md).
-- Add credential always asks and can never be pre-approved: a person types the value into a secure form that goes straight to the platform's credential store.
+- Six card kinds: Raise budget, Add credential, Attach repo, Change environment, Allow this tool? (`ask_first`) and Use a connector tool. Defaults, policy, Mode and who may approve are in [organization approvals](../organization/approvals.md).
+- Add credential always asks and can never be pre-approved: a person types the value into a secure form that goes straight to the server's secret store.
 - Roles decide who may approve which card; a viewer approves nothing. The audit log lists tool calls that changed something and approvals.
-- Two things are set up in Settings because no experiment can run without them: agent platform accounts (self-hosted, later) and members and sign-in. Connectors and agents are registered once in Customize, and a chat can ask for the same thing with an Add credential card, so nothing waits on it.
-
-## The judge
-
-- **A trait separate from the agent platform trait:** run this command at these commits with these secrets and return these numbers. See [judge rules](../judge/rules.md).
-- **The trust rules never bend.** Only the judge's numbers count. An agent never holds the holdout credential. A sealed experiment never changes. A person or an agent can never mark a win: only the acceptance criteria can, as one pure function in code. Chat changes what an agent tries, never what counts.
-- **Anti-cheat is built in:** a seal over the definition and protected files (a trial that changes a protected path is Rejected), a fresh judge sandbox for every measurement, seal checks, confirmation before Kept, a second opinion from a different model provider that flags and never decides, and a signed receipt. See [judge anti-cheat](../judge/anti-cheat.md).
-- **Acceptance.** A trial is Kept when it beats the trial it started from by more than the bar, every guardrail holds, and it is confirmed in a fresh judge sandbox and on the holdout. An experiment's best is its best Kept trial. Outcomes: Measuring, Kept, Within noise, Worse, Guardrail failed, Failed holdout, Rejected, Failed.
-- **The holdout as an oracle.** Failed holdout is one bit per trial, so it can be probed. The judge credential is read-only. Holdout checks are capped per experiment version (sealed, default 20); at the cap the experiment needs a new version with a new holdout. The trial's code sees the holdout at the same path and shape as the evaluation data, and a standard planted cheat that behaves differently on the holdout must be caught by the seal checks.
-- **What an agent sees.** The measured value and guardrail values on the evaluation data, and the outcome. It may read the evaluation's code and may never change it. It never reads the holdout or learns a holdout value.
-- **Paired measurement and the bar.** In each fresh judge sandbox the trial and the trial it started from run interleaved, for the sealed number of repeats, and the gain is the mean of the paired differences. The bar: the one-sided lower confidence bound of that gain must be above zero at confidence 1 − 0.05/k, where k is the number of trials measured in this experiment version, this one included, so many attempts cannot win by luck. Confirmation repeats the paired measurement in another fresh sandbox.
-- **Quick check and patience.** A measurement starts with a quick check (one pair: the trial and the experiment's best, run once each in the same sandbox); the full measurement follows only if it beats the best by more than the noise. The quick check never decides Kept. When patience (default 6) trials in a row are not Kept, the judge first measures each session's branch head that differs from every measured trial as one cumulative trial, started from the best, so gains each below the bar can add up; it counts in k and meets the same bar. If none is Kept, the experiment waits on a Keep going? card. Both are sealed.
-- **Delivery and watch.** `deliver` opens one linked pull request per repo changed, each carrying the receipt, and refuses any trial that is not Kept. The session stays attached for review comments and CI failures, and a rebase is measured again. A delivered experiment can be watched: the judge pairs the delivered commit with the current head of the default branch, and a regression is a paired loss whose lower confidence bound is above zero at 95%. It wakes or starts a session and notifies.
-- **Receipt.** Every win carries a signed receipt with Experiment, Data and Compute groups, and a Verify action. See [judge model](../judge/model.md).
-- **Value.** A win is Delivered once its pull request is merged. Pending is not in Return. Delivered is measured offline by the judge and says so wherever it is shown ("measured offline") until production scoring is decided. See the three aims below.
+- Two things are set up in Settings because no session can run without them: model keys (saved per organization per provider) and members and sign-in. Connectors and agents are registered once in Customize, and a chat can ask for the same thing with a card, so nothing waits on it.
 
 ## Sessions, budget and storage
 
-- **One agent per session,** with any number of repos. Git is the hand-off: each session gets a short-lived git token per repo that pushes only to its own branch, and Antilog stores commit ids, never diffs.
-- **Spawn.** A session may spawn others in the same experiment, on the same budget, on any agent and platform. A spawned session cannot spawn, appears as a card and opens as its own chat. See [session rules](../session/rules.md).
-- **Budget.** One per experiment, covering all its sessions and judge time. It is set on the composer (default: the project's, then the organization's) and an editor or owner can change it at any time; lowering it below spend stops new measurements. When it is spent the judge refuses `measure` and the experiment is Waiting for you with a Raise budget card. It sits inside its project's optional monthly cap, inside the organization's.
-- **The sandbox is temporary, the conversation is not.** A sandbox ends when the session is idle or stopped, and resuming starts a new one from the session's branches.
-- **What the server stores:** the conversation, tool call names and card states, commit ids, measurements, spend and audit rows. Never tool output, file contents, diffs or data. Tool output and raw logs stay on the platform, are fetched when opened and may expire; the session says so.
+- **One agent per session,** with any number of repos. The repos, the environment version, the agent and the model are fixed when it starts.
+- **Budget.** Caps nest: a session's own optional cap is at most its project's monthly cap, which is at most the organization's monthly cap. A new session's cap defaults to the project's default per session, then the organization's. The proxy refuses model calls with a 402 once any of them is spent; the session is then Waiting for you, and `request_budget` raises its own cap through a Raise budget card. See [organization approvals](../organization/approvals.md).
+- **The machine is temporary, the conversation is not.** A machine is released when the session is idle or stopped, and resuming starts a new one from the exported history.
+- **What the server stores:** the conversation, tool call names and card states, spend and audit rows. Never tool output, file contents, diffs or data.
 - **Prompt injection is assumed.** Every agent reads untrusted text; what a hijacked agent holds and what still gets through is in [session threat model](../session/threat-model.md).
-- **A person's terminal** in the agent's sandbox is audited, and its output is not stored.
-- **What agents are told is part of the product** and is versioned and tested. See [session prompts](../session/prompts.md).
-- **Rules kept:** one translator per outside system; Antilog never reshapes or pipes data; a session contacts only the endpoints its environment allows; a stopped session is ended and deleted at once.
+- **A person's terminal** in the session's machine is audited, and its output is not stored.
+- **What agents are told is part of the product.** See [session prompts](../session/prompts.md).
+- **Rules kept:** one translator per outside system; Antilog never reshapes or pipes data; a session contacts only the endpoints its environment allows; a stopped session's machine is released and its disk dropped.
 
-## Projects, Customize and data
+## Projects and Customize
 
-- **Projects.** Every experiment belongs to exactly one project. A project has members as owner, editor or viewer; the organization role is the default in every project and a project can set another for that project. Organization owners manage organization settings; project owners manage the project's members, budget, cap and value models. Permission is checked at project scope. See [organization model](../organization/model.md).
-- **Customize** is one sidebar page, a library of reusable things, with tabs Evaluations, Skills, Connectors, Agents and Plugins, each with Yours and Discover. Every item opens the one DetailPage layout. Setting one up with a card works too, and what a card adds appears here.
-  - **Evaluations** are reusable templates (kind Speed, Quality, Size or Cost). A sealed experiment starts from a copy, and the seal checks stay the judge's.
-  - **Skills** are versioned skill packs. The judge never reads one, a pack never holds holdout data, and an experiment records the versions read. See [session add-skill-pack](../session/add-skill-pack.md).
-  - **Connectors** are Snowflake, Databricks, BigQuery, Postgres, DynamoDB, Amazon S3 and an MCP server. The code host is not a connector.
-  - **Agents** are listed with platform, model and use. Settings, Agent platforms keeps platform accounts only.
-  - **Plugins** bundle the other kinds. A plugin has no powers of its own and can never mark, unmark or grant a dataset. An item in use is never removed.
-- **Two credentials per connector,** registered once and kept in the platform's credential store, never by Antilog. The agent credential is read-only and leaves out the holdout; the judge credential is separate and also covers it. Both are short-lived and minted per session.
-- **Datasets and the holdout.** Datasets live under a connector, and a dataset version never changes. A holdout is a marking enforced by the credentials; the grant control is absent, not disabled, and the row reads "Restricted to the judge". A holdout value never appears in history, a message or a receipt shown to an agent. A connector error shows datasets as Not checked, never empty.
-- **Small things.** @-mention of a session in the composer, and a one-time prompt after the first measurement, "Notify me when this experiment needs me".
+- **Projects.** Every session belongs to exactly one project. A project has members as owner, editor or viewer; the organization role is the default in every project and a project can set another for that project. Organization owners manage organization settings and create projects; project owners manage the project's roles and limits (monthly cap, default budget per session). Permission is checked at project scope. See [organization model](../organization/model.md).
+- **Customize** is one sidebar page, a library of reusable things, with tabs Skills, Connectors, Agents and Plugins. Every item opens the one DetailPage layout. Setting one up with a card works too, and what a card adds appears here. Every session gets all connectors and the latest version of every skill.
+  - **Skills** are versioned `SKILL.md` skill packs. See [session add-skill-pack](../session/add-skill-pack.md).
+  - **Connectors** are remote MCP servers ([docs/V0.md](../../../docs/V0.md)). The code host is not a connector. A connector's credential is kept sealed on the server and never sent to a session machine.
+  - **Agents** are listed with model and use; an owner sets the default agent.
+  - **Plugins** bundle skills and connectors. A plugin has no powers of its own.
 
-## The three aims
+## Parked: experiments and the judge
 
-Beside trust: cost control, no tie to one model provider, and Return for the organization. They sit at the top of the [product skill](SKILL.md).
+Owner, 21 Nov 2026: v0 is only cloud sessions. Experiments and the judge are parked, not redesigned, and their code is deleted (not hidden). The last commit that has all of it is `daa445f` on `claude/dreamy-ptolemy-vg7uga`. What was there: a sealed experiment (metric, evaluation, protected paths, guardrails, data and holdout, repeats, acceptance criteria), the judge's tools (`seal`, `measure`, `history`, `deliver`, `watch`), trials and measurements with a paired bar, the holdout machine, Kept trials and wins, signed receipts, value models, Delivered, Pending, At risk, Return, the Report, evaluation templates, datasets, the agent scoreboard, Auto by cost per win, hand off, failover, pull-request delivery and watch. The iteration ideas of 21 Nov (a draft stage, diff-based versions, trials that carry across versions, k counted across the experiment, a minimal seal input, a version timeline) wait with them. The earlier rulings, promises and skill pages are readable in that commit. If the judge returns, restore from there in a change the owner asks for.
 
-- **Value models.** What one unit of a metric is worth in dollars a year, with a source and who set it. A project owner sets one per metric; a different one proposed on the Seal experiment card needs a project owner's approval. It is sealed with the experiment. With none, the experiment shows "No value set" and counts in no dollar figure. Agents never set one.
-- **Return** is Delivered divided by everything spent in the scope (project, organization, time range), including experiments that found nothing, were stopped or failed. A regressed win is At risk, not Delivered.
-- **Auto picks the agent** with the best cost per win for this evaluation kind in this project, among the agents the organization turned on, and says why. Before there is data it uses the organization's default agent, set by an owner in Customize, Agents. A person can always pick a named agent, and no agent is preselected by brand.
-- **Cost views.** Cost per trial, an estimate on the Seal experiment card, Where the spend went, the agent scoreboard (measured on the customer's code, never a vendor benchmark), hand off, failover, compaction, Ideas and a monthly Report. See [session model](../session/model.md), [judge model](../judge/model.md) and [organization approvals](../organization/approvals.md).
+The business model the owner set on 17 Nov (services first, a capped success fee on verified wins, named offers) rested on measured wins and waits with the judge; the platform subscription and the two phases below stand.
 
-## Business model
+## Customer and phases
 
-- **Services first, on our own platform.** Antilog is sold as engagements: our engineers work inside a client's organization with Antilog and deliver measured wins. Client engineers get their own roles as the engagement goes on and keep using Antilog after it ends. The platform's job is to make each engagement cheaper than the last: time to first win, engineer-days per engagement and evaluations reused are tracked.
-- **Pricing.** A fixed fee per engagement, a capped success fee on verified wins, and a platform subscription once client engineers run it themselves. The success fee rests on the value model, which the client signs off on the Seal experiment card, so a dispute is settled before work starts.
-- **Named offers, sold broadly.** Engagements are sold as modernisation with proof, delivered through a few named offers with ready evaluations and value models (cost and latency, build and test time first). Evaluation kinds and connectors are built as paying engagements need them.
-- **Two phases.** Phase 1 is Antilog cloud: we run it on our AWS account for early clients and pilots. Phase 2 is self-hosted in the client's own cloud account (AWS, Azure or GCP), which is what the Fortune 100 buy. Both run the same container images and Helm chart, so every phase 1 engagement tests what phase 2 ships. At least one Fortune 100 pilot, on a low-risk repo, runs in phase 1.
+- **Two phases.** Phase 1 is Antilog cloud: we run it for early clients and pilots. Phase 2 is self-hosted in the client's own cloud account, which is what the Fortune 100 buy. Both run the same server and proxy binaries.
 - **Our staff across organizations.** Our engineers work in several client organizations at once: one sign-in reaches each organization they are members of, and every action is in that organization's audit log.
-- **Compute is rebilled.** Platform spend (tokens, sandboxes, judge time) is metered by the budget and appears on the client's invoice. Self-hosted, it is on the client's own cloud bill.
+- **Compute is rebilled.** Compute (session machines) is metered by the budget and appears on the client's invoice. Model calls are the customer's own: they bring their keys and the proxy meters the spend.
 
 ## The screen and the clients
 
-- **Frame and pages.** A fixed 256px sidebar and a main area; a New experiment composer with five chips (Project, Repos, Agent, Environment, Budget), not a dialog; an experiment page that is the chat of its lead session; Projects, a project page, Customize, an experiment detail page, a receipt page and Settings as a dialog. A new experiment starts Not sealed: the agent explores, measures the baseline and proposes a definition with `seal`, and it may stay Not sealed and end there. The composer follows Claude Code's, with a Mode per experiment (Ask or Follow policy; "Auto" names only the agent choice). A card is the only place structured output appears. See [design behaviour](../design/behaviour.md).
-- **The chat's voice is Antilog.** An agent's message shows the Antilog mark and the name "Antilog", with the agent that did the work as a quiet second label. Agent logos stay where an agent is the subject.
-- **Clients.** The web app, the `antilog` CLI (`antilog "cut checkout p95"` opens the same session in the terminal) and `antilog mcp` (all target), and the native macOS app, which stays ruled in with its boards removed until the web direction is approved. Clients share behaviour, words and element ids, never pixels.
-- **Windows and Linux** use the web app installed as a progressive web app. On macOS it points to the Mac app. Notifications (a win, Waiting for you, a regression, a budget spent) carry ids only ([organization notifications](../organization/notifications.md)). The device stores no data: the service worker caches the app's own files only.
-- **The Mac app** is a direct download, signed, notarized and updated with Sparkle from one signed feed; checks can be turned off and releases deployed through device management. See [stack/swift/antilog.md](../stack/swift/antilog.md).
-
-## Offerings, platforms and vendor facts
-
-- **Two offerings, one core.** Antilog cloud (phase 1) and self-hosted (phase 2) run the same server, images and Helm chart on Kubernetes with Postgres. Antilog cloud: we run it on our AWS account and every session runs on Antilog's platform accounts. Self-hosted: the client runs it in its own AWS, Azure or GCP account, on its own platform accounts. Nothing is specific to one cloud except a thin infrastructure module per cloud; see Deployment below.
-- **Antilog runs no sandboxes for agents. Agent platforms do:** Claude Managed Agents, AWS AgentCore, the OpenAI Agents API, Microsoft Foundry Agent Service and Google Agent Runtime, each behind one agent trait with one adapter (start a session, send input, read events, stop and delete it). Foundry and Google run a container image Antilog supplies, one per agent.
-- **An agent is a model on a platform:** Claude on Claude Managed Agents, Codex on the OpenAI Agents API, Gemini or Grok on AgentCore, GitHub Copilot on Foundry, Gemini (ADK) on Google Agent Runtime.
-- **Build order.** The traits are designed against all five from the start. Adapters ship: AgentCore (agents and the judge sandbox), then a Kubernetes sandbox adapter, then Foundry Agent Service and Google Agent Runtime as clients on Azure and GCP need them, then Claude Managed Agents and the OpenAI Agents API.
-- **A Kubernetes sandbox adapter.** It runs the judge sandbox, and optionally agents, as isolated pods (gVisor or Kata) on a dedicated node pool in the cluster Antilog runs in. It gives one judge that behaves the same on every cloud, keeps the client's code in its own cluster, and gives quieter timing than shared sandboxes.
-- **Where the judge sandbox runs:** on a platform that can run a command in a sandbox with no agent. AgentCore can. Google Agent Runtime is checked in the spike. Claude Managed Agents, the OpenAI Agents API and Foundry cannot; on Azure and GCP the judge runs in the Kubernetes sandbox adapter.
-- **`measure` is asynchronous** so no platform limit applies (Foundry may expire tool outputs after 10 minutes; Google's event stream is undocumented and limited to 10 minutes per query). The spike checks it.
-- **Credentials reach a session only through the platform's credential store,** never a prompt, a repo file or Antilog's database. No model key enters a sandbox.
-- **Antilog cloud uses only Antilog's platform accounts.** The adapters support the client's accounts because self-hosted needs them. A client that needs its code and data to stay in its own network self-hosts.
-- **Timing is noisier on shared sandboxes,** so the noise band is wider and fewer trials are Kept; paired measurement cancels drift between sandboxes, and the experiment detail page says so.
-- **A Helm chart and OpenTofu.** The server ships as signed container images and one Helm chart. One OpenTofu module per cloud creates what sits around the cluster. Docker Compose is kept for local development and quick evaluations only. Antilog's own accounts are owned by the owner.
-- **"This machine" is deferred.** Antilog never starts an agent on a Mac until a later ruling. `antilog mcp` is separate: it serves the tools to an agent a person runs themselves, and that agent's trials are still measured only in a judge sandbox. Measuring never runs on a laptop.
+- **Frame and pages.** A fixed 256px sidebar and a main area; a New session composer with five chips (Project, Repos, Agent, Environment, Budget), not a dialog; a session page that is the chat; Projects, a project page, Customize and Settings as a dialog. The composer follows Claude Code's, with a Mode per session (Ask or Follow policy; "Auto" names only the agent choice). A card is the only place structured output appears. See [design behaviour](../design/behaviour.md).
+- **The chat's voice is Antilog.** An agent's message shows the Antilog mark and the name "Antilog", with the agent that did the work as a quiet second label.
+- **Clients.** The web app and the native macOS app, which stays ruled in with its boards removed until the web direction is approved. The CLI is `antilog runner` only. Clients share behaviour, words and element ids, never pixels.
+- **Windows and Linux** use the web app installed as a progressive web app. On macOS it points to the Mac app. Notifications carry ids only ([organization notifications](../organization/notifications.md)).
+- **The Mac app** is a direct download, signed, notarized and updated with Sparkle. See [stack/swift/antilog.md](../stack/swift/antilog.md).
 
 ## Licence
 
@@ -108,13 +65,10 @@ Antilog is licensed under the Functional Source License, FSL-1.1-ALv2: the sourc
 ## Deployment
 
 - **The server is cloud-agnostic.** One Rust server (`antilog-server`) with the web app built in, and Postgres 18 as the only stateful dependency, which also holds the job queue and live events. Files and exports go to object storage through one crate that speaks S3, Azure Blob and GCS. Secrets are read from mounted files or the environment, never through a cloud SDK. Cloud access is by workload identity, with no stored cloud keys. Telemetry is OpenTelemetry, exported to whatever the client uses. Images are signed, with an SBOM, and can be pushed to a client's own registry for an air-gapped install.
-- **Two ways to run the one image.** The same Rust server and container image run pay-per-use (Antilog cloud in phase 1) or on Kubernetes. On Kubernetes, EKS, AKS, GKE or OpenShift run the same Helm chart, for a client who needs steady traffic, whose contract requires it, or who self-hosts in phase 2. Upgrades are a Helm upgrade with a job that runs forward-only migrations first.
-- **One OpenTofu module per cloud** creates managed Postgres (RDS, Azure Database for PostgreSQL, Cloud SQL), a bucket, a key in the cloud's key service and workload identity. A client with its own cluster uses the chart alone. AWS ships first; Azure and GCP are built when the first client on each signs.
-- **Antilog cloud starts pay-per-use, then grows in steps.** Phase 1 on our AWS runs on Lambda, serving the unchanged axum `Router` through `lambda_http`, behind a function URL with response streaming, with Aurora Serverless v2 (PostgreSQL) at a minimum of 0 ACUs so it pauses when idle. Cost tracks traffic: about $3 to $5 a month idle (Aurora's paused storage, Secrets Manager, Route 53, S3), Aurora about $0.06 an hour while awake, and Lambda a fraction of a cent a request. The first request after a pause waits about 15 seconds. AgentCore and Bedrock are per use on top. A client who needs steady traffic, or whose contract requires it, gets EKS with RDS, one namespace and one database per client (about $200 a month). Clients relying on it: Multi-AZ RDS and more nodes (about $400 to $500 a month). A client whose contract requires it gets its own database instance or cluster. GCP (Cloud Run) and Azure (Container Apps) scale to zero the same way and are built when a client on each cloud needs it.
-- **Scale to zero forces four rules.** (1) Nothing runs after a response is sent: no spawned task, in-process timer or background loop. (2) Timers sit behind a trait: due jobs stay rows in Postgres and each due time books a one-off wake-up with the cloud's scheduler (EventBridge Scheduler on AWS, Cloud Tasks on GCP, Container Apps jobs on Azure); on Kubernetes the timer is in-process. Wake-ups are at least once, so handlers stay idempotent. (3) Lambda caps an invocation at 15 minutes, so long server work (relaying a session's events, waiting on a measurement or a watch) runs as resumable steps of about 10 minutes, each saving the platform's event cursor and booking the next wake-up. Agent sessions and judge runs run on AgentCore, not Lambda. Lambda durable functions are not used: their SDK is TypeScript and Python only. (4) Live event streams end before the cap and the browser reconnects with `Last-Event-ID`, replayed from the events table; `LISTEN/NOTIFY` is for the Kubernetes setup only.
-- **Antilog cloud in phase 1** runs in the US. Organizations join by invitation. Sign-in is GitHub and Google; repos come from GitHub only, through a GitHub App. The first cut runs only models AgentCore reaches through Amazon Bedrock, Claude first, so no model key enters a sandbox; Claude is also on Microsoft Foundry and Vertex AI for phase 2 on Azure and GCP.
-- **Antilog's platform credentials** sit in AWS Secrets Manager, read by the server through workload identity, never in an organization's database, a response or a log.
-- **We are a data processor** for every Antilog cloud organization: a data processing agreement, listed subprocessors (AWS, and Anthropic through Bedrock) and a stated retention rule. Antilog keeps no tool output, file contents or diffs. Each platform's retention and residency is stated beside it: the vendors promise only where data is stored at rest, and the OpenAI Agents API offers United States residency only and no zero data retention. Self-hosted, the data stays in the client's account and a services agreement sets our engineers' access.
+- **Antilog cloud runs on a small always-on host.** The server and the proxy are plain binaries on one small host, with managed Postgres; session machines run on a pool of hosts, each locked to one organization ([docs/V0.md](../../../docs/V0.md)). An agent writes and runs whatever deploys them, on demand; the repo has no infrastructure code.
+- **Work that must happen later is a row in Postgres**, claimed by a poller (the runner, or the server's own loop), so a restart loses nothing. Live event streams end after a few minutes and the browser reconnects with `Last-Event-ID`, replayed from the events table.
+- **Antilog cloud in phase 1** runs in the US. Organizations join by invitation. Sign-in is GitHub and Google; repos come from GitHub only, through a GitHub App. Customers bring their own model keys (Anthropic and OpenAI first), held by the proxy and never sent into a session.
+- **We are a data processor** for every Antilog cloud organization: a data processing agreement, listed subprocessors and a stated retention rule. Antilog keeps no tool output, file contents or diffs. Model calls go to the customer's own provider account through the proxy, so the model vendor's retention is the customer's agreement. Self-hosted, the data stays in the client's account and a services agreement sets our engineers' access.
 - **Security paperwork starts in phase 1.** SOC 2 Type I is started during phase 1, since the Fortune 100 ask for it on the first call.
 
 ## Sign-in
@@ -123,13 +77,13 @@ No passwords. Antilog cloud offers exactly two sign-ins, GitHub (OAuth with its 
 
 ## Decided by the owner
 
+Rows that name experiments, the judge, value models, receipts or holdout were decided for the design now parked (see above); they stand as history, not as live rules.
+
 | Date | Decision |
 | --- | --- |
 | 14 and 15 Nov 2026 | A native macOS app, SwiftUI, macOS only at launch. |
-| 15 and 16 Nov 2026 | Antilog cloud on Cloudflare, one Durable Object per organization. Replaced on 17 Nov by AWS and Kubernetes. |
 | 16 Nov 2026 | The design is a chat and a judge. |
 | 16 Nov 2026 | The server stores the conversation's words, never tool output. |
-| 16 Nov 2026 | The customer's CI runner is not a judge sandbox; the trait leaves room for it. |
 | 16 Nov 2026 | "Experiment" names the goal; a session is one agent's work inside it. |
 | 16 Nov 2026 | Projects, Customize, skill packs and plugins are in; notes and the dashboard page are out. |
 | 16 Nov 2026 | The macOS app's boards are removed until the web direction is approved. |
@@ -138,10 +92,7 @@ No passwords. Antilog cloud offers exactly two sign-ins, GitHub (OAuth with its 
 | 16 Nov 2026 | The composer follows Claude Code's, with Mode (Ask or Follow policy). |
 | 16 Nov 2026 | The chat speaks as Antilog. An agent may read the evaluation's code, never change it. |
 | 16 Nov 2026 | The three aims, with value models, Auto, Return on all spend, sealed quick check and patience, and two new card kinds. |
-| 16 Nov 2026 | The spike measures noise on each judge platform. |
 | 16 Nov 2026 | Paired measurement; the bar is a lower confidence bound above zero at 1 − 0.05/k. |
-| 16 Nov 2026 | AgentCore is the first adapter, for agents and the judge. |
-| 16 Nov 2026 | A thin first release: self-hosted, AgentCore, the web app, Speed, and `antilog mcp`. Replaced the same day by cloud first. |
 | 16 Nov 2026 | The licence is the Functional Source License (FSL-1.1-ALv2). |
 | 16 Nov 2026 | Cumulative trials at patience, so small gains add up. |
 | 16 Nov 2026 | Watch is paired: the delivered commit against the current head. |
@@ -149,59 +100,31 @@ No passwords. Antilog cloud offers exactly two sign-ins, GitHub (OAuth with its 
 | 16 Nov 2026 | Prompt injection is assumed; the session threat model is written. |
 | 16 Nov 2026 | Delivered is labelled "measured offline" until production scoring is decided. |
 | 16 Nov 2026 | Cloud first: the first release is Antilog cloud; self-hosted follows. |
-| 16 Nov 2026 | Invite only with no billing at first; Antilog pays under a hard cap per organization. Replaced on 17 Nov: compute is rebilled. |
 | 16 Nov 2026 | US jurisdiction first, then the EU. |
-| 16 Nov 2026 | Models on Bedrock only in the first cut, Claude first. |
 | 16 Nov 2026 | GitHub is the only code host in the first cut. |
 | 16 Nov 2026 | Three to five design partners at launch. Replaced on 17 Nov by paid engagements and pilots. |
 | 17 Nov 2026 | Services first: our engineers deliver engagements on Antilog, client engineers take over. |
 | 17 Nov 2026 | Pricing: a fixed fee per engagement, a capped success fee on verified wins, then a subscription. |
-| 17 Nov 2026 | Phase 1 is Antilog cloud on our AWS; phase 2 is self-hosted in the client's AWS, Azure or GCP account. |
-| 17 Nov 2026 | Cloudflare is dropped. Kubernetes, one Helm chart and one OpenTofu module per cloud. |
-| 17 Nov 2026 | A Kubernetes sandbox adapter runs the judge on any cloud. |
-| 17 Nov 2026 | Demos run on k3s on one EC2 instance; EKS from the first paying client. Replaced the same day by pay-per-use. |
-| 17 Nov 2026 | Phase 1 Antilog cloud runs pay-per-use (Lambda, Aurora Serverless v2 at zero); the Helm chart on EKS stays for clients who need steady traffic and for phase 2. Same server and image both ways. |
 | 17 Nov 2026 | Value models, Return and the Report are in the first release. |
 | 17 Nov 2026 | The product is renamed Antilog; it is hosted at antilog.tech. |
 | 17 Nov 2026 | Antilog cloud sign-in is GitHub and Google only, with no per-organization single sign-on. Self-hosted keeps the client's own OpenID Connect provider. |
-| 17 Nov 2026 | Antilog cloud runs in AWS region us-east-1. |
+| 18 Nov 2026 | No username and password, not even for testing. Agents and tests sign in through fakes: access tokens and a fake sign-in provider. |
+| 18 Nov 2026 | An organization always keeps at least one owner, as a project does. |
+| 18 Nov 2026 | Done and Failed sessions are final; resuming means a new session. |
+| 18 Nov 2026 | Only the receipt is signed; it carries a hash of each of its measurements. |
+| 18 Nov 2026 | The kill-switch runs under a role the owner creates and holds, outside `antilog-*`, so the agent's boundary cannot reach it. |
+| 18 Nov 2026 | The antilog.tech landing page (`site/index.html`) spoke to CTOs and VPs of engineering as "your cloud bill, edited by autonomous agents": agents propose, a judge decides, people approve. It is a marketing page outside the design rules (its own fonts, no board), and its figures are invented examples labelled "Illustrative example". The product and its boards are unchanged. Contact is hello@antilog.tech. The audience and headline were replaced on 19 Nov; the rest stands. |
+| 20 Nov 2026 | No Lambda and no infrastructure code in the repo; the server and proxy are plain binaries, and agents write and run deploy code on demand. |
+| 21 Nov 2026 | v0 is only cloud sessions, copying Claude Code's. Experiments and the judge are parked and their code deleted (`daa445f` keeps it). |
+| 21 Nov 2026 | Projects stay: a project groups sessions, as Claude Code's sidebar does; a session belongs to one project. |
+| 21 Nov 2026 | Spend is capped by the organization (monthly), the project (monthly) and optionally the session; caps nest. |
 
 Decided calls also appear on the Decisions board.
 
-## Still unproven: the spike
-
-The spike comes before any product code. One tiny experiment is measured end to end on all five platforms. It proves the agent trait, the Antilog tools served to a session over its event stream and a judge sandbox that holds a credential no agent sees. It also runs one fixed benchmark many times in fresh judge sandboxes on each judge platform and records the spread of paired differences, which says whether Speed experiments can be Kept there.
-
-The spike also answers:
-
-- **Repeats.** How many paired repeats make the bar reachable. With 3 repeats and k = 10 the critical value is about 10, so almost nothing is Kept. The Seal experiment card should show the smallest gain the setup can detect.
-- **The Speed holdout.** What a holdout is for a timing evaluation: other inputs, another load profile, or something else.
-- **A first example that fits.** "Cut checkout p95" needs real services and load that a sandbox with no connectors does not have. Find a Speed experiment that can be measured honestly there, such as test suite or build time, or a library benchmark.
-- **The agent image.** AgentCore runs a container Antilog supplies, so Antilog packages the coding agent itself. What goes in it and who maintains it.
-- **Usage timing.** Whether each platform reports usage fast enough for the budget meter to stop spend on time.
-- **Quotas.** Platform and model limits on concurrent sessions, and what happens when one is hit.
-- **One branch per session.** A GitHub App installation token can push to any branch of a repo, not just the session's. Show that pushes can be held to the session's branch (for example a ruleset on a `antilog/*` prefix, or a push relay that checks the ref), or change the design.
-- **Scale to zero.** How long Aurora's resume takes in practice and what the first request shows, whether a function URL streams server-sent events as designed, and how small the Lambda connection pool can be before it hurts.
-- **The Kubernetes judge.** How noisy and how well isolated judge pods (gVisor or Kata, dedicated nodes) are, beside AgentCore.
-- **Cost of one experiment.** Tokens, sandbox and judge time for one sealed experiment end to end, which sets engagement pricing.
-- **Pair interference.** Whether warm caches, shared state or migrations leak between the two sides of a pair, and whether an ABBA order is enough.
-
-## First release
-
-Antilog cloud on our AWS (pay-per-use on Lambda and Aurora Serverless v2, EKS when a client needs it), with AgentCore and models on Bedrock, GitHub sign-in and repos (and Google sign-in), the web app and `antilog mcp`, one evaluation kind (Speed) with no connectors: seal, measure, Kept, receipt, deliver, budget, approvals and the audit log, plus value models, Return and the Report, since they are what an engagement is paid on. Before the first client: the push scan and second opinion from the threat model, a data processing agreement, the subprocessor list, a retention and deletion rule, the cross-organization staff sign-in and spend alerts. Then, in this order unless the owner says otherwise: the Kubernetes sandbox adapter, self-hosted on the client's AWS, evaluation kinds and connectors as engagements need them, Azure and GCP with their adapters, plugins, Ideas, and the Mac app. Their fields stay in the sealed definition and the store from the start, so nothing is redesigned.
-
-A `antilog mcp` connection works inside a session in the experiment, named by its agent, with no platform sandbox. Its trial commits are pushed to that session's branch with a short-lived git token minted for the session, and are measured only in a judge sandbox.
-
 ## Open questions
 
-- Whether scoring is offline only or production results are used too.
-- Whether Antilog ever reshapes data (today no, see [non-goals](non-goals.md)).
 - Whether "Try a demo" stays in the web app.
-- Whether every trial in the version, from every session and including quick-check stops, should count in k. Spawned sessions raise the bar for all.
-- How experiments on the same code interact: overlapping changes, a default branch that moves mid-experiment, one win making another's baseline stale. Today only delivery rebases.
 - How a secret pasted into the chat is caught before the conversation is stored.
-- Who holds the judge's signing key when self-hosted (on Antilog cloud it is Antilog's, in AWS Secrets Manager), how it rotates, and what "Signed by the judge" proves to someone outside the organization.
-- The seal is the hardest step and seal checks catch only a trivially broken evaluation. How the product helps a team that has no benchmark.
-- How time to merge is shown and eased, since value counts only after a merge.
-- What the second opinion costs per win, and its data path: the diff goes to a second provider.
+- How a pull request is opened: by the agent with the repo's credentials, a code host, or both.
+- Whether session machines get a microVM or VM backend before self-hosting.
 - The FSL's "competing use" wording and whether contributors sign an agreement.

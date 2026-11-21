@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select coalesce(r.role, m.role) as \"role!\" from members m join projects p on p.organization_id = m.organization_id and p.id = $2 left join project_roles r on r.project_id = p.id and r.member_id = m.id where m.organization_id = $1 and m.id = $3",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "role!",
+        "type_info": "Text",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "bf789da95523a323697828afe28466b4e74617c012ef0c8ea42325fe1769796c"
+}

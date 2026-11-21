@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into session_context (session_id, organization_id, used_tokens, window_tokens, reported_at) values ($1, $2, $3, $4, to_timestamp($5::bigint / 1000.0)) on conflict (session_id) do update set used_tokens = excluded.used_tokens, window_tokens = coalesce(excluded.window_tokens, session_context.window_tokens), reported_at = excluded.reported_at",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Int8",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5164f27c9dcff14256d1a4c90d82ed16befcfc74f108637a9e87bab45418767b"
+}

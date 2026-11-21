@@ -72,66 +72,6 @@
       "expand": "fill",
       "is_interactive": true
     },
-    "AddConnectorMcp.dc.html": {
-      "x": 22800,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Add MCP server",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "AddConnectorMcpDark.dc.html": {
-      "x": 22800,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Add MCP server \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "AddEvaluation.dc.html": {
-      "x": 6080,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Add evaluation",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "AddEvaluationDark.dc.html": {
-      "x": 6080,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Add evaluation \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "AddPlatform.dc.html": {
-      "x": 6080,
-      "y": 9450,
-      "w": 1440,
-      "h": 900,
-      "title": "8 \u00b7 Settings, Agent platforms, add platform",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "AddPlatformDark.dc.html": {
-      "x": 6080,
-      "y": 9450,
-      "w": 1440,
-      "h": 900,
-      "title": "8 \u00b7 Settings, Agent platforms, add platform \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
     "AddPlugin.dc.html": {
       "x": 41040,
       "y": 8350,
@@ -168,26 +108,6 @@
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Customize, Add skill \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "AddValueModel.dc.html": {
-      "x": 6080,
-      "y": 7250,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Add value model",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "AddValueModelDark.dc.html": {
-      "x": 6080,
-      "y": 7250,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Add value model \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -272,6 +192,26 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "AppShell.dc.html": {
+      "x": 0,
+      "y": 12780,
+      "w": 1440,
+      "h": 900,
+      "title": "11 \u00b7 App shell, account menu",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AppShellDark.dc.html": {
+      "x": 0,
+      "y": 12780,
+      "w": 1440,
+      "h": 900,
+      "title": "11 \u00b7 App shell, account menu \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "ConnectorDetail.dc.html": {
       "x": 19760,
       "y": 8350,
@@ -312,6 +252,26 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "ConnectorRemove.dc.html": {
+      "x": 42560,
+      "y": 8350,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Customize, Remove connector",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "ConnectorRemoveDark.dc.html": {
+      "x": 42560,
+      "y": 8350,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Customize, Remove connector \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "Connectors.dc.html": {
       "x": 15200,
       "y": 8350,
@@ -328,26 +288,6 @@
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Customize, Connectors \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "ConnectorsDiscover.dc.html": {
-      "x": 18240,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Connectors, discover",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "ConnectorsDiscoverDark.dc.html": {
-      "x": 18240,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Connectors, discover \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -372,26 +312,6 @@
       "expand": "fill",
       "is_interactive": true
     },
-    "DatasetHoldout.dc.html": {
-      "x": 25840,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Holdout dataset",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "DatasetHoldoutDark.dc.html": {
-      "x": 25840,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Holdout dataset \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
     "Decisions.dc.html": {
       "x": 1520,
       "y": 0,
@@ -407,106 +327,6 @@
       "h": 6090,
       "title": "Design rules",
       "page": "rules"
-    },
-    "EvaluationDetail.dc.html": {
-      "x": 4560,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Evaluation detail",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "EvaluationDetailDark.dc.html": {
-      "x": 4560,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Evaluation detail \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "Evaluations.dc.html": {
-      "x": 0,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Evaluations",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "EvaluationsDark.dc.html": {
-      "x": 0,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Evaluations \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "EvaluationsDiscover.dc.html": {
-      "x": 3040,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Evaluations, discover",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "EvaluationsDiscoverDark.dc.html": {
-      "x": 3040,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Evaluations, discover \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "EvaluationsEmpty.dc.html": {
-      "x": 1520,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Evaluations, empty",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "EvaluationsEmptyDark.dc.html": {
-      "x": 1520,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Evaluations, empty \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "ExperimentDetail.dc.html": {
-      "x": 3040,
-      "y": 5050,
-      "w": 1440,
-      "h": 900,
-      "title": "4 \u00b7 Experiment, Checkout p95 latency",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "ExperimentDetailDark.dc.html": {
-      "x": 3040,
-      "y": 5050,
-      "w": 1440,
-      "h": 900,
-      "title": "4 \u00b7 Experiment, Checkout p95 latency \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
     },
     "Home.dc.html": {
       "x": 0,
@@ -548,22 +368,42 @@
       "expand": "fill",
       "is_interactive": true
     },
-    "PlatformError.dc.html": {
-      "x": 4560,
-      "y": 9450,
+    "NewSession.dc.html": {
+      "x": 1520,
+      "y": 12780,
       "w": 1440,
       "h": 900,
-      "title": "8 \u00b7 Settings, Agent platforms, credential rejected",
+      "title": "11 \u00b7 New session",
       "page": "web-light",
       "expand": "fill",
       "is_interactive": true
     },
-    "PlatformErrorDark.dc.html": {
-      "x": 4560,
-      "y": 9450,
+    "NewSessionDark.dc.html": {
+      "x": 1520,
+      "y": 12780,
       "w": 1440,
       "h": 900,
-      "title": "8 \u00b7 Settings, Agent platforms, credential rejected \u00b7 dark",
+      "title": "11 \u00b7 New session \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "NewSessionRepos.dc.html": {
+      "x": 5030,
+      "y": 12780,
+      "w": 1440,
+      "h": 900,
+      "title": "11 \u00b7 New session, repo list",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "NewSessionReposDark.dc.html": {
+      "x": 5030,
+      "y": 12780,
+      "w": 1440,
+      "h": 900,
+      "title": "11 \u00b7 New session, repo list \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -588,6 +428,26 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "PluginRemove.dc.html": {
+      "x": 44080,
+      "y": 8350,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Customize, Remove plugin",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "PluginRemoveDark.dc.html": {
+      "x": 44080,
+      "y": 8350,
+      "w": 1440,
+      "h": 900,
+      "title": "6 \u00b7 Customize, Remove plugin \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "Plugins.dc.html": {
       "x": 34960,
       "y": 8350,
@@ -604,26 +464,6 @@
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Customize, Plugins \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "PluginsDiscover.dc.html": {
-      "x": 38000,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Plugins, discover",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "PluginsDiscoverDark.dc.html": {
-      "x": 38000,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Plugins, discover \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -704,46 +544,6 @@
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Projects \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "Receipt.dc.html": {
-      "x": 4560,
-      "y": 5050,
-      "w": 1440,
-      "h": 900,
-      "title": "4 \u00b7 Receipt for trial 12",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "ReceiptDark.dc.html": {
-      "x": 4560,
-      "y": 5050,
-      "w": 1440,
-      "h": 900,
-      "title": "4 \u00b7 Receipt for trial 12 \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "Report.dc.html": {
-      "x": 4560,
-      "y": 7250,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Report, November 2026",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "ReportDark.dc.html": {
-      "x": 4560,
-      "y": 7250,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Report, November 2026 \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -888,6 +688,46 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "SessionConnectorTool.dc.html": {
+      "x": 38000,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, use a connector tool",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionConnectorToolDark.dc.html": {
+      "x": 38000,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, use a connector tool \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionContext.dc.html": {
+      "x": 47120,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, context nearly full",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionContextDark.dc.html": {
+      "x": 47120,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, context nearly full \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "SessionCredential.dc.html": {
       "x": 22800,
       "y": 3370,
@@ -908,22 +748,42 @@
       "expand": "fill",
       "is_interactive": true
     },
-    "SessionDelivered.dc.html": {
-      "x": 18240,
+    "SessionEnvironment.dc.html": {
+      "x": 42560,
       "y": 3370,
       "w": 1440,
       "h": 900,
-      "title": "3 \u00b7 Session, delivered",
+      "title": "3 \u00b7 Session, change environment",
       "page": "web-light",
       "expand": "fill",
       "is_interactive": true
     },
-    "SessionDeliveredDark.dc.html": {
-      "x": 18240,
+    "SessionEnvironmentCard.dc.html": {
+      "x": 44080,
       "y": 3370,
       "w": 1440,
       "h": 900,
-      "title": "3 \u00b7 Session, delivered \u00b7 dark",
+      "title": "3 \u00b7 Session, change environment card",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionEnvironmentCardDark.dc.html": {
+      "x": 44080,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, change environment card \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionEnvironmentDark.dc.html": {
+      "x": 42560,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, change environment \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -948,26 +808,6 @@
       "expand": "fill",
       "is_interactive": true
     },
-    "SessionFailover.dc.html": {
-      "x": 36480,
-      "y": 3370,
-      "w": 1440,
-      "h": 900,
-      "title": "3 \u00b7 Session, failover",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "SessionFailoverDark.dc.html": {
-      "x": 36480,
-      "y": 3370,
-      "w": 1440,
-      "h": 900,
-      "title": "3 \u00b7 Session, failover \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
     "SessionFiles.dc.html": {
       "x": 10640,
       "y": 3370,
@@ -988,62 +828,122 @@
       "expand": "fill",
       "is_interactive": true
     },
-    "SessionHandOff.dc.html": {
-      "x": 34960,
-      "y": 3370,
-      "w": 1440,
-      "h": 900,
-      "title": "3 \u00b7 Session, hand off",
+    "SessionList.dc.html": {
+      "x": 4560,
+      "y": 12780,
+      "w": 390,
+      "h": 844,
+      "title": "11 \u00b7 Session list, phone",
       "page": "web-light",
       "expand": "fill",
       "is_interactive": true
     },
-    "SessionHandOffDark.dc.html": {
-      "x": 34960,
-      "y": 3370,
+    "SessionListCollapsed.dc.html": {
+      "x": 3040,
+      "y": 12780,
       "w": 1440,
       "h": 900,
-      "title": "3 \u00b7 Session, hand off \u00b7 dark",
+      "title": "11 \u00b7 Session list, sidebar collapsed",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionListCollapsedDark.dc.html": {
+      "x": 3040,
+      "y": 12780,
+      "w": 1440,
+      "h": 900,
+      "title": "11 \u00b7 Session list, sidebar collapsed \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
     },
-    "SessionKeepGoing.dc.html": {
-      "x": 33440,
-      "y": 3370,
-      "w": 1440,
-      "h": 900,
-      "title": "3 \u00b7 Session, keep going",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "SessionKeepGoingDark.dc.html": {
-      "x": 33440,
-      "y": 3370,
-      "w": 1440,
-      "h": 900,
-      "title": "3 \u00b7 Session, keep going \u00b7 dark",
+    "SessionListDark.dc.html": {
+      "x": 4560,
+      "y": 12780,
+      "w": 390,
+      "h": 844,
+      "title": "11 \u00b7 Session list, phone \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
     },
-    "SessionNoWin.dc.html": {
-      "x": 19760,
+    "SessionModelEffort.dc.html": {
+      "x": 47120,
       "y": 3370,
       "w": 1440,
       "h": 900,
-      "title": "3 \u00b7 Session, no win",
+      "title": "3 \u00b7 Session, effort submenu",
       "page": "web-light",
       "expand": "fill",
       "is_interactive": true
     },
-    "SessionNoWinDark.dc.html": {
-      "x": 19760,
+    "SessionModelEffortDark.dc.html": {
+      "x": 47120,
       "y": 3370,
       "w": 1440,
       "h": 900,
-      "title": "3 \u00b7 Session, no win \u00b7 dark",
+      "title": "3 \u00b7 Session, effort submenu \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionModelMenu.dc.html": {
+      "x": 45600,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, model menu",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionModelMenuDark.dc.html": {
+      "x": 45600,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, model menu \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionModelMore.dc.html": {
+      "x": 48640,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, more models",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionModelMoreDark.dc.html": {
+      "x": 48640,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, more models \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionOverview.dc.html": {
+      "x": 41040,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, overview",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionOverviewDark.dc.html": {
+      "x": 41040,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, overview \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -1088,26 +988,6 @@
       "expand": "fill",
       "is_interactive": true
     },
-    "SessionRegression.dc.html": {
-      "x": 25840,
-      "y": 3370,
-      "w": 1440,
-      "h": 900,
-      "title": "3 \u00b7 Session, regression",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "SessionRegressionDark.dc.html": {
-      "x": 25840,
-      "y": 3370,
-      "w": 1440,
-      "h": 900,
-      "title": "3 \u00b7 Session, regression \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
     "SessionRepo.dc.html": {
       "x": 24320,
       "y": 3370,
@@ -1124,26 +1004,6 @@
       "w": 1440,
       "h": 900,
       "title": "3 \u00b7 Session, attach repo \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "SessionSeal.dc.html": {
-      "x": 1520,
-      "y": 3370,
-      "w": 1440,
-      "h": 900,
-      "title": "3 \u00b7 Session, seal experiment",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "SessionSealDark.dc.html": {
-      "x": 1520,
-      "y": 3370,
-      "w": 1440,
-      "h": 900,
-      "title": "3 \u00b7 Session, seal experiment \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -1228,6 +1088,26 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "SessionTerminalResume.dc.html": {
+      "x": 9200,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, terminal resume",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionTerminalResumeDark.dc.html": {
+      "x": 9200,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, terminal resume \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "SessionTitleMenu.dc.html": {
       "x": 13680,
       "y": 3370,
@@ -1248,42 +1128,22 @@
       "expand": "fill",
       "is_interactive": true
     },
-    "SessionTrials.dc.html": {
-      "x": 4560,
+    "SessionToolCalls.dc.html": {
+      "x": 39520,
       "y": 3370,
       "w": 1440,
       "h": 900,
-      "title": "3 \u00b7 Session, trials",
+      "title": "3 \u00b7 Session, tool calls",
       "page": "web-light",
       "expand": "fill",
       "is_interactive": true
     },
-    "SessionTrialsDark.dc.html": {
-      "x": 4560,
+    "SessionToolCallsDark.dc.html": {
+      "x": 39520,
       "y": 3370,
       "w": 1440,
       "h": 900,
-      "title": "3 \u00b7 Session, trials \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "SessionWin.dc.html": {
-      "x": 16720,
-      "y": 3370,
-      "w": 1440,
-      "h": 900,
-      "title": "3 \u00b7 Session, win",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "SessionWinDark.dc.html": {
-      "x": 16720,
-      "y": 3370,
-      "w": 1440,
-      "h": 900,
-      "title": "3 \u00b7 Session, win \u00b7 dark",
+      "title": "3 \u00b7 Session, tool calls \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -1428,6 +1288,46 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "SettingsEnvironment.dc.html": {
+      "w": 1440,
+      "h": 900,
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true,
+      "x": 12160,
+      "y": 9450,
+      "title": "8 \u00b7 Settings, Connections, edit environment"
+    },
+    "SettingsEnvironmentDark.dc.html": {
+      "w": 1440,
+      "h": 900,
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true,
+      "x": 12160,
+      "y": 9450,
+      "title": "8 \u00b7 Settings, Connections, edit environment \u00b7 dark"
+    },
+    "SettingsEnvironmentSecrets.dc.html": {
+      "w": 1440,
+      "h": 900,
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true,
+      "x": 13660,
+      "y": 9450,
+      "title": "8 \u00b7 Settings, Connections, edit environment, network secrets"
+    },
+    "SettingsEnvironmentSecretsDark.dc.html": {
+      "w": 1440,
+      "h": 900,
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true,
+      "x": 13660,
+      "y": 9450,
+      "title": "8 \u00b7 Settings, Connections, edit environment, network secrets \u00b7 dark"
+    },
     "SettingsGeneral.dc.html": {
       "x": 9120,
       "y": 10550,
@@ -1468,62 +1368,42 @@
       "expand": "fill",
       "is_interactive": true
     },
-    "SettingsPlatforms.dc.html": {
-      "x": 0,
-      "y": 9450,
+    "SettingsModelKeys.dc.html": {
+      "x": 19760,
+      "y": 10550,
       "w": 1440,
       "h": 900,
-      "title": "8 \u00b7 Settings, Agent platforms",
+      "title": "9 \u00b7 Settings, Model keys",
       "page": "web-light",
       "expand": "fill",
       "is_interactive": true
     },
-    "SettingsPlatformsDark.dc.html": {
-      "x": 0,
-      "y": 9450,
+    "SettingsModelKeysAdd.dc.html": {
+      "x": 21280,
+      "y": 10550,
       "w": 1440,
       "h": 900,
-      "title": "8 \u00b7 Settings, Agent platforms \u00b7 dark",
+      "title": "9 \u00b7 Settings, Add a model key",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SettingsModelKeysAddDark.dc.html": {
+      "x": 21280,
+      "y": 10550,
+      "w": 1440,
+      "h": 900,
+      "title": "9 \u00b7 Settings, Add a model key \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
     },
-    "SettingsPlatformsEmpty.dc.html": {
-      "x": 1520,
-      "y": 9450,
+    "SettingsModelKeysDark.dc.html": {
+      "x": 19760,
+      "y": 10550,
       "w": 1440,
       "h": 900,
-      "title": "8 \u00b7 Settings, Agent platforms, none added",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "SettingsPlatformsEmptyDark.dc.html": {
-      "x": 1520,
-      "y": 9450,
-      "w": 1440,
-      "h": 900,
-      "title": "8 \u00b7 Settings, Agent platforms, none added \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "SettingsPlatformsManaged.dc.html": {
-      "x": 3040,
-      "y": 9450,
-      "w": 1440,
-      "h": 900,
-      "title": "8 \u00b7 Settings, Agent platforms, Antilog cloud",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "SettingsPlatformsManagedDark.dc.html": {
-      "x": 3040,
-      "y": 9450,
-      "w": 1440,
-      "h": 900,
-      "title": "8 \u00b7 Settings, Agent platforms, Antilog cloud \u00b7 dark",
+      "title": "9 \u00b7 Settings, Model keys \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -1781,26 +1661,6 @@
       "expand": "fill",
       "is_interactive": true
     },
-    "SkillsDiscover.dc.html": {
-      "x": 10640,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Skills, discover",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "SkillsDiscoverDark.dc.html": {
-      "x": 10640,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Skills, discover \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
     "SkillsEmpty.dc.html": {
       "x": 9120,
       "y": 8350,
@@ -1955,24 +1815,6 @@
       "w": 240,
       "maxW": 2960
     },
-    "web-light4": {
-      "kind": "title1",
-      "page": "web-light",
-      "text": "4 \u00b7 Experiment and receipts",
-      "x": 0,
-      "y": 4920,
-      "w": 240,
-      "maxW": 2960
-    },
-    "web-dark4": {
-      "kind": "title1",
-      "page": "web-dark",
-      "text": "4 \u00b7 Experiment and receipts",
-      "x": 0,
-      "y": 4920,
-      "w": 240,
-      "maxW": 2960
-    },
     "web-light5": {
       "kind": "title1",
       "page": "web-light",
@@ -2080,6 +1922,24 @@
       "y": 8220,
       "w": 240,
       "maxW": 2960
+    },
+    "web-light11": {
+      "kind": "title1",
+      "page": "web-light",
+      "text": "11 \u00b7 App shell",
+      "x": 0,
+      "y": 12650,
+      "w": 240,
+      "maxW": 2960
+    },
+    "web-dark11": {
+      "kind": "title1",
+      "page": "web-dark",
+      "text": "11 \u00b7 App shell",
+      "x": 0,
+      "y": 12650,
+      "w": 240,
+      "maxW": 2960
     }
   },
   "noteOrder": [
@@ -2091,8 +1951,6 @@
     "web-dark2",
     "web-light3",
     "web-dark3",
-    "web-light4",
-    "web-dark4",
     "web-light5",
     "web-dark5",
     "web-light6",
@@ -2104,7 +1962,9 @@
     "web-light10",
     "web-dark10",
     "web-light6b",
-    "web-dark6b"
+    "web-dark6b",
+    "web-light11",
+    "web-dark11"
   ],
   "attachments": {},
   "designSystems": [],
@@ -2113,18 +1973,10 @@
     "AddAgentDark.dc.html",
     "AddConnector.dc.html",
     "AddConnectorDark.dc.html",
-    "AddConnectorMcp.dc.html",
-    "AddConnectorMcpDark.dc.html",
-    "AddEvaluation.dc.html",
-    "AddEvaluationDark.dc.html",
-    "AddPlatform.dc.html",
-    "AddPlatformDark.dc.html",
     "AddPlugin.dc.html",
     "AddPluginDark.dc.html",
     "AddSkill.dc.html",
     "AddSkillDark.dc.html",
-    "AddValueModel.dc.html",
-    "AddValueModelDark.dc.html",
     "AgentDetail.dc.html",
     "AgentDetailDark.dc.html",
     "Agents.dc.html",
@@ -2133,42 +1985,34 @@
     "AgentsDiscoverDark.dc.html",
     "AgentsEmpty.dc.html",
     "AgentsEmptyDark.dc.html",
+    "AppShell.dc.html",
+    "AppShellDark.dc.html",
     "ConnectorDetail.dc.html",
     "ConnectorDetailDark.dc.html",
     "ConnectorError.dc.html",
     "ConnectorErrorDark.dc.html",
+    "ConnectorRemove.dc.html",
+    "ConnectorRemoveDark.dc.html",
     "Connectors.dc.html",
     "ConnectorsDark.dc.html",
-    "ConnectorsDiscover.dc.html",
-    "ConnectorsDiscoverDark.dc.html",
     "ConnectorsEmpty.dc.html",
     "ConnectorsEmptyDark.dc.html",
-    "DatasetHoldout.dc.html",
-    "DatasetHoldoutDark.dc.html",
     "Decisions.dc.html",
     "DesignRules.dc.html",
-    "EvaluationDetail.dc.html",
-    "EvaluationDetailDark.dc.html",
-    "Evaluations.dc.html",
-    "EvaluationsDark.dc.html",
-    "EvaluationsDiscover.dc.html",
-    "EvaluationsDiscoverDark.dc.html",
-    "EvaluationsEmpty.dc.html",
-    "EvaluationsEmptyDark.dc.html",
-    "ExperimentDetail.dc.html",
-    "ExperimentDetailDark.dc.html",
     "Home.dc.html",
     "HomeDark.dc.html",
     "HomeEmpty.dc.html",
     "HomeEmptyDark.dc.html",
-    "PlatformError.dc.html",
-    "PlatformErrorDark.dc.html",
+    "NewSession.dc.html",
+    "NewSessionDark.dc.html",
+    "NewSessionRepos.dc.html",
+    "NewSessionReposDark.dc.html",
     "PluginDetail.dc.html",
     "PluginDetailDark.dc.html",
+    "PluginRemove.dc.html",
+    "PluginRemoveDark.dc.html",
     "Plugins.dc.html",
     "PluginsDark.dc.html",
-    "PluginsDiscover.dc.html",
-    "PluginsDiscoverDark.dc.html",
     "PluginsEmpty.dc.html",
     "PluginsEmptyDark.dc.html",
     "Project.dc.html",
@@ -2177,10 +2021,6 @@
     "ProjectEmptyDark.dc.html",
     "Projects.dc.html",
     "ProjectsDark.dc.html",
-    "Receipt.dc.html",
-    "ReceiptDark.dc.html",
-    "Report.dc.html",
-    "ReportDark.dc.html",
     "Search.dc.html",
     "SearchDark.dc.html",
     "SearchEmpty.dc.html",
@@ -2195,32 +2035,38 @@
     "SessionChangesDark.dc.html",
     "SessionComposerExpanded.dc.html",
     "SessionComposerExpandedDark.dc.html",
+    "SessionConnectorTool.dc.html",
+    "SessionConnectorToolDark.dc.html",
+    "SessionContext.dc.html",
+    "SessionContextDark.dc.html",
     "SessionCredential.dc.html",
     "SessionCredentialDark.dc.html",
-    "SessionDelivered.dc.html",
-    "SessionDeliveredDark.dc.html",
+    "SessionEnvironment.dc.html",
+    "SessionEnvironmentCard.dc.html",
+    "SessionEnvironmentCardDark.dc.html",
+    "SessionEnvironmentDark.dc.html",
     "SessionFailed.dc.html",
     "SessionFailedDark.dc.html",
-    "SessionFailover.dc.html",
-    "SessionFailoverDark.dc.html",
     "SessionFiles.dc.html",
     "SessionFilesDark.dc.html",
-    "SessionHandOff.dc.html",
-    "SessionHandOffDark.dc.html",
-    "SessionKeepGoing.dc.html",
-    "SessionKeepGoingDark.dc.html",
-    "SessionNoWin.dc.html",
-    "SessionNoWinDark.dc.html",
+    "SessionList.dc.html",
+    "SessionListCollapsed.dc.html",
+    "SessionListCollapsedDark.dc.html",
+    "SessionListDark.dc.html",
+    "SessionModelEffort.dc.html",
+    "SessionModelEffortDark.dc.html",
+    "SessionModelMenu.dc.html",
+    "SessionModelMenuDark.dc.html",
+    "SessionModelMore.dc.html",
+    "SessionModelMoreDark.dc.html",
+    "SessionOverview.dc.html",
+    "SessionOverviewDark.dc.html",
     "SessionPreview.dc.html",
     "SessionPreviewDark.dc.html",
     "SessionReadOnly.dc.html",
     "SessionReadOnlyDark.dc.html",
-    "SessionRegression.dc.html",
-    "SessionRegressionDark.dc.html",
     "SessionRepo.dc.html",
     "SessionRepoDark.dc.html",
-    "SessionSeal.dc.html",
-    "SessionSealDark.dc.html",
     "SessionShare.dc.html",
     "SessionShareDark.dc.html",
     "SessionSpawned.dc.html",
@@ -2229,12 +2075,12 @@
     "SessionStartDark.dc.html",
     "SessionTerminal.dc.html",
     "SessionTerminalDark.dc.html",
+    "SessionTerminalResume.dc.html",
+    "SessionTerminalResumeDark.dc.html",
     "SessionTitleMenu.dc.html",
     "SessionTitleMenuDark.dc.html",
-    "SessionTrials.dc.html",
-    "SessionTrialsDark.dc.html",
-    "SessionWin.dc.html",
-    "SessionWinDark.dc.html",
+    "SessionToolCalls.dc.html",
+    "SessionToolCallsDark.dc.html",
     "SessionWorking.dc.html",
     "SessionWorkingDark.dc.html",
     "SettingsAppearance.dc.html",
@@ -2249,16 +2095,18 @@
     "SettingsConnectionsDark.dc.html",
     "SettingsDevice.dc.html",
     "SettingsDeviceDark.dc.html",
+    "SettingsEnvironment.dc.html",
+    "SettingsEnvironmentDark.dc.html",
+    "SettingsEnvironmentSecrets.dc.html",
+    "SettingsEnvironmentSecretsDark.dc.html",
     "SettingsGeneral.dc.html",
     "SettingsGeneralDark.dc.html",
     "SettingsMembers.dc.html",
     "SettingsMembersDark.dc.html",
-    "SettingsPlatforms.dc.html",
-    "SettingsPlatformsDark.dc.html",
-    "SettingsPlatformsEmpty.dc.html",
-    "SettingsPlatformsEmptyDark.dc.html",
-    "SettingsPlatformsManaged.dc.html",
-    "SettingsPlatformsManagedDark.dc.html",
+    "SettingsModelKeys.dc.html",
+    "SettingsModelKeysAdd.dc.html",
+    "SettingsModelKeysAddDark.dc.html",
+    "SettingsModelKeysDark.dc.html",
     "SettingsProfile.dc.html",
     "SettingsProfileDark.dc.html",
     "SettingsRail.dc.html",
@@ -2285,8 +2133,6 @@
     "SkillDetailDark.dc.html",
     "Skills.dc.html",
     "SkillsDark.dc.html",
-    "SkillsDiscover.dc.html",
-    "SkillsDiscoverDark.dc.html",
     "SkillsEmpty.dc.html",
     "SkillsEmptyDark.dc.html",
     "WebInstalled.dc.html",

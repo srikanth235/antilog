@@ -1,51 +1,54 @@
-# Approvals and budgets (target)
+# Approvals and budgets
+
+Built: raising a card, policy, deciding and who may decide (`antilog-core/src/approval.rs`), budgets, caps and `ensure_room` for the gateway (`budget.rs`), and their endpoints. The cards' chat UI, Mode on the composer, the Settings pages and notifications are web work or target.
 
 A person approves the tool calls that matter, in the chat, when they are needed. Settings pages list what was approved and revoke it ([rulings](../product/rulings.md)).
 
 ## The cards
 
-An approval card has a title, what would happen, what it may cost, and Approve and Decline. The eight kinds:
+An approval card has a title, what would happen, what it may cost, and Approve and Decline. The six kinds:
 
 | Card | Raised by | Shows | Default policy |
 | --- | --- | --- | --- |
-| Seal experiment | `seal` | The definition, the seal check results, a Budget row, the estimate, the expected return and the value model for the metric (or "No value set") | Always ask |
-| Raise budget | `request_budget` | The amount asked, spent so far, the budget now | Allow up to a limit: asks above the limit set in Settings, Approvals |
-| Add credential | `request_credential` | The host and why. A secure form: the value is typed there, never into the chat, and goes straight to the platform's credential store. The agent never sees it | Always ask, and can never be pre-approved |
-| Attach repo | `attach_repo` | The repo and the access asked | Always ask |
-| Change environment | `set_environment` | Image, setup script, size and network, as a change from now | Always ask |
-| Open pull request | `deliver` | One pull request per repo changed, and the receipt | Always ask |
-| Keep going? | Patience reached (sealed, default 6 trials in a row not Kept) | "The last 6 trials did not beat 1,102 ms. $48 of $100 is left." Actions: Keep going, Stop here, and a note of what was tried | Always ask. Allow means never pause |
-| Continue on another agent? | A platform that is unavailable or rate-limited | The agent Auto would choose and why, and what has been done so far | Always ask. Allow continues without asking and records a timeline line |
+| Raise budget (`raise_budget`) | `request_budget` | The amount asked, the session's budget now, the reason | Allow up to a limit: asks above the limit set in Settings, Approvals. Approving raises that session's cap |
+| Add credential (`add_credential`) | `request_credential` | The connector, the scope and why. A secure form: the value is typed there, never into the chat, and goes straight to the server's secret store. The agent never sees it | Always ask, and can never be pre-approved |
+| Attach repo (`attach_repo`) | `attach_repo` | The repo and the access asked. Approving clones it into the live machine | Always ask |
+| Change environment (`change_environment`) | `set_environment` | The environment it changes and the versions, then a diff against what the session runs: network and hosts (apply now), variables (new commands now), setup script (runs now), default repos (cloned now). Approving makes the environment's next version, which other sessions on it also get, and moves the session to it | Always ask |
+| Allow this tool? (`ask_first`) | The harness asked to use a tool that is set to ask first | The tool and what it would do, as the harness described it. Actions: Allow once, Decline. The answer goes back to the machine that asked | Always ask |
+| Use a connector tool (`use_connector_tool`) | A connector tool set to Ask first | The tool and the exact input. One approval pays for one call | Always ask |
 
-The tools are in [../session/tools.md](../session/tools.md) and [../judge/tools.md](../judge/tools.md).
+The tools are in [../session/tools.md](../session/tools.md). A decided card reaches the agent at once: its outcome is sent into the session as a message from Antilog.
 
 ## Policy
 
-Settings, Approvals sets one value per card kind: **Always ask**, **Allow up to a limit** or **Allow**. A card that policy approves still writes its audit row and shows in the chat as approved by policy. Add credential has no pre-approval, because a person must type the value. Keep going? and Continue on another agent? take the same three values. A value model is never pre-approved: on the Seal experiment card a project owner approves a model the person sealing proposes, and an agent never sets one. A card nobody may approve in time stays open and the session is Waiting for you.
+Settings, Approvals sets one value per card kind: **Always ask**, **Allow up to a limit** or **Allow**. A card that policy approves still writes its audit row and shows in the chat as approved by policy. Add credential has no pre-approval, because a person must type the value. A card nobody may approve in time stays open and the session is Waiting for you.
 
 ## Mode
 
-Each experiment has a Mode on its composer: **Ask** (every card asks a person) or **Follow policy** (cards that policy allows go through without asking, and each still writes its audit row and shows in the chat as approved by policy). Policy always caps Follow policy: a card kind set to Always ask still asks, and a limit still holds.
+Each session has a Mode on its composer (`followPolicy` on the session): **Ask** (every card asks a person) or **Follow policy** (cards that policy allows go through without asking, and each still writes its audit row and shows in the chat as approved by policy). Policy always caps Follow policy: a card kind set to Always ask still asks, and a limit still holds.
 
 ## Who may approve
 
-Roles are checked at project scope ([model.md](model.md)). Owners and editors of the project approve every card for its experiments, except a changed value model, which needs a project owner. A viewer reads them and approves nothing. Changing an experiment's budget needs an editor or owner of its project. A project owner manages the project's members, its budget and its value models. Only an organization owner changes policy.
+Roles are checked at project scope ([model.md](model.md)). Owners and editors of the card's project approve its cards. A viewer reads them and approves nothing. `GET /approvals/pending` lists the cards the caller may decide, by their role in each card's project. Changing a session's budget needs an editor or owner of its project. Only an organization owner changes policy.
 
 ## Recorded
 
-Every approval is an audit row: who, which card, what it would do, when, the outcome (approved, declined, approved by policy). So is every tool call that changes something. Revoking is an audited action too.
+Every approval is an audit row (`approval.decide`): who, which card, what it would do, when, the outcome (approved, declined, approved by policy). So is every tool call that changes something (`tool.call`). Audit names include `session.set_environment` (a person's move or an approved Change environment card; the new version itself is `environment.edit` or `environment.create`), `session.start`, `session.message`, `session.stop`, `session.set_budget`, `project.create`, `project.set_role`, `project.set_limits`, `organization.set_limits`, `policy.set`, `model_key.set` and `connector.set`.
 
 ## Settings pages
 
-Settings, Approvals holds policy. Settings, Connections lists the repos, credentials and environments that were approved, each with Revoke. Budgets holds the organization's default budget per experiment, the monthly cap, and the list of projects and experiments with their budgets and spend. These pages are read-only for non-owners, not hidden. Two things are still set up in Settings because no experiment can run without them: agent platform accounts (self-hosted), and members and sign-in.
+Settings, Approvals holds policy. Settings, Connections holds the environments sessions run on: everyone reads them, owners and editors add, change (a new version) and archive them. Budgets holds the organization's monthly cap and default budget per session, and the projects with their caps and spend (`GET /budgets`). These pages are read-only for non-owners, not hidden. Two things are set up in Settings because no session can run without them: model keys (Settings, Model keys: an owner sets, replaces or removes one per provider; every member sees which providers have one and never the key; built), and members and sign-in.
 
 ## Budgets
 
-- One budget per experiment, covering all its sessions and their judge time. Spend is model tokens, sandbox time and judge time. The meter is in [../session/model.md](../session/model.md).
-- A person sets it when starting, from the budget on the composer's row. It defaults to the project's default budget per experiment, which falls back to the organization's default in Settings, Budgets (boards show $10 as the example).
-- An editor or owner can change it at any time: from the scoreboard strip ("Change budget"), from the experiment detail page, or in a row on the Seal experiment card. Lowering it below what is spent stops new measurements. Each change is an audit row. An experiment's budget sits inside its project's cap, and a raise that would pass the cap is refused.
-- `request_budget` lets the agent ask for more through a Raise budget card; policy for it stays in Settings, Approvals.
-- A project may have a monthly cap on all its experiments. A project owner changes it, and it cannot pass the organization's. The project page shows spent this month against it.
-- An organization has a monthly cap. No budget, no project cap and no card passes it. Only an organization owner changes the cap.
-- When a budget is spent, the judge refuses `measure`, and the experiment's sessions are Waiting for you with a Raise budget card. A notification says so ([notifications.md](notifications.md)).
-- When patience is reached, the experiment is Waiting for you with a Keep going? card; policy may set it to Allow (never pause) or Always ask.
+Caps nest: a session's own optional cap is at most its project's monthly cap, which is at most the organization's monthly cap. A write that would break the order is refused with 409 `over_cap`.
+
+- **Spend** is model tokens, booked by the proxy from each reply, and machine time. The proxy refuses a model call with a 402 once a cap is spent; the meter is in [../session/model.md](../session/model.md). Starting a session when the project's or the organization's monthly cap is already reached is refused with 409 `budget_spent`.
+- **A session's cap** is optional. A person sets it when starting. It defaults to the project's default budget per session (`defaultBudgetCents`), which falls back to the organization's default. An editor or owner can change it at any time (`PUT /sessions/{id}/budget`); each change is an audit row (`session.set_budget`).
+- **`request_budget`** lets the agent ask for more through a Raise budget card, and works only for a session with its own cap (otherwise it says so and points to Settings). An approved card raises that session's cap.
+- **A project's monthly cap** and its default per session are set by a project owner (`PUT /projects/{id}/limits`), and cannot pass the organization's.
+- **The organization's monthly cap** is changed only by an organization owner (`PUT /organization/limits`). No session cap, project cap or card passes it.
+- **The gateway check** (`budget::ensure_room`) looks at the session's cap, then the project's, then the organization's.
+- When a cap is spent the session is Waiting for you. A notification says so ([notifications.md](notifications.md)).
+
+**Card fields.** Each card kind carries a typed payload (`CardPayload` in `antilog-types/src/ledger.rs`): Raise budget the budget now, the amount asked and why; Add credential the connector, scope and why; and so on. A tool raises the card with its payload, the web card renders from it and the action after approval reads from it. Never put what a person must read only in the summary text, and never parse the summary.

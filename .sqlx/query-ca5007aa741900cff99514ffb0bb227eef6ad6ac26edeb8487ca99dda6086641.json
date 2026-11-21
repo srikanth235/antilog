@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update machines set expiring = true where holder = $1 and state in ('claimed', 'running', 'idle') and not expiring and claimed_at < to_timestamp($2::bigint / 1000.0) returning session_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "session_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "machines",
+            "name": "session_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "ca5007aa741900cff99514ffb0bb227eef6ad6ac26edeb8487ca99dda6086641"
+}
