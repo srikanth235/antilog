@@ -80,7 +80,19 @@ def main():
         if "input_cost_per_token" not in info or "output_cost_per_token" not in info:
             continue
         input_price = thousandths(info["input_cost_per_token"])
+        # What the model picker shows: the context window, whether the model can call tools (an
+        # agent needs that) and the effort levels, lowest first (OpenCode's variant names).
+        levels = []
+        if info.get("supports_reasoning"):
+            levels = ["low", "medium", "high"]
+            if info.get("supports_xhigh_reasoning_effort"):
+                levels.append("xhigh")
+            if info.get("supports_max_reasoning_effort"):
+                levels.append("max")
         table[model] = {
+            "context": int(info.get("max_input_tokens") or 0),
+            "reasoning": levels,
+            "tools": bool(info.get("supports_function_calling")),
             "provider": provider,
             "input": input_price,
             "output": thousandths(info["output_cost_per_token"]),

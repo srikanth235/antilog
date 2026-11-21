@@ -132,6 +132,7 @@ mod tests {
                 open_organizations: false,
                 secure_cookies: true,
                 runner: None,
+                models: crate::models::ModelLists::offline(),
             },
         );
         let response = app

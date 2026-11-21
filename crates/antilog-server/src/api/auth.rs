@@ -69,9 +69,11 @@ pub struct Settings {
     pub secure_cookies: bool,
     /// With a runner key, `/runner/*` is mounted. From `ANTILOG_RUNNER_KEY`.
     pub runner: Option<super::runner::RunnerSettings>,
+    /// The models `GET /models` lists, and the levels a session may ask of them.
+    pub models: crate::models::ModelLists,
 }
 
-pub(super) fn setting(name: &str) -> Option<String> {
+pub(crate) fn setting(name: &str) -> Option<String> {
     std::env::var(name).ok().filter(|value| !value.is_empty())
 }
 
@@ -134,6 +136,7 @@ impl Settings {
             open_organizations: setting("ANTILOG_OPEN_ORGANIZATIONS").as_deref() == Some("1"),
             secure_cookies: setting("ANTILOG_INSECURE_COOKIES").as_deref() != Some("1"),
             runner: super::runner::RunnerSettings::from_env(),
+            models: crate::models::ModelLists::from_env(),
         }
     }
 }

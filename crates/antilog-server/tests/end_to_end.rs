@@ -95,6 +95,7 @@ fn app() -> Router {
             open_organizations: true,
             secure_cookies: true,
             runner: None,
+            models: antilog_server::models::ModelLists::offline(),
         },
     )
 }

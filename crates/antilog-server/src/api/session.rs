@@ -11,7 +11,7 @@ use antilog_core::{agents, budget, environments as env};
 use antilog_types::{
     Agent, ApiError, AutoChoice, CommitChanges, Environment, EventPage, NewAgent, NewEnvironment,
     ProjectId, SendMessage, Session, SessionBudget, SessionChanges, SessionEnvironment, SessionId,
-    SessionSpend, StartSession,
+    SessionModel, SessionSpend, StartSession,
 };
 use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
@@ -36,6 +36,7 @@ use super::auth::{App, Authed, Fail};
     spend,
     set_budget,
     set_environment,
+    set_model,
     agents,
     auto_agent,
     set_agent,
@@ -163,10 +164,16 @@ async fn start<D: Deps + 'static>(
     }) {
         return Err(Refusal::Invalid("a model looks like provider/model").into());
     }
+    let effort = body
+        .effort
+        .map(|effort| effort.trim().to_owned())
+        .filter(|effort| !effort.is_empty());
+    check_effort(&app, &model, effort.as_deref()).await?;
     let new = NewSession {
         title: body.title,
         agent,
         model,
+        effort,
         prompt: body.prompt,
         repos: body.repos,
         environment: body.environment,
@@ -178,6 +185,19 @@ async fn start<D: Deps + 'static>(
         .await
         .map_err(Fail::Session)?;
     Ok((StatusCode::CREATED, Json(session)))
+}
+
+/// An effort level must be one of the model's levels. The message names the levels it offers.
+async fn check_effort<D: Deps + 'static>(
+    app: &App<D>,
+    model: &str,
+    effort: Option<&str>,
+) -> Result<(), Fail> {
+    app.settings
+        .models
+        .check_effort(model, effort)
+        .await
+        .map_err(|message| Refusal::Invalid(message).into())
 }
 
 #[derive(serde::Deserialize, utoipa::IntoParams)]
@@ -559,6 +579,66 @@ async fn set_environment<D: Deps + 'static>(
     .map_err(Fail::Session)
 }
 
+#[utoipa::path(
+    put, path = "/sessions/{id}/model", security(("bearer" = [])),
+    params(("id" = SessionId, Path, description = "The session")),
+    request_body = SessionModel,
+    responses(
+        (status = 200, description = "The session with its new model and effort, which apply from the next message; the transcript gets a note. Editors and owners of the project", body = Session),
+        (status = 409, description = "The session has ended", body = ApiError),
+        (status = 422, description = "Not a model, or an effort the model does not offer", body = ApiError),
+    )
+)]
+async fn set_model<D: Deps + 'static>(
+    State(app): Shared<D>,
+    authed: Authed,
+    Path(id): Path<SessionId>,
+    Json(body): Json<SessionModel>,
+) -> Result<Json<Session>, Fail> {
+    let row = owned(&app, &authed, id).await?;
+    permit(&app, &authed, Action::SessionMessage, row.project_id).await?;
+    let model = body.model.trim().to_owned();
+    if model.split_once('/').is_none_or(|(provider, name)| {
+        provider.is_empty() || name.is_empty() || model.contains(char::is_whitespace)
+    }) {
+        return Err(Refusal::Invalid("a model looks like provider/model").into());
+    }
+    let effort = body
+        .effort
+        .map(|effort| effort.trim().to_owned())
+        .filter(|effort| !effort.is_empty());
+    check_effort(&app, &model, effort.as_deref()).await?;
+    let known = app.settings.models.models(None).await;
+    let found = known.iter().find(|info| info.id == model);
+    let note = switched(
+        found.map_or(model.as_str(), |info| info.name.as_str()),
+        effort.as_deref(),
+    );
+    session::set_model(
+        &*app.deps,
+        authed.who.organization,
+        id,
+        Some(authed.who.member),
+        &model,
+        effort.as_deref(),
+        &note,
+    )
+    .await
+    .map(Json)
+    .map_err(Fail::Session)
+}
+
+/// "Switched to GLM 5.3 Flash · High".
+fn switched(name: &str, effort: Option<&str>) -> String {
+    match effort {
+        Some(effort) => format!(
+            "Switched to {name} · {}",
+            crate::models::level_label(effort)
+        ),
+        None => format!("Switched to {name}"),
+    }
+}
+
 pub fn routes<D: Deps + 'static>() -> Router<Arc<App<D>>> {
     Router::new()
         .route(
@@ -578,6 +658,7 @@ pub fn routes<D: Deps + 'static>() -> Router<Arc<App<D>>> {
         .route("/sessions/{id}/spend", get(spend::<D>))
         .route("/sessions/{id}/budget", put(set_budget::<D>))
         .route("/sessions/{id}/environment", put(set_environment::<D>))
+        .route("/sessions/{id}/model", put(set_model::<D>))
         .route("/agents", get(agents::<D>))
         .route("/agents/auto", get(auto_agent::<D>))
         .route("/agents/{id}", put(set_agent::<D>))

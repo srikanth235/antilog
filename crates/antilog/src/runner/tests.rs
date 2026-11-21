@@ -330,6 +330,7 @@ async fn backend(proxy: &str, model: &str) -> (Arc<FakeDeps>, Seed, String, Path
                 key: KEY.to_owned(),
                 core,
             }),
+            models: antilog_server::models::ModelLists::offline(),
         },
     );
     tokio::spawn(async move { axum::serve(listener, app).await });
@@ -994,6 +995,7 @@ async fn a_skill_pack_is_unpacked_into_the_skills_folder() {
         organization: antilog_types::OrganizationId::new(),
         agent: "opencode".into(),
         model: "v/m".into(),
+        effort: None,
         repos: vec![],
         environment: antilog_types::EnvironmentSpec::default(),
         skills: vec![
@@ -1059,6 +1061,7 @@ fn setup_spec(script: &str) -> antilog_types::SessionSpec {
         organization: antilog_types::OrganizationId::new(),
         agent: "opencode".into(),
         model: "v/m".into(),
+        effort: None,
         repos: vec![antilog_types::RepoSpec {
             name: "acme/api".into(),
             url: "x".into(),
@@ -1562,6 +1565,98 @@ async fn an_idle_session_lets_its_machine_go_and_a_message_brings_it_back() {
     })
     .await;
     assert_eq!(locked(&world.shared).imported.len(), 1);
+}
+
+#[tokio::test]
+async fn every_prompt_carries_the_sessions_model_and_effort_and_a_switch_applies_from_the_next_message()
+ {
+    let world = world().await;
+    let org = world.seed.organization.id;
+    let session = session::start(
+        &*world.deps,
+        org,
+        world.seed.project.id,
+        NewSession {
+            agent: "opencode".into(),
+            model: "vendor/model-1".into(),
+            effort: Some("high".into()),
+            prompt: "first".into(),
+            repos: vec!["acme/api".into()],
+            actor: world.seed.owner.id,
+            ..NewSession::default()
+        },
+    )
+    .await
+    .unwrap();
+    until("the first prompt", async || {
+        (!locked(&world.shared).prompts.is_empty()).then_some(())
+    })
+    .await;
+    let first = locked(&world.shared).prompts[0].clone();
+    assert_eq!(
+        first["model"],
+        json!({"providerID": "vendor", "modelID": "model-1"})
+    );
+    assert_eq!(first["variant"], "high");
+
+    session::set_model(
+        &*world.deps,
+        org,
+        session.id,
+        Some(world.seed.owner.id),
+        "other/model-2",
+        Some("max"),
+        "Switched to Model 2 · Max",
+    )
+    .await
+    .unwrap();
+    session::message(
+        &*world.deps,
+        org,
+        session.id,
+        Some(world.seed.owner.id),
+        "second",
+    )
+    .await
+    .unwrap();
+    until("the second prompt", async || {
+        (locked(&world.shared).prompts.len() == 2).then_some(())
+    })
+    .await;
+    let second = locked(&world.shared).prompts[1].clone();
+    assert_eq!(second["parts"][0]["text"], "second");
+    assert_eq!(
+        second["model"],
+        json!({"providerID": "other", "modelID": "model-2"})
+    );
+    assert_eq!(second["variant"], "max");
+
+    // Back to the model's own default: no variant at all.
+    session::set_model(
+        &*world.deps,
+        org,
+        session.id,
+        Some(world.seed.owner.id),
+        "other/model-2",
+        None,
+        "Switched to Model 2",
+    )
+    .await
+    .unwrap();
+    session::message(
+        &*world.deps,
+        org,
+        session.id,
+        Some(world.seed.owner.id),
+        "third",
+    )
+    .await
+    .unwrap();
+    until("the third prompt", async || {
+        (locked(&world.shared).prompts.len() == 3).then_some(())
+    })
+    .await;
+    assert!(locked(&world.shared).prompts[2].get("variant").is_none());
 }
 
 #[tokio::test]

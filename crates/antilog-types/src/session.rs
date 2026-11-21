@@ -37,6 +37,8 @@ pub struct Session {
     pub agent: String,
     /// `provider/model`, as the harness names it.
     pub model: String,
+    /// The effort level chosen for the model, one of its OpenCode variants; `None`: its default.
+    pub effort: Option<String>,
     pub repos: Vec<String>,
     /// The stored environment it runs on; `None` is the built-in default.
     pub environment: Option<String>,
@@ -59,6 +61,7 @@ pub struct SessionParams {
     pub title: String,
     pub agent: String,
     pub model: String,
+    pub effort: Option<String>,
     pub repos: Vec<String>,
     pub environment: Option<String>,
     pub environment_version: Option<u32>,
@@ -82,6 +85,7 @@ impl Session {
             created_by,
             agent: params.agent,
             model: params.model,
+            effort: params.effort,
             repos: params.repos,
             environment: params.environment,
             environment_version: params.environment_version,
@@ -97,8 +101,8 @@ impl Session {
 
 text_enum!(
     /// Who spoke: a person, an agent, the name of a tool an agent called, or an error the model's
-    /// provider or the machine reported.
-    EventKind { Person => "person", Agent => "agent", Tool => "tool", Error => "error" }
+    /// provider or the machine reported, or a plain line of the timeline Antilog wrote (a note).
+    EventKind { Person => "person", Agent => "agent", Tool => "tool", Error => "error", Note => "note" }
 );
 
 text_enum!(
@@ -405,6 +409,9 @@ pub struct StartSession {
     /// `provider/model`; left out, the server's default model.
     #[serde(default)]
     pub model: Option<String>,
+    /// One of the model's effort levels (`GET /models`); left out, the model's own default.
+    #[serde(default)]
+    pub effort: Option<String>,
     pub prompt: String,
     #[serde(default)]
     pub repos: Vec<String>,

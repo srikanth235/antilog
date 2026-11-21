@@ -20,6 +20,17 @@ use axum::http::{Method, Request, StatusCode, header};
 use serde_json::{Value, json};
 use tower::ServiceExt;
 
+/// OpenCode's lists as the picker reads them: a model that cannot call tools is left out, a model
+/// that reasons names its levels or takes the common three, one that does not has none.
+const ZEN: &[u8] = br#"{"data":[
+  {"id":"big-pickle","name":"Big Pickle","capabilities":{"tools":{"supported":true},"reasoning":{"supported":true}},"limit":{"context":200000},"cost":{"text":{"input":{"price":0},"output":{"price":0}}}},
+  {"id":"no-tools","name":"No Tools","capabilities":{"tools":{"supported":false}}}
+]}"#;
+const GO: &[u8] = br#"{"data":[
+  {"id":"glm-5.3-flash","name":"GLM 5.3 Flash","capabilities":{"tools":{"supported":true},"reasoning":{"supported":true,"effort":["low","high","max"]}},"limit":{"context":200000,"input":160000},"cost":{"text":{"input":{"price":0.3},"output":{"price":1.2}}}},
+  {"id":"plain","name":"Plain","capabilities":{"tools":{"supported":true},"reasoning":{"supported":false}},"limit":{"context":64000},"cost":{"text":{"input":{"price":0.1},"output":{"price":0.2}}}}
+]}"#;
+
 fn app(fake: bool, open: bool) -> Router {
     let providers = if fake {
         vec![Provider::Fake(FakeSignIn)]
@@ -33,6 +44,7 @@ fn app(fake: bool, open: bool) -> Router {
             open_organizations: open,
             secure_cookies: true,
             runner: None,
+            models: antilog_server::models::ModelLists::fixed(ZEN, GO),
         },
     });
     router_with_reach(
@@ -936,6 +948,7 @@ async fn org_with_store() -> (Org, Arc<FakeDeps>) {
             open_organizations: true,
             secure_cookies: true,
             runner: None,
+            models: antilog_server::models::ModelLists::offline(),
         },
     );
     let created = create_organization(&app, "acme", "ada").await;
@@ -1925,4 +1938,212 @@ async fn an_editor_moves_a_session_to_another_environment_and_a_viewer_cannot() 
             .any(|e| e["action"] == "session.set_environment" && e["outcome"] == outcome)
     };
     assert!(has("done") && has("denied"), "{rows:?}");
+}
+
+fn ids(models: &Reply) -> Vec<String> {
+    models
+        .body
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|m| m["id"].as_str().map(str::to_owned))
+        .collect()
+}
+
+#[tokio::test]
+async fn models_are_listed_for_the_providers_that_have_a_key() {
+    let org = org().await;
+    let (_, viewer) = org.member("vi", "viewer").await;
+    let none = org.call(Method::GET, "/models", &viewer, None).await;
+    assert_eq!((none.status, none.body), (StatusCode::OK, json!([])));
+
+    let org = &org;
+    let set = |provider: &'static str| async move {
+        let uri = format!("/model-keys/{provider}");
+        org.call(
+            Method::PUT,
+            &uri,
+            &org.owner,
+            Some(json!({"key": "k-test"})),
+        )
+        .await
+    };
+    assert_eq!(set("openai").await.status, StatusCode::OK);
+    let listed = org.call(Method::GET, "/models", &viewer, None).await;
+    let openai = ids(&listed);
+    assert!(openai.contains(&"openai/o3".to_owned()));
+    assert!(openai.iter().all(|id| id.starts_with("openai/")));
+    let o3m = listed
+        .body
+        .as_array()
+        .into_iter()
+        .flatten()
+        .find(|m| m["id"] == "openai/o3")
+        .cloned()
+        .unwrap_or_default();
+    assert_eq!(o3m["name"], "O3");
+    assert_eq!(o3m["provider"], "openai");
+    assert_eq!(o3m["contextWindow"], 200_000);
+    assert_eq!(o3m["inputPrice"], 2.0);
+    assert_eq!(o3m["reasoningLevels"], json!(["low", "medium", "high"]));
+
+    assert_eq!(set("opencode-go").await.status, StatusCode::OK);
+    assert_eq!(set("opencode").await.status, StatusCode::OK);
+    let all = ids(&org.call(Method::GET, "/models", &viewer, None).await);
+    // A model without tool support is left out; the OpenAI key stays, so its models stay; no Anthropic key, so none of those.
+    assert!(all.contains(&"opencode-go/glm-5.3-flash".to_owned()));
+    assert!(all.contains(&"opencode/big-pickle".to_owned()));
+    assert!(
+        !all.iter()
+            .any(|id| id.contains("no-tools") || id.starts_with("anthropic/"))
+    );
+    let go = org.call(Method::GET, "/models", &viewer, None).await;
+    let glm = go
+        .body
+        .as_array()
+        .into_iter()
+        .flatten()
+        .find(|m| m["id"] == "opencode-go/glm-5.3-flash")
+        .cloned()
+        .unwrap_or_default();
+    assert_eq!(glm["reasoningLevels"], json!(["low", "high", "max"]));
+    assert_eq!(glm["contextWindow"], 200_000);
+    assert_eq!(glm["outputPrice"], 1.2);
+    let pickle = go
+        .body
+        .as_array()
+        .into_iter()
+        .flatten()
+        .find(|m| m["id"] == "opencode/big-pickle")
+        .cloned()
+        .unwrap_or_default();
+    assert_eq!(pickle["reasoningLevels"], json!(["low", "medium", "high"]));
+    let plain = go
+        .body
+        .as_array()
+        .into_iter()
+        .flatten()
+        .find(|m| m["id"] == "opencode-go/plain")
+        .cloned()
+        .unwrap_or_default();
+    assert_eq!(plain["reasoningLevels"], json!([]));
+}
+
+#[tokio::test]
+async fn an_effort_must_be_one_of_the_models_levels_at_the_start_and_on_a_switch() {
+    let org = org().await;
+    let (_, viewer) = org.member("vi", "viewer").await;
+    let org = &org;
+    let start = |model: &'static str, effort: Value| async move {
+        let uri = org.start_uri();
+        org.call(
+            Method::POST,
+            &uri,
+            &org.owner,
+            Some(json!({"prompt": "go", "model": model, "effort": effort})),
+        )
+        .await
+    };
+    // Not a level, a level of another model, and an effort on a model that has none.
+    for (model, effort) in [
+        ("openai/o3", "turbo"),
+        ("opencode-go/glm-5.3-flash", "medium"),
+        ("opencode-go/plain", "low"),
+        ("openai/not-a-model", "high"),
+    ] {
+        let refused = start(model, json!(effort)).await;
+        assert_eq!(
+            refused.status,
+            StatusCode::UNPROCESSABLE_ENTITY,
+            "{model} {effort}"
+        );
+    }
+    let started = start("opencode-go/glm-5.3-flash", json!("high")).await;
+    assert_eq!(started.status, StatusCode::CREATED);
+    assert_eq!(started.body["effort"], "high");
+    let id = started.body["id"].as_str().unwrap_or_default().to_owned();
+    let uri = format!("/sessions/{id}/model");
+
+    let bad = org
+        .call(
+            Method::PUT,
+            &uri,
+            &org.owner,
+            Some(json!({"model": "openai/o3", "effort": "high "})),
+        )
+        .await;
+    assert_eq!(bad.status, StatusCode::OK, "a level is trimmed");
+    let bad = org
+        .call(
+            Method::PUT,
+            &uri,
+            &org.owner,
+            Some(json!({"model": "opencode-go/glm-5.3-flash", "effort": "medium"})),
+        )
+        .await;
+    assert_eq!(bad.status, StatusCode::UNPROCESSABLE_ENTITY);
+    let malformed = org
+        .call(
+            Method::PUT,
+            &uri,
+            &org.owner,
+            Some(json!({"model": "nonsense"})),
+        )
+        .await;
+    assert_eq!(malformed.status, StatusCode::UNPROCESSABLE_ENTITY);
+    let denied = org
+        .call(
+            Method::PUT,
+            &uri,
+            &viewer,
+            Some(json!({"model": "opencode-go/plain"})),
+        )
+        .await;
+    assert_eq!(denied.status, StatusCode::FORBIDDEN);
+
+    let switched = org
+        .call(
+            Method::PUT,
+            &uri,
+            &org.owner,
+            Some(json!({"model": "opencode-go/glm-5.3-flash", "effort": "max"})),
+        )
+        .await;
+    assert_eq!(switched.status, StatusCode::OK);
+    assert_eq!(
+        (
+            switched.body["model"].as_str(),
+            switched.body["effort"].as_str()
+        ),
+        (Some("opencode-go/glm-5.3-flash"), Some("max"))
+    );
+    let notes: Vec<String> = org
+        .call(
+            Method::GET,
+            &format!("/sessions/{id}/events"),
+            &org.owner,
+            None,
+        )
+        .await
+        .body["events"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|e| e["kind"] == "note")
+        .filter_map(|e| e["text"].as_str().map(str::to_owned))
+        .collect();
+    assert_eq!(
+        notes,
+        ["Switched to O3 · High", "Switched to GLM 5.3 Flash · Max"]
+    );
+    // Nothing changed: no second note.
+    let same = org
+        .call(
+            Method::PUT,
+            &uri,
+            &org.owner,
+            Some(json!({"model": "opencode-go/glm-5.3-flash", "effort": "max"})),
+        )
+        .await;
+    assert_eq!(same.status, StatusCode::OK);
 }

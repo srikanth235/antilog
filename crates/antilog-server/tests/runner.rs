@@ -59,6 +59,7 @@ async fn world_with(lifetime: Option<jiff::SignedDuration>) -> World {
                 key: KEY.to_owned(),
                 core,
             }),
+            models: antilog_server::models::ModelLists::offline(),
         },
     );
     World { deps, app, seed }
@@ -166,6 +167,7 @@ async fn the_routes_exist_only_with_a_key_and_each_checks_it() {
             open_organizations: false,
             secure_cookies: true,
             runner: None,
+            models: antilog_server::models::ModelLists::offline(),
         },
     );
     let (status, _) = call(

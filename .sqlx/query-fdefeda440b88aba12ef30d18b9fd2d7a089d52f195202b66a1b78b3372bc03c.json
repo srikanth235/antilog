@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update sessions set model = $3, effort = $4 where organization_id = $1 and id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "fdefeda440b88aba12ef30d18b9fd2d7a089d52f195202b66a1b78b3372bc03c"
+}

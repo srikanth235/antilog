@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use antilog_core::deps::Deps;
 use antilog_core::model_keys;
-use antilog_types::{ApiError, ModelKeyStatus, ModelProvider, NewModelKey};
+use antilog_types::{ApiError, ModelInfo, ModelKeyStatus, ModelProvider, NewModelKey};
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::routing::{get, put};
@@ -17,7 +17,7 @@ use super::auth::{App, Authed, Fail};
 type Shared<D> = State<Arc<App<D>>>;
 
 #[derive(OpenApi)]
-#[openapi(paths(list_model_keys, set_model_key, remove_model_key))]
+#[openapi(paths(list_model_keys, set_model_key, remove_model_key, list_models))]
 pub struct Doc;
 
 #[utoipa::path(
@@ -29,6 +29,22 @@ async fn list_model_keys<D: Deps + 'static>(
     authed: Authed,
 ) -> Result<Json<Vec<ModelKeyStatus>>, Fail> {
     Ok(Json(model_keys::list(app.store(), &authed.who).await?))
+}
+
+#[utoipa::path(
+    get, path = "/models", security(("bearer" = [])),
+    responses((status = 200, description = "The models of the providers that have a key, by provider then name, each with its context window, prices and effort levels. Listed from the vendored LiteLLM table and OpenCode's own lists, which are kept for an hour", body = Vec<ModelInfo>))
+)]
+async fn list_models<D: Deps + 'static>(
+    State(app): Shared<D>,
+    authed: Authed,
+) -> Result<Json<Vec<ModelInfo>>, Fail> {
+    let keyed: Vec<ModelProvider> = model_keys::list(app.store(), &authed.who)
+        .await?
+        .into_iter()
+        .map(|key| key.provider)
+        .collect();
+    Ok(Json(app.settings.models.models(Some(&keyed)).await))
 }
 
 #[utoipa::path(
@@ -71,6 +87,7 @@ async fn remove_model_key<D: Deps + 'static>(
 
 pub fn routes<D: Deps + 'static>() -> Router<Arc<App<D>>> {
     Router::new()
+        .route("/models", get(list_models::<D>))
         .route("/model-keys", get(list_model_keys::<D>))
         .route(
             "/model-keys/{provider}",

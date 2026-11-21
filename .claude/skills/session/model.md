@@ -10,13 +10,13 @@ Sessions, their events and spend are in the store ([../change/ledger-table.md](.
 | session | One agent's work in a project: a chat with one agent in one machine, with any number of repos attached. Status: Queued (no runner holds it yet), Working, Waiting for you, Done, Stopped, Failed. A session a person stops is Stopped, "Stopped by NAME"; a failed one keeps the runner's reason as its note | a thread, a task, a step machine |
 | session event | One item in a session's conversation: a message, a tool call name, a card or a status change | a log line |
 
-A session's fields (`antilog-types/src/session.rs`): `id`, `organizationId`, `projectId`, `title` (the first line of the prompt, up to 80 characters, when none is given), `createdBy` (the member who started it), `agent` (OpenCode; `auto` resolves to the organization's default agent), `model` (`provider/model`, from the request or else the server's `ANTILOG_MODEL`), `repos`, `environment` and `environmentVersion` (pinned at start), `budgetCapCents` (optional, the session's own cap), `followPolicy` (the composer's Mode), `status`, `note`, `createdAt`, `updatedAt`. Events and spend belong to the session.
+A session's fields (`antilog-types/src/session.rs`): `id`, `organizationId`, `projectId`, `title` (the first line of the prompt, up to 80 characters, when none is given), `createdBy` (the member who started it), `agent` (OpenCode; `auto` resolves to the organization's default agent), `model` (`provider/model`, from the request or else the server's `ANTILOG_MODEL`; changeable while the session runs), `effort` (one of the model's OpenCode variants, or null for its default; changeable too), `repos`, `environment` and `environmentVersion` (pinned at start), `budgetCapCents` (optional, the session's own cap), `followPolicy` (the composer's Mode), `status`, `note`, `createdAt`, `updatedAt`. Events and spend belong to the session.
 
 ## Routes
 
 | Route | Does |
 | --- | --- |
-| `POST /projects/{id}/sessions` | Start a session: `{title?, agent?, model?, prompt, repos[], environment?, budgetCapCents?, followPolicy?}`. Editors and owners of the project. 201; 409 `budget_spent` when the project's or the organization's monthly cap is reached; 422 for a bad model or an empty prompt |
+| `POST /projects/{id}/sessions` | Start a session: `{title?, agent?, model?, effort?, prompt, repos[], environment?, budgetCapCents?, followPolicy?}`. Editors and owners of the project. 201; 409 `budget_spent` when the project's or the organization's monthly cap is reached; 422 for a bad model or an empty prompt |
 | `GET /projects/{id}/sessions` | The project's sessions, newest first; `?mine=true` keeps the caller's |
 | `GET /sessions` | The organization's sessions across projects, newest first, each with `projectId` and `status`; `?mine=true` |
 | `GET /sessions/{id}` | One session |

@@ -72,6 +72,18 @@ pub trait SessionStore {
         audit: &AuditEntry,
     ) -> impl Future<Output = Result<(), StoreError>> + Send;
 
+    /// Changes the session's model and effort, with the audit entry, together. `NotFound` for no
+    /// such session. A runner reads them when it next claims the session, and is told of a change
+    /// while it holds it (`Command::SetModel`).
+    fn set_session_model(
+        &self,
+        organization: OrganizationId,
+        session: SessionId,
+        model: &str,
+        effort: Option<&str>,
+        audit: &AuditEntry,
+    ) -> impl Future<Output = Result<(), StoreError>> + Send;
+
     /// Idempotent on (session, key). Refused with `NotFound` for a session that is not there.
     fn append_event(&self, event: &NewEvent)
     -> impl Future<Output = Result<(), StoreError>> + Send;

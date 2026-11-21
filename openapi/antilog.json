@@ -1310,6 +1310,32 @@
         ]
       }
     },
+    "/models": {
+      "get": {
+        "tags": [],
+        "operationId": "list_models",
+        "responses": {
+          "200": {
+            "description": "The models of the providers that have a key, by provider then name, each with its context window, prices and effort levels. Listed from the vendored LiteLLM table and OpenCode's own lists, which are kept for an hour",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ModelInfo"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/organization": {
       "get": {
         "tags": [],
@@ -2295,6 +2321,70 @@
             }
           },
           "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/sessions/{id}/model": {
+      "put": {
+        "tags": [],
+        "operationId": "set_model",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The session",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/SessionId"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SessionModel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The session with its new model and effort, which apply from the next message; the transcript gets a note. Editors and owners of the project",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Session"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The session has ended",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Not a model, or an effort the model does not offer",
             "content": {
               "application/json": {
                 "schema": {
@@ -3576,12 +3666,13 @@
       },
       "EventKind": {
         "type": "string",
-        "description": "Who spoke: a person, an agent, the name of a tool an agent called, or an error the model's\nprovider or the machine reported.",
+        "description": "Who spoke: a person, an agent, the name of a tool an agent called, or an error the model's\nprovider or the machine reported, or a plain line of the timeline Antilog wrote (a note).",
         "enum": [
           "person",
           "agent",
           "tool",
-          "error"
+          "error",
+          "note"
         ]
       },
       "EventPage": {
@@ -4004,6 +4095,62 @@
           "person",
           "service"
         ]
+      },
+      "ModelInfo": {
+        "type": "object",
+        "description": "One model the organization's keys reach.",
+        "required": [
+          "id",
+          "name",
+          "provider",
+          "reasoningLevels"
+        ],
+        "properties": {
+          "contextWindow": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "The most input tokens, when the source says.",
+            "minimum": 0
+          },
+          "id": {
+            "type": "string",
+            "description": "`provider/model`, as a session names it."
+          },
+          "inputPrice": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "US dollars per million input tokens; `None` when the source gives no price."
+          },
+          "name": {
+            "type": "string",
+            "description": "What the picker shows, such as \"GLM 5.3 Flash\"."
+          },
+          "outputPrice": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "US dollars per million output tokens."
+          },
+          "provider": {
+            "$ref": "#/components/schemas/ModelProvider"
+          },
+          "reasoningLevels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The effort levels the model offers, lowest first, named as OpenCode's model variants.\nEmpty: the model has no effort setting."
+          }
+        },
+        "additionalProperties": false
       },
       "ModelKeyStatus": {
         "type": "object",
@@ -4771,6 +4918,13 @@
             "$ref": "#/components/schemas/MemberId",
             "description": "The member who started it; its calls and cards are theirs."
           },
+          "effort": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The effort level chosen for the model, one of its OpenCode variants; `None`: its default."
+          },
           "environment": {
             "type": [
               "string",
@@ -4949,6 +5103,27 @@
           },
           "secret": {
             "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SessionModel": {
+        "type": "object",
+        "description": "A session's model and effort changed from its next message on.",
+        "required": [
+          "model"
+        ],
+        "properties": {
+          "effort": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "One of the model's levels; left out, the model's own default."
+          },
+          "model": {
+            "type": "string",
+            "description": "`provider/model`."
           }
         },
         "additionalProperties": false
@@ -5239,6 +5414,13 @@
             ],
             "format": "int64",
             "description": "This session's own cap in US cents; left out, the project's default, then the organization's."
+          },
+          "effort": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "One of the model's effort levels (`GET /models`); left out, the model's own default."
           },
           "environment": {
             "type": [

@@ -101,6 +101,24 @@ impl SessionStore for FakeStore {
         Ok(())
     }
 
+    async fn set_session_model(
+        &self,
+        organization: OrganizationId,
+        session: SessionId,
+        model: &str,
+        effort: Option<&str>,
+        audit: &AuditEntry,
+    ) -> Result<(), StoreError> {
+        let mut ledger = locked(&self.ledger);
+        not_found(ledger.session(organization, session))?;
+        if let Some(row) = ledger.sessions.iter_mut().find(|row| row.id == session) {
+            row.model = model.to_owned();
+            row.effort = effort.map(str::to_owned);
+        }
+        ledger.audit.push(audit.clone());
+        Ok(())
+    }
+
     async fn append_event(&self, event: &NewEvent) -> Result<(), StoreError> {
         let mut ledger = locked(&self.ledger);
         not_found(ledger.session(event.organization, event.session))?;

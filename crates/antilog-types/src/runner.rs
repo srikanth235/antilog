@@ -60,6 +60,9 @@ pub struct SessionSpec {
     pub agent: String,
     /// `provider/model`, as OpenCode names it.
     pub model: String,
+    /// The effort level (an OpenCode model variant) sent with every prompt; `None`: the model's default.
+    #[serde(default)]
+    pub effort: Option<String>,
     pub repos: Vec<RepoSpec>,
     /// The environment version the session runs on; its variables are the machine's.
     pub environment: EnvironmentSpec,
@@ -86,6 +89,11 @@ pub enum Reply {
 pub enum Command {
     /// A person's message for the agent.
     Message { text: String },
+    /// The session's model or effort changed: every prompt from now on uses them.
+    SetModel {
+        model: String,
+        effort: Option<String>,
+    },
     /// A repo a person approved: clone it into the live machine if it is not there yet.
     AttachRepo { repo: RepoSpec },
     /// The session moved to another version of its environment (or another environment): the

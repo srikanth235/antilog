@@ -117,6 +117,7 @@ pub struct NewSession {
     pub title: Option<String>,
     pub agent: String,
     pub model: String,
+    pub effort: Option<String>,
     pub prompt: String,
     pub repos: Vec<String>,
     pub environment: Option<String>,
@@ -205,6 +206,7 @@ pub async fn start<D: Deps>(
             title: title_of(new.title.as_deref(), &new.prompt),
             agent: new.agent,
             model: new.model,
+            effort: new.effort,
             repos: repos.clone(),
             environment: environment.clone(),
             environment_version,
@@ -346,6 +348,56 @@ pub async fn message<D: Deps>(
             Some(&audit(deps, organization, actor, "session.message", id)),
         )
         .await?)
+}
+
+/// A person changes the session's model or effort. It applies from the next message: a running
+/// machine is told in order with the messages (`Command::SetModel`), a released one reads the
+/// session's row when it is claimed. The timeline gets `note` ("Switched to X · High").
+pub async fn set_model<D: Deps>(
+    deps: &D,
+    organization: OrganizationId,
+    id: SessionId,
+    actor: Option<MemberId>,
+    model: &str,
+    effort: Option<&str>,
+    note: &str,
+) -> Result<Session, SessionError> {
+    let row = active(deps, organization, id).await?;
+    if row.model == model && row.effort.as_deref() == effort {
+        return Ok(row);
+    }
+    deps.store()
+        .set_session_model(
+            organization,
+            id,
+            model,
+            effort,
+            &audit(deps, organization, actor, "session.set_model", id),
+        )
+        .await?;
+    tell(
+        deps,
+        organization,
+        id,
+        &Command::SetModel {
+            model: model.to_owned(),
+            effort: effort.map(str::to_owned),
+        },
+    )
+    .await?;
+    record(
+        deps,
+        &row,
+        format!("model:{}", uuid::Uuid::now_v7()),
+        EventKind::Note,
+        actor,
+        note,
+    )
+    .await?;
+    deps.store()
+        .session(organization, id)
+        .await?
+        .ok_or(SessionError::NotFound)
 }
 
 /// A person stops the session: Stopped, "Stopped by NAME". What it spent until now is kept.

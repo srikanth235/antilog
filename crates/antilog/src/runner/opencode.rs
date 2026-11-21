@@ -169,9 +169,19 @@ impl Api {
             .context("OpenCode made a session without an id")
     }
 
-    /// A person's words for the agent. `model` is `provider/model`.
-    pub async fn prompt(&self, session: &str, text: &str, model: &str) -> Result<()> {
+    /// A person's words for the agent. `model` is `provider/model`; `effort` is one of the model's
+    /// OpenCode variants (the prompt's `variant`), or none for the model's default.
+    pub async fn prompt(
+        &self,
+        session: &str,
+        text: &str,
+        model: &str,
+        effort: Option<&str>,
+    ) -> Result<()> {
         let mut body = json!({"parts": [{"type": "text", "text": text}]});
+        if let (Some(effort), Some(object)) = (effort, body.as_object_mut()) {
+            object.insert("variant".into(), json!(effort));
+        }
         if let (Some((provider, id)), Some(object)) = (model.split_once('/'), body.as_object_mut())
         {
             object.insert(

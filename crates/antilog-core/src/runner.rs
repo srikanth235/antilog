@@ -192,6 +192,7 @@ async fn spec<D: Deps>(
         organization: machine.organization,
         agent: machine.agent.clone(),
         model: model.clone(),
+        effort: row.effort.clone(),
         repos: machine
             .seed
             .repos

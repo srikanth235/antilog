@@ -497,8 +497,18 @@ impl<S: Sandbox> Live<S> {
                     None => text,
                 };
                 self.api
-                    .prompt(&self.oc_session, &text, &self.spec.model)
+                    .prompt(
+                        &self.oc_session,
+                        &text,
+                        &self.spec.model,
+                        self.spec.effort.as_deref(),
+                    )
                     .await?;
+            }
+            Command::SetModel { model, effort } => {
+                // Commands arrive in order, so the next message is the first to use them.
+                self.spec.model = model;
+                self.spec.effort = effort;
             }
             Command::AttachRepo { repo } => {
                 // A failed clone is not the session's end: the agent can still work without it.

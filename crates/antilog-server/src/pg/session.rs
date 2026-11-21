@@ -15,6 +15,7 @@ struct SessionRow {
     created_by: Uuid,
     agent: String,
     model: String,
+    effort: Option<String>,
     repos: Vec<String>,
     environment: Option<String>,
     environment_version: Option<i32>,
@@ -38,6 +39,7 @@ impl TryFrom<SessionRow> for Session {
             created_by: MemberId::from_uuid(row.created_by),
             agent: row.agent,
             model: row.model,
+            effort: row.effort,
             repos: row.repos,
             environment: row.environment,
             environment_version: row
@@ -62,7 +64,7 @@ impl SessionStore for PgStore {
     ) -> Result<(), StoreError> {
         let mut tx = self.scoped(session.organization_id).await?;
         sqlx::query!(
-            "insert into sessions (id, organization_id, project_id, title, created_by, agent, model, repos, environment, environment_version, budget_cap_cents, follow_policy, status, note, created_at, updated_at) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, to_timestamp($15::bigint / 1000.0), to_timestamp($16::bigint / 1000.0))",
+            "insert into sessions (id, organization_id, project_id, title, created_by, agent, model, effort, repos, environment, environment_version, budget_cap_cents, follow_policy, status, note, created_at, updated_at) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, to_timestamp($16::bigint / 1000.0), to_timestamp($17::bigint / 1000.0))",
             session.id.as_uuid(),
             session.organization_id.as_uuid(),
             session.project_id.as_uuid(),
@@ -70,6 +72,7 @@ impl SessionStore for PgStore {
             session.created_by.as_uuid(),
             session.agent,
             session.model,
+            session.effort,
             &session.repos,
             session.environment,
             session.environment_version.map(|version| i32::try_from(version).unwrap_or(i32::MAX)),
@@ -95,7 +98,7 @@ impl SessionStore for PgStore {
         let mut tx = self.scoped(organization).await?;
         sqlx::query_as!(
             SessionRow,
-            "select id, organization_id, project_id, title, created_by, agent, model, repos, environment, environment_version, budget_cap_cents, follow_policy, status, note, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from updated_at) * 1000)::bigint as \"updated_at!\" from sessions where organization_id = $1 and id = $2",
+            "select id, organization_id, project_id, title, created_by, agent, model, effort, repos, environment, environment_version, budget_cap_cents, follow_policy, status, note, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from updated_at) * 1000)::bigint as \"updated_at!\" from sessions where organization_id = $1 and id = $2",
             organization.as_uuid(),
             id.as_uuid(),
         )
@@ -115,7 +118,7 @@ impl SessionStore for PgStore {
         let mut tx = self.scoped(organization).await?;
         sqlx::query_as!(
             SessionRow,
-            "select id, organization_id, project_id, title, created_by, agent, model, repos, environment, environment_version, budget_cap_cents, follow_policy, status, note, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from updated_at) * 1000)::bigint as \"updated_at!\" from sessions where organization_id = $1 and ($2::uuid is null or project_id = $2) and ($3::uuid is null or created_by = $3) order by created_at desc, id desc",
+            "select id, organization_id, project_id, title, created_by, agent, model, effort, repos, environment, environment_version, budget_cap_cents, follow_policy, status, note, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from updated_at) * 1000)::bigint as \"updated_at!\" from sessions where organization_id = $1 and ($2::uuid is null or project_id = $2) and ($3::uuid is null or created_by = $3) order by created_at desc, id desc",
             organization.as_uuid(),
             project.map(|project| project.as_uuid()),
             creator.map(|member| member.as_uuid()),
@@ -139,7 +142,7 @@ impl SessionStore for PgStore {
         let mut tx = self.scoped(organization).await?;
         let row = sqlx::query_as!(
             SessionRow,
-            "update sessions set status = coalesce($3, status), note = coalesce($4, note), updated_at = to_timestamp($5::bigint / 1000.0) where organization_id = $1 and id = $2 returning id, organization_id, project_id, title, created_by, agent, model, repos, environment, environment_version, budget_cap_cents, follow_policy, status, note, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from updated_at) * 1000)::bigint as \"updated_at!\"",
+            "update sessions set status = coalesce($3, status), note = coalesce($4, note), updated_at = to_timestamp($5::bigint / 1000.0) where organization_id = $1 and id = $2 returning id, organization_id, project_id, title, created_by, agent, model, effort, repos, environment, environment_version, budget_cap_cents, follow_policy, status, note, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from updated_at) * 1000)::bigint as \"updated_at!\"",
             organization.as_uuid(),
             id.as_uuid(),
             change.status.map(SessionStatus::as_str),
@@ -204,6 +207,33 @@ impl SessionStore for PgStore {
             .execute(&mut *tx)
             .await
             .map_err(map)?;
+        }
+        audit(&mut tx, entry).await?;
+        tx.commit().await.map_err(map)
+    }
+
+    async fn set_session_model(
+        &self,
+        organization: OrganizationId,
+        session: SessionId,
+        model: &str,
+        effort: Option<&str>,
+        entry: &AuditEntry,
+    ) -> Result<(), StoreError> {
+        let mut tx = self.scoped(organization).await?;
+        let changed = sqlx::query!(
+            "update sessions set model = $3, effort = $4 where organization_id = $1 and id = $2",
+            organization.as_uuid(),
+            session.as_uuid(),
+            model,
+            effort,
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(map)?
+        .rows_affected();
+        if changed == 0 {
+            return Err(StoreError::NotFound);
         }
         audit(&mut tx, entry).await?;
         tx.commit().await.map_err(map)
@@ -314,7 +344,7 @@ impl SessionStore for PgStore {
         let mut tx = self.scoped(organization).await?;
         sqlx::query_as!(
             SessionRow,
-            "select id, organization_id, project_id, title, created_by, agent, model, repos, environment, environment_version, budget_cap_cents, follow_policy, status, note, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from updated_at) * 1000)::bigint as \"updated_at!\" from sessions where organization_id = $1 and updated_at >= to_timestamp($2::bigint / 1000.0) order by updated_at, id limit $3",
+            "select id, organization_id, project_id, title, created_by, agent, model, effort, repos, environment, environment_version, budget_cap_cents, follow_policy, status, note, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from updated_at) * 1000)::bigint as \"updated_at!\" from sessions where organization_id = $1 and updated_at >= to_timestamp($2::bigint / 1000.0) order by updated_at, id limit $3",
             organization.as_uuid(),
             since,
             i64::from(limit),

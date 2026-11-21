@@ -1,7 +1,7 @@
 # Model prices
 
 `prices.json` is a trimmed copy of `model_prices_and_context_window.json` from LiteLLM
-(https://github.com/BerriAI/litellm), taken at commit `f9b908a185fddcc8f88fb0bd5a78d004a38fad70`.
+(https://github.com/BerriAI/litellm), taken at commit `e8ae52cd618843cd2cf63b410751c434b8df083f`.
 Only Anthropic and OpenAI chat models are kept. Each price is in thousandths of a dollar per
 million tokens (3000 is $3.00 per million). Regenerate it with `scripts/update-prices.py`.
 

@@ -147,6 +147,7 @@ async fn world() -> World {
             open_organizations: false,
             secure_cookies: true,
             runner: None,
+            models: antilog_server::models::ModelLists::offline(),
         },
     });
     let router = api::router_with_reach(
