@@ -1,4 +1,9 @@
-#![allow(clippy::unwrap_used, clippy::expect_used, clippy::indexing_slicing, clippy::panic)]
+#![allow(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::indexing_slicing,
+    clippy::panic
+)]
 
 //! The terminal relay over real sockets on the in-memory store: who may open one, how the
 //! browser's and the runner's ends pair, and when it closes.
@@ -85,6 +90,7 @@ async fn world_with(terminals: Terminals) -> World {
             providers: Vec::new(),
             open_organizations: false,
             secure_cookies: true,
+            models: antilog_server::models::ModelLists::offline(),
             runner: Some(RunnerSettings {
                 key: KEY.to_owned(),
                 core,
@@ -589,6 +595,7 @@ async fn an_idle_poll_waits_for_a_terminal_and_answers_when_one_is_asked_for() {
             providers: Vec::new(),
             open_organizations: false,
             secure_cookies: true,
+            models: antilog_server::models::ModelLists::offline(),
             runner: Some(RunnerSettings {
                 key: KEY.to_owned(),
                 core,
