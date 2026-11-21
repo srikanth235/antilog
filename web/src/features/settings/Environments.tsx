@@ -595,6 +595,36 @@ function Form(props: { environment: Environment | null; onDone: () => void }) {
   );
 }
 
+/** The edit dialog of one environment (`null`: a new one), as the Settings list and a session's
+ * Overview both open it. Saving makes the environment's next version. */
+export function EnvironmentDialog(props: {
+  environment: Environment | null;
+  open: boolean;
+  onClose: () => void;
+}) {
+  const t = w.settings.environments;
+  return (
+    <Dialog
+      open={props.open}
+      onClose={props.onClose}
+      title={props.environment === null ? t.addTitle : t.editTitle}
+      width={600}
+    >
+      {props.open ? (
+        <Form
+          key={
+            props.environment === null
+              ? "new"
+              : `${props.environment.id}-${props.environment.version}`
+          }
+          environment={props.environment}
+          onDone={props.onClose}
+        />
+      ) : null}
+    </Dialog>
+  );
+}
+
 /** Environments: what a session runs on. Everyone reads them; owners and editors add, change
  * (a new version) and archive. */
 export function Environments() {
@@ -684,22 +714,11 @@ export function Environments() {
         <Icon name="lock" size="s" />
         {t.editorsOnly}
       </p>
-      <Dialog
+      <EnvironmentDialog
         open={editing !== false}
+        environment={editing === false ? null : editing}
         onClose={() => setEditing(false)}
-        title={
-          editing === null ? w.settings.environments.addTitle : w.settings.environments.editTitle
-        }
-        width={600}
-      >
-        {editing === false ? null : (
-          <Form
-            key={editing === null ? "new" : `${editing.id}-${editing.version}`}
-            environment={editing}
-            onDone={() => setEditing(false)}
-          />
-        )}
-      </Dialog>
+      />
     </div>
   );
 }

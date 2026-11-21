@@ -430,6 +430,17 @@ export const w = {
     overview: {
       environments: "Environments",
       noConnectors: "No connectors switched on",
+      version: (n: number) => `Version ${n}`,
+      change: "Change",
+      edit: "Edit",
+      changeEnvironmentTitle: "Change environment",
+      changeEnvironmentLead:
+        "Move this session to another environment. Its network applies at once. Variables reach new commands now, and the setup script runs now if it differs.",
+      thisSession: "this session",
+      pickNote:
+        "The session moves to the newest version of the one you pick. Its default repositories are cloned into the machine. The agent is told.",
+      move: "Move session",
+      editThis: "Edit this environment",
     },
     attachRepo: "Attach a repo",
     changeEnvironment: "Change environment",
@@ -593,11 +604,22 @@ export const w = {
       readsOnly: "Reads only",
       branch: "Branch",
       scope: "Scope",
-      image: "Image",
-      setupScript: "Setup script",
-      setupScriptLines: (n: number) => (n === 1 ? "1 line" : `${n} lines`),
-      size: "Size",
-      network: "Network",
+      environment: "Environment",
+      environmentOwn:
+        "This session is on the default, which cannot change. Approving makes an environment of its own for it and moves the session to it.",
+      environmentShared: (now: number, next: number) =>
+        `This session is on version ${now}. Approving makes version ${next} of it, which other sessions on this environment also get when they start, and moves this session to it.`,
+      environmentBehind: (now: number, newest: number, next: number) =>
+        `This session is on version ${now}, and the environment is at version ${newest} now. Approving makes version ${next} from the newest, which other sessions on it also get when they start, and moves this session to it.`,
+      diff: {
+        network: "Network, applies now",
+        variables: "Variables, for commands run from now on",
+        script: "Setup script, runs now",
+        repos: "Repositories, cloned now",
+        registries: "Package registries",
+        level: { none: "No network", limited: "Limited network", full: "Full network" },
+        moreLines: (n: number) => `… ${n} more lines`,
+      },
       repos: "Pull requests in",
       tried: "What was tried",
       trial: "Trial",
@@ -764,6 +786,7 @@ export const w = {
       edit: "Edit",
       archive: "Archive",
       builtIn: "Built in",
+      builtInName: "Default",
       archived: "Archived",
       loadFailed: "The environments could not be loaded.",
       networks: {
