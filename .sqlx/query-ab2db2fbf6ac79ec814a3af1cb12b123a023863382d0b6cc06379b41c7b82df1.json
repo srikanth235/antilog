@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select parts from session_context where session_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "parts",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "session_context",
+            "name": "parts"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "ab2db2fbf6ac79ec814a3af1cb12b123a023863382d0b6cc06379b41c7b82df1"
+}

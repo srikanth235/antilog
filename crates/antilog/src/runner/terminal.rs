@@ -54,6 +54,12 @@ fn install_crypto() {
         .ok();
 }
 
+/// The server answered 404: it has dropped the terminal, so there is nobody to carry it to.
+fn is_gone(error: &tokio_tungstenite::tungstenite::Error) -> bool {
+    matches!(error, tokio_tungstenite::tungstenite::Error::Http(response)
+        if response.status() == tokio_tungstenite::tungstenite::http::StatusCode::NOT_FOUND)
+}
+
 async fn carry(api: &Api, server: &Server, open: &Open, pty: &str) -> Result<()> {
     api.pty_resize(pty, open.cols, open.rows).await?;
     let (mut shell, _) = tokio_tungstenite::connect_async(api.pty_connect_request(pty)?)
@@ -70,13 +76,21 @@ async fn carry(api: &Api, server: &Server, open: &Open, pty: &str) -> Result<()>
             .parse()
             .context("the runner token is not a header")?,
     );
-    let (mut relay, _) = tokio::time::timeout(
+    let (mut relay, _) = match tokio::time::timeout(
         Duration::from_secs(30),
         tokio_tungstenite::connect_async(request),
     )
     .await
     .context("the server did not answer the terminal")?
-    .context("connecting to the server")?;
+    {
+        Ok(connected) => connected,
+        // The server no longer has the terminal: the person closed it before it connected.
+        Err(error) if is_gone(&error) => {
+            tracing::debug!(terminal = %open.terminal, "the terminal was closed before it connected");
+            return Ok(());
+        }
+        Err(error) => return Err(anyhow::Error::from(error).context("connecting to the server")),
+    };
     loop {
         tokio::select! {
             from_server = relay.next() => match from_server {
@@ -112,5 +126,23 @@ async fn carry(api: &Api, server: &Server, open: &Open, pty: &str) -> Result<()>
                 Some(Ok(_)) => {}
             },
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tokio_tungstenite::tungstenite::{Error, http};
+
+    fn refused(status: u16) -> Error {
+        let response = http::Response::builder().status(status).body(None).unwrap();
+        Error::Http(Box::new(response))
+    }
+
+    #[test]
+    fn only_a_missing_terminal_is_a_close() {
+        assert!(is_gone(&refused(404)));
+        assert!(!is_gone(&refused(500)));
+        assert!(!is_gone(&Error::ConnectionClosed));
     }
 }

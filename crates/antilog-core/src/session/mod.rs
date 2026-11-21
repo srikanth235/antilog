@@ -412,6 +412,10 @@ pub async fn set_model<D: Deps>(
         },
     )
     .await?;
+    // One note per change: a switch nothing has followed yet is replaced, not added to.
+    deps.store()
+        .remove_trailing_event(organization, id, "model:")
+        .await?;
     record(
         deps,
         &row,

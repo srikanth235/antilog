@@ -88,6 +88,15 @@ pub trait SessionStore {
     fn append_event(&self, event: &NewEvent)
     -> impl Future<Output = Result<(), StoreError>> + Send;
 
+    /// Removes the session's newest conversation item when its key starts with `prefix`, so a
+    /// note that nothing has followed can be replaced. Whether one was removed.
+    fn remove_trailing_event(
+        &self,
+        organization: OrganizationId,
+        session: SessionId,
+        prefix: &str,
+    ) -> impl Future<Output = Result<bool, StoreError>> + Send;
+
     /// The conversation, oldest first: up to `limit` items after `after` (a `seq`; 0 for the start).
     fn session_events(
         &self,

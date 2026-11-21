@@ -42,6 +42,10 @@ impl ContextStore for FakeStore {
     ) -> Result<(), StoreError> {
         self.context_row(organization, session, |row| {
             row.used = Some(context.used);
+            // A breakdown larger than the window now holds is from before a compaction.
+            if row.parts.iter().map(|part| part.tokens).sum::<u64>() > context.used {
+                row.parts.clear();
+            }
             if context.window.is_some() {
                 row.window = context.window;
             }

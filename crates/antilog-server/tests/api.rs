@@ -1931,7 +1931,24 @@ async fn a_session_serves_its_context_use_and_an_editor_may_compact_it() {
     assert_eq!(read.body["parts"][0]["kind"], "system");
     assert_eq!(read.body["parts"][0]["tokens"], 9_000);
     assert_eq!(read.body["reportedAt"], 20);
-    // A use reported later keeps the parts, and a report without a window keeps the window.
+    // A use that still holds the parts keeps them, and a report without a window keeps the window.
+    deps.store
+        .put_context_use(
+            organization,
+            session,
+            ContextUse {
+                used: 50_000,
+                window: None,
+            },
+            30,
+        )
+        .await
+        .unwrap_or_else(|e| unreachable!("{e}"));
+    let again = org.call(Method::GET, &uri, &viewer, None).await;
+    assert_eq!(again.body["used"], 50_000);
+    assert_eq!(again.body["window"], 1_000_000);
+    assert_eq!(again.body["parts"][0]["tokens"], 9_000);
+    // After a compaction the window holds less than the parts add up to: they are cleared.
     deps.store
         .put_context_use(
             organization,
@@ -1940,14 +1957,13 @@ async fn a_session_serves_its_context_use_and_an_editor_may_compact_it() {
                 used: 5,
                 window: None,
             },
-            30,
+            40,
         )
         .await
         .unwrap_or_else(|e| unreachable!("{e}"));
-    let again = org.call(Method::GET, &uri, &viewer, None).await;
-    assert_eq!(again.body["used"], 5);
-    assert_eq!(again.body["window"], 1_000_000);
-    assert_eq!(again.body["parts"][0]["tokens"], 9_000);
+    let compacted = org.call(Method::GET, &uri, &viewer, None).await;
+    assert_eq!(compacted.body["used"], 5);
+    assert_eq!(compacted.body["parts"], json!([]));
 
     assert_eq!(
         org.call(
@@ -2294,10 +2310,8 @@ async fn an_effort_must_be_one_of_the_models_levels_at_the_start_and_on_a_switch
         .filter(|e| e["kind"] == "note")
         .filter_map(|e| e["text"].as_str().map(str::to_owned))
         .collect();
-    assert_eq!(
-        notes,
-        ["Switched to O3 · High", "Switched to GLM 5.3 Flash · Max"]
-    );
+    // Both switches came before any message: the second replaced the first's note.
+    assert_eq!(notes, ["Switched to GLM 5.3 Flash · Max"]);
     // Nothing changed: no second note.
     let same = org
         .call(
@@ -2308,4 +2322,30 @@ async fn an_effort_must_be_one_of_the_models_levels_at_the_start_and_on_a_switch
         )
         .await;
     assert_eq!(same.status, StatusCode::OK);
+    // A second change before any message replaces the note instead of adding another.
+    let again = org
+        .call(
+            Method::PUT,
+            &uri,
+            &org.owner,
+            Some(json!({"model": "opencode-go/glm-5.3-flash", "effort": "low"})),
+        )
+        .await;
+    assert_eq!(again.status, StatusCode::OK);
+    let notes: Vec<String> = org
+        .call(
+            Method::GET,
+            &format!("/sessions/{id}/events"),
+            &org.owner,
+            None,
+        )
+        .await
+        .body["events"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|e| e["kind"] == "note")
+        .filter_map(|e| e["text"].as_str().map(str::to_owned))
+        .collect();
+    assert_eq!(notes, ["Switched to GLM 5.3 Flash · Low"]);
 }

@@ -38,6 +38,26 @@ impl ContextStore for PgStore {
         .execute(&mut *tx)
         .await
         .map_err(map)?;
+        // A breakdown that adds up to more than the window now holds is from before a
+        // compaction: clear it until the next call measures a new one.
+        let kept = sqlx::query_scalar!(
+            "select parts from session_context where session_id = $1",
+            session.as_uuid(),
+        )
+        .fetch_one(&mut *tx)
+        .await
+        .map_err(map)?;
+        let stale = serde_json::from_str::<Vec<ContextPart>>(&kept)
+            .is_ok_and(|parts| parts.iter().map(|part| part.tokens).sum::<u64>() > context.used);
+        if stale {
+            sqlx::query!(
+                "update session_context set parts = '[]' where session_id = $1",
+                session.as_uuid(),
+            )
+            .execute(&mut *tx)
+            .await
+            .map_err(map)?;
+        }
         tx.commit().await.map_err(map)
     }
 

@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from session_events where organization_id = $1 and session_id = $2 and starts_with(key, $3) and seq = (select max(seq) from session_events where organization_id = $1 and session_id = $2)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "567b699bd549ff249c5845ccdf7fb2abc2f2483f84550ff6316057af2a8d8841"
+}
