@@ -23,6 +23,9 @@ export const keys = {
   session: (id: string) => ["sessions", id] as const,
   sessionApprovals: (id: string) => ["sessions", id, "approvals"] as const,
   sessionSpend: (id: string) => ["sessions", id, "spend"] as const,
+  changes: (id: string) => ["sessions", id, "changes"] as const,
+  commitChanges: (id: string, repo: string, sha: string) =>
+    ["sessions", id, "changes", repo, sha] as const,
   agents: () => ["agents"] as const,
   autoAgent: () => ["agents", "auto"] as const,
   environments: () => ["environments"] as const,
@@ -147,6 +150,32 @@ export function useSessionApprovals(id: string) {
     queryFn: async () =>
       unwrap(await api.GET("/sessions/{id}/approvals", { params: { path: { id } } })),
     refetchInterval: poll,
+  });
+}
+
+/** What the session changed in each repo, as of the end of the agent's last turn. */
+export function useChanges(id: string) {
+  const poll = usePoll();
+  return useQuery({
+    queryKey: keys.changes(id),
+    queryFn: async () =>
+      unwrap(await api.GET("/sessions/{id}/changes", { params: { path: { id } } })),
+    refetchInterval: poll,
+  });
+}
+
+/** The files of one commit; a commit never changes, so it is fetched once. */
+export function useCommitChanges(id: string, repo: string, sha: string | null) {
+  return useQuery({
+    queryKey: keys.commitChanges(id, repo, sha ?? ""),
+    queryFn: async () =>
+      unwrap(
+        await api.GET("/sessions/{id}/changes/commits/{sha}", {
+          params: { path: { id, sha: sha ?? "" }, query: { repo } },
+        }),
+      ),
+    enabled: sha !== null,
+    staleTime: Number.POSITIVE_INFINITY,
   });
 }
 

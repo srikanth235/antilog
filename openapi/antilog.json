@@ -2027,6 +2027,110 @@
         ]
       }
     },
+    "/sessions/{id}/changes": {
+      "get": {
+        "tags": [],
+        "operationId": "changes",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The session",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/SessionId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "What the session changed in each repo against the commit it was cloned at, as of the end of the agent's last turn: commits, files and their unified diffs. Empty before the first report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionChanges"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/sessions/{id}/changes/commits/{sha}": {
+      "get": {
+        "tags": [],
+        "operationId": "commit_changes",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The session",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/SessionId"
+            }
+          },
+          {
+            "name": "sha",
+            "in": "path",
+            "description": "A commit listed in the session's changes",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "repo",
+            "in": "query",
+            "description": "The repo, when more than one has the commit.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The files of that commit against its parent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommitChanges"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/sessions/{id}/events": {
       "get": {
         "tags": [],
@@ -3004,6 +3108,47 @@
         ],
         "description": "What each kind of card asks, as typed fields. A card shows these, never text parsed out of\nits summary, and an action that follows an approval reads what to do from here."
       },
+      "CommitChanges": {
+        "type": "object",
+        "description": "The files of one commit.",
+        "required": [
+          "sha",
+          "files"
+        ],
+        "properties": {
+          "files": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FileChange"
+            }
+          },
+          "sha": {
+            "type": "string"
+          }
+        }
+      },
+      "CommitInfo": {
+        "type": "object",
+        "description": "One commit made since the base.",
+        "required": [
+          "sha",
+          "subject",
+          "time"
+        ],
+        "properties": {
+          "sha": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "time": {
+            "type": "integer",
+            "format": "int64",
+            "description": "When it was committed, epoch milliseconds."
+          }
+        }
+      },
       "Connector": {
         "type": "object",
         "description": "A remote MCP server. The credential is kept sealed on the server and never shown.",
@@ -3272,6 +3417,63 @@
         },
         "additionalProperties": false
       },
+      "FileChange": {
+        "type": "object",
+        "description": "One file of a diff. `patch` is the unified diff text from its first `@@` line on, with\nthree lines of context; it is empty for a binary file and for one that is too large.",
+        "required": [
+          "path",
+          "status",
+          "additions",
+          "deletions",
+          "binary",
+          "tooLarge",
+          "patch"
+        ],
+        "properties": {
+          "additions": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "binary": {
+            "type": "boolean"
+          },
+          "deletions": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "oldPath": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The path before a rename; `null` otherwise."
+          },
+          "patch": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/FileStatus"
+          },
+          "tooLarge": {
+            "type": "boolean"
+          }
+        }
+      },
+      "FileStatus": {
+        "type": "string",
+        "description": "How a file differs from the base.",
+        "enum": [
+          "added",
+          "modified",
+          "deleted",
+          "renamed"
+        ]
+      },
       "Health": {
         "type": "object",
         "required": [
@@ -3465,6 +3667,25 @@
                 "type": "string",
                 "enum": [
                   "session"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "A runner reported a session's changes: refetch `GET /sessions/{id}/changes`.",
+            "required": [
+              "sessionId",
+              "type"
+            ],
+            "properties": {
+              "sessionId": {
+                "$ref": "#/components/schemas/SessionId"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "changes"
                 ]
               }
             }
@@ -4235,6 +4456,56 @@
           "push"
         ]
       },
+      "RepoChanges": {
+        "type": "object",
+        "description": "One repo's changes, as the Changes panel reads them.",
+        "required": [
+          "repo",
+          "baseBranch",
+          "headBranch",
+          "baseSha",
+          "headSha",
+          "commits",
+          "files",
+          "reportedAt"
+        ],
+        "properties": {
+          "baseBranch": {
+            "type": "string"
+          },
+          "baseSha": {
+            "type": "string"
+          },
+          "commits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CommitInfo"
+            },
+            "description": "Newest first. Each has its own diff at `GET /sessions/{id}/changes/commits/{sha}`."
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FileChange"
+            },
+            "description": "All changes: the base against the working tree."
+          },
+          "headBranch": {
+            "type": "string"
+          },
+          "headSha": {
+            "type": "string"
+          },
+          "repo": {
+            "type": "string"
+          },
+          "reportedAt": {
+            "type": "integer",
+            "format": "int64",
+            "description": "When the runner reported it, epoch milliseconds."
+          }
+        }
+      },
       "Role": {
         "type": "string",
         "description": "Ordered: a higher role may do what a lower one may.",
@@ -4365,6 +4636,21 @@
           }
         },
         "additionalProperties": false
+      },
+      "SessionChanges": {
+        "type": "object",
+        "description": "The latest report for each repo of the session; empty before the first one.",
+        "required": [
+          "repos"
+        ],
+        "properties": {
+          "repos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RepoChanges"
+            }
+          }
+        }
       },
       "SessionEvent": {
         "type": "object",

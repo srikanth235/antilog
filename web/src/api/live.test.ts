@@ -26,3 +26,7 @@ test("a half message is ignored", () => {
   expect(parse('{"type":"hel')).toBeNull();
   expect(parse("7")).toBeNull();
 });
+
+test("a report of changes refetches that session's changes", () => {
+  expect(staleBy({ type: "changes", sessionId: "s1" })).toEqual([keys.changes("s1")]);
+});

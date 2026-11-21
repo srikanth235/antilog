@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into session_changes (session_id, organization_id, repo, base_branch, head_branch, base_sha, head_sha, commits, files, reported_at) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, to_timestamp($10::bigint / 1000.0))",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5a2c54769286c955fb37b6d510fe1536624fea649ad5100e43fc17b5fd71a3fa"
+}

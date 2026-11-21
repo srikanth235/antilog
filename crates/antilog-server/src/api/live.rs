@@ -21,7 +21,7 @@ use antilog_core::approval;
 use antilog_core::auth;
 use antilog_core::deps::Deps;
 use antilog_core::organization::{self as floor, Principal};
-use antilog_core::store::SessionStore;
+use antilog_core::store::{ChangesStore, SessionStore};
 use antilog_types::{ApiError, LiveEvent, SessionId, SessionStatus};
 use axum::Router;
 use axum::extract::State;
@@ -92,6 +92,7 @@ struct Watch {
     /// organization, so this is whether the session exists here.
     readable: HashMap<SessionId, bool>,
     statuses: HashMap<SessionId, SessionStatus>,
+    reports: HashMap<SessionId, i64>,
     changed_since: i64,
     cards: HashSet<antilog_types::ApprovalId>,
 }
@@ -156,6 +157,33 @@ impl Watch {
         out
     }
 
+    async fn report_changes<D: Deps + 'static>(&mut self, app: &App<D>) -> Vec<LiveEvent> {
+        let Ok(marks) = app
+            .store()
+            .changes_marks(self.who.organization, self.changed_since, BATCH)
+            .await
+        else {
+            return Vec::new();
+        };
+        let mut out = Vec::new();
+        for mark in marks {
+            if self
+                .reports
+                .get(&mark.session)
+                .is_some_and(|seen| *seen >= mark.reported_at)
+            {
+                continue;
+            }
+            self.reports.insert(mark.session, mark.reported_at);
+            if self.can_read(app, mark.session).await {
+                out.push(LiveEvent::Changes {
+                    session_id: mark.session,
+                });
+            }
+        }
+        out
+    }
+
     async fn card_changes<D: Deps + 'static>(&mut self, app: &App<D>) -> Option<LiveEvent> {
         let waiting: HashSet<_> = approval::pending(app.store(), &self.who)
             .await
@@ -199,6 +227,7 @@ pub fn open<D: Deps + 'static>(
             cursor,
             readable: HashMap::new(),
             statuses: HashMap::new(),
+            reports: HashMap::new(),
             changed_since: app.now(),
             cards: HashSet::new(),
         };
@@ -231,6 +260,7 @@ pub fn open<D: Deps + 'static>(
             let mut events = watch.messages(&app).await;
             if tick.is_multiple_of(options.slow_every.max(1)) {
                 events.extend(watch.status_changes(&app).await);
+                events.extend(watch.report_changes(&app).await);
                 events.extend(watch.card_changes(&app).await);
             }
             for event in events {

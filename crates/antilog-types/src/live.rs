@@ -25,6 +25,9 @@ pub enum LiveEvent {
         session_id: SessionId,
         status: SessionStatus,
     },
+    /// A runner reported a session's changes: refetch `GET /sessions/{id}/changes`.
+    #[serde(rename_all = "camelCase")]
+    Changes { session_id: SessionId },
     /// The cards waiting for this member changed; `pending` is how many wait now.
     Cards { pending: u32 },
 }
@@ -37,6 +40,7 @@ impl LiveEvent {
             Self::Resync { .. } => "resync",
             Self::Message { .. } => "message",
             Self::Session { .. } => "session",
+            Self::Changes { .. } => "changes",
             Self::Cards { .. } => "cards",
         }
     }
@@ -46,7 +50,7 @@ impl LiveEvent {
         match self {
             Self::Hello { cursor } | Self::Resync { cursor } => Some(*cursor),
             Self::Message { seq, .. } => Some(*seq),
-            Self::Session { .. } | Self::Cards { .. } => None,
+            Self::Session { .. } | Self::Changes { .. } | Self::Cards { .. } => None,
         }
     }
 }

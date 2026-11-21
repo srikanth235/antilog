@@ -12,7 +12,7 @@ use antilog_core::organization::Principal;
 use antilog_core::runner::Settings as CoreSettings;
 use antilog_core::seed::{Seed, organization};
 use antilog_core::session::{self, NewSession};
-use antilog_core::store::{ApprovalStore, RunnerStore, SessionStore};
+use antilog_core::store::{ApprovalStore, ChangesStore, RunnerStore, SessionStore};
 use antilog_server::api::auth::Settings;
 use antilog_server::api::router;
 use antilog_server::api::runner::RunnerSettings;
@@ -633,6 +633,74 @@ async fn a_session_runs_from_the_queue_through_opencode_and_back() {
     .await;
     let export = world.deps.store.export(session.id).await.unwrap().unwrap();
     assert!(export.contains("ses_fake"));
+}
+
+#[tokio::test]
+async fn the_end_of_a_turn_reports_the_changes_against_the_clone() {
+    let world = world().await;
+    let org = world.seed.organization.id;
+    let session = start(&world, "cut p95").await;
+    until("the first prompt", async || {
+        (!locked(&world.shared).prompts.is_empty()).then_some(())
+    })
+    .await;
+    until("a stream", async || {
+        (locked(&world.shared).streams_opened > 0).then_some(())
+    })
+    .await;
+    let repo = world.workdir.join(session.id.to_string()).join("api");
+    sh(
+        &repo,
+        "echo second > file.txt && git -c user.email=a@b -c user.name=n commit -qam 'change the file'",
+    );
+    sh(
+        &repo,
+        "echo third > file.txt && echo new > new.txt && echo '*.log' > .gitignore && echo x > noise.log && printf 'a\\0b' > blob.bin",
+    );
+    emit(
+        &world.shared,
+        json!({"type": "session.idle", "properties": {"sessionID": "ses_fake"}}),
+    )
+    .await;
+    let repos = until("the report", async || {
+        let found = world.deps.store.changes(org, session.id).await.unwrap();
+        (!found.is_empty()).then_some(found)
+    })
+    .await;
+    let api = &repos[0];
+    assert_eq!(api.repo, "acme/api");
+    assert_eq!(api.base_branch, api.head_branch);
+    assert_ne!(api.base_sha, api.head_sha);
+    assert_eq!(api.commits.len(), 1);
+    assert_eq!(api.commits[0].subject, "change the file");
+    let file = |name: &str| api.files.iter().find(|file| file.path == name);
+    let changed = file("file.txt").expect("the edited file");
+    assert_eq!((changed.additions, changed.deletions), (1, 1));
+    assert!(changed.patch.starts_with("@@"));
+    assert!(changed.patch.contains("+third"));
+    assert_eq!(
+        file("new.txt").expect("a new file counts").status,
+        antilog_types::FileStatus::Added
+    );
+    assert!(file("blob.bin").expect("a binary file").binary);
+    assert!(file("blob.bin").unwrap().patch.is_empty());
+    assert!(file("noise.log").is_none(), "an ignored file is left out");
+    assert!(file(".gitignore").is_some());
+
+    let commit = world
+        .deps
+        .store
+        .commit_changes(org, session.id, None, &api.commits[0].sha)
+        .await
+        .unwrap()
+        .expect("the commit's own diff");
+    assert_eq!(commit.files.len(), 1);
+    assert!(commit.files[0].patch.contains("+second"));
+    let status = sh(&repo, "git status --short");
+    assert!(
+        status.contains("?? new.txt"),
+        "the work tree's index is left as the agent had it: {status}"
+    );
 }
 
 #[tokio::test]

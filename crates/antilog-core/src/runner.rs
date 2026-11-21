@@ -3,9 +3,9 @@
 //! with that session's own `Runner` token.
 
 use antilog_types::{
-    ApprovalStatus, CardKind, CardPayload, Command, EventKind, Item, ItemKind, Machine,
-    MachineState, PollRequest, PollResponse, Release, ReleaseOutcome, Reply, RepoSpec, SessionId,
-    SessionSpec, SessionStatus, SkillDownload,
+    ApprovalStatus, CardKind, CardPayload, ChangesReport, Command, EventKind, Item, ItemKind,
+    Machine, MachineState, PollRequest, PollResponse, Release, ReleaseOutcome, Reply, RepoSpec,
+    SessionId, SessionSpec, SessionStatus, SkillDownload,
 };
 use jiff::SignedDuration;
 use serde_json::{Value, json};
@@ -16,7 +16,7 @@ use crate::deps::Deps;
 use crate::environments;
 use crate::organization::Refusal;
 use crate::session::{SessionError, audit, now_ms, record, record_tool};
-use crate::store::{ApprovalStore, CustomizeStore, Store};
+use crate::store::{ApprovalStore, ChangesStore, CustomizeStore, Store};
 use crate::store::{RunnerStore, SessionChange, SessionStore, StoreError};
 
 /// How a server reaches its runners and what it tells them. From server config.
@@ -466,6 +466,25 @@ pub async fn ingest<D: Deps>(
             }
         }
     }
+    Ok(())
+}
+
+/// The runner's report of what the session changed in each repo; it replaces the last one.
+pub async fn report_changes<D: Deps>(
+    deps: &D,
+    session: SessionId,
+    holder: &str,
+    report: ChangesReport,
+) -> Result<(), RunnerError> {
+    let machine = held_by(deps, session, holder).await?;
+    deps.store()
+        .put_changes(
+            machine.organization,
+            session,
+            &report.capped(),
+            now_ms(deps),
+        )
+        .await?;
     Ok(())
 }
 
