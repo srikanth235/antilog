@@ -6,8 +6,6 @@ What a hijacked agent could do, and what stops it Assume every agent can be prom
 
 - Repo files, including dependencies, vendored code, issues quoted in comments, and generated files.
 - Connector data: rows, documents and whatever an MCP server returns.
-- Pull request review comments and CI output while a delivered session stays attached.
-- The history of other sessions, whose hypotheses an injected agent may have written.
 - Skill packs and plugins an organization added.
 
 A person's own messages in the chat are trusted as that person's, within their role.
@@ -16,23 +14,21 @@ A person's own messages in the chat are trusted as that person's, within their r
 
 | It holds | The limit | What still gets through |
 | --- | --- | --- |
-| A git token for its own branch | Pushes only to the session's branch, short-lived, one per repo | It can push anything to that branch, including data it read. The branch is on the code host |
+| Repo access in its machine | What the repo's credentials allow (the real code host is not built; a pull request comes later, from the agent with the repo's credentials) | It can push anything those credentials allow, including data it read |
 | A connector's tools through the session endpoint | The credential stays on the server; each tool is On, Off or Ask first and each call is audited | It can use any On tool with any input, and read what the connector returns |
 | Network from its machine | Only the endpoints the environment allows | Any allowed endpoint that accepts writes is a way out |
-| The Antilog tools | Cards ask a person unless policy pre-approved them; Add credential always asks; `deliver` refuses a trial that is not Kept | It can spend the budget on trials, and write misleading hypotheses and pull request text |
+| The setup tools | Cards ask a person unless policy pre-approved them; Add credential always asks | It can spend up to the session's, the project's and the organization's caps, and write misleading text on a card |
 | The conversation | Stored as words, plus each tool call's label, input and output cut to 4 KB with credentials taken out | Whatever it writes in a message is stored, including data it read |
 
-It never holds the holdout credential, a write credential, a model key, a cloud credential or the judge's signing key. It cannot mark a win or change a sealed experiment.
+It never holds a model key or a cloud credential.
 
 ## Rules
 
 - Treat every tool argument from an agent as untrusted input, checked by the action layer like a request from outside.
 - Show the agent's text on a card as the agent's, never as Antilog's or a person's. A card shows exactly what will happen, not the agent's summary of it.
 - Keep allowed endpoints narrow: an environment that allows a host that accepts writes says so on the Change environment card.
-- Scan what an agent pushes for secrets and for data that looks like connector rows before a pull request opens, and show a hit on the Open pull request card. A scan narrows the leak through git and does not close it.
-- The second opinion also reads the pull request text, and flags instructions aimed at a reviewer.
-- When a session acts against its experiment (tries a protected path, reaches a blocked host, asks for the holdout), record it on the timeline and in the audit log, and tell a person.
+- When a session acts against its limits (reaches a blocked host, spends to a cap), record it in the audit log and tell a person.
 
 ## What this does not stop
 
-Data the agent may read can leave through its branch, its messages or an allowed endpoint. The defence is what the agent may reach: switch on only connectors, and set On only tools, whose answers the customer is willing to see in a pull request. Say so where a connector is added ([add-connector.md](add-connector.md)).
+Data the agent may read can leave through its pushes, its messages or an allowed endpoint. The defence is what the agent may reach: switch on only connectors, and set On only tools, whose answers the customer is willing to see in the agent's output. Say so where a connector is added ([add-connector.md](add-connector.md)).

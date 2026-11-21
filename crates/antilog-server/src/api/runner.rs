@@ -8,7 +8,7 @@ use antilog_core::credentials::{Purpose, SessionCredentials};
 use antilog_core::deps::Deps;
 use antilog_core::runner::{self, RunnerError};
 use antilog_core::store::RunnerStore;
-use antilog_types::{ApiError, Items, PollRequest, PollResponse, Release, RunResult, SessionId};
+use antilog_types::{ApiError, Items, PollRequest, PollResponse, Release, SessionId};
 use axum::extract::{DefaultBodyLimit, Path, State};
 use axum::http::{HeaderMap, StatusCode, header};
 use axum::response::{IntoResponse, Response};
@@ -34,7 +34,6 @@ pub fn routes<D: Deps + 'static>() -> Router<Arc<App<D>>> {
     Router::new()
         .route("/runner/poll", post(poll::<D>))
         .route("/runner/sessions/{id}/events", post(events::<D>))
-        .route("/runner/sessions/{id}/results", post(results::<D>))
         .route("/runner/sessions/{id}/release", post(release::<D>))
         .route("/runner/sessions/{id}/export", get(export::<D>))
         .route(
@@ -174,17 +173,6 @@ async fn events<D: Deps + 'static>(
     Ok(StatusCode::NO_CONTENT)
 }
 
-async fn results<D: Deps + 'static>(
-    State(app): Shared<D>,
-    headers: HeaderMap,
-    Path(session): Path<SessionId>,
-    Json(result): Json<RunResult>,
-) -> Result<StatusCode, Fail> {
-    let holder = holder(&app, &headers, session).await?;
-    runner::result(&*app.deps, session, &holder, &result).await?;
-    Ok(StatusCode::NO_CONTENT)
-}
-
 async fn release<D: Deps + 'static>(
     State(app): Shared<D>,
     headers: HeaderMap,
@@ -212,7 +200,7 @@ async fn export<D: Deps + 'static>(
 }
 
 /// A skill pack at one version: its files as text, from Customize. Only the holding runner may
-/// download, and only a version the session's experiment selected.
+/// download, and only a version of an organization skill.
 async fn skill<D: Deps + 'static>(
     State(app): Shared<D>,
     headers: HeaderMap,

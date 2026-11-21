@@ -1,8 +1,8 @@
 use antilog_core::store::{ConnectorRow, CustomizeStore, SessionScope, StoreError};
 use antilog_types::{
-    ApprovalId, AuditEntry, Connector, ConnectorHealth, ConnectorId, ConnectorTool, ExperimentId,
-    MemberId, OrganizationId, PartKind, Plugin, PluginPart, ProjectId, SessionId, Skill, SkillFile,
-    SkillRef, SkillVersion, ToolMode,
+    ApprovalId, AuditEntry, Connector, ConnectorHealth, ConnectorId, ConnectorTool, MemberId,
+    OrganizationId, PartKind, Plugin, PluginPart, SessionId, Skill, SkillFile, SkillVersion,
+    ToolMode,
 };
 use sqlx::PgConnection;
 use uuid::Uuid;
@@ -121,9 +121,7 @@ impl CustomizeStore for PgStore {
     async fn session_scope(&self, session: SessionId) -> Result<Option<SessionScope>, StoreError> {
         let mut tx = self.within("antilog.session_id", session.as_uuid()).await?;
         let found = sqlx::query!(
-            r#"select s.organization_id as "organization_id!", s.experiment_id as "experiment_id!", e.project_id as "project_id!", e.created_by as "created_by!"
-               from sessions s join experiments e on e.id = s.experiment_id and e.organization_id = s.organization_id
-               where s.id = $1"#,
+            r#"select organization_id, created_by from sessions where id = $1"#,
             session.as_uuid(),
         )
         .fetch_optional(&mut *tx)
@@ -131,8 +129,6 @@ impl CustomizeStore for PgStore {
         .map_err(map)?;
         Ok(found.map(|row| SessionScope {
             organization: OrganizationId::from_uuid(row.organization_id),
-            experiment: ExperimentId::from_uuid(row.experiment_id),
-            project: ProjectId::from_uuid(row.project_id),
             member: MemberId::from_uuid(row.created_by),
         }))
     }
@@ -333,75 +329,6 @@ impl CustomizeStore for PgStore {
         tx.commit().await.map_err(map)
     }
 
-    async fn select_connectors(
-        &self,
-        organization: OrganizationId,
-        experiment: ExperimentId,
-        connectors: &[ConnectorId],
-        entry: &AuditEntry,
-    ) -> Result<(), StoreError> {
-        let mut tx = self.scoped(organization).await?;
-        sqlx::query!(
-            "delete from experiment_connectors where organization_id = $1 and experiment_id = $2",
-            organization.as_uuid(),
-            experiment.as_uuid(),
-        )
-        .execute(&mut *tx)
-        .await
-        .map_err(map)?;
-        for id in connectors {
-            sqlx::query!(
-                "insert into experiment_connectors (organization_id, experiment_id, connector_id) values ($1, $2, $3)",
-                organization.as_uuid(),
-                experiment.as_uuid(),
-                id.as_uuid(),
-            )
-            .execute(&mut *tx)
-            .await
-            .map_err(map)?;
-        }
-        audit(&mut tx, entry).await?;
-        tx.commit().await.map_err(map)
-    }
-
-    async fn experiment_connectors(
-        &self,
-        organization: OrganizationId,
-        experiment: ExperimentId,
-    ) -> Result<Vec<ConnectorId>, StoreError> {
-        let mut tx = self.scoped(organization).await?;
-        Ok(sqlx::query_scalar!(
-            "select connector_id from experiment_connectors where organization_id = $1 and experiment_id = $2 order by connector_id",
-            organization.as_uuid(),
-            experiment.as_uuid(),
-        )
-        .fetch_all(&mut *tx)
-        .await
-        .map_err(map)?
-        .into_iter()
-        .map(ConnectorId::from_uuid)
-        .collect())
-    }
-
-    async fn connector_users(
-        &self,
-        organization: OrganizationId,
-        id: ConnectorId,
-    ) -> Result<Vec<ExperimentId>, StoreError> {
-        let mut tx = self.scoped(organization).await?;
-        Ok(sqlx::query_scalar!(
-            "select experiment_id from experiment_connectors where organization_id = $1 and connector_id = $2",
-            organization.as_uuid(),
-            id.as_uuid(),
-        )
-        .fetch_all(&mut *tx)
-        .await
-        .map_err(map)?
-        .into_iter()
-        .map(ExperimentId::from_uuid)
-        .collect())
-    }
-
     async fn add_skill_version(
         &self,
         organization: OrganizationId,
@@ -438,7 +365,6 @@ impl CustomizeStore for PgStore {
                     description: row.description,
                     latest: number,
                     versions: vec![number],
-                    on: true,
                     from_plugin: row.plugin_id,
                 }),
             }
@@ -473,14 +399,6 @@ impl CustomizeStore for PgStore {
         entry: &AuditEntry,
     ) -> Result<(), StoreError> {
         let mut tx = self.scoped(organization).await?;
-        sqlx::query!(
-            "delete from project_skills_off where organization_id = $1 and name = $2",
-            organization.as_uuid(),
-            name,
-        )
-        .execute(&mut *tx)
-        .await
-        .map_err(map)?;
         let gone = sqlx::query!(
             "delete from skill_versions where organization_id = $1 and name = $2",
             organization.as_uuid(),
@@ -495,142 +413,6 @@ impl CustomizeStore for PgStore {
         }
         audit(&mut tx, entry).await?;
         tx.commit().await.map_err(map)
-    }
-
-    async fn set_project_skill(
-        &self,
-        organization: OrganizationId,
-        project: ProjectId,
-        name: &str,
-        on: bool,
-        entry: &AuditEntry,
-    ) -> Result<(), StoreError> {
-        let mut tx = self.scoped(organization).await?;
-        let known = sqlx::query_scalar!(
-            r#"select count(*) as "n!" from skill_versions where organization_id = $1 and name = $2"#,
-            organization.as_uuid(),
-            name,
-        )
-        .fetch_one(&mut *tx)
-        .await
-        .map_err(map)?;
-        if known == 0 {
-            return Err(StoreError::NotFound);
-        }
-        if on {
-            sqlx::query!(
-                "delete from project_skills_off where organization_id = $1 and project_id = $2 and name = $3",
-                organization.as_uuid(),
-                project.as_uuid(),
-                name,
-            )
-            .execute(&mut *tx)
-            .await
-            .map_err(map)?;
-        } else {
-            sqlx::query!(
-                "insert into project_skills_off (organization_id, project_id, name) values ($1, $2, $3) on conflict do nothing",
-                organization.as_uuid(),
-                project.as_uuid(),
-                name,
-            )
-            .execute(&mut *tx)
-            .await
-            .map_err(map)?;
-        }
-        audit(&mut tx, entry).await?;
-        tx.commit().await.map_err(map)
-    }
-
-    async fn project_skills_off(
-        &self,
-        organization: OrganizationId,
-        project: ProjectId,
-    ) -> Result<Vec<String>, StoreError> {
-        let mut tx = self.scoped(organization).await?;
-        sqlx::query_scalar!(
-            "select name from project_skills_off where organization_id = $1 and project_id = $2 order by name",
-            organization.as_uuid(),
-            project.as_uuid(),
-        )
-        .fetch_all(&mut *tx)
-        .await
-        .map_err(map)
-    }
-
-    async fn select_skills(
-        &self,
-        organization: OrganizationId,
-        experiment: ExperimentId,
-        skills: &[SkillRef],
-        entry: &AuditEntry,
-    ) -> Result<(), StoreError> {
-        let mut tx = self.scoped(organization).await?;
-        sqlx::query!(
-            "delete from experiment_skills where organization_id = $1 and experiment_id = $2",
-            organization.as_uuid(),
-            experiment.as_uuid(),
-        )
-        .execute(&mut *tx)
-        .await
-        .map_err(map)?;
-        for skill in skills {
-            sqlx::query!(
-                "insert into experiment_skills (organization_id, experiment_id, name, version) values ($1, $2, $3, $4)",
-                organization.as_uuid(),
-                experiment.as_uuid(),
-                skill.name,
-                i32::try_from(skill.version).map_err(|_| StoreError::NotFound)?,
-            )
-            .execute(&mut *tx)
-            .await
-            .map_err(map)?;
-        }
-        audit(&mut tx, entry).await?;
-        tx.commit().await.map_err(map)
-    }
-
-    async fn experiment_skills(
-        &self,
-        organization: OrganizationId,
-        experiment: ExperimentId,
-    ) -> Result<Vec<SkillRef>, StoreError> {
-        let mut tx = self.scoped(organization).await?;
-        sqlx::query!(
-            "select name, version from experiment_skills where organization_id = $1 and experiment_id = $2 order by name",
-            organization.as_uuid(),
-            experiment.as_uuid(),
-        )
-        .fetch_all(&mut *tx)
-        .await
-        .map_err(map)?
-        .into_iter()
-        .map(|r| {
-            Ok(SkillRef {
-                name: r.name,
-                version: version(r.version)?,
-            })
-        })
-        .collect()
-    }
-
-    async fn skill_users(
-        &self,
-        organization: OrganizationId,
-        name: &str,
-    ) -> Result<Vec<ExperimentId>, StoreError> {
-        let mut tx = self.scoped(organization).await?;
-        Ok(sqlx::query_scalar!(
-            "select experiment_id from experiment_skills where organization_id = $1 and name = $2",
-            organization.as_uuid(),
-            name,
-        )
-        .fetch_all(&mut *tx)
-        .await
-        .map_err(map)?
-        .into_iter()
-        .map(ExperimentId::from_uuid)
-        .collect())
     }
 
     async fn add_plugin(
@@ -724,7 +506,6 @@ impl CustomizeStore for PgStore {
                     .await
                     .map_err(map)?;
                 }
-                PartKind::Evaluation => {}
             }
         }
         sqlx::query!(

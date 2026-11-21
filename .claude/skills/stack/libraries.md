@@ -4,13 +4,14 @@ Do not add a dependency for convenience. A new one is a product call: ask the ow
 
 ## Chosen for the target
 
-(target) None of this is in the repository yet. Versions are the latest stable releases on 2026-11-14, read from crates.io, npm and each project's release feed. Pin these when the code lands; raise them on purpose, never by accident.
+Versions are the latest stable releases on 2026-11-14, read from crates.io, npm and each project's release feed, and the root `Cargo.toml` pins the Rust ones. A row marked (target) is not a dependency yet. Raise versions on purpose, never by accident.
 
-**Shape.** One Cargo workspace builds one core and one server, with the CLI:
+**Shape.** One Cargo workspace builds one core, one server and one proxy, with the runner CLI:
 
 - `antilog-core`: all logic and the API routes as an axum `Router`, behind one `Store` trait. It never imports `sqlx`, a cloud SDK or an adapter crate. It never connects to data.
 - `antilog-server`: the one server, for Antilog cloud and self-hosted. The API, the embedded web app, Postgres, object storage. It ships as a container image.
-- `antilog`: the CLI and the MCP server, built on the API's types.
+- `antilog-proxy`: the model gateway, spend booking and egress allowlist.
+- `antilog`: the CLI, which is `antilog runner`.
 
 
 **Toolchain**
@@ -38,10 +39,10 @@ Do not add a dependency for convenience. A new one is a product call: ask the ow
 | Object storage (S3, Azure Blob, GCS; backend chosen by configuration) | `object_store` | 0.14.2 |
 | OpenAPI from Rust types (paths listed in `ApiDoc`; `utoipa-axum` dropped: its `routes!` refuses generic handlers) | `utoipa` | 6.0.0 |
 | Sign-in: OpenID Connect, and GitHub's OAuth  | `openidconnect` / `oauth2` | 4.1.0 / 5.0.0 |
-| Webhook signature (HMAC-SHA256, `X-Hub-Signature-256`) checked with `verify_slice`, which compares in constant time; chosen over a hand-written HMAC, and already in the lockfile | `hmac` | 0.13.0 (matches `sha2` 0.11) |
-| Receipt signing (ed25519), token and session hashes, constant-time compare (pure Rust) | `ed25519-dalek` / `sha2` / `subtle` | 3.0.0 / 0.11.1 / 2.6.1 |
+| Token and session hashes, constant-time compare (pure Rust) | `sha2` / `subtle` | 0.11.1 / 2.6.1 |
+| Sealing model keys and connector credentials (XChaCha20-Poly1305) | `chacha20poly1305` | 0.11.0 |
 | Embedded web app | `rust-embed` | 8.14.0 |
-| GitHub | `octocrab` | 0.54.9 |
+| GitHub (target: the code host is not built) | `octocrab` | 0.54.9 |
 | Postgres connector (not needed by the target unless credential minting is ruled; the server never connects to data) | `tokio-postgres` | 0.7.18 |
 | Egress proxy, TLS interception (not needed by the target: no egress proxy) | `hudsucker` / `rcgen` | 0.25.0 / 0.14.10 |
 | MCP server | `rmcp` | 3.10.0 |
@@ -57,7 +58,7 @@ Do not add a dependency for convenience. A new one is a product call: ask the ow
 
 Sessions and access tokens need no library: each is 32 random bytes shown once, stored as a SHA-256 hash through the `Store` and compared in constant time. `tower-sessions` was dropped (November 2026): the hashed-token scheme is small and keeps sessions in our own tables. Better Auth was considered and refused: it is TypeScript and keeps its own user, session and organization tables beside ours.
 
-Snowflake, Databricks and BigQuery have no maintained Rust client we would ship; their connectors call each vendor's REST API through `reqwest`. Every connector sits behind one `Connector` trait, so its vocabulary stops there, and each says how to make a read-only, holdout-excluding credential for its system (whether Antilog mints them per session is open).
+A connector is a remote MCP server the server calls through `reqwest` and `rmcp`'s client side, behind one `ConnectorClient` trait.
 
 The server reads secrets from mounted files or the environment, so it needs no cloud SDK.
 

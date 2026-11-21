@@ -29,7 +29,6 @@ async fn main() -> anyhow::Result<()> {
         .sealed_by(&antilog_core::secrets::EnvSecrets::from_env())
         .await;
     store.migrate().await.context("applying migrations")?;
-    tracing::warn!("no real code host or credential store is built yet: serving on the fakes");
     let settings = api::auth::Settings::from_env();
     if settings.runner.is_none() {
         tracing::warn!("ANTILOG_RUNNER_KEY is not set: no runner can claim a session");
@@ -40,7 +39,7 @@ async fn main() -> anyhow::Result<()> {
         .with_context(|| format!("binding {listen}"))?;
     tracing::info!(%listen, "serving");
     let app = Arc::new(api::auth::App {
-        deps: Arc::new(ServerDeps::on_fakes(store.clone())),
+        deps: Arc::new(ServerDeps::new(store.clone())),
         settings,
     });
     let router = api::router_with_reach(app, store, api::customize::Backend::from_env().await?);

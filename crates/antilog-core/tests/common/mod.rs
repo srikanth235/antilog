@@ -44,17 +44,12 @@ impl Agent {
         for (id, name, input) in queued {
             let caller = Caller {
                 organization: self.session.organization_id,
-                experiment: self.session.experiment_id,
                 session: self.session.id,
-                actor: None,
+                actor: self.session.created_by,
                 call: id.clone(),
             };
             let reply = host.call(&caller, &name, input).await;
             self.answers.lock().unwrap().insert(id, reply.answer);
-            if let Some(ticket) = reply.ticket {
-                let text = host.finish(&caller, &ticket).await;
-                self.inputs.lock().unwrap().push(text);
-            }
         }
         let told = session::settle(deps, self.session.organization_id, self.session.id)
             .await

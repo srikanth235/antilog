@@ -2,24 +2,22 @@
 
 use antilog_types::{
     Approval, ApprovalId, ApprovalStatus, AuditEntry, AuditOutcome, CardKind, CardPayload,
-    Decision, ExperimentId, MemberId, OrganizationId, Policy, PolicyMode, SessionId,
+    Decision, MemberId, OrganizationId, Policy, PolicyMode, SessionId,
 };
 
-use crate::organization::{Action, Principal, Refusal, entry, member_of, permit, project_of};
+use crate::organization::{Action, Principal, Refusal, entry, member_of, permit, permit_session};
 use crate::store::Store;
 
-/// A card a tool raises. `follow_policy` is the experiment's Mode: with Ask, nothing is pre-approved.
+/// A card a tool raises. `follow_policy` is the session's Mode: with Ask, nothing is pre-approved.
 #[derive(Debug, Clone)]
 pub struct CardRequest {
     pub organization: OrganizationId,
-    pub experiment: ExperimentId,
-    pub session: Option<SessionId>,
+    pub session: SessionId,
     pub card: CardKind,
     pub summary: String,
     /// The card's typed fields; it must belong to `card`.
     pub payload: Option<CardPayload>,
     pub cost_cents: Option<i64>,
-    pub needs_owner: bool,
     pub follow_policy: bool,
 }
 
@@ -41,7 +39,7 @@ pub fn effective(set: &[Policy]) -> Vec<Policy> {
 }
 
 fn allowed(request: &CardRequest, policy: &Policy) -> bool {
-    if !request.follow_policy || request.needs_owner || request.card == CardKind::AddCredential {
+    if !request.follow_policy || request.card == CardKind::AddCredential {
         return false;
     }
     match policy.mode {
@@ -83,13 +81,11 @@ pub async fn raise<S: Store>(
     let approval = Approval {
         id: ApprovalId::new(),
         organization_id: request.organization,
-        experiment_id: request.experiment,
         session_id: request.session,
         card: request.card,
         summary: request.summary,
         payload: request.payload,
         cost_cents: request.cost_cents,
-        needs_owner: request.needs_owner,
         status: if by_policy {
             ApprovalStatus::ApprovedByPolicy
         } else {
@@ -115,7 +111,7 @@ pub async fn raise<S: Store>(
     Ok(approval)
 }
 
-/// Owners and editors of the project decide; a changed value model needs a project owner.
+/// Owners and editors of the card's project decide.
 pub async fn decide<S: Store>(
     store: &S,
     who: &Principal,
@@ -127,13 +123,15 @@ pub async fn decide<S: Store>(
         .approval(who.organization, id)
         .await?
         .ok_or(Refusal::NotFound)?;
-    let project = project_of(store, who, approval.experiment_id).await?;
-    let action = if approval.needs_owner {
-        Action::ApprovalDecideValueModel
-    } else {
-        Action::ApprovalDecide
-    };
-    permit(store, who, action, Some(project), id, now).await?;
+    permit_session(
+        store,
+        who,
+        now,
+        Action::ApprovalDecide,
+        approval.session_id,
+        id,
+    )
+    .await?;
     let outcome = match decision {
         Decision::Approve => AuditOutcome::Approved,
         Decision::Decline => AuditOutcome::Declined,
@@ -159,33 +157,29 @@ pub async fn decide<S: Store>(
     Ok(decided)
 }
 
+/// The cards of one session. Every member reads.
 pub async fn approvals<S: Store>(
     store: &S,
     who: &Principal,
-    experiment: ExperimentId,
+    session: SessionId,
 ) -> Result<Vec<Approval>, Refusal> {
     member_of(store, who).await?;
-    project_of(store, who, experiment).await?;
-    Ok(store.approvals(who.organization, experiment).await?)
+    store
+        .session(who.organization, session)
+        .await?
+        .ok_or(Refusal::NotFound)?;
+    Ok(store.approvals(who.organization, session).await?)
 }
 
-/// Every pending card across the organization's experiments that this person may decide: their
-/// role in the card's project is read from the one place and held against the matrix, so a viewer
-/// sees none and a value-model card shows only to a project owner. Reads write no audit row.
+/// Every pending card across the organization's projects that this person may decide: their
+/// role in the card's project is read from the one place and held against the matrix, so a
+/// viewer sees none. Reads write no audit row.
 pub async fn pending<S: Store>(store: &S, who: &Principal) -> Result<Vec<Approval>, Refusal> {
     member_of(store, who).await?;
-    let mut projects = std::collections::HashMap::new();
     let mut roles = std::collections::HashMap::new();
     let mut mine = Vec::new();
     for approval in store.pending_approvals(who.organization).await? {
-        let project = match projects.get(&approval.experiment_id) {
-            Some(project) => *project,
-            None => {
-                let project = project_of(store, who, approval.experiment_id).await?;
-                projects.insert(approval.experiment_id, project);
-                project
-            }
-        };
+        let project = crate::organization::project_of(store, who, approval.session_id).await?;
         let role = match roles.get(&project) {
             Some(role) => *role,
             None => {
@@ -196,12 +190,7 @@ pub async fn pending<S: Store>(store: &S, who: &Principal) -> Result<Vec<Approva
                 role
             }
         };
-        let action = if approval.needs_owner {
-            Action::ApprovalDecideValueModel
-        } else {
-            Action::ApprovalDecide
-        };
-        if role.is_some_and(|role| role >= action.minimum()) {
+        if role.is_some_and(|role| role >= Action::ApprovalDecide.minimum()) {
             mine.push(approval);
         }
     }
@@ -230,15 +219,7 @@ pub async fn set_policy<S: Store>(
         (_, None) => {}
         (_, Some(_)) => return Err(Refusal::Invalid("only allow up to takes a limit")),
     }
-    permit(
-        store,
-        who,
-        Action::PolicySet,
-        None,
-        policy.card.as_str(),
-        now,
-    )
-    .await?;
+    permit(store, who, Action::PolicySet, policy.card.as_str(), now).await?;
     store
         .set_policy(
             who.organization,

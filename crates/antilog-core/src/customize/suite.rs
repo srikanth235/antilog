@@ -9,8 +9,7 @@
 
 use antilog_types::{
     ApprovalStatus, ConnectorHealth, Decision, NewConnector, NewPlugin, NewSkill, PartKind,
-    PluginConnector, PluginPart, RemovePlugin, SelectConnectors, SelectSkills, SetOn, SetToolMode,
-    SkillFile, ToolMode,
+    PluginConnector, PluginPart, RemovePlugin, SetToolMode, SkillFile, ToolMode,
 };
 use serde_json::json;
 
@@ -23,7 +22,7 @@ use crate::sealed::Sealer;
 use crate::secrets::Secret;
 use crate::seed;
 use crate::session::now_ms;
-use crate::store::{ApprovalStore, CustomizeStore};
+use crate::store::{ApprovalStore, CustomizeStore, SessionStore};
 use crate::tools::Caller;
 
 fn pack(name: &str, extra: &str) -> NewSkill {
@@ -45,14 +44,13 @@ fn pack(name: &str, extra: &str) -> NewSkill {
 
 pub async fn reach_suite<D: Deps>(deps: &D) {
     let store = deps.store();
-    let seed = seed::experiment(store, 1_000).await;
-    let (organization, experiment) = (seed.organization.id, seed.experiment.id);
+    let seed = seed::organization(store).await;
+    let organization = seed.organization.id;
     let owner = Principal {
         organization,
         member: seed.owner.id,
     };
     let now = now_ms(deps);
-    let project = seed.experiment.project_id;
 
     // Skills: a pack is checked, each upload is the next version, versions never change.
     let first = skills::add(store, &owner, now, pack("postgres-tuning", "v1"))
@@ -63,13 +61,11 @@ pub async fn reach_suite<D: Deps>(deps: &D) {
         .await
         .expect("the next version");
     assert_eq!(second.version, 2);
-    let listed = skills::list(store, &owner, Some(project))
-        .await
-        .expect("listed");
+    let listed = skills::list(store, &owner).await.expect("listed");
     assert_eq!(listed.len(), 1);
     assert_eq!(
-        (listed[0].latest, listed[0].versions.clone(), listed[0].on),
-        (2, vec![1, 2], true)
+        (listed[0].latest, listed[0].versions.clone()),
+        (2, vec![1, 2])
     );
     let old = skills::version(store, &owner, "postgres-tuning", 1)
         .await
@@ -147,76 +143,14 @@ pub async fn reach_suite<D: Deps>(deps: &D) {
         ));
     }
 
-    // A project turns a skill Off; an experiment selects a version; a selected skill stays.
-    skills::set_on(
-        store,
-        &owner,
-        now,
-        project,
-        "postgres-tuning",
-        SetOn { on: false },
-    )
-    .await
-    .expect("off");
-    assert!(!skills::list(store, &owner, Some(project)).await.expect("l")[0].on);
-    let refused = crate::customize::select_skills(
-        store,
-        &owner,
-        now,
-        experiment,
-        SelectSkills {
-            skills: vec!["postgres-tuning".into()],
-        },
-    )
-    .await;
-    assert!(
-        matches!(refused, Err(Refusal::Invalid(_))),
-        "Off hides it from new experiments"
-    );
-    skills::set_on(
-        store,
-        &owner,
-        now,
-        project,
-        "postgres-tuning",
-        SetOn { on: true },
-    )
-    .await
-    .expect("on");
-    let chosen = crate::customize::select_skills(
-        store,
-        &owner,
-        now,
-        experiment,
-        SelectSkills {
-            skills: vec!["postgres-tuning".into()],
-        },
-    )
-    .await
-    .expect("selected");
-    assert_eq!(chosen[0].version, 2, "pinned to the latest version now");
-    skills::add(store, &owner, now, pack("postgres-tuning", "v3"))
-        .await
-        .expect("v3");
-    let held = crate::customize::chosen_skills(store, &owner, experiment)
-        .await
-        .expect("held");
-    assert_eq!(
-        held[0].version, 2,
-        "a new version does not move a selection"
-    );
-    assert!(matches!(
-        skills::remove(store, &owner, now, "postgres-tuning").await,
-        Err(Refusal::Invalid(_))
-    ));
     skills::add(store, &owner, now, pack("loose-skill", ""))
         .await
         .expect("another");
     skills::remove(store, &owner, now, "loose-skill")
         .await
-        .expect("an unused skill goes");
+        .expect("a skill goes with all its versions");
 
-    // Connectors: sealed credential, tools that ask first, in-use protection.
+    // Connectors: sealed credential, tools that ask first.
     let client = FakeConnectors::default()
         .with_tool("query", "Run a read-only query")
         .with_tool("drop_table", "Dangerous")
@@ -348,35 +282,30 @@ pub async fn reach_suite<D: Deps>(deps: &D) {
         Some(ToolMode::On)
     );
 
-    crate::customize::select_connectors(
-        store,
-        &owner,
-        now,
-        experiment,
-        SelectConnectors {
-            connectors: vec![added.id],
-        },
-    )
-    .await
-    .expect("switched on");
-    assert!(matches!(
-        connectors::remove(store, &owner, now, added.id).await,
-        Err(Refusal::Invalid(_))
-    ));
-
     // The session's endpoint: Antilog's tools, then the connector's, off ones left out.
-    let session =
-        crate::session::open_external(deps, organization, experiment, Some(seed.owner.id))
-            .await
-            .expect("a session");
+    let session = seed::session(&seed, "opencode", now);
+    store
+        .create_session(
+            &session,
+            &antilog_types::AuditEntry::new(
+                organization,
+                Some(seed.owner.id),
+                "session.start",
+                session.id,
+                antilog_types::AuditOutcome::Done,
+                now,
+            ),
+        )
+        .await
+        .expect("a session");
     let scope = store
         .session_scope(session.id)
         .await
         .expect("scope")
         .expect("found");
     assert_eq!(
-        (scope.organization, scope.experiment, scope.project),
-        (organization, experiment, project)
+        (scope.organization, scope.member),
+        (organization, seed.owner.id)
     );
     let reach = Reach {
         deps,
@@ -389,7 +318,7 @@ pub async fn reach_suite<D: Deps>(deps: &D) {
         .into_iter()
         .map(|t| t.name)
         .collect();
-    assert!(names.contains(&"measure".to_owned()));
+    assert!(names.contains(&"attach_repo".to_owned()));
     assert!(names.contains(&"analytics-db__query".to_owned()));
     assert!(
         !names.contains(&"analytics-db__drop_table".to_owned()),
@@ -397,9 +326,8 @@ pub async fn reach_suite<D: Deps>(deps: &D) {
     );
     let caller = |n: &str| Caller {
         organization,
-        experiment,
         session: session.id,
-        actor: Some(seed.owner.id),
+        actor: seed.owner.id,
         call: n.into(),
     };
     let Outcome::Remote { text, refused } = reach
@@ -472,7 +400,7 @@ pub async fn reach_suite<D: Deps>(deps: &D) {
         panic!("still waiting")
     };
     let pending: Vec<_> = store
-        .approvals(organization, experiment)
+        .approvals(organization, session.id)
         .await
         .expect("cards")
         .into_iter()
@@ -514,7 +442,7 @@ pub async fn reach_suite<D: Deps>(deps: &D) {
     };
     assert_eq!(reply.answer["status"], "waiting for a person");
 
-    // Plugins: unpacked into governed parts; removal asks per part; a part in use stays.
+    // Plugins: unpacked into governed parts; removal asks per part.
     let bundle = NewPlugin {
         name: "Postgres kit".into(),
         description: "Tuning pack".into(),
@@ -524,23 +452,14 @@ pub async fn reach_suite<D: Deps>(deps: &D) {
             name: "Kit DB".into(),
             url: "https://kit.example.com/mcp".into(),
         }],
-        evaluations: vec![antilog_types::NewEvaluationTemplate {
-            name: "Kit p95".into(),
-            summary: String::new(),
-            kind: antilog_types::EvaluationKind::Speed,
-            metric: "p95".into(),
-            lower_is_better: true,
-            command: "bench".into(),
-            protected_paths: vec![],
-        }],
     };
     let plugin = plugins::add(store, false, &owner, now, bundle)
         .await
         .expect("a plugin");
     assert_eq!(plugin.id, "postgres-kit");
-    assert_eq!(plugin.parts.len(), 3);
+    assert_eq!(plugin.parts.len(), 2);
     assert!(
-        skills::list(store, &owner, None)
+        skills::list(store, &owner)
             .await
             .expect("l")
             .iter()
@@ -556,34 +475,6 @@ pub async fn reach_suite<D: Deps>(deps: &D) {
         (kit.health, kit.has_credential),
         (ConnectorHealth::NotChecked, false)
     );
-    assert!(
-        crate::evaluations::get(store, &owner, "kit-p95")
-            .await
-            .is_ok()
-    );
-    crate::customize::select_connectors(
-        store,
-        &owner,
-        now,
-        experiment,
-        SelectConnectors {
-            connectors: vec![added.id, kit.id],
-        },
-    )
-    .await
-    .expect("both");
-    let blocked = plugins::remove(
-        store,
-        &owner,
-        now,
-        "postgres-kit",
-        RemovePlugin { keep: vec![] },
-    )
-    .await;
-    assert!(
-        matches!(blocked, Err(Refusal::Invalid(_))),
-        "a part in use is never removed"
-    );
     plugins::remove(
         store,
         &owner,
@@ -597,23 +488,17 @@ pub async fn reach_suite<D: Deps>(deps: &D) {
         },
     )
     .await
-    .expect("removed, keeping the connector in use");
+    .expect("removed, keeping the connector");
     assert!(plugins::list(store, &owner).await.expect("l").is_empty());
     let left = connectors::list(store, &owner).await.expect("l");
     assert!(left.iter().any(|c| c.slug == "kit-db"), "kept");
     assert!(
-        !skills::list(store, &owner, None)
+        !skills::list(store, &owner)
             .await
             .expect("l")
             .iter()
             .any(|s| s.name == "pg-explain"),
-        "not kept, not in use: gone"
-    );
-    assert!(
-        crate::evaluations::get(store, &owner, "kit-p95")
-            .await
-            .is_ok(),
-        "templates are append-only and stay"
+        "not kept: gone"
     );
 
     // Roles: a viewer reads and changes nothing; an editor uploads skills and nothing else here.

@@ -1,7 +1,6 @@
 use antilog_types::{
-    Agent, Approval, AuditEntry, Environment, EvaluationTemplate, Experiment, ExperimentId, Member,
-    MemberId, Organization, OrganizationId, Policy, Project, ProjectId, ProjectRole, Role, Session,
-    SessionEvent, SessionId, Spend,
+    Agent, Approval, AuditEntry, Environment, Member, MemberId, Organization, OrganizationId,
+    Policy, Project, ProjectId, ProjectRole, Role, Session, SessionEvent, SessionId, Spend,
 };
 
 use crate::store::{Invariant, SignInRecord, StoreError, TokenRecord};
@@ -14,7 +13,6 @@ pub(crate) struct Ledger {
     pub project_roles: Vec<(ProjectId, ProjectRole)>,
     pub tokens: Vec<TokenRecord>,
     pub sign_ins: Vec<SignInRecord>,
-    pub experiments: Vec<Experiment>,
     pub sessions: Vec<Session>,
     pub spend: Vec<Spend>,
     pub policies: Vec<(OrganizationId, Policy)>,
@@ -22,7 +20,6 @@ pub(crate) struct Ledger {
     pub audit: Vec<AuditEntry>,
     pub events: Vec<(String, SessionEvent)>,
     pub agents: Vec<(OrganizationId, Agent)>,
-    pub evaluations: Vec<(OrganizationId, EvaluationTemplate)>,
     /// Every version of every environment; `archived` is set on all of an environment's rows.
     pub environments: Vec<(OrganizationId, Environment)>,
 }
@@ -60,22 +57,6 @@ impl Ledger {
             .find(|row| row.organization_id == organization && row.id == id)
     }
 
-    pub fn experiment(
-        &self,
-        organization: OrganizationId,
-        id: ExperimentId,
-    ) -> Option<&Experiment> {
-        self.experiments
-            .iter()
-            .find(|row| row.organization_id == organization && row.id == id)
-    }
-
-    pub fn session(&self, organization: OrganizationId, id: SessionId) -> Option<&Session> {
-        self.sessions
-            .iter()
-            .find(|row| row.organization_id == organization && row.id == id)
-    }
-
     pub fn role_in_project(
         &self,
         organization: OrganizationId,
@@ -89,6 +70,12 @@ impl Ledger {
             .iter()
             .find(|(id, row)| *id == project && row.member_id == member.id);
         Some(own.map_or(member.role, |(_, row)| row.role))
+    }
+
+    pub fn session(&self, organization: OrganizationId, id: SessionId) -> Option<&Session> {
+        self.sessions
+            .iter()
+            .find(|row| row.organization_id == organization && row.id == id)
     }
 
     pub fn keeps_owners(&self, organization: OrganizationId) -> Result<(), StoreError> {
@@ -118,14 +105,6 @@ impl Ledger {
         }
     }
 
-    pub fn experiment_ceiling(&self, project: &Project) -> Option<i64> {
-        least(
-            project.monthly_cap_cents,
-            self.organization(project.organization_id)
-                .and_then(|organization| organization.monthly_cap_cents),
-        )
-    }
-
     pub fn project_limits_fit(&self, project: &Project) -> Result<(), StoreError> {
         let organization_cap = self
             .organization(project.organization_id)
@@ -133,9 +112,8 @@ impl Ledger {
         let ceiling = least(project.monthly_cap_cents, organization_cap);
         let over = exceeds(project.monthly_cap_cents, organization_cap)
             || exceeds(project.default_budget_cents, ceiling)
-            || self.experiments.iter().any(|experiment| {
-                experiment.project_id == project.id
-                    && exceeds(Some(experiment.budget_cap_cents), ceiling)
+            || self.sessions.iter().any(|session| {
+                session.project_id == project.id && exceeds(session.budget_cap_cents, ceiling)
             });
         if over {
             Err(Invariant::OverCap.into())
@@ -152,9 +130,8 @@ impl Ledger {
                     && (exceeds(project.monthly_cap_cents, cap)
                         || exceeds(project.default_budget_cents, cap))
             })
-            || self.experiments.iter().any(|experiment| {
-                experiment.organization_id == organization.id
-                    && exceeds(Some(experiment.budget_cap_cents), cap)
+            || self.sessions.iter().any(|session| {
+                session.organization_id == organization.id && exceeds(session.budget_cap_cents, cap)
             });
         if over {
             Err(Invariant::OverCap.into())
@@ -163,12 +140,14 @@ impl Ledger {
         }
     }
 
-    pub fn experiment_fits(&self, experiment: &Experiment) -> Result<(), StoreError> {
-        let project = not_found(self.project(experiment.organization_id, experiment.project_id))?;
-        if exceeds(
-            Some(experiment.budget_cap_cents),
-            self.experiment_ceiling(project),
-        ) {
+    pub fn session_fits(&self, session: &Session) -> Result<(), StoreError> {
+        let project = not_found(self.project(session.organization_id, session.project_id))?;
+        let ceiling = least(
+            project.monthly_cap_cents,
+            self.organization(project.organization_id)
+                .and_then(|organization| organization.monthly_cap_cents),
+        );
+        if exceeds(session.budget_cap_cents, ceiling) {
             Err(Invariant::OverCap.into())
         } else {
             Ok(())

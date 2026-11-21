@@ -4,54 +4,7 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 use crate::id::text_enum;
-use crate::{
-    EnvironmentSpec, ExperimentId, MemberId, NetworkLevel, OrganizationId, ProjectId, SessionId,
-};
-
-text_enum!(
-    /// Sealing is the judge's; Watching and Regressed are derived, never stored.
-    ExperimentStatus { NotSealed => "not_sealed", Sealed => "sealed" }
-);
-
-/// The row of an experiment; its sealed definition belongs to the judge.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct Experiment {
-    pub id: ExperimentId,
-    pub organization_id: OrganizationId,
-    pub project_id: ProjectId,
-    pub goal: String,
-    pub status: ExperimentStatus,
-    /// What all its sessions and judge time may spend, in US cents.
-    pub budget_cap_cents: i64,
-    pub created_by: MemberId,
-    pub created_at: i64,
-    /// The composer's Mode: false asks a person for every card, true lets policy approve.
-    pub follow_policy: bool,
-}
-
-impl Experiment {
-    pub fn new(
-        organization_id: OrganizationId,
-        project_id: ProjectId,
-        goal: impl Into<String>,
-        budget_cap_cents: i64,
-        created_by: MemberId,
-        created_at: i64,
-    ) -> Self {
-        Self {
-            id: ExperimentId::new(),
-            organization_id,
-            project_id,
-            goal: goal.into(),
-            status: ExperimentStatus::NotSealed,
-            budget_cap_cents,
-            created_by,
-            created_at,
-            follow_policy: false,
-        }
-    }
-}
+use crate::{EnvironmentSpec, MemberId, NetworkLevel, OrganizationId, ProjectId, SessionId};
 
 text_enum!(
     SessionStatus {
@@ -68,33 +21,70 @@ impl SessionStatus {
     }
 }
 
-/// One agent's work inside an experiment.
+/// One agent's work in a project: a chat that runs in a machine of its own. The repos,
+/// the environment version and the model are fixed when it starts.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Session {
     pub id: SessionId,
     pub organization_id: OrganizationId,
-    pub experiment_id: ExperimentId,
+    pub project_id: ProjectId,
+    pub title: String,
+    /// The member who started it; its calls and cards are theirs.
+    pub created_by: MemberId,
     pub agent: String,
+    /// `provider/model`, as the harness names it.
+    pub model: String,
+    pub repos: Vec<String>,
+    /// The stored environment it runs on; `None` is the built-in default.
+    pub environment: Option<String>,
+    /// The version of that environment, pinned when the session started.
+    pub environment_version: Option<u32>,
+    /// What this session alone may spend, in US cents. `None`: only the organization's monthly cap.
+    pub budget_cap_cents: Option<i64>,
+    /// The composer's Mode: false asks a person for every card, true lets policy approve.
+    pub follow_policy: bool,
     pub status: SessionStatus,
-    /// Why it ended, such as "Stopped by Ada" or "Handed off to Codex".
+    /// Why it ended, such as "Stopped by Ada".
     pub note: Option<String>,
     pub created_at: i64,
     pub updated_at: i64,
 }
 
+/// What a person gives to start a session.
+#[derive(Debug, Clone, Default)]
+pub struct SessionParams {
+    pub title: String,
+    pub agent: String,
+    pub model: String,
+    pub repos: Vec<String>,
+    pub environment: Option<String>,
+    pub environment_version: Option<u32>,
+    pub budget_cap_cents: Option<i64>,
+    pub follow_policy: bool,
+}
+
 impl Session {
     pub fn new(
         organization_id: OrganizationId,
-        experiment_id: ExperimentId,
-        agent: impl Into<String>,
+        project_id: ProjectId,
+        created_by: MemberId,
+        params: SessionParams,
         created_at: i64,
     ) -> Self {
         Self {
             id: SessionId::new(),
             organization_id,
-            experiment_id,
-            agent: agent.into(),
+            project_id,
+            title: params.title,
+            created_by,
+            agent: params.agent,
+            model: params.model,
+            repos: params.repos,
+            environment: params.environment,
+            environment_version: params.environment_version,
+            budget_cap_cents: params.budget_cap_cents,
+            follow_policy: params.follow_policy,
             status: SessionStatus::Working,
             note: None,
             created_at,
@@ -350,25 +340,29 @@ pub struct NewEnvironment {
     pub memory_mb: u32,
 }
 
-/// What starts an experiment in a project. The budget defaults to the project's, then the organization's.
-#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize, ToSchema)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct NewExperiment {
-    pub goal: String,
-    pub budget_cap_cents: Option<i64>,
-    #[serde(default)]
-    pub follow_policy: bool,
-}
-
-/// What starts a session in an experiment.
+/// What starts a session in a project: `POST /projects/{id}/sessions`.
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct StartSession {
-    pub agent: String,
+    /// Left out, the first line of the prompt.
+    #[serde(default)]
+    pub title: Option<String>,
+    /// Left out or `auto`: the agent Auto chooses.
+    #[serde(default)]
+    pub agent: Option<String>,
+    /// `provider/model`; left out, the server's default model.
+    #[serde(default)]
+    pub model: Option<String>,
     pub prompt: String,
     #[serde(default)]
     pub repos: Vec<String>,
     pub environment: Option<String>,
+    /// This session's own cap in US cents; left out, the project's default, then the organization's.
+    #[serde(default)]
+    pub budget_cap_cents: Option<i64>,
+    /// The composer's Mode: false asks a person for every card, true lets policy approve.
+    #[serde(default)]
+    pub follow_policy: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
@@ -376,76 +370,6 @@ pub struct StartSession {
 pub struct SendMessage {
     pub text: String,
 }
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct ToolDefinition {
-    pub name: String,
-    pub description: String,
-    #[schema(value_type = std::collections::HashMap<String, serde_json::Value>)]
-    pub input_schema: serde_json::Value,
-}
-
-/// A call of one Antilog tool from an agent that is not in an Antilog session, such as `antilog mcp`.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct ToolCall {
-    /// The session the calls belong to; the first call without one opens it.
-    pub session: Option<SessionId>,
-    /// Unique per call; sending a call again with the same id changes nothing twice.
-    pub call: Option<String>,
-    #[schema(value_type = std::collections::HashMap<String, serde_json::Value>)]
-    pub input: serde_json::Value,
-}
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct ToolResult {
-    pub session: SessionId,
-    #[schema(value_type = std::collections::HashMap<String, serde_json::Value>)]
-    pub answer: serde_json::Value,
-    /// A measurement that was accepted: how it ended, in words. Never a holdout value.
-    pub followup: Option<String>,
-}
-
-text_enum!(
-    /// What an evaluation measures.
-    EvaluationKind { Speed => "speed", Quality => "quality", Size => "size", Cost => "cost" }
-);
-
-/// A starting point for an experiment's evaluation in Customize, Evaluations. An experiment starts
-/// from a copy; the template holds a command and paths, never a credential or data.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct EvaluationTemplate {
-    pub id: String,
-    pub name: String,
-    pub summary: String,
-    pub kind: EvaluationKind,
-    /// What is measured, as a dotted path in the command's JSON output.
-    pub metric: String,
-    pub lower_is_better: bool,
-    pub command: String,
-    /// Files an agent may never change, each as `repo:path`.
-    pub protected_paths: Vec<String>,
-    pub created_by: MemberId,
-    pub created_at: i64,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct NewEvaluationTemplate {
-    pub name: String,
-    #[serde(default)]
-    pub summary: String,
-    pub kind: EvaluationKind,
-    pub metric: String,
-    pub lower_is_better: bool,
-    pub command: String,
-    #[serde(default)]
-    pub protected_paths: Vec<String>,
-}
-
 #[cfg(test)]
 mod tool_tests {
     use super::*;

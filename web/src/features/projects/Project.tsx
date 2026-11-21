@@ -1,350 +1,212 @@
-import { useQueries } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { api, type Schemas, unwrap } from "../../api/client";
+import type { Schemas } from "../../api/client";
 import {
-  keys,
   useBudgets,
   useMember,
   useMembers,
-  useOrganization,
-  usePendingApprovals,
-  useProjectExperiments,
   useProjectRoles,
+  useProjectSessions,
   useProjects,
+  useSetProjectLimits,
   useSetProjectRole,
-  useSpend,
 } from "../../api/queries";
 import { Icon, StatusIcon } from "../../components/icon/Icon";
 import { ROLE_OPTIONS } from "../../components/select/roles";
 import { Select } from "../../components/select/Select";
-import { Empty, Failed, Loading } from "../../components/state/State";
-import { activityOf, defaultBudgetCents, isOwner, pendingCards } from "../../lib/domain";
-import { dollars, initial, plural, share } from "../../lib/format";
-import { fromTo, winChange } from "../../lib/value";
+import { Empty, Failed, Loading, reason } from "../../components/state/State";
+import { isOwner } from "../../lib/domain";
+import { ago, dollars, parseDollars } from "../../lib/format";
 import { w } from "../../words";
-import { ProjectBudget } from "./ProjectBudget";
-import { ProjectValue } from "./ProjectValue";
+import { ReadOnly, Row, Table } from "../settings/Table";
 
-/** The best win of an experiment, baseline to best, or the plain words when it has none. */
-function BestCell({ value }: { value: Schemas["ExperimentValue"] | undefined }) {
-  if (value === undefined)
-    return (
-      <span className="vv">
-        <span className="mono">{w.noData}</span>
-      </span>
-    );
-  const win = [...value.wins].sort((a, b) => b.version - a.version)[0];
-  if (win === undefined)
-    return (
-      <span className="vv">
-        <span className="m">{w.projects.noWinYet}</span>
-      </span>
-    );
-  const change = winChange(win.baseline, win.best);
-  return (
-    <span className="vv">
-      <span className="mono">{fromTo(win)}</span>
-      {change === null ? null : (
-        <span className="m">
-          <span className="dlt">{change}</span>
-        </span>
-      )}
-    </span>
-  );
-}
+const p = w.projects;
 
 export function Project({ projectId }: { projectId: string }) {
   const projects = useProjects();
-  const experiments = useProjectExperiments(projectId);
-  const roles = useProjectRoles(projectId);
-  const members = useMembers();
-  const me = useMember();
-  const organization = useOrganization();
-  const budgets = useBudgets();
-  const setRole = useSetProjectRole(projectId);
-  const [budgetOpen, setBudgetOpen] = useState(false);
-  const project = projects.data?.find((item) => item.id === projectId);
-  const list = experiments.data ?? [];
-  const sessions = useQueries({
-    queries: list.map((experiment) => ({
-      queryKey: keys.sessions(experiment.id),
-      queryFn: async () =>
-        unwrap(
-          await api.GET("/experiments/{id}/sessions", { params: { path: { id: experiment.id } } }),
-        ),
-    })),
-  });
-  const values = useQueries({
-    queries: list.map((experiment) => ({
-      queryKey: keys.experimentValue(experiment.id),
-      queryFn: async () =>
-        unwrap(
-          await api.GET("/experiments/{id}/value", { params: { path: { id: experiment.id } } }),
-        ),
-    })),
-  });
-  const pending = usePendingApprovals();
-  const spend = useSpend();
-
-  if (projects.isPending)
-    return (
-      <section className="page ct ls">
-        <Loading />
-      </section>
-    );
-  if (project === undefined)
-    return (
-      <section className="page ct ls">
-        <Failed error={projects.error} />
-      </section>
-    );
-
-  const myProjectRole = roles.data?.find((role) => role.memberId === me?.id)?.role;
-  const role = myProjectRole ?? me?.role;
-  const owner = isOwner(role);
-  const spent =
-    budgets.data?.projects.find((entry) => entry.projectId === projectId)?.spentCents ?? 0;
-  const cap = project.monthlyCapCents ?? null;
-  const defaultBudget = defaultBudgetCents(project, organization.data);
-  const winCount = values.reduce((sum, query) => sum + (query.data?.wins.length ?? 0), 0);
-  const working = sessions.filter((query) =>
-    query.data?.some((session) => session.status === "working"),
-  ).length;
-
+  if (projects.isPending) return <Loading />;
+  if (projects.isError)
+    return <Failed error={projects.error} retry={() => void projects.refetch()} />;
+  const project = projects.data.find((item) => item.id === projectId);
+  if (project === undefined) return <Empty title={w.noData} />;
   return (
-    <article className="page ct ls">
-      <Link className="textbtn ct-back" to="/projects">
+    <section className="page">
+      <Link className="textbtn" to="/projects" style={{ alignSelf: "flex-start" }}>
         <Icon name="back" size="s" />
-        {w.projects.back}
+        {p.back}
       </Link>
-      <div className="ct-head">
-        <div className="ct-ttl">
-          <div className="rw">
-            <h1 className="t-title">{project.name}</h1>
-            {role === undefined ? null : <span className="tag">{w.roles[role]}</span>}
-            <span className="tag">{w.projects.counts(list.length, winCount)}</span>
-          </div>
-          <span className="ink2">{project.description}</span>
-        </div>
-        <div className="ct-ctl">
-          <Link className="btn primary" to="/" search={{ project: projectId }}>
-            <Icon name="plus" size="s" />
-            {w.sidebar.newExperiment}
-          </Link>
-        </div>
+      <div className="hd">
+        <h1 className="t-display">{project.name}</h1>
       </div>
-      <div className="vs c4">
-        <div>
-          <span className="k">{w.projects.experiments}</span>
-          <span className="v">{list.length}</span>
-          <span className="s">{working === 0 ? "" : w.projectStrip.working(working)}</span>
-        </div>
-        <div>
-          <span className="k">{w.projects.spentThisMonth}</span>
-          <span className="v">
-            {dollars(spent)}
-            {cap === null ? null : <small> of {dollars(cap)}</small>}
-          </span>
-          <span className="s">
-            {cap === null
-              ? w.settings.budgets.noCap
-              : w.projectStrip.ofCap(Math.round(share(spent, cap) * 100))}
-          </span>
-        </div>
-        <div>
-          <span className="k">{w.projects.defaultPer}</span>
-          <span className="v">
-            {defaultBudget === null ? w.projects.noDefault : dollars(defaultBudget)}
-          </span>
-          <span className="s">
-            {project.defaultBudgetCents == null
-              ? w.projectStrip.orgDefault
-              : w.projectStrip.projectDefault}
-          </span>
-        </div>
-      </div>
+      {project.description === "" ? null : <p className="sd-lead">{project.description}</p>}
+      <Sessions projectId={project.id} />
+      <Limits project={project} />
+      <Roles projectId={project.id} />
+    </section>
+  );
+}
 
-      <section className="ds" aria-labelledby="h-experiments">
-        <div className="ds-h">
-          <h2 className="t-section" id="h-experiments">
-            {w.projects.experiments}
-          </h2>
-        </div>
-        {experiments.isPending ? (
-          <Loading />
-        ) : list.length === 0 ? (
-          <Empty title={w.projects.noExperiments} hint={w.projects.noExperimentsHint}>
-            <Link className="btn primary" to="/" search={{ project: projectId }}>
-              <Icon name="plus" size="s" />
-              {w.sidebar.newExperiment}
-            </Link>
-          </Empty>
-        ) : (
-          <div className="tb tb-px" style={{ marginTop: 12 }}>
-            <div className="tb-r th">
-              <span>{w.projects.columnsExp.experiment}</span>
-              <span>{w.projects.columnsExp.best}</span>
-              <span>{w.projects.columnsExp.state}</span>
-              <span>{w.projects.columnsExp.activity}</span>
-              <span>{w.projects.columnsExp.spent}</span>
-              <span />
-            </div>
-            {list.map((experiment, index) => {
-              const activity = activityOf(
-                sessions[index]?.data ?? [],
-                pendingCards(
-                  pending.data?.filter((card) => card.experimentId === experiment.id) ?? [],
-                ).length,
-              );
-              return (
-                <Link
-                  key={experiment.id}
-                  className="tb-r"
-                  to="/experiments/$experimentId"
-                  params={{ experimentId: experiment.id }}
-                >
-                  <span className="n">
-                    <span>{experiment.goal}</span>
-                  </span>
-                  <BestCell value={values[index]?.data} />
-                  <span className="spill" style={{ ["--c" as string]: "var(--ink3)" }}>
-                    {w.state[experiment.status]}
-                  </span>
-                  <span className="spill" style={{ ["--c" as string]: "var(--accent)" }}>
-                    {activity === null ? null : (
-                      <>
-                        <StatusIcon activity={activity} />
-                        {w.activity[activity]}
-                      </>
-                    )}
-                  </span>
-                  <span className="mono">
-                    {spend.data === undefined
-                      ? w.noData
-                      : `${dollars(spend.data.find((row) => row.experimentId === experiment.id)?.spentCents ?? 0)} / ${dollars(experiment.budgetCapCents)}`}
-                  </span>
-                  <Icon name="chev" size="s" />
-                </Link>
-              );
-            })}
+function Sessions({ projectId }: { projectId: string }) {
+  const sessions = useProjectSessions(projectId);
+  const cols = "minmax(0, 1.8fr) 140px 140px";
+  const now = Date.now();
+  return (
+    <div className="sd-sec">
+      <h3 className="t-section">{p.sessionsTitle}</h3>
+      {sessions.isPending ? (
+        <Loading rows={2} />
+      ) : sessions.isError ? (
+        <Failed error={sessions.error} retry={() => void sessions.refetch()} />
+      ) : sessions.data.length === 0 ? (
+        <Empty title={p.noSessionsHere} hint={p.sessionsHint} />
+      ) : (
+        <Table
+          columns={cols}
+          head={[p.sessionColumns.session, p.sessionColumns.status, p.sessionColumns.updated]}
+          label={p.sessionsTitle}
+        >
+          {sessions.data.map((session) => (
+            <Row key={session.id} columns={cols}>
+              <Link className="ell" to="/sessions/$sessionId" params={{ sessionId: session.id }}>
+                {session.title}
+              </Link>
+              <span className="rw g8">
+                <StatusIcon activity={session.status} />
+                {w.activity[session.status]}
+              </span>
+              <span className="xs mut">{ago(session.updatedAt, now)}</span>
+            </Row>
+          ))}
+        </Table>
+      )}
+    </div>
+  );
+}
+
+function Limits({ project }: { project: Schemas["Project"] }) {
+  const me = useMember();
+  const owner = isOwner(me?.role);
+  const budgets = useBudgets();
+  const set = useSetProjectLimits(project.id);
+  const spent = budgets.data?.projects.find((x) => x.projectId === project.id)?.spentCents ?? 0;
+  const [cap, setCap] = useState(
+    project.monthlyCapCents == null ? "" : String(project.monthlyCapCents / 100),
+  );
+  const [def, setDef] = useState(
+    project.defaultBudgetCents == null ? "" : String(project.defaultBudgetCents / 100),
+  );
+  const [saved, setSaved] = useState(false);
+  const bad = (text: string) => text.trim() !== "" && parseDollars(text) === null;
+  return (
+    <div className="sd-sec">
+      <h3 className="t-section">{p.limitsTitle}</h3>
+      <p className="sd-lead">{p.limitsLead}</p>
+      {owner ? null : <ReadOnly text={p.onlyOwners} />}
+      <dl className="kvl">
+        <div className="stg">
+          <div className="tx">
+            <span className="t-item">{p.spentThisMonth}</span>
           </div>
-        )}
-      </section>
-
-      <section className="ds" aria-labelledby="h-ideas">
-        <div className="ds-h">
-          <h2 className="t-section" id="h-ideas">
-            {w.projects.ideas}
-          </h2>
+          <div className="ct">
+            <span className="mono">{dollars(spent)}</span>
+          </div>
         </div>
-        <p className="ds-n">{w.projects.ideasLead}</p>
-        <p className="target-note">{w.projects.ideasNone}</p>
-      </section>
-
-      <ProjectValue project={project} owner={owner} />
-
-      <section className="ds" aria-labelledby="h-connectors">
-        <div className="ds-h">
-          <h2 className="t-section" id="h-connectors">
-            {w.projects.connectors}
-          </h2>
-        </div>
-        <Empty title={w.projects.connectorsNone} />
-      </section>
-
-      <section className="ds" aria-labelledby="h-budget">
-        <div className="ds-h">
-          <h2 className="t-section" id="h-budget">
-            {w.projects.budget}
-          </h2>
-          <button
-            type="button"
-            className="btn sm"
+      </dl>
+      <form
+        className="form-col"
+        onSubmit={(event) => {
+          event.preventDefault();
+          setSaved(false);
+          set.mutate(
+            {
+              monthlyCapCents: cap.trim() === "" ? null : parseDollars(cap),
+              defaultBudgetCents: def.trim() === "" ? null : parseDollars(def),
+            },
+            { onSuccess: () => setSaved(true) },
+          );
+        }}
+      >
+        <label className="field">
+          {p.capLabel}
+          <input
+            className="input"
+            inputMode="decimal"
             disabled={!owner}
-            title={owner ? undefined : w.readOnly.onlyOwners}
-            onClick={() => setBudgetOpen(true)}
-          >
-            {w.projects.changeBudget}
-          </button>
-        </div>
-        <p className="ds-n">{w.projects.budgetLead}</p>
-        <div className="ds-b">
-          <div className="dr">
-            <span className="k">{w.projects.spentThisMonth}</span>
-            <span className="v">
-              <span>
-                <span className="mono">{dollars(spent)}</span>
-                {cap === null ? null : (
-                  <>
-                    {" "}
-                    of <span className="mono">{dollars(cap)}</span> {w.projects.projectCap}
-                  </>
-                )}
-              </span>
-              {cap === null ? null : (
-                <span className="bar" style={{ maxWidth: 360 }}>
-                  <span style={{ width: `${Math.round(share(spent, cap) * 100)}%` }} />
-                </span>
-              )}
-            </span>
-          </div>
-          <div className="dr">
-            <span className="k">{w.projects.defaultPer}</span>
-            <span className="v">
-              <span className="mono">
-                {defaultBudget === null ? w.projects.noDefault : dollars(defaultBudget)}
-              </span>
-            </span>
-          </div>
-        </div>
-        {owner ? null : <p className="target-note">{w.readOnly.onlyOwners}</p>}
-      </section>
-
-      <section className="ds" aria-labelledby="h-members">
-        <div className="ds-h">
-          <h2 className="t-section" id="h-members">
-            {w.projects.members}
-          </h2>
-        </div>
-        <p className="ds-n">{w.projects.membersLead}</p>
-        <div className="tb tb-pm" style={{ marginTop: 12 }}>
-          {(members.data ?? []).map((member) => {
-            const set = roles.data?.find((entry) => entry.memberId === member.id)?.role ?? null;
-            const effective = set ?? member.role;
-            return (
-              <div key={member.id} className="tb-r">
-                <span className="rw g12" style={{ minWidth: 0 }}>
-                  <span className="avatar round" aria-hidden="true">
-                    {initial(member.name)}
-                  </span>
-                  <span className="n">
-                    <span style={{ fontSize: 13.5 }}>{member.name}</span>
-                    <span className="m">
-                      {set === null ? w.projects.inherited : w.projects.setForProject}
-                    </span>
-                  </span>
-                </span>
-                <Select
-                  label={`${member.name}: ${w.settings.members.role}`}
-                  value={effective}
-                  options={ROLE_OPTIONS}
-                  disabled={!owner}
-                  onChange={(next) => setRole.mutate({ member: member.id, role: next })}
-                />
-              </div>
-            );
-          })}
-        </div>
-        <p className="target-note">{w.projects.keepsOwner}</p>
-        {setRole.isError ? (
+            value={cap}
+            onChange={(event) => setCap(event.target.value)}
+          />
+          <span className="xs mut">{p.clearCap}</span>
+        </label>
+        <label className="field">
+          {p.defaultSession}
+          <input
+            className="input"
+            inputMode="decimal"
+            disabled={!owner}
+            value={def}
+            onChange={(event) => setDef(event.target.value)}
+          />
+        </label>
+        {set.isError ? (
           <p className="error-line" role="alert">
-            {setRole.error.message}
+            {reason(set.error)}
           </p>
         ) : null}
-      </section>
-      <ProjectBudget open={budgetOpen} onClose={() => setBudgetOpen(false)} project={project} />
-      <span className="sr-only">{plural(list.length, "experiment")}</span>
-    </article>
+        {saved ? <span className="xs mut">{p.saved}</span> : null}
+        <button
+          type="submit"
+          className="btn primary sm"
+          style={{ alignSelf: "flex-start" }}
+          disabled={!owner || set.isPending || bad(cap) || bad(def)}
+        >
+          {w.save}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+function Roles({ projectId }: { projectId: string }) {
+  const members = useMembers();
+  const roles = useProjectRoles(projectId);
+  const set = useSetProjectRole(projectId);
+  const me = useMember();
+  const owner = isOwner(me?.role);
+  const cols = "minmax(0, 1.6fr) 160px";
+  const own = new Map((roles.data ?? []).map((entry) => [entry.memberId, entry.role]));
+  return (
+    <div className="sd-sec">
+      <h3 className="t-section">{p.members}</h3>
+      <p className="sd-lead">{p.membersLead}</p>
+      {members.isPending || roles.isPending ? (
+        <Loading rows={2} />
+      ) : members.isError ? (
+        <Failed error={members.error} retry={() => void members.refetch()} />
+      ) : (
+        <Table
+          columns={cols}
+          head={[w.settings.members.name, w.settings.members.role]}
+          label={p.members}
+        >
+          {members.data.map((member) => (
+            <Row key={member.id} columns={cols}>
+              <span className="ell">{member.name}</span>
+              <Select
+                label={`${w.settings.members.role}: ${member.name}`}
+                value={own.get(member.id) ?? member.role}
+                options={ROLE_OPTIONS}
+                disabled={!owner}
+                onChange={(next) => set.mutate({ member: member.id, role: next })}
+              />
+            </Row>
+          ))}
+        </Table>
+      )}
+      {set.isError ? (
+        <p className="error-line" role="alert">
+          {reason(set.error)}
+        </p>
+      ) : null}
+    </div>
   );
 }

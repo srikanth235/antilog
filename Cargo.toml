@@ -19,7 +19,6 @@ hyper-util = "0.1.21"
 anyhow = "1.0.104"
 axum = "0.8.9"
 clap = { version = "4.6.7", features = ["derive"] }
-ed25519-dalek = "3.0.0"
 chacha20poly1305 = { version = "0.11.0", default-features = false, features = ["alloc"] }
 getrandom = "0.4.3"
 jiff = "0.2.43"
@@ -31,7 +30,6 @@ rmcp = { version = "=3.10.0", default-features = false, features = ["server", "t
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.154"
 sha2 = "0.11.1"
-hmac = "0.13.0"
 subtle = "2.6.1"
 sqlx = { version = "0.9.0", default-features = false, features = ["postgres", "runtime-tokio", "tls-rustls", "migrate", "macros", "uuid"] }
 testcontainers = "0.28.0"

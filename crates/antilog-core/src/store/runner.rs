@@ -1,8 +1,6 @@
 use std::future::Future;
 
-use antilog_types::{
-    Command, Envelope, Machine, MachineState, OrganizationId, RunResult, Seed, SessionId,
-};
+use antilog_types::{Command, Envelope, Machine, MachineState, OrganizationId, Seed, SessionId};
 use uuid::Uuid;
 
 use super::StoreError;
@@ -115,21 +113,6 @@ pub trait RunnerStore {
         holder: &str,
         ids: &[Uuid],
     ) -> impl Future<Output = Result<(), StoreError>> + Send;
-
-    /// Forgets a command nobody waits for any more.
-    fn drop_command(&self, id: Uuid) -> impl Future<Output = Result<(), StoreError>> + Send;
-
-    /// Keeps the outcome of a `Run`. False when the session has no such command.
-    fn put_result(
-        &self,
-        session: SessionId,
-        result: &RunResult,
-    ) -> impl Future<Output = Result<bool, StoreError>> + Send;
-
-    fn result(
-        &self,
-        command: Uuid,
-    ) -> impl Future<Output = Result<Option<RunResult>, StoreError>> + Send;
 
     /// The session's `opencode export`, replaced on each release.
     fn put_export(

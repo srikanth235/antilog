@@ -5,10 +5,9 @@
 
 use antilog_types::{
     Agent, Approval, ApprovalId, ApprovalStatus, AuditEntry, AuditId, AuditOutcome, CardKind,
-    CostTier, Decision, Environment, EvaluationKind, EvaluationTemplate, EventKind, Experiment,
-    ExperimentStatus, Identity, Member, MemberId, NetworkLevel, Organization, OrganizationId,
-    Policy, PolicyMode, Project, ProjectRole, Role, Session, SessionStatus, Spend, SpendId,
-    SpendKind,
+    CostTier, Decision, Environment, EventKind, Identity, Member, MemberId, NetworkLevel,
+    Organization, OrganizationId, Policy, PolicyMode, Project, ProjectRole, Role, Session,
+    SessionId, SessionParams, SessionStatus, Spend, SpendId, SpendKind,
 };
 
 use crate::store::{Invariant, NewEvent, SessionChange, SpendScope, SpendTotal, Store, StoreError};
@@ -107,23 +106,29 @@ async fn world<S: Store>(store: &S) -> World {
     }
 }
 
-async fn experiment<S: Store>(
+async fn session<S: Store>(
     store: &S,
     world: &World,
-    cents: i64,
-) -> Result<Experiment, StoreError> {
-    let experiment = Experiment::new(
+    agent: &str,
+    cents: Option<i64>,
+) -> Result<Session, StoreError> {
+    let session = Session::new(
         world.id(),
         world.project.id,
-        "cut p95",
-        cents,
         world.owner.id,
+        SessionParams {
+            title: "cut p95".into(),
+            agent: agent.into(),
+            model: "opencode/test".into(),
+            budget_cap_cents: cents,
+            ..SessionParams::default()
+        },
         T0,
     );
     store
-        .create_experiment(&experiment, &world.log("experiment.create"))
+        .create_session(&session, &world.log("session.start"))
         .await
-        .map(|()| experiment)
+        .map(|()| session)
 }
 
 async fn logged<S: Store>(store: &S, organization: OrganizationId, id: AuditId) -> bool {
@@ -143,10 +148,9 @@ pub async fn store_suite<S: Store>(store: &S) {
     tokens(store).await;
     owners_and_sign_ins(store).await;
     budgets_and_spend(store).await;
-    experiments_and_sessions(store).await;
+    sessions(store).await;
     agents(store).await;
     environments(store).await;
-    evaluations(store).await;
     approvals(store).await;
     audit_log(store).await;
 }
@@ -551,12 +555,7 @@ async fn tokens<S: Store>(store: &S) {
 
 async fn budgets_and_spend<S: Store>(store: &S) {
     let world = world(store).await;
-    let (org, project) = (world.id(), world.project.id);
-    let limits = async |cap, default| {
-        store
-            .set_project_limits(org, project, cap, default, &world.log("budget.set"))
-            .await
-    };
+    let org = world.id();
 
     store
         .set_organization_limits(
@@ -568,51 +567,64 @@ async fn budgets_and_spend<S: Store>(store: &S) {
         )
         .await
         .expect("set");
-    refused(limits(Some(20_000), None).await, Invariant::OverCap);
-    refused(limits(Some(5_000), Some(6_000)).await, Invariant::OverCap);
-    limits(Some(5_000), Some(1_000)).await.expect("inside");
     refused(
         store
-            .set_organization_limits(org, Some(4_000), None, None, &world.log("budget.set"))
+            .set_organization_limits(
+                org,
+                Some(1_000),
+                Some(2_000),
+                None,
+                &world.log("budget.set"),
+            )
             .await,
         Invariant::OverCap,
     );
+    let limits = async |cap, default| {
+        store
+            .set_project_limits(
+                org,
+                world.project.id,
+                cap,
+                default,
+                &world.log("budget.set"),
+            )
+            .await
+    };
+    refused(limits(Some(20_000), None).await, Invariant::OverCap);
+    refused(limits(Some(5_000), Some(6_000)).await, Invariant::OverCap);
+    limits(Some(9_000), Some(1_000)).await.expect("inside");
 
-    let first = experiment(store, &world, 3_000).await.expect("inside");
-    refused(experiment(store, &world, 6_000).await, Invariant::OverCap);
-    assert_eq!(
-        store.experiments(org, project).await.expect("read").len(),
-        1
+    let lead = session(store, &world, "claude", Some(3_000))
+        .await
+        .expect("inside");
+    refused(
+        session(store, &world, "claude", Some(9_001)).await,
+        Invariant::OverCap,
     );
     let set = async |cents| {
         store
-            .set_experiment_budget(org, first.id, cents, &world.log("budget.set"))
+            .set_session_budget(org, lead.id, cents, &world.log("budget.set"))
             .await
     };
-    set(5_000).await.expect("up to the cap");
-    refused(set(5_001).await, Invariant::OverCap);
+    set(9_000).await.expect("up to the project's cap");
+    refused(set(9_001).await, Invariant::OverCap);
     assert_eq!(
         store
-            .experiment(org, first.id)
+            .session(org, lead.id)
             .await
             .expect("read")
-            .map(|row| row.budget_cap_cents),
-        Some(5_000)
+            .and_then(|row| row.budget_cap_cents),
+        Some(9_000)
     );
-    refused(limits(Some(4_000), None).await, Invariant::OverCap);
-    limits(None, None).await.expect("a project may have no cap");
-    set(10_000)
-        .await
-        .expect("then the organization's cap holds");
-    refused(set(10_001).await, Invariant::OverCap);
+    refused(
+        store
+            .set_organization_limits(org, Some(5_000), None, None, &world.log("budget.set"))
+            .await,
+        Invariant::OverCap,
+    );
     not_found(
         store
-            .set_experiment_budget(
-                org,
-                antilog_types::ExperimentId::new(),
-                1,
-                &world.log("budget.set"),
-            )
+            .set_session_budget(org, SessionId::new(), 1, &world.log("budget.set"))
             .await,
     );
 
@@ -620,35 +632,9 @@ async fn budgets_and_spend<S: Store>(store: &S) {
         .set_organization_limits(org, None, None, None, &world.log("budget.set"))
         .await
         .expect("lifting the organization cap");
-    let second_project = Project::new(org, "search", "", T0);
-    store
-        .create_project(
-            &second_project,
-            world.owner.id,
-            &world.log("project.create"),
-        )
+    let elsewhere = session(store, &world, "claude", None)
         .await
-        .expect("created");
-    let second = Experiment::new(
-        org,
-        second_project.id,
-        "cut build time",
-        100,
-        world.owner.id,
-        T0,
-    );
-    store
-        .create_experiment(&second, &world.log("experiment.create"))
-        .await
-        .expect("created");
-    let lead = Session::new(org, first.id, "claude", T0);
-    let elsewhere = Session::new(org, second.id, "claude", T0);
-    for session in [&lead, &elsewhere] {
-        store
-            .create_session(session, &world.log("session.create"))
-            .await
-            .expect("created");
-    }
+        .expect("no cap");
     let spend = |session: &Session, kind, cents, tokens, at| Spend {
         id: SpendId::new(),
         organization_id: org,
@@ -657,11 +643,10 @@ async fn budgets_and_spend<S: Store>(store: &S) {
         amount_cents: cents,
         tokens,
         occurred_at: at,
-        trial_id: None,
     };
     for row in [
         spend(&lead, SpendKind::Tokens, 40, 900, T0 + 10),
-        spend(&lead, SpendKind::Judge, 25, 0, T0 + 20),
+        spend(&lead, SpendKind::Machine, 25, 0, T0 + 20),
         spend(&elsewhere, SpendKind::Machine, 7, 0, T0 + 20),
     ] {
         store.record_spend(&row).await.expect("recorded");
@@ -676,20 +661,16 @@ async fn budgets_and_spend<S: Store>(store: &S) {
     let total = async |scope, from, to| store.spend(org, scope, from, to).await.expect("read");
     let sum = |cents, tokens| SpendTotal { cents, tokens };
     assert_eq!(
-        total(SpendScope::Experiment(first.id), T0, T0 + 100).await,
+        total(SpendScope::Session(lead.id), T0, T0 + 100).await,
         sum(66, 901)
     );
     assert_eq!(
-        total(SpendScope::Experiment(first.id), T0 + 10, T0 + 30).await,
+        total(SpendScope::Session(lead.id), T0 + 10, T0 + 30).await,
         sum(65, 900)
     );
     assert_eq!(
-        total(SpendScope::Project(second_project.id), T0, T0 + 100).await,
+        total(SpendScope::Session(elsewhere.id), T0, T0 + 100).await,
         sum(7, 0)
-    );
-    assert_eq!(
-        total(SpendScope::Project(project), T0, T0 + 100).await,
-        sum(66, 901)
     );
     assert_eq!(
         total(SpendScope::Organization, T0, T0 + 100).await,
@@ -698,26 +679,6 @@ async fn budgets_and_spend<S: Store>(store: &S) {
     assert_eq!(
         total(SpendScope::Organization, T0 + 31, T0 + 100).await,
         sum(0, 0)
-    );
-    let between = store
-        .spend_lines_between(org, T0 + 15, T0 + 25)
-        .await
-        .expect("read");
-    assert_eq!(
-        between
-            .iter()
-            .map(|line| (line.session, line.kind, line.cents))
-            .collect::<Vec<_>>()
-            .len(),
-        2
-    );
-    assert_eq!(between.iter().map(|line| line.cents).sum::<i64>(), 32);
-    assert!(
-        store
-            .spend_lines_between(org, T0 + 31, T0 + 100)
-            .await
-            .expect("read")
-            .is_empty()
     );
     assert_eq!(
         store
@@ -733,105 +694,92 @@ async fn budgets_and_spend<S: Store>(store: &S) {
     );
 
     let lines = store
-        .spend_lines(org, Some(first.id))
+        .spend_lines(org, lead.id)
         .await
-        .expect("an experiment's lines");
+        .expect("a session's lines");
     let mut got: Vec<_> = lines
         .iter()
-        .map(|line| (line.session, line.kind.as_str(), line.cents, line.tokens))
+        .map(|line| (line.kind.as_str(), line.cents, line.tokens))
         .collect();
     got.sort();
-    let mut want = vec![(lead.id, "judge", 25, 0), (lead.id, "tokens", 41, 901)];
-    want.sort();
-    assert_eq!(got, want);
-    assert!(lines.iter().all(|line| line.experiment == first.id));
-    assert_eq!(
-        store.spend_lines(org, None).await.expect("all").len(),
-        3,
-        "the other experiment's machine spend joins the rest"
-    );
+    assert_eq!(got, vec![("machine", 25, 0), ("tokens", 41, 901)]);
     assert!(
         store
-            .spend_lines(world_org(store).await, None)
+            .spend_lines(world_org(store).await, lead.id)
             .await
             .expect("another organization")
             .is_empty()
     );
 }
 
-async fn experiments_and_sessions<S: Store>(store: &S) {
+async fn sessions<S: Store>(store: &S) {
     let world = world(store).await;
     let org = world.id();
-    let experiment = experiment(store, &world, 1_000).await.expect("created");
-    assert_eq!(experiment.status, ExperimentStatus::NotSealed);
+    let lead = session(store, &world, "claude", Some(1_000))
+        .await
+        .expect("created");
     assert_eq!(
-        store.experiment(org, experiment.id).await.expect("read"),
-        Some(experiment.clone())
+        store.session(org, lead.id).await.expect("read"),
+        Some(lead.clone())
     );
     assert_eq!(
         store
-            .experiment(world_org(store).await, experiment.id)
+            .session(world_org(store).await, lead.id)
             .await
             .expect("read"),
         None
     );
-    let seal = async |status| {
-        store
-            .set_experiment_status(org, experiment.id, status, &world.log("experiment.seal"))
-            .await
-    };
-    seal(ExperimentStatus::Sealed).await.expect("sealed");
-    refused(
-        seal(ExperimentStatus::NotSealed).await,
-        Invariant::IllegalTransition,
-    );
-    not_found(
-        store
-            .set_experiment_status(
-                org,
-                antilog_types::ExperimentId::new(),
-                ExperimentStatus::Sealed,
-                &world.log("x"),
-            )
-            .await,
-    );
-    not_found(
-        store
-            .create_experiment(
-                &Experiment::new(org, world.project.id, "g", 1, MemberId::new(), T0),
-                &world.log("experiment.create"),
-            )
-            .await,
-    );
-    not_found(
-        store
-            .create_experiment(
-                &Experiment::new(
-                    org,
-                    antilog_types::ProjectId::new(),
-                    "g",
-                    1,
-                    world.owner.id,
-                    T0,
-                ),
-                &world.log("experiment.create"),
-            )
-            .await,
-    );
-
-    let lead = Session::new(org, experiment.id, "claude", T0);
     let create = async |session: &Session| {
         store
-            .create_session(session, &world.log("session.create"))
+            .create_session(session, &world.log("session.start"))
             .await
     };
-    create(&lead).await.expect("created");
-    let child = Session::new(org, experiment.id, "codex", T0 + 1);
+    not_found(
+        create(&Session::new(
+            org,
+            world.project.id,
+            MemberId::new(),
+            SessionParams {
+                title: "x".into(),
+                agent: "claude".into(),
+                ..SessionParams::default()
+            },
+            T0,
+        ))
+        .await,
+    );
+    let other_person = person(store, org, Role::Editor).await;
+    let child = Session::new(
+        org,
+        world.project.id,
+        other_person.id,
+        SessionParams {
+            title: "second".into(),
+            agent: "codex".into(),
+            ..SessionParams::default()
+        },
+        T0 + 1,
+    );
     create(&child).await.expect("a second session");
     conflict(create(&lead).await);
     assert_eq!(
-        store.sessions(org, experiment.id).await.expect("read"),
-        vec![lead.clone(), child.clone()]
+        store.sessions(org, None, None).await.expect("read"),
+        vec![child.clone(), lead.clone()],
+        "newest first"
+    );
+    assert_eq!(
+        store
+            .sessions(org, Some(world.project.id), Some(world.owner.id))
+            .await
+            .expect("read"),
+        vec![lead.clone()]
+    );
+    assert!(
+        store
+            .sessions(world_org(store).await, None, None)
+            .await
+            .expect("another organization")
+            .is_empty()
     );
 
     let update = async |change: SessionChange, at, entry: Option<&AuditEntry>| {
@@ -1293,62 +1241,12 @@ async fn environments<S: Store>(store: &S) {
     );
 }
 
-async fn evaluations<S: Store>(store: &S) {
-    let world = world(store).await;
-    let org = world.id();
-    let template = |id: &str, at| EvaluationTemplate {
-        id: id.to_owned(),
-        name: id.to_owned(),
-        summary: String::new(),
-        kind: EvaluationKind::Speed,
-        metric: "p95".into(),
-        lower_is_better: true,
-        command: "make bench".into(),
-        protected_paths: vec!["app:bench/".into(), "app:fixtures/".into()],
-        created_by: world.owner.id,
-        created_at: at,
-    };
-    let first = template("load-test", T0);
-    store
-        .add_evaluation(&first, org, &world.log("evaluation.add"))
-        .await
-        .expect("added");
-    store
-        .add_evaluation(
-            &template("bundle", T0 + 1),
-            org,
-            &world.log("evaluation.add"),
-        )
-        .await
-        .expect("added");
-    conflict(
-        store
-            .add_evaluation(&first, org, &world.log("evaluation.add"))
-            .await,
-    );
-    let mut stray = template("x", T0);
-    stray.created_by = MemberId::new();
-    not_found(
-        store
-            .add_evaluation(&stray, org, &world.log("evaluation.add"))
-            .await,
-    );
-    let listed = store.evaluations(org).await.expect("listed");
-    assert_eq!(listed.first(), Some(&first));
-    assert_eq!(listed.len(), 2);
-    assert!(
-        store
-            .evaluations(world_org(store).await)
-            .await
-            .expect("another organization")
-            .is_empty()
-    );
-}
-
 async fn approvals<S: Store>(store: &S) {
     let world = world(store).await;
     let org = world.id();
-    let experiment = experiment(store, &world, 1_000).await.expect("created");
+    let session = session(store, &world, "claude", Some(1_000))
+        .await
+        .expect("created");
     let policy = |card, mode, limit_cents| Policy {
         card,
         mode,
@@ -1407,13 +1305,11 @@ async fn approvals<S: Store>(store: &S) {
     let card = |kind, status| Approval {
         id: ApprovalId::new(),
         organization_id: org,
-        experiment_id: experiment.id,
-        session_id: None,
+        session_id: session.id,
         card: kind,
         summary: "Raise the budget by $5".into(),
         payload: None,
         cost_cents: Some(500),
-        needs_owner: false,
         status,
         decided_by: None,
         created_at: T0,
@@ -1488,7 +1384,7 @@ async fn approvals<S: Store>(store: &S) {
             .await,
     );
 
-    let second = card(CardKind::KeepGoing, ApprovalStatus::Pending);
+    let second = card(CardKind::ChangeEnvironment, ApprovalStatus::Pending);
     store
         .request_approval(&second, &world.log("approval.request"))
         .await
@@ -1525,18 +1421,14 @@ async fn approvals<S: Store>(store: &S) {
     refused(
         store
             .request_approval(
-                &card(CardKind::KeepGoing, ApprovalStatus::Approved),
+                &card(CardKind::ChangeEnvironment, ApprovalStatus::Approved),
                 &world.log("approval.request"),
             )
             .await,
         Invariant::IllegalTransition,
     );
     assert_eq!(
-        store
-            .approvals(org, experiment.id)
-            .await
-            .expect("read")
-            .len(),
+        store.approvals(org, session.id).await.expect("read").len(),
         3
     );
     let waiting = card(CardKind::AttachRepo, ApprovalStatus::Pending);
@@ -1566,8 +1458,8 @@ async fn audit_log<S: Store>(store: &S) {
     let denied = AuditEntry::new(
         org,
         Some(world.owner.id),
-        "project.delete",
-        world.project.id,
+        "session.delete",
+        world.owner.id,
         AuditOutcome::Denied,
         T0 + 1_000,
     );

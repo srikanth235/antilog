@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useMatchRoute, useNavigate } from "@tanstack/react-router";
 import { api, unwrap } from "../../api/client";
-import { useAgentLabel, useMe } from "../../api/queries";
+import { useMe } from "../../api/queries";
 import { Mark } from "../../components/brand/Brand";
 import { Group } from "../../components/collapsible/Collapsible";
 import { Icon, StatusIcon } from "../../components/icon/Icon";
@@ -15,65 +15,42 @@ import { useSidebarData } from "./useSidebarData";
 
 export function Sidebar() {
   const data = useSidebarData();
-  const agentLabel = useAgentLabel();
   const pins = usePins();
   const folded = useFolded();
   const matchRoute = useMatchRoute();
-  const open = matchRoute({ to: "/experiments/$experimentId", fuzzy: true });
-  const openId = open === false ? null : open.experimentId;
+  const open = matchRoute({ to: "/sessions/$sessionId", fuzzy: true });
+  const openId = open === false ? null : open.sessionId;
   const onProjects = matchRoute({ to: "/projects", fuzzy: true }) !== false;
   const onCustomize = matchRoute({ to: "/customize", fuzzy: true }) !== false;
 
-  const row = (experiment: (typeof data.all)[number], pinned: boolean) => {
-    const sessions = data.sessionsOf.get(experiment.id) ?? [];
-    const waiting = pendingCards(data.approvalsOf.get(experiment.id) ?? []).length;
-    const activity = activityOf(sessions, waiting);
-    const nested = experiment.id === openId || pins.includes(experiment.id);
+  const row = (session: (typeof data.all)[number], pinned: boolean) => {
+    const waiting = pendingCards(data.approvalsOf.get(session.id) ?? []).length;
+    const activity = activityOf([session], waiting);
     return (
-      <div key={`${pinned ? "pin" : "row"}-${experiment.id}`}>
-        <div className="srow">
-          <Link
-            className="rec ses"
-            to="/experiments/$experimentId"
-            params={{ experimentId: experiment.id }}
-            data-item={experiment.id}
-            activeProps={{ "aria-current": "page" }}
-          >
-            {activity === null ? null : <StatusIcon activity={activity} />}
-            <span className="t">{experiment.goal}</span>
-          </Link>
-          <button
-            type="button"
-            className="pinb"
-            aria-label={(pins.includes(experiment.id) ? w.sidebar.unpin : w.sidebar.pin)(
-              experiment.goal,
-            )}
-            onClick={() => togglePin(experiment.id)}
-          >
-            <Icon name="pin" size="s" />
-          </button>
-        </div>
-        {nested && sessions.length > 0 ? (
-          <div className="sx-l">
-            {sessions.map((session) => (
-              <Link
-                key={session.id}
-                className="rec ses sx"
-                to="/experiments/$experimentId"
-                params={{ experimentId: experiment.id }}
-                search={{ session: session.id }}
-              >
-                <StatusIcon activity={session.status} />
-                <span className="t">{w.sidebar.session(agentLabel(session.agent))}</span>
-              </Link>
-            ))}
-          </div>
-        ) : null}
+      <div key={`${pinned ? "pin" : "row"}-${session.id}`} className="srow">
+        <Link
+          className="rec ses"
+          to="/sessions/$sessionId"
+          params={{ sessionId: session.id }}
+          data-item={session.id}
+          aria-current={session.id === openId ? "page" : undefined}
+        >
+          {activity === null ? null : <StatusIcon activity={activity} />}
+          <span className="t">{session.title}</span>
+        </Link>
+        <button
+          type="button"
+          className="pinb"
+          aria-label={(pins.includes(session.id) ? w.sidebar.unpin : w.sidebar.pin)(session.title)}
+          onClick={() => togglePin(session.id)}
+        >
+          <Icon name="pin" size="s" />
+        </button>
       </div>
     );
   };
 
-  const pinned = data.all.filter((experiment) => pins.includes(experiment.id));
+  const pinned = data.all.filter((session) => pins.includes(session.id));
   return (
     <nav className="side" aria-label={w.sidebar.main}>
       <div className="side-top">
@@ -83,7 +60,7 @@ export function Sidebar() {
         </Link>
         <Link className="btn primary full" to="/" data-item="new">
           <Icon name="plus" size="s" />
-          {w.sidebar.newExperiment}
+          {w.sidebar.newSession}
         </Link>
         <div className="col" style={{ gap: 2 }}>
           <button
@@ -110,7 +87,7 @@ export function Sidebar() {
           </Link>
           <Link
             className="nav"
-            to="/customize/evaluations"
+            to="/customize/skills"
             data-item="customize"
             aria-current={onCustomize ? "page" : undefined}
           >
@@ -123,24 +100,26 @@ export function Sidebar() {
         {pinned.length > 0 ? (
           <div className="col" style={{ gap: 2 }}>
             <span className="t-label sl">{w.sidebar.pinned}</span>
-            {pinned.map((experiment) => row(experiment, true))}
+            {pinned.map((session) => row(session, true))}
           </div>
         ) : null}
         <div className="col" style={{ gap: 8 }}>
-          {data.groups
-            .filter((group) => group.experiments.length > 0)
-            .map((group) => (
-              <Group
-                key={group.project.id}
-                title={group.project.name}
-                open={!folded.includes(group.project.id)}
-                onOpenChange={(isOpen) => setFolded(group.project.id, !isOpen)}
-              >
-                {group.experiments.map((experiment) => row(experiment, false))}
-              </Group>
-            ))}
-          {!data.loading && data.all.length === 0 ? (
-            <p className="sd-none">{w.sidebar.emptyRows}</p>
+          {data.groups.map((group) => (
+            <Group
+              key={group.project.id}
+              title={group.project.name}
+              open={!folded.includes(group.project.id)}
+              onOpenChange={(isOpen) => setFolded(group.project.id, !isOpen)}
+            >
+              {group.sessions.length === 0 ? (
+                <p className="sd-none">{w.sidebar.emptyRows}</p>
+              ) : (
+                group.sessions.map((session) => row(session, false))
+              )}
+            </Group>
+          ))}
+          {!data.loading && data.groups.length === 0 ? (
+            <p className="sd-none">{w.sidebar.noProjects}</p>
           ) : null}
         </div>
       </div>

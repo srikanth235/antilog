@@ -14,14 +14,11 @@ use utoipa::OpenApi;
 
 pub mod auth;
 pub mod customize;
-pub mod e2e;
 pub mod live;
 pub mod mcp;
 pub mod model_key;
 pub mod organization;
 pub mod runner;
-pub mod value;
-pub mod webhook;
 
 #[derive(OpenApi)]
 #[openapi(
@@ -74,20 +71,9 @@ fn base<D: Deps + 'static>(app: &auth::App<D>) -> Router<Arc<auth::App<D>>> {
         .merge(organization::routes())
         .merge(model_key::routes())
         .merge(session::routes())
-        .merge(value::routes())
         .merge(live::routes());
-    let router = if app.settings.e2e_seed {
-        router.merge(e2e::routes())
-    } else {
-        router
-    };
-    let router = if app.settings.runner.is_some() {
+    if app.settings.runner.is_some() {
         router.merge(runner::routes())
-    } else {
-        router
-    };
-    if app.settings.code_host_webhook_secret.is_some() {
-        router.merge(webhook::routes())
     } else {
         router
     }
@@ -122,7 +108,6 @@ pub fn openapi_json() -> String {
     doc.merge(organization::ApiDoc::openapi());
     doc.merge(model_key::Doc::openapi());
     doc.merge(session::Doc::openapi());
-    doc.merge(value::Doc::openapi());
     doc.merge(live::Doc::openapi());
     doc.merge(customize::Doc::openapi());
     doc.to_pretty_json()
@@ -131,7 +116,7 @@ pub fn openapi_json() -> String {
 
 #[cfg(test)]
 mod tests {
-    use antilog_core::fakes::{FakeCodeHost, FakeDeps, FakeMachine};
+    use antilog_core::fakes::FakeDeps;
     use axum::body::Body;
     use axum::http::Request;
     use tower::ServiceExt;
@@ -141,16 +126,11 @@ mod tests {
     #[tokio::test]
     async fn health_answers_ok_from_the_fake_store() {
         let app = router(
-            Arc::new(FakeDeps::new(
-                FakeMachine::default(),
-                FakeCodeHost::default(),
-            )),
+            Arc::new(FakeDeps::new()),
             auth::Settings {
                 providers: Vec::new(),
                 open_organizations: false,
                 secure_cookies: true,
-                code_host_webhook_secret: None,
-                e2e_seed: false,
                 runner: None,
             },
         );

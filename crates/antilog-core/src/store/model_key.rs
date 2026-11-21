@@ -1,8 +1,6 @@
 use std::future::Future;
 
-use antilog_types::{
-    AuditEntry, ExperimentId, ModelKeyStatus, ModelProvider, OrganizationId, SessionId,
-};
+use antilog_types::{AuditEntry, ModelKeyStatus, ModelProvider, OrganizationId, SessionId};
 
 use super::StoreError;
 use crate::secrets::Secret;
@@ -11,7 +9,6 @@ use crate::secrets::Secret;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct GatewayScope {
     pub organization: OrganizationId,
-    pub experiment: ExperimentId,
 }
 
 /// An organization's own model keys. The store seals each key before it is written and opens it
@@ -49,7 +46,7 @@ pub trait ModelKeyStore {
         provider: ModelProvider,
     ) -> impl Future<Output = Result<Option<Secret>, StoreError>> + Send;
 
-    /// The organization and experiment of a session, found from its id alone because the
+    /// The organization of a session, found from its id alone because the
     /// gateway holds only a session token. `None` for a session that is not there.
     fn gateway_scope(
         &self,

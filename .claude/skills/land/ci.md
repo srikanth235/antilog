@@ -20,8 +20,7 @@ One job per layer, each running the commands in [checks.md](checks.md). A pull r
 | storage | the storage suite against Postgres (a container); migrations from empty and from the last release |
 | web | typecheck, lint, tests |
 | macos-app | build and test the Swift app, on a macOS runner only |
-| judge | the acceptance criteria tests, the seal checks against the fake session machine, the protected-path test |
-| release | builds the programs (`antilog-server`, `antilog`) and the container image; signs them and attaches an SBOM |
+| release | builds the programs (`antilog-server`, `antilog-proxy`, `antilog`) and the container image; signs them and attaches an SBOM |
 
 Rules:
 

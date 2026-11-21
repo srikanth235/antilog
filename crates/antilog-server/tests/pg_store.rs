@@ -1,12 +1,11 @@
 use std::time::Duration;
 
-use antilog_core::store::judge::judge_store_suite;
 use antilog_core::store::{ApprovalStore, ModelKeyStore, OrganizationStore, SessionStore};
 use antilog_core::testing::store_suite;
 use antilog_server::pg::{MIGRATOR, PgStore};
 use antilog_types::{
-    ApprovalStatus, AuditEntry, AuditOutcome, CardKind, ExperimentStatus, MachineState, Member,
-    MemberKind, Organization, OrganizationId, PolicyMode, Role, SessionStatus, SpendKind,
+    ApprovalStatus, AuditEntry, AuditOutcome, CardKind, MachineState, Member, MemberKind,
+    Organization, OrganizationId, PolicyMode, Role, SessionStatus, SpendKind,
 };
 use sqlx::PgPool;
 use sqlx::postgres::PgPoolOptions;
@@ -117,64 +116,6 @@ async fn postgres_store_keeps_the_card_state() -> anyhow::Result<()> {
 }
 
 #[tokio::test]
-async fn postgres_keeps_pull_requests_spend_cards_and_audited_models() -> anyhow::Result<()> {
-    // As the role the server runs as, so row-level security is in force.
-    let (store, _pool, _container) = app_store().await?;
-    antilog_core::seed::wins_suite(&store, |organization| store.judge(organization)).await;
-    Ok(())
-}
-
-#[tokio::test]
-async fn a_pull_request_two_organizations_share_belongs_to_neither() -> anyhow::Result<()> {
-    use antilog_core::judge::fixtures;
-    use antilog_core::store::judge::JudgeStore;
-    use antilog_core::store::{CodeHostStore, PullRequestRow};
-    use antilog_types::judge::{PullRequestState, SealedExperiment};
-
-    let (store, _pool, _container) = app_store().await?;
-    let mut owners = Vec::new();
-    for _ in 0..2 {
-        let seed = antilog_core::seed::experiment(&store, 1_000).await;
-        let judge = store.judge(seed.organization.id);
-        let sealed = SealedExperiment::seal(
-            seed.experiment.id,
-            1,
-            fixtures::definition(),
-            vec![],
-            fixtures::checks(),
-            0,
-        )
-        .map_err(|e| anyhow::anyhow!("{e:?}"))?;
-        judge.put_sealed(&sealed).await?;
-        let trial = fixtures::trial(&sealed, None, "a");
-        judge.begin_trial(&trial).await?;
-        owners.push((seed, trial));
-    }
-    let row =
-        |seed: &antilog_core::seed::Seed, trial: &antilog_types::judge::Trial| PullRequestRow {
-            organization: seed.organization.id,
-            repo: "acme/shared".into(),
-            number: 5,
-            experiment: seed.experiment.id,
-            version: 1,
-            trial: trial.id,
-            url: "https://code.example/acme/shared/pull/5".into(),
-            state: PullRequestState::Open,
-        };
-    let (first, trial) = &owners[0];
-    store
-        .put_pull_requests(first.organization.id, &[row(first, trial)])
-        .await?;
-    assert!(store.pull_request("acme/shared", 5).await?.is_some());
-    let (second, trial) = &owners[1];
-    store
-        .put_pull_requests(second.organization.id, &[row(second, trial)])
-        .await?;
-    assert_eq!(store.pull_request("acme/shared", 5).await?, None);
-    Ok(())
-}
-
-#[tokio::test]
 async fn migrations_apply_again_without_change() -> anyhow::Result<()> {
     let (store, _pool, _container) = migrated_store().await?;
     store.migrate().await?;
@@ -206,7 +147,7 @@ async fn audit_log_and_spend_refuse_every_change() -> anyhow::Result<()> {
     let entry = AuditEntry::new(
         organization.id,
         None,
-        "project.create",
+        "session.start",
         "p",
         AuditOutcome::Done,
         1_700_000_000_000,
@@ -222,8 +163,6 @@ async fn audit_log_and_spend_refuse_every_change() -> anyhow::Result<()> {
         "update session_events set text = 'x'",
         "delete from session_events",
         "truncate session_events",
-        "update evaluation_templates set name = 'x'",
-        "delete from evaluation_templates",
         "update environment_versions set name = 'x'",
         "delete from environment_versions",
         "truncate environment_versions",
@@ -272,11 +211,6 @@ async fn check_constraints_list_the_values_of_the_enums() -> anyhow::Result<()> 
     let expected = [
         ("members_kind", texts(MemberKind::ALL, MemberKind::as_str)),
         ("members_role", texts(Role::ALL, Role::as_str)),
-        ("project_roles_role", texts(Role::ALL, Role::as_str)),
-        (
-            "experiments_status",
-            texts(ExperimentStatus::ALL, ExperimentStatus::as_str),
-        ),
         (
             "sessions_status",
             texts(SessionStatus::ALL, SessionStatus::as_str),
@@ -320,9 +254,9 @@ async fn check_constraints_list_the_values_of_the_enums() -> anyhow::Result<()> 
 }
 
 #[tokio::test]
-async fn concurrent_demotions_cannot_orphan_a_project() -> anyhow::Result<()> {
+async fn concurrent_demotions_cannot_orphan_the_organization() -> anyhow::Result<()> {
     use antilog_core::store::{Invariant, StoreError};
-    use antilog_types::{Identity, Project};
+    use antilog_types::Identity;
 
     let (store, _pool, _container) = migrated_store().await?;
     let org = OrganizationId::new();
@@ -358,11 +292,6 @@ async fn concurrent_demotions_cannot_orphan_a_project() -> anyhow::Result<()> {
         owners.push(member);
     }
     let (a, b) = (owners[0].id, owners[1].id);
-    let project = Project::new(org, "p", "", 0);
-    store.create_project(&project, a, &log(a)).await?;
-    store
-        .set_project_role(org, project.id, a, None, &log(a))
-        .await?;
     let demote = |member| {
         let store = store.clone();
         async move {
@@ -455,7 +384,7 @@ async fn a_query_that_forgets_its_organization_sees_nothing() -> anyhow::Result<
         "organizations",
         "members",
         "audit_log",
-        "projects",
+        "sessions",
         "policies",
         "access_tokens",
         "sign_in_sessions",
@@ -485,11 +414,11 @@ async fn a_query_that_forgets_its_organization_sees_nothing() -> anyhow::Result<
     let organizations: Vec<String> = sqlx::query_scalar("select name from organizations")
         .fetch_all(&mut *tx)
         .await?;
-    let projects: i64 = sqlx::query_scalar("select count(*) from projects")
+    let sessions: i64 = sqlx::query_scalar("select count(*) from sessions")
         .fetch_one(&mut *tx)
         .await?;
     assert_eq!(
-        (members, organizations, projects),
+        (members, organizations, sessions),
         (1, vec!["a".to_owned()], 0)
     );
     // Read-only: nothing changes through the window, and a write is refused.
@@ -498,7 +427,7 @@ async fn a_query_that_forgets_its_organization_sees_nothing() -> anyhow::Result<
         .await?;
     assert_eq!(changed.rows_affected(), 0);
     let insert = sqlx::query(
-        "insert into projects (id, organization_id, name, description, created_at) select gen_random_uuid(), organization_id, 'p', '', now() from members",
+        "insert into agents (organization_id, id, name, enabled, is_default, cost_tier, created_at) select organization_id, 'x', 'x', true, false, 'low', now() from members",
     )
     .execute(&mut *tx)
     .await;
@@ -569,34 +498,27 @@ async fn a_query_that_forgets_its_organization_sees_nothing() -> anyhow::Result<
 }
 
 #[tokio::test]
-async fn the_session_area_and_the_judge_see_only_their_organization() -> anyhow::Result<()> {
+async fn the_session_area_sees_only_its_organization() -> anyhow::Result<()> {
     let (store, pool, _container) = app_store().await?;
-    let a = antilog_core::seed::experiment(&store, 1_000).await;
-    let b = antilog_core::seed::experiment(&store, 1_000).await;
-    let tables = [
-        "experiments",
-        "sessions",
-        "spend",
-        "seal_proposals",
-        "approvals_told",
-        "sealed_experiments",
-        "trials",
-        "receipts",
-        "value_models",
-        "win_events",
-    ];
-    judge_store_suite(
-        &store.judge(a.organization.id),
-        a.experiment.project_id,
-        a.experiment.id,
-    )
-    .await;
-    judge_store_suite(
-        &store.judge(b.organization.id),
-        b.experiment.project_id,
-        b.experiment.id,
-    )
-    .await;
+    let a = antilog_core::seed::organization(&store).await;
+    let b = antilog_core::seed::organization(&store).await;
+    for seed in [&a, &b] {
+        let session = antilog_core::seed::session(seed, "opencode", antilog_core::seed::T0);
+        store
+            .create_session(
+                &session,
+                &AuditEntry::new(
+                    seed.organization.id,
+                    Some(seed.owner.id),
+                    "session.start",
+                    session.id,
+                    AuditOutcome::Done,
+                    antilog_core::seed::T0,
+                ),
+            )
+            .await?;
+    }
+    let tables = ["sessions", "spend", "approvals_told"];
     for table in tables {
         let unscoped: i64 =
             sqlx::query_scalar(sqlx::AssertSqlSafe(format!("select count(*) from {table}")))
@@ -618,11 +540,11 @@ async fn the_session_area_and_the_judge_see_only_their_organization() -> anyhow:
         .await?;
         assert_eq!(foreign, 0, "{table} shows another organization's rows");
     }
-    let own: i64 = sqlx::query_scalar("select count(*) from trials")
+    let own: i64 = sqlx::query_scalar("select count(*) from sessions")
         .fetch_one(&mut *tx)
         .await?;
-    assert_eq!(own, 2, "only a's two trials");
-    let forged = sqlx::query("insert into experiments (id, organization_id, project_id, goal, status, budget_cap_cents, created_by, created_at) select gen_random_uuid(), $1, project_id, 'x', 'not_sealed', 0, created_by, now() from experiments")
+    assert_eq!(own, 1, "only a's session");
+    let forged = sqlx::query("insert into sessions (id, organization_id, title, created_by, agent, model, status, created_at, updated_at) select gen_random_uuid(), $1, 'x', created_by, 'opencode', 'a/b', 'working', now(), now() from sessions")
         .bind(b.organization.id.as_uuid())
         .execute(&mut *tx)
         .await;
@@ -644,8 +566,8 @@ async fn environments_and_their_versions_see_only_their_organization() -> anyhow
     use antilog_types::{Environment, NetworkLevel};
 
     let (store, pool, _container) = app_store().await?;
-    let a = antilog_core::seed::experiment(&store, 1_000).await;
-    let b = antilog_core::seed::experiment(&store, 1_000).await;
+    let a = antilog_core::seed::organization(&store).await;
+    let b = antilog_core::seed::organization(&store).await;
     for (seed, id) in [(&a, "bench"), (&b, "bench"), (&b, "other")] {
         let mut environment = Environment::built_in();
         environment.id = id.to_owned();
@@ -700,19 +622,6 @@ async fn environments_and_their_versions_see_only_their_organization() -> anyhow
         Some("42501"),
         "a write into another organization is refused"
     );
-    Ok(())
-}
-
-#[tokio::test]
-async fn postgres_judge_store_passes_the_suite() -> anyhow::Result<()> {
-    let (store, _pool, _container) = migrated_store().await?;
-    let seed = antilog_core::seed::experiment(&store, 1_000).await;
-    judge_store_suite(
-        &store.judge(seed.organization.id),
-        seed.experiment.project_id,
-        seed.experiment.id,
-    )
-    .await;
     Ok(())
 }
 
@@ -775,128 +684,14 @@ async fn access_tokens_and_sign_in_sessions_are_found_by_id_alone() -> anyhow::R
 }
 
 #[tokio::test]
-async fn the_queue_machine_runs_a_command_through_the_holding_runner() -> anyhow::Result<()> {
-    use std::time::Duration;
-
-    use antilog_core::machine::{Data, MachineError, Run, SessionMachine};
-    use antilog_core::seed::{T0, experiment};
-    use antilog_core::store::{RunnerStore, SessionStore};
-    use antilog_server::queue::QueueMachine;
-    use antilog_types::judge::{CommitRef, DatasetRef};
-    use antilog_types::{Command, MachineState, RunResult, Seed, Session, SessionId};
-
-    let (store, _pool, _container) = app_store().await?;
-    let seed = experiment(&store, 1_000).await;
-    let org = seed.organization.id;
-    let session = Session::new(org, seed.experiment.id, "opencode", T0);
-    let entry = AuditEntry::new(
-        org,
-        Some(seed.owner.id),
-        "session.start",
-        session.id,
-        AuditOutcome::Done,
-        T0,
-    );
-    store.create_session(&session, &entry).await?;
-    store
-        .enqueue_machine(org, session.id, &Seed::default(), T0)
-        .await?;
-    let dataset = DatasetRef {
-        id: "d".into(),
-        version: 1,
-    };
-    let commits = [CommitRef {
-        repo: "app".into(),
-        sha: "abc".into(),
-    }];
-    let run = Run {
-        session: session.id,
-        command: "make bench",
-        commits: &commits,
-        files: &[],
-        data: Data::Holdout(&dataset),
-    };
-    let machine = QueueMachine::new(store.clone(), Duration::from_secs(10))
-        .polling_every(Duration::from_millis(20));
-
-    assert!(matches!(
-        machine
-            .run(&Run {
-                session: SessionId::new(),
-                ..run
-            })
-            .await,
-        Err(MachineError::NoMachine)
-    ));
-
-    // No runner holds it: the command waits, times out, and is not left for a runner that
-    // comes later.
-    let impatient = QueueMachine::new(store.clone(), Duration::from_millis(100))
-        .polling_every(Duration::from_millis(20));
-    assert!(matches!(
-        impatient.run(&run).await,
-        Err(MachineError::Unavailable(_))
-    ));
-    assert_eq!(store.claim("r1", 1, T0, T0 + 60_000).await?.len(), 1);
-    assert!(store.take_commands("r1").await?.is_empty());
-
-    // The holding runner answers; the judge's call returns what it ran.
-    let runner = {
-        let store = store.clone();
-        tokio::spawn(async move {
-            loop {
-                for envelope in store.take_commands("r1").await? {
-                    if let Command::Run { run } = envelope.command {
-                        assert!(run.data.holdout);
-                        let result = RunResult {
-                            command: envelope.id,
-                            exit: 0,
-                            output: format!("ran {}\n{{\"metric\": 1}}\n", run.command),
-                        };
-                        store.put_result(envelope.session, &result).await?;
-                        return anyhow::Ok(());
-                    }
-                }
-                tokio::time::sleep(Duration::from_millis(10)).await;
-            }
-        })
-    };
-    let output = machine.run(&run).await?;
-    runner.await??;
-    assert_eq!(output.exit, 0);
-    assert!(output.output.starts_with("ran make bench"));
-
-    // A machine that was let go is woken to run it, and one that is done refuses.
-    assert!(
-        store
-            .set_machine_state(session.id, "r1", MachineState::Released, T0)
-            .await?
-    );
-    assert!(matches!(
-        impatient.run(&run).await,
-        Err(MachineError::Unavailable(_))
-    ));
-    assert_eq!(
-        store.machine(session.id).await?.map(|m| m.state),
-        Some(MachineState::Queued)
-    );
-    Ok(())
-}
-
-#[tokio::test]
 async fn postgres_keeps_session_credentials_as_a_role_without_bypass() -> anyhow::Result<()> {
     let (store, pool, _container) = app_store().await?;
     antilog_core::gateway_suite::credentials_suite(&store, &store).await;
     // Only a hash is kept, and a token is not a column.
     let token = {
         use antilog_core::credentials::{Purpose, SessionCredentials};
-        let seed = antilog_core::seed::experiment(&store, 100).await;
-        let session = antilog_types::Session::new(
-            seed.organization.id,
-            seed.experiment.id,
-            "opencode",
-            antilog_core::seed::T0,
-        );
+        let seed = antilog_core::seed::organization(&store).await;
+        let session = antilog_core::seed::session(&seed, "opencode", antilog_core::seed::T0);
         store
             .create_session(
                 &session,
@@ -932,7 +727,7 @@ async fn postgres_seals_model_keys_and_scopes_them_to_their_organization() -> an
     let (store, pool, _container) = app_store().await?;
     antilog_core::gateway_suite::model_key_suite(&store).await;
 
-    let seed = antilog_core::seed::experiment(&store, 100).await;
+    let seed = antilog_core::seed::organization(&store).await;
     let org = seed.organization.id;
     let audit = AuditEntry::new(
         org,
@@ -992,7 +787,7 @@ async fn postgres_keeps_connectors_skills_and_plugins_and_finds_a_session_by_id(
 -> anyhow::Result<()> {
     // As the role the server runs as, so row-level security is in force.
     let (store, _pool, _container) = app_store().await?;
-    let deps = antilog_server::deps::ServerDeps::on_fakes(store);
+    let deps = antilog_server::deps::ServerDeps::new(store);
     antilog_core::customize::suite::reach_suite(&deps).await;
     Ok(())
 }

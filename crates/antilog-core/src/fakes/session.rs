@@ -1,78 +1,19 @@
 use antilog_types::{
-    Agent, AuditEntry, EvaluationTemplate, Experiment, ExperimentId, ExperimentStatus,
-    OrganizationId, ProjectId, Session, SessionEvent, SessionId,
+    Agent, AuditEntry, MemberId, OrganizationId, ProjectId, Session, SessionEvent, SessionId,
 };
 
 use super::{FakeStore, ledger::not_found, locked};
 use crate::store::{Invariant, NewEvent, SessionChange, SessionStore, StoreError};
 
 impl SessionStore for FakeStore {
-    async fn create_experiment(
-        &self,
-        experiment: &Experiment,
-        audit: &AuditEntry,
-    ) -> Result<(), StoreError> {
-        let mut ledger = locked(&self.ledger);
-        not_found(ledger.member(experiment.organization_id, experiment.created_by))?;
-        ledger.experiment_fits(experiment)?;
-        if ledger.experiments.iter().any(|row| row.id == experiment.id) {
-            return Err(StoreError::Conflict);
-        }
-        ledger.experiments.push(experiment.clone());
-        ledger.audit.push(audit.clone());
-        Ok(())
-    }
-
-    async fn experiment(
-        &self,
-        organization: OrganizationId,
-        id: ExperimentId,
-    ) -> Result<Option<Experiment>, StoreError> {
-        Ok(locked(&self.ledger).experiment(organization, id).cloned())
-    }
-
-    async fn experiments(
-        &self,
-        organization: OrganizationId,
-        project: ProjectId,
-    ) -> Result<Vec<Experiment>, StoreError> {
-        Ok(locked(&self.ledger)
-            .experiments
-            .iter()
-            .filter(|row| row.organization_id == organization && row.project_id == project)
-            .cloned()
-            .collect())
-    }
-
-    async fn set_experiment_status(
-        &self,
-        organization: OrganizationId,
-        id: ExperimentId,
-        status: ExperimentStatus,
-        audit: &AuditEntry,
-    ) -> Result<(), StoreError> {
-        let mut ledger = locked(&self.ledger);
-        let row = not_found(
-            ledger
-                .experiments
-                .iter_mut()
-                .find(|row| row.organization_id == organization && row.id == id),
-        )?;
-        if row.status == ExperimentStatus::Sealed && status != ExperimentStatus::Sealed {
-            return Err(Invariant::IllegalTransition.into());
-        }
-        row.status = status;
-        ledger.audit.push(audit.clone());
-        Ok(())
-    }
-
     async fn create_session(
         &self,
         session: &Session,
         audit: &AuditEntry,
     ) -> Result<(), StoreError> {
         let mut ledger = locked(&self.ledger);
-        not_found(ledger.experiment(session.organization_id, session.experiment_id))?;
+        not_found(ledger.member(session.organization_id, session.created_by))?;
+        ledger.session_fits(session)?;
         if ledger.sessions.iter().any(|row| row.id == session.id) {
             return Err(StoreError::Conflict);
         }
@@ -92,14 +33,21 @@ impl SessionStore for FakeStore {
     async fn sessions(
         &self,
         organization: OrganizationId,
-        experiment: ExperimentId,
+        project: Option<ProjectId>,
+        creator: Option<MemberId>,
     ) -> Result<Vec<Session>, StoreError> {
-        Ok(locked(&self.ledger)
+        let mut rows: Vec<Session> = locked(&self.ledger)
             .sessions
             .iter()
-            .filter(|row| row.organization_id == organization && row.experiment_id == experiment)
+            .filter(|row| {
+                row.organization_id == organization
+                    && project.is_none_or(|project| project == row.project_id)
+                    && creator.is_none_or(|member| member == row.created_by)
+            })
             .cloned()
-            .collect())
+            .collect();
+        rows.sort_by_key(|row| std::cmp::Reverse((row.created_at, row.id)));
+        Ok(rows)
     }
 
     async fn update_session(
@@ -264,37 +212,5 @@ impl SessionStore for FakeStore {
             .collect();
         agents.sort_by(|a, b| a.id.cmp(&b.id));
         Ok(agents)
-    }
-
-    async fn add_evaluation(
-        &self,
-        template: &EvaluationTemplate,
-        organization: OrganizationId,
-        audit: &AuditEntry,
-    ) -> Result<(), StoreError> {
-        let mut ledger = locked(&self.ledger);
-        not_found(ledger.member(organization, template.created_by))?;
-        if ledger
-            .evaluations
-            .iter()
-            .any(|(id, row)| *id == organization && row.id == template.id)
-        {
-            return Err(StoreError::Conflict);
-        }
-        ledger.evaluations.push((organization, template.clone()));
-        ledger.audit.push(audit.clone());
-        Ok(())
-    }
-
-    async fn evaluations(
-        &self,
-        organization: OrganizationId,
-    ) -> Result<Vec<EvaluationTemplate>, StoreError> {
-        Ok(locked(&self.ledger)
-            .evaluations
-            .iter()
-            .filter(|(id, _)| *id == organization)
-            .map(|(_, row)| row.clone())
-            .collect())
     }
 }

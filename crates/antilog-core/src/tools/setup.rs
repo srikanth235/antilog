@@ -9,14 +9,13 @@ use crate::organization::Refusal;
 use crate::session::now_ms;
 use crate::store::{SessionChange, SessionStore};
 
-/// A card in front of a person, or approved by policy when the experiment follows it.
+/// A card in front of a person, or approved by policy when the session follows it.
 /// The agent gets the answer in the tool's reply either way.
 pub(crate) struct Card {
     pub kind: CardKind,
     pub summary: String,
     pub payload: CardPayload,
     pub cost_cents: Option<i64>,
-    pub needs_owner: bool,
 }
 
 pub(crate) async fn ask<D: Deps>(
@@ -30,28 +29,25 @@ pub(crate) async fn ask<D: Deps>(
         summary,
         payload,
         cost_cents,
-        needs_owner,
     } = card;
     let now = now_ms(deps);
-    let experiment = deps
+    let session = deps
         .store()
-        .experiment(caller.organization, caller.experiment)
+        .session(caller.organization, caller.session)
         .await?
-        .ok_or_else(|| ToolError::new("this experiment is unknown"))?;
+        .ok_or_else(|| ToolError::new("this session is unknown"))?;
     let approval = approval::raise(
         deps.store(),
         now,
-        caller.actor,
+        Some(caller.actor),
         CardRequest {
             organization: caller.organization,
-            experiment: caller.experiment,
-            session: Some(caller.session),
+            session: caller.session,
             card: kind,
             summary,
             payload: Some(payload),
             cost_cents,
-            needs_owner,
-            follow_policy: experiment.follow_policy,
+            follow_policy: session.follow_policy,
         },
     )
     .await
@@ -73,7 +69,7 @@ pub(crate) async fn ask<D: Deps>(
     Ok(approval)
 }
 
-/// Applies a card the experiment's policy approved at once; a card in front of a person is
+/// Applies a card the session's policy approved at once; a card in front of a person is
 /// applied when they decide it.
 pub(super) async fn follow<D: Deps>(deps: &D, caller: &Caller, approval: &Approval) {
     if approval.status != ApprovalStatus::Pending {
@@ -136,11 +132,10 @@ pub(super) async fn attach_repo<D: Deps>(
                 branch: None,
             },
             cost_cents: None,
-            needs_owner: false,
         },
     )
     .await?;
-    Ok((waiting(deps, caller, &approval).await, None))
+    Ok(waiting(deps, caller, &approval).await)
 }
 
 #[derive(Deserialize)]
@@ -160,12 +155,9 @@ pub(super) async fn request_credential<D: Deps>(
         ToolError::new("send connector, reason and scope only: never a secret value; a person enters it on the card")
     })?;
     let lower = scope.to_lowercase();
-    if ["holdout", "write", "admin"]
-        .iter()
-        .any(|word| lower.contains(word))
-    {
+    if ["write", "admin"].iter().any(|word| lower.contains(word)) {
         return Err(ToolError::new(
-            "a credential is read-only and never reaches the holdout: ask for a read scope on the evaluation data",
+            "a credential is read-only: ask for a read scope",
         ));
     }
     let summary = format!("Add a read-only credential for {connector} ({scope}): {reason}");
@@ -183,11 +175,10 @@ pub(super) async fn request_credential<D: Deps>(
             summary,
             payload,
             cost_cents: None,
-            needs_owner: false,
         },
     )
     .await?;
-    Ok((waiting(deps, caller, &approval).await, None))
+    Ok(waiting(deps, caller, &approval).await)
 }
 
 #[derive(Deserialize)]
@@ -245,11 +236,10 @@ pub(super) async fn set_environment<D: Deps>(
             summary,
             payload,
             cost_cents: None,
-            needs_owner: false,
         },
     )
     .await?;
-    Ok((waiting(deps, caller, &approval).await, None))
+    Ok(waiting(deps, caller, &approval).await)
 }
 
 #[derive(Deserialize)]
@@ -271,13 +261,18 @@ pub(super) async fn request_budget<D: Deps>(
     if amount_cents <= 0 {
         return Err(ToolError::new("amount_cents must be more than zero"));
     }
-    let now_cents = deps
+    let Some(now_cents) = deps
         .store()
-        .experiment(caller.organization, caller.experiment)
+        .session(caller.organization, caller.session)
         .await?
-        .map_or(0, |row| row.budget_cap_cents);
+        .and_then(|row| row.budget_cap_cents)
+    else {
+        return Err(ToolError::new(
+            "this session has no budget of its own, only the organization's monthly cap, which an owner changes in Settings",
+        ));
+    };
     let summary = format!(
-        "Raise the budget by ${}.{:02}: {reason}",
+        "Raise this session's budget by ${}.{:02}: {reason}",
         amount_cents / 100,
         amount_cents % 100
     );
@@ -295,9 +290,8 @@ pub(super) async fn request_budget<D: Deps>(
             summary,
             payload,
             cost_cents: Some(amount_cents),
-            needs_owner: false,
         },
     )
     .await?;
-    Ok((waiting(deps, caller, &approval).await, None))
+    Ok(waiting(deps, caller, &approval).await)
 }

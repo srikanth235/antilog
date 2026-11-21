@@ -22,7 +22,7 @@ use antilog_core::auth;
 use antilog_core::deps::Deps;
 use antilog_core::organization::{self as floor, Principal};
 use antilog_core::store::SessionStore;
-use antilog_types::{ApiError, ExperimentId, LiveEvent, SessionId, SessionStatus};
+use antilog_types::{ApiError, LiveEvent, SessionId, SessionStatus};
 use axum::Router;
 use axum::extract::State;
 use axum::http::HeaderMap;
@@ -88,29 +88,23 @@ fn frame(event: &LiveEvent) -> Frame {
 struct Watch {
     who: Principal,
     cursor: i64,
-    /// Whether this member may read each session, by session: its experiment, or `None`.
-    readable: HashMap<SessionId, Option<ExperimentId>>,
+    /// Whether this member may read each session: every member reads every session of the
+    /// organization, so this is whether the session exists here.
+    readable: HashMap<SessionId, bool>,
     statuses: HashMap<SessionId, SessionStatus>,
     changed_since: i64,
     cards: HashSet<antilog_types::ApprovalId>,
 }
 
 impl Watch {
-    async fn experiment_of<D: Deps + 'static>(
-        &mut self,
-        app: &App<D>,
-        session: SessionId,
-    ) -> Option<ExperimentId> {
+    async fn can_read<D: Deps + 'static>(&mut self, app: &App<D>, session: SessionId) -> bool {
         if let Some(known) = self.readable.get(&session) {
             return *known;
         }
-        let found = match app.store().session(self.who.organization, session).await {
-            Ok(Some(row)) => floor::experiment(app.store(), &self.who, row.experiment_id)
-                .await
-                .ok()
-                .map(|_| row.experiment_id),
-            _ => None,
-        };
+        let found = matches!(
+            app.store().session(self.who.organization, session).await,
+            Ok(Some(_))
+        );
         self.readable.insert(session, found);
         found
     }
@@ -127,10 +121,9 @@ impl Watch {
         let mut out = Vec::new();
         for (seq, session) in marks {
             self.cursor = seq;
-            if let Some(experiment_id) = self.experiment_of(app, session).await {
+            if self.can_read(app, session).await {
                 out.push(LiveEvent::Message {
                     session_id: session,
-                    experiment_id,
                     seq,
                 });
             }
@@ -153,10 +146,9 @@ impl Watch {
                 continue;
             }
             self.statuses.insert(row.id, row.status);
-            if self.experiment_of(app, row.id).await.is_some() {
+            if self.can_read(app, row.id).await {
                 out.push(LiveEvent::Session {
                     session_id: row.id,
-                    experiment_id: row.experiment_id,
                     status: row.status,
                 });
             }

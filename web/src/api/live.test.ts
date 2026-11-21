@@ -3,14 +3,12 @@ import { parse, staleBy } from "./live";
 import { keys } from "./queries";
 
 test("a message refetches its conversation and nothing else", () => {
-  expect(staleBy({ type: "message", sessionId: "s1", experimentId: "e1", seq: 4 })).toEqual([
-    keys.transcript("s1"),
-  ]);
+  expect(staleBy({ type: "message", sessionId: "s1", seq: 4 })).toEqual([keys.transcript("s1")]);
 });
 
-test("a session change refetches its experiment's sessions and the cards list", () => {
-  const stale = staleBy({ type: "session", sessionId: "s1", experimentId: "e1", status: "done" });
-  expect(stale).toContainEqual(keys.sessions("e1"));
+test("a session change refetches the sessions and the cards list", () => {
+  const stale = staleBy({ type: "session", sessionId: "s1", status: "done" });
+  expect(stale).toContainEqual(keys.sessions());
   expect(stale).toContainEqual(keys.pending());
 });
 

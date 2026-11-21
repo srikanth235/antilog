@@ -1,0 +1,43 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select kind, coalesce(sum(amount_cents), 0)::bigint as \"cents!\", coalesce(sum(tokens), 0)::bigint as \"tokens!\" from spend where organization_id = $1 and session_id = $2 group by kind order by kind",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "kind",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "spend",
+            "name": "kind"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "cents!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "3149a8c4d6479d45981b3065481626381dc44f4f12443ce1bf3c2ae29a8ed48e"
+}

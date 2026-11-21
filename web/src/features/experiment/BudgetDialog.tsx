@@ -1,6 +1,6 @@
 import { type FormEvent, useState } from "react";
 import type { Schemas } from "../../api/client";
-import { useSetExperimentBudget } from "../../api/queries";
+import { useSetSessionBudget } from "../../api/queries";
 import { Dialog } from "../../components/dialog/Dialog";
 import { reason } from "../../components/state/State";
 import { parseDollars } from "../../lib/format";
@@ -9,7 +9,7 @@ import { w } from "../../words";
 export function BudgetDialog(props: {
   open: boolean;
   onClose: () => void;
-  experiment: Schemas["Experiment"];
+  session: Schemas["Session"];
 }) {
   return (
     <Dialog
@@ -18,14 +18,16 @@ export function BudgetDialog(props: {
       title={w.experiment.budgetSave}
       description={w.experiment.budgetLower}
     >
-      <Form experiment={props.experiment} onClose={props.onClose} />
+      <Form session={props.session} onClose={props.onClose} />
     </Dialog>
   );
 }
 
-function Form(props: { experiment: Schemas["Experiment"]; onClose: () => void }) {
-  const set = useSetExperimentBudget(props.experiment.id);
-  const [text, setText] = useState(String(props.experiment.budgetCapCents / 100));
+function Form(props: { session: Schemas["Session"]; onClose: () => void }) {
+  const set = useSetSessionBudget(props.session.id);
+  const [text, setText] = useState(
+    props.session.budgetCapCents == null ? "" : String(props.session.budgetCapCents / 100),
+  );
   const cents = parseDollars(text);
   const submit = async (event: FormEvent) => {
     event.preventDefault();

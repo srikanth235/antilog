@@ -15,19 +15,13 @@ export function staleBy(event: LiveEvent): QueryKey[] {
   switch (event.type) {
     case "hello":
     case "resync":
-      return [["experiments"], ["sessions"], ["approvals"], ["projects"]];
+      return [["sessions"], ["approvals"], ["projects"]];
     case "message":
       return [keys.transcript(event.sessionId)];
     case "session":
-      return [
-        keys.sessions(event.experimentId),
-        keys.experiment(event.experimentId),
-        keys.session(event.sessionId),
-        keys.pending(),
-        ["projects"],
-      ];
+      return [keys.session(event.sessionId), keys.sessions(), keys.pending(), ["projects"]];
     case "cards":
-      return [keys.pending(), ["experiments"]];
+      return [keys.pending(), keys.sessions()];
   }
 }
 

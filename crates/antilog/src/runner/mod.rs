@@ -1,6 +1,5 @@
 mod api;
 mod container;
-mod machine;
 pub mod opencode;
 mod sandbox;
 mod session;

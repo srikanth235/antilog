@@ -1,0 +1,69 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select session_id as \"session_id!\", organization_id as \"organization_id!\", agent as \"agent!\", state as \"state!\", holder, seed as \"seed!\", resume as \"resume!\" from claim_machines($1, $2, to_timestamp($3::bigint / 1000.0), to_timestamp($4::bigint / 1000.0), $5)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "session_id!",
+        "type_info": "Uuid",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "organization_id!",
+        "type_info": "Uuid",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "agent!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "state!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "holder",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "seed!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "resume!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int4",
+        "Int8",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "337b6f3b00a42ec9864ed3ea92b69e42f456b9c384681276c7ca42b7cbfbbed2"
+}

@@ -1,18 +1,13 @@
-mod judge;
 mod setup;
-mod shape;
 
 use std::future::Future;
 
-use antilog_types::judge::Trial;
 use antilog_types::{MemberId, OrganizationId, SessionId};
 use serde_json::{Value, json};
 
 use crate::deps::Deps;
 use crate::store::{SessionStore, StoreError};
 
-pub(crate) use judge::issue_receipt;
-pub use judge::seal_approved;
 pub(crate) use setup::{Card, ask, waiting};
 
 /// A tool an agent may call: its name, what it does and the shape of its input.
@@ -23,25 +18,12 @@ pub struct ToolDef {
     pub schema: Value,
 }
 
-/// `history` as a plain read for a person, with no session behind it.
-pub async fn read_history<D: Deps>(
-    deps: &D,
-    organization: OrganizationId,
-    experiment: antilog_types::ExperimentId,
-    value: Value,
-) -> Result<Value, ToolError> {
-    judge::read_history(deps, organization, experiment, value)
-        .await
-        .map(|(answer, _)| answer)
-}
-
-/// Who calls: a session of an experiment, and the person behind it when there is one.
+/// Who calls: a session, and the member who started it.
 #[derive(Debug, Clone)]
 pub struct Caller {
     pub organization: OrganizationId,
-    pub experiment: antilog_types::ExperimentId,
     pub session: SessionId,
-    pub actor: Option<MemberId>,
+    pub actor: MemberId,
     /// Unique per call in a session; a repeated call changes nothing twice.
     pub call: String,
 }
@@ -71,34 +53,20 @@ impl From<StoreError> for ToolError {
     }
 }
 
-impl From<crate::store::judge::JudgeStoreError> for ToolError {
-    fn from(_: crate::store::judge::JudgeStoreError) -> Self {
-        Self::new("the judge's store is unavailable: retry in a minute")
-    }
-}
-
-/// A measurement that was accepted and is still to run; `finish` runs it.
-#[derive(Debug, Clone)]
-pub struct Ticket {
-    pub trial: Trial,
-}
-
 #[derive(Debug, Clone)]
 pub struct ToolReply {
     pub answer: Value,
-    pub ticket: Option<Ticket>,
 }
 
 impl ToolReply {
     pub fn error(error: ToolError) -> Self {
         Self {
             answer: json!({ "error": error.0 }),
-            ticket: None,
         }
     }
 }
 
-/// What serves tool calls: the API, for a session and for `antilog mcp`.
+/// What serves tool calls: the MCP endpoint of a session.
 pub trait ToolHost: Send + Sync {
     fn call(
         &self,
@@ -106,9 +74,6 @@ pub trait ToolHost: Send + Sync {
         name: &str,
         input: Value,
     ) -> impl Future<Output = ToolReply> + Send;
-
-    /// Runs an accepted measurement and says in words how it ended. Never a holdout value.
-    fn finish(&self, caller: &Caller, ticket: &Ticket) -> impl Future<Output = String> + Send;
 }
 
 pub struct Toolbox<'a, D: Deps>(pub &'a D);
@@ -151,10 +116,6 @@ impl<D: Deps> ToolHost for Toolbox<'_, D> {
     async fn call(&self, caller: &Caller, name: &str, input: Value) -> ToolReply {
         let shown = input.clone();
         let result = match name {
-            "seal" => judge::seal(self.0, caller, input).await,
-            "measure" => judge::measure(self.0, caller, input).await,
-            "history" => judge::history(self.0, caller, input).await,
-            "deliver" => judge::deliver(self.0, caller, input).await,
             "attach_repo" => setup::attach_repo(self.0, caller, input).await,
             "request_credential" => setup::request_credential(self.0, caller, input).await,
             "set_environment" => setup::set_environment(self.0, caller, input).await,
@@ -169,7 +130,7 @@ impl<D: Deps> ToolHost for Toolbox<'_, D> {
             ))),
         };
         let reply = match result {
-            Ok((answer, ticket)) => ToolReply { answer, ticket },
+            Ok(answer) => ToolReply { answer },
             Err(error) => ToolReply::error(error),
         };
         // The conversation keeps a short, cleaned record of the call once it has ended.
@@ -184,27 +145,14 @@ impl<D: Deps> ToolHost for Toolbox<'_, D> {
         .await;
         reply
     }
-
-    async fn finish(&self, caller: &Caller, ticket: &Ticket) -> String {
-        judge::finish(self.0, caller, ticket).await
-    }
 }
 
-pub(crate) type Done = Result<(Value, Option<Ticket>), ToolError>;
+pub(crate) type Done = Result<Value, ToolError>;
 
 pub(crate) fn input<T: serde::de::DeserializeOwned>(value: Value) -> Result<T, ToolError> {
-    input_for("", value)
-}
-
-/// Like `input`; for `seal` and `measure` a parse error also names the failing field and its shape.
-pub(crate) fn input_for<T: serde::de::DeserializeOwned>(
-    tool: &str,
-    value: Value,
-) -> Result<T, ToolError> {
-    serde_json::from_value(value.clone()).map_err(|error| {
+    serde_json::from_value(value).map_err(|error| {
         ToolError::new(format!(
-            "the input is wrong: {}. Check the tool's input fields",
-            shape::explain(tool, &value, &error.to_string())
+            "the input is wrong: {error}. Check the tool's input fields"
         ))
     })
 }
@@ -217,42 +165,9 @@ fn tool(name: &str, description: &str, schema: Value) -> ToolDef {
     }
 }
 
-/// One definition, served to a session and by `antilog mcp`.
+/// The tools a session's agent is given.
 pub fn definitions() -> Vec<ToolDef> {
-    let commits = json!({"type":"array","items":{"type":"object","properties":{"repo":{"type":"string"},"sha":{"type":"string"}},"required":["repo","sha"]}});
     vec![
-        tool(
-            "seal",
-            shape::SEAL_DESCRIPTION,
-            json!({"type":"object","properties":{
-                "definition":{"type":"object","description":"The experiment definition: {metric, kind, evaluation, guardrails, data, repeats, quickCheck, patience, holdoutCap, valueModel, criteria}. See the tool description for a full example."},
-                "files":{"type":"array","description":"Protected files with their content hashes: [{repo, path, sha256}]."},
-                "cheats":{"type":"array","description":"Planted cheats the evaluation must reject, all four standard ones: [{name, commits: [{repo, sha}], changed: [[repo, path]]}]."}
-            },"required":["definition"]}),
-        ),
-        tool(
-            "measure",
-            shape::MEASURE_DESCRIPTION,
-            json!({"type":"object","properties":{
-                "commits":commits,
-                "parent":{"type":"string","description":"A Kept trial id from history."},
-                "hypothesis":{"type":"string","description":"One line: what you think this changes."},
-                "version":{"type":"integer","description":"Defaults to the latest sealed version."}
-            },"required":["commits","hypothesis"]}),
-        ),
-        tool(
-            "history",
-            "Every trial of the experiment across all sessions, failures included. Read it before you try something.",
-            json!({"type":"object","properties":{
-                "session":{"type":"string"},"outcome":{"type":"string"},
-                "limit":{"type":"integer"},"offset":{"type":"integer"}
-            }}),
-        ),
-        tool(
-            "deliver",
-            "Open pull requests for a Kept trial that is the win. A person may be asked first.",
-            json!({"type":"object","properties":{"trial":{"type":"string"}},"required":["trial"]}),
-        ),
         tool(
             "attach_repo",
             "Ask to attach a repo (owner/name) to this session. A person approves.",
@@ -260,7 +175,7 @@ pub fn definitions() -> Vec<ToolDef> {
         ),
         tool(
             "request_credential",
-            "Ask for a read-only credential for a connector. A person enters the value on the card; you never see it. The holdout is never in scope.",
+            "Ask for a read-only credential for a connector. A person enters the value on the card; you never see it.",
             json!({"type":"object","properties":{"connector":{"type":"string"},"reason":{"type":"string"},"scope":{"type":"string"}},"required":["connector","reason","scope"]}),
         ),
         tool(
@@ -270,7 +185,7 @@ pub fn definitions() -> Vec<ToolDef> {
         ),
         tool(
             "request_budget",
-            "Ask to raise the experiment's budget, in US cents, with a reason.",
+            "Ask to raise this session's budget, in US cents, with a reason.",
             json!({"type":"object","properties":{"amount_cents":{"type":"integer"},"reason":{"type":"string"}},"required":["amount_cents","reason"]}),
         ),
     ]

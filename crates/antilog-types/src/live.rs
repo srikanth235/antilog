@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-use crate::{ExperimentId, SessionId, SessionStatus};
+use crate::{SessionId, SessionStatus};
 
 /// One message on `GET /events/stream`: a hint that something changed, so a client refetches
 /// what it shows. It carries ids, a count and a status, never words, a card's text or any
@@ -18,16 +18,11 @@ pub enum LiveEvent {
     Resync { cursor: i64 },
     /// A conversation item was added to a session. Fetch `GET /sessions/{id}/events?after=`.
     #[serde(rename_all = "camelCase")]
-    Message {
-        session_id: SessionId,
-        experiment_id: ExperimentId,
-        seq: i64,
-    },
+    Message { session_id: SessionId, seq: i64 },
     /// A session's status changed.
     #[serde(rename_all = "camelCase")]
     Session {
         session_id: SessionId,
-        experiment_id: ExperimentId,
         status: SessionStatus,
     },
     /// The cards waiting for this member changed; `pending` is how many wait now.

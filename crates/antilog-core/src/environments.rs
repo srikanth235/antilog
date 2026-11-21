@@ -175,7 +175,7 @@ pub async fn create<S: Store>(
     now: i64,
     new: NewEnvironment,
 ) -> Result<Environment, Refusal> {
-    permit(store, who, Action::EnvironmentCreate, None, &new.name, now).await?;
+    permit(store, who, Action::EnvironmentCreate, &new.name, now).await?;
     let new = checked(new)?;
     let id = slug(&new.name);
     if id.is_empty() {
@@ -206,7 +206,7 @@ pub async fn edit<S: Store>(
     id: &str,
     new: NewEnvironment,
 ) -> Result<Environment, Refusal> {
-    permit(store, who, Action::EnvironmentEdit, None, id, now).await?;
+    permit(store, who, Action::EnvironmentEdit, id, now).await?;
     let new = checked(new)?;
     if id == DEFAULT {
         return Err(Refusal::Invalid(
@@ -243,7 +243,7 @@ pub async fn archive<S: Store>(
     now: i64,
     id: &str,
 ) -> Result<(), Refusal> {
-    permit(store, who, Action::EnvironmentArchive, None, id, now).await?;
+    permit(store, who, Action::EnvironmentArchive, id, now).await?;
     if id == DEFAULT {
         return Err(Refusal::Invalid(
             "the default environment cannot be archived",

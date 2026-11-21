@@ -14,7 +14,7 @@ export function Composer(props: {
   hasCard: boolean;
   canSend: boolean;
   agent: string;
-  budgetCents: number;
+  budgetCents: number | null;
   onSend: (text: string) => Promise<void>;
   onInterrupt: () => void;
   onContinue: (text: string) => Promise<void>;
@@ -43,6 +43,7 @@ export function Composer(props: {
     }
   };
 
+  const budget = props.budgetCents === null ? w.home.noBudget : dollars(props.budgetCents);
   const working = props.status === "working" && text.trim() === "";
   return (
     <div className="dock ac-dock">
@@ -85,8 +86,8 @@ export function Composer(props: {
               <span
                 className="opt"
                 role="img"
-                aria-label={`${w.home.budget}: ${dollars(props.budgetCents)}`}
-                title={`${w.home.budget}: ${dollars(props.budgetCents)}`}
+                aria-label={`${w.home.budget}: ${budget}`}
+                title={`${w.home.budget}: ${budget}`}
               >
                 <span className="ring" style={{ ["--p" as string]: 0 }} />
               </span>

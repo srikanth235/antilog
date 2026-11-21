@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into sessions (id, organization_id, project_id, title, created_by, agent, model, repos, environment, environment_version, budget_cap_cents, follow_policy, status, note, created_at, updated_at) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, to_timestamp($15::bigint / 1000.0), to_timestamp($16::bigint / 1000.0))",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Uuid",
+        "Text",
+        "Text",
+        "TextArray",
+        "Text",
+        "Int4",
+        "Int8",
+        "Bool",
+        "Text",
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "aab9398281e81da1edd13a22fa0947cdf72fd6fd12866eddb7489c7bd7ac6bfa"
+}

@@ -14,9 +14,9 @@ cargo nextest run -p <crate>             # database tests, against Postgres in a
 
 ## What the database holds, and does not
 
-- **Ids, versions, numbers, states, commit ids, the conversation's words, spend and audit rows only.** Antilog stores no customer data. It never holds a dataset's rows, a holdout row, a connector secret, a model key or a token in the clear. The server never connects to customer data; the session machines do. If a column would hold something a customer would call their data, stop and ask.
-- **Never store what can be derived** (product principle 6). Value, Return and status are computed from measured results, not written as columns that can drift. If a derived value must be stored for speed, it is a cache with a rebuild path and a test that recomputes it.
-- **The audit log is append-only.** Rows are inserted, never updated or deleted by the application. A job's state history, a verdict and a receipt are recorded, not overwritten. Tokens are stored as hashes. Receipts are signed ([libraries.md](../libraries.md)).
+- **Ids, versions, numbers, states, commit ids, the conversation's words, spend and audit rows only.** Antilog stores no customer data. It never holds a dataset's rows, a connector secret, a model key or a token in the clear. The server never connects to customer data; the session machines do. If a column would hold something a customer would call their data, stop and ask.
+- **Never store what can be derived** (product principle 6). Status and spend totals are computed from rows already kept, not written as columns that can drift. If a derived value must be stored for speed, it is a cache with a rebuild path and a test that recomputes it.
+- **The audit log is append-only.** Rows are inserted, never updated or deleted by the application. A job's state history is recorded, not overwritten. Tokens are stored as hashes.
 - **Every row carries its organization.** Each table that belongs to an organization has `organization_id`, indexed (usually the first column of its composite indexes), and every query filters by it. A query that forgets the organization is a data leak between customers. Prefer a function or a typed repository per module that takes the organization as an argument so it cannot be forgotten.
 - **Each module owns its tables.** No joins across modules; a module asks another through its Rust API. Write SQL plain enough to move.
 - **Row-level security is not used for end users (the members).** There is one database client, the server, which enforces access in code ([organization skill](../../organization/SKILL.md)). Do not give the database users that mirror Antilog's members. A policy on each organization table is an extra guard; the code never relies on it. The server connects as a role that owns no table (the migrations run as the owner) and sets `antilog.organization_id` in each transaction through `PgStore::scoped`.
@@ -42,7 +42,7 @@ cargo nextest run -p <crate>             # database tests, against Postgres in a
 ## One schema
 
 - Ids are `uuid` (UUIDv7 made in Rust). Times are `timestamptz`. A document the server stores whole is `jsonb`. States are `text` with a `check`. Money is `bigint` minor units with a currency column.
-- Append-only tables (audit log, events, verdicts, receipts, spend) are enforced by triggers.
+- Append-only tables (audit log, events, spend) are enforced by triggers.
 - Moving an organization between deployments (Antilog cloud to the client's own) is an export and import of one neutral file format, not a database copy, so the schema can change without breaking a move.
 
 ## Types and ids
@@ -50,7 +50,7 @@ cargo nextest run -p <crate>             # database tests, against Postgres in a
 - Ids are `uuid` holding a UUIDv7, made in Rust (`uuid` with the `v7` feature) so a test can fix them, and time-ordered so inserts are not scattered across the index. The owner confirms the id scheme when the first schema lands (target). Never expose a sequential id that leaks counts to a customer.
 - Times are `timestamptz`, written in UTC. Money and spend are integer minor units with a currency column, never a float. Counts and versions that must add up are integers.
 - States are `text` with a `check` constraint, never a Postgres enum, so adding a state is a plain migration. Mirror them as a Rust enum with an exhaustive `match`; a test lists the values in both and compares them.
-- JSON is `jsonb`, only for a document the server stores whole and does not query into (a receipt payload, a spec). Anything you filter or join on is a column. Do not store a secret in it.
+- JSON is `jsonb`, only for a document the server stores whole and does not query into (a spec). Anything you filter or join on is a column. Do not store a secret in it.
 - Constrain in the database what the database can know: `not null`, `check`, `unique`, foreign keys with a deliberate `on delete`.
 
 ## The job queue
@@ -84,7 +84,7 @@ The queue is a table in Postgres. No Redis, no message bus, no cloud queue ([lib
 ## Pitfalls
 
 - **A migration that locks a hot table** blocks the whole server. Check what lock a statement takes before shipping it, and set `lock_timeout`.
-- **`OFFSET` pagination** gets slower with depth and skips or repeats rows while new ones arrive; the timeline, the audit log and trial lists page by a keyset cursor on `(time, id)` ([general/postgres-best-practices.md](general/postgres-best-practices.md)).
+- **`OFFSET` pagination** gets slower with depth and skips or repeats rows while new ones arrive; the timeline and the audit log page by a keyset cursor on `(time, id)` ([general/postgres-best-practices.md](general/postgres-best-practices.md)).
 - **A long-lived transaction** holds locks and stops vacuum. Set `idle_in_transaction_session_timeout`.
 - **Unindexed foreign keys** make deletes and joins scan. Run the missing-index query in review.
 - **`timestamp` without time zone, `float` for money, `varchar(n)` for nothing** are the usual type mistakes: see the types above.

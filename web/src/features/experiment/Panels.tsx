@@ -1,9 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import type { Schemas } from "../../api/client";
-import { useAgentLabel } from "../../api/queries";
+import { useConnectors } from "../../api/queries";
 import { Glyph, Icon } from "../../components/icon/Icon";
-import { dollars } from "../../lib/format";
-import { type History, OUTCOME_COLOR, OUTCOME_WORDS } from "../../lib/history";
+import { dollars, share } from "../../lib/format";
 import { w } from "../../words";
 import type { Panel } from "./Header";
 
@@ -36,20 +35,21 @@ export function PanelFrame(props: {
 
 /**
  * The overview of the session on screen: what it runs on, what it spent and what it reaches.
- * Each section leads to the panel or page that shows it in full. A row the API cannot fill yet is
- * left out: the environment's name, the repos and branch, the context window, and the outputs
- * (files, patches and the delivered pull request). (target)
+ * Each section leads to the page that shows it in full. A row the API cannot fill yet is left
+ * out: the branch, the context window and the outputs (files, patches, pull requests). (target)
  */
 export function OverviewPanel(props: {
-  experiment: Schemas["Experiment"];
-  sessions: Schemas["Session"][];
+  session: Schemas["Session"];
   spentCents: number | undefined;
-  connectors: { id: string; name: string }[];
   onClose: () => void;
+  onBudget: () => void;
+  canEdit: boolean;
 }) {
-  const e = props.experiment;
+  const s = props.session;
   const o = w.experiment.overview;
-  const agentLabel = useAgentLabel();
+  const connectors = useConnectors();
+  const spent = props.spentCents;
+  const cap = s.budgetCapCents ?? null;
   return (
     <PanelFrame panel="details" onClose={props.onClose}>
       <div className="pane-b scr">
@@ -59,33 +59,63 @@ export function OverviewPanel(props: {
           </div>
           <Link className="dp-row" to="/settings/$section" params={{ section: "connections" }}>
             <Glyph name="cloud" />
-            <span className="v">{o.environments}</span>
+            <span className="v">{s.environment ?? o.environments}</span>
             <Icon name="chev" size="s" />
           </Link>
-        </section>
-        {props.spentCents === undefined ? null : (
-          <section className="dp-sec">
-            <div className="dp-lh">
-              <span className="t-label">{w.experiment.sections.spend}</span>
+          {s.repos.map((repo) => (
+            <div key={repo} className="dp-row">
+              <Glyph name="code" />
+              <span className="v">{repo}</span>
             </div>
+          ))}
+        </section>
+        <section className="dp-sec">
+          <div className="dp-lh">
+            <span className="t-label">{w.experiment.sections.spend}</span>
+            <button
+              type="button"
+              className="textbtn"
+              style={{ minHeight: 28, fontSize: 12.5 }}
+              disabled={!props.canEdit}
+              onClick={props.onBudget}
+            >
+              {w.projects.changeBudget}
+            </button>
+          </div>
+          {spent === undefined ? (
             <div className="dp-row">
               <Glyph name="gauge" />
-              <span className="v">{dollars(props.spentCents)}</span>
+              <span className="v">{cap === null ? w.home.noBudget : dollars(cap)}</span>
             </div>
-          </section>
-        )}
+          ) : cap === null ? (
+            <div className="dp-row">
+              <Glyph name="gauge" />
+              <span className="v">{dollars(spent)}</span>
+            </div>
+          ) : (
+            <div className="dp-bar" style={{ paddingLeft: 0 }}>
+              <div className="m">
+                <span>{w.experiment.budgetSpent(spent, cap)}</span>
+                <span>{`${Math.round(share(spent, cap) * 100)}%`}</span>
+              </div>
+              <span className="bar" aria-hidden="true">
+                <span style={{ width: `${share(spent, cap) * 100}%` }} />
+              </span>
+            </div>
+          )}
+        </section>
         <section className="dp-sec">
           <div className="dp-lh">
             <span className="t-label">{w.experiment.sections.connectors}</span>
           </div>
-          {props.connectors.length === 0 ? (
+          {(connectors.data ?? []).length === 0 ? (
             <Link className="dp-row" to="/customize/connectors">
               <Glyph name="blocks" />
               <span className="v">{o.noConnectors}</span>
               <Icon name="chev" size="s" />
             </Link>
           ) : null}
-          {props.connectors.map((connector) => (
+          {(connectors.data ?? []).map((connector) => (
             <Link
               key={connector.id}
               className="dp-row"
@@ -98,80 +128,6 @@ export function OverviewPanel(props: {
             </Link>
           ))}
         </section>
-        <section className="dp-sec">
-          <div className="dp-lh">
-            <span className="t-label">{w.experiment.sections.sessions}</span>
-          </div>
-          {props.sessions.length === 0 ? (
-            <span className="xs mut">{w.experiment.noSessions}</span>
-          ) : null}
-          {props.sessions.map((session) => (
-            <Link
-              key={session.id}
-              className="dp-row"
-              to="/experiments/$experimentId"
-              params={{ experimentId: e.id }}
-              search={{ session: session.id }}
-            >
-              <span className="v">{agentLabel(session.agent)}</span>
-              <span className="r">{w.activity[session.status]}</span>
-            </Link>
-          ))}
-        </section>
-      </div>
-    </PanelFrame>
-  );
-}
-
-export function TrialsPanel(props: {
-  history: History;
-  sessions: Schemas["Session"][];
-  onClose: () => void;
-}) {
-  const h = props.history;
-  const rows = [...h.trials].reverse();
-  const agentLabel = useAgentLabel();
-  const agentOf = (id: string) => agentLabel(props.sessions.find((s) => s.id === id)?.agent ?? "");
-  return (
-    <PanelFrame panel="trials" onClose={props.onClose} sub={`${h.trials.length} trials`}>
-      <div className="pane-b scr">
-        {rows.length === 0 ? (
-          <p className="sd-none">{h.note ?? w.experiment.trialsPanelNone}</p>
-        ) : null}
-        {rows.map((row) => {
-          const link = row.outcome === "kept";
-          const inner = (
-            <>
-              <span className="h">
-                <span className="n">{row.number}</span>
-                <span className="t">{row.hypothesis}</span>
-                <span className="tg" style={{ ["--c" as string]: OUTCOME_COLOR[row.outcome] }}>
-                  {OUTCOME_WORDS[row.outcome]}
-                </span>
-              </span>
-              <span className="m">
-                <span className="by">{agentOf(row.session)}</span>
-                {row.value === null ? null : (
-                  <span className="tv">{`${row.value} ${h.unit}`.trim()}</span>
-                )}
-              </span>
-            </>
-          );
-          return link ? (
-            <Link
-              key={row.trial}
-              className="tr-r"
-              to="/receipts/$trialId"
-              params={{ trialId: row.trial }}
-            >
-              {inner}
-            </Link>
-          ) : (
-            <div key={row.trial} className="tr-r">
-              {inner}
-            </div>
-          );
-        })}
       </div>
     </PanelFrame>
   );

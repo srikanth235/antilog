@@ -17,7 +17,7 @@ Built: `antilog-types` (`Environment`, `NewEnvironment`, and `EnvironmentSpec` w
 1. Types and validation: `antilog-core/src/environments.rs`; run `cargo run -q -p antilog-server -- openapi > openapi/antilog.json` and `pnpm generate:api` in `web/`.
 2. A new column: [../change/ledger-table.md](../change/ledger-table.md); `cargo sqlx prepare --workspace`.
 3. The screen: a board first ([../change/screen.md](../change/screen.md)); `SettingsConnections` and `SettingsEnvironment` are the boards.
-4. Cost it: show the estimated spend per hour on the Change environment card before approval.
+4. A change an agent proposes arrives as a Change environment card; a person approves it ([tools.md](tools.md)).
 
 ## Proving it
 

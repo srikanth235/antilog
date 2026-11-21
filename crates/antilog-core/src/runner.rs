@@ -4,8 +4,8 @@
 
 use antilog_types::{
     ApprovalStatus, CardKind, CardPayload, Command, EventKind, Item, ItemKind, Machine,
-    MachineState, PollRequest, PollResponse, Release, ReleaseOutcome, Reply, RepoSpec, RunResult,
-    SessionId, SessionSpec, SessionStatus, SkillDownload,
+    MachineState, PollRequest, PollResponse, Release, ReleaseOutcome, Reply, RepoSpec, SessionId,
+    SessionSpec, SessionStatus, SkillDownload,
 };
 use jiff::SignedDuration;
 use serde_json::{Value, json};
@@ -28,7 +28,7 @@ pub struct Settings {
     pub server_url: String,
     /// Prepended to a repo name to clone it, such as `https://github.com/`.
     pub clone_base: String,
-    /// `provider/model`.
+    /// `provider/model`, for a session that names none.
     pub model: String,
     /// A claim's lease; each poll renews it.
     pub lease: SignedDuration,
@@ -84,6 +84,7 @@ impl From<StoreError> for RunnerError {
 pub fn opencode_config(
     settings: &Settings,
     session: SessionId,
+    model: &str,
     model_token: &str,
     mcp_token: &str,
 ) -> Value {
@@ -91,7 +92,7 @@ pub fn opencode_config(
         "autoupdate": false,
         // Titles and summaries use the session's own model, so a key that pays for one model
         // (or a free one) covers the whole session.
-        "small_model": settings.model,
+        "small_model": model,
         "provider": {
             "anthropic": {"options": {
                 "baseURL": format!("{}/anthropic/v1", settings.proxy_url),
@@ -140,19 +141,24 @@ async fn spec<D: Deps>(
     let model_token = creds.mint(session, Purpose::Model, ttl).await?;
     let mcp_token = creds.mint(session, Purpose::Mcp, ttl).await?;
     let runner_token = creds.mint(session, Purpose::Runner, ttl).await?;
-    // The skill pack versions the experiment selected; the runner downloads each.
+    let row = deps
+        .store()
+        .session(machine.organization, session)
+        .await?
+        .ok_or(RunnerError::NotFound)?;
+    // The latest version of each of the organization's skills; the runner downloads each.
     let skills = deps
         .store()
-        .experiment_skills(machine.organization, machine.experiment)
+        .skills(machine.organization)
         .await?
         .into_iter()
         .map(|skill| SkillDownload {
             path: format!(
                 "/runner/sessions/{session}/skills/{}/{}",
-                skill.name, skill.version
+                skill.name, skill.latest
             ),
             name: skill.name,
-            version: skill.version.to_string(),
+            version: skill.latest.to_string(),
         })
         .collect();
     // The version the session started on; one that has gone missing fails the claim, so a
@@ -160,12 +166,16 @@ async fn spec<D: Deps>(
     let environment = environments::of_seed(deps.store(), machine.organization, &machine.seed)
         .await?
         .ok_or(RunnerError::NotFound)?;
+    let model = if row.model.is_empty() {
+        settings.model.clone()
+    } else {
+        row.model.clone()
+    };
     Ok(SessionSpec {
         session,
         organization: machine.organization,
-        experiment: machine.experiment,
         agent: machine.agent.clone(),
-        model: settings.model.clone(),
+        model: model.clone(),
         repos: machine
             .seed
             .repos
@@ -174,7 +184,7 @@ async fn spec<D: Deps>(
             .collect(),
         environment,
         skills,
-        opencode_config: opencode_config(settings, session, &model_token, &mcp_token),
+        opencode_config: opencode_config(settings, session, &model, &model_token, &mcp_token),
         model_token,
         mcp_token,
         runner_token,
@@ -314,16 +324,15 @@ async fn ask_card<S: Store>(
     detail: &str,
 ) -> Result<(), RunnerError> {
     let existing = store
-        .approvals(machine.organization, machine.experiment)
+        .approvals(machine.organization, machine.session)
         .await?;
     if existing.iter().any(|approval| {
-        approval.session_id == Some(machine.session)
-            && matches!(&approval.payload, Some(CardPayload::AskFirst { permission: id, .. }) if id == permission)
+        matches!(&approval.payload, Some(CardPayload::AskFirst { permission: id, .. }) if id == permission)
     }) {
         return Ok(());
     }
-    let experiment = store
-        .experiment(machine.organization, machine.experiment)
+    let session = store
+        .session(machine.organization, machine.session)
         .await?
         .ok_or(RunnerError::NotFound)?;
     let summary: String = format!("{} asks to use {tool}: {detail}", machine.agent)
@@ -336,8 +345,7 @@ async fn ask_card<S: Store>(
         None,
         CardRequest {
             organization: machine.organization,
-            experiment: machine.experiment,
-            session: Some(machine.session),
+            session: machine.session,
             card: CardKind::AskFirst,
             summary,
             payload: Some(CardPayload::AskFirst {
@@ -346,8 +354,7 @@ async fn ask_card<S: Store>(
                 permission: permission.to_owned(),
             }),
             cost_cents: None,
-            needs_owner: false,
-            follow_policy: experiment.follow_policy,
+            follow_policy: session.follow_policy,
         },
     )
     .await?;
@@ -440,7 +447,7 @@ pub async fn ingest<D: Deps>(
                     .pending_approvals(machine.organization)
                     .await?
                     .iter()
-                    .any(|approval| approval.session_id == Some(session));
+                    .any(|approval| approval.session_id == session);
                 if !(asking && *busy) {
                     set_status(deps.store(), now_ms(deps), &machine, status).await?;
                 }
@@ -448,21 +455,6 @@ pub async fn ingest<D: Deps>(
         }
     }
     Ok(())
-}
-
-/// The outcome of a `Run` the judge is waiting for.
-pub async fn result<D: Deps>(
-    deps: &D,
-    session: SessionId,
-    holder: &str,
-    result: &RunResult,
-) -> Result<(), RunnerError> {
-    held_by(deps, session, holder).await?;
-    if deps.store().put_result(session, result).await? {
-        Ok(())
-    } else {
-        Err(RunnerError::NotFound)
-    }
 }
 
 /// The runner lets the session go: its export is kept, its tokens stop working, and the
@@ -519,11 +511,10 @@ pub async fn answer<S: Store>(
     approval: &antilog_types::Approval,
     now: i64,
 ) -> Result<(), RunnerError> {
-    let (Some(session), Some(CardPayload::AskFirst { permission, .. })) =
-        (approval.session_id, &approval.payload)
-    else {
+    let Some(CardPayload::AskFirst { permission, .. }) = &approval.payload else {
         return Ok(());
     };
+    let session = approval.session_id;
     let reply = if matches!(
         approval.status,
         ApprovalStatus::Approved | ApprovalStatus::ApprovedByPolicy

@@ -3,22 +3,20 @@ import { useDecide } from "../../api/queries";
 import { Icon, StatusIcon } from "../../components/icon/Icon";
 import { reason } from "../../components/state/State";
 import { dollars, time } from "../../lib/format";
-import type { History } from "../../lib/history";
 import { w } from "../../words";
 import { cardLead, cardRows } from "./cardRows";
 
 /** A card is a frame: a title, what would happen, what it may cost, two buttons. */
 export function ApprovalCard(props: {
   approval: Schemas["Approval"];
-  experiment: string;
+  session: string;
   canDecide: boolean;
   decidedBy: string;
-  budgetCapCents: number;
+  budgetCapCents: number | null;
   spentCents: number | undefined;
-  history: History;
 }) {
   const { approval } = props;
-  const decide = useDecide(props.experiment);
+  const decide = useDecide(props.session);
   const title = w.card.titles[approval.card];
 
   if (approval.status !== "pending") {
@@ -38,7 +36,6 @@ export function ApprovalCard(props: {
   }
 
   const credential = approval.card === "add_credential";
-  const keepGoing = approval.card === "keep_going";
   const cost = approval.costCents;
   const rows = cardRows(approval, props);
   const lead = cardLead(approval);
@@ -71,14 +68,6 @@ export function ApprovalCard(props: {
             <span>{cost == null || cost === 0 ? w.card.costsNothing : w.card.mayCost(cost)}</span>
           </span>
         </div>
-        {approval.needsOwner ? (
-          <div className="ap-r">
-            <span className="k">{w.value.sealValue}</span>
-            <span className="v">
-              <span>{w.value.needsOwner}</span>
-            </span>
-          </div>
-        ) : null}
         {credential ? (
           <div className="ap-r">
             <span className="k">{w.card.titles.add_credential}</span>
@@ -99,13 +88,7 @@ export function ApprovalCard(props: {
           <span>
             {cost == null || cost === 0 ? w.card.costsNothing : `${w.card.mayCost(cost)}`}
           </span>
-          <span className="xs">
-            {props.canDecide
-              ? approval.needsOwner
-                ? w.card.waitingOwner
-                : w.card.nothingHappens
-              : w.readOnly.approve}
-          </span>
+          <span className="xs">{props.canDecide ? w.card.nothingHappens : w.readOnly.approve}</span>
         </div>
         <div className="bt">
           <button
@@ -122,7 +105,7 @@ export function ApprovalCard(props: {
             disabled={!props.canDecide || decide.isPending}
             onClick={() => decide.mutate({ id: approval.id, decision: "decline" })}
           >
-            {keepGoing ? w.card.declineKeepGoing : w.card.decline}
+            {w.card.decline}
           </button>
         </div>
       </div>

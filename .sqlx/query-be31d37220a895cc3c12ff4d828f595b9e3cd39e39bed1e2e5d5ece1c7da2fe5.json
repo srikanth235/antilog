@@ -1,0 +1,139 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select id, organization_id, session_id, card, summary, payload, cost_cents, status, decided_by, (extract(epoch from created_at) * 1000)::bigint as \"created_at!\", (extract(epoch from decided_at) * 1000)::bigint as \"decided_at\" from approvals where organization_id = $1 and session_id = $2 order by created_at, id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "approvals",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "organization_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "approvals",
+            "name": "organization_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "session_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "approvals",
+            "name": "session_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "card",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "approvals",
+            "name": "card"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "summary",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "approvals",
+            "name": "summary"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "payload",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "approvals",
+            "name": "payload"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "cost_cents",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "approvals",
+            "name": "cost_cents"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "status",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "approvals",
+            "name": "status"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "decided_by",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "approvals",
+            "name": "decided_by"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "created_at!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 10,
+        "name": "decided_at",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      true,
+      null,
+      null
+    ]
+  },
+  "hash": "be31d37220a895cc3c12ff4d828f595b9e3cd39e39bed1e2e5d5ece1c7da2fe5"
+}

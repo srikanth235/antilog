@@ -2,44 +2,32 @@
 
 mod common;
 
-use antilog_core::fakes::{FakeCodeHost, FakeDeps, FakeMachine, Profile};
-use antilog_core::judge::fixtures::definition;
-use antilog_core::seed::{Seed, T0, experiment};
+use antilog_core::fakes::FakeDeps;
+use antilog_core::seed::{Seed, T0, organization};
 use antilog_core::session::{self, NewSession};
 use antilog_core::store::RunnerStore;
-use antilog_core::store::{ApprovalStore, OrganizationStore, SessionStore};
-use antilog_types::{ApprovalStatus, Command, Decision, SessionStatus};
+use antilog_core::store::{ApprovalStore, SessionStore};
+use antilog_types::{Command, Decision, SessionStatus};
 use common::Agent;
-use serde_json::{Value, json};
+use serde_json::json;
 
-fn machine() -> FakeMachine {
-    let mut p = FakeMachine::default().with("base", Profile::new(100.0));
-    for i in 0..4 {
-        p = p.with(&format!("cheat-{i}"), Profile::new(10.0).holdout(100.0));
-    }
-    p.with("fast", Profile::new(80.0))
-        .with("slow", Profile::new(120.0))
-}
-
-async fn world(budget: i64) -> (FakeDeps, Seed) {
-    let deps = FakeDeps::new(
-        machine(),
-        FakeCodeHost::default()
-            .with("fast", "app", "src/a.rs")
-            .with("slow", "app", "src/b.rs"),
-    );
-    let seed = experiment(&deps.store, budget).await;
+async fn world() -> (FakeDeps, Seed) {
+    let deps = FakeDeps::new();
+    let seed = organization(&deps.store).await;
     (deps, seed)
 }
 
-async fn lead(deps: &FakeDeps, seed: &Seed) -> Agent {
+async fn lead_with(deps: &FakeDeps, seed: &Seed, budget: Option<i64>) -> Agent {
     let session = session::start(
         deps,
         seed.organization.id,
-        seed.experiment.id,
+        seed.project.id,
         NewSession {
-            agent: "claude".into(),
+            agent: "opencode".into(),
+            model: "opencode/test".into(),
             prompt: "cut p95".into(),
+            budget_cap_cents: budget,
+            actor: seed.owner.id,
             ..NewSession::default()
         },
     )
@@ -48,26 +36,13 @@ async fn lead(deps: &FakeDeps, seed: &Seed) -> Agent {
     Agent::new(session)
 }
 
-fn cheats() -> Value {
-    let cheats: Vec<Value> = antilog_types::judge::STANDARD_CHEATS
-        .iter()
-        .enumerate()
-        .map(|(i, name)| {
-            let path = if i == 3 {
-                "src/x.rs"
-            } else {
-                "bench/data.json"
-            };
-            json!({"name": name, "commits": [{"repo":"app","sha":format!("cheat-{i}")}],
-                "changed": [["app", path]]})
-        })
-        .collect();
-    Value::Array(cheats)
+async fn lead(deps: &FakeDeps, seed: &Seed) -> Agent {
+    lead_with(deps, seed, Some(1_000)).await
 }
 
 #[tokio::test]
 async fn a_started_session_is_working_and_spend_is_booked_once() {
-    let (deps, seed) = world(1_000).await;
+    let (deps, seed) = world().await;
     let session = lead(&deps, &seed).await.session;
     let org = seed.organization.id;
     assert_eq!(session.status, SessionStatus::Working);
@@ -84,7 +59,7 @@ async fn a_started_session_is_working_and_spend_is_booked_once() {
         .await
         .unwrap();
     }
-    let spent = antilog_core::spend::spent(&deps.store, &deps.clock, org, seed.experiment.id)
+    let spent = antilog_core::spend::spent(&deps.store, &deps.clock, org, session.id)
         .await
         .unwrap();
     assert_eq!(
@@ -96,7 +71,7 @@ async fn a_started_session_is_working_and_spend_is_booked_once() {
 
 #[tokio::test]
 async fn a_message_resumes_and_stop_is_final() {
-    let (deps, seed) = world(1_000).await;
+    let (deps, seed) = world().await;
     let session = lead(&deps, &seed).await.session;
     let org = seed.organization.id;
     let resumed = session::message(&deps, org, session.id, None, "try caching")
@@ -122,122 +97,8 @@ async fn a_message_resumes_and_stop_is_final() {
 }
 
 #[tokio::test]
-async fn seal_measure_history_deliver_through_the_session() {
-    let (deps, seed) = world(100_000).await;
-    let agent = lead(&deps, &seed).await;
-    let org = seed.organization.id;
-
-    agent.call(
-        "c1",
-        "measure",
-        json!({"commits":[{"repo":"app","sha":"fast"}],"hypothesis":"cache"}),
-    );
-    agent.step(&deps).await;
-    assert!(
-        agent.answer("c1")["error"]
-            .as_str()
-            .unwrap()
-            .contains("call seal")
-    );
-
-    agent.call(
-        "c2",
-        "seal",
-        json!({"definition": definition(), "cheats": cheats()}),
-    );
-    agent.step(&deps).await;
-    let sealed = agent.answer("c2");
-    assert_eq!(sealed["status"], "waiting for a person", "{sealed}");
-    let approval = deps
-        .store
-        .approvals(org, seed.experiment.id)
-        .await
-        .unwrap()
-        .remove(0);
-    assert_eq!(approval.status, ApprovalStatus::Pending);
-    let waiting = deps
-        .store
-        .session(org, agent.session.id)
-        .await
-        .unwrap()
-        .unwrap();
-    assert_eq!(waiting.status, SessionStatus::WaitingForYou);
-
-    let entry = antilog_types::AuditEntry::new(
-        org,
-        Some(seed.owner.id),
-        "card.approve",
-        approval.id,
-        antilog_types::AuditOutcome::Approved,
-        T0,
-    );
-    deps.store
-        .decide_approval(
-            org,
-            approval.id,
-            Decision::Approve,
-            seed.owner.id,
-            T0,
-            &entry,
-        )
-        .await
-        .unwrap();
-    let step = agent.step(&deps).await;
-    assert_eq!(step, SessionStatus::Working);
-    assert!(
-        agent
-            .inputs()
-            .last()
-            .unwrap()
-            .contains("Sealed as version 1")
-    );
-    assert_eq!(
-        deps.store
-            .experiment(org, seed.experiment.id)
-            .await
-            .unwrap()
-            .unwrap()
-            .status,
-        antilog_types::ExperimentStatus::Sealed
-    );
-
-    agent.call(
-        "c3",
-        "measure",
-        json!({"commits":[{"repo":"app","sha":"fast"}],"hypothesis":"cache"}),
-    );
-    agent.step(&deps).await;
-    assert_eq!(agent.answer("c3")["status"], "measuring");
-    let told = agent.inputs().last().unwrap().clone();
-    assert!(told.contains("kept"), "{told}");
-    assert!(told.contains("p95 80.00 ms"), "{told}");
-
-    agent.call("c4", "history", json!({}));
-    agent.step(&deps).await;
-    let history = agent.answer("c4");
-    assert_eq!(history["trials"].as_array().unwrap().len(), 1);
-    let trial = history["trials"][0]["trial"].clone();
-    assert_eq!(history["best"], trial);
-
-    agent.call("c5", "deliver", json!({"trial": trial}));
-    agent.call(
-        "c6",
-        "deliver",
-        json!({"trial": "00000000-0000-7000-8000-000000000000"}),
-    );
-    agent.step(&deps).await;
-    assert_eq!(agent.answer("c5")["status"], "waiting for a person");
-    assert!(
-        agent.answer("c6")["error"]
-            .as_str()
-            .unwrap()
-            .contains("history")
-    );
-}
-
-#[tokio::test]
 async fn setup_tools_ask_and_refuse_with_a_next_step() {
-    let (deps, seed) = world(1_000).await;
+    let (deps, seed) = world().await;
     let agent = lead(&deps, &seed).await;
     let org = seed.organization.id;
     agent.call("a", "attach_repo", json!({"repo": "acme/app"}));
@@ -245,7 +106,7 @@ async fn setup_tools_ask_and_refuse_with_a_next_step() {
     agent.call(
         "c",
         "request_credential",
-        json!({"connector":"snowflake","reason":"read orders","scope":"holdout read"}),
+        json!({"connector":"snowflake","reason":"read orders","scope":"admin"}),
     );
     agent.call(
         "d",
@@ -270,7 +131,7 @@ async fn setup_tools_ask_and_refuse_with_a_next_step() {
             .unwrap()
             .contains("never a secret")
     );
-    let cards = deps.store.approvals(org, seed.experiment.id).await.unwrap();
+    let cards = deps.store.approvals(org, agent.session.id).await.unwrap();
     assert_eq!(cards.len(), 2);
 
     let raise = cards
@@ -292,11 +153,11 @@ async fn setup_tools_ask_and_refuse_with_a_next_step() {
     agent.step(&deps).await;
     let row = deps
         .store
-        .experiment(org, seed.experiment.id)
+        .session(org, agent.session.id)
         .await
         .unwrap()
         .unwrap();
-    assert_eq!(row.budget_cap_cents, 1_500);
+    assert_eq!(row.budget_cap_cents, Some(1_500));
     agent.step(&deps).await;
     let told = agent
         .inputs()
@@ -307,41 +168,80 @@ async fn setup_tools_ask_and_refuse_with_a_next_step() {
 }
 
 #[tokio::test]
-async fn a_spent_budget_stops_new_sessions_and_measurements() {
-    let (deps, seed) = world(100).await;
-    let agent = lead(&deps, &seed).await;
+async fn a_spent_budget_leaves_no_room_and_the_organization_cap_stops_new_sessions() {
+    let (deps, seed) = world().await;
+    let agent = lead_with(&deps, &seed, Some(100)).await;
     let org = seed.organization.id;
+    let room = antilog_core::budget::ensure_room(&deps.store, org, agent.session.id, T0)
+        .await
+        .unwrap();
+    assert_eq!(room.remaining(), Some(100));
     antilog_core::spend::record_usage(&deps.store, org, agent.session.id, 100, 1, T0, "u")
         .await
         .unwrap();
+    assert!(matches!(
+        antilog_core::budget::ensure_room(&deps.store, org, agent.session.id, T0).await,
+        Err(antilog_core::organization::Refusal::Spent(
+            antilog_core::budget::Spent::Session
+        ))
+    ));
     agent.call(
-        "m",
-        "measure",
-        json!({"commits":[{"repo":"app","sha":"fast"}],"hypothesis":"x"}),
+        "r",
+        "request_budget",
+        json!({"amount_cents": 50, "reason": "one more try"}),
     );
     agent.step(&deps).await;
+    assert_eq!(agent.answer("r")["status"], "waiting for a person");
+
+    // A session with no cap of its own is held only by the organization's monthly cap.
+    let free = lead_with(&deps, &seed, None).await;
+    free.call(
+        "r",
+        "request_budget",
+        json!({"amount_cents": 50, "reason": "more"}),
+    );
+    free.step(&deps).await;
     assert!(
-        agent.answer("m")["error"]
+        free.answer("r")["error"]
             .as_str()
             .unwrap()
-            .contains("request_budget")
+            .contains("no budget of its own")
     );
+    let owner = antilog_core::organization::Principal {
+        organization: org,
+        member: seed.owner.id,
+    };
+    antilog_core::budget::set_organization_limits(&deps.store, &owner, T0, Some(120), None, None)
+        .await
+        .unwrap();
+    assert!(
+        antilog_core::budget::set_session_budget(&deps.store, &owner, T0, free.session.id, 121)
+            .await
+            .is_err(),
+        "a session's budget stays inside the organization's cap"
+    );
+    let now = antilog_core::clock::Clock::now(&deps.clock).as_millisecond();
+    antilog_core::spend::record_usage(&deps.store, org, free.session.id, 120, 1, now, "m")
+        .await
+        .unwrap();
     let again = session::start(
         &deps,
         org,
-        seed.experiment.id,
+        seed.project.id,
         NewSession {
-            agent: "claude".into(),
+            agent: "opencode".into(),
+            model: "opencode/test".into(),
+            actor: seed.owner.id,
             ..NewSession::default()
         },
     )
     .await;
-    assert!(matches!(again, Err(session::SessionError::Budget(_))));
+    assert!(matches!(again, Err(session::SessionError::CapReached)));
 }
 
 #[tokio::test]
 async fn a_decided_card_reaches_the_agent_once_and_an_approved_repo_reaches_the_machine() {
-    let (deps, seed) = world(1_000).await;
+    let (deps, seed) = world().await;
     let agent = lead(&deps, &seed).await;
     let (org, id) = (seed.organization.id, agent.session.id);
     agent.call("a", "attach_repo", json!({"repo": "acme/lib"}));
@@ -349,7 +249,7 @@ async fn a_decided_card_reaches_the_agent_once_and_an_approved_repo_reaches_the_
     // A runner holds the machine: the repo is cloned now.
     let held = deps.store.claim("host", 1, T0, T0 + 60_000).await.unwrap();
     assert_eq!(held.len(), 1);
-    let card = deps.store.approvals(org, seed.experiment.id).await.unwrap()[0].id;
+    let card = deps.store.approvals(org, id).await.unwrap()[0].id;
     let entry = antilog_types::AuditEntry::new(
         org,
         Some(seed.owner.id),
@@ -402,13 +302,13 @@ async fn a_decided_card_reaches_the_agent_once_and_an_approved_repo_reaches_the_
 
 #[tokio::test]
 async fn the_conversation_keeps_words_and_a_cleaned_record_of_each_tool_call() {
-    let (deps, seed) = world(1_000).await;
+    let (deps, seed) = world().await;
     let agent = lead(&deps, &seed).await;
     let org = seed.organization.id;
     agent.call(
         "c1",
-        "history",
-        json!({"note": "use alc_0123abcdef", "secret-looking": "kept"}),
+        "attach_repo",
+        json!({"repo": "acme/app", "note": "use alc_0123abcdef", "secret-looking": "kept"}),
     );
     agent.step(&deps).await;
     session::message(
@@ -433,17 +333,17 @@ async fn the_conversation_keeps_words_and_a_cleaned_record_of_each_tool_call() {
         said,
         vec![
             ("person", "cut p95"),
-            ("tool", "history"),
+            ("tool", "attach_repo"),
             ("person", "try caching"),
         ]
     );
-    assert_eq!(page.events[0].member_id, None);
+    assert_eq!(page.events[0].member_id, Some(seed.owner.id));
     assert_eq!(page.events[2].member_id, Some(seed.owner.id));
     let record = page.events[1]
         .tool
         .as_ref()
         .expect("a tool call carries its record");
-    assert_eq!(record.label, "history");
+    assert_eq!(record.label, "attach_repo");
     let input = record.input.as_deref().unwrap_or_default();
     assert!(input.contains("kept"), "the input is kept: {input}");
     assert!(!input.contains("alc_0123"), "a credential is not: {input}");
@@ -471,107 +371,5 @@ async fn the_conversation_keeps_words_and_a_cleaned_record_of_each_tool_call() {
         )
         .await
         .is_err()
-    );
-}
-
-#[tokio::test]
-async fn sealing_only_points_at_the_projects_value_model_and_says_so_on_the_card() {
-    use antilog_core::store::judge::JudgeStore;
-    use antilog_types::judge::{ValueModelId, ValueSource};
-
-    let (deps, seed) = world(100_000).await;
-    let agent = lead(&deps, &seed).await;
-    let org = seed.organization.id;
-    let project = seed.experiment.project_id;
-    let model = |metric: &str, version| antilog_types::judge::ValueModel {
-        id: ValueModelId::new(),
-        version,
-        metric: metric.into(),
-        unit: "ms".into(),
-        cents_per_unit: 360.0,
-        source: ValueSource {
-            text: "finance".into(),
-            link: None,
-        },
-        set_by: seed.owner.id.as_uuid(),
-    };
-    let p95 = model("p95", 1);
-    deps.judge.put_value_model(project, &p95, T0).await.unwrap();
-    let other_metric = model("bundle", 1);
-    deps.judge
-        .put_value_model(project, &other_metric, T0)
-        .await
-        .unwrap();
-    let other_project = {
-        let p = antilog_types::Project::new(org, "other", "x", T0);
-        deps.store
-            .create_project(
-                &p,
-                seed.owner.id,
-                &antilog_types::AuditEntry::new(
-                    org,
-                    Some(seed.owner.id),
-                    "project.create",
-                    p.id,
-                    antilog_types::AuditOutcome::Done,
-                    T0,
-                ),
-            )
-            .await
-            .unwrap();
-        p.id
-    };
-    let foreign = model("p95", 1);
-    deps.judge
-        .put_value_model(other_project, &foreign, T0)
-        .await
-        .unwrap();
-
-    let seal = |id: &str, reference: Value| {
-        let mut def = serde_json::to_value(definition()).unwrap();
-        def["valueModel"] = reference;
-        agent.call(id, "seal", json!({"definition": def, "cheats": cheats()}));
-    };
-    let reference =
-        |m: &antilog_types::judge::ValueModel| json!({"id": m.id, "version": m.version});
-
-    seal("nobody", json!({"id": ValueModelId::new(), "version": 1}));
-    seal("metric", reference(&other_metric));
-    seal("project", reference(&foreign));
-    agent.step(&deps).await;
-    for id in ["nobody", "metric", "project"] {
-        assert!(agent.answer(id)["error"].is_string(), "{id}");
-    }
-    assert!(
-        deps.store
-            .approvals(org, seed.experiment.id)
-            .await
-            .unwrap()
-            .is_empty(),
-        "a refused seal raises no card"
-    );
-
-    // The project's own model needs no owner; leaving it out or an old one does.
-    seal("ok", reference(&p95));
-    agent.step(&deps).await;
-    assert_eq!(agent.answer("ok")["status"], "waiting for a person");
-    seal("dropped", Value::Null);
-    agent.step(&deps).await;
-    let cards = deps.store.approvals(org, seed.experiment.id).await.unwrap();
-    assert_eq!(cards.len(), 2);
-    let value = cards.iter().find(|c| c.summary.contains("Value:")).unwrap();
-    assert!(
-        value.summary.contains("measured offline"),
-        "{}",
-        value.summary
-    );
-    assert!(!value.needs_owner);
-    let none = cards
-        .iter()
-        .find(|c| c.summary.contains("No value set"))
-        .unwrap();
-    assert!(
-        none.needs_owner,
-        "dropping the project's model needs an owner"
     );
 }

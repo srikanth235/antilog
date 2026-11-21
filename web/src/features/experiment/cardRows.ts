@@ -1,6 +1,5 @@
 import type { Schemas } from "../../api/client";
 import { dollars } from "../../lib/format";
-import { type History, OUTCOME_WORDS } from "../../lib/history";
 import { w } from "../../words";
 
 export interface CardRow {
@@ -11,9 +10,8 @@ export interface CardRow {
 }
 
 interface Context {
-  budgetCapCents: number;
+  budgetCapCents: number | null;
   spentCents: number | undefined;
-  history: History;
 }
 
 const r = w.card.rows;
@@ -37,8 +35,6 @@ export function cardLead(approval: Schemas["Approval"]): string {
       return w.card.lead.addCredential(p.connector, p.scope);
     case "change_environment":
       return w.card.lead.changeEnvironment;
-    case "open_pull_request":
-      return w.card.lead.openPullRequest(p.hypothesis);
     case "use_connector_tool":
       return w.card.lead.askConnectorTool(p.tool, p.connector);
     default:
@@ -47,8 +43,8 @@ export function cardLead(approval: Schemas["Approval"]): string {
 }
 
 /**
- * The detail rows the boards show above the buttons, filled from the card's payload, the experiment's budget
- * and spend, and the judge's history. A row whose data is not served is left out.
+ * The detail rows the boards show above the buttons, filled from the card's payload, the session's budget
+ * and spend. A row whose data is not served is left out.
  */
 export function cardRows(approval: Schemas["Approval"], ctx: Context): CardRow[] {
   const p = approval.payload;
@@ -57,7 +53,7 @@ export function cardRows(approval: Schemas["Approval"], ctx: Context): CardRow[]
       const rows: CardRow[] = [];
       if (approval.status === "pending") {
         const cap = p.nowCents;
-        if (ctx.spentCents !== undefined)
+        if (ctx.spentCents !== undefined && ctx.budgetCapCents !== null)
           rows.push({
             key: "now",
             label: r.now,
@@ -113,25 +109,11 @@ export function cardRows(approval: Schemas["Approval"], ctx: Context): CardRow[]
         { key: "tool", label: r.tool, lines: [p.tool], mono: true },
         { key: "input", label: r.input, lines: [p.inputDigest], mono: true },
       ];
-    case "open_pull_request":
-      return [{ key: "repos", label: r.repos, lines: p.repos, mono: true }];
     case "ask_first":
       return [
         { key: "tool", label: r.tool, lines: [p.tool] },
         { key: "asked", label: r.asked, lines: [p.detail], mono: true },
       ];
-    case "keep_going": {
-      const tried = ctx.history.trials.slice(-6).reverse();
-      return tried.length === 0
-        ? []
-        : [
-            {
-              key: "tried",
-              label: r.tried,
-              lines: tried.map((row) => `${row.hypothesis} · ${OUTCOME_WORDS[row.outcome]}`),
-            },
-          ];
-    }
     default:
       return [];
   }
