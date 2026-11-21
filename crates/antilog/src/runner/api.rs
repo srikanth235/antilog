@@ -2,7 +2,7 @@
 
 use std::fmt;
 
-use antilog_types::{Item, Items, PollRequest, PollResponse, Release, RunResult, SessionId};
+use antilog_types::{ChangesReport, Item, Items, PollRequest, PollResponse, Release, SessionId};
 use anyhow::{Context, Result, bail};
 use reqwest::{Client, StatusCode};
 
@@ -81,8 +81,13 @@ impl Server {
         self.about(session, token, "events", &body).await
     }
 
-    pub async fn result(&self, session: SessionId, token: &str, result: &RunResult) -> Result<()> {
-        self.about(session, token, "results", result).await
+    pub async fn changes(
+        &self,
+        session: SessionId,
+        token: &str,
+        report: &ChangesReport,
+    ) -> Result<()> {
+        self.about(session, token, "changes", report).await
     }
 
     pub async fn release(&self, session: SessionId, token: &str, release: &Release) -> Result<()> {

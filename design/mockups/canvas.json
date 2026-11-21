@@ -72,26 +72,6 @@
       "expand": "fill",
       "is_interactive": true
     },
-    "AddEvaluation.dc.html": {
-      "x": 6080,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Add evaluation",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "AddEvaluationDark.dc.html": {
-      "x": 6080,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Add evaluation \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
     "AddPlugin.dc.html": {
       "x": 41040,
       "y": 8350,
@@ -128,26 +108,6 @@
       "w": 1440,
       "h": 900,
       "title": "6 \u00b7 Customize, Add skill \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "AddValueModel.dc.html": {
-      "x": 6080,
-      "y": 7250,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Add value model",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "AddValueModelDark.dc.html": {
-      "x": 6080,
-      "y": 7250,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Add value model \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -352,26 +312,6 @@
       "expand": "fill",
       "is_interactive": true
     },
-    "DatasetHoldout.dc.html": {
-      "x": 25840,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Holdout dataset",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "DatasetHoldoutDark.dc.html": {
-      "x": 25840,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Holdout dataset \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
     "Decisions.dc.html": {
       "x": 1520,
       "y": 0,
@@ -387,106 +327,6 @@
       "h": 6090,
       "title": "Design rules",
       "page": "rules"
-    },
-    "EvaluationDetail.dc.html": {
-      "x": 4560,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Evaluation detail",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "EvaluationDetailDark.dc.html": {
-      "x": 4560,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Evaluation detail \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "Evaluations.dc.html": {
-      "x": 0,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Evaluations",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "EvaluationsDark.dc.html": {
-      "x": 0,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Evaluations \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "EvaluationsDiscover.dc.html": {
-      "x": 3040,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Evaluations, discover",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "EvaluationsDiscoverDark.dc.html": {
-      "x": 3040,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Evaluations, discover \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "EvaluationsEmpty.dc.html": {
-      "x": 1520,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Evaluations, empty",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "EvaluationsEmptyDark.dc.html": {
-      "x": 1520,
-      "y": 8350,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Customize, Evaluations, empty \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "ExperimentDetail.dc.html": {
-      "x": 3040,
-      "y": 5050,
-      "w": 1440,
-      "h": 900,
-      "title": "4 \u00b7 Experiment, Checkout p95 latency",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "ExperimentDetailDark.dc.html": {
-      "x": 3040,
-      "y": 5050,
-      "w": 1440,
-      "h": 900,
-      "title": "4 \u00b7 Experiment, Checkout p95 latency \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
     },
     "Home.dc.html": {
       "x": 0,
@@ -708,46 +548,6 @@
       "expand": "fill",
       "is_interactive": true
     },
-    "Receipt.dc.html": {
-      "x": 4560,
-      "y": 5050,
-      "w": 1440,
-      "h": 900,
-      "title": "4 \u00b7 Receipt for trial 12",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "ReceiptDark.dc.html": {
-      "x": 4560,
-      "y": 5050,
-      "w": 1440,
-      "h": 900,
-      "title": "4 \u00b7 Receipt for trial 12 \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "Report.dc.html": {
-      "x": 4560,
-      "y": 7250,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Report, November 2026",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "ReportDark.dc.html": {
-      "x": 4560,
-      "y": 7250,
-      "w": 1440,
-      "h": 900,
-      "title": "6 \u00b7 Report, November 2026 \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
     "Search.dc.html": {
       "x": 7600,
       "y": 6150,
@@ -928,26 +728,6 @@
       "expand": "fill",
       "is_interactive": true
     },
-    "SessionDelivered.dc.html": {
-      "x": 18240,
-      "y": 3370,
-      "w": 1440,
-      "h": 900,
-      "title": "3 \u00b7 Session, delivered",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "SessionDeliveredDark.dc.html": {
-      "x": 18240,
-      "y": 3370,
-      "w": 1440,
-      "h": 900,
-      "title": "3 \u00b7 Session, delivered \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
     "SessionFailed.dc.html": {
       "x": 27360,
       "y": 3370,
@@ -968,26 +748,6 @@
       "expand": "fill",
       "is_interactive": true
     },
-    "SessionFailover.dc.html": {
-      "x": 36480,
-      "y": 3370,
-      "w": 1440,
-      "h": 900,
-      "title": "3 \u00b7 Session, failover",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "SessionFailoverDark.dc.html": {
-      "x": 36480,
-      "y": 3370,
-      "w": 1440,
-      "h": 900,
-      "title": "3 \u00b7 Session, failover \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
     "SessionFiles.dc.html": {
       "x": 10640,
       "y": 3370,
@@ -1004,46 +764,6 @@
       "w": 1440,
       "h": 900,
       "title": "3 \u00b7 Session, files \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "SessionHandOff.dc.html": {
-      "x": 34960,
-      "y": 3370,
-      "w": 1440,
-      "h": 900,
-      "title": "3 \u00b7 Session, hand off",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "SessionHandOffDark.dc.html": {
-      "x": 34960,
-      "y": 3370,
-      "w": 1440,
-      "h": 900,
-      "title": "3 \u00b7 Session, hand off \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "SessionKeepGoing.dc.html": {
-      "x": 33440,
-      "y": 3370,
-      "w": 1440,
-      "h": 900,
-      "title": "3 \u00b7 Session, keep going",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "SessionKeepGoingDark.dc.html": {
-      "x": 33440,
-      "y": 3370,
-      "w": 1440,
-      "h": 900,
-      "title": "3 \u00b7 Session, keep going \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -1088,22 +808,22 @@
       "expand": "fill",
       "is_interactive": true
     },
-    "SessionNoWin.dc.html": {
-      "x": 19760,
+    "SessionOverview.dc.html": {
+      "x": 41040,
       "y": 3370,
       "w": 1440,
       "h": 900,
-      "title": "3 \u00b7 Session, no win",
+      "title": "3 \u00b7 Session, overview",
       "page": "web-light",
       "expand": "fill",
       "is_interactive": true
     },
-    "SessionNoWinDark.dc.html": {
-      "x": 19760,
+    "SessionOverviewDark.dc.html": {
+      "x": 41040,
       "y": 3370,
       "w": 1440,
       "h": 900,
-      "title": "3 \u00b7 Session, no win \u00b7 dark",
+      "title": "3 \u00b7 Session, overview \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -1148,26 +868,6 @@
       "expand": "fill",
       "is_interactive": true
     },
-    "SessionRegression.dc.html": {
-      "x": 25840,
-      "y": 3370,
-      "w": 1440,
-      "h": 900,
-      "title": "3 \u00b7 Session, regression",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "SessionRegressionDark.dc.html": {
-      "x": 25840,
-      "y": 3370,
-      "w": 1440,
-      "h": 900,
-      "title": "3 \u00b7 Session, regression \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
     "SessionRepo.dc.html": {
       "x": 24320,
       "y": 3370,
@@ -1184,26 +884,6 @@
       "w": 1440,
       "h": 900,
       "title": "3 \u00b7 Session, attach repo \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "SessionSeal.dc.html": {
-      "x": 1520,
-      "y": 3370,
-      "w": 1440,
-      "h": 900,
-      "title": "3 \u00b7 Session, seal experiment",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "SessionSealDark.dc.html": {
-      "x": 1520,
-      "y": 3370,
-      "w": 1440,
-      "h": 900,
-      "title": "3 \u00b7 Session, seal experiment \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -1308,42 +988,22 @@
       "expand": "fill",
       "is_interactive": true
     },
-    "SessionTrials.dc.html": {
-      "x": 4560,
+    "SessionToolCalls.dc.html": {
+      "x": 39520,
       "y": 3370,
       "w": 1440,
       "h": 900,
-      "title": "3 \u00b7 Session, trials",
+      "title": "3 \u00b7 Session, tool calls",
       "page": "web-light",
       "expand": "fill",
       "is_interactive": true
     },
-    "SessionTrialsDark.dc.html": {
-      "x": 4560,
+    "SessionToolCallsDark.dc.html": {
+      "x": 39520,
       "y": 3370,
       "w": 1440,
       "h": 900,
-      "title": "3 \u00b7 Session, trials \u00b7 dark",
-      "page": "web-dark",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "SessionWin.dc.html": {
-      "x": 16720,
-      "y": 3370,
-      "w": 1440,
-      "h": 900,
-      "title": "3 \u00b7 Session, win",
-      "page": "web-light",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "SessionWinDark.dc.html": {
-      "x": 16720,
-      "y": 3370,
-      "w": 1440,
-      "h": 900,
-      "title": "3 \u00b7 Session, win \u00b7 dark",
+      "title": "3 \u00b7 Session, tool calls \u00b7 dark",
       "page": "web-dark",
       "expand": "fill",
       "is_interactive": true
@@ -1995,24 +1655,6 @@
       "w": 240,
       "maxW": 2960
     },
-    "web-light4": {
-      "kind": "title1",
-      "page": "web-light",
-      "text": "4 \u00b7 Experiment and receipts",
-      "x": 0,
-      "y": 4920,
-      "w": 240,
-      "maxW": 2960
-    },
-    "web-dark4": {
-      "kind": "title1",
-      "page": "web-dark",
-      "text": "4 \u00b7 Experiment and receipts",
-      "x": 0,
-      "y": 4920,
-      "w": 240,
-      "maxW": 2960
-    },
     "web-light5": {
       "kind": "title1",
       "page": "web-light",
@@ -2149,8 +1791,6 @@
     "web-dark2",
     "web-light3",
     "web-dark3",
-    "web-light4",
-    "web-dark4",
     "web-light5",
     "web-dark5",
     "web-light6",
@@ -2173,14 +1813,10 @@
     "AddAgentDark.dc.html",
     "AddConnector.dc.html",
     "AddConnectorDark.dc.html",
-    "AddEvaluation.dc.html",
-    "AddEvaluationDark.dc.html",
     "AddPlugin.dc.html",
     "AddPluginDark.dc.html",
     "AddSkill.dc.html",
     "AddSkillDark.dc.html",
-    "AddValueModel.dc.html",
-    "AddValueModelDark.dc.html",
     "AgentDetail.dc.html",
     "AgentDetailDark.dc.html",
     "Agents.dc.html",
@@ -2201,20 +1837,8 @@
     "ConnectorsDark.dc.html",
     "ConnectorsEmpty.dc.html",
     "ConnectorsEmptyDark.dc.html",
-    "DatasetHoldout.dc.html",
-    "DatasetHoldoutDark.dc.html",
     "Decisions.dc.html",
     "DesignRules.dc.html",
-    "EvaluationDetail.dc.html",
-    "EvaluationDetailDark.dc.html",
-    "Evaluations.dc.html",
-    "EvaluationsDark.dc.html",
-    "EvaluationsDiscover.dc.html",
-    "EvaluationsDiscoverDark.dc.html",
-    "EvaluationsEmpty.dc.html",
-    "EvaluationsEmptyDark.dc.html",
-    "ExperimentDetail.dc.html",
-    "ExperimentDetailDark.dc.html",
     "Home.dc.html",
     "HomeDark.dc.html",
     "HomeEmpty.dc.html",
@@ -2237,10 +1861,6 @@
     "ProjectEmptyDark.dc.html",
     "Projects.dc.html",
     "ProjectsDark.dc.html",
-    "Receipt.dc.html",
-    "ReceiptDark.dc.html",
-    "Report.dc.html",
-    "ReportDark.dc.html",
     "Search.dc.html",
     "SearchDark.dc.html",
     "SearchEmpty.dc.html",
@@ -2259,34 +1879,22 @@
     "SessionConnectorToolDark.dc.html",
     "SessionCredential.dc.html",
     "SessionCredentialDark.dc.html",
-    "SessionDelivered.dc.html",
-    "SessionDeliveredDark.dc.html",
     "SessionFailed.dc.html",
     "SessionFailedDark.dc.html",
-    "SessionFailover.dc.html",
-    "SessionFailoverDark.dc.html",
     "SessionFiles.dc.html",
     "SessionFilesDark.dc.html",
-    "SessionHandOff.dc.html",
-    "SessionHandOffDark.dc.html",
-    "SessionKeepGoing.dc.html",
-    "SessionKeepGoingDark.dc.html",
     "SessionList.dc.html",
     "SessionListCollapsed.dc.html",
     "SessionListCollapsedDark.dc.html",
     "SessionListDark.dc.html",
-    "SessionNoWin.dc.html",
-    "SessionNoWinDark.dc.html",
+    "SessionOverview.dc.html",
+    "SessionOverviewDark.dc.html",
     "SessionPreview.dc.html",
     "SessionPreviewDark.dc.html",
     "SessionReadOnly.dc.html",
     "SessionReadOnlyDark.dc.html",
-    "SessionRegression.dc.html",
-    "SessionRegressionDark.dc.html",
     "SessionRepo.dc.html",
     "SessionRepoDark.dc.html",
-    "SessionSeal.dc.html",
-    "SessionSealDark.dc.html",
     "SessionShare.dc.html",
     "SessionShareDark.dc.html",
     "SessionSpawned.dc.html",
@@ -2297,10 +1905,8 @@
     "SessionTerminalDark.dc.html",
     "SessionTitleMenu.dc.html",
     "SessionTitleMenuDark.dc.html",
-    "SessionTrials.dc.html",
-    "SessionTrialsDark.dc.html",
-    "SessionWin.dc.html",
-    "SessionWinDark.dc.html",
+    "SessionToolCalls.dc.html",
+    "SessionToolCallsDark.dc.html",
     "SessionWorking.dc.html",
     "SessionWorkingDark.dc.html",
     "SettingsAppearance.dc.html",

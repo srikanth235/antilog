@@ -4,14 +4,13 @@
     reason = "tests read JSON bodies and fail loudly"
 )]
 
-//! A person signs in, sets up an experiment, has the agent seal it, measures a win and reads
-//! its receipt: the whole chain over HTTP on the fakes.
+//! A person signs in, starts a session, talks to it, reads what it spent and stops it: the whole
+//! chain over HTTP on the fakes.
 
 use std::sync::Arc;
 
 use antilog_core::auth::FakeSignIn;
-use antilog_core::fakes::{FakeCodeHost, FakeDeps, FakeMachine, Profile};
-use antilog_core::judge::fixtures::definition;
+use antilog_core::fakes::FakeDeps;
 use antilog_server::api::auth::{Provider, Settings};
 use antilog_server::api::router;
 use axum::Router;
@@ -88,47 +87,20 @@ async fn sign_in(app: &Router) -> String {
         .to_owned()
 }
 
-fn cheats() -> Value {
-    let cheats: Vec<Value> = antilog_types::judge::STANDARD_CHEATS
-        .iter()
-        .enumerate()
-        .map(|(i, name)| {
-            let path = if i == 3 {
-                "src/x.rs"
-            } else {
-                "bench/data.json"
-            };
-            json!({"name": name, "commits": [{"repo": "app", "sha": format!("cheat-{i}")}],
-                "changed": [["app", path]]})
-        })
-        .collect();
-    Value::Array(cheats)
-}
-
 fn app() -> Router {
-    let mut machine = FakeMachine::default().with("base", Profile::new(100.0));
-    for i in 0..4 {
-        machine = machine.with(&format!("cheat-{i}"), Profile::new(10.0).holdout(100.0));
-    }
-    let machine = machine.with("fast", Profile::new(80.0));
     router(
-        Arc::new(FakeDeps::new(
-            machine,
-            FakeCodeHost::default().with("fast", "app", "src/a.rs"),
-        )),
+        Arc::new(FakeDeps::new()),
         Settings {
             providers: vec![Provider::Fake(FakeSignIn)],
             open_organizations: true,
             secure_cookies: true,
-            code_host_webhook_secret: None,
-            e2e_seed: false,
             runner: None,
         },
     )
 }
 
 #[tokio::test]
-async fn from_sign_in_to_a_signed_receipt() {
+async fn from_sign_in_to_a_stopped_session() {
     let app = app();
     let owner = sign_in(&app).await;
     let post = |uri: String, body: Value| {
@@ -146,72 +118,74 @@ async fn from_sign_in_to_a_signed_receipt() {
     )
     .await;
     assert_eq!(status, StatusCode::CREATED, "{project}");
-    let (status, experiment) = post(
-        format!("/projects/{}/experiments", project["id"].as_str().unwrap()),
-        json!({"goal": "cut p95", "budgetCapCents": 100_000}),
+    let project_id = project["id"].as_str().unwrap().to_owned();
+    let (status, empty) = post(
+        format!("/projects/{project_id}/sessions"),
+        json!({"prompt": "cut p95", "repos": ["acme/app"]}),
     )
     .await;
-    assert_eq!(status, StatusCode::CREATED, "{experiment}");
-    let exp = experiment["id"].as_str().unwrap().to_owned();
-
+    assert_eq!(
+        status,
+        StatusCode::UNPROCESSABLE_ENTITY,
+        "this server has no default model: {empty}"
+    );
     let (status, session) = post(
-        format!("/experiments/{exp}/sessions"),
-        json!({"agent": "claude", "prompt": "cut p95"}),
+        format!("/projects/{project_id}/sessions"),
+        json!({
+            "prompt": "cut p95 on the checkout path\nmore detail",
+            "repos": ["acme/app"],
+            "model": "opencode/big-pickle",
+            "budgetCapCents": 500
+        }),
     )
     .await;
     assert_eq!(status, StatusCode::CREATED, "{session}");
     let sid = session["id"].as_str().unwrap().to_owned();
-    let tool = |name: &str, input: Value| {
-        post(
-            format!("/experiments/{exp}/tools/{name}"),
-            json!({"session": sid, "input": input}),
-        )
-    };
+    assert_eq!(session["title"], "cut p95 on the checkout path");
+    assert_eq!(session["status"], "working");
+    assert_eq!(session["repos"], json!(["acme/app"]));
+    assert_eq!(session["budgetCapCents"], 500);
+    assert_eq!(session["model"], "opencode/big-pickle");
 
-    let (_, sealed) = tool(
-        "seal",
-        json!({"definition": definition(), "cheats": cheats()}),
+    let (_, listed) = get("/sessions".into()).await;
+    assert_eq!(listed.as_array().unwrap().len(), 1);
+    assert_eq!(listed[0]["id"], sid.as_str());
+    assert_eq!(listed[0]["projectId"], project_id.as_str());
+    let (_, mine) = get("/sessions?mine=true".into()).await;
+    assert_eq!(mine.as_array().unwrap().len(), 1);
+    let (_, in_project) = get(format!("/projects/{project_id}/sessions")).await;
+    assert_eq!(in_project.as_array().unwrap().len(), 1);
+
+    let (status, after) = post(
+        format!("/sessions/{sid}/messages"),
+        json!({"text": "try caching"}),
     )
     .await;
+    assert_eq!(status, StatusCode::OK, "{after}");
+    let (_, events) = get(format!("/sessions/{sid}/events")).await;
+    let said: Vec<&str> = events["events"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|event| event["text"].as_str().unwrap())
+        .collect();
     assert_eq!(
-        sealed["answer"]["status"], "waiting for a person",
-        "{sealed}"
+        said,
+        ["cut p95 on the checkout path\nmore detail", "try caching"]
     );
-    let (_, cards) = get(format!("/experiments/{exp}/approvals")).await;
-    let card = cards[0]["id"].as_str().unwrap();
-    assert_eq!(cards[0]["status"], "pending");
-    let (status, decided) = post(
-        format!("/approvals/{card}/decision"),
-        json!({"decision": "approve"}),
-    )
-    .await;
-    assert_eq!(status, StatusCode::OK, "{decided}");
-    let (_, row) = get(format!("/experiments/{exp}")).await;
-    assert_eq!(row["status"], "sealed");
+    let (_, spend) = get(format!("/sessions/{sid}/spend")).await;
+    assert_eq!(spend["spentCents"], 0);
+    assert_eq!(spend["budgetCapCents"], 500);
 
-    let (_, measured) = tool(
-        "measure",
-        json!({"commits": [{"repo": "app", "sha": "fast"}], "hypothesis": "cache"}),
+    let (status, stopped) = post(format!("/sessions/{sid}/stop"), json!({})).await;
+    assert_eq!(status, StatusCode::OK, "{stopped}");
+    assert_eq!(stopped["status"], "done");
+    let (status, _) = post(
+        format!("/sessions/{sid}/messages"),
+        json!({"text": "again"}),
     )
     .await;
-    let followup = measured["followup"].as_str().unwrap();
-    assert!(
-        followup.contains("kept") && followup.contains("receipt"),
-        "{followup}"
-    );
-    let (_, history) = tool("history", json!({})).await;
-    let trial = history["answer"]["best"].as_str().unwrap();
-    let (status, receipt) = get(format!("/trials/{trial}/receipt")).await;
-    assert_eq!(status, StatusCode::OK, "{receipt}");
-    assert_eq!(receipt["body"]["experiment"]["trial"], trial);
-    assert_eq!(receipt["body"]["experiment"]["value"], 80.0);
-    assert_eq!(receipt["body"]["experiment"]["holdout"], "passed");
-    let (status, _) = get(format!(
-        "/trials/{}/receipt",
-        "018f3b1e-0000-7000-8000-000000000000"
-    ))
-    .await;
-    assert_eq!(status, StatusCode::NOT_FOUND);
+    assert_eq!(status, StatusCode::CONFLICT, "a stopped session stays so");
 
     let (_, audit) = get("/audit".into()).await;
     let started = audit["entries"]

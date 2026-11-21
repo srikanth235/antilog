@@ -13,7 +13,7 @@ pub struct Organization {
     pub created_at: i64,
     /// Monthly cap on all spend, in US cents. `None`: no cap.
     pub monthly_cap_cents: Option<i64>,
-    /// Default budget per experiment, in US cents.
+    /// The cap a new session gets when its request names none, in US cents.
     pub default_budget_cents: Option<i64>,
     /// Most sessions this organization has on machines at once; queued ones wait.
     pub max_running_sessions: u32,
@@ -109,9 +109,9 @@ pub struct Project {
     pub organization_id: OrganizationId,
     pub name: String,
     pub description: String,
-    /// Monthly cap on the spend of its experiments, in US cents.
+    /// Monthly cap on the spend of its sessions, in US cents.
     pub monthly_cap_cents: Option<i64>,
-    /// Default budget per experiment, in US cents.
+    /// Default budget per session, in US cents.
     pub default_budget_cents: Option<i64>,
     pub created_at: i64,
 }

@@ -1,0 +1,108 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select repo, base_branch, head_branch, base_sha, head_sha, commits, files, (extract(epoch from reported_at) * 1000)::bigint as \"reported_at!\" from session_changes where session_id = $1 and organization_id = $2 order by repo",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "repo",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "session_changes",
+            "name": "repo"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "base_branch",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "session_changes",
+            "name": "base_branch"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "head_branch",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "session_changes",
+            "name": "head_branch"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "base_sha",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "session_changes",
+            "name": "base_sha"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "head_sha",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "session_changes",
+            "name": "head_sha"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "commits",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "session_changes",
+            "name": "commits"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "files",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "session_changes",
+            "name": "files"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "reported_at!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "0a213e67521ec978b17f1a2fe026e8862c44e84ccb7cbe76d18bbcfb4349a51d"
+}

@@ -111,7 +111,6 @@ impl ModelKeyStore for FakeStore {
             .find(|row| row.id == session)
             .map(|row| GatewayScope {
                 organization: row.organization_id,
-                experiment: row.experiment_id,
             }))
     }
 }

@@ -1,8 +1,8 @@
 use std::future::Future;
 
 use antilog_types::{
-    Agent, AuditEntry, EvaluationTemplate, EventKind, Experiment, ExperimentId, ExperimentStatus,
-    MemberId, OrganizationId, ProjectId, Session, SessionEvent, SessionId, SessionStatus,
+    Agent, AuditEntry, EventKind, MemberId, OrganizationId, ProjectId, Session, SessionEvent,
+    SessionId, SessionStatus, ToolRecord,
 };
 
 use super::StoreError;
@@ -24,38 +24,11 @@ pub struct NewEvent {
     pub kind: EventKind,
     pub member: Option<MemberId>,
     pub text: String,
+    pub tool: Option<ToolRecord>,
     pub at: i64,
 }
 
 pub trait SessionStore {
-    /// Refused with `OverCap` when its budget passes the project's or organization's cap.
-    fn create_experiment(
-        &self,
-        experiment: &Experiment,
-        audit: &AuditEntry,
-    ) -> impl Future<Output = Result<(), StoreError>> + Send;
-
-    fn experiment(
-        &self,
-        organization: OrganizationId,
-        id: ExperimentId,
-    ) -> impl Future<Output = Result<Option<Experiment>, StoreError>> + Send;
-
-    fn experiments(
-        &self,
-        organization: OrganizationId,
-        project: ProjectId,
-    ) -> impl Future<Output = Result<Vec<Experiment>, StoreError>> + Send;
-
-    /// Only `NotSealed` to `Sealed`; anything else is `IllegalTransition`.
-    fn set_experiment_status(
-        &self,
-        organization: OrganizationId,
-        id: ExperimentId,
-        status: ExperimentStatus,
-        audit: &AuditEntry,
-    ) -> impl Future<Output = Result<(), StoreError>> + Send;
-
     fn create_session(
         &self,
         session: &Session,
@@ -68,10 +41,13 @@ pub trait SessionStore {
         id: SessionId,
     ) -> impl Future<Output = Result<Option<Session>, StoreError>> + Send;
 
+    /// The organization's sessions, newest first; `project` keeps one project's, `creator` only
+    /// that member's.
     fn sessions(
         &self,
         organization: OrganizationId,
-        experiment: ExperimentId,
+        project: Option<ProjectId>,
+        creator: Option<MemberId>,
     ) -> impl Future<Output = Result<Vec<Session>, StoreError>> + Send;
 
     /// Done and Failed are final: a change of status after them is `IllegalTransition`.
@@ -135,18 +111,4 @@ pub trait SessionStore {
         &self,
         organization: OrganizationId,
     ) -> impl Future<Output = Result<Vec<Agent>, StoreError>> + Send;
-
-    /// A new template with its audit entry; the id is taken (`Conflict`) when the organization has it.
-    fn add_evaluation(
-        &self,
-        template: &EvaluationTemplate,
-        organization: OrganizationId,
-        audit: &AuditEntry,
-    ) -> impl Future<Output = Result<(), StoreError>> + Send;
-
-    /// The organization's templates, oldest first.
-    fn evaluations(
-        &self,
-        organization: OrganizationId,
-    ) -> impl Future<Output = Result<Vec<EvaluationTemplate>, StoreError>> + Send;
 }

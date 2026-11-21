@@ -1,12 +1,11 @@
-//! Plugins: an Antilog bundle of skills, connectors and evaluation templates. Adding one unpacks
+//! Plugins: an Antilog bundle of skills and connectors. Adding one unpacks
 //! it into those parts, each governed as usual; a plugin has no powers of its own.
 
 use antilog_types::{
     AuditOutcome, NewPlugin, PartKind, Plugin, PluginPart, RemovePlugin, SkillVersion,
 };
 
-use super::{connectors, skills};
-use crate::evaluations::slug;
+use super::{connectors, skills, slug};
 use crate::organization::{Action, Principal, Refusal, entry, member_of, permit};
 use crate::store::{ConnectorRow, Store, StoreError};
 
@@ -15,8 +14,8 @@ pub async fn list<S: Store>(store: &S, who: &Principal) -> Result<Vec<Plugin>, R
     Ok(store.plugins(who.organization).await?)
 }
 
-/// Owners add one: the connectors, the skills and the evaluation templates it names appear in
-/// their own Customize tabs. Its connectors come without a credential and unchecked.
+/// Owners add one: the connectors and the skills it names appear in their own
+/// Customize tabs. Its connectors come without a credential and unchecked.
 pub async fn add<S: Store>(
     store: &S,
     allow_private: bool,
@@ -60,13 +59,7 @@ pub async fn add<S: Store>(
         });
         rows.push(row);
     }
-    for template in &new.evaluations {
-        parts.push(PluginPart {
-            kind: PartKind::Evaluation,
-            name: slug(&template.name),
-        });
-    }
-    permit(store, who, Action::PluginAdd, None, &id, now).await?;
+    permit(store, who, Action::PluginAdd, &id, now).await?;
     let plugin = Plugin {
         id: id.clone(),
         name: new.name.trim().to_owned(),
@@ -89,41 +82,10 @@ pub async fn add<S: Store>(
             StoreError::Conflict => Refusal::Conflict,
             other => other.into(),
         })?;
-    // The evaluation templates go through their own action, so a role that may add a plugin
-    // but not a template cannot slip one in: an owner may do both.
-    for template in new.evaluations {
-        match crate::evaluations::add(store, who, now, template).await {
-            Ok(_) | Err(Refusal::Conflict) => {}
-            Err(error) => return Err(error),
-        }
-    }
     Ok(plugin)
 }
 
-/// Whether a part is in use: a skill an experiment selected, a connector an experiment switched on.
-async fn in_use<S: Store>(store: &S, who: &Principal, part: &PluginPart) -> Result<bool, Refusal> {
-    Ok(match part.kind {
-        PartKind::Skill => !store
-            .skill_users(who.organization, &part.name)
-            .await?
-            .is_empty(),
-        PartKind::Connector => {
-            let connectors = store.connectors(who.organization).await?;
-            match connectors.iter().find(|c| c.slug == part.name) {
-                Some(c) => !store
-                    .connector_users(who.organization, c.id)
-                    .await?
-                    .is_empty(),
-                None => false,
-            }
-        }
-        // Templates are append-only: an experiment starts from a copy, so none is ever in use.
-        PartKind::Evaluation => false,
-    })
-}
-
-/// Removing a plugin asks, per part, whether to keep it. A part not kept is removed unless it is
-/// in use, and then the removal is refused whole. Evaluation templates are always kept.
+/// Removing a plugin asks, per part, whether to keep it. A part not kept is removed.
 pub async fn remove<S: Store>(
     store: &S,
     who: &Principal,
@@ -131,7 +93,7 @@ pub async fn remove<S: Store>(
     id: &str,
     choice: RemovePlugin,
 ) -> Result<(), Refusal> {
-    permit(store, who, Action::PluginRemove, None, id, now).await?;
+    permit(store, who, Action::PluginRemove, id, now).await?;
     let plugin = store
         .plugins(who.organization)
         .await?
@@ -140,13 +102,8 @@ pub async fn remove<S: Store>(
         .ok_or(Refusal::NotFound)?;
     let mut drop = Vec::new();
     for part in &plugin.parts {
-        if part.kind == PartKind::Evaluation || choice.keep.contains(part) {
+        if choice.keep.contains(part) {
             continue;
-        }
-        if in_use(store, who, part).await? {
-            return Err(Refusal::Invalid(
-                "a part of this plugin is in use by an experiment: keep it, or switch it off there first",
-            ));
         }
         drop.push(part.clone());
     }

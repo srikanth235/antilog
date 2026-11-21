@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select organization_id as \"organization_id!\" from gateway_scope($1)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "organization_id!",
+        "type_info": "Uuid",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "9a127b55a8954fea28286374a1d3a60408a6dc235b088233750d3024cb58f3a7"
+}

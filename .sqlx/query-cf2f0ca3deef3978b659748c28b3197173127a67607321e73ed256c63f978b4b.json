@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into session_commit_changes (session_id, organization_id, repo, sha, files) values ($1, $2, $3, $4, $5) on conflict do nothing",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "cf2f0ca3deef3978b659748c28b3197173127a67607321e73ed256c63f978b4b"
+}

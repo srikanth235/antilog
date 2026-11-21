@@ -6,20 +6,19 @@
 
 ## Our server
 
-`antilog mcp` (built: `crates/antilog/src/mcp.rs`; `watch` is not served yet) is a mode of the `antilog` CLI that serves the Antilog tools on stdio, built with `rmcp` (version in [../libraries.md](../libraries.md)). The tools are `seal`, `measure`, `history`, `deliver`, `watch` and the setup tools `attach_repo`, `request_credential`, `set_environment` and `request_budget`. They are the same tools every session gets, so an agent a person already uses on their own machine (Claude Code, Codex) can propose a change that only the judge measures. It is Rust, on the API's own types. How a client signs in and how it is registered is in [../../antilog/SKILL.md](../../antilog/SKILL.md). The tools are described in [../../session/tools.md](../../session/tools.md) and [../../judge/tools.md](../../judge/tools.md), and a new or changed tool follows [../../change/tool.md](../../change/tool.md).
+The session's MCP endpoint (`/mcp/sessions/{id}`, built: `crates/antilog-server/src/api/mcp.rs`, with `rmcp`'s streamable HTTP server feature; version in [../libraries.md](../libraries.md)) serves the setup tools `attach_repo`, `request_credential`, `set_environment` and `request_budget` and the tools of every organization connector. The tools are defined in `crates/antilog-core/src/tools/`. There is no `antilog mcp` command and no REST tool endpoint. The tools are described in [../../session/tools.md](../../session/tools.md), and a new or changed tool follows [../../change/tool.md](../../change/tool.md).
 
 Read the skill for **design**, not code: how to name tools, write descriptions a model can choose between, shape inputs and outputs, paginate, return errors that say what to do next, and write an evaluation of realistic questions. Skip its TypeScript and Python server guides and its scripts.
 
 ## Rules
 
-- **A tool can do nothing its caller's token cannot.** Each tool calls the API with the caller's access token and role. It never has a back door and never widens a scope. A denied call returns the API's error.
-- **Holdout data is never reachable.** No tool reads, lists or summarizes the holdout, and no tool output may carry it. An agent never holds the holdout credential and never learns a holdout value; see [../../judge/rules.md](../../judge/rules.md).
-- **One definition, served twice.** A tool has one definition, served to a session and by `antilog mcp`. Name tools and describe them as the glossary does ("experiment" and "session", never "contract" or "automation"). Do not add a tool the API lacks. A tool that matters shows an approval card to a person; a tool whose command needs `--yes` takes `confirm: true` and shows its preview first, as [../../antilog/SKILL.md](../../antilog/SKILL.md) says. `measure` returns a ticket at once and its result arrives later as an event, so no tool timeout applies.
-- **A tool does a whole job.** An agent calls it from its name and description alone, so a tool takes intent (`measure` this commit) and does the steps inside: no tool the agent must call in a set order, no ids it must look up first, no cleanup it must remember. See "Every language" in [../SKILL.md](../SKILL.md).
-- **Every error says how to recover.** A refusal names the next action and the tool for it: "not sealed: call seal first", "budget exhausted: call request_budget", "trial not Kept: deliver needs a Kept trial". An error an agent cannot act on makes it guess.
-- **Output is bounded.** Every list (history, trials, sessions) is capped and paginated with a cursor, and long text is truncated with a note on how to get more. A large result fills the agent's context and makes it worse at the task.
+- **A tool can do nothing its caller's token cannot.** Each tool acts with the session's `Purpose::Mcp` token and the role of the member who started the session. It never has a back door and never widens a scope. A denied call returns the error.
+- **A tool does a whole job.** An agent calls it from its name and description alone, so a tool takes intent and does the steps inside: no tool the agent must call in a set order, no ids it must look up first, no cleanup it must remember. See "Every language" in [../SKILL.md](../SKILL.md).
+- **Every error says how to recover.** A refusal names the next action: "this session has no budget of its own, only the organization's monthly cap, which an owner changes in Settings". An error an agent cannot act on makes it guess.
+- **Output is bounded.** Every list is capped and paginated with a cursor, and long text is truncated with a note on how to get more.
 - **Secrets never appear in a tool result.** Not a token, a connector secret or a model key.
-- **Evaluate it.** Write the skill's evaluation questions against a test server and keep them with the CLI's tests ([../../land/tests.md](../../land/tests.md)).
+- **Names follow the glossary** ("session", "project"). A tool that matters shows an approval card to a person.
+- **Evaluate it.** Write the skill's evaluation questions against a test server and keep them with the tool tests ([../../land/tests.md](../../land/tests.md)).
 
 ## Connecting to other MCP servers
 

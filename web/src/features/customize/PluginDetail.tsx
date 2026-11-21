@@ -1,13 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { type FormEvent, useState } from "react";
 import { ApiFailure, type Schemas } from "../../api/client";
-import {
-  useConnectors,
-  useEvaluations,
-  useMember,
-  usePlugins,
-  useRemovePlugin,
-} from "../../api/queries";
+import { useConnectors, useMember, usePlugins, useRemovePlugin } from "../../api/queries";
 import { Dialog } from "../../components/dialog/Dialog";
 import { Icon } from "../../components/icon/Icon";
 import { Empty, Failed, Loading, reason } from "../../components/state/State";
@@ -83,12 +77,10 @@ function Loaded({ item }: { item: Schemas["Plugin"] }) {
   const me = useMember();
   const editable = canEdit(me?.role);
   const connectors = useConnectors();
-  const evaluations = useEvaluations();
   const [removing, setRemoving] = useState(false);
   const part = (kind: Schemas["PartKind"]) => item.parts.filter((x) => x.kind === kind);
   const skills = part("skill");
   const connectorParts = part("connector");
-  const evaluationParts = part("evaluation");
   return (
     <section className="page">
       <Back />
@@ -155,42 +147,14 @@ function Loaded({ item }: { item: Schemas["Plugin"] }) {
           </>
         }
         right={
-          <>
-            <Section title={p.evaluationsTitle(evaluationParts.length)}>
-              <PartRows
-                rows={evaluationParts.map((x) => {
-                  const found = evaluations.data?.find((template) => template.id === x.name);
-                  return {
-                    key: x.name,
-                    glyph: "gauge",
-                    name: found?.name ?? x.name,
-                    note: found === undefined ? "" : w.customize.kinds[found.kind],
-                    link:
-                      found === undefined ? (
-                        x.name
-                      ) : (
-                        <Link to="/customize/evaluations/$id" params={{ id: found.id }}>
-                          {found.name}
-                        </Link>
-                      ),
-                  };
-                })}
-              />
-              <span className="xs mut">{p.evaluationsStay}</span>
-            </Section>
-            <Section title={p.about}>
-              <div className="card" style={{ padding: "4px 20px" }}>
-                <div className="kv">
-                  <span>{p.versionLabel}</span>
-                  <span>{item.version}</span>
-                </div>
+          <Section title={p.about}>
+            <div className="card" style={{ padding: "4px 20px" }}>
+              <div className="kv">
+                <span>{p.versionLabel}</span>
+                <span>{item.version}</span>
               </div>
-            </Section>
-            <span className="lock">
-              <Icon name="lock" size="s" />
-              {p.holdout}
-            </span>
-          </>
+            </div>
+          </Section>
         }
       />
       <RemoveDialog
@@ -254,7 +218,6 @@ function RemoveForm(props: {
       </fieldset>
     );
   };
-  const templates = props.item.parts.filter((x) => x.kind === "evaluation").length;
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     await remove.mutateAsync(props.item.parts.filter((x) => keep.has(id(x))));
@@ -265,7 +228,6 @@ function RemoveForm(props: {
     <form className="form-col" onSubmit={(event) => void submit(event).catch(() => undefined)}>
       {group("skill", p.skillsGroup)}
       {group("connector", p.connectorsGroup)}
-      {templates === 0 ? null : <span className="sm ink2">{p.templatesStay(templates)}</span>}
       {remove.isError ? (
         <p className="error-line" role="alert">
           {reason(remove.error)}

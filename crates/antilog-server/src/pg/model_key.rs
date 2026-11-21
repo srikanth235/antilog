@@ -1,9 +1,7 @@
 use antilog_core::sealed::Sealer;
 use antilog_core::secrets::Secret;
 use antilog_core::store::{GatewayScope, ModelKeyStore, StoreError};
-use antilog_types::{
-    AuditEntry, ExperimentId, ModelKeyStatus, ModelProvider, OrganizationId, SessionId,
-};
+use antilog_types::{AuditEntry, ModelKeyStatus, ModelProvider, OrganizationId, SessionId};
 
 use super::{PgStore, audit, corrupt, map};
 
@@ -121,7 +119,7 @@ impl ModelKeyStore for PgStore {
 
     async fn gateway_scope(&self, session: SessionId) -> Result<Option<GatewayScope>, StoreError> {
         let found = sqlx::query!(
-            r#"select organization_id as "organization_id!", experiment_id as "experiment_id!" from gateway_scope($1)"#,
+            r#"select organization_id as "organization_id!" from gateway_scope($1)"#,
             session.as_uuid(),
         )
         .fetch_optional(&self.pool)
@@ -129,7 +127,6 @@ impl ModelKeyStore for PgStore {
         .map_err(map)?;
         Ok(found.map(|found| GatewayScope {
             organization: OrganizationId::from_uuid(found.organization_id),
-            experiment: ExperimentId::from_uuid(found.experiment_id),
         }))
     }
 }

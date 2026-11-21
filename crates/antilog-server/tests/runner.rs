@@ -6,10 +6,10 @@
 use std::sync::Arc;
 
 use antilog_core::approval;
-use antilog_core::fakes::{FakeCodeHost, FakeDeps, FakeMachine};
+use antilog_core::fakes::FakeDeps;
 use antilog_core::organization::Principal;
 use antilog_core::runner;
-use antilog_core::seed::{Seed, experiment};
+use antilog_core::seed::{Seed, organization};
 use antilog_core::session::{self, NewSession};
 use antilog_core::store::{ApprovalStore, RunnerStore, SessionStore};
 use antilog_server::api::auth::Settings;
@@ -38,11 +38,8 @@ async fn world() -> World {
 
 /// `lifetime`: the most a claim may hold a machine; omitted, the server's default.
 async fn world_with(lifetime: Option<jiff::SignedDuration>) -> World {
-    let deps = Arc::new(FakeDeps::new(
-        FakeMachine::default(),
-        FakeCodeHost::default(),
-    ));
-    let seed = experiment(&deps.store, 10_000).await;
+    let deps = Arc::new(FakeDeps::new());
+    let seed = organization(&deps.store).await;
     let mut core = runner::Settings::new(
         "https://proxy.example/",
         "https://antilog.example",
@@ -58,8 +55,6 @@ async fn world_with(lifetime: Option<jiff::SignedDuration>) -> World {
             providers: Vec::new(),
             open_organizations: false,
             secure_cookies: true,
-            code_host_webhook_secret: None,
-            e2e_seed: false,
             runner: Some(RunnerSettings {
                 key: KEY.to_owned(),
                 core,
@@ -111,13 +106,14 @@ async fn start(world: &World, prompt: &str) -> Session {
     session::start(
         &*world.deps,
         world.seed.organization.id,
-        world.seed.experiment.id,
+        world.seed.project.id,
         NewSession {
             agent: "opencode".into(),
+            model: "vendor/model-2".into(),
             prompt: prompt.into(),
             repos: vec!["acme/api".into()],
-            environment: None,
-            actor: Some(world.seed.owner.id),
+            actor: world.seed.owner.id,
+            ..NewSession::default()
         },
     )
     .await
@@ -169,8 +165,6 @@ async fn the_routes_exist_only_with_a_key_and_each_checks_it() {
             providers: Vec::new(),
             open_organizations: false,
             secure_cookies: true,
-            code_host_webhook_secret: None,
-            e2e_seed: false,
             runner: None,
         },
     );
@@ -196,7 +190,7 @@ async fn a_claim_carries_the_spec_the_contract_lists() {
     let polled = poll(&world.app, "r1", &[]).await;
     let spec = &polled["claims"][0];
     assert_eq!(spec["session"], json!(session.id));
-    assert_eq!(spec["model"], "vendor/model-1");
+    assert_eq!(spec["model"], "vendor/model-2", "the session's own model");
     assert_eq!(
         spec["repos"],
         json!([{"name": "acme/api", "url": "/srv/git/acme/api", "token": null}])
@@ -211,7 +205,7 @@ async fn a_claim_carries_the_spec_the_contract_lists() {
         spec["opencodeConfig"],
         json!({
             "autoupdate": false,
-            "small_model": "vendor/model-1",
+            "small_model": "vendor/model-2",
             "experimental": {"mcp_timeout": 1_800_000},
             "provider": {
                 "anthropic": {"options": {"baseURL": "https://proxy.example/anthropic/v1", "apiKey": model}},
@@ -598,14 +592,14 @@ async fn a_claim_carries_the_environment_version_the_session_started_on() {
     .unwrap();
     let on = |environment: Option<&str>| NewSession {
         agent: "opencode".into(),
+        model: "vendor/model-1".into(),
         prompt: "go".into(),
-        repos: vec![],
         environment: environment.map(str::to_owned),
-        actor: Some(world.seed.owner.id),
+        actor: world.seed.owner.id,
+        ..NewSession::default()
     };
     let org = world.seed.organization.id;
-    let exp = world.seed.experiment.id;
-    let first = session::start(&*world.deps, org, exp, on(Some("bench")))
+    let first = session::start(&*world.deps, org, world.seed.project.id, on(Some("bench")))
         .await
         .unwrap();
     // An edit after the session started does not move it.
@@ -618,10 +612,10 @@ async fn a_claim_carries_the_environment_version_the_session_started_on() {
     )
     .await
     .unwrap();
-    let second = session::start(&*world.deps, org, exp, on(Some("bench")))
+    let second = session::start(&*world.deps, org, world.seed.project.id, on(Some("bench")))
         .await
         .unwrap();
-    let plain = session::start(&*world.deps, org, exp, on(None))
+    let plain = session::start(&*world.deps, org, world.seed.project.id, on(None))
         .await
         .unwrap();
 

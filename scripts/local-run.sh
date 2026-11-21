@@ -110,18 +110,14 @@ TOKEN=$(curl -fsS -b "$jar" -X POST "$SERVER/auth/fake/organization" -H 'content
 step "Saving the model key (sealed) for provider $PROVIDER"
 api PUT "/model-keys/$PROVIDER" "{\"key\":\"$ZEN_KEY\"}" >/dev/null
 
-step "Creating a project and an experiment with a \$5 budget"
-project=$(api POST /projects '{"name":"local run","description":""}' | field "['id']")
-experiment=$(api POST "/projects/$project/experiments" '{"goal":"local end-to-end run","budgetCapCents":500}' | field "['id']")
-
 step "Starting the runner"
 "$BIN"/antilog runner --server "$SERVER" --name local --proxy 127.0.0.1:8081 \
   --state-dir "$RUN/state" >"$RUN/runner.log" 2>&1 &
 pids+=($!)
 
-step "Starting a session on $MODEL"
-body=$(python3 -c 'import json,sys; print(json.dumps({"agent":"opencode","prompt":sys.argv[1],"repos":[]}))' "$PROMPT")
-session=$(api POST "/experiments/$experiment/sessions" "$body" | field "['id']")
+step "Starting a session on $MODEL with a \$5 budget"
+body=$(python3 -c 'import json,sys; print(json.dumps({"agent":"opencode","prompt":sys.argv[1],"repos":[],"budgetCapCents":500}))' "$PROMPT")
+session=$(api POST /sessions "$body" | field "['id']")
 echo "session $session"
 
 step "Waiting up to ${WAIT_SECS}s for the session"
@@ -156,6 +152,6 @@ done
 
 step "Result"
 echo "status: $status"
-api GET "/experiments/$experiment/spend" || true
+api GET "/sessions/$session/spend" || true
 echo
 echo "Logs: $RUN/server.log $RUN/proxy.log $RUN/runner.log; events: $RUN/events.json"

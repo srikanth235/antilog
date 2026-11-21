@@ -1,9 +1,8 @@
 //! The organization floor's action layer: one permission check, one audit entry per write.
 
 use antilog_types::{
-    AccessToken, AuditEntry, AuditId, AuditOutcome, Experiment, ExperimentId, Identity, Me, Member,
-    MemberId, NewExperiment, Organization, OrganizationId, OrganizationRef, Project, ProjectId,
-    ProjectRole, Role, TokenId,
+    AccessToken, AuditEntry, AuditId, AuditOutcome, Identity, Me, Member, MemberId, Organization,
+    OrganizationId, OrganizationRef, Project, ProjectId, ProjectRole, Role, SessionId, TokenId,
 };
 
 use crate::store::{Invariant, Store, StoreError};
@@ -67,24 +66,17 @@ pub enum Action {
     EnvironmentArchive,
     ModelKeySet,
     ModelKeyRemove,
-    EvaluationAdd,
     ConnectorSet,
     SkillAdd,
     SkillRemove,
     PluginAdd,
     PluginRemove,
-    ProjectSkillSet,
-    ExperimentReachSet,
-    ExperimentBudgetSet,
-    ExperimentCreate,
+    SessionBudgetSet,
     SessionStart,
     SessionMessage,
     SessionStop,
     ToolCall,
     ApprovalDecide,
-    ApprovalDecideValueModel,
-    ValueModelSet,
-    ReportRead,
     TokenCreateOwn,
     TokenCreateForOther,
     TokenRevokeOther,
@@ -106,24 +98,17 @@ impl Action {
         Self::EnvironmentArchive,
         Self::ModelKeySet,
         Self::ModelKeyRemove,
-        Self::EvaluationAdd,
         Self::ConnectorSet,
         Self::SkillAdd,
         Self::SkillRemove,
         Self::PluginAdd,
         Self::PluginRemove,
-        Self::ProjectSkillSet,
-        Self::ExperimentReachSet,
-        Self::ExperimentBudgetSet,
-        Self::ExperimentCreate,
+        Self::SessionBudgetSet,
         Self::SessionStart,
         Self::SessionMessage,
         Self::SessionStop,
         Self::ToolCall,
         Self::ApprovalDecide,
-        Self::ApprovalDecideValueModel,
-        Self::ValueModelSet,
-        Self::ReportRead,
         Self::TokenCreateOwn,
         Self::TokenCreateForOther,
         Self::TokenRevokeOther,
@@ -145,48 +130,38 @@ impl Action {
             Self::EnvironmentArchive => "environment.archive",
             Self::ModelKeySet => "model_key.set",
             Self::ModelKeyRemove => "model_key.remove",
-            Self::EvaluationAdd => "evaluation.add",
             Self::ConnectorSet => "connector.set",
             Self::SkillAdd => "skill.add",
             Self::SkillRemove => "skill.remove",
             Self::PluginAdd => "plugin.add",
             Self::PluginRemove => "plugin.remove",
-            Self::ProjectSkillSet => "project.set_skill",
-            Self::ExperimentReachSet => "experiment.set_reach",
-            Self::ExperimentBudgetSet => "experiment.set_budget",
-            Self::ExperimentCreate => "experiment.create",
+            Self::SessionBudgetSet => "session.set_budget",
             Self::SessionStart => "session.start",
             Self::SessionMessage => "session.message",
             Self::SessionStop => "session.stop",
             Self::ToolCall => "tool.call",
-            Self::ApprovalDecide | Self::ApprovalDecideValueModel => "approval.decide",
-            Self::ValueModelSet => "value_model.set",
-            Self::ReportRead => "report.read",
+            Self::ApprovalDecide => "approval.decide",
             Self::TokenCreateOwn | Self::TokenCreateForOther => "token.create",
             Self::TokenRevokeOther => "token.revoke",
             Self::AuditRead => "audit.read",
         }
     }
 
-    /// The one permission matrix. Project actions are checked against the member's role
-    /// in that project, the rest against their organization role.
+    /// The one permission matrix. Project actions are checked against the member's role in that
+    /// project, the rest against their organization role.
     pub const fn minimum(self) -> Role {
         match self {
             Self::TokenCreateOwn => Role::Viewer,
-            Self::ExperimentBudgetSet
-            | Self::ExperimentCreate
-            | Self::EvaluationAdd
+            Self::SessionBudgetSet
             | Self::EnvironmentCreate
             | Self::EnvironmentEdit
             | Self::EnvironmentArchive
             | Self::SkillAdd
-            | Self::ExperimentReachSet
             | Self::SessionStart
             | Self::SessionMessage
             | Self::SessionStop
             | Self::ToolCall
-            | Self::ApprovalDecide
-            | Self::ReportRead => Role::Editor,
+            | Self::ApprovalDecide => Role::Editor,
             Self::MemberAdd
             | Self::MemberSetRole
             | Self::ProjectCreate
@@ -201,9 +176,6 @@ impl Action {
             | Self::SkillRemove
             | Self::PluginAdd
             | Self::PluginRemove
-            | Self::ProjectSkillSet
-            | Self::ApprovalDecideValueModel
-            | Self::ValueModelSet
             | Self::TokenCreateForOther
             | Self::TokenRevokeOther
             | Self::AuditRead => Role::Owner,
@@ -215,17 +187,12 @@ impl Action {
             self,
             Self::ProjectRoleSet
                 | Self::ProjectLimitsSet
-                | Self::ExperimentBudgetSet
-                | Self::ExperimentCreate
-                | Self::ProjectSkillSet
-                | Self::ExperimentReachSet
+                | Self::SessionBudgetSet
                 | Self::SessionStart
                 | Self::SessionMessage
                 | Self::SessionStop
                 | Self::ToolCall
                 | Self::ApprovalDecide
-                | Self::ApprovalDecideValueModel
-                | Self::ValueModelSet
         )
     }
 }
@@ -253,25 +220,46 @@ pub async fn permit<S: Store>(
     store: &S,
     who: &Principal,
     action: Action,
-    project: Option<ProjectId>,
     target: impl ToString,
     now: i64,
 ) -> Result<Role, Refusal> {
-    let role = match project.filter(|_| action.in_project()) {
-        Some(project) => {
+    let role = store
+        .member(who.organization, who.member)
+        .await?
+        .map(|member| member.role);
+    match role {
+        Some(role) if role >= action.minimum() => Ok(role),
+        _ => {
             store
-                .project(who.organization, project)
-                .await?
-                .ok_or(Refusal::NotFound)?;
-            store
-                .role_in_project(who.organization, project, who.member)
-                .await?
+                .append_audit(&entry(
+                    who,
+                    action.name(),
+                    target,
+                    AuditOutcome::Denied,
+                    now,
+                ))
+                .await?;
+            Err(Refusal::Denied)
         }
-        None => store
-            .member(who.organization, who.member)
-            .await?
-            .map(|member| member.role),
-    };
+    }
+}
+
+/// Like `permit` for an action in a project: the member's role in that project decides.
+pub async fn permit_in<S: Store>(
+    store: &S,
+    who: &Principal,
+    action: Action,
+    project: ProjectId,
+    target: impl ToString,
+    now: i64,
+) -> Result<Role, Refusal> {
+    store
+        .project(who.organization, project)
+        .await?
+        .ok_or(Refusal::NotFound)?;
+    let role = store
+        .role_in_project(who.organization, project, who.member)
+        .await?;
     match role {
         Some(role) if role >= action.minimum() => Ok(role),
         _ => {
@@ -348,7 +336,7 @@ pub async fn add_member<S: Store>(
     role: Role,
 ) -> Result<Member, Refusal> {
     name_ok(name, "a member's name is 1 to 200 characters")?;
-    permit(store, who, Action::MemberAdd, None, name, now).await?;
+    permit(store, who, Action::MemberAdd, name, now).await?;
     let name = name.trim();
     let member = match identity {
         Some(identity) => Member::person(who.organization, name, identity, role, now),
@@ -370,7 +358,7 @@ pub async fn set_member_role<S: Store>(
     member: MemberId,
     role: Role,
 ) -> Result<(), Refusal> {
-    permit(store, who, Action::MemberSetRole, None, member, now).await?;
+    permit(store, who, Action::MemberSetRole, member, now).await?;
     store
         .set_member_role(
             who.organization,
@@ -393,7 +381,7 @@ pub async fn create_project<S: Store>(
     if description.chars().count() > 2000 {
         return Err(Refusal::Invalid("a description is at most 2000 characters"));
     }
-    permit(store, who, Action::ProjectCreate, None, name, now).await?;
+    permit(store, who, Action::ProjectCreate, name, now).await?;
     let project = Project::new(who.organization, name.trim(), description, now);
     store
         .create_project(
@@ -413,15 +401,7 @@ pub async fn set_project_role<S: Store>(
     member: MemberId,
     role: Option<Role>,
 ) -> Result<(), Refusal> {
-    permit(
-        store,
-        who,
-        Action::ProjectRoleSet,
-        Some(project),
-        project,
-        now,
-    )
-    .await?;
+    permit_in(store, who, Action::ProjectRoleSet, project, project, now).await?;
     store
         .set_project_role(
             who.organization,
@@ -462,7 +442,7 @@ pub async fn create_token<S: Store>(
     } else {
         Action::TokenCreateForOther
     };
-    permit(store, who, action, None, member, now).await?;
+    permit(store, who, action, member, now).await?;
     store
         .member(who.organization, member)
         .await?
@@ -507,7 +487,7 @@ pub async fn revoke_token<S: Store>(
         .filter(|record| record.token.organization_id == who.organization)
         .ok_or(Refusal::NotFound)?;
     if owned.token.member_id != who.member {
-        permit(store, who, Action::TokenRevokeOther, None, token, now).await?;
+        permit(store, who, Action::TokenRevokeOther, token, now).await?;
     } else {
         member_of(store, who).await?;
     }
@@ -529,7 +509,7 @@ pub async fn audit_log<S: Store>(
     before: Option<(i64, AuditId)>,
     limit: u32,
 ) -> Result<Vec<AuditEntry>, Refusal> {
-    permit(store, who, Action::AuditRead, None, who.organization, now).await?;
+    permit(store, who, Action::AuditRead, who.organization, now).await?;
     Ok(store
         .audit_log(who.organization, before, limit.clamp(1, 200))
         .await?)
@@ -543,113 +523,35 @@ pub async fn organization<S: Store>(store: &S, who: &Principal) -> Result<Organi
         .ok_or(Refusal::NotFound)
 }
 
-/// The project an experiment belongs to, for a permission check at project scope.
+/// The project a session belongs to, for a permission check at project scope.
 pub async fn project_of<S: Store>(
     store: &S,
     who: &Principal,
-    experiment: ExperimentId,
+    session: SessionId,
 ) -> Result<ProjectId, Refusal> {
     store
-        .experiment(who.organization, experiment)
+        .session(who.organization, session)
         .await?
-        .map(|experiment| experiment.project_id)
+        .map(|session| session.project_id)
         .ok_or(Refusal::NotFound)
 }
 
-/// Starts an experiment in a project: editors and owners of the project. The budget defaults
-/// to the project's, then the organization's; the store refuses one above the caps.
-pub async fn create_experiment<S: Store>(
-    store: &S,
-    who: &Principal,
-    now: i64,
-    project: ProjectId,
-    new: NewExperiment,
-) -> Result<Experiment, Refusal> {
-    if !(1..=4000).contains(&new.goal.trim().chars().count()) {
-        return Err(Refusal::Invalid("a goal is 1 to 4000 characters"));
-    }
-    if new.budget_cap_cents.is_some_and(|cents| cents < 0) {
-        return Err(Refusal::Invalid("a budget is not negative"));
-    }
-    permit(
-        store,
-        who,
-        Action::ExperimentCreate,
-        Some(project),
-        new.goal.as_str(),
-        now,
-    )
-    .await?;
-    let row = store
-        .project(who.organization, project)
-        .await?
-        .ok_or(Refusal::NotFound)?;
-    let default = match row.default_budget_cents {
-        Some(cents) => Some(cents),
-        None => store
-            .organization(who.organization)
-            .await?
-            .and_then(|organization| organization.default_budget_cents),
-    };
-    let mut experiment = Experiment::new(
-        who.organization,
-        project,
-        new.goal.trim(),
-        new.budget_cap_cents.or(default).unwrap_or(0),
-        who.member,
-        now,
-    );
-    experiment.follow_policy = new.follow_policy;
-    store
-        .create_experiment(
-            &experiment,
-            &entry(
-                who,
-                "experiment.create",
-                experiment.id,
-                AuditOutcome::Done,
-                now,
-            ),
-        )
-        .await?;
-    Ok(experiment)
-}
-
-pub async fn experiments<S: Store>(
-    store: &S,
-    who: &Principal,
-    project: ProjectId,
-) -> Result<Vec<Experiment>, Refusal> {
-    member_of(store, who).await?;
-    store
-        .project(who.organization, project)
-        .await?
-        .ok_or(Refusal::NotFound)?;
-    Ok(store.experiments(who.organization, project).await?)
-}
-
-pub async fn experiment<S: Store>(
-    store: &S,
-    who: &Principal,
-    id: ExperimentId,
-) -> Result<Experiment, Refusal> {
-    member_of(store, who).await?;
-    store
-        .experiment(who.organization, id)
-        .await?
-        .ok_or(Refusal::NotFound)
-}
-
-/// A write on an experiment's sessions: the role in its project decides.
+/// A write on a session: the role in its project decides.
 pub async fn permit_session<S: Store>(
     store: &S,
     who: &Principal,
     now: i64,
     action: Action,
-    experiment: ExperimentId,
+    session: SessionId,
     target: impl ToString,
 ) -> Result<(), Refusal> {
-    let project = project_of(store, who, experiment).await?;
-    permit(store, who, action, Some(project), target, now).await?;
+    let project = project_of(store, who, session).await?;
+    permit_in(store, who, action, project, target, now).await?;
     Ok(())
+}
+
+/// The projects of the organization. Every member reads.
+pub async fn projects<S: Store>(store: &S, who: &Principal) -> Result<Vec<Project>, Refusal> {
+    member_of(store, who).await?;
+    Ok(store.projects(who.organization).await?)
 }

@@ -1,8 +1,6 @@
 use std::collections::HashMap;
 
-use antilog_types::{
-    Command, Envelope, Machine, MachineState, OrganizationId, RunResult, Seed, SessionId,
-};
+use antilog_types::{Command, Envelope, Machine, MachineState, OrganizationId, Seed, SessionId};
 use uuid::Uuid;
 
 use super::{FakeStore, locked};
@@ -23,7 +21,6 @@ struct Pending {
     command: Command,
     delivered: bool,
     finished: bool,
-    result: Option<RunResult>,
 }
 
 #[derive(Default)]
@@ -77,7 +74,6 @@ impl RunnerStore for FakeStore {
             machine: Machine {
                 session,
                 organization,
-                experiment: row.experiment_id,
                 agent: row.agent,
                 state: MachineState::Queued,
                 holder: None,
@@ -289,7 +285,6 @@ impl RunnerStore for FakeStore {
             command: command.clone(),
             delivered: false,
             finished: false,
-            result: None,
         });
         Ok(id)
     }
@@ -332,37 +327,6 @@ impl RunnerStore for FakeStore {
             }
         }
         Ok(())
-    }
-
-    async fn drop_command(&self, id: Uuid) -> Result<(), StoreError> {
-        locked(&self.runner)
-            .commands
-            .retain(|pending| pending.id != id);
-        Ok(())
-    }
-
-    async fn put_result(&self, session: SessionId, result: &RunResult) -> Result<bool, StoreError> {
-        let mut state = locked(&self.runner);
-        match state
-            .commands
-            .iter_mut()
-            .find(|pending| pending.id == result.command && pending.session == session)
-        {
-            Some(pending) => {
-                pending.result = Some(result.clone());
-                pending.finished = true;
-                Ok(true)
-            }
-            None => Ok(false),
-        }
-    }
-
-    async fn result(&self, command: Uuid) -> Result<Option<RunResult>, StoreError> {
-        Ok(locked(&self.runner)
-            .commands
-            .iter()
-            .find(|pending| pending.id == command)
-            .and_then(|pending| pending.result.clone()))
     }
 
     async fn put_export(

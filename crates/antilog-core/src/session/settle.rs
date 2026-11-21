@@ -4,15 +4,13 @@ use antilog_types::{
 };
 
 use super::{SessionError, audit, now_ms, record, tell};
-use crate::delivery::open_approved;
 use crate::deps::Deps;
 use crate::store::{
     ApprovalStore, BudgetStore, CardStore, RunnerStore, SessionChange, SessionStore, StoreError,
 };
-use crate::tools::seal_approved;
 
-/// Applies what a session's decided cards allowed, once each: seals what was approved, raises a
-/// budget, opens pull requests. Returns what each one came to, in words, for the agent.
+/// Applies what a session's decided cards allowed, once each: raises a budget, attaches a repo.
+/// Returns what each one came to, in words, for the agent.
 /// Safe to run again: a card already applied is skipped.
 pub async fn settle<D: Deps>(
     deps: &D,
@@ -24,15 +22,11 @@ pub async fn settle<D: Deps>(
         .session(organization, session)
         .await?
         .ok_or(SessionError::NotFound)?;
-    let approvals = deps
-        .store()
-        .approvals(organization, row.experiment_id)
-        .await?;
+    let approvals = deps.store().approvals(organization, session).await?;
     let mut told = Vec::new();
     for approval in approvals {
         let decided = approval.status != ApprovalStatus::Pending;
-        if approval.session_id != Some(session)
-            || approval.card == CardKind::AskFirst
+        if approval.card == CardKind::AskFirst
             || !decided
             || !deps.store().mark_applied(organization, approval.id).await?
         {
@@ -82,14 +76,6 @@ async fn outcome_text<D: Deps>(deps: &D, approval: &Approval) -> String {
     }
     let applied = match approval.card {
         CardKind::RaiseBudget => raise_budget(deps, approval).await,
-        CardKind::SealExperiment => match seal_approved(deps, approval).await {
-            Ok(version) => format!("Sealed as version {version}. Measure trials with measure."),
-            Err(error) => format!("Approved, but sealing failed: {error}"),
-        },
-        CardKind::OpenPullRequest => match open_approved(deps, approval).await {
-            Ok(text) => text,
-            Err(error) => format!("Approved, but opening the pull request failed: {error}"),
-        },
         CardKind::AttachRepo => attach_repo(deps, approval).await,
         _ => "Done.".to_owned(),
     };
@@ -103,26 +89,27 @@ async fn raise_budget<D: Deps>(deps: &D, approval: &Approval) -> String {
         org,
         approval.decided_by,
         "budget.raise",
-        approval.experiment_id,
+        approval.session_id,
     );
     let result = async {
         let row = deps
             .store()
-            .experiment(org, approval.experiment_id)
+            .session(org, approval.session_id)
             .await?
             .ok_or(StoreError::NotFound)?;
         let cap = row
             .budget_cap_cents
+            .unwrap_or(0)
             .saturating_add(approval.cost_cents.unwrap_or(0));
         deps.store()
-            .set_experiment_budget(org, approval.experiment_id, cap, &entry)
+            .set_session_budget(org, approval.session_id, cap, &entry)
             .await
     }
     .await;
     match result {
         Ok(()) => "The budget is raised.".to_owned(),
         Err(StoreError::Invariant(_)) => {
-            "The raise passes the project's or organization's cap, so the budget is unchanged. Ask for less with request_budget.".to_owned()
+            "The raise passes the organization's monthly cap, so the budget is unchanged. Ask for less with request_budget.".to_owned()
         }
         Err(_) => "The budget could not be changed now; call request_budget again.".to_owned(),
     }
@@ -131,17 +118,15 @@ async fn raise_budget<D: Deps>(deps: &D, approval: &Approval) -> String {
 /// The repo joins the machine's seed, so a later claim or resume clones it, and a running machine
 /// is told to clone it now.
 async fn attach_repo<D: Deps>(deps: &D, approval: &Approval) -> String {
-    let (Some(CardPayload::AttachRepo { repo, .. }), Some(session)) =
-        (&approval.payload, approval.session_id)
-    else {
+    let Some(CardPayload::AttachRepo { repo, .. }) = &approval.payload else {
         return "Done.".to_owned();
     };
+    let session = approval.session_id;
     let org = approval.organization_id;
     let name = repo.rsplit('/').next().unwrap_or(repo);
     let store = deps.store();
     match store.add_seed_repo(session, repo).await {
         Ok(_) => {}
-        // A session of an agent on a person's own machine has no machine to clone into.
         Err(StoreError::NotFound) => return "Done.".to_owned(),
         Err(_) => return "The repo could not be attached now; call attach_repo again.".to_owned(),
     }

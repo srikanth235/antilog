@@ -1,8 +1,5 @@
 use antilog_core::store::{RUNNER_LOCK_LAPSE_MS, RunnerStore, StoreError};
-use antilog_types::{
-    Command, Envelope, ExperimentId, Machine, MachineState, OrganizationId, RunResult, Seed,
-    SessionId,
-};
+use antilog_types::{Command, Envelope, Machine, MachineState, OrganizationId, Seed, SessionId};
 use sqlx::{Postgres, Transaction};
 use uuid::Uuid;
 
@@ -11,7 +8,6 @@ use super::{PgStore, corrupt, map};
 struct Row {
     session_id: Uuid,
     organization_id: Uuid,
-    experiment_id: Uuid,
     agent: String,
     state: String,
     holder: Option<String>,
@@ -26,7 +22,6 @@ impl TryFrom<Row> for Machine {
         Ok(Machine {
             session: SessionId::from_uuid(row.session_id),
             organization: OrganizationId::from_uuid(row.organization_id),
-            experiment: ExperimentId::from_uuid(row.experiment_id),
             agent: row.agent,
             state: MachineState::parse(&row.state)
                 .ok_or_else(|| corrupt("machine state", &row.state))?,
@@ -64,7 +59,7 @@ impl RunnerStore for PgStore {
     ) -> Result<(), StoreError> {
         let mut tx = self.scoped(organization).await?;
         let session_row = sqlx::query!(
-            "select experiment_id, agent from sessions where organization_id = $1 and id = $2",
+            "select agent from sessions where organization_id = $1 and id = $2",
             organization.as_uuid(),
             session.as_uuid(),
         )
@@ -73,10 +68,9 @@ impl RunnerStore for PgStore {
         .map_err(map)?
         .ok_or(StoreError::NotFound)?;
         sqlx::query!(
-            "insert into machines (session_id, organization_id, experiment_id, agent, state, seed, updated_at) values ($1, $2, $3, $4, 'queued', $5, to_timestamp($6::bigint / 1000.0))",
+            "insert into machines (session_id, organization_id, agent, state, seed, updated_at) values ($1, $2, $3, 'queued', $4, to_timestamp($5::bigint / 1000.0))",
             session.as_uuid(),
             organization.as_uuid(),
-            session_row.experiment_id,
             session_row.agent,
             json(seed)?,
             at,
@@ -91,7 +85,7 @@ impl RunnerStore for PgStore {
         let mut tx = self.runner().await?;
         sqlx::query_as!(
             Row,
-            "select session_id, organization_id, experiment_id, agent, state, holder, seed, resume from machines where session_id = $1",
+            "select session_id, organization_id, agent, state, holder, seed, resume from machines where session_id = $1",
             session.as_uuid(),
         )
         .fetch_optional(&mut *tx)
@@ -110,7 +104,7 @@ impl RunnerStore for PgStore {
     ) -> Result<Vec<Machine>, StoreError> {
         let mut tx = self.runner().await?;
         let claimed = sqlx::query!(
-            "select session_id as \"session_id!\", organization_id as \"organization_id!\", experiment_id as \"experiment_id!\", agent as \"agent!\", state as \"state!\", holder, seed as \"seed!\", resume as \"resume!\" from claim_machines($1, $2, to_timestamp($3::bigint / 1000.0), to_timestamp($4::bigint / 1000.0), $5)",
+            "select session_id as \"session_id!\", organization_id as \"organization_id!\", agent as \"agent!\", state as \"state!\", holder, seed as \"seed!\", resume as \"resume!\" from claim_machines($1, $2, to_timestamp($3::bigint / 1000.0), to_timestamp($4::bigint / 1000.0), $5)",
             holder,
             i32::try_from(limit).unwrap_or(i32::MAX),
             now,
@@ -126,7 +120,6 @@ impl RunnerStore for PgStore {
                 Machine::try_from(Row {
                     session_id: row.session_id,
                     organization_id: row.organization_id,
-                    experiment_id: row.experiment_id,
                     agent: row.agent,
                     state: row.state,
                     holder: row.holder,
@@ -324,42 +317,6 @@ impl RunnerStore for PgStore {
         .await
         .map_err(map)?;
         tx.commit().await.map_err(map)
-    }
-
-    async fn drop_command(&self, id: Uuid) -> Result<(), StoreError> {
-        let mut tx = self.runner().await?;
-        sqlx::query!("delete from machine_commands where id = $1", id)
-            .execute(&mut *tx)
-            .await
-            .map_err(map)?;
-        tx.commit().await.map_err(map)
-    }
-
-    async fn put_result(&self, session: SessionId, result: &RunResult) -> Result<bool, StoreError> {
-        let mut tx = self.runner().await?;
-        let changed = sqlx::query!(
-            "update machine_commands set result = $3, finished = true where id = $1 and session_id = $2",
-            result.command,
-            session.as_uuid(),
-            json(result)?,
-        )
-        .execute(&mut *tx)
-        .await
-        .map_err(map)?
-        .rows_affected();
-        tx.commit().await.map_err(map)?;
-        Ok(changed == 1)
-    }
-
-    async fn result(&self, command: Uuid) -> Result<Option<RunResult>, StoreError> {
-        let mut tx = self.runner().await?;
-        sqlx::query_scalar!("select result from machine_commands where id = $1", command)
-            .fetch_optional(&mut *tx)
-            .await
-            .map_err(map)?
-            .flatten()
-            .map(|text| serde_json::from_str(&text).map_err(|_| corrupt("run result", &text)))
-            .transpose()
     }
 
     async fn put_export(

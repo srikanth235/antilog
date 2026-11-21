@@ -1,9 +1,7 @@
 //! Skills (skill packs): organization `SKILL.md` folders with fixed versions. Text only, read by
-//! agents and never by the judge.
+//! agents.
 
-use antilog_types::{
-    AuditOutcome, MemberId, NewSkill, ProjectId, SetOn, Skill, SkillFile, SkillVersion,
-};
+use antilog_types::{AuditOutcome, MemberId, NewSkill, Skill, SkillFile, SkillVersion};
 
 use crate::organization::{Action, Principal, Refusal, entry, member_of, permit};
 use crate::store::{Store, StoreError};
@@ -95,21 +93,10 @@ pub fn check(files: &[SkillFile]) -> Result<(String, String, u64), Refusal> {
     Ok((name, description, u64::try_from(total).unwrap_or(u64::MAX)))
 }
 
-/// Each skill with whether the project has it On (every project starts with all of them On).
-pub async fn list<S: Store>(
-    store: &S,
-    who: &Principal,
-    project: Option<ProjectId>,
-) -> Result<Vec<Skill>, Refusal> {
+/// Every skill of the organization, with its versions.
+pub async fn list<S: Store>(store: &S, who: &Principal) -> Result<Vec<Skill>, Refusal> {
     member_of(store, who).await?;
-    let mut skills = store.skills(who.organization).await?;
-    if let Some(project) = project {
-        let off = store.project_skills_off(who.organization, project).await?;
-        for skill in &mut skills {
-            skill.on = !off.contains(&skill.name);
-        }
-    }
-    Ok(skills)
+    Ok(store.skills(who.organization).await?)
 }
 
 pub async fn version<S: Store>(
@@ -164,7 +151,7 @@ pub async fn add<S: Store>(
     new: NewSkill,
 ) -> Result<SkillVersion, Refusal> {
     let (name, _, _) = check(&new.files)?;
-    permit(store, who, Action::SkillAdd, None, &name, now).await?;
+    permit(store, who, Action::SkillAdd, &name, now).await?;
     for _ in 0..3 {
         let version = next_version(store, who.organization, &name).await?;
         let skill = build(new.files.clone(), version, who.member, now)?;
@@ -197,61 +184,19 @@ pub fn single(text: &str) -> NewSkill {
     }
 }
 
-/// A skill an experiment selected is in use and is never removed.
+/// Removes a skill with all its versions. Owners only.
 pub async fn remove<S: Store>(
     store: &S,
     who: &Principal,
     now: i64,
     name: &str,
 ) -> Result<(), Refusal> {
-    permit(store, who, Action::SkillRemove, None, name, now).await?;
-    if !store.skill_users(who.organization, name).await?.is_empty() {
-        return Err(Refusal::Invalid(
-            "an experiment selected this skill, so it stays: it can be turned Off per project",
-        ));
-    }
+    permit(store, who, Action::SkillRemove, name, now).await?;
     store
         .remove_skill(
             who.organization,
             name,
             &entry(who, "skill.remove", name, AuditOutcome::Done, now),
-        )
-        .await?;
-    Ok(())
-}
-
-/// A project owner turns a skill On or Off for the project. Off hides it from New experiment
-/// there; an experiment that already selected a version keeps it.
-pub async fn set_on<S: Store>(
-    store: &S,
-    who: &Principal,
-    now: i64,
-    project: ProjectId,
-    name: &str,
-    change: SetOn,
-) -> Result<(), Refusal> {
-    permit(
-        store,
-        who,
-        Action::ProjectSkillSet,
-        Some(project),
-        name,
-        now,
-    )
-    .await?;
-    store
-        .set_project_skill(
-            who.organization,
-            project,
-            name,
-            change.on,
-            &entry(
-                who,
-                "project.set_skill",
-                format!("{project}:{name}"),
-                AuditOutcome::Done,
-                now,
-            ),
         )
         .await?;
     Ok(())

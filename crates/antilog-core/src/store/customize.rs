@@ -1,9 +1,8 @@
 use std::future::Future;
 
 use antilog_types::{
-    ApprovalId, AuditEntry, Connector, ConnectorHealth, ConnectorId, ConnectorTool, ExperimentId,
-    MemberId, OrganizationId, Plugin, PluginPart, ProjectId, SessionId, Skill, SkillRef,
-    SkillVersion, ToolMode,
+    ApprovalId, AuditEntry, Connector, ConnectorHealth, ConnectorId, ConnectorTool, MemberId,
+    OrganizationId, Plugin, PluginPart, SessionId, Skill, SkillVersion, ToolMode,
 };
 
 use super::StoreError;
@@ -22,8 +21,6 @@ pub struct ConnectorRow {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SessionScope {
     pub organization: OrganizationId,
-    pub experiment: ExperimentId,
-    pub project: ProjectId,
     /// The member the session works for.
     pub member: MemberId,
 }
@@ -99,27 +96,6 @@ pub trait CustomizeStore {
         audit: &AuditEntry,
     ) -> impl Future<Output = Result<(), StoreError>> + Send;
 
-    fn select_connectors(
-        &self,
-        organization: OrganizationId,
-        experiment: ExperimentId,
-        connectors: &[ConnectorId],
-        audit: &AuditEntry,
-    ) -> impl Future<Output = Result<(), StoreError>> + Send;
-
-    fn experiment_connectors(
-        &self,
-        organization: OrganizationId,
-        experiment: ExperimentId,
-    ) -> impl Future<Output = Result<Vec<ConnectorId>, StoreError>> + Send;
-
-    /// The experiments that switched this connector on.
-    fn connector_users(
-        &self,
-        organization: OrganizationId,
-        id: ConnectorId,
-    ) -> impl Future<Output = Result<Vec<ExperimentId>, StoreError>> + Send;
-
     /// `Conflict` when the name and version exist.
     fn add_skill_version(
         &self,
@@ -129,7 +105,7 @@ pub trait CustomizeStore {
         audit: &AuditEntry,
     ) -> impl Future<Output = Result<(), StoreError>> + Send;
 
-    /// Every skill with its versions, `on` true; a project's switch is applied by the caller.
+    /// Every skill with its versions.
     fn skills(
         &self,
         organization: OrganizationId,
@@ -148,42 +124,6 @@ pub trait CustomizeStore {
         name: &str,
         audit: &AuditEntry,
     ) -> impl Future<Output = Result<(), StoreError>> + Send;
-
-    fn set_project_skill(
-        &self,
-        organization: OrganizationId,
-        project: ProjectId,
-        name: &str,
-        on: bool,
-        audit: &AuditEntry,
-    ) -> impl Future<Output = Result<(), StoreError>> + Send;
-
-    /// The skills a project turned Off.
-    fn project_skills_off(
-        &self,
-        organization: OrganizationId,
-        project: ProjectId,
-    ) -> impl Future<Output = Result<Vec<String>, StoreError>> + Send;
-
-    fn select_skills(
-        &self,
-        organization: OrganizationId,
-        experiment: ExperimentId,
-        skills: &[SkillRef],
-        audit: &AuditEntry,
-    ) -> impl Future<Output = Result<(), StoreError>> + Send;
-
-    fn experiment_skills(
-        &self,
-        organization: OrganizationId,
-        experiment: ExperimentId,
-    ) -> impl Future<Output = Result<Vec<SkillRef>, StoreError>> + Send;
-
-    fn skill_users(
-        &self,
-        organization: OrganizationId,
-        name: &str,
-    ) -> impl Future<Output = Result<Vec<ExperimentId>, StoreError>> + Send;
 
     /// A plugin and the parts it brought, in one step. `Conflict` when the id exists.
     fn add_plugin(

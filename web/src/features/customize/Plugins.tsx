@@ -16,7 +16,6 @@ export function adds(parts: Schemas["PluginPart"][]): string {
   const words = [
     [count("skill"), p.skills],
     [count("connector"), p.connectors],
-    [count("evaluation"), p.evaluations],
   ] as const;
   const said = words.filter(([n]) => n > 0).map(([n, say]) => say(n));
   return said.length === 0 ? p.nothing : said.join(", ");

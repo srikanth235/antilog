@@ -1,11 +1,9 @@
-pub mod judge;
-
 use std::future::Future;
 
 mod approval;
 mod budget;
 mod card;
-mod code_host;
+mod changes;
 mod customize;
 mod environment;
 mod model_key;
@@ -14,9 +12,9 @@ mod runner;
 mod session;
 
 pub use approval::ApprovalStore;
-pub use budget::{BudgetStore, SpendLine, SpendRow, SpendScope, SpendTotal};
+pub use budget::{BudgetStore, SpendLine, SpendScope, SpendTotal};
 pub use card::CardStore;
-pub use code_host::{CodeHostStore, PullRequestRow};
+pub use changes::ChangesStore;
 pub use customize::{ConnectorRow, CustomizeStore, SessionScope};
 pub use environment::EnvironmentStore;
 pub use model_key::{GatewayScope, ModelKeyStore};
@@ -56,7 +54,7 @@ pub trait Store:
     + BudgetStore
     + ApprovalStore
     + CardStore
-    + CodeHostStore
+    + ChangesStore
     + RunnerStore
     + ModelKeyStore
     + CustomizeStore

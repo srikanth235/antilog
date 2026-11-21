@@ -1,9 +1,8 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 use antilog_types::{
-    ApprovalId, AuditEntry, Connector, ConnectorHealth, ConnectorId, ConnectorTool, ExperimentId,
-    OrganizationId, Plugin, PluginPart, ProjectId, SessionId, Skill, SkillRef, SkillVersion,
-    ToolMode,
+    ApprovalId, AuditEntry, Connector, ConnectorHealth, ConnectorId, ConnectorTool, OrganizationId,
+    Plugin, PluginPart, SessionId, Skill, SkillVersion, ToolMode,
 };
 
 use super::{FakeStore, locked};
@@ -13,10 +12,7 @@ use crate::store::{ConnectorRow, CustomizeStore, SessionScope, StoreError};
 pub(super) struct State {
     used: HashSet<(OrganizationId, ApprovalId)>,
     connectors: Vec<(OrganizationId, ConnectorRow)>,
-    experiment_connectors: HashMap<(OrganizationId, ExperimentId), Vec<ConnectorId>>,
     skills: Vec<(OrganizationId, SkillVersion, Option<String>)>,
-    project_off: HashSet<(OrganizationId, ProjectId, String)>,
-    experiment_skills: HashMap<(OrganizationId, ExperimentId), Vec<SkillRef>>,
     plugins: Vec<(OrganizationId, Plugin)>,
 }
 
@@ -32,14 +28,10 @@ impl CustomizeStore for FakeStore {
         let Some(row) = ledger.sessions.iter().find(|row| row.id == session) else {
             return Ok(None);
         };
-        Ok(ledger
-            .experiment(row.organization_id, row.experiment_id)
-            .map(|experiment| SessionScope {
-                organization: row.organization_id,
-                experiment: experiment.id,
-                project: experiment.project_id,
-                member: experiment.created_by,
-            }))
+        Ok(Some(SessionScope {
+            organization: row.organization_id,
+            member: row.created_by,
+        }))
     }
 
     async fn use_approval(
@@ -187,54 +179,6 @@ impl CustomizeStore for FakeStore {
         Ok(())
     }
 
-    async fn select_connectors(
-        &self,
-        organization: OrganizationId,
-        experiment: ExperimentId,
-        connectors: &[ConnectorId],
-        audit: &AuditEntry,
-    ) -> Result<(), StoreError> {
-        let mut state = locked(&self.customize);
-        if connectors.iter().any(|id| {
-            !state
-                .connectors
-                .iter()
-                .any(|(org, row)| *org == organization && row.connector.id == *id)
-        }) {
-            return Err(StoreError::NotFound);
-        }
-        state
-            .experiment_connectors
-            .insert((organization, experiment), connectors.to_vec());
-        self.audit_one(audit);
-        Ok(())
-    }
-
-    async fn experiment_connectors(
-        &self,
-        organization: OrganizationId,
-        experiment: ExperimentId,
-    ) -> Result<Vec<ConnectorId>, StoreError> {
-        Ok(locked(&self.customize)
-            .experiment_connectors
-            .get(&(organization, experiment))
-            .cloned()
-            .unwrap_or_default())
-    }
-
-    async fn connector_users(
-        &self,
-        organization: OrganizationId,
-        id: ConnectorId,
-    ) -> Result<Vec<ExperimentId>, StoreError> {
-        Ok(locked(&self.customize)
-            .experiment_connectors
-            .iter()
-            .filter(|((org, _), ids)| *org == organization && ids.contains(&id))
-            .map(|((_, experiment), _)| *experiment)
-            .collect())
-    }
-
     async fn add_skill_version(
         &self,
         organization: OrganizationId,
@@ -275,7 +219,6 @@ impl CustomizeStore for FakeStore {
                     description: skill.description.clone(),
                     latest: skill.version,
                     versions: vec![skill.version],
-                    on: true,
                     from_plugin: plugin.clone(),
                 }),
             }
@@ -315,97 +258,8 @@ impl CustomizeStore for FakeStore {
         if state.skills.len() == before {
             return Err(StoreError::NotFound);
         }
-        state
-            .project_off
-            .retain(|(org, _, have)| !(*org == organization && have == name));
         self.audit_one(audit);
         Ok(())
-    }
-
-    async fn set_project_skill(
-        &self,
-        organization: OrganizationId,
-        project: ProjectId,
-        name: &str,
-        on: bool,
-        audit: &AuditEntry,
-    ) -> Result<(), StoreError> {
-        let mut state = locked(&self.customize);
-        if !state
-            .skills
-            .iter()
-            .any(|(org, have, _)| *org == organization && have.name == name)
-        {
-            return Err(StoreError::NotFound);
-        }
-        let key = (organization, project, name.to_owned());
-        if on {
-            state.project_off.remove(&key);
-        } else {
-            state.project_off.insert(key);
-        }
-        self.audit_one(audit);
-        Ok(())
-    }
-
-    async fn project_skills_off(
-        &self,
-        organization: OrganizationId,
-        project: ProjectId,
-    ) -> Result<Vec<String>, StoreError> {
-        Ok(locked(&self.customize)
-            .project_off
-            .iter()
-            .filter(|(org, have, _)| *org == organization && *have == project)
-            .map(|(_, _, name)| name.clone())
-            .collect())
-    }
-
-    async fn select_skills(
-        &self,
-        organization: OrganizationId,
-        experiment: ExperimentId,
-        skills: &[SkillRef],
-        audit: &AuditEntry,
-    ) -> Result<(), StoreError> {
-        let mut state = locked(&self.customize);
-        if skills.iter().any(|want| {
-            !state.skills.iter().any(|(org, have, _)| {
-                *org == organization && have.name == want.name && have.version == want.version
-            })
-        }) {
-            return Err(StoreError::NotFound);
-        }
-        state
-            .experiment_skills
-            .insert((organization, experiment), skills.to_vec());
-        self.audit_one(audit);
-        Ok(())
-    }
-
-    async fn experiment_skills(
-        &self,
-        organization: OrganizationId,
-        experiment: ExperimentId,
-    ) -> Result<Vec<SkillRef>, StoreError> {
-        Ok(locked(&self.customize)
-            .experiment_skills
-            .get(&(organization, experiment))
-            .cloned()
-            .unwrap_or_default())
-    }
-
-    async fn skill_users(
-        &self,
-        organization: OrganizationId,
-        name: &str,
-    ) -> Result<Vec<ExperimentId>, StoreError> {
-        Ok(locked(&self.customize)
-            .experiment_skills
-            .iter()
-            .filter(|((org, _), refs)| *org == organization && refs.iter().any(|r| r.name == name))
-            .map(|((_, experiment), _)| *experiment)
-            .collect())
     }
 
     async fn add_plugin(

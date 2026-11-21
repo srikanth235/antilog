@@ -13,9 +13,15 @@ use tokio::sync::mpsc;
 use uuid::Uuid;
 
 use super::api::{NotHeld, Server};
-use super::machine::{self, repo_dir};
+use super::changes::{self, Base};
+
 use super::opencode::{Api, Opencode, Tracker, permission};
 use super::sandbox::{Exec, Machine, Sandbox, SandboxSpec, run as run_in_machine};
+
+/// Where a repo of the session is cloned.
+pub fn repo_dir(workdir: &Path, repo: &str) -> PathBuf {
+    workdir.join(repo.rsplit('/').next().unwrap_or(repo))
+}
 
 /// What the poll loop tells a session's task.
 pub enum Msg {
@@ -167,7 +173,6 @@ fn password() -> Result<String> {
 }
 
 struct Live<S: Sandbox> {
-    sandbox: Arc<S>,
     machine: Arc<S::Machine>,
     opencode: Arc<Opencode>,
     server: Server,
@@ -180,6 +185,8 @@ struct Live<S: Sandbox> {
     tracker: Tracker,
     outbox: Vec<Item>,
     done: Done,
+    /// Each repo of the machine with where it was cloned from, for the Changes panel.
+    repos: Vec<(String, PathBuf, Base)>,
 }
 
 impl<S: Sandbox> Live<S> {
@@ -203,6 +210,27 @@ impl<S: Sandbox> Live<S> {
                 tracing::warn!(%error, "could not send events; will try again");
                 Ok(())
             }
+        }
+    }
+
+    /// Reads what the agent changed in each repo and sends it, replacing the last report. A repo
+    /// or a server that cannot answer leaves the old report: the next turn tries again.
+    async fn report_changes(&self) -> Result<()> {
+        let report = changes::report(&*self.machine, &self.repos).await;
+        if report.repos.is_empty() {
+            return Ok(());
+        }
+        match self
+            .server
+            .changes(self.spec.session, &self.spec.runner_token, &report)
+            .await
+        {
+            Err(error) if error.is::<NotHeld>() => Err(error),
+            Err(error) => {
+                tracing::warn!(%error, "could not send the changes");
+                Ok(())
+            }
+            Ok(()) => Ok(()),
         }
     }
 
@@ -247,6 +275,13 @@ impl<S: Sandbox> Live<S> {
                 match clone_all(&*self.machine, &self.machine.paths().work.clone(), &only).await {
                     Ok(()) => {
                         if !self.spec.repos.iter().any(|have| have.name == repo.name) {
+                            let dir = repo_dir(&self.machine.paths().work, &repo.name);
+                            match changes::base(&*self.machine, &dir).await {
+                                Ok(base) => self.repos.push((repo.name.clone(), dir, base)),
+                                Err(error) => {
+                                    tracing::warn!(%error, "could not read the attached repo's base");
+                                }
+                            }
                             self.spec.repos.push(repo);
                         }
                     }
@@ -257,25 +292,6 @@ impl<S: Sandbox> Live<S> {
                 self.api.reply(&permission, reply).await?;
             }
             Command::Abort => self.api.abort(&self.oc_session).await?,
-            Command::Run { run } => {
-                // It can take long, and the conversation goes on meanwhile.
-                let (server, session, token) = (
-                    self.server.clone(),
-                    self.spec.session,
-                    self.spec.runner_token.clone(),
-                );
-                let (sandbox, machine) = (self.sandbox.clone(), self.machine.clone());
-                let spec = self.spec.clone();
-                let (done, id) = (self.done.clone(), envelope.id);
-                tokio::spawn(async move {
-                    let result = machine::run(&*sandbox, &*machine, &spec, id, &run).await;
-                    match server.result(session, &token, &result).await {
-                        Ok(()) => finish(&done, id),
-                        Err(error) => tracing::warn!(%error, "could not return a run's outcome"),
-                    }
-                });
-                return Ok(false);
-            }
             Command::Release { outcome } => {
                 self.release(outcome).await?;
                 finish(&self.done, envelope.id);
@@ -300,6 +316,7 @@ impl<S: Sandbox> Live<S> {
             }
         };
         self.flush().await.ok();
+        self.report_changes().await.ok();
         self.stop().await;
         self.server
             .release(
@@ -324,11 +341,16 @@ impl<S: Sandbox> Live<S> {
             tokio::select! {
                 batch = events.next() => {
                     let Some(batch) = batch? else { return Ok(false) };
+                    let mut turn_ended = false;
                     for event in batch {
                         let items = self.tracker.event(&event);
+                        turn_ended |= items.iter().any(|item| matches!(item, Item::Status { busy: false }));
                         self.outbox.extend(items);
                     }
                     self.flush().await?;
+                    if turn_ended {
+                        self.report_changes().await?;
+                    }
                 }
                 message = commands.recv() => match message {
                     Some(Msg::Command(envelope)) => {
@@ -352,7 +374,7 @@ async fn start<S: Sandbox>(
     done: &Done,
 ) -> Result<Live<S>> {
     let machine = Arc::new(sandbox.start(&SandboxSpec::new(spec)).await?);
-    match prepare(sandbox, &machine, opencode, server, spec, done).await {
+    match prepare(&machine, opencode, server, spec, done).await {
         Ok(live) => Ok(live),
         Err(error) => {
             machine.stop().await;
@@ -362,7 +384,6 @@ async fn start<S: Sandbox>(
 }
 
 async fn prepare<S: Sandbox>(
-    sandbox: &Arc<S>,
     machine: &Arc<S::Machine>,
     opencode: &Arc<Opencode>,
     server: &Server,
@@ -396,6 +417,16 @@ async fn prepare<S: Sandbox>(
             .await
             .ok();
     }
+    let mut repos = Vec::new();
+    for repo in &spec.repos {
+        let at = repo_dir(&root, &repo.name);
+        match changes::base(&**machine, &at).await {
+            Ok(base) => repos.push((repo.name.clone(), at, base)),
+            Err(error) => {
+                tracing::warn!(repo = %repo.name, %error, "could not read the repo's base")
+            }
+        }
+    }
     let base = opencode.serve(&**machine, &dir, &password).await?;
     let api = Api::new(&base, &password);
     api.wait_healthy(Duration::from_secs(60)).await?;
@@ -404,7 +435,6 @@ async fn prepare<S: Sandbox>(
         None => api.create_session().await?,
     };
     Ok(Live {
-        sandbox: sandbox.clone(),
         machine: machine.clone(),
         opencode: opencode.clone(),
         server: server.clone(),
@@ -416,6 +446,7 @@ async fn prepare<S: Sandbox>(
         oc_session,
         outbox: Vec::new(),
         done: done.clone(),
+        repos,
     })
 }
 

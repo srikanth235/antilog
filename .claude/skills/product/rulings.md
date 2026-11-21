@@ -1,94 +1,62 @@
 # Rulings
 
-The settled product, directed by the owner, as [docs/V0.md](../../../docs/V0.md) shapes it (V0 changes: sessions copy Claude Code cloud sessions, a runner, OpenCode, one proxy, no infrastructure tool, customers bring model keys). The runner, proxy, environments and the org lock are built; the real code host is not. Cut features are in [non-goals](non-goals.md), the words in [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md).
+The settled product, directed by the owner, as [docs/V0.md](../../../docs/V0.md) shapes it: v0 is cloud sessions only, copying Claude Code's cloud sessions (a runner, OpenCode, one proxy, no infrastructure tool, customers bring model keys). The runner, proxy, environments and the org lock are built; the real code host is not. Cut features are in [non-goals](non-goals.md), the words in [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md).
 
-## A chat and a judge
+## A chat in a cloud session
 
-- **Antilog is a chat and a judge.** The chat works like Claude Code on the web: a person talks to a coding agent in its own machine with repos attached. The judge is a set of tools every session gets. Only the judge's numbers count, and only a measured win becomes a pull request.
-- **No modes, no plan step, no orchestration loop on the server.** The agent drives. The only server-side state machines are the judge's queue and the budget meter.
-- **Four things.** A **project** groups the experiments for one area of the code. An **experiment** is the sealed goal and everything measured against it. A **session** is one agent's work inside an experiment. A **measurement** is the judge's signed result for one trial. Everything else (scoreboard, wins, receipts, value, Return) is a view over measurements. Reusable setup lives in one Customize page.
-- **Experiment.** Its definition of better (metric and direction, evaluation and protected files, guardrails, data and holdout, repeats, acceptance criteria, quick check, patience, value model) is immutable once sealed; a change makes a new version and numbers never carry across. State: Not sealed, Sealed, Watching or Regressed.
-- **Session.** A chat with one agent in one machine. It always belongs to an experiment. Status: Working, Waiting for you, Done or Failed; a stopped one is Done, "Stopped by NAME". On screen it is named by its agent.
-- **Trial.** One `measure` call: a set of commits (one per repo changed), the trial it started from and a one-line hypothesis.
-- **Tools.** Every session gets the Antilog tools, and `antilog mcp` serves them to an agent on a person's own machine. Work tools: `seal`, `measure` (asynchronous: a ticket now, the measurement later as an event), `history`, `deliver`, `watch`. Setup tools, each a card: `attach_repo`, `request_credential`, `set_environment`, `request_budget`. See [session tools](../session/tools.md) and [judge tools](../judge/tools.md).
-- **Memory is `history`.** Each trial carries its hypothesis, so a later session reads what was tried and what failed. There is no notes feature. Skill packs are written know-how a person adds, not a record of trials.
+- **Antilog is a chat with a coding agent in a cloud session.** A person talks to an agent that runs in a machine of its own with repos attached, started in a project. The agent asks for setup through Antilog's tools and a person approves each request.
+- **No modes, no plan step, no orchestration loop on the server.** The agent drives. The only server-side state machines are the runner's queue and the budget meter.
+- **Three things.** A **project** groups sessions for one area of the code. A **session** is one agent's work in one machine and belongs to one project. A **card** is a tool call a person approves. Reusable setup lives in one Customize page.
+- **Session.** Its fields and routes are in [session model](../session/model.md). Status: Working, Waiting for you, Done or Failed; a stopped one is Done, "Stopped by NAME". The sidebar lists projects, each with its sessions.
+- **Tools.** A session's MCP endpoint (`/mcp/sessions/{id}`) serves the setup tools, each a card: `attach_repo`, `request_credential`, `set_environment`, `request_budget`, plus the tools of every organization connector (On, Off or Ask first). See [session tools](../session/tools.md). There is no `antilog mcp` and no REST tool endpoint.
 
 ## Settings are tools
 
 - A person approves the tool calls that matter, and settings pages list and revoke what was approved. Setup happens in the chat, at the moment it is needed, as a card.
-- Eight card kinds: Seal experiment, Raise budget, Add credential, Attach repo, Change environment, Open pull request, Keep going?, Continue on another agent?. Defaults, policy, Mode and who may approve are in [organization approvals](../organization/approvals.md).
+- Six card kinds: Raise budget, Add credential, Attach repo, Change environment, Allow this tool? (`ask_first`) and Use a connector tool. Defaults, policy, Mode and who may approve are in [organization approvals](../organization/approvals.md).
 - Add credential always asks and can never be pre-approved: a person types the value into a secure form that goes straight to the server's secret store.
 - Roles decide who may approve which card; a viewer approves nothing. The audit log lists tool calls that changed something and approvals.
-- Two things are set up in Settings because no experiment can run without them: model keys (saved per organization per provider) and members and sign-in. Connectors and agents are registered once in Customize, and a chat can ask for the same thing with an Add credential card, so nothing waits on it.
-
-## The judge
-
-- **The trust rules never bend.** Only the judge's numbers count. An agent never holds the holdout credential. A sealed experiment never changes. A person or an agent can never mark a win: only the acceptance criteria can, as one pure function in code. Chat changes what an agent tries, never what counts.
-- **Anti-cheat is built in:** a seal over the definition and protected files (a trial that changes a protected path is Rejected), a fresh checkout for every measurement, seal checks, confirmation before Kept, a second opinion from a different model provider that flags and never decides, and a signed receipt. See [judge anti-cheat](../judge/anti-cheat.md).
-- **Acceptance.** A trial is Kept when it beats the trial it started from by more than the bar, every guardrail holds, and it is confirmed in a fresh checkout and on the holdout. An experiment's best is its best Kept trial. Outcomes: Measuring, Kept, Within noise, Worse, Guardrail failed, Failed holdout, Rejected, Failed.
-- **The holdout as an oracle.** Failed holdout is one bit per trial, so it can be probed. The judge credential is read-only. Holdout checks are capped per experiment version (sealed, default 20); at the cap the experiment needs a new version with a new holdout. The trial's code sees the holdout at the same path and shape as the evaluation data, and a standard planted cheat that behaves differently on the holdout must be caught by the seal checks.
-- **What an agent sees.** The measured value and guardrail values on the evaluation data, and the outcome. It may read the evaluation's code and may never change it. It never reads the holdout or learns a holdout value.
-- **Paired measurement and the bar.** In each fresh checkout the trial and the trial it started from run interleaved, for the sealed number of repeats, and the gain is the mean of the paired differences. The bar: the one-sided lower confidence bound of that gain must be above zero at confidence 1 − 0.05/k, where k is the number of trials measured in this experiment version, this one included, so many attempts cannot win by luck. Confirmation repeats the paired measurement in another fresh sandbox.
-- **Quick check and patience.** A measurement starts with a quick check (one pair: the trial and the experiment's best, run once each on the same machine); the full measurement follows only if it beats the best by more than the noise. The quick check never decides Kept. When patience (default 6) trials in a row are not Kept, the judge first measures each session's branch head that differs from every measured trial as one cumulative trial, started from the best, so gains each below the bar can add up; it counts in k and meets the same bar. If none is Kept, the experiment waits on a Keep going? card. Both are sealed.
-- **Delivery and watch.** `deliver` opens one linked pull request per repo changed, each carrying the receipt, and refuses any trial that is not Kept. The session stays attached for review comments and CI failures, and a rebase is measured again. A delivered experiment can be watched: the judge pairs the delivered commit with the current head of the default branch, and a regression is a paired loss whose lower confidence bound is above zero at 95%. It wakes or starts a session and notifies.
-- **Receipt.** Every win carries a signed receipt with Experiment, Data and Compute groups, and a Verify action. See [judge model](../judge/model.md).
-- **Value.** A win is Delivered once its pull request is merged. Pending is not in Return. Delivered is measured offline by the judge and says so wherever it is shown ("measured offline") until production scoring is decided. See the three aims below.
+- Two things are set up in Settings because no session can run without them: model keys (saved per organization per provider) and members and sign-in. Connectors and agents are registered once in Customize, and a chat can ask for the same thing with a card, so nothing waits on it.
 
 ## Sessions, budget and storage
 
-- **One agent per session,** with any number of repos. Git is the hand-off: each session gets a short-lived git token per repo that pushes only to its own branch, and Antilog stores commit ids, never diffs.
-- **Budget.** One per experiment, covering all its sessions and judge time. It is set on the composer (default: the project's, then the organization's) and an editor or owner can change it at any time; lowering it below spend stops new measurements. When it is spent the judge refuses `measure` and the experiment is Waiting for you with a Raise budget card. It sits inside its project's optional monthly cap, inside the organization's.
-- **The machine is temporary, the conversation is not.** A machine is released when the session is idle or stopped, and resuming starts a new one from the session's branches and the exported history.
-- **What the server stores:** the conversation, tool call names and card states, commit ids, measurements, spend and audit rows. Never tool output, file contents, diffs or data. Tool output and raw logs stay on the session machine, are fetched when opened and may expire; the session says so.
+- **One agent per session,** with any number of repos. The repos, the environment version, the agent and the model are fixed when it starts.
+- **Budget.** Caps nest: a session's own optional cap is at most its project's monthly cap, which is at most the organization's monthly cap. A new session's cap defaults to the project's default per session, then the organization's. The proxy refuses model calls with a 402 once any of them is spent; the session is then Waiting for you, and `request_budget` raises its own cap through a Raise budget card. See [organization approvals](../organization/approvals.md).
+- **The machine is temporary, the conversation is not.** A machine is released when the session is idle or stopped, and resuming starts a new one from the exported history.
+- **What the server stores:** the conversation, tool call names and card states, spend and audit rows. Never tool output, file contents, diffs or data.
 - **Prompt injection is assumed.** Every agent reads untrusted text; what a hijacked agent holds and what still gets through is in [session threat model](../session/threat-model.md).
 - **A person's terminal** in the session's machine is audited, and its output is not stored.
-- **What agents are told is part of the product** and is versioned and tested. See [session prompts](../session/prompts.md).
+- **What agents are told is part of the product.** See [session prompts](../session/prompts.md).
 - **Rules kept:** one translator per outside system; Antilog never reshapes or pipes data; a session contacts only the endpoints its environment allows; a stopped session's machine is released and its disk dropped.
 
-## Projects, Customize and data
+## Projects and Customize
 
-- **Projects.** Every experiment belongs to exactly one project. A project has members as owner, editor or viewer; the organization role is the default in every project and a project can set another for that project. Organization owners manage organization settings; project owners manage the project's members, budget, cap and value models. Permission is checked at project scope. See [organization model](../organization/model.md).
-- **Customize** is one sidebar page, a library of reusable things, with tabs Evaluations, Skills, Connectors, Agents and Plugins, each with Yours and Discover. Every item opens the one DetailPage layout. Setting one up with a card works too, and what a card adds appears here.
-  - **Evaluations** are reusable templates (kind Speed, Quality, Size or Cost). A sealed experiment starts from a copy, and the seal checks stay the judge's.
-  - **Skills** are versioned `SKILL.md` skill packs. The judge never reads one, a pack never holds holdout data, and an experiment records the versions it selected. See [session add-skill-pack](../session/add-skill-pack.md).
-  - **Connectors** are remote MCP servers (v0, 20 Nov: [docs/V0.md](../../../docs/V0.md)). The code host is not a connector.
-  - **Agents** are listed with model and use.
-  - **Plugins** bundle the other kinds. A plugin has no powers of its own and can never mark, unmark or grant a dataset. An item in use is never removed.
-- **A connector's credential** is kept sealed on the server and never sent to a session machine; each tool is On, Off or Ask first. The earlier two-credential design (agent and judge, per data system) is not built and V0 replaces it.
-- **Datasets and the holdout.** Datasets live under a connector, and a dataset version never changes. A holdout is a marking enforced by the credentials; the grant control is absent, not disabled, and the row reads "Restricted to the judge". A holdout value never appears in history, a message or a receipt shown to an agent. A connector error shows datasets as Not checked, never empty.
-- **Small things.** @-mention of a session in the composer, and a one-time prompt after the first measurement, "Notify me when this experiment needs me".
+- **Projects.** Every session belongs to exactly one project. A project has members as owner, editor or viewer; the organization role is the default in every project and a project can set another for that project. Organization owners manage organization settings and create projects; project owners manage the project's roles and limits (monthly cap, default budget per session). Permission is checked at project scope. See [organization model](../organization/model.md).
+- **Customize** is one sidebar page, a library of reusable things, with tabs Skills, Connectors, Agents and Plugins. Every item opens the one DetailPage layout. Setting one up with a card works too, and what a card adds appears here. Every session gets all connectors and the latest version of every skill.
+  - **Skills** are versioned `SKILL.md` skill packs. See [session add-skill-pack](../session/add-skill-pack.md).
+  - **Connectors** are remote MCP servers ([docs/V0.md](../../../docs/V0.md)). The code host is not a connector. A connector's credential is kept sealed on the server and never sent to a session machine.
+  - **Agents** are listed with model and use; an owner sets the default agent.
+  - **Plugins** bundle skills and connectors. A plugin has no powers of its own.
 
-## The three aims
+## Parked: experiments and the judge
 
-Beside trust: cost control, no tie to one model provider, and Return for the organization. They sit at the top of the [product skill](SKILL.md).
+Owner, 21 Nov 2026: v0 is only cloud sessions. Experiments and the judge are parked, not redesigned, and their code is deleted (not hidden). The last commit that has all of it is `daa445f` on `claude/dreamy-ptolemy-vg7uga`. What was there: a sealed experiment (metric, evaluation, protected paths, guardrails, data and holdout, repeats, acceptance criteria), the judge's tools (`seal`, `measure`, `history`, `deliver`, `watch`), trials and measurements with a paired bar, the holdout machine, Kept trials and wins, signed receipts, value models, Delivered, Pending, At risk, Return, the Report, evaluation templates, datasets, the agent scoreboard, Auto by cost per win, hand off, failover, pull-request delivery and watch. The iteration ideas of 21 Nov (a draft stage, diff-based versions, trials that carry across versions, k counted across the experiment, a minimal seal input, a version timeline) wait with them. The earlier rulings, promises and skill pages are readable in that commit. If the judge returns, restore from there in a change the owner asks for.
 
-- **Value models.** What one unit of a metric is worth in dollars a year, with a source and who set it. A project owner sets one per metric; a different one proposed on the Seal experiment card needs a project owner's approval. It is sealed with the experiment. With none, the experiment shows "No value set" and counts in no dollar figure. Agents never set one.
-- **Return** is Delivered divided by everything spent in the scope (project, organization, time range), including experiments that found nothing, were stopped or failed. A regressed win is At risk, not Delivered.
-- **Auto picks the agent** with the best cost per win for this evaluation kind in this project, among the agents the organization turned on, and says why. Before there is data it uses the organization's default agent, set by an owner in Customize, Agents. A person can always pick a named agent, and no agent is preselected by brand.
-- **Cost views.** Cost per trial, an estimate on the Seal experiment card, Where the spend went, the agent scoreboard (measured on the customer's code, never a vendor benchmark), hand off, failover, compaction, Ideas and a monthly Report. See [session model](../session/model.md), [judge model](../judge/model.md) and [organization approvals](../organization/approvals.md).
+The business model the owner set on 17 Nov (services first, a capped success fee on verified wins, named offers) rested on measured wins and waits with the judge; the platform subscription and the two phases below stand.
 
-## Business model
+## Customer and phases
 
-- **Services first, on our own platform.** Antilog is sold as engagements: our engineers work inside a client's organization with Antilog and deliver measured wins. Client engineers get their own roles as the engagement goes on and keep using Antilog after it ends. The platform's job is to make each engagement cheaper than the last: time to first win, engineer-days per engagement and evaluations reused are tracked.
-- **Pricing.** A fixed fee per engagement, a capped success fee on verified wins, and a platform subscription once client engineers run it themselves. The success fee rests on the value model, which the client signs off on the Seal experiment card, so a dispute is settled before work starts.
-- **Named offers, sold broadly.** Engagements are sold as modernisation with proof, delivered through a few named offers with ready evaluations and value models (cost and latency, build and test time first). Evaluation kinds and connectors are built as paying engagements need them.
-- **Two phases.** Phase 1 is Antilog cloud: we run it for early clients and pilots. Phase 2 is self-hosted in the client's own cloud account, which is what the Fortune 100 buy. Both run the same server and proxy binaries, so every phase 1 engagement tests what phase 2 ships. At least one Fortune 100 pilot, on a low-risk repo, runs in phase 1.
+- **Two phases.** Phase 1 is Antilog cloud: we run it for early clients and pilots. Phase 2 is self-hosted in the client's own cloud account, which is what the Fortune 100 buy. Both run the same server and proxy binaries.
 - **Our staff across organizations.** Our engineers work in several client organizations at once: one sign-in reaches each organization they are members of, and every action is in that organization's audit log.
-- **Compute is rebilled.** Compute (session machines, judge time) is metered by the budget and appears on the client's invoice. Model calls are the customer's own: they bring their keys and the proxy meters the spend.
+- **Compute is rebilled.** Compute (session machines) is metered by the budget and appears on the client's invoice. Model calls are the customer's own: they bring their keys and the proxy meters the spend.
 
 ## The screen and the clients
 
-- **Frame and pages.** A fixed 256px sidebar and a main area; a New experiment composer with five chips (Project, Repos, Agent, Environment, Budget), not a dialog; an experiment page that is the chat of its lead session; Projects, a project page, Customize, an experiment detail page, a receipt page and Settings as a dialog. A new experiment starts Not sealed: the agent explores, measures the baseline and proposes a definition with `seal`, and it may stay Not sealed and end there. The composer follows Claude Code's, with a Mode per experiment (Ask or Follow policy; "Auto" names only the agent choice). A card is the only place structured output appears. See [design behaviour](../design/behaviour.md).
-- **The chat's voice is Antilog.** An agent's message shows the Antilog mark and the name "Antilog", with the agent that did the work as a quiet second label. Agent logos stay where an agent is the subject.
-- **Clients.** The web app, the `antilog` CLI (`antilog "cut checkout p95"` opens the same session in the terminal) and `antilog mcp`, and the native macOS app, which stays ruled in with its boards removed until the web direction is approved. Clients share behaviour, words and element ids, never pixels.
-- **Windows and Linux** use the web app installed as a progressive web app. On macOS it points to the Mac app. Notifications (a win, Waiting for you, a regression, a budget spent) carry ids only ([organization notifications](../organization/notifications.md)). The device stores no data: the service worker caches the app's own files only.
-- **The Mac app** is a direct download, signed, notarized and updated with Sparkle from one signed feed; checks can be turned off and releases deployed through device management. See [stack/swift/antilog.md](../stack/swift/antilog.md).
-
-## Offerings and vendor facts
-
-- **Two offerings, one core.** Antilog cloud (phase 1) and self-hosted (phase 2) run the same server with Postgres; see Deployment below.
-- **Timing is noisier on shared hosts,** so the noise band is wider and fewer trials are Kept; paired measurement cancels drift, and the experiment detail page says so.
-- **"This machine" is deferred.** Antilog never starts an agent on a Mac until a later ruling. `antilog mcp` is separate: it serves the tools to an agent a person runs themselves, and that agent's trials are still measured only by the judge, in a session machine. Measuring never runs on a laptop.
+- **Frame and pages.** A fixed 256px sidebar and a main area; a New session composer with five chips (Project, Repos, Agent, Environment, Budget), not a dialog; a session page that is the chat; Projects, a project page, Customize and Settings as a dialog. The composer follows Claude Code's, with a Mode per session (Ask or Follow policy; "Auto" names only the agent choice). A card is the only place structured output appears. See [design behaviour](../design/behaviour.md).
+- **The chat's voice is Antilog.** An agent's message shows the Antilog mark and the name "Antilog", with the agent that did the work as a quiet second label.
+- **Clients.** The web app and the native macOS app, which stays ruled in with its boards removed until the web direction is approved. The CLI is `antilog runner` only. Clients share behaviour, words and element ids, never pixels.
+- **Windows and Linux** use the web app installed as a progressive web app. On macOS it points to the Mac app. Notifications carry ids only ([organization notifications](../organization/notifications.md)).
+- **The Mac app** is a direct download, signed, notarized and updated with Sparkle. See [stack/swift/antilog.md](../stack/swift/antilog.md).
 
 ## Licence
 
@@ -108,6 +76,8 @@ Antilog is licensed under the Functional Source License, FSL-1.1-ALv2: the sourc
 No passwords. Antilog cloud offers exactly two sign-ins, GitHub (OAuth with its user API, since GitHub offers no OpenID Connect for app sign-in) and Google (OpenID Connect). It has no per-organization single sign-on (owner's call, 17 Nov 2026). A self-hosted server uses the client's own OpenID Connect provider (Entra ID, Okta, Google).
 
 ## Decided by the owner
+
+Rows that name experiments, the judge, value models, receipts or holdout were decided for the design now parked (see above); they stand as history, not as live rules.
 
 | Date | Decision |
 | --- | --- |
@@ -145,36 +115,16 @@ No passwords. Antilog cloud offers exactly two sign-ins, GitHub (OAuth with its 
 | 18 Nov 2026 | The kill-switch runs under a role the owner creates and holds, outside `antilog-*`, so the agent's boundary cannot reach it. |
 | 18 Nov 2026 | The antilog.tech landing page (`site/index.html`) spoke to CTOs and VPs of engineering as "your cloud bill, edited by autonomous agents": agents propose, a judge decides, people approve. It is a marketing page outside the design rules (its own fonts, no board), and its figures are invented examples labelled "Illustrative example". The product and its boards are unchanged. Contact is hello@antilog.tech. The audience and headline were replaced on 19 Nov; the rest stands. |
 | 20 Nov 2026 | No Lambda and no infrastructure code in the repo; the server and proxy are plain binaries, and agents write and run deploy code on demand. |
+| 21 Nov 2026 | v0 is only cloud sessions, copying Claude Code's. Experiments and the judge are parked and their code deleted (`daa445f` keeps it). |
+| 21 Nov 2026 | Projects stay: a project groups sessions, as Claude Code's sidebar does; a session belongs to one project. |
+| 21 Nov 2026 | Spend is capped by the organization (monthly), the project (monthly) and optionally the session; caps nest. |
 
 Decided calls also appear on the Decisions board.
 
-## Still unproven: the spike
-
-What stays unproven:
-
-- **Repeats.** How many paired repeats make the bar reachable. With 3 repeats and k = 10 the critical value is about 10, so almost nothing is Kept. The Seal experiment card should show the smallest gain the setup can detect.
-- **The Speed holdout.** What a holdout is for a timing evaluation: other inputs, another load profile, or something else.
-- **A first example that fits.** "Cut checkout p95" needs real services and load that a session machine with no connectors does not have. Find a Speed experiment that can be measured honestly there, such as test suite or build time, or a library benchmark.
-- **One branch per session.** A GitHub App installation token can push to any branch of a repo, not just the session's. Show that pushes can be held to the session's branch (for example a ruleset on a `antilog/*` prefix, or a push relay that checks the ref), or change the design.
-- **Cost of one experiment.** Tokens, machine and judge time for one sealed experiment end to end, which sets engagement pricing.
-- **Pair interference.** Whether warm caches, shared state or migrations leak between the two sides of a pair, and whether an ABBA order is enough.
-
-## First release
-
-Antilog cloud (an always-on host for the server and the proxy, managed Postgres, a pool of session hosts), with a runner and OpenCode ([docs/V0.md](../../../docs/V0.md)), GitHub sign-in and repos (and Google sign-in), the web app and `antilog mcp`, one evaluation kind (Speed) with no connectors: seal, measure, Kept, receipt, deliver, budget, approvals and the audit log, plus value models, Return and the Report, since they are what an engagement is paid on. Before the first client: the push scan and second opinion from the threat model, a data processing agreement, the subprocessor list, a retention and deletion rule, the cross-organization staff sign-in and spend alerts. Then, in this order unless the owner says otherwise: a microVM or VM backend for session machines, self-hosted on the client's AWS, evaluation kinds and connectors as engagements need them, Azure and GCP with their adapters, plugins, Ideas, and the Mac app. Their fields stay in the sealed definition and the store from the start, so nothing is redesigned.
-
-A `antilog mcp` connection works inside a session in the experiment, named by its agent, on the person's own machine. Its trial commits are pushed to that session's branch with a short-lived git token minted for the session, and are measured only by the judge, in a session machine.
-
 ## Open questions
 
-- Whether scoring is offline only or production results are used too.
-- Whether Antilog ever reshapes data (today no, see [non-goals](non-goals.md)).
 - Whether "Try a demo" stays in the web app.
-- Whether every trial in the version, from every session and including quick-check stops, should count in k.
-- How experiments on the same code interact: overlapping changes, a default branch that moves mid-experiment, one win making another's baseline stale. Today only delivery rebases.
 - How a secret pasted into the chat is caught before the conversation is stored.
-- Who holds the judge's signing key when self-hosted (on Antilog cloud it is Antilog's), how it rotates, and what "Signed by the judge" proves to someone outside the organization.
-- The seal is the hardest step and seal checks catch only a trivially broken evaluation. How the product helps a team that has no benchmark.
-- How time to merge is shown and eased, since value counts only after a merge.
-- What the second opinion costs per win, and its data path: the diff goes to a second provider.
+- How a pull request is opened: by the agent with the repo's credentials, a code host, or both.
+- Whether session machines get a microVM or VM backend before self-hosting.
 - The FSL's "competing use" wording and whether contributors sign an agreement.

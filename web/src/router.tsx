@@ -12,25 +12,19 @@ import { useLiveUpdates } from "./api/live";
 import { keys, useMe } from "./api/queries";
 import { TipProvider } from "./components/tooltip/Tooltip";
 import { AddConnector } from "./features/customize/AddConnector";
-import { AddEvaluation } from "./features/customize/AddEvaluation";
 import { AddPlugin } from "./features/customize/AddPlugin";
 import { AddSkill } from "./features/customize/AddSkill";
 import { ConnectorDetail } from "./features/customize/ConnectorDetail";
 import { Connectors } from "./features/customize/Connectors";
-import { EvaluationDetail } from "./features/customize/EvaluationDetail";
-import { Evaluations } from "./features/customize/Evaluations";
 import { PluginDetail } from "./features/customize/PluginDetail";
 import { Plugins } from "./features/customize/Plugins";
 import { SkillDetail } from "./features/customize/SkillDetail";
 import { Skills } from "./features/customize/Skills";
-import { Experiment } from "./features/experiment/Experiment";
-import { ExperimentDetail } from "./features/experiment/ExperimentDetail";
 import type { Panel } from "./features/experiment/Header";
-import { Receipt } from "./features/experiment/Receipt";
+import { Session } from "./features/experiment/Session";
 import { Home } from "./features/home/Home";
 import { Project } from "./features/projects/Project";
 import { Projects } from "./features/projects/Projects";
-import { Report } from "./features/report/Report";
 import { SECTIONS, type Section, SettingsDialog } from "./features/settings/SettingsDialog";
 import { Sidebar } from "./features/shell/Sidebar";
 import { Callback } from "./features/signin/Callback";
@@ -161,49 +155,23 @@ const project = createRoute({
   },
 });
 
-const report = createRoute({
-  getParentRoute: () => app,
-  path: "/report",
-  validateSearch: (search: Record<string, unknown>): { month?: string; project?: string } => {
-    const month = typeof search.month === "string" && /^\d{4}-(0[1-9]|1[0-2])$/.test(search.month);
-    const project = str(search.project);
-    return {
-      ...(month ? { month: search.month as string } : {}),
-      ...(project === undefined ? {} : { project }),
-    };
-  },
-  component: function ReportPage() {
-    const { month, project: chosen } = report.useSearch();
-    return (
-      <Scroll>
-        <Report month={month} project={chosen} />
-      </Scroll>
-    );
-  },
-});
+const PANELS: readonly Panel[] = ["details", "changes", "terminal", "preview", "files"];
 
-const PANELS: readonly Panel[] = ["details", "trials", "changes", "terminal", "preview", "files"];
-
-const experiment = createRoute({
+const session = createRoute({
   getParentRoute: () => app,
-  path: "/experiments/$experimentId",
-  validateSearch: (search: Record<string, unknown>): { session?: string; panel?: Panel } => {
-    const session = str(search.session);
+  path: "/sessions/$sessionId",
+  validateSearch: (search: Record<string, unknown>): { panel?: Panel } => {
     const panel = PANELS.find((candidate) => candidate === search.panel);
-    return {
-      ...(session === undefined ? {} : { session }),
-      ...(panel === undefined ? {} : { panel }),
-    };
+    return panel === undefined ? {} : { panel };
   },
-  component: function ExperimentPage() {
-    const { experimentId } = experiment.useParams();
-    const { session, panel } = experiment.useSearch();
-    const navigate = experiment.useNavigate();
+  component: function SessionPage() {
+    const { sessionId } = session.useParams();
+    const { panel } = session.useSearch();
+    const navigate = session.useNavigate();
     return (
-      <Experiment
-        key={experimentId}
-        experimentId={experimentId}
-        sessionId={session}
+      <Session
+        key={sessionId}
+        sessionId={sessionId}
         panel={panel}
         onPanel={(next) =>
           void navigate({
@@ -219,68 +187,11 @@ const experiment = createRoute({
   },
 });
 
-const experimentDetail = createRoute({
-  getParentRoute: () => app,
-  path: "/experiments/$experimentId/details",
-  component: function DetailPage() {
-    const { experimentId } = experimentDetail.useParams();
-    return (
-      <Scroll>
-        <ExperimentDetail experimentId={experimentId} />
-      </Scroll>
-    );
-  },
-});
-
-const receipt = createRoute({
-  getParentRoute: () => app,
-  path: "/receipts/$trialId",
-  component: function ReceiptPage() {
-    const { trialId } = receipt.useParams();
-    return (
-      <Scroll>
-        <Receipt trialId={trialId} />
-      </Scroll>
-    );
-  },
-});
-
 const customize = createRoute({
   getParentRoute: () => app,
   path: "/customize",
-  component: () => <Navigate to="/customize/evaluations" replace />,
+  component: () => <Navigate to="/customize/skills" replace />,
 });
-const evaluations = createRoute({
-  getParentRoute: () => app,
-  path: "/customize/evaluations",
-  component: () => (
-    <Scroll>
-      <Evaluations />
-    </Scroll>
-  ),
-});
-const addEvaluation = createRoute({
-  getParentRoute: () => app,
-  path: "/customize/evaluations/new",
-  component: () => (
-    <Scroll>
-      <AddEvaluation />
-    </Scroll>
-  ),
-});
-const evaluationDetail = createRoute({
-  getParentRoute: () => app,
-  path: "/customize/evaluations/$id",
-  component: function EvaluationPage() {
-    const { id } = evaluationDetail.useParams();
-    return (
-      <Scroll>
-        <EvaluationDetail id={id} />
-      </Scroll>
-    );
-  },
-});
-
 const skills = createRoute({
   getParentRoute: () => app,
   path: "/customize/skills",
@@ -398,14 +309,8 @@ const tree = root.addChildren([
     home,
     projects,
     project,
-    report,
-    experiment,
-    experimentDetail,
-    receipt,
+    session,
     customize,
-    evaluations,
-    addEvaluation,
-    evaluationDetail,
     skills,
     addSkill,
     skillDetail,

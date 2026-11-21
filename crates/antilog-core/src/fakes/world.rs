@@ -1,136 +1,42 @@
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
-use antilog_types::judge::CommitRef;
-
-use super::{FakeClock, FakeCredentials, FakeMachine, FakeSigner, FakeStore, locked};
-use crate::code_host::{CodeHost, CodeHostError, OpenedPullRequest, PullRequestSpec};
+use super::{FakeClock, FakeCredentials, FakeStore};
 use crate::deps::Deps;
-use crate::store::judge::FakeJudgeStore;
-
-#[derive(Default)]
-struct CodeHostState {
-    changed: HashMap<String, Vec<(String, String)>>,
-    opened: Vec<PullRequestSpec>,
-    numbers: HashMap<String, u64>,
-    refuse: bool,
-}
-
-/// Changed files by the sha of a commit (a sha not scripted changes nothing), and the pull
-/// requests it was asked to open, numbered per repo from 1.
-#[derive(Default)]
-pub struct FakeCodeHost(Mutex<CodeHostState>);
-
-impl FakeCodeHost {
-    pub fn with(self, sha: &str, repo: &str, path: &str) -> Self {
-        locked(&self.0)
-            .changed
-            .entry(sha.to_owned())
-            .or_default()
-            .push((repo.to_owned(), path.to_owned()));
-        self
-    }
-
-    /// Every pull request it was asked to open, in order.
-    pub fn opened(&self) -> Vec<PullRequestSpec> {
-        locked(&self.0).opened.clone()
-    }
-
-    /// From now on it refuses to open a pull request, as a host that is down would.
-    pub fn refuse_pull_requests(&self) {
-        locked(&self.0).refuse = true;
-    }
-
-    /// The address the fake gives a pull request.
-    pub fn url(repo: &str, number: u64) -> String {
-        format!("https://code.example/{repo}/pull/{number}")
-    }
-}
-
-impl CodeHost for FakeCodeHost {
-    async fn changed_files(
-        &self,
-        commits: &[CommitRef],
-    ) -> Result<Vec<(String, String)>, CodeHostError> {
-        let scripted = locked(&self.0);
-        Ok(commits
-            .iter()
-            .flat_map(|c| scripted.changed.get(&c.sha).cloned().unwrap_or_default())
-            .collect())
-    }
-
-    async fn open_pull_request(
-        &self,
-        spec: &PullRequestSpec,
-    ) -> Result<OpenedPullRequest, CodeHostError> {
-        let mut state = locked(&self.0);
-        if state.refuse {
-            return Err(CodeHostError::Unavailable("the fake host refuses".into()));
-        }
-        let number = state.numbers.entry(spec.repo.clone()).or_insert(0);
-        *number += 1;
-        let number = *number;
-        state.opened.push(spec.clone());
-        Ok(OpenedPullRequest {
-            repo: spec.repo.clone(),
-            number,
-            url: Self::url(&spec.repo, number),
-        })
-    }
-}
 
 pub struct FakeDeps {
     pub store: FakeStore,
-    pub judge: FakeJudgeStore,
-    pub machine: FakeMachine,
-    pub signer: FakeSigner,
     pub clock: FakeClock,
-    pub code: FakeCodeHost,
     pub credentials: FakeCredentials,
 }
 
+impl Default for FakeDeps {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl FakeDeps {
-    pub fn new(machine: FakeMachine, code: FakeCodeHost) -> Self {
+    pub fn new() -> Self {
         let store = FakeStore::default();
         let clock = FakeClock::new("2026-11-18T09:00:00Z".parse().unwrap_or_default());
         Self {
-            judge: store.judge_store(),
             store,
-            machine,
-            signer: FakeSigner::new("fake"),
             credentials: FakeCredentials::new(Arc::new(clock.clone())),
             clock,
-            code,
         }
     }
 }
 
 impl Deps for FakeDeps {
     type Store = FakeStore;
-    type Judge = FakeJudgeStore;
-    type Machine = FakeMachine;
-    type Signer = FakeSigner;
     type Clock = FakeClock;
-    type Code = FakeCodeHost;
     type Credentials = FakeCredentials;
 
     fn store(&self) -> &FakeStore {
         &self.store
     }
-    fn judge(&self, _: antilog_types::OrganizationId) -> FakeJudgeStore {
-        self.judge.clone()
-    }
-    fn machine(&self) -> &FakeMachine {
-        &self.machine
-    }
-    fn signer(&self) -> &FakeSigner {
-        &self.signer
-    }
     fn clock(&self) -> &FakeClock {
         &self.clock
-    }
-    fn code(&self) -> &FakeCodeHost {
-        &self.code
     }
     fn credentials(&self) -> &FakeCredentials {
         &self.credentials

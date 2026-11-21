@@ -324,38 +324,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/evaluations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["evaluations"];
-        put?: never;
-        post: operations["add_evaluation"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/evaluations/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["evaluation"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/events/stream": {
         parameters: {
             query?: never;
@@ -364,166 +332,6 @@ export interface paths {
             cookie?: never;
         };
         get: operations["stream"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/experiments/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["experiment"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/experiments/{id}/approvals": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["approvals"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/experiments/{id}/budget": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put: operations["set_experiment_budget"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/experiments/{id}/connectors": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["experiment_connectors"];
-        put: operations["experiment_set_connectors"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/experiments/{id}/history": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["history"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/experiments/{id}/sessions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["sessions"];
-        put?: never;
-        post: operations["start_session"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/experiments/{id}/skills": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["experiment_skills"];
-        put: operations["experiment_set_skills"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/experiments/{id}/spend": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["experiment_spend"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/experiments/{id}/tools/{tool}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["call"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/experiments/{id}/value": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["experiment_value"];
         put?: never;
         post?: never;
         delete?: never;
@@ -724,22 +532,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/projects/{id}/experiments": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["experiments"];
-        put?: never;
-        post: operations["create_experiment"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/projects/{id}/limits": {
         parameters: {
             query?: never;
@@ -788,62 +580,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/projects/{id}/skills/{name}": {
+    "/projects/{id}/sessions": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        put: operations["project_skill"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/projects/{id}/value": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["project_value"];
+        get: operations["project_sessions"];
         put?: never;
-        post?: never;
+        post: operations["start_session"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/projects/{id}/value-models": {
+    "/sessions": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["value_models"];
-        put?: never;
-        post: operations["set_value_model"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/report": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["report"];
+        get: operations["sessions"];
         put?: never;
         post?: never;
         delete?: never;
@@ -860,6 +620,70 @@ export interface paths {
             cookie?: never;
         };
         get: operations["read"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/{id}/approvals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["approvals"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/{id}/budget": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["set_budget"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/{id}/changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["changes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/{id}/changes/commits/{sha}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["commit_changes"];
         put?: never;
         post?: never;
         delete?: never;
@@ -894,6 +718,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["message"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/{id}/spend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["spend"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -964,22 +804,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/spend": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["all_spend"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/tokens": {
         parameters: {
             query?: never;
@@ -1007,54 +831,6 @@ export interface paths {
         put?: never;
         post?: never;
         delete: operations["revoke_token"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/tools": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["tools"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/trials/{id}/receipt": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["receipt"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/value": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["organization_value"];
-        put?: never;
-        post?: never;
-        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1088,27 +864,6 @@ export interface components {
             isDefault: boolean;
             name: string;
         };
-        AgentRow: {
-            agent: string;
-            /** Format: int64 */
-            deliveredCents: number;
-            /** Format: int32 */
-            kept: number;
-            /** Format: int64 */
-            pendingCents: number;
-            /** Format: int64 */
-            spentCents: number;
-            /** Format: int32 */
-            trials: number;
-            /** Format: int32 */
-            winsDelivered: number;
-            /** Format: int32 */
-            winsPending: number;
-        };
-        AgentRun: {
-            agent: string;
-            session: components["schemas"]["SessionId"];
-        };
         ApiError: {
             code: string;
             fields: components["schemas"]["FieldError"][];
@@ -1123,13 +878,10 @@ export interface components {
             /** Format: int64 */
             decidedAt?: number | null;
             decidedBy?: components["schemas"]["MemberId"] | null;
-            experimentId: components["schemas"]["ExperimentId"];
             id: components["schemas"]["ApprovalId"];
-            /** @description Only a project owner may decide it, and policy never does: a changed value model. */
-            needsOwner: boolean;
             organizationId: components["schemas"]["OrganizationId"];
             payload?: components["schemas"]["CardPayload"] | null;
-            sessionId?: components["schemas"]["SessionId"] | null;
+            sessionId: components["schemas"]["SessionId"];
             status: components["schemas"]["ApprovalStatus"];
             /** @description What would happen; never a secret. */
             summary: string;
@@ -1145,7 +897,7 @@ export interface components {
         };
         /** @description An append-only record of a write or an approval. Holds no secret. */
         AuditEntry: {
-            /** @description A registered action name, such as `project.create`. */
+            /** @description A registered action name, such as `session.start`. */
             action: string;
             actor?: components["schemas"]["MemberId"] | null;
             /** Format: int64 */
@@ -1176,32 +928,17 @@ export interface components {
             projects: components["schemas"]["ProjectSpend"][];
         };
         /** @enum {string} */
-        CardKind: "seal_experiment" | "raise_budget" | "add_credential" | "attach_repo" | "change_environment" | "open_pull_request" | "keep_going" | "continue_on_another_agent" | "ask_first" | "use_connector_tool";
+        CardKind: "raise_budget" | "add_credential" | "attach_repo" | "change_environment" | "ask_first" | "use_connector_tool";
         /**
          * @description What each kind of card asks, as typed fields. A card shows these, never text parsed out of
          *     its summary, and an action that follows an approval reads what to do from here.
          */
         CardPayload: {
-            /** Format: double */
-            baseline: number;
-            /** Format: int32 */
-            cheatsRejected: number;
-            /** @enum {string} */
-            kind: "seal_experiment";
-            metric: string;
-            /** Format: double */
-            noise: number;
-            unit: string;
-            /** @description "No value set", or what one unit is worth, measured offline. */
-            valueNote: string;
-            /** Format: int32 */
-            version: number;
-        } | {
             /** @enum {string} */
             kind: "raise_budget";
             /**
              * Format: int64
-             * @description The experiment's budget when the card was raised.
+             * @description The session's budget when the card was raised.
              */
             nowCents: number;
             /**
@@ -1232,21 +969,6 @@ export interface components {
             setupScriptLines?: number | null;
             size?: string | null;
         } | {
-            hypothesis: string;
-            /** @enum {string} */
-            kind: "open_pull_request";
-            /** @description One pull request per repo changed. */
-            repos: string[];
-            trial: components["schemas"]["TrialId"];
-        } | {
-            /** @enum {string} */
-            kind: "keep_going";
-            /** Format: int32 */
-            tried: number;
-        } | {
-            /** @enum {string} */
-            kind: "continue_on_another_agent";
-        } | {
             /** @description What it would do, as the harness described it. */
             detail: string;
             /** @enum {string} */
@@ -1262,17 +984,20 @@ export interface components {
             kind: "use_connector_tool";
             tool: string;
         };
-        /** Format: int64 */
-        Cents: number;
-        CommitRef: {
-            repo: string;
+        /** @description The files of one commit. */
+        CommitChanges: {
+            files: components["schemas"]["FileChange"][];
             sha: string;
         };
-        ComputeSection: {
-            agents: components["schemas"]["AgentRun"][];
-            environment: string;
-            judgeDigest: string;
-            judgeImage: string;
+        /** @description One commit made since the base. */
+        CommitInfo: {
+            sha: string;
+            subject: string;
+            /**
+             * Format: int64
+             * @description When it was committed, epoch milliseconds.
+             */
+            time: number;
         };
         /** @description A remote MCP server. The credential is kept sealed on the server and never shown. */
         Connector: {
@@ -1305,30 +1030,11 @@ export interface components {
          * @enum {string}
          */
         CostTier: "low" | "medium" | "high";
-        /** @enum {string} */
-        CredentialHolder: "agent" | "judge";
-        CredentialScope: {
-            holder: components["schemas"]["CredentialHolder"];
-            scope: string;
-        };
-        DataSection: {
-            commits: components["schemas"]["CommitRef"][];
-            credentialScopes: components["schemas"]["CredentialScope"][];
-            datasets: components["schemas"]["DatasetRef"][];
-            skillPacks: components["schemas"]["SkillPackRef"][];
-        };
-        DatasetRef: {
-            id: string;
-            /** Format: int32 */
-            version: number;
-        };
         Decide: {
             decision: components["schemas"]["Decision"];
         };
         /** @enum {string} */
         Decision: "approve" | "decline";
-        /** @enum {string} */
-        Direction: "minimize" | "maximize";
         /**
          * @description One version of an environment an organization manages, or the built-in default. A change
          *     makes a new version; a session records the version it ran.
@@ -1363,30 +1069,6 @@ export interface components {
             version: number;
         };
         /**
-         * @description What an evaluation measures.
-         * @enum {string}
-         */
-        EvaluationKind: "speed" | "quality" | "size" | "cost";
-        /**
-         * @description A starting point for an experiment's evaluation in Customize, Evaluations. An experiment starts
-         *     from a copy; the template holds a command and paths, never a credential or data.
-         */
-        EvaluationTemplate: {
-            command: string;
-            /** Format: int64 */
-            createdAt: number;
-            createdBy: components["schemas"]["MemberId"];
-            id: string;
-            kind: components["schemas"]["EvaluationKind"];
-            lowerIsBetter: boolean;
-            /** @description What is measured, as a dotted path in the command's JSON output. */
-            metric: string;
-            name: string;
-            /** @description Files an agent may never change, each as `repo:path`. */
-            protectedPaths: string[];
-            summary: string;
-        };
-        /**
          * @description Who spoke: a person, an agent, or the name of a tool an agent called.
          * @enum {string}
          */
@@ -1397,93 +1079,37 @@ export interface components {
             /** Format: int64 */
             next?: number | null;
         };
-        /** @description The row of an experiment; its sealed definition belongs to the judge. */
-        Experiment: {
-            /**
-             * Format: int64
-             * @description What all its sessions and judge time may spend, in US cents.
-             */
-            budgetCapCents: number;
-            /** Format: int64 */
-            createdAt: number;
-            createdBy: components["schemas"]["MemberId"];
-            /** @description The composer's Mode: false asks a person for every card, true lets policy approve. */
-            followPolicy: boolean;
-            goal: string;
-            id: components["schemas"]["ExperimentId"];
-            organizationId: components["schemas"]["OrganizationId"];
-            projectId: components["schemas"]["ProjectId"];
-            status: components["schemas"]["ExperimentStatus"];
-        };
-        ExperimentBudget: {
-            /** Format: int64 */
-            budgetCapCents: number;
-        };
-        /** Format: uuid */
-        ExperimentId: string;
-        ExperimentSection: {
-            /** Format: double */
-            baseline: number;
-            costOfWin: components["schemas"]["Cents"];
-            experiment: components["schemas"]["ExperimentId"];
-            holdout: components["schemas"]["HoldoutResult"];
-            /** Format: double */
-            noise: number;
-            /** Format: int32 */
-            repeats: number;
-            seal: components["schemas"]["SealHash"];
-            secondOpinion?: components["schemas"]["SecondOpinion"] | null;
-            spend: components["schemas"]["Cents"];
-            trial: components["schemas"]["TrialId"];
-            /** Format: int32 */
-            trialsTried: number;
-            /** Format: double */
-            value: number;
-            valueModel?: components["schemas"]["ValueModel"] | null;
-            /** Format: int32 */
-            version: number;
-            /** Format: double */
-            winReturn?: number | null;
-        };
-        /**
-         * @description All the spend of one experiment since it began, against its budget. Spend rows name a session
-         *     and a kind, not a trial, so it is split by kind and by session, never by a trial's outcome.
-         */
-        ExperimentSpend: {
-            /** Format: int64 */
-            budgetCapCents: number;
-            byKind: components["schemas"]["KindSpend"][];
-            bySession: components["schemas"]["SessionSpend"][];
-            experimentId: components["schemas"]["ExperimentId"];
-            projectId: components["schemas"]["ProjectId"];
-            /** Format: int64 */
-            spentCents: number;
-            /** Format: int64 */
-            tokens: number;
-        };
-        /**
-         * @description Sealing is the judge's; Watching and Regressed are derived, never stored.
-         * @enum {string}
-         */
-        ExperimentStatus: "not_sealed" | "sealed";
-        /** @description An experiment's value: the model it was sealed with, its wins and what they add up to. */
-        ExperimentValue: {
-            experimentId: components["schemas"]["ExperimentId"];
-            figures: components["schemas"]["ValueFigures"];
-            valueModel?: components["schemas"]["ProjectValueModel"] | null;
-            wins: components["schemas"]["WinView"][];
-        };
         FieldError: {
             field: string;
             message: string;
         };
+        /**
+         * @description One file of a diff. `patch` is the unified diff text from its first `@@` line on, with
+         *     three lines of context; it is empty for a binary file and for one that is too large.
+         */
+        FileChange: {
+            /** Format: int32 */
+            additions: number;
+            binary: boolean;
+            /** Format: int32 */
+            deletions: number;
+            /** @description The path before a rename; `null` otherwise. */
+            oldPath?: string | null;
+            patch: string;
+            path: string;
+            status: components["schemas"]["FileStatus"];
+            tooLarge: boolean;
+        };
+        /**
+         * @description How a file differs from the base.
+         * @enum {string}
+         */
+        FileStatus: "added" | "modified" | "deleted" | "renamed";
         Health: {
             status: components["schemas"]["HealthStatus"];
         };
         /** @enum {string} */
         HealthStatus: "ok";
-        /** @enum {string} */
-        HoldoutResult: "passed" | "failed";
         /** @description A person's identity at a sign-in provider. */
         Identity: {
             provider: string;
@@ -1497,11 +1123,6 @@ export interface components {
             /** Format: int64 */
             tokens: number;
         };
-        KindSpendLine: {
-            /** Format: int64 */
-            cents: number;
-            kind: components["schemas"]["SpendKind"];
-        };
         LimitSpend: {
             /** Format: int64 */
             capCents?: number | null;
@@ -1509,7 +1130,10 @@ export interface components {
             spentCents: number;
         };
         Limits: {
-            /** Format: int64 */
+            /**
+             * Format: int64
+             * @description The cap a new session gets when its request names none.
+             */
             defaultBudgetCents?: number | null;
             /**
              * Format: int32
@@ -1537,18 +1161,20 @@ export interface components {
             /** @enum {string} */
             type: "resync";
         } | {
-            experimentId: components["schemas"]["ExperimentId"];
             /** Format: int64 */
             seq: number;
             sessionId: components["schemas"]["SessionId"];
             /** @enum {string} */
             type: "message";
         } | {
-            experimentId: components["schemas"]["ExperimentId"];
             sessionId: components["schemas"]["SessionId"];
             status: components["schemas"]["SessionStatus"];
             /** @enum {string} */
             type: "session";
+        } | {
+            sessionId: components["schemas"]["SessionId"];
+            /** @enum {string} */
+            type: "changes";
         } | {
             /** Format: int32 */
             pending: number;
@@ -1629,22 +1255,6 @@ export interface components {
                 [key: string]: string;
             };
         };
-        NewEvaluationTemplate: {
-            command: string;
-            kind: components["schemas"]["EvaluationKind"];
-            lowerIsBetter: boolean;
-            metric: string;
-            name: string;
-            protectedPaths?: string[];
-            summary?: string;
-        };
-        /** @description What starts an experiment in a project. The budget defaults to the project's, then the organization's. */
-        NewExperiment: {
-            /** Format: int64 */
-            budgetCapCents?: number | null;
-            followPolicy?: boolean;
-            goal: string;
-        };
         NewMember: {
             identity?: components["schemas"]["Identity"] | null;
             name: string;
@@ -1663,7 +1273,6 @@ export interface components {
         NewPlugin: {
             connectors?: components["schemas"]["PluginConnector"][];
             description?: string;
-            evaluations?: components["schemas"]["NewEvaluationTemplate"][];
             name: string;
             skills?: components["schemas"]["NewSkill"][];
             version: string;
@@ -1680,17 +1289,6 @@ export interface components {
             memberId?: components["schemas"]["MemberId"] | null;
             name: string;
         };
-        /** @description What a project owner sets: the model without its id, version or who set it. */
-        NewValueModel: {
-            /**
-             * Format: double
-             * @description Cents a year that one unit of the metric is worth; more than zero.
-             */
-            centsPerUnit: number;
-            metric: string;
-            source: components["schemas"]["ValueSource"];
-            unit: string;
-        };
         Organization: {
             /**
              * Format: int64
@@ -1699,7 +1297,7 @@ export interface components {
             createdAt: number;
             /**
              * Format: int64
-             * @description Default budget per experiment, in US cents.
+             * @description The cap a new session gets when its request names none, in US cents.
              */
             defaultBudgetCents?: number | null;
             id: components["schemas"]["OrganizationId"];
@@ -1726,15 +1324,7 @@ export interface components {
             name: string;
         };
         /** @enum {string} */
-        Outcome: "measuring" | "kept" | "withinNoise" | "worse" | "guardrailFailed" | "failedHoldout" | "rejected" | "failed";
-        /** @description What was spent on trials that ended one way, or on none. */
-        OutcomeSpendLine: {
-            /** Format: int64 */
-            cents: number;
-            outcome?: components["schemas"]["Outcome"] | null;
-        };
-        /** @enum {string} */
-        PartKind: "skill" | "connector" | "evaluation";
+        PartKind: "skill" | "connector";
         Plugin: {
             /** Format: int64 */
             createdAt: number;
@@ -1750,7 +1340,7 @@ export interface components {
             name: string;
             url: string;
         };
-        /** @description What a plugin brought, by kind and name (a skill's name, a connector's id, an evaluation's id). */
+        /** @description What a plugin brought, by kind and name (a skill's name, a connector's id). */
         PluginPart: {
             kind: components["schemas"]["PartKind"];
             name: string;
@@ -1772,14 +1362,14 @@ export interface components {
             createdAt: number;
             /**
              * Format: int64
-             * @description Default budget per experiment, in US cents.
+             * @description Default budget per session, in US cents.
              */
             defaultBudgetCents?: number | null;
             description: string;
             id: components["schemas"]["ProjectId"];
             /**
              * Format: int64
-             * @description Monthly cap on the spend of its experiments, in US cents.
+             * @description Monthly cap on the spend of its sessions, in US cents.
              */
             monthlyCapCents?: number | null;
             name: string;
@@ -1799,102 +1389,86 @@ export interface components {
             /** Format: int64 */
             spentCents: number;
         };
-        /** @description A value model as a project holds it: one per metric, a new version on every change. */
-        ProjectValueModel: {
-            model: components["schemas"]["ValueModel"];
-            projectId: components["schemas"]["ProjectId"];
-            /** Format: int64 */
-            setAt: number;
-        };
-        /** @description A body and the judge's signature over it. There is no unsigned receipt. */
-        Receipt: {
-            body: components["schemas"]["ReceiptBody"];
-            keyId: string;
-            signature: number[];
-        };
-        ReceiptBody: {
-            compute: components["schemas"]["ComputeSection"];
-            data: components["schemas"]["DataSection"];
-            experiment: components["schemas"]["ExperimentSection"];
-            id: components["schemas"]["ReceiptId"];
-        };
-        /** Format: uuid */
-        ReceiptId: string;
         /** @description What to do with each part when a plugin is removed; a part not named is removed, and one in use refuses. */
         RemovePlugin: {
             keep?: components["schemas"]["PluginPart"][];
         };
         /** @enum {string} */
         RepoAccess: "read" | "push";
-        /** @description The monthly Report for the organization or one project. */
-        Report: {
-            agents: components["schemas"]["AgentRow"][];
-            figures: components["schemas"]["ValueFigures"];
-            /** Format: int64 */
-            from: number;
-            /** @description `YYYY-MM`, in UTC. */
-            month: string;
-            projectId?: components["schemas"]["ProjectId"] | null;
-            spendByKind: components["schemas"]["KindSpendLine"][];
-            /** @description By what became of the trial each dollar paid for; Not measured is `outcome: null`. */
-            spendByOutcome: components["schemas"]["OutcomeSpendLine"][];
+        /** @description One repo's changes, as the Changes panel reads them. */
+        RepoChanges: {
+            baseBranch: string;
+            baseSha: string;
+            /** @description Newest first. Each has its own diff at `GET /sessions/{id}/changes/commits/{sha}`. */
+            commits: components["schemas"]["CommitInfo"][];
+            /** @description All changes: the base against the working tree. */
+            files: components["schemas"]["FileChange"][];
+            headBranch: string;
+            headSha: string;
+            repo: string;
             /**
              * Format: int64
-             * @description Spent on sealed experiments with no win, stopped or still going.
+             * @description When the runner reported it, epoch milliseconds.
              */
-            spentNoWinCents: number;
-            /**
-             * Format: int64
-             * @description Spent on experiments that are not sealed yet.
-             */
-            spentNotSealedCents: number;
-            /**
-             * Format: int64
-             * @description Spent on experiments that have a win.
-             */
-            spentWithWinCents: number;
-            stopped: components["schemas"]["StoppedExperiment"][];
-            /** Format: int64 */
-            to: number;
-            topWins: components["schemas"]["TopWin"][];
+            reportedAt: number;
         };
         /**
          * @description Ordered: a higher role may do what a lower one may.
          * @enum {string}
          */
         Role: "viewer" | "editor" | "owner";
-        SealHash: string;
-        SecondOpinion: {
-            flags: string[];
-            provider: string;
-        };
-        SelectConnectors: {
-            connectors: components["schemas"]["ConnectorId"][];
-        };
-        SelectSkills: {
-            /** @description Names; each is pinned to its latest version now. */
-            skills: string[];
-        };
         SendMessage: {
             text: string;
         };
-        /** @description One agent's work inside an experiment. */
+        /**
+         * @description One agent's work in a project: a chat that runs in a machine of its own. The repos,
+         *     the environment version and the model are fixed when it starts.
+         */
         Session: {
             agent: string;
+            /**
+             * Format: int64
+             * @description What this session alone may spend, in US cents. `None`: only the organization's monthly cap.
+             */
+            budgetCapCents?: number | null;
             /** Format: int64 */
             createdAt: number;
-            experimentId: components["schemas"]["ExperimentId"];
+            /** @description The member who started it; its calls and cards are theirs. */
+            createdBy: components["schemas"]["MemberId"];
+            /** @description The stored environment it runs on; `None` is the built-in default. */
+            environment?: string | null;
+            /**
+             * Format: int32
+             * @description The version of that environment, pinned when the session started.
+             */
+            environmentVersion?: number | null;
+            /** @description The composer's Mode: false asks a person for every card, true lets policy approve. */
+            followPolicy: boolean;
             id: components["schemas"]["SessionId"];
-            /** @description Why it ended, such as "Stopped by Ada" or "Handed off to Codex". */
+            /** @description `provider/model`, as the harness names it. */
+            model: string;
+            /** @description Why it ended, such as "Stopped by Ada". */
             note?: string | null;
             organizationId: components["schemas"]["OrganizationId"];
+            projectId: components["schemas"]["ProjectId"];
+            repos: string[];
             status: components["schemas"]["SessionStatus"];
+            title: string;
             /** Format: int64 */
             updatedAt: number;
         };
+        /** @description A session's own cap, in US cents. */
+        SessionBudget: {
+            /** Format: int64 */
+            budgetCapCents: number;
+        };
+        /** @description The latest report for each repo of the session; empty before the first one. */
+        SessionChanges: {
+            repos: components["schemas"]["RepoChanges"][];
+        };
         /**
-         * @description One item of a session's conversation. A tool call carries only its name, never its input or
-         *     output; the server stores the words people and agents said and nothing a tool returned.
+         * @description One item of a session's conversation. A tool call carries what `ToolRecord` keeps, never more:
+         *     the server stores the words people and agents said and a short, cleaned record of each tool call.
          */
         SessionEvent: {
             /** Format: int64 */
@@ -1908,6 +1482,7 @@ export interface components {
             seq: number;
             sessionId: components["schemas"]["SessionId"];
             text: string;
+            tool?: components["schemas"]["ToolRecord"] | null;
         };
         /** Format: uuid */
         SessionId: string;
@@ -1918,11 +1493,17 @@ export interface components {
             member: components["schemas"]["Member"];
             secret: string;
         };
-        /** @description What one session spent. */
+        /**
+         * @description All the spend of one session since it began, against its own cap, if it has one. Spend rows
+         *     name a session and a kind.
+         */
         SessionSpend: {
             /** Format: int64 */
-            cents: number;
+            budgetCapCents?: number | null;
+            byKind: components["schemas"]["KindSpend"][];
             sessionId: components["schemas"]["SessionId"];
+            /** Format: int64 */
+            spentCents: number;
             /** Format: int64 */
             tokens: number;
         };
@@ -1930,9 +1511,6 @@ export interface components {
         SessionStatus: "working" | "waiting_for_you" | "done" | "failed";
         SetCredential: {
             credential: string;
-        };
-        SetOn: {
-            on: boolean;
         };
         /** @description `None` returns the member to their organization role in this project. */
         SetProjectRole: {
@@ -1962,25 +1540,12 @@ export interface components {
             /** Format: int32 */
             latest: number;
             name: string;
-            /** @description A project turns it Off to hide it from New experiment there. */
-            on: boolean;
             versions: number[];
         };
         /** @description One text file of a skill pack, by path inside its folder. */
         SkillFile: {
             content: string;
             path: string;
-        };
-        SkillPackRef: {
-            id: string;
-            /** Format: int32 */
-            version: number;
-        };
-        /** @description The skill versions an experiment selected. */
-        SkillRef: {
-            name: string;
-            /** Format: int32 */
-            version: number;
         };
         /** @description One immutable version of an organization skill. */
         SkillVersion: {
@@ -1996,24 +1561,25 @@ export interface components {
             version: number;
         };
         /** @enum {string} */
-        SpendKind: "tokens" | "machine" | "judge";
-        /** @description What starts a session in an experiment. */
+        SpendKind: "tokens" | "machine";
+        /** @description What starts a session in a project: `POST /projects/{id}/sessions`. */
         StartSession: {
-            agent: string;
+            /** @description Left out or `auto`: the agent Auto chooses. */
+            agent?: string | null;
+            /**
+             * Format: int64
+             * @description This session's own cap in US cents; left out, the project's default, then the organization's.
+             */
+            budgetCapCents?: number | null;
             environment?: string | null;
+            /** @description The composer's Mode: false asks a person for every card, true lets policy approve. */
+            followPolicy?: boolean;
+            /** @description `provider/model`; left out, the server's default model. */
+            model?: string | null;
             prompt: string;
             repos?: string[];
-        };
-        StoppedExperiment: {
-            /** @description True when the experiment spent all of its budget. */
-            budgetSpent: boolean;
-            experimentId: components["schemas"]["ExperimentId"];
-            goal: string;
-            projectId: components["schemas"]["ProjectId"];
-            /** Format: int64 */
-            spentCents: number;
-            /** Format: int32 */
-            trials: number;
+            /** @description Left out, the first line of the prompt. */
+            title?: string | null;
         };
         /** Format: uuid */
         TokenId: string;
@@ -2022,150 +1588,27 @@ export interface components {
             secret: string;
             token: components["schemas"]["AccessToken"];
         };
-        /** @description A call of one Antilog tool from an agent that is not in an Antilog session, such as `antilog mcp`. */
-        ToolCall: {
-            /** @description Unique per call; sending a call again with the same id changes nothing twice. */
-            call?: string | null;
-            input: {
-                [key: string]: unknown;
-            };
-            session?: components["schemas"]["SessionId"] | null;
-        };
-        ToolDefinition: {
-            description: string;
-            inputSchema: {
-                [key: string]: unknown;
-            };
-            name: string;
-        };
         /**
          * @description What a session may do with one tool of a connector.
          * @enum {string}
          */
         ToolMode: "on" | "off" | "ask";
-        ToolResult: {
-            answer: {
-                [key: string]: unknown;
-            };
-            /** @description A measurement that was accepted: how it ended, in words. Never a holdout value. */
-            followup?: string | null;
-            session: components["schemas"]["SessionId"];
-        };
-        TopWin: {
-            agent?: string | null;
-            goal: string;
-            projectId: components["schemas"]["ProjectId"];
-            sessionId?: components["schemas"]["SessionId"] | null;
-            /**
-             * Format: int64
-             * @description What the experiment spent in the range.
-             */
-            spentCents: number;
-            win: components["schemas"]["WinView"];
-        };
-        /** Format: uuid */
-        TrialId: string;
         /**
-         * @description How a dollar figure was measured, said wherever one is shown.
+         * @description What one tool call did, kept small: a short label (the first line of a command, a file path,
+         *     the Antilog tool's name), how it ended, and its input and output cut to 4 KB each with
+         *     anything that looks like a credential taken out.
+         */
+        ToolRecord: {
+            input?: string | null;
+            label: string;
+            output?: string | null;
+            status: components["schemas"]["ToolStatus"];
+        };
+        /**
+         * @description How a tool call ended. A call still running is not stored: it is recorded when it ends.
          * @enum {string}
          */
-        ValueBasis: "measuredOffline";
-        /** @description Delivered, Pending, At risk and Return for one scope and time range, in US cents a year. */
-        ValueFigures: {
-            /** Format: int64 */
-            atRiskCents: number;
-            basis: components["schemas"]["ValueBasis"];
-            /** Format: int64 */
-            deliveredCents: number;
-            /**
-             * Format: int32
-             * @description Wins whose pull request is merged and that count in Delivered or At risk.
-             */
-            mergedWins: number;
-            /** Format: int64 */
-            pendingCents: number;
-            /**
-             * Format: int32
-             * @description Wins in an open pull request.
-             */
-            pendingWins: number;
-            /**
-             * Format: double
-             * @description Delivered over spent; `null` when nothing was spent.
-             */
-            returnX?: number | null;
-            /**
-             * Format: int64
-             * @description Everything spent in the scope and range, experiments with no win included.
-             */
-            spentCents: number;
-            /**
-             * Format: int32
-             * @description Wins with no value model: they count in no dollar figure.
-             */
-            unvaluedWins: number;
-        };
-        ValueModel: {
-            /**
-             * Format: double
-             * @description Cents a year that one unit of the metric is worth.
-             */
-            centsPerUnit: number;
-            id: components["schemas"]["ValueModelId"];
-            metric: string;
-            /**
-             * Format: uuid
-             * @description The project owner who set it; never an agent.
-             */
-            setBy: string;
-            source: components["schemas"]["ValueSource"];
-            /** @description What one unit of the metric is called, such as `ms`. */
-            unit: string;
-            /** Format: int32 */
-            version: number;
-        };
-        /** Format: uuid */
-        ValueModelId: string;
-        /** @description The newest version of each metric's model in a project. */
-        ValueModels: {
-            models: components["schemas"]["ProjectValueModel"][];
-        };
-        ValueSource: {
-            link?: string | null;
-            text: string;
-        };
-        /** @enum {string} */
-        WinState: "notOpened" | "pending" | "delivered" | "atRisk";
-        /** @description One win of one experiment version: its best Kept trial. */
-        WinView: {
-            /** Format: int64 */
-            atRiskCents?: number | null;
-            /** Format: double */
-            baseline: number;
-            /** Format: double */
-            best: number;
-            /** Format: int64 */
-            deliveredCents?: number | null;
-            direction: components["schemas"]["Direction"];
-            experimentId: components["schemas"]["ExperimentId"];
-            /**
-             * Format: int64
-             * @description When its pull request was merged.
-             */
-            mergedAt?: number | null;
-            metric: string;
-            pullRequest?: string | null;
-            state: components["schemas"]["WinState"];
-            trialId: components["schemas"]["TrialId"];
-            unit: string;
-            /** Format: int32 */
-            version: number;
-            /**
-             * Format: int64
-             * @description What the whole win is worth a year; `null` with no value model.
-             */
-            yearlyCents?: number | null;
-        };
+        ToolStatus: "done" | "failed";
     };
     responses: never;
     parameters: never;
@@ -2260,7 +1703,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Every card across experiments that the caller may decide, oldest first */
+            /** @description Every pending card in the organization if the caller may decide (an editor or an owner), oldest first */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -2296,7 +1739,7 @@ export interface operations {
                     "application/json": components["schemas"]["Approval"];
                 };
             };
-            /** @description Editors and owners of its project decide; a changed value model needs a project owner */
+            /** @description Editors and owners decide */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -2632,8 +2075,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description An experiment has it switched on */
-            422: {
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2886,89 +2328,6 @@ export interface operations {
             };
         };
     };
-    evaluations: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description The organization's evaluation templates, oldest first */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["EvaluationTemplate"][];
-                };
-            };
-        };
-    };
-    add_evaluation: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["NewEvaluationTemplate"];
-            };
-        };
-        responses: {
-            /** @description Added; editors and owners */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["EvaluationTemplate"];
-                };
-            };
-            /** @description A template with that name exists */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-        };
-    };
-    evaluation: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The template's id */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["EvaluationTemplate"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-        };
-    };
     stream: {
         parameters: {
             query?: never;
@@ -2991,397 +2350,6 @@ export interface operations {
                 };
             };
             401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-        };
-    };
-    experiment: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The experiment */
-                id: components["schemas"]["ExperimentId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Experiment"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-        };
-    };
-    approvals: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The experiment */
-                id: components["schemas"]["ExperimentId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Its cards, oldest first */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Approval"][];
-                };
-            };
-        };
-    };
-    set_experiment_budget: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The experiment */
-                id: components["schemas"]["ExperimentId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ExperimentBudget"];
-            };
-        };
-        responses: {
-            /** @description Set; editors and owners of its project */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description The budget would pass the project's cap */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-        };
-    };
-    experiment_connectors: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The experiment */
-                id: components["schemas"]["ExperimentId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description The connectors switched on */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConnectorId"][];
-                };
-            };
-        };
-    };
-    experiment_set_connectors: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The experiment */
-                id: components["schemas"]["ExperimentId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SelectConnectors"];
-            };
-        };
-        responses: {
-            /** @description The connectors now switched on; editors and owners of the project */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConnectorId"][];
-                };
-            };
-        };
-    };
-    history: {
-        parameters: {
-            query?: {
-                /** @description Only this session's trials. */
-                session?: components["schemas"]["SessionId"];
-                /** @description Only this outcome, by word. */
-                outcome?: string;
-                /** @description At most this many (1 to 50, default 20). */
-                limit?: number;
-                offset?: number;
-            };
-            header?: never;
-            path: {
-                /** @description The experiment */
-                id: components["schemas"]["ExperimentId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description What the `history` tool answers; a read that opens no session */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-        };
-    };
-    sessions: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The experiment */
-                id: components["schemas"]["ExperimentId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Session"][];
-                };
-            };
-        };
-    };
-    start_session: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The experiment */
-                id: components["schemas"]["ExperimentId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StartSession"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Session"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-        };
-    };
-    experiment_skills: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The experiment */
-                id: components["schemas"]["ExperimentId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description The skill versions it selected */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SkillRef"][];
-                };
-            };
-        };
-    };
-    experiment_set_skills: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The experiment */
-                id: components["schemas"]["ExperimentId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SelectSkills"];
-            };
-        };
-        responses: {
-            /** @description Each skill pinned to its latest version now; editors and owners of the project */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SkillRef"][];
-                };
-            };
-        };
-    };
-    experiment_spend: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The experiment */
-                id: components["schemas"]["ExperimentId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Its spend since it began, against its budget */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ExperimentSpend"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-        };
-    };
-    call: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The experiment */
-                id: components["schemas"]["ExperimentId"];
-                /** @description A tool from /tools */
-                tool: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ToolCall"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ToolResult"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-        };
-    };
-    experiment_value: {
-        parameters: {
-            query?: {
-                from?: number;
-                to?: number;
-            };
-            header?: never;
-            path: {
-                /** @description The experiment */
-                id: components["schemas"]["ExperimentId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Its value model, its wins and what they are worth, measured offline */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ExperimentValue"];
-                };
-            };
-            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3715,7 +2683,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Unpacked into its skills, connectors and evaluation templates; owners */
+            /** @description Unpacked into its skills and connectors; owners */
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -3757,8 +2725,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description A part is in use */
-            422: {
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3872,65 +2839,6 @@ export interface operations {
             };
         };
     };
-    experiments: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The project */
-                id: components["schemas"]["ProjectId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Its experiments, oldest first */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Experiment"][];
-                };
-            };
-        };
-    };
-    create_experiment: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The project */
-                id: components["schemas"]["ProjectId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["NewExperiment"];
-            };
-        };
-        responses: {
-            /** @description Created; editors and owners of the project */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Experiment"];
-                };
-            };
-            /** @description The budget would pass a cap */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-        };
-    };
     set_project_limits: {
         parameters: {
             query?: never;
@@ -4024,38 +2932,11 @@ export interface operations {
             };
         };
     };
-    project_skill: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The project */
-                id: components["schemas"]["ProjectId"];
-                /** @description The skill */
-                name: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SetOn"];
-            };
-        };
-        responses: {
-            /** @description Turned On or Off for the project; project owners */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    project_value: {
+    project_sessions: {
         parameters: {
             query?: {
-                from?: number;
-                to?: number;
+                /** @description Only the sessions the caller started. */
+                mine?: boolean;
             };
             header?: never;
             path: {
@@ -4066,13 +2947,13 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Delivered, Pending, At risk and Return of the project, measured offline */
+            /** @description The project's sessions, newest first; `mine` keeps the caller's */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ValueFigures"];
+                    "application/json": components["schemas"]["Session"][];
                 };
             };
             404: {
@@ -4085,38 +2966,7 @@ export interface operations {
             };
         };
     };
-    value_models: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The project */
-                id: components["schemas"]["ProjectId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description The newest version of each metric's value model */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ValueModels"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-        };
-    };
-    set_value_model: {
+    start_session: {
         parameters: {
             query?: never;
             header?: never;
@@ -4128,21 +2978,21 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["NewValueModel"];
+                "application/json": components["schemas"]["StartSession"];
             };
         };
         responses: {
-            /** @description Set: a project owner only, a new version when the metric had one */
+            /** @description Started: queued for a runner; editors and owners */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ProjectValueModel"];
+                    "application/json": components["schemas"]["Session"];
                 };
             };
-            /** @description Not a project owner */
-            403: {
+            /** @description The organization's monthly cap is reached */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -4160,13 +3010,11 @@ export interface operations {
             };
         };
     };
-    report: {
+    sessions: {
         parameters: {
             query?: {
-                /** @description The month as `YYYY-MM`, in UTC; the current month when left out. */
-                month?: string;
-                /** @description One project; left out, the organization. */
-                project?: components["schemas"]["ProjectId"];
+                /** @description Only the sessions the caller started. */
+                mine?: boolean;
             };
             header?: never;
             path?: never;
@@ -4174,38 +3022,13 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description The month's report: spent, Delivered, Pending, At risk, Return, where the spend went, the agent scoreboard, top wins and experiments stopped with no win */
+            /** @description The organization's sessions across its projects, newest first, each with its status and project; `mine` keeps the caller's */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Report"];
-                };
-            };
-            /** @description The organization report is for owners and editors */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
+                    "application/json": components["schemas"]["Session"][];
                 };
             };
         };
@@ -4228,6 +3051,130 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Session"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    approvals: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The session */
+                id: components["schemas"]["SessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Its cards, oldest first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Approval"][];
+                };
+            };
+        };
+    };
+    set_budget: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The session */
+                id: components["schemas"]["SessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SessionBudget"];
+            };
+        };
+        responses: {
+            /** @description Set; editors and owners */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description It would pass the organization's monthly cap */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    changes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The session */
+                id: components["schemas"]["SessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description What the session changed in each repo against the commit it was cloned at, as of the end of the agent's last turn: commits, files and their unified diffs. Empty before the first report */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionChanges"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    commit_changes: {
+        parameters: {
+            query?: {
+                /** @description The repo, when more than one has the commit. */
+                repo?: string;
+            };
+            header?: never;
+            path: {
+                /** @description The session */
+                id: components["schemas"]["SessionId"];
+                /** @description A commit listed in the session's changes */
+                sha: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The files of that commit against its parent */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommitChanges"];
                 };
             };
             404: {
@@ -4310,6 +3257,37 @@ export interface operations {
             };
         };
     };
+    spend: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The session */
+                id: components["schemas"]["SessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description What it spent since it began, against its own cap, by kind */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionSpend"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
     stop: {
         parameters: {
             query?: never;
@@ -4343,10 +3321,7 @@ export interface operations {
     };
     skills_list: {
         parameters: {
-            query?: {
-                /** @description Show each skill On or Off for this project. */
-                project?: components["schemas"]["ProjectId"];
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -4415,8 +3390,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description An experiment selected it */
-            422: {
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -4454,26 +3428,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiError"];
-                };
-            };
-        };
-    };
-    all_spend: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description The spend of every experiment, since it began */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ExperimentSpend"][];
                 };
             };
         };
@@ -4543,87 +3497,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
-            };
-        };
-    };
-    tools: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ToolDefinition"][];
-                };
-            };
-        };
-    };
-    receipt: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description A Kept trial that was the win when it ran */
-                id: components["schemas"]["TrialId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description The judge's signed receipt */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Receipt"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-        };
-    };
-    organization_value: {
-        parameters: {
-            query?: {
-                from?: number;
-                to?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Delivered, Pending, At risk and Return of the organization, measured offline; organization owners and editors */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ValueFigures"];
-                };
-            };
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
-                };
             };
         };
     };

@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 
+mod changes;
 mod customize;
 mod floor;
 mod id;
@@ -9,6 +10,7 @@ mod organization;
 mod runner;
 mod session;
 
+pub use changes::*;
 pub use customize::*;
 pub use floor::*;
 pub use id::*;
@@ -47,4 +49,3 @@ pub struct FieldError {
     pub field: String,
     pub message: String,
 }
-pub mod judge;

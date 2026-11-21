@@ -8,8 +8,7 @@ use utoipa::ToSchema;
 use uuid::Uuid;
 
 use crate::id::text_enum;
-use crate::judge::{CommitRef, DatasetRef, ProtectedFile};
-use crate::{ExperimentId, OrganizationId, SessionId};
+use crate::{OrganizationId, SessionId, ToolRecord};
 
 text_enum!(
     /// Where a session's machine is. A claim holds a lease; a lapsed lease is `Queued` again.
@@ -58,7 +57,6 @@ pub struct SkillDownload {
 pub struct SessionSpec {
     pub session: SessionId,
     pub organization: OrganizationId,
-    pub experiment: ExperimentId,
     pub agent: String,
     /// `provider/model`, as OpenCode names it.
     pub model: String,
@@ -84,23 +82,6 @@ pub enum Reply {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DataSpec {
-    pub holdout: bool,
-    pub dataset: DatasetRef,
-}
-
-/// A `SessionMachine` command: check out the commits, restore the protected files, run.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct RunSpec {
-    pub command: String,
-    pub commits: Vec<CommitRef>,
-    pub files: Vec<ProtectedFile>,
-    pub data: DataSpec,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum Command {
     /// A person's message for the agent.
@@ -113,8 +94,6 @@ pub enum Command {
     Abort,
     /// Export, stop OpenCode and let the machine go.
     Release { outcome: ReleaseOutcome },
-    /// Run the judge's sealed command.
-    Run { run: RunSpec },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -169,6 +148,9 @@ pub enum Item {
         key: String,
         kind: ItemKind,
         text: String,
+        /// For a tool call: what it did. The server cleans it again before storing.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        tool: Option<ToolRecord>,
     },
     /// The agent asked for a permission: it becomes an approval card.
     Permission {
@@ -184,14 +166,6 @@ pub enum Item {
 #[serde(rename_all = "camelCase")]
 pub struct Items {
     pub items: Vec<Item>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct RunResult {
-    pub command: Uuid,
-    pub exit: i32,
-    pub output: String,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -228,7 +202,6 @@ pub struct Seed {
 pub struct Machine {
     pub session: SessionId,
     pub organization: OrganizationId,
-    pub experiment: ExperimentId,
     pub agent: String,
     pub state: MachineState,
     /// The runner that holds the lease.

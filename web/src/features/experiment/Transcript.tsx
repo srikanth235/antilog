@@ -4,7 +4,7 @@ import { Failed } from "../../components/state/State";
 import { Markdown } from "../../lib/markdown";
 import { w } from "../../words";
 
-/** One thing said in a session: a person's words, the agent's, or the name of a tool it called. Never a tool's output. */
+/** One thing said in a session: a person's words or the agent's. Tool calls are folded into groups by `ToolGroup`. */
 export function Message(props: { event: Schemas["SessionEvent"]; agent: string }) {
   const { event } = props;
   if (event.kind === "person")
@@ -30,7 +30,7 @@ export function Message(props: { event: Schemas["SessionEvent"]; agent: string }
         </div>
       </div>
     );
-  return <div className="tl">{w.experiment.calledTool(event.text)}</div>;
+  return null;
 }
 
 export function TranscriptError(props: { error: unknown; onRetry: () => void }) {

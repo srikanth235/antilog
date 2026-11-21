@@ -1,12 +1,12 @@
 //! Budgets and caps: what is left to spend, and the refusal when nothing is.
 
-use antilog_types::{
-    AuditOutcome, ExperimentId, ExperimentSpend, KindSpend, OrganizationId, ProjectId, SessionSpend,
-};
+use antilog_types::{AuditOutcome, KindSpend, OrganizationId, ProjectId, SessionId, SessionSpend};
 use jiff::Timestamp;
 
-use crate::organization::{Action, Principal, Refusal, entry, member_of, permit, project_of};
-use crate::store::{SpendLine, SpendScope, Store};
+use crate::organization::{
+    Action, Principal, Refusal, entry, member_of, permit, permit_in, project_of,
+};
+use crate::store::{SpendScope, Store};
 
 /// Epoch milliseconds of the first instant of the UTC month `now` falls in, and of the next.
 pub fn month_bounds(now: i64) -> Option<(i64, i64)> {
@@ -29,29 +29,29 @@ pub fn month_bounds(now: i64) -> Option<(i64, i64)> {
 /// What is left under each limit, in US cents; `None` is no limit.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Headroom {
-    pub experiment: i64,
+    pub session: Option<i64>,
     pub project: Option<i64>,
     pub organization: Option<i64>,
 }
 
 impl Headroom {
-    pub fn remaining(&self) -> i64 {
-        [Some(self.experiment), self.project, self.organization]
+    /// The least left under any limit; `None` when nothing limits the session.
+    pub fn remaining(&self) -> Option<i64> {
+        [self.session, self.project, self.organization]
             .into_iter()
             .flatten()
             .min()
-            .unwrap_or(self.experiment)
     }
 
     pub fn spent(&self) -> bool {
-        self.remaining() <= 0
+        self.remaining().is_some_and(|left| left <= 0)
     }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
 pub enum Spent {
-    #[error("the experiment's budget is spent")]
-    Experiment,
+    #[error("the session's budget is spent")]
+    Session,
     #[error("the project's monthly cap is reached")]
     Project,
     #[error("the organization's monthly cap is reached")]
@@ -65,12 +65,12 @@ fn left(cap: Option<i64>, spent: i64) -> Option<i64> {
 pub async fn headroom<S: Store>(
     store: &S,
     organization: OrganizationId,
-    experiment: ExperimentId,
+    session: SessionId,
     now: i64,
 ) -> Result<Headroom, Refusal> {
     let (from, to) = month_bounds(now).ok_or(Refusal::Invalid("the time is out of range"))?;
     let row = store
-        .experiment(organization, experiment)
+        .session(organization, session)
         .await?
         .ok_or(Refusal::NotFound)?;
     let project = store
@@ -81,10 +81,10 @@ pub async fn headroom<S: Store>(
         .organization(organization)
         .await?
         .ok_or(Refusal::NotFound)?;
-    let experiment_spent = store
+    let session_spent = store
         .spend(
             organization,
-            SpendScope::Experiment(experiment),
+            SpendScope::Session(session),
             0,
             now.saturating_add(1),
         )
@@ -99,23 +99,54 @@ pub async fn headroom<S: Store>(
         .await?
         .cents;
     Ok(Headroom {
-        experiment: row.budget_cap_cents.saturating_sub(experiment_spent),
+        session: left(row.budget_cap_cents, session_spent),
         project: left(project.monthly_cap_cents, project_spent),
         organization: left(owner.monthly_cap_cents, organization_spent),
     })
 }
 
-/// What the judge asks before `measure` and a session asks before it starts:
+/// Whether the organization's and the project's monthly caps, where they have one, still leave
+/// room for a new session.
+pub async fn has_room<S: Store>(
+    store: &S,
+    organization: OrganizationId,
+    project: ProjectId,
+    now: i64,
+) -> Result<bool, Refusal> {
+    let (from, to) = month_bounds(now).ok_or(Refusal::Invalid("the time is out of range"))?;
+    let row = store
+        .project(organization, project)
+        .await?
+        .ok_or(Refusal::NotFound)?;
+    let project_spent = store
+        .spend(organization, SpendScope::Project(project), from, to)
+        .await?
+        .cents;
+    if left(row.monthly_cap_cents, project_spent).is_some_and(|left| left <= 0) {
+        return Ok(false);
+    }
+    let owner = store
+        .organization(organization)
+        .await?
+        .ok_or(Refusal::NotFound)?;
+    let spent = store
+        .spend(organization, SpendScope::Organization, from, to)
+        .await?
+        .cents;
+    Ok(left(owner.monthly_cap_cents, spent).is_none_or(|left| left > 0))
+}
+
+/// What the model gateway asks before it forwards a call, and a session asks before it starts:
 /// refused when nothing is left under any limit.
 pub async fn ensure_room<S: Store>(
     store: &S,
     organization: OrganizationId,
-    experiment: ExperimentId,
+    session: SessionId,
     now: i64,
 ) -> Result<Headroom, Refusal> {
-    let room = headroom(store, organization, experiment, now).await?;
-    let blocked = if room.experiment <= 0 {
-        Some(Spent::Experiment)
+    let room = headroom(store, organization, session, now).await?;
+    let blocked = if room.session.is_some_and(|left| left <= 0) {
+        Some(Spent::Session)
     } else if room.project.is_some_and(|left| left <= 0) {
         Some(Spent::Project)
     } else if room.organization.is_some_and(|left| left <= 0) {
@@ -158,7 +189,6 @@ pub async fn set_organization_limits<S: Store>(
         store,
         who,
         Action::OrganizationLimitsSet,
-        None,
         who.organization,
         now,
     )
@@ -192,15 +222,7 @@ pub async fn set_project_limits<S: Store>(
 ) -> Result<(), Refusal> {
     cents(monthly_cap_cents)?;
     cents(default_budget_cents)?;
-    permit(
-        store,
-        who,
-        Action::ProjectLimitsSet,
-        Some(project),
-        project,
-        now,
-    )
-    .await?;
+    permit_in(store, who, Action::ProjectLimitsSet, project, project, now).await?;
     store
         .set_project_limits(
             who.organization,
@@ -213,37 +235,27 @@ pub async fn set_project_limits<S: Store>(
     Ok(())
 }
 
-/// An editor or owner of the experiment's project changes its budget, inside the project's cap.
-pub async fn set_experiment_budget<S: Store>(
+/// An editor or owner of the session's project changes its own cap, inside the project's cap.
+pub async fn set_session_budget<S: Store>(
     store: &S,
     who: &Principal,
     now: i64,
-    experiment: ExperimentId,
+    session: SessionId,
     budget_cap_cents: i64,
 ) -> Result<(), Refusal> {
     cents(Some(budget_cap_cents))?;
-    let project = project_of(store, who, experiment).await?;
-    permit(
-        store,
-        who,
-        Action::ExperimentBudgetSet,
-        Some(project),
-        experiment,
-        now,
-    )
-    .await?;
     store
-        .set_experiment_budget(
+        .session(who.organization, session)
+        .await?
+        .ok_or(Refusal::NotFound)?;
+    let project = project_of(store, who, session).await?;
+    permit_in(store, who, Action::SessionBudgetSet, project, session, now).await?;
+    store
+        .set_session_budget(
             who.organization,
-            experiment,
+            session,
             budget_cap_cents,
-            &entry(
-                who,
-                "experiment.set_budget",
-                experiment,
-                AuditOutcome::Done,
-                now,
-            ),
+            &entry(who, "session.set_budget", session, AuditOutcome::Done, now),
         )
         .await?;
     Ok(())
@@ -296,51 +308,26 @@ pub async fn summary<S: Store>(store: &S, who: &Principal, now: i64) -> Result<S
     })
 }
 
-/// One experiment's spend since it began against its budget, by kind and by session. Every member reads.
-pub async fn experiment_spend<S: Store>(
+/// One session's spend since it began against its own cap, by kind. Every member reads.
+pub async fn session_spend<S: Store>(
     store: &S,
     who: &Principal,
-    experiment: ExperimentId,
-) -> Result<ExperimentSpend, Refusal> {
+    session: SessionId,
+) -> Result<SessionSpend, Refusal> {
     member_of(store, who).await?;
     let row = store
-        .experiment(who.organization, experiment)
+        .session(who.organization, session)
         .await?
         .ok_or(Refusal::NotFound)?;
-    let lines = store
-        .spend_lines(who.organization, Some(experiment))
-        .await?;
-    Ok(collect(&row, &lines))
-}
-
-/// The same for every experiment of the organization, oldest experiment first.
-pub async fn all_spend<S: Store>(
-    store: &S,
-    who: &Principal,
-) -> Result<Vec<ExperimentSpend>, Refusal> {
-    member_of(store, who).await?;
-    let lines = store.spend_lines(who.organization, None).await?;
-    let mut all = Vec::new();
-    for project in store.projects(who.organization).await? {
-        for experiment in store.experiments(who.organization, project.id).await? {
-            all.push(collect(&experiment, &lines));
-        }
-    }
-    all.sort_by_key(|spend| spend.experiment_id.as_uuid());
-    Ok(all)
-}
-
-fn collect(experiment: &antilog_types::Experiment, lines: &[SpendLine]) -> ExperimentSpend {
-    let mut spend = ExperimentSpend {
-        experiment_id: experiment.id,
-        project_id: experiment.project_id,
-        budget_cap_cents: experiment.budget_cap_cents,
+    let lines = store.spend_lines(who.organization, session).await?;
+    let mut spend = SessionSpend {
+        session_id: session,
+        budget_cap_cents: row.budget_cap_cents,
         spent_cents: 0,
         tokens: 0,
         by_kind: Vec::new(),
-        by_session: Vec::new(),
     };
-    for line in lines.iter().filter(|line| line.experiment == experiment.id) {
+    for line in lines {
         spend.spent_cents += line.cents;
         spend.tokens += line.tokens;
         match spend.by_kind.iter_mut().find(|kind| kind.kind == line.kind) {
@@ -354,22 +341,7 @@ fn collect(experiment: &antilog_types::Experiment, lines: &[SpendLine]) -> Exper
                 tokens: line.tokens,
             }),
         }
-        match spend
-            .by_session
-            .iter_mut()
-            .find(|session| session.session_id == line.session)
-        {
-            Some(session) => {
-                session.cents += line.cents;
-                session.tokens += line.tokens;
-            }
-            None => spend.by_session.push(SessionSpend {
-                session_id: line.session,
-                cents: line.cents,
-                tokens: line.tokens,
-            }),
-        }
     }
     spend.by_kind.sort_by_key(|kind| kind.kind.as_str());
-    spend
+    Ok(spend)
 }

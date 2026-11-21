@@ -2,7 +2,7 @@ import { Tabs as Base } from "@base-ui/react/tabs";
 import { Link } from "@tanstack/react-router";
 import { w } from "../../words";
 
-export type Tab = "evaluations" | "skills" | "connectors" | "plugins";
+export type Tab = "skills" | "connectors" | "plugins";
 
 /** Each tab is a URL. Agents is not in the first release and says so. */
 export function Tabs({ active }: { active: Tab }) {
@@ -20,7 +20,6 @@ export function Tabs({ active }: { active: Tab }) {
   return (
     <Base.Root value={active}>
       <Base.List className="ctabs" aria-label={w.customize.tabs}>
-        {tab("evaluations", "/customize/evaluations", w.customize.evaluations)}
         {tab("skills", "/customize/skills", w.customize.skills)}
         {tab("connectors", "/customize/connectors", w.customize.connectors)}
         <Base.Tab value="agents" className="ptab" disabled title={w.customize.laterTabs}>

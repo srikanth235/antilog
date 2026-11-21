@@ -17,37 +17,28 @@ export const keys = {
   organization: () => ["organization"] as const,
   members: () => ["members"] as const,
   projects: () => ["projects"] as const,
-  projectExperiments: (id: string) => ["projects", id, "experiments"] as const,
+  projectSessions: (id: string) => ["projects", id, "sessions"] as const,
   projectRoles: (id: string) => ["projects", id, "roles"] as const,
-  experiment: (id: string) => ["experiments", id] as const,
-  sessions: (id: string) => ["experiments", id, "sessions"] as const,
-  approvals: (id: string) => ["experiments", id, "approvals"] as const,
+  sessions: () => ["sessions"] as const,
   session: (id: string) => ["sessions", id] as const,
-  receipt: (trial: string) => ["trials", trial, "receipt"] as const,
-  history: (id: string) => ["experiments", id, "history"] as const,
+  sessionApprovals: (id: string) => ["sessions", id, "approvals"] as const,
+  sessionSpend: (id: string) => ["sessions", id, "spend"] as const,
+  changes: (id: string) => ["sessions", id, "changes"] as const,
+  commitChanges: (id: string, repo: string, sha: string) =>
+    ["sessions", id, "changes", repo, sha] as const,
   agents: () => ["agents"] as const,
   autoAgent: () => ["agents", "auto"] as const,
   environments: () => ["environments"] as const,
-  evaluations: () => ["evaluations"] as const,
   connectors: () => ["connectors"] as const,
   skills: () => ["skills"] as const,
   plugins: () => ["plugins"] as const,
-  experimentConnectors: (id: string) => ["experiments", id, "connectors"] as const,
-  experimentSkills: (id: string) => ["experiments", id, "skills"] as const,
   budgets: () => ["budgets"] as const,
   spend: () => ["spend"] as const,
-  experimentSpend: (id: string) => ["experiments", id, "spend"] as const,
   transcript: (session: string) => ["sessions", session, "events"] as const,
   policies: () => ["policies"] as const,
   tokens: () => ["tokens"] as const,
   modelKeys: () => ["model-keys"] as const,
   audit: () => ["audit"] as const,
-  tools: () => ["tools"] as const,
-  valueModels: (project: string) => ["projects", project, "value-models"] as const,
-  projectValue: (project: string) => ["projects", project, "value"] as const,
-  organizationValue: () => ["value"] as const,
-  experimentValue: (id: string) => ["experiments", id, "value"] as const,
-  report: (month: string, project: string | null) => ["report", month, project] as const,
 };
 
 /** Sessions and approvals change while an agent works. The server's event stream says when (`live.ts`);
@@ -115,11 +106,13 @@ export function useProjects() {
   });
 }
 
-export function useProjectExperiments(id: string) {
+export function useProjectSessions(id: string) {
+  const poll = usePoll();
   return useQuery({
-    queryKey: keys.projectExperiments(id),
+    queryKey: keys.projectSessions(id),
     queryFn: async () =>
-      unwrap(await api.GET("/projects/{id}/experiments", { params: { path: { id } } })),
+      unwrap(await api.GET("/projects/{id}/sessions", { params: { path: { id } } })),
+    refetchInterval: poll,
   });
 }
 
@@ -131,30 +124,68 @@ export function useProjectRoles(id: string) {
   });
 }
 
-export function useExperiment(id: string) {
-  return useQuery({
-    queryKey: keys.experiment(id),
-    queryFn: async () => unwrap(await api.GET("/experiments/{id}", { params: { path: { id } } })),
-  });
-}
-
-export function useExperimentSessions(id: string) {
+/** Every session of the organization, newest first, across projects: the sidebar and Home read this. */
+export function useSessions() {
   const poll = usePoll();
   return useQuery({
-    queryKey: keys.sessions(id),
-    queryFn: async () =>
-      unwrap(await api.GET("/experiments/{id}/sessions", { params: { path: { id } } })),
+    queryKey: keys.sessions(),
+    queryFn: async () => unwrap(await api.GET("/sessions")),
     refetchInterval: poll,
   });
 }
 
-export function useExperimentApprovals(id: string) {
+export function useSession(id: string) {
   const poll = usePoll();
   return useQuery({
-    queryKey: keys.approvals(id),
-    queryFn: async () =>
-      unwrap(await api.GET("/experiments/{id}/approvals", { params: { path: { id } } })),
+    queryKey: keys.session(id),
+    queryFn: async () => unwrap(await api.GET("/sessions/{id}", { params: { path: { id } } })),
     refetchInterval: poll,
+  });
+}
+
+export function useSessionApprovals(id: string) {
+  const poll = usePoll();
+  return useQuery({
+    queryKey: keys.sessionApprovals(id),
+    queryFn: async () =>
+      unwrap(await api.GET("/sessions/{id}/approvals", { params: { path: { id } } })),
+    refetchInterval: poll,
+  });
+}
+
+/** What the session changed in each repo, as of the end of the agent's last turn. */
+export function useChanges(id: string) {
+  const poll = usePoll();
+  return useQuery({
+    queryKey: keys.changes(id),
+    queryFn: async () =>
+      unwrap(await api.GET("/sessions/{id}/changes", { params: { path: { id } } })),
+    refetchInterval: poll,
+  });
+}
+
+/** The files of one commit; a commit never changes, so it is fetched once. */
+export function useCommitChanges(id: string, repo: string, sha: string | null) {
+  return useQuery({
+    queryKey: keys.commitChanges(id, repo, sha ?? ""),
+    queryFn: async () =>
+      unwrap(
+        await api.GET("/sessions/{id}/changes/commits/{sha}", {
+          params: { path: { id, sha: sha ?? "" }, query: { repo } },
+        }),
+      ),
+    enabled: sha !== null,
+    staleTime: Number.POSITIVE_INFINITY,
+  });
+}
+
+/** One session's spend against its own cap, by kind. */
+export function useSessionSpend(id: string) {
+  return useQuery({
+    queryKey: keys.sessionSpend(id),
+    queryFn: async () =>
+      unwrap(await api.GET("/sessions/{id}/spend", { params: { path: { id } } })),
+    refetchInterval: LIVE_MS,
   });
 }
 
@@ -185,15 +216,6 @@ export function useTranscript(session: string, status: Schemas["SessionStatus"] 
     // The poll pauses in a hidden tab (the default), is off while the event stream delivers, and
     // ends once the session is Done or Failed.
     refetchInterval: status === "done" || status === "failed" ? false : poll,
-  });
-}
-
-export function useReceipt(trial: string) {
-  return useQuery({
-    queryKey: keys.receipt(trial),
-    queryFn: async () =>
-      unwrap(await api.GET("/trials/{id}/receipt", { params: { path: { id: trial } } })),
-    retry: false,
   });
 }
 
@@ -257,29 +279,6 @@ export function useArchiveEnvironment() {
     async (id: string) =>
       unwrap(await api.POST("/environments/{id}/archive", { params: { path: { id } } })),
     refreshEnvironments,
-  );
-}
-
-export function useEvaluations() {
-  return useQuery({
-    queryKey: keys.evaluations(),
-    queryFn: async () => unwrap(await api.GET("/evaluations")),
-  });
-}
-
-export function useEvaluation(id: string) {
-  return useQuery({
-    queryKey: [...keys.evaluations(), id] as const,
-    queryFn: async () => unwrap(await api.GET("/evaluations/{id}", { params: { path: { id } } })),
-    retry: false,
-  });
-}
-
-export function useAddEvaluation() {
-  return useWrite(
-    async (body: Schemas["NewEvaluationTemplate"]) =>
-      unwrap(await api.POST("/evaluations", { body })),
-    (client) => client.invalidateQueries({ queryKey: keys.evaluations() }),
   );
 }
 
@@ -348,16 +347,11 @@ export function useRemoveConnector(id: string) {
   );
 }
 
-/** The organization's skill packs. With a project, `on` says whether that project has the pack On. */
-export function useSkills(project?: string) {
+/** The organization's skill packs. */
+export function useSkills() {
   return useQuery({
-    queryKey: [...keys.skills(), { project: project ?? null }] as const,
-    queryFn: async () =>
-      unwrap(
-        await api.GET("/skills", {
-          params: { query: project === undefined ? {} : { project } },
-        }),
-      ),
+    queryKey: keys.skills(),
+    queryFn: async () => unwrap(await api.GET("/skills")),
   });
 }
 
@@ -391,19 +385,6 @@ export function useRemoveSkill(name: string) {
   );
 }
 
-export function useSetProjectSkill(name: string) {
-  return useWrite(
-    async (change: { project: string; on: boolean }) =>
-      unwrap(
-        await api.PUT("/projects/{id}/skills/{name}", {
-          params: { path: { id: change.project, name } },
-          body: { on: change.on },
-        }),
-      ),
-    refreshSkills,
-  );
-}
-
 export function usePlugins() {
   return useQuery({
     queryKey: keys.plugins(),
@@ -411,10 +392,10 @@ export function usePlugins() {
   });
 }
 
-/** A plugin brings or takes away skill packs, connectors and evaluation templates. */
+/** A plugin brings or takes away skill packs and connectors. */
 function refreshPlugin(client: QueryClient) {
   return Promise.all(
-    [keys.plugins(), keys.skills(), keys.connectors(), keys.evaluations()].map((queryKey) =>
+    [keys.plugins(), keys.skills(), keys.connectors()].map((queryKey) =>
       client.invalidateQueries({ queryKey }),
     ),
   );
@@ -435,68 +416,10 @@ export function useRemovePlugin(id: string) {
   );
 }
 
-export function useExperimentConnectors(id: string) {
-  return useQuery({
-    queryKey: keys.experimentConnectors(id),
-    queryFn: async () =>
-      unwrap(await api.GET("/experiments/{id}/connectors", { params: { path: { id } } })),
-  });
-}
-
-export function useSetExperimentConnectors(id: string) {
-  return useWrite(
-    async (connectors: string[]) =>
-      unwrap(
-        await api.PUT("/experiments/{id}/connectors", {
-          params: { path: { id } },
-          body: { connectors },
-        }),
-      ),
-    (client) => client.invalidateQueries({ queryKey: keys.experimentConnectors(id) }),
-  );
-}
-
-export function useExperimentSkills(id: string) {
-  return useQuery({
-    queryKey: keys.experimentSkills(id),
-    queryFn: async () =>
-      unwrap(await api.GET("/experiments/{id}/skills", { params: { path: { id } } })),
-  });
-}
-
-export function useSetExperimentSkills(id: string) {
-  return useWrite(
-    async (skills: string[]) =>
-      unwrap(
-        await api.PUT("/experiments/{id}/skills", { params: { path: { id } }, body: { skills } }),
-      ),
-    (client) => client.invalidateQueries({ queryKey: keys.experimentSkills(id) }),
-  );
-}
-
 export function useBudgets() {
   return useQuery({
     queryKey: keys.budgets(),
     queryFn: async () => unwrap(await api.GET("/budgets")),
-  });
-}
-
-/** The spend of every experiment since it began: the project table and "Where the spend went". */
-export function useSpend() {
-  return useQuery({
-    queryKey: keys.spend(),
-    queryFn: async () => unwrap(await api.GET("/spend")),
-    refetchInterval: LIVE_MS * 4,
-  });
-}
-
-/** One experiment's spend against its budget, by kind and by session: the ring and the breakdown. */
-export function useExperimentSpend(id: string) {
-  return useQuery({
-    queryKey: keys.experimentSpend(id),
-    queryFn: async () =>
-      unwrap(await api.GET("/experiments/{id}/spend", { params: { path: { id } } })),
-    refetchInterval: LIVE_MS,
   });
 }
 
@@ -541,78 +464,6 @@ export function useAudit() {
   });
 }
 
-export function useTools() {
-  return useQuery({
-    queryKey: keys.tools(),
-    queryFn: async () => unwrap(await api.GET("/tools")),
-    staleTime: Number.POSITIVE_INFINITY,
-  });
-}
-
-/** `history`, the judge's list of every trial: a plain read that opens no session. Its answer is free-form; the page narrows it. */
-export function useHistory(experiment: string) {
-  return useQuery({
-    queryKey: keys.history(experiment),
-    queryFn: async () =>
-      unwrap(
-        await api.GET("/experiments/{id}/history", {
-          params: { path: { id: experiment }, query: { limit: 50 } },
-        }),
-      ) as unknown,
-    retry: false,
-    refetchInterval: LIVE_MS * 2,
-  });
-}
-
-/** The newest value model of each metric in a project. */
-export function useValueModels(project: string) {
-  return useQuery({
-    queryKey: keys.valueModels(project),
-    queryFn: async () =>
-      unwrap(await api.GET("/projects/{id}/value-models", { params: { path: { id: project } } }))
-        .models,
-  });
-}
-
-/** Delivered, Pending, At risk and Return for a project, all time. */
-export function useProjectValue(project: string) {
-  return useQuery({
-    queryKey: keys.projectValue(project),
-    queryFn: async () =>
-      unwrap(await api.GET("/projects/{id}/value", { params: { path: { id: project } } })),
-  });
-}
-
-export function useOrganizationValue() {
-  return useQuery({
-    queryKey: keys.organizationValue(),
-    queryFn: async () => unwrap(await api.GET("/value")),
-  });
-}
-
-/** An experiment's value model, its wins with their state, and what they add up to. */
-export function useExperimentValue(experiment: string) {
-  return useQuery({
-    queryKey: keys.experimentValue(experiment),
-    enabled: experiment !== "",
-    queryFn: async () =>
-      unwrap(await api.GET("/experiments/{id}/value", { params: { path: { id: experiment } } })),
-  });
-}
-
-/** The monthly Report; `month` is `YYYY-MM` in UTC, `project` is one project or null for all. */
-export function useReport(month: string, project: string | null) {
-  return useQuery({
-    queryKey: keys.report(month, project),
-    queryFn: async () =>
-      unwrap(
-        await api.GET("/report", {
-          params: { query: { month, ...(project === null ? {} : { project }) } },
-        }),
-      ),
-  });
-}
-
 function useWrite<V, R>(
   write: (variables: V) => Promise<R>,
   invalidate: (client: QueryClient, variables: V, result: R) => Promise<unknown> | undefined,
@@ -631,30 +482,24 @@ export function useCreateProject() {
   );
 }
 
-export function useCreateExperiment(project: string) {
-  return useWrite(
-    async (body: Schemas["NewExperiment"]) =>
-      unwrap(
-        await api.POST("/projects/{id}/experiments", { params: { path: { id: project } }, body }),
-      ),
-    (client) => client.invalidateQueries({ queryKey: keys.projectExperiments(project) }),
-  );
-}
+/** Every list of sessions: the sidebar, a project's page, one session. */
+const refreshSessions = (client: QueryClient) =>
+  client.invalidateQueries({ queryKey: keys.sessions() });
 
-export function useStartSession(experiment: string) {
+export function useStartSession(project: string) {
   return useWrite(
     async (body: Schemas["StartSession"]) =>
       unwrap(
-        await api.POST("/experiments/{id}/sessions", {
-          params: { path: { id: experiment } },
-          body,
-        }),
+        await api.POST("/projects/{id}/sessions", { params: { path: { id: project } }, body }),
       ),
-    (client) => client.invalidateQueries({ queryKey: keys.sessions(experiment) }),
+    async (client) => {
+      await refreshSessions(client);
+      await client.invalidateQueries({ queryKey: keys.projectSessions(project) });
+    },
   );
 }
 
-export function useSendMessage(experiment: string, session: string) {
+export function useSendMessage(session: string) {
   return useWrite(
     async (text: string) =>
       unwrap(
@@ -663,19 +508,19 @@ export function useSendMessage(experiment: string, session: string) {
           body: { text },
         }),
       ),
-    (client) => client.invalidateQueries({ queryKey: keys.sessions(experiment) }),
+    (client) => client.invalidateQueries({ queryKey: keys.transcript(session) }),
   );
 }
 
-export function useStopSession(experiment: string) {
+export function useStopSession() {
   return useWrite(
     async (session: string) =>
       unwrap(await api.POST("/sessions/{id}/stop", { params: { path: { id: session } } })),
-    (client) => client.invalidateQueries({ queryKey: keys.sessions(experiment) }),
+    refreshSessions,
   );
 }
 
-export function useDecide(experiment: string) {
+export function useDecide(session: string) {
   return useWrite(
     async (v: { id: string; decision: Schemas["Decision"] }) =>
       unwrap(
@@ -685,23 +530,27 @@ export function useDecide(experiment: string) {
         }),
       ),
     async (client) => {
-      await client.invalidateQueries({ queryKey: keys.approvals(experiment) });
-      await client.invalidateQueries({ queryKey: keys.experiment(experiment) });
+      await client.invalidateQueries({ queryKey: keys.sessionApprovals(session) });
+      await client.invalidateQueries({ queryKey: keys.pending() });
+      await client.invalidateQueries({ queryKey: keys.session(session) });
       await client.invalidateQueries({ queryKey: keys.budgets() });
     },
   );
 }
 
-export function useSetExperimentBudget(experiment: string) {
+export function useSetSessionBudget(session: string) {
   return useWrite(
     async (budgetCapCents: number) =>
       unwrap(
-        await api.PUT("/experiments/{id}/budget", {
-          params: { path: { id: experiment } },
+        await api.PUT("/sessions/{id}/budget", {
+          params: { path: { id: session } },
           body: { budgetCapCents },
         }),
       ),
-    (client) => client.invalidateQueries({ queryKey: keys.experiment(experiment) }),
+    async (client) => {
+      await client.invalidateQueries({ queryKey: keys.session(session) });
+      await client.invalidateQueries({ queryKey: keys.sessionSpend(session) });
+    },
   );
 }
 
@@ -798,20 +647,5 @@ export function useSetProjectRole(project: string) {
         }),
       ),
     (client) => client.invalidateQueries({ queryKey: keys.projectRoles(project) }),
-  );
-}
-
-export function useSetValueModel(project: string) {
-  return useWrite(
-    async (body: Schemas["NewValueModel"]) =>
-      unwrap(
-        await api.POST("/projects/{id}/value-models", { params: { path: { id: project } }, body }),
-      ),
-    async (client) => {
-      await client.invalidateQueries({ queryKey: keys.valueModels(project) });
-      await client.invalidateQueries({ queryKey: keys.projectValue(project) });
-      await client.invalidateQueries({ queryKey: keys.organizationValue() });
-      await client.invalidateQueries({ queryKey: ["report"] });
-    },
   );
 }

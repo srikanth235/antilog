@@ -2,18 +2,16 @@ use std::collections::HashMap;
 use std::sync::{Mutex, MutexGuard, PoisonError};
 
 use jiff::{SignedDuration, Timestamp};
-use sha2::{Digest, Sha256};
 
 mod approval;
 mod budget;
 mod card;
-mod code_host;
+mod changes;
 mod connectors;
 mod credentials;
 mod customize;
 mod environment;
 pub(crate) mod ledger;
-mod machine;
 mod model_key;
 mod organization;
 mod runner;
@@ -22,22 +20,19 @@ mod world;
 
 pub use connectors::{Call, FakeConnectors};
 pub use credentials::FakeCredentials;
-pub use machine::{FakeMachine, Profile};
-pub use world::{FakeCodeHost, FakeDeps};
+pub use world::FakeDeps;
 
 use crate::clock::Clock;
 use crate::secrets::{Secret, Secrets, SecretsError};
-use crate::signer::{Signature, Signer};
 use crate::store::{Store, StoreError};
 
 mod card_state {
-    use std::collections::{HashMap, HashSet};
+    use std::collections::HashSet;
 
     use antilog_types::{ApprovalId, OrganizationId};
 
     #[derive(Default)]
     pub struct Cards {
-        pub proposals: HashMap<(OrganizationId, ApprovalId), String>,
         pub told: HashSet<(OrganizationId, ApprovalId)>,
     }
 }
@@ -79,57 +74,15 @@ impl Clock for FakeClock {
 pub struct FakeStore {
     ledger: std::sync::Arc<Mutex<ledger::Ledger>>,
     cards: Mutex<card_state::Cards>,
-    code_host: Mutex<code_host::State>,
     runner: Mutex<runner::State>,
+    changes: Mutex<changes::State>,
     vault: Mutex<model_key::Vault>,
     customize: Mutex<customize::State>,
-}
-
-impl FakeStore {
-    /// A judge store whose audited writes land in this store's audit log, in one step: either
-    /// the row and its audit entry both land or neither does, as in Postgres.
-    pub fn judge_store(&self) -> crate::store::judge::FakeJudgeStore {
-        crate::store::judge::FakeJudgeStore::linked(self.ledger.clone())
-    }
 }
 
 impl Store for FakeStore {
     async fn ping(&self) -> Result<(), StoreError> {
         Ok(())
-    }
-}
-
-pub struct FakeSigner {
-    key_id: String,
-}
-
-impl FakeSigner {
-    pub fn new(key_id: impl Into<String>) -> Self {
-        Self {
-            key_id: key_id.into(),
-        }
-    }
-
-    fn digest(&self, message: &[u8]) -> Vec<u8> {
-        Sha256::new()
-            .chain_update(self.key_id.as_bytes())
-            .chain_update(message)
-            .finalize()
-            .to_vec()
-    }
-}
-
-impl Signer for FakeSigner {
-    fn key_id(&self) -> &str {
-        &self.key_id
-    }
-
-    fn sign(&self, message: &[u8]) -> Signature {
-        Signature(self.digest(message))
-    }
-
-    fn verify(&self, message: &[u8], signature: &Signature) -> bool {
-        signature.0 == self.digest(message)
     }
 }
 
@@ -194,12 +147,6 @@ mod tests {
         crate::seed::card_suite(&FakeStore::default()).await;
     }
 
-    #[tokio::test]
-    async fn fake_store_keeps_pull_requests_spend_cards_and_audited_models() {
-        let store = FakeStore::default();
-        crate::seed::wins_suite(&store, |_| store.judge_store()).await;
-    }
-
     #[test]
     fn fake_clock_moves_only_when_advanced() {
         let start: Timestamp = "2026-11-18T00:00:00Z".parse().unwrap();
@@ -210,15 +157,6 @@ mod tests {
             clock.now(),
             start.checked_add(SignedDuration::from_secs(60)).unwrap()
         );
-    }
-
-    #[test]
-    fn fake_signer_rejects_a_changed_message_and_a_foreign_key() {
-        let signer = FakeSigner::new("k1");
-        let signature = signer.sign(b"receipt");
-        assert!(signer.verify(b"receipt", &signature));
-        assert!(!signer.verify(b"receipt!", &signature));
-        assert!(!FakeSigner::new("k2").verify(b"receipt", &signature));
     }
 
     #[tokio::test]

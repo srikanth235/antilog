@@ -2,18 +2,17 @@ import { describe, expect, it } from "vitest";
 import type { Schemas } from "../../api/client";
 import { cardLead, cardRows } from "./cardRows";
 
-const ctx = { budgetCapCents: 10_000, spentCents: 4_000, history: { trials: [] } } as never;
+const ctx = { budgetCapCents: 10_000, spentCents: 4_000 };
 
 function card(payload: Schemas["CardPayload"] | null, summary = "legacy summary: reason") {
   return {
     id: "a",
     organizationId: "o",
-    experimentId: "e",
-    card: payload?.kind ?? "keep_going",
+    sessionId: "s",
+    card: payload?.kind ?? "ask_first",
     summary,
     payload,
     costCents: null,
-    needsOwner: false,
     status: "pending",
     createdAt: 0,
   } as unknown as Schemas["Approval"];

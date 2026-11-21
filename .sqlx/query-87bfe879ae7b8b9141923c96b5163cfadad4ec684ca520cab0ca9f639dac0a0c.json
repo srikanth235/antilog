@@ -1,0 +1,31 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select files from session_commit_changes where session_id = $1 and organization_id = $2 and sha = $3 and ($4::text is null or repo = $4) order by repo limit 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "files",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "session_commit_changes",
+            "name": "files"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "87bfe879ae7b8b9141923c96b5163cfadad4ec684ca520cab0ca9f639dac0a0c"
+}

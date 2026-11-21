@@ -13,7 +13,7 @@ use crate::seed::{self, T0};
 use crate::store::{GatewayScope, Store, StoreError};
 
 async fn session_of<S: Store>(store: &S, seed: &seed::Seed) -> Session {
-    let session = Session::new(seed.organization.id, seed.experiment.id, "opencode", T0);
+    let session = seed::session(seed, "opencode", T0);
     store
         .create_session(
             &session,
@@ -33,7 +33,7 @@ async fn session_of<S: Store>(store: &S, seed: &seed::Seed) -> Session {
 
 /// Tokens are found by hash for their own purpose until they expire or are revoked.
 pub async fn credentials_suite<S: Store, C: SessionCredentials>(store: &S, creds: &C) {
-    let seed = seed::experiment(store, 10_000).await;
+    let seed = seed::organization(store).await;
     let one = session_of(store, &seed).await;
     let two = session_of(store, &seed).await;
     let ttl = SignedDuration::from_mins(10);
@@ -107,8 +107,8 @@ pub async fn credentials_suite<S: Store, C: SessionCredentials>(store: &S, creds
 /// Keys are kept per organization and provider, replaced in place, removed on request, and
 /// found for the gateway by session.
 pub async fn model_key_suite<S: Store>(store: &S) {
-    let seed = seed::experiment(store, 10_000).await;
-    let other = seed::experiment(store, 10_000).await;
+    let seed = seed::organization(store).await;
+    let other = seed::organization(store).await;
     let org = seed.organization.id;
     let audit = |action: &str| {
         AuditEntry::new(
@@ -224,14 +224,11 @@ pub async fn model_key_suite<S: Store>(store: &S) {
         1
     );
 
-    // The gateway finds a session's organization and experiment from its id alone.
+    // The gateway finds a session's organization from its id alone.
     let session = session_of(store, &seed).await;
     assert_eq!(
         store.gateway_scope(session.id).await.expect("scope"),
-        Some(GatewayScope {
-            organization: org,
-            experiment: seed.experiment.id,
-        })
+        Some(GatewayScope { organization: org })
     );
     assert_eq!(
         store

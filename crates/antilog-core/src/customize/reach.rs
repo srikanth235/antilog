@@ -1,10 +1,10 @@
 //! What a session's MCP endpoint serves: the Antilog tools and the tools of every connector
-//! switched on for the experiment. Each connector tool is on, off or ask first. Credentials are
+//! of the organization. Each connector tool is on, off or ask first. Credentials are
 //! opened here, on the server, for the one call, and go nowhere else.
 
 use antilog_types::{
     ApprovalStatus, AuditEntry, AuditOutcome, CardKind, CardPayload, Connector, ConnectorId,
-    EventKind, ToolMode,
+    ToolMode,
 };
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -13,7 +13,7 @@ use super::connectors::{ConnectorClient, namespaced};
 use crate::deps::Deps;
 use crate::sealed::Sealer;
 use crate::session::now_ms;
-use crate::store::{ApprovalStore, CustomizeStore, SessionScope, SessionStore};
+use crate::store::{ApprovalStore, CustomizeStore, SessionScope};
 use crate::tools::{Caller, ToolDef, ToolHost, ToolReply, Toolbox, definitions};
 
 pub struct Reach<'a, D: Deps, C: ConnectorClient> {
@@ -73,18 +73,11 @@ fn text_of(result: &Value) -> (String, bool) {
 
 impl<D: Deps, C: ConnectorClient> Reach<'_, D, C> {
     async fn switched_on(&self, scope: &SessionScope) -> Vec<Connector> {
-        let store = self.deps.store();
-        let ids = store
-            .experiment_connectors(scope.organization, scope.experiment)
+        self.deps
+            .store()
+            .connectors(scope.organization)
             .await
-            .unwrap_or_default();
-        let mut found = Vec::new();
-        for id in ids {
-            if let Ok(Some(connector)) = store.connector(scope.organization, id).await {
-                found.push(connector);
-            }
-        }
-        found
+            .unwrap_or_default()
     }
 
     /// The Antilog tools, then the connectors' tools that are not off, namespaced.
@@ -117,7 +110,7 @@ impl<D: Deps, C: ConnectorClient> Reach<'_, D, C> {
     ) -> AuditEntry {
         AuditEntry::new(
             scope.organization,
-            caller.actor,
+            Some(caller.actor),
             "connector.use",
             target,
             outcome,
@@ -141,16 +134,23 @@ impl<D: Deps, C: ConnectorClient> Reach<'_, D, C> {
         });
         match target {
             Some((connector, tool)) => {
-                self.connector_call(scope, caller, &connector, &tool, input)
-                    .await
+                let full = namespaced(&connector, &tool);
+                let shown = input.clone();
+                let outcome = self
+                    .connector_call(scope, caller, &connector, &tool, input)
+                    .await;
+                let (output, failed) = match &outcome {
+                    Outcome::Antilog(reply) => (
+                        reply.answer.to_string(),
+                        reply.answer.get("error").is_some(),
+                    ),
+                    Outcome::Remote { text, refused } => (text.clone(), *refused),
+                };
+                crate::tools::record_call(self.deps, caller, &full, &shown, &output, failed).await;
+                outcome
             }
             None => Outcome::Antilog(Toolbox(self.deps).call(caller, name, input).await),
         }
-    }
-
-    /// `finish` of an accepted measurement, for the endpoint to await.
-    pub async fn finish(&self, caller: &Caller, ticket: &crate::tools::Ticket) -> String {
-        Toolbox(self.deps).finish(caller, ticket).await
     }
 
     async fn connector_call(
@@ -162,18 +162,6 @@ impl<D: Deps, C: ConnectorClient> Reach<'_, D, C> {
         input: Value,
     ) -> Outcome {
         let store = self.deps.store();
-        let full = namespaced(connector, tool);
-        if let Ok(Some(session)) = store.session(scope.organization, caller.session).await {
-            let _ = crate::session::record(
-                self.deps,
-                &session,
-                format!("tool:{}", caller.call),
-                EventKind::Tool,
-                None,
-                &full,
-            )
-            .await;
-        }
         let target = format!("{}:{tool}", connector.id);
         let Some(setting) = connector.tools.iter().find(|t| t.name == tool) else {
             return refused(format!(
@@ -201,10 +189,7 @@ impl<D: Deps, C: ConnectorClient> Reach<'_, D, C> {
                     Ok(true) => {}
                     Ok(false) => {
                         return match self.raise(caller, connector, tool, wanted).await {
-                            Ok(answer) => Outcome::Antilog(ToolReply {
-                                answer,
-                                ticket: None,
-                            }),
+                            Ok(answer) => Outcome::Antilog(ToolReply { answer }),
                             Err(error) => refused(error),
                         };
                     }
@@ -272,11 +257,11 @@ impl<D: Deps, C: ConnectorClient> Reach<'_, D, C> {
     ) -> Result<bool, String> {
         let store = self.deps.store();
         let cards = store
-            .approvals(scope.organization, scope.experiment)
+            .approvals(scope.organization, caller.session)
             .await
             .map_err(|_| "the approvals are unavailable: retry in a minute".to_owned())?;
         for card in cards {
-            let matches = card.session_id == Some(caller.session)
+            let matches = card.session_id == caller.session
                 && matches!(
                     &card.payload,
                     Some(CardPayload::UseConnectorTool { connector: c, tool: t, input_digest })
@@ -312,12 +297,12 @@ impl<D: Deps, C: ConnectorClient> Reach<'_, D, C> {
         let existing = self
             .deps
             .store()
-            .approvals(caller.organization, caller.experiment)
+            .approvals(caller.organization, caller.session)
             .await
             .unwrap_or_default();
         if let Some(card) = existing.iter().find(|card| {
             card.status == ApprovalStatus::Pending
-                && card.session_id == Some(caller.session)
+                && card.session_id == caller.session
                 && matches!(
                     &card.payload,
                     Some(CardPayload::UseConnectorTool { connector: c, tool: t, input_digest })
@@ -343,7 +328,6 @@ impl<D: Deps, C: ConnectorClient> Reach<'_, D, C> {
                     input_digest: wanted,
                 },
                 cost_cents: None,
-                needs_owner: false,
             },
         )
         .await

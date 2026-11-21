@@ -1,7 +1,7 @@
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { expect, test } from "@playwright/test";
-import { createProject, signUp, unique } from "./helpers";
+import { signUp, unique } from "./helpers";
 
 /** A tiny remote MCP server: JSON-RPC over POST, JSON answers, one tool named `lookup`. */
 async function mockMcp(): Promise<{ url: string; server: Server }> {
@@ -84,9 +84,7 @@ test("add a skill pack by pasting a SKILL.md, then add the same name again for v
   );
 });
 
-test("add a connector, set a tool On, and switch it on for an experiment", async ({
-  page,
-}, info) => {
+test("add a connector, set a tool On", async ({ page }, info) => {
   const mock = await mockMcp();
   try {
     await signUp(page);
@@ -120,34 +118,12 @@ test("add a connector, set a tool On, and switch it on for an experiment", async
       "Connected",
     );
 
-    // An experiment switches it on.
-    const project = unique("Checkout");
-    await createProject(page, project);
-    await page.getByRole("link", { name: "New experiment" }).first().click();
-    await page.getByLabel("New experiment").fill("Cut checkout p95 latency");
-    await page.getByLabel("Budget ($)").fill("10");
-    await page.getByRole("button", { name: "Send" }).click();
-    await expect(
-      page.getByRole("heading", { name: "Cut checkout p95 latency", level: 1 }),
-    ).toBeVisible();
-    const id = page.url().split("/experiments/")[1]?.split(/[?#]/)[0];
-    await page.goto(`/experiments/${id}/details`);
-    const uses = page.getByRole("region", { name: "Skills and connectors" });
-    const box = uses.getByRole("checkbox", { name });
-    await expect(box).not.toBeChecked();
-    await box.click();
-    await expect(box).toBeChecked();
-    await page.reload();
-    await expect(
-      page.getByRole("region", { name: "Skills and connectors" }).getByRole("checkbox", { name }),
-    ).toBeChecked();
-
-    // It is in use now, so the server refuses to remove it and says why.
     await page.goto("/customize/connectors");
     await page.getByRole("link", { name: `Configure ${name}` }).click();
     await page.getByRole("button", { name: `Remove ${name}` }).click();
     await page.getByRole("alertdialog").getByRole("button", { name: "Remove connector" }).click();
-    await expect(page.getByRole("alert")).toBeVisible();
+    await expect(page).toHaveURL(/\/customize\/connectors$/);
+    await expect(page.getByText("No connectors yet.")).toBeVisible();
   } finally {
     mock.server.close();
   }

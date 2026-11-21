@@ -1,23 +1,14 @@
-import { useQueries } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { ApiFailure, api, unwrap } from "../../api/client";
-import {
-  keys,
-  useMember,
-  useProjects,
-  useRemoveSkill,
-  useSetProjectSkill,
-  useSkills,
-  useSkillVersion,
-} from "../../api/queries";
+import { ApiFailure } from "../../api/client";
+import { useMember, useRemoveSkill, useSkills, useSkillVersion } from "../../api/queries";
 import { Confirm } from "../../components/dialog/Dialog";
 import { Icon } from "../../components/icon/Icon";
 import { Empty, Failed, Loading, reason } from "../../components/state/State";
 import { canEdit } from "../../lib/domain";
 import { w } from "../../words";
 import { Row, Table } from "../settings/Table";
-import { DetailHead, Section, SwitchRow, TwoColumns } from "./ListShell";
+import { DetailHead, Section, TwoColumns } from "./ListShell";
 
 const s = w.skill;
 
@@ -168,34 +159,24 @@ function Loaded(props: {
           </>
         }
         right={
-          <>
-            <Section title={s.projects}>
-              <Projects name={name} disabled={!editable} />
-              <span className="xs mut">{s.projectsNote}</span>
-            </Section>
-            <Section title={s.howTitle}>
-              <div className="card" style={{ padding: "4px 20px" }}>
-                <div className="kv">
-                  <span>{s.name}</span>
-                  <span>
-                    <span className="mono xs">{name}</span>
-                  </span>
-                </div>
-                <div className="kv">
-                  <span>{s.pinned}</span>
-                  <span>{s.pinnedText}</span>
-                </div>
-                <div className="kv">
-                  <span>{s.loaded}</span>
-                  <span>{s.loadedText}</span>
-                </div>
+          <Section title={s.howTitle}>
+            <div className="card" style={{ padding: "4px 20px" }}>
+              <div className="kv">
+                <span>{s.name}</span>
+                <span>
+                  <span className="mono xs">{name}</span>
+                </span>
               </div>
-              <span className="lock">
-                <Icon name="lock" size="s" />
-                {s.judgeNever}
-              </span>
-            </Section>
-          </>
+              <div className="kv">
+                <span>{s.pinned}</span>
+                <span>{s.pinnedText}</span>
+              </div>
+              <div className="kv">
+                <span>{s.loaded}</span>
+                <span>{s.loadedText}</span>
+              </div>
+            </div>
+          </Section>
         }
       />
       <Confirm
@@ -214,34 +195,5 @@ function Loaded(props: {
         }}
       />
     </section>
-  );
-}
-
-/** One switch per project the person can see: Off hides the pack from New experiment there. */
-function Projects({ name, disabled }: { name: string; disabled: boolean }) {
-  const projects = useProjects();
-  const list = projects.data ?? [];
-  const states = useQueries({
-    queries: list.map((project) => ({
-      queryKey: [...keys.skills(), { project: project.id }] as const,
-      queryFn: async () =>
-        unwrap(await api.GET("/skills", { params: { query: { project: project.id } } })),
-    })),
-  });
-  const set = useSetProjectSkill(name);
-  if (projects.isPending) return <Loading rows={1} />;
-  if (list.length === 0) return <Empty title={s.noProjects} />;
-  return (
-    <div className="card" style={{ padding: "2px 20px" }}>
-      {list.map((project, index) => (
-        <SwitchRow
-          key={project.id}
-          label={s.projectOn(project.name)}
-          on={states[index]?.data?.find((skill) => skill.name === name)?.on ?? true}
-          disabled={disabled || set.isPending}
-          onChange={(on) => set.mutate({ project: project.id, on })}
-        />
-      ))}
-    </div>
   );
 }

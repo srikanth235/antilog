@@ -1,9 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import type { Schemas } from "../../api/client";
-import { useAgentLabel } from "../../api/queries";
-import { Icon } from "../../components/icon/Icon";
-import { dollars } from "../../lib/format";
-import { type History, OUTCOME_COLOR, OUTCOME_WORDS } from "../../lib/history";
+import { useConnectors } from "../../api/queries";
+import { Glyph, Icon } from "../../components/icon/Icon";
+import { dollars, share } from "../../lib/format";
 import { w } from "../../words";
 import type { Panel } from "./Header";
 
@@ -11,15 +10,24 @@ export function PanelFrame(props: {
   panel: Panel;
   onClose: () => void;
   sub?: string;
+  /** A panel that needs room, such as a diff beside its file list. */
+  wide?: boolean;
+  /** Shown beside the close button. */
+  actions?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const label = w.experiment[props.panel];
   return (
-    <aside className="pane" id={`panel-${props.panel}`} aria-label={label}>
+    <aside
+      className={props.wide ? "pane wide" : "pane"}
+      id={`panel-${props.panel}`}
+      aria-label={label}
+    >
       <div className="pane-h">
         <h2>{label}</h2>
         {props.sub === undefined ? null : <span className="sub">{props.sub}</span>}
         <span className="grow" />
+        {props.actions}
         <button
           type="button"
           className="icon-btn sm"
@@ -34,119 +42,101 @@ export function PanelFrame(props: {
   );
 }
 
-export function DetailsPanel(props: {
-  experiment: Schemas["Experiment"];
-  sessions: Schemas["Session"][];
+/**
+ * The overview of the session on screen: what it runs on, what it spent and what it reaches.
+ * Each section leads to the page that shows it in full. A row the API cannot fill yet is left
+ * out: the branch, the context window and the outputs (files, patches, pull requests). (target)
+ */
+export function OverviewPanel(props: {
+  session: Schemas["Session"];
+  spentCents: number | undefined;
   onClose: () => void;
   onBudget: () => void;
   canEdit: boolean;
 }) {
-  const e = props.experiment;
-  const agentLabel = useAgentLabel();
+  const s = props.session;
+  const o = w.experiment.overview;
+  const connectors = useConnectors();
+  const spent = props.spentCents;
+  const cap = s.budgetCapCents ?? null;
   return (
     <PanelFrame panel="details" onClose={props.onClose}>
       <div className="pane-b scr">
         <section className="dp-sec">
-          <span className="t-label">{w.experiment.sections.experiment}</span>
-          <div className="dp-r">
-            <span>{w.state[e.status]}</span>
+          <div className="dp-lh">
+            <span className="t-label">{w.experiment.sections.environment}</span>
           </div>
-          <Link
-            className="textbtn"
-            to="/experiments/$experimentId/details"
-            params={{ experimentId: e.id }}
-          >
-            {w.experiment.experimentDetails}
+          <Link className="dp-row" to="/settings/$section" params={{ section: "connections" }}>
+            <Glyph name="cloud" />
+            <span className="v">{s.environment ?? o.environments}</span>
+            <Icon name="chev" size="s" />
           </Link>
+          {s.repos.map((repo) => (
+            <div key={repo} className="dp-row">
+              <Glyph name="code" />
+              <span className="v">{repo}</span>
+            </div>
+          ))}
         </section>
         <section className="dp-sec">
-          <span className="t-label">{w.experiment.sections.budget}</span>
-          <div className="dp-r">
-            <span className="mono">{dollars(e.budgetCapCents)}</span>
-          </div>
-          <button
-            type="button"
-            className="textbtn"
-            disabled={!props.canEdit}
-            onClick={props.onBudget}
-          >
-            {w.projects.changeBudget}
-          </button>
-        </section>
-        <section className="dp-sec">
-          <span className="t-label">{w.experiment.sections.sessions}</span>
-          {props.sessions.length === 0 ? (
-            <span className="xs mut">{w.experiment.noSessions}</span>
-          ) : null}
-          {props.sessions.map((session) => (
-            <Link
-              key={session.id}
-              className="dp-r"
-              to="/experiments/$experimentId"
-              params={{ experimentId: e.id }}
-              search={{ session: session.id }}
+          <div className="dp-lh">
+            <span className="t-label">{w.experiment.sections.spend}</span>
+            <button
+              type="button"
+              className="textbtn"
+              style={{ minHeight: 28, fontSize: 12.5 }}
+              disabled={!props.canEdit}
+              onClick={props.onBudget}
             >
-              <span className="col">
-                <span>{agentLabel(session.agent)}</span>
-                <span className="xs mut">{w.activity[session.status]}</span>
+              {w.projects.changeBudget}
+            </button>
+          </div>
+          {spent === undefined ? (
+            <div className="dp-row">
+              <Glyph name="gauge" />
+              <span className="v">{cap === null ? w.home.noBudget : dollars(cap)}</span>
+            </div>
+          ) : cap === null ? (
+            <div className="dp-row">
+              <Glyph name="gauge" />
+              <span className="v">{dollars(spent)}</span>
+            </div>
+          ) : (
+            <div className="dp-bar" style={{ paddingLeft: 0 }}>
+              <div className="m">
+                <span>{w.experiment.budgetSpent(spent, cap)}</span>
+                <span>{`${Math.round(share(spent, cap) * 100)}%`}</span>
+              </div>
+              <span className="bar" aria-hidden="true">
+                <span style={{ width: `${share(spent, cap) * 100}%` }} />
               </span>
+            </div>
+          )}
+        </section>
+        <section className="dp-sec">
+          <div className="dp-lh">
+            <span className="t-label">{w.experiment.sections.connectors}</span>
+          </div>
+          {(connectors.data ?? []).length === 0 ? (
+            <Link className="dp-row" to="/customize/connectors">
+              <Glyph name="blocks" />
+              <span className="v">{o.noConnectors}</span>
+              <Icon name="chev" size="s" />
+            </Link>
+          ) : null}
+          {(connectors.data ?? []).map((connector) => (
+            <Link
+              key={connector.id}
+              className="dp-row"
+              to="/customize/connectors/$id"
+              params={{ id: connector.id }}
+            >
+              <Glyph name="blocks" />
+              <span className="v">{connector.name}</span>
+              <Icon name="chev" size="s" />
             </Link>
           ))}
         </section>
-      </div>
-    </PanelFrame>
-  );
-}
-
-export function TrialsPanel(props: {
-  history: History;
-  sessions: Schemas["Session"][];
-  onClose: () => void;
-}) {
-  const h = props.history;
-  const rows = [...h.trials].reverse();
-  const agentLabel = useAgentLabel();
-  const agentOf = (id: string) => agentLabel(props.sessions.find((s) => s.id === id)?.agent ?? "");
-  return (
-    <PanelFrame panel="trials" onClose={props.onClose} sub={`${h.trials.length} trials`}>
-      <div className="pane-b scr">
-        {rows.length === 0 ? (
-          <p className="sd-none">{h.note ?? w.experiment.trialsPanelNone}</p>
-        ) : null}
-        {rows.map((row) => {
-          const link = row.outcome === "kept";
-          const inner = (
-            <>
-              <span className="h">
-                <span className="n">{row.number}</span>
-                <span className="t">{row.hypothesis}</span>
-                <span className="tg" style={{ ["--c" as string]: OUTCOME_COLOR[row.outcome] }}>
-                  {OUTCOME_WORDS[row.outcome]}
-                </span>
-              </span>
-              <span className="m">
-                <span className="by">{agentOf(row.session)}</span>
-                {row.value === null ? null : (
-                  <span className="tv">{`${row.value} ${h.unit}`.trim()}</span>
-                )}
-              </span>
-            </>
-          );
-          return link ? (
-            <Link
-              key={row.trial}
-              className="tr-r"
-              to="/receipts/$trialId"
-              params={{ trialId: row.trial }}
-            >
-              {inner}
-            </Link>
-          ) : (
-            <div key={row.trial} className="tr-r">
-              {inner}
-            </div>
-          );
-        })}
       </div>
     </PanelFrame>
   );
