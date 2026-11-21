@@ -32,7 +32,7 @@ impl Server {
         }
     }
 
-    fn url(&self, path: &str) -> String {
+    pub fn url(&self, path: &str) -> String {
         format!("{}{path}", self.base)
     }
 

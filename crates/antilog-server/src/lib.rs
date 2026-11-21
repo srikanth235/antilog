@@ -6,3 +6,4 @@ pub mod deps;
 pub mod models;
 pub mod pg;
 pub mod signin;
+pub mod terminal;

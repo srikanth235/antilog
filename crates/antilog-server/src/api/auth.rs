@@ -144,6 +144,8 @@ impl Settings {
 pub struct App<D> {
     pub deps: Arc<D>,
     pub settings: Settings,
+    /// The terminals open on this server.
+    pub terminals: Arc<crate::terminal::Terminals>,
 }
 
 impl<D: Deps> App<D> {

@@ -149,6 +149,7 @@ async fn world() -> World {
             runner: None,
             models: antilog_server::models::ModelLists::offline(),
         },
+        terminals: Arc::default(),
     });
     let router = api::router_with_reach(
         app,

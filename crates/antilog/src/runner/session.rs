@@ -18,11 +18,15 @@ use super::changes::{self, Base};
 
 use super::opencode::{Api, Opencode, Tracker, permission};
 use super::sandbox::{Exec, Machine, Sandbox, SandboxSpec, run as run_in_machine};
+use super::terminal;
 
 /// Where a repo of the session is cloned.
 pub fn repo_dir(workdir: &Path, repo: &str) -> PathBuf {
     workdir.join(repo.rsplit('/').next().unwrap_or(repo))
 }
+
+/// The most terminals one machine carries.
+const MAX_TERMINALS: usize = 8;
 
 /// What the poll loop tells a session's task.
 pub enum Msg {
@@ -416,6 +420,8 @@ struct Live<S: Sandbox> {
     idle_limit: Duration,
     /// Since when nothing has happened: the agent is not busy and no one has written to it.
     quiet_since: Option<Instant>,
+    /// The terminals open on this machine, each carried by a task of its own.
+    terminals: Vec<tokio::task::JoinHandle<()>>,
 }
 
 impl<S: Sandbox> Live<S> {
@@ -555,6 +561,11 @@ impl<S: Sandbox> Live<S> {
                     });
                 }
             }
+            Command::OpenTerminal {
+                terminal,
+                cols,
+                rows,
+            } => self.open_terminal(terminal, cols, rows),
             Command::Release { outcome } => {
                 self.release(outcome).await?;
                 finish(&self.done, envelope.id);
@@ -653,8 +664,36 @@ impl<S: Sandbox> Live<S> {
             .await
     }
 
+    /// A person opened a terminal tab. It runs in its own task and ends with the browser's
+    /// socket, the shell, or this machine.
+    fn open_terminal(&mut self, terminal: Uuid, cols: u16, rows: u16) {
+        self.terminals.retain(|task| !task.is_finished());
+        if self.terminals.len() >= MAX_TERMINALS {
+            tracing::warn!(session = %self.spec.session, "too many terminals: ignoring one");
+            return;
+        }
+        let open = terminal::Open {
+            session: self.spec.session,
+            terminal,
+            token: self.spec.runner_token.clone(),
+            cwd: self.dir.to_string_lossy().into_owned(),
+            env: self.spec.environment.variables.clone(),
+            cols,
+            rows,
+        };
+        let (api, server) = (self.api.clone(), self.server.clone());
+        self.terminals.push(tokio::spawn(async move {
+            if let Err(error) = terminal::run(api, server, open).await {
+                tracing::warn!(%terminal, error = %format!("{error:#}"), "a terminal ended with an error");
+            }
+        }));
+    }
+
     /// Takes the machine away, with its disk.
     async fn stop(&mut self) {
+        for task in self.terminals.drain(..) {
+            task.abort();
+        }
         self.machine.stop().await;
     }
 
@@ -686,7 +725,9 @@ impl<S: Sandbox> Live<S> {
                 }
                 message = commands.recv() => match message {
                     Some(Msg::Command(envelope)) => {
-                        self.quiet_since = None;
+                        if !matches!(envelope.command, Command::OpenTerminal { .. }) {
+                            self.quiet_since = None;
+                        }
                         if self.command(envelope).await? {
                             return Ok(true);
                         }
@@ -695,6 +736,11 @@ impl<S: Sandbox> Live<S> {
                 },
                 _ = tick.tick() => {
                     self.flush().await?;
+                    // A terminal someone has open is not a machine nobody is using.
+                    self.terminals.retain(|task| !task.is_finished());
+                    if !self.terminals.is_empty() && self.quiet_since.is_some() {
+                        self.quiet_since = Some(Instant::now());
+                    }
                     if !self.idle_limit.is_zero()
                         && self.quiet_since.is_some_and(|since| since.elapsed() >= self.idle_limit)
                     {
@@ -815,6 +861,7 @@ async fn prepare<S: Sandbox>(
         setup_timeout,
         idle_limit: timing.idle,
         quiet_since: None,
+        terminals: Vec::new(),
     })
 }
 

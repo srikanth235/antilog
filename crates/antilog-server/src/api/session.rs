@@ -30,6 +30,7 @@ use super::auth::{App, Authed, Fail};
     read,
     message,
     stop,
+    resume,
     events,
     changes,
     commit_changes,
@@ -63,6 +64,11 @@ pub fn refuse(error: SessionError) -> Response {
             "session_ended",
             "The session has ended: start a new one.".to_owned(),
         ),
+        SessionError::NotRunning => (
+            StatusCode::CONFLICT,
+            "not_running",
+            "The session's machine is not running: resume the session.".to_owned(),
+        ),
         SessionError::CapReached => (StatusCode::CONFLICT, "budget_spent", error.to_string()),
         SessionError::Invalid(message) => (
             StatusCode::UNPROCESSABLE_ENTITY,
@@ -91,7 +97,7 @@ pub fn refuse(error: SessionError) -> Response {
         .into_response()
 }
 
-async fn owned<D: Deps + 'static>(
+pub(super) async fn owned<D: Deps + 'static>(
     app: &App<D>,
     authed: &Authed,
     id: SessionId,
@@ -104,7 +110,7 @@ async fn owned<D: Deps + 'static>(
         .ok_or(Refusal::NotFound)?)
 }
 
-async fn permit<D: Deps + 'static>(
+pub(super) async fn permit<D: Deps + 'static>(
     app: &App<D>,
     authed: &Authed,
     action: Action,
@@ -354,12 +360,39 @@ async fn stop<D: Deps + 'static>(
         .await?
         .map(|member| member.name)
         .ok_or(Refusal::NotFound)?;
-    session::stop(
+    let stopped = session::stop(
         &*app.deps,
         authed.who.organization,
         id,
         Some(authed.who.member),
         &name,
+    )
+    .await
+    .map_err(Fail::Session)?;
+    app.terminals.close_session(id);
+    Ok(Json(stopped))
+}
+
+#[utoipa::path(
+    post, path = "/sessions/{id}/resume", security(("bearer" = [])),
+    params(("id" = SessionId, Path, description = "The session")),
+    responses(
+        (status = 200, description = "A machine that was let go waits for a runner again (Queued); a held machine is unchanged", body = Session),
+        (status = 409, description = "The session has ended", body = ApiError),
+    )
+)]
+async fn resume<D: Deps + 'static>(
+    State(app): Shared<D>,
+    authed: Authed,
+    Path(id): Path<SessionId>,
+) -> Result<Json<Session>, Fail> {
+    let row = owned(&app, &authed, id).await?;
+    permit(&app, &authed, Action::SessionResume, row.project_id).await?;
+    session::resume(
+        &*app.deps,
+        authed.who.organization,
+        id,
+        Some(authed.who.member),
     )
     .await
     .map(Json)
@@ -704,6 +737,7 @@ pub fn routes<D: Deps + 'static>() -> Router<Arc<App<D>>> {
         .route("/sessions/{id}/context", get(context::<D>))
         .route("/sessions/{id}/compact", post(compact::<D>))
         .route("/sessions/{id}/stop", post(stop::<D>))
+        .route("/sessions/{id}/resume", post(resume::<D>))
         .route("/sessions/{id}/spend", get(spend::<D>))
         .route("/sessions/{id}/budget", put(set_budget::<D>))
         .route("/sessions/{id}/environment", put(set_environment::<D>))

@@ -106,6 +106,13 @@ pub enum Command {
     Abort,
     /// Summarise the conversation so far to free the window (OpenCode's compact).
     Compact,
+    /// A person opened a terminal tab: create a shell (a PTY) in OpenCode at this size and carry
+    /// it over an outbound WebSocket to `/runner/sessions/{id}/terminals/{terminal}`.
+    OpenTerminal {
+        terminal: Uuid,
+        cols: u16,
+        rows: u16,
+    },
     /// Export, stop OpenCode and let the machine go.
     Release { outcome: ReleaseOutcome },
 }

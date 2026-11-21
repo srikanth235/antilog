@@ -4,13 +4,14 @@ mod container;
 pub mod opencode;
 mod sandbox;
 mod session;
+mod terminal;
 
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
-use antilog_types::{PollRequest, SessionId};
+use antilog_types::{Command, PollRequest, SessionId};
 use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
 
@@ -132,6 +133,7 @@ async fn run_until<S: Sandbox>(
     let mut held: HashMap<SessionId, Held> = HashMap::new();
     let mut claimed_any = false;
     let mut draining: Option<tokio::time::Instant> = None;
+    let mut again = false;
     loop {
         held.retain(|_, session| !session.task.is_finished());
         if draining.is_none()
@@ -216,6 +218,11 @@ async fn run_until<S: Sandbox>(
                         },
                     );
                 }
+                // A person is waiting for a terminal: ask again at once, not after the sleep.
+                again = answer
+                    .commands
+                    .iter()
+                    .any(|envelope| matches!(envelope.command, Command::OpenTerminal { .. }));
                 for envelope in answer.commands {
                     match held.get(&envelope.session) {
                         Some(session) => {
@@ -240,7 +247,9 @@ async fn run_until<S: Sandbox>(
                 tracing::warn!(error = %format!("{error:#}"), "poll failed");
             }
         }
-        tokio::time::sleep(config.poll).await;
+        if !std::mem::take(&mut again) {
+            tokio::time::sleep(config.poll).await;
+        }
     }
 }
 

@@ -567,6 +567,15 @@ export function useStopSession() {
   );
 }
 
+/** Brings back a session whose machine was let go, without a message. */
+export function useResumeSession() {
+  return useWrite(
+    async (session: string) =>
+      unwrap(await api.POST("/sessions/{id}/resume", { params: { path: { id: session } } })),
+    refreshSessions,
+  );
+}
+
 export function useDecide(session: string) {
   return useWrite(
     async (v: { id: string; decision: Schemas["Decision"] }) =>

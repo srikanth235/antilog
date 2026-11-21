@@ -5,7 +5,12 @@ import { defineConfig } from "vitest/config";
 // The dev server and the preview server forward /api/* to the local server.
 const target = process.env.ANTILOG_API ?? "http://127.0.0.1:8080";
 const proxy = {
-  "/api": { target, changeOrigin: false, rewrite: (path: string) => path.replace(/^\/api/, "") },
+  "/api": {
+    target,
+    changeOrigin: false,
+    ws: true,
+    rewrite: (path: string) => path.replace(/^\/api/, ""),
+  },
 };
 
 export default defineConfig({

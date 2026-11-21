@@ -29,6 +29,7 @@ import { Composer } from "./Composer";
 import { Header, type Panel } from "./Header";
 import { ModelPicker } from "./ModelPicker";
 import { OverviewPanel, PlatformPanel } from "./Panels";
+import { TerminalPanel } from "./Terminal";
 import { ToolGroup } from "./ToolCalls";
 import { Message, TranscriptError } from "./Transcript";
 
@@ -256,9 +257,14 @@ export function Session(props: {
           />
         ) : props.panel === "changes" ? (
           <ChangesPanel sessionId={s.id} onClose={() => props.onPanel(undefined)} />
-        ) : props.panel === undefined ? null : (
+        ) : props.panel === undefined || props.panel === "terminal" ? null : (
           <PlatformPanel panel={props.panel} onClose={() => props.onPanel(undefined)} />
         )}
+        <TerminalPanel
+          sessionId={s.id}
+          visible={props.panel === "terminal"}
+          onClose={() => props.onPanel(undefined)}
+        />
       </div>
       <BudgetDialog open={budgetOpen} onClose={() => setBudgetOpen(false)} session={s} />
     </>

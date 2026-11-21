@@ -33,6 +33,8 @@ Versions are the latest stable releases on 2026-11-14, read from crates.io, npm 
 | Middleware | `tower` / `tower-http` | 0.5.3 / 0.7.1 |
 | HTTP | `hyper` | 1.12.0 |
 | TLS | `rustls` | 0.23.46 |
+| WebSocket client (the runner's terminal socket; `rustls-tls-native-roots`; the server's side is axum's `ws`) | `tokio-tungstenite` | 0.30.0 |
+| Splitting a WebSocket into a sink and a stream | `futures-util` (`sink` only) | 0.3.34 |
 | HTTP client | `reqwest` | 0.13.5 |
 | Serialization | `serde` / `serde_json` | 1.0.229 / 1.0.154 |
 | Postgres, migrations | `sqlx` (+ `sqlx-cli`) | 0.9.0 |
@@ -75,6 +77,7 @@ Background jobs use a small queue in the store: Postgres with `FOR UPDATE SKIP L
 | `@base-ui/react` (pinned exactly) | 1.9.0 |
 | `openapi-typescript` / `openapi-fetch` | 7.13.0 / 0.17.0 |
 | `vitest` / `@playwright/test` | 5.1.0 / 1.65.1 |
+| `@xterm/xterm` / `@xterm/addon-fit` (the Terminal panel; approved by the owner 21 Nov, pinned exactly) | 6.0.0 / 0.11.0 |
 | `@biomejs/biome` | 2.6.7 |
 
 **macOS app (target)**

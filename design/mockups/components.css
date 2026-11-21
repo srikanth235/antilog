@@ -887,6 +887,15 @@ a.tr-r:hover{background:var(--hover)}
 .term-h .dot{width:7px;height:7px;border-radius:50%;background:var(--good);flex:none}
 .term-in{flex:none;display:flex;align-items:center;gap:8px;padding:8px 16px;border-top:1px solid var(--line);font:400 12.5px/1.4 var(--font-mono);color:var(--ink3);background:var(--canvas);min-height:44px}
 .term-in.ro{font-family:var(--font-sans);font-size:12.5px}
+.term.x{padding:8px 8px 8px 12px;overflow:hidden}
+.pane-h .term-dir{flex:0 1 auto;max-width:40%;font-family:var(--font-mono)}
+.term-tabs{flex:none;display:flex;gap:4px;padding:6px 8px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:thin}
+.term-tabs .tt{display:inline-flex;align-items:center;gap:4px;min-height:30px;padding:0 4px 0 12px;border-radius:999px;font-size:12.5px;color:var(--ink2);cursor:pointer;white-space:nowrap}
+.term-tabs .tt:hover{background:var(--hover);color:var(--ink)}.term-tabs .tt.on{background:var(--hover);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line2)}
+.icon-btn.xs{width:22px;height:22px;min-height:22px}
+.term-empty{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px;text-align:center;color:var(--ink2)}
+.term-empty p{margin:0;font:500 14px/1.4 var(--font-sans);color:var(--ink)}.term-empty .xs{max-width:320px}
+.wsp:has(.pane.max) .chat{display:none}.pane.max{width:auto;flex:1 1 auto}
 /* Preview */
 .pv-bar{flex:none;display:flex;align-items:center;gap:4px;padding:8px 12px;border-bottom:1px solid var(--line)}
 .pv-url{flex:1;min-width:0;display:flex;align-items:center;gap:8px;min-height:30px;padding:0 12px;border:1px solid var(--line2);border-radius:999px;background:var(--sunk);font:400 12.5px/1 var(--font-mono);color:var(--ink2)}

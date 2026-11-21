@@ -1088,6 +1088,26 @@
       "expand": "fill",
       "is_interactive": true
     },
+    "SessionTerminalResume.dc.html": {
+      "x": 9200,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, terminal resume",
+      "page": "web-light",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SessionTerminalResumeDark.dc.html": {
+      "x": 9200,
+      "y": 3370,
+      "w": 1440,
+      "h": 900,
+      "title": "3 \u00b7 Session, terminal resume \u00b7 dark",
+      "page": "web-dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
     "SessionTitleMenu.dc.html": {
       "x": 13680,
       "y": 3370,
@@ -2055,6 +2075,8 @@
     "SessionStartDark.dc.html",
     "SessionTerminal.dc.html",
     "SessionTerminalDark.dc.html",
+    "SessionTerminalResume.dc.html",
+    "SessionTerminalResumeDark.dc.html",
     "SessionTitleMenu.dc.html",
     "SessionTitleMenuDark.dc.html",
     "SessionToolCalls.dc.html",

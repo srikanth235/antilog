@@ -41,6 +41,7 @@ async fn main() -> anyhow::Result<()> {
     let app = Arc::new(api::auth::App {
         deps: Arc::new(ServerDeps::new(store.clone())),
         settings,
+        terminals: Arc::default(),
     });
     let router = api::router_with_reach(app, store, api::customize::Backend::from_env().await?);
     axum::serve(listener, router).await.context("serving")

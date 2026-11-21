@@ -1,7 +1,7 @@
 //! OpenCode, driven over its HTTP API. `Opencode` starts it in a session's machine and runs its
 //! CLI there; `Api` is what it speaks once running.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::Path;
 use std::time::Duration;
 
@@ -130,6 +130,63 @@ impl Api {
         self.http
             .post(format!("{}{path}", self.base))
             .basic_auth("opencode", Some(&self.password))
+    }
+
+    /// A shell in the machine: OpenCode's PTY, started in `cwd` with the session's variables.
+    pub async fn pty_create(&self, cwd: &str, env: &BTreeMap<String, String>) -> Result<String> {
+        let made: Value = self
+            .post("/pty")
+            .json(&json!({"cwd": cwd, "env": env, "title": "Antilog terminal"}))
+            .send()
+            .await?
+            .error_for_status()?
+            .json()
+            .await?;
+        made.get("id")
+            .and_then(Value::as_str)
+            .map(str::to_owned)
+            .context("OpenCode made a terminal without an id")
+    }
+
+    pub async fn pty_resize(&self, id: &str, cols: u16, rows: u16) -> Result<()> {
+        self.http
+            .put(format!("{}/pty/{id}", self.base))
+            .basic_auth("opencode", Some(&self.password))
+            .json(&json!({"size": {"rows": rows, "cols": cols}}))
+            .send()
+            .await?
+            .error_for_status()?;
+        Ok(())
+    }
+
+    pub async fn pty_remove(&self, id: &str) -> Result<()> {
+        self.http
+            .delete(format!("{}/pty/{id}", self.base))
+            .basic_auth("opencode", Some(&self.password))
+            .send()
+            .await?;
+        Ok(())
+    }
+
+    /// The WebSocket request for a terminal: the same address, over `ws`, with the password.
+    pub fn pty_connect_request(
+        &self,
+        id: &str,
+    ) -> Result<tokio_tungstenite::tungstenite::handshake::client::Request> {
+        use tokio_tungstenite::tungstenite::client::IntoClientRequest;
+        let url = websocket_url(&format!("{}/pty/{id}/connect", self.base));
+        let mut request = url.into_client_request()?;
+        let auth = self
+            .http
+            .get(&self.base)
+            .basic_auth("opencode", Some(&self.password))
+            .build()?
+            .headers()
+            .get(reqwest::header::AUTHORIZATION)
+            .cloned()
+            .context("no authorization header")?;
+        request.headers_mut().insert("authorization", auth);
+        Ok(request)
     }
 
     /// Waits until the server answers.
@@ -722,6 +779,15 @@ pub fn permission(request: &Value) -> Option<Item> {
         tool: tool.to_owned(),
         detail: patterns.join(", "),
     })
+}
+
+/// `http` becomes `ws`, `https` becomes `wss`.
+pub fn websocket_url(url: &str) -> String {
+    match url.split_once("://") {
+        Some(("https", rest)) => format!("wss://{rest}"),
+        Some(("http", rest)) => format!("ws://{rest}"),
+        _ => url.to_owned(),
+    }
 }
 
 #[cfg(test)]

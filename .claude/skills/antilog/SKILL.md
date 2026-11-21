@@ -41,6 +41,8 @@ curl -s -H "$H" -H 'content-type: application/json' \
 | `GET /sessions/{id}`, `GET /sessions/{id}/events` | One session; its conversation |
 | `POST /sessions/{id}/messages` | Send the agent a message: `{text}` |
 | `POST /sessions/{id}/stop` | Stop it. It is Done, "Stopped by NAME" |
+| `POST /sessions/{id}/resume` | Bring a released machine back without a message (Queued until a runner holds it) |
+| `POST /sessions/{id}/terminals` | Ask for a shell in the machine (`{cols, rows}`); returns `{terminal, token}` for the browser's WebSocket at `/terminals/{terminal}/connect?token=`; editors and owners, audited `terminal.opened` |
 | `GET /sessions/{id}/spend` | `budgetCapCents` or null, `spentCents`, tokens, `byKind` |
 | `PUT /sessions/{id}/budget` | `{budgetCapCents}`: change the session's cap (409 `over_cap` above the project's or the organization's) |
 | `PUT /sessions/{id}/environment` | `{environment}`: move the session to the newest version of that environment (`default` for the built-in one) |

@@ -22,6 +22,7 @@ import { SkillDetail } from "./features/customize/SkillDetail";
 import { Skills } from "./features/customize/Skills";
 import type { Panel } from "./features/experiment/Header";
 import { Session } from "./features/experiment/Session";
+import { TerminalWindow } from "./features/experiment/Terminal";
 import { Home } from "./features/home/Home";
 import { Project } from "./features/projects/Project";
 import { Projects } from "./features/projects/Projects";
@@ -187,6 +188,30 @@ const session = createRoute({
   },
 });
 
+/** A terminal in a window of its own, opened from the panel's pop-out. */
+const terminalWindow = createRoute({
+  getParentRoute: () => root,
+  path: "/sessions/$sessionId/terminal",
+  beforeLoad: async ({ context }) => {
+    try {
+      await context.queryClient.fetchQuery({
+        queryKey: keys.me(),
+        queryFn: async () => unwrap(await api.GET("/me")),
+        staleTime: 60_000,
+        retry: false,
+      });
+    } catch (caught) {
+      if (caught instanceof ApiFailure && (caught.status === 401 || caught.status === 403))
+        throw redirect({ to: "/signin" });
+      throw caught;
+    }
+  },
+  component: function TerminalPage() {
+    const { sessionId } = terminalWindow.useParams();
+    return <TerminalWindow sessionId={sessionId} />;
+  },
+});
+
 const customize = createRoute({
   getParentRoute: () => app,
   path: "/customize",
@@ -305,6 +330,7 @@ const settings = createRoute({
 const tree = root.addChildren([
   signin,
   callback,
+  terminalWindow,
   app.addChildren([
     home,
     projects,

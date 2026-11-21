@@ -46,6 +46,7 @@ fn app(fake: bool, open: bool) -> Router {
             runner: None,
             models: antilog_server::models::ModelLists::fixed(ZEN, GO),
         },
+        terminals: Arc::default(),
     });
     router_with_reach(
         app,

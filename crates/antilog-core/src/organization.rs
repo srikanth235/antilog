@@ -76,6 +76,8 @@ pub enum Action {
     SessionStart,
     SessionMessage,
     SessionStop,
+    SessionResume,
+    TerminalOpen,
     ToolCall,
     ApprovalDecide,
     TokenCreateOwn,
@@ -109,6 +111,8 @@ impl Action {
         Self::SessionStart,
         Self::SessionMessage,
         Self::SessionStop,
+        Self::SessionResume,
+        Self::TerminalOpen,
         Self::ToolCall,
         Self::ApprovalDecide,
         Self::TokenCreateOwn,
@@ -142,6 +146,8 @@ impl Action {
             Self::SessionStart => "session.start",
             Self::SessionMessage => "session.message",
             Self::SessionStop => "session.stop",
+            Self::SessionResume => "session.resume",
+            Self::TerminalOpen => "terminal.opened",
             Self::ToolCall => "tool.call",
             Self::ApprovalDecide => "approval.decide",
             Self::TokenCreateOwn | Self::TokenCreateForOther => "token.create",
@@ -164,6 +170,8 @@ impl Action {
             | Self::SessionStart
             | Self::SessionMessage
             | Self::SessionStop
+            | Self::SessionResume
+            | Self::TerminalOpen
             | Self::ToolCall
             | Self::ApprovalDecide => Role::Editor,
             Self::MemberAdd
@@ -196,6 +204,8 @@ impl Action {
                 | Self::SessionStart
                 | Self::SessionMessage
                 | Self::SessionStop
+                | Self::SessionResume
+                | Self::TerminalOpen
                 | Self::ToolCall
                 | Self::ApprovalDecide
         )

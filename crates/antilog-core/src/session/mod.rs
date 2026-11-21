@@ -4,7 +4,8 @@ mod settle;
 use crate::deps::Deps;
 use crate::environments::{Unavailable, pin};
 use crate::store::{
-    NewEvent, OrganizationStore, RunnerStore, SessionChange, SessionStore, StoreError,
+    ApprovalStore, NewEvent, OrganizationStore, RunnerStore, SessionChange, SessionStore,
+    StoreError,
 };
 use antilog_types::{
     AuditEntry, AuditOutcome, Command, EventKind, MachineState, MemberId, OrganizationId,
@@ -22,6 +23,8 @@ pub enum SessionError {
     Ended,
     #[error(transparent)]
     Environment(#[from] Unavailable),
+    #[error("the session's machine is not running: resume the session")]
+    NotRunning,
     #[error("{0}")]
     Invalid(&'static str),
     #[error(
@@ -460,6 +463,82 @@ pub async fn stop<D: Deps>(
             Some(&audit(deps, organization, actor, "session.stop", id)),
         )
         .await?)
+}
+
+/// A person wakes a session whose machine was let go (idle, or a runner that went away) without
+/// saying anything: it waits for a runner again. A session whose machine is held is unchanged.
+pub async fn resume<D: Deps>(
+    deps: &D,
+    organization: OrganizationId,
+    id: SessionId,
+    actor: Option<MemberId>,
+) -> Result<Session, SessionError> {
+    let row = active(deps, organization, id).await?;
+    let released = deps
+        .store()
+        .machine(id)
+        .await?
+        .is_some_and(|machine| machine.state == MachineState::Released);
+    if !released {
+        return Ok(row);
+    }
+    let status = wake(deps, id, now_ms(deps)).await?;
+    let change = SessionChange {
+        status: Some(status),
+        ..SessionChange::default()
+    };
+    Ok(deps
+        .store()
+        .update_session(
+            organization,
+            id,
+            &change,
+            now_ms(deps),
+            Some(&audit(deps, organization, actor, "session.resume", id)),
+        )
+        .await?)
+}
+
+/// A person opens a terminal in the session's machine. Only a machine that is up (OpenCode
+/// running) takes one; the command waits for the runner's next poll. Audited as
+/// `terminal.opened` with the session; what is typed is never recorded.
+pub async fn open_terminal<D: Deps>(
+    deps: &D,
+    organization: OrganizationId,
+    id: SessionId,
+    actor: Option<MemberId>,
+    terminal: uuid::Uuid,
+    cols: u16,
+    rows: u16,
+) -> Result<(), SessionError> {
+    active(deps, organization, id).await?;
+    let up =
+        deps.store().machine(id).await?.is_some_and(|machine| {
+            matches!(machine.state, MachineState::Running | MachineState::Idle)
+        });
+    if !up {
+        return Err(SessionError::NotRunning);
+    }
+    if cols == 0 || rows == 0 || cols > 1000 || rows > 1000 {
+        return Err(SessionError::Invalid(
+            "The terminal's size is out of range.",
+        ));
+    }
+    tell(
+        deps,
+        organization,
+        id,
+        &Command::OpenTerminal {
+            terminal,
+            cols,
+            rows,
+        },
+    )
+    .await?;
+    deps.store()
+        .append_audit(&audit(deps, organization, actor, "terminal.opened", id))
+        .await?;
+    Ok(())
 }
 
 /// The default and largest page of a conversation.
