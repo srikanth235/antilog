@@ -4,6 +4,7 @@ import {
   useAgents,
   useEnvironments,
   useMember,
+  useModels,
   useProjects,
   useStartSession,
 } from "../../api/queries";
@@ -11,8 +12,17 @@ import { Glyph, Icon } from "../../components/icon/Icon";
 import { Select } from "../../components/select/Select";
 import { reason } from "../../components/state/State";
 import { canEdit, isOwner, parseRepos } from "../../lib/domain";
-import { setLastModel, setLastProject, useLastModel, useLastProject } from "../../lib/prefs";
+import { defaultEffort } from "../../lib/models";
+import {
+  rememberModel,
+  setLastProject,
+  useLastEffort,
+  useLastModel,
+  useLastProject,
+  useRecentModels,
+} from "../../lib/prefs";
 import { w } from "../../words";
+import { ModelPicker } from "../experiment/ModelPicker";
 import { NewProject } from "../projects/NewProject";
 import { useSidebarData } from "../shell/useSidebarData";
 import { Waiting } from "./Waiting";
@@ -25,10 +35,13 @@ export function Home({ project: preferred }: { project: string | undefined }) {
   const data = useSidebarData();
   const lastProject = useLastProject();
   const lastModel = useLastModel();
+  const lastEffort = useLastEffort();
+  const recent = useRecentModels();
+  const models = useModels();
   const [text, setText] = useState("");
   const [repos, setRepos] = useState("");
   const [chosen, setChosen] = useState<string | null>(null);
-  const [typedModel, setModel] = useState<string | null>(null);
+  const [picked, setPicked] = useState<{ model: string; effort: string | null } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const agents = useAgents();
@@ -48,7 +61,19 @@ export function Home({ project: preferred }: { project: string | undefined }) {
         ? lastProject
         : (list[0]?.id ?? null));
   const project = list.find((p) => p.id === selectedId);
-  const model = (typedModel ?? lastModel ?? "").trim();
+  // The pick, else the last one if the keys still reach it, else the first model listed.
+  const reachable = models.data ?? [];
+  const remembered = reachable.find((item) => item.id === lastModel);
+  const fallback = remembered ?? reachable[0];
+  const model = picked?.model ?? fallback?.id ?? "";
+  const effort =
+    picked !== null
+      ? picked.effort
+      : remembered !== undefined
+        ? lastEffort !== null && remembered.reasoningLevels.includes(lastEffort)
+          ? lastEffort
+          : defaultEffort(remembered)
+        : defaultEffort(fallback);
   const allowed = canEdit(me?.role);
   const start = useStartSession(project?.id ?? "");
 
@@ -60,12 +85,13 @@ export function Home({ project: preferred }: { project: string | undefined }) {
       const session = await start.mutateAsync({
         agent,
         model,
+        ...(effort === null ? {} : { effort }),
         prompt: text.trim(),
         repos: parseRepos(repos),
         ...(environment === null ? {} : { environment }),
       });
       setLastProject(project.id);
-      setLastModel(model);
+      rememberModel(model, effort);
       await navigate({ to: "/sessions/$sessionId", params: { sessionId: session.id } });
     } catch (caught) {
       setError(reason(caught));
@@ -139,16 +165,6 @@ export function Home({ project: preferred }: { project: string | undefined }) {
             options={list.map((p) => ({ value: p.id, label: p.name }))}
             onChange={setChosen}
           />
-          <label className="opt" title={w.home.modelHint}>
-            <Icon name="sliders" />
-            <input
-              className="sr-input"
-              aria-label={w.home.model}
-              placeholder={w.home.modelPlaceholder}
-              value={typedModel ?? lastModel ?? ""}
-              onChange={(event) => setModel(event.target.value)}
-            />
-          </label>
           <label className="opt" title={w.home.reposHint}>
             <Glyph name="git" />
             <input
@@ -180,6 +196,14 @@ export function Home({ project: preferred }: { project: string | undefined }) {
               label: item.name,
             }))}
             onChange={setEnvironment}
+          />
+          <ModelPicker
+            models={reachable}
+            model={model === "" ? null : model}
+            effort={effort}
+            recent={recent}
+            disabled={!allowed}
+            onChange={(next, level) => setPicked({ model: next, effort: level })}
           />
         </div>
         {error === null ? null : (

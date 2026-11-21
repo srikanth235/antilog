@@ -436,6 +436,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/models": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_models"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/organization": {
         parameters: {
             query?: never;
@@ -734,6 +750,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["message"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/{id}/model": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["set_model"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1144,10 +1176,10 @@ export interface components {
         };
         /**
          * @description Who spoke: a person, an agent, the name of a tool an agent called, or an error the model's
-         *     provider or the machine reported.
+         *     provider or the machine reported, or a plain line of the timeline Antilog wrote (a note).
          * @enum {string}
          */
-        EventKind: "person" | "agent" | "tool" | "error";
+        EventKind: "person" | "agent" | "tool" | "error" | "note";
         /** @description Oldest first. `next` is the `after` for the page that follows, or `null` when this is the end so far. */
         EventPage: {
             events: components["schemas"]["SessionEvent"][];
@@ -1282,6 +1314,34 @@ export interface components {
         MemberId: string;
         /** @enum {string} */
         MemberKind: "person" | "service";
+        /** @description One model the organization's keys reach. */
+        ModelInfo: {
+            /**
+             * Format: int64
+             * @description The most input tokens, when the source says.
+             */
+            contextWindow?: number | null;
+            /** @description `provider/model`, as a session names it. */
+            id: string;
+            /**
+             * Format: double
+             * @description US dollars per million input tokens; `None` when the source gives no price.
+             */
+            inputPrice?: number | null;
+            /** @description What the picker shows, such as "GLM 5.3 Flash". */
+            name: string;
+            /**
+             * Format: double
+             * @description US dollars per million output tokens.
+             */
+            outputPrice?: number | null;
+            provider: components["schemas"]["ModelProvider"];
+            /**
+             * @description The effort levels the model offers, lowest first, named as OpenCode's model variants.
+             *     Empty: the model has no effort setting.
+             */
+            reasoningLevels: string[];
+        };
         /** @description Which providers an organization has a key for, and when it was last set. Never the key. */
         ModelKeyStatus: {
             provider: components["schemas"]["ModelProvider"];
@@ -1532,6 +1592,8 @@ export interface components {
             createdAt: number;
             /** @description The member who started it; its calls and cards are theirs. */
             createdBy: components["schemas"]["MemberId"];
+            /** @description The effort level chosen for the model, one of its OpenCode variants; `None`: its default. */
+            effort?: string | null;
             /** @description The stored environment it runs on; `None` is the built-in default. */
             environment?: string | null;
             /**
@@ -1594,6 +1656,13 @@ export interface components {
             expiresAt: number;
             member: components["schemas"]["Member"];
             secret: string;
+        };
+        /** @description A session's model and effort changed from its next message on. */
+        SessionModel: {
+            /** @description One of the model's levels; left out, the model's own default. */
+            effort?: string | null;
+            /** @description `provider/model`. */
+            model: string;
         };
         /**
          * @description All the spend of one session since it began, against its own cap, if it has one. Spend rows
@@ -1673,6 +1742,8 @@ export interface components {
              * @description This session's own cap in US cents; left out, the project's default, then the organization's.
              */
             budgetCapCents?: number | null;
+            /** @description One of the model's effort levels (`GET /models`); left out, the model's own default. */
+            effort?: string | null;
             environment?: string | null;
             /** @description The composer's Mode: false asks a person for every card, true lets policy approve. */
             followPolicy?: boolean;
@@ -2701,6 +2772,26 @@ export interface operations {
             };
         };
     };
+    list_models: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The models of the providers that have a key, by provider then name, each with its context window, prices and effort levels. Listed from the vendored LiteLLM table and OpenCode's own lists, which are kept for an hour */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModelInfo"][];
+                };
+            };
+        };
+    };
     organization: {
         parameters: {
             query?: never;
@@ -3395,6 +3486,51 @@ export interface operations {
                 };
             };
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    set_model: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The session */
+                id: components["schemas"]["SessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SessionModel"];
+            };
+        };
+        responses: {
+            /** @description The session with its new model and effort, which apply from the next message; the transcript gets a note. Editors and owners of the project */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Session"];
+                };
+            };
+            /** @description The session has ended */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not a model, or an effort the model does not offer */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };

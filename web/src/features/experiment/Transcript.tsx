@@ -30,6 +30,7 @@ export function Message(props: { event: Schemas["SessionEvent"]; agent: string }
         </div>
       </div>
     );
+  if (event.kind === "note") return <div className="tl">{event.text}</div>;
   if (event.kind === "error")
     return (
       <div className="fl" role="alert">

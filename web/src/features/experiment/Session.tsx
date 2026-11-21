@@ -6,17 +6,20 @@ import {
   useAgentLabel,
   useMember,
   useMembers,
+  useModels,
   useProjects,
   useSendMessage,
   useSession,
   useSessionApprovals,
   useSessionSpend,
+  useSetSessionModel,
   useStartSession,
   useStopSession,
   useTranscript,
 } from "../../api/queries";
 import { Failed, Loading } from "../../components/state/State";
 import { activityOf, canEdit, MCP_AGENT, pendingCards } from "../../lib/domain";
+import { rememberModel, useRecentModels } from "../../lib/prefs";
 import { groupEvents } from "../../lib/toolcalls";
 import { w } from "../../words";
 import { ApprovalCard } from "./ApprovalCard";
@@ -24,6 +27,7 @@ import { BudgetDialog } from "./BudgetDialog";
 import { ChangesPanel } from "./Changes";
 import { Composer } from "./Composer";
 import { Header, type Panel } from "./Header";
+import { ModelPicker } from "./ModelPicker";
 import { OverviewPanel, PlatformPanel } from "./Panels";
 import { ToolGroup } from "./ToolCalls";
 import { Message, TranscriptError } from "./Transcript";
@@ -52,6 +56,9 @@ export function Session(props: {
   const transcript = useTranscript(sessionId, active?.status);
   const start = useStartSession(active?.projectId ?? "");
   const stop = useStopSession();
+  const models = useModels();
+  const setModel = useSetSessionModel(sessionId);
+  const recent = useRecentModels();
 
   if (session.isPending)
     return (
@@ -206,6 +213,19 @@ export function Session(props: {
             canSend={editor}
             agent={agentLabel(s.agent)}
             budgetCents={s.budgetCapCents ?? null}
+            picker={
+              <ModelPicker
+                models={models.data ?? []}
+                model={s.model}
+                effort={s.effort ?? null}
+                recent={recent}
+                disabled={!editor || !s.status.match(/^(queued|working|waiting_for_you)$/)}
+                onChange={(model, effort) => {
+                  rememberModel(model, effort);
+                  setModel.mutate({ model, ...(effort === null ? {} : { effort }) });
+                }}
+              />
+            }
             onInterrupt={() => setConfirmStop(true)}
             onSend={async (text) => {
               await send.mutateAsync(text);
@@ -215,6 +235,7 @@ export function Session(props: {
               const created = await start.mutateAsync({
                 agent: s.agent,
                 model: s.model,
+                ...(s.effort == null ? {} : { effort: s.effort }),
                 prompt: text,
                 repos: s.repos,
                 ...(s.environment == null ? {} : { environment: s.environment }),

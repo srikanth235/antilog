@@ -1,4 +1,4 @@
-import { type FormEvent, useState } from "react";
+import { type FormEvent, type ReactNode, useState } from "react";
 import type { Schemas } from "../../api/client";
 import { Icon } from "../../components/icon/Icon";
 import { reason } from "../../components/state/State";
@@ -15,6 +15,8 @@ export function Composer(props: {
   canSend: boolean;
   agent: string;
   budgetCents: number | null;
+  /** The model and effort picker, shown under the input at the right. */
+  picker?: ReactNode;
   onSend: (text: string) => Promise<void>;
   onInterrupt: () => void;
   onContinue: (text: string) => Promise<void>;
@@ -121,6 +123,7 @@ export function Composer(props: {
               )}
             </span>
           </div>
+          {props.picker === undefined ? null : <div className="cmp-opt">{props.picker}</div>}
           {error === null ? null : (
             <p className="error-line" role="alert">
               {error}

@@ -26,11 +26,14 @@ test("start a session from home, then read the settings", async ({ page }, info)
   await createProject(page, project);
   await expect(page.getByText("No sessions in this project yet.")).toBeVisible();
 
-  // Home: the composer is the page; the server needs a model named as provider/model.
+  // Home: the composer is the page; it cannot send until a model key makes a model available.
   await page.getByRole("link", { name: "New session" }).first().click();
   await page.getByLabel("New session").fill("Cut checkout p95 latency");
   await expect(page.getByRole("button", { name: "Send" })).toBeDisabled();
-  await page.getByLabel("Model").fill("opencode/e2e");
+  const key = await page.request.put("/api/model-keys/anthropic", { data: { key: "sk-ant-e2e" } });
+  expect(key.ok()).toBe(true);
+  await page.reload();
+  await page.getByLabel("New session").fill("Cut checkout p95 latency");
   await page.getByRole("button", { name: "Send" }).click();
   await expect(page.getByText(/Started a session with/)).toBeVisible();
   // The conversation comes from the server: the prompt is there once, not twice.

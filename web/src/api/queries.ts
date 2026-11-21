@@ -38,6 +38,7 @@ export const keys = {
   policies: () => ["policies"] as const,
   tokens: () => ["tokens"] as const,
   modelKeys: () => ["model-keys"] as const,
+  models: () => ["models"] as const,
   audit: () => ["audit"] as const,
 };
 
@@ -445,6 +446,27 @@ export function useModelKeys() {
   });
 }
 
+/** The models the organization's keys reach, with their levels and prices. Changes when a key does. */
+export function useModels() {
+  return useQuery({
+    queryKey: keys.models(),
+    queryFn: async () => unwrap(await api.GET("/models")),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/** A person changes the session's model or effort; it applies from the next message. */
+export function useSetSessionModel(session: string) {
+  return useWrite(
+    async (body: Schemas["SessionModel"]) =>
+      unwrap(await api.PUT("/sessions/{id}/model", { params: { path: { id: session } }, body })),
+    async (client) => {
+      await refreshSessions(client);
+      await client.invalidateQueries({ queryKey: keys.transcript(session) });
+    },
+  );
+}
+
 export function useAudit() {
   return useInfiniteQuery({
     queryKey: keys.audit(),
@@ -615,7 +637,10 @@ export function useSetModelKey() {
           body: { key: vars.key },
         }),
       ),
-    (client) => client.invalidateQueries({ queryKey: keys.modelKeys() }),
+    async (client) => {
+      await client.invalidateQueries({ queryKey: keys.modelKeys() });
+      await client.invalidateQueries({ queryKey: keys.models() });
+    },
   );
 }
 
@@ -623,7 +648,10 @@ export function useRemoveModelKey() {
   return useWrite(
     async (provider: Schemas["ModelProvider"]) =>
       unwrap(await api.DELETE("/model-keys/{provider}", { params: { path: { provider } } })),
-    (client) => client.invalidateQueries({ queryKey: keys.modelKeys() }),
+    async (client) => {
+      await client.invalidateQueries({ queryKey: keys.modelKeys() });
+      await client.invalidateQueries({ queryKey: keys.models() });
+    },
   );
 }
 

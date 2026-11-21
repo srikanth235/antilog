@@ -1,3 +1,4 @@
+import { pushRecent } from "./models";
 import { readJson, useStored, writeJson } from "./storage";
 
 function strings(raw: unknown): string[] {
@@ -36,10 +37,28 @@ export function useLastProject(): string | null {
 export function setLastProject(id: string): void {
   writeJson(LAST_PROJECT, id);
 }
-/** The last `provider/model` a person typed. */
+/** The last `provider/model` a person picked. */
 export function useLastModel(): string | null {
   return useStored(LAST_MODEL, text);
 }
 export function setLastModel(model: string): void {
   writeJson(LAST_MODEL, model);
+}
+
+const LAST_EFFORT = "antilog.lastEffort.v1";
+const RECENT_MODELS = "antilog.recentModels.v1";
+
+/** The effort last picked with the last model; `null` when that model had none. */
+export function useLastEffort(): string | null {
+  return useStored(LAST_EFFORT, text);
+}
+/** The models last used, newest first, at most four: the picker's favourites. */
+export function useRecentModels(): string[] {
+  return useStored(RECENT_MODELS, strings);
+}
+/** Remembers a pick: the model, its effort and its place among the favourites. */
+export function rememberModel(model: string, effort: string | null): void {
+  writeJson(LAST_MODEL, model);
+  writeJson(LAST_EFFORT, effort ?? "");
+  writeJson(RECENT_MODELS, pushRecent(strings(readJson(RECENT_MODELS)), model));
 }

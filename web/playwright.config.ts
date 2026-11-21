@@ -39,6 +39,9 @@ export default defineConfig({
               // The model-key tests seal a key under their own master.
               ANTILOG_SECRET_MODEL_KEY_MASTER:
                 "ffeeddccbbaa99887766554433221100ffeeddccbbaa99887766554433221100",
+              // The model picker lists OpenCode's models from its own lists; tests stay offline.
+              ANTILOG_OPENCODE_URL: "http://127.0.0.1:1",
+              ANTILOG_OPENCODE_GO_URL: "http://127.0.0.1:1",
               ANTILOG_LISTEN: new URL(api).host,
             },
           },
