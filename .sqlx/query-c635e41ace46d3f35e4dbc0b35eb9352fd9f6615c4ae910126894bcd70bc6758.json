@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into session_context (session_id, organization_id, parts, reported_at) values ($1, $2, $3, to_timestamp($4::bigint / 1000.0)) on conflict (session_id) do update set parts = excluded.parts, reported_at = excluded.reported_at",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c635e41ace46d3f35e4dbc0b35eb9352fd9f6615c4ae910126894bcd70bc6758"
+}

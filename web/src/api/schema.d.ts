@@ -708,6 +708,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sessions/{id}/compact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["compact"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/{id}/context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["context"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sessions/{id}/environment": {
         parameters: {
             query?: never;
@@ -1068,6 +1100,17 @@ export interface components {
             mode: components["schemas"]["ToolMode"];
             name: string;
         };
+        /** @description One measured part of the latest model request, in tokens. */
+        ContextPart: {
+            kind: components["schemas"]["ContextPartKind"];
+            /** Format: int64 */
+            tokens: number;
+        };
+        /**
+         * @description What a part of a model request is made of.
+         * @enum {string}
+         */
+        ContextPartKind: "system" | "tools" | "antilog_tools" | "messages";
         /**
          * @description "$", "$$" or "$$$", set from the agent's price.
          * @enum {string}
@@ -1282,6 +1325,10 @@ export interface components {
             sessionId: components["schemas"]["SessionId"];
             /** @enum {string} */
             type: "changes";
+        } | {
+            sessionId: components["schemas"]["SessionId"];
+            /** @enum {string} */
+            type: "context";
         } | {
             /** Format: int32 */
             pending: number;
@@ -1624,6 +1671,32 @@ export interface components {
         /** @description The latest report for each repo of the session; empty before the first one. */
         SessionChanges: {
             repos: components["schemas"]["RepoChanges"][];
+        };
+        /**
+         * @description A session's context window as the Overview reads it. A field the server has not been told
+         *     yet is `null` (or an empty list); a session that has made no call has all of them empty.
+         */
+        SessionContext: {
+            /**
+             * @description What the latest request was made of, scaled to the provider's own input count. Empty
+             *     until the gateway has measured one.
+             */
+            parts: components["schemas"]["ContextPart"][];
+            /**
+             * Format: int64
+             * @description When anything last changed, epoch milliseconds; `null` before the first report.
+             */
+            reportedAt?: number | null;
+            /**
+             * Format: int64
+             * @description Tokens the latest model call filled: input plus cache reads and writes.
+             */
+            used?: number | null;
+            /**
+             * Format: int64
+             * @description The model's context window, in tokens.
+             */
+            window?: number | null;
         };
         /** @description The environment to move a session to: its newest version. */
         SessionEnvironment: {
@@ -3368,6 +3441,69 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CommitChanges"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    compact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The session */
+                id: components["schemas"]["SessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The agent's harness was told to compact the conversation; the transcript shows a note when it has. Editors and owners of the project, as for a message */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Session"];
+                };
+            };
+            /** @description The session has ended */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    context: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The session */
+                id: components["schemas"]["SessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description How full the model's context window is: what the latest call used, the model's window and what the request was made of. Empty before the first call */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionContext"];
                 };
             };
             404: {

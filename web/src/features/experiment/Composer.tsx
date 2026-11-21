@@ -5,6 +5,7 @@ import { reason } from "../../components/state/State";
 import { composerPlaceholderKey } from "../../lib/domain";
 import { dollars } from "../../lib/format";
 import { w } from "../../words";
+import { ContextRing } from "./ContextRing";
 
 type Status = Schemas["SessionStatus"] | "none";
 
@@ -14,6 +15,7 @@ export function Composer(props: {
   hasCard: boolean;
   canSend: boolean;
   agent: string;
+  sessionId: string;
   budgetCents: number | null;
   /** The model and effort picker, shown under the input at the right. */
   picker?: ReactNode;
@@ -89,6 +91,7 @@ export function Composer(props: {
               >
                 <Icon name="sliders" />
               </span>
+              <ContextRing sessionId={props.sessionId} />
               <span
                 className="opt"
                 role="img"

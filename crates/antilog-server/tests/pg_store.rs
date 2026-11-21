@@ -116,6 +116,13 @@ async fn postgres_store_keeps_the_card_state() -> anyhow::Result<()> {
 }
 
 #[tokio::test]
+async fn postgres_store_keeps_the_context_window() -> anyhow::Result<()> {
+    let (store, _pool, _container) = migrated_store().await?;
+    antilog_core::seed::context_suite(&store).await;
+    Ok(())
+}
+
+#[tokio::test]
 async fn migrations_apply_again_without_change() -> anyhow::Result<()> {
     let (store, _pool, _container) = migrated_store().await?;
     store.migrate().await?;

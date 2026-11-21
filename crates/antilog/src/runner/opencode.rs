@@ -5,7 +5,7 @@ use std::collections::{HashMap, HashSet};
 use std::path::Path;
 use std::time::Duration;
 
-use antilog_types::{Item, ItemKind, Reply, ToolRecord, ToolStatus};
+use antilog_types::{ContextUse, Item, ItemKind, Reply, ToolRecord, ToolStatus};
 use anyhow::{Context, Result, bail};
 use serde_json::{Value, json};
 
@@ -197,6 +197,40 @@ impl Api {
         Ok(())
     }
 
+    /// Each model's context window in tokens, by `provider/model`, from the providers OpenCode
+    /// is configured with. A model that reports none is left out.
+    pub async fn context_limits(&self) -> Result<HashMap<String, u64>> {
+        let body: Value = self
+            .get("/config/providers")
+            .send()
+            .await?
+            .error_for_status()?
+            .json()
+            .await?;
+        Ok(limits(&body))
+    }
+
+    /// Compacts the conversation now. OpenCode's v2 route first, the older summarize route
+    /// (which names the model) when the server does not have it.
+    pub async fn compact(&self, session: &str, model: &str) -> Result<()> {
+        let response = self
+            .post(&format!("/api/session/{session}/compact"))
+            .json(&json!({}))
+            .send()
+            .await?;
+        if response.status() != reqwest::StatusCode::NOT_FOUND {
+            response.error_for_status()?;
+            return Ok(());
+        }
+        let (provider, id) = model.split_once('/').unwrap_or(("", model));
+        self.post(&format!("/session/{session}/summarize"))
+            .json(&json!({"providerID": provider, "modelID": id}))
+            .send()
+            .await?
+            .error_for_status()?;
+        Ok(())
+    }
+
     pub async fn abort(&self, session: &str) -> Result<()> {
         self.post(&format!("/session/{session}/abort"))
             .send()
@@ -324,6 +358,35 @@ fn drain(buffer: &mut String) -> Vec<Value> {
     events
 }
 
+/// Reads `GET /config/providers`: `providers` is a list, each with its `models` as a record
+/// (or a list) whose `limit.context` is the window.
+fn limits(body: &Value) -> HashMap<String, u64> {
+    let mut out = HashMap::new();
+    let providers = body
+        .get("providers")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten();
+    for provider in providers {
+        let Some(provider_id) = provider.get("id").and_then(Value::as_str) else {
+            continue;
+        };
+        let models: Vec<(Option<&str>, &Value)> = match provider.get("models") {
+            Some(Value::Object(map)) => map.iter().map(|(k, v)| (Some(k.as_str()), v)).collect(),
+            Some(Value::Array(list)) => list.iter().map(|v| (None, v)).collect(),
+            _ => Vec::new(),
+        };
+        for (key, model) in models {
+            let id = key.or_else(|| model.get("id").and_then(Value::as_str));
+            let window = model.pointer("/limit/context").and_then(Value::as_u64);
+            if let (Some(id), Some(window)) = (id, window.filter(|w| *w > 0)) {
+                out.insert(format!("{provider_id}/{id}"), window);
+            }
+        }
+    }
+    out
+}
+
 /// What has been said and what has been sent, so that an event seen twice, or again after a
 /// reconnect, is sent to the server once. The server also ignores a key it has.
 pub struct Tracker {
@@ -333,6 +396,10 @@ pub struct Tracker {
     /// What the errors of the turn in progress said, so a failure that arrives twice (on the
     /// message and as a session error) is shown once.
     errors: HashSet<String>,
+    /// The `provider/model` each assistant message was made with.
+    models: HashMap<String, String>,
+    /// Each model's context window, from OpenCode's providers.
+    limits: HashMap<String, u64>,
 }
 
 impl Tracker {
@@ -342,7 +409,14 @@ impl Tracker {
             roles: HashMap::new(),
             sent: HashSet::new(),
             errors: HashSet::new(),
+            models: HashMap::new(),
+            limits: HashMap::new(),
         }
+    }
+
+    /// The windows of the configured models, so a step's use can be reported with its window.
+    pub fn set_limits(&mut self, limits: HashMap<String, u64>) {
+        self.limits = limits;
     }
 
     fn mine(&self, properties: &Value) -> bool {
@@ -407,6 +481,18 @@ impl Tracker {
         items
     }
 
+    /// Of the context uses in `items` only the last matters: a rebuild reads every step again.
+    pub fn latest_context(items: &mut Vec<Item>) {
+        let last = items
+            .iter()
+            .rposition(|item| matches!(item, Item::Context { .. }));
+        let mut at = 0;
+        items.retain(|item| {
+            at += 1;
+            !matches!(item, Item::Context { .. }) || Some(at - 1) == last
+        });
+    }
+
     /// Remembers whose message this is; an assistant message that ended in an error is an item.
     fn know(&mut self, info: &Value) -> Vec<Item> {
         let (Some(id), Some(role)) = (
@@ -418,6 +504,14 @@ impl Tracker {
         self.roles.insert(id.to_owned(), role.to_owned());
         if role != "assistant" {
             return Vec::new();
+        }
+        let model = |pointer: &str| info.pointer(pointer).and_then(Value::as_str);
+        if let (Some(provider), Some(model)) = (
+            model("/providerID").or_else(|| model("/model/providerID")),
+            model("/modelID").or_else(|| model("/model/modelID")),
+        ) {
+            self.models
+                .insert(id.to_owned(), format!("{provider}/{model}"));
         }
         info.get("error")
             .and_then(|error| self.failure(id.to_owned(), error))
@@ -444,12 +538,47 @@ impl Tracker {
         let (Some(message), Some(id)) = (text("messageID"), text("id")) else {
             return Vec::new();
         };
+        let key = format!("{message}:{id}");
+        // A compaction marker sits in a message of the person's side: it is Antilog's note.
+        if text("type") == Some("compaction") {
+            if !self.sent.insert(key.clone()) {
+                return Vec::new();
+            }
+            let how = if flag(part, "overflow") {
+                " (the window overflowed)"
+            } else if flag(part, "auto") {
+                " (automatic)"
+            } else {
+                ""
+            };
+            return vec![Item::Note {
+                key: format!("compaction:{key}"),
+                text: format!("Context compacted{how}."),
+            }];
+        }
         if self.roles.get(message).map(String::as_str) != Some("assistant") {
             return Vec::new();
         }
-        let key = format!("{message}:{id}");
         if self.sent.contains(&key) {
             return Vec::new();
+        }
+        // A step of the agent ended: its input, cached or not, is what sat in the window.
+        if text("type") == Some("step-finish") {
+            self.sent.insert(key);
+            let count = |pointer: &str| part.pointer(pointer).and_then(Value::as_u64).unwrap_or(0);
+            let used =
+                count("/tokens/input") + count("/tokens/cache/read") + count("/tokens/cache/write");
+            if used == 0 {
+                return Vec::new();
+            }
+            let window = self
+                .models
+                .get(message)
+                .and_then(|model| self.limits.get(model))
+                .copied();
+            return vec![Item::Context {
+                context: ContextUse { used, window },
+            }];
         }
         // The Antilog tools reach the agent through our own MCP endpoint, which records each call
         // with its input and answer; recording OpenCode's view of it too would show it twice.
@@ -678,6 +807,102 @@ mod tests {
                 }),
             }]
         );
+    }
+
+    #[test]
+    fn a_step_finish_is_the_context_the_call_filled_with_the_models_window() {
+        let mut tracker = Tracker::new("ses_1");
+        tracker.set_limits(limits(&json!({"providers": [
+            {"id": "vendor", "models": {"m": {"limit": {"context": 1_000_000}}, "none": {}}},
+            {"id": "other", "models": [{"id": "n", "limit": {"context": 8000}}]},
+        ]})));
+        assert_eq!(tracker.limits.len(), 2);
+        assert_eq!(tracker.limits["vendor/m"], 1_000_000);
+        assert_eq!(tracker.limits["other/n"], 8000);
+        let none = tracker.event(&json!({
+            "type": "message.updated",
+            "properties": {"sessionID": "ses_1", "info": {
+                "id": "msg_a", "role": "assistant", "providerID": "vendor", "modelID": "m"}}
+        }));
+        assert!(none.is_empty());
+        let step = |id: &str, input: u64| {
+            json!({"type": "message.part.updated", "properties": {"sessionID": "ses_1", "part": {
+                "id": id, "messageID": "msg_a", "type": "step-finish",
+                "tokens": {"input": input, "output": 9, "reasoning": 0, "cache": {"read": 100, "write": 10}}}}})
+        };
+        assert_eq!(
+            tracker.event(&step("p1", 1)),
+            vec![Item::Context {
+                context: ContextUse {
+                    used: 111,
+                    window: Some(1_000_000)
+                }
+            }]
+        );
+        assert!(tracker.event(&step("p1", 1)).is_empty(), "once");
+        // A model whose window is unknown is reported without one.
+        let mut unknown = Tracker::new("ses_1");
+        assistant(&mut unknown, "msg_a");
+        assert_eq!(
+            unknown.event(&step("p2", 5)),
+            vec![Item::Context {
+                context: ContextUse {
+                    used: 115,
+                    window: None
+                }
+            }]
+        );
+        // Of many steps read back, only the last is kept.
+        let mut items = vec![
+            Item::Context {
+                context: ContextUse {
+                    used: 1,
+                    window: None,
+                },
+            },
+            Item::Status { busy: true },
+            Item::Context {
+                context: ContextUse {
+                    used: 2,
+                    window: None,
+                },
+            },
+        ];
+        Tracker::latest_context(&mut items);
+        assert_eq!(
+            items,
+            vec![
+                Item::Status { busy: true },
+                Item::Context {
+                    context: ContextUse {
+                        used: 2,
+                        window: None
+                    }
+                },
+            ]
+        );
+    }
+
+    #[test]
+    fn a_compaction_is_a_note_once() {
+        let mut tracker = Tracker::new("ses_1");
+        let part = |auto: bool, overflow: bool| {
+            json!({"type": "message.part.updated", "properties": {"sessionID": "ses_1", "part": {
+                "id": "prt_c", "messageID": "msg_u", "type": "compaction",
+                "auto": auto, "overflow": overflow}}})
+        };
+        let first = tracker.event(&part(true, false));
+        let [Item::Note { text, .. }] = first.as_slice() else {
+            panic!("one note")
+        };
+        assert_eq!(text, "Context compacted (automatic).");
+        assert!(tracker.event(&part(true, false)).is_empty());
+        let mut other = Tracker::new("ses_1");
+        let plain = other.event(&part(false, false));
+        let [Item::Note { text, .. }] = plain.as_slice() else {
+            panic!("one note")
+        };
+        assert_eq!(text, "Context compacted.");
     }
 
     #[test]

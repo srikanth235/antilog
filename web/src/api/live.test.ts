@@ -27,6 +27,10 @@ test("a half message is ignored", () => {
   expect(parse("7")).toBeNull();
 });
 
+test("a change of context refetches that session's context", () => {
+  expect(staleBy({ type: "context", sessionId: "s1" })).toEqual([keys.context("s1")]);
+});
+
 test("a report of changes refetches that session's changes", () => {
   expect(staleBy({ type: "changes", sessionId: "s1" })).toEqual([keys.changes("s1")]);
 });

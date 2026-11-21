@@ -41,6 +41,7 @@ struct Fake {
     prompts: Vec<Value>,
     replies: Vec<(String, String)>,
     aborts: u32,
+    compacts: u32,
     /// Messages as `GET /session/{id}/message` lists them, oldest first.
     messages: Vec<Value>,
     permissions: Vec<Value>,
@@ -94,6 +95,20 @@ async fn serve_fake(shared: Shared) -> String {
                 post(|State(s): State<Shared>| async move {
                     locked(&s).aborts += 1;
                     Json(true)
+                }),
+            )
+            .route(
+                "/api/session/{id}/compact",
+                post(|State(s): State<Shared>| async move {
+                    locked(&s).compacts += 1;
+                    Json(true)
+                }),
+            )
+            .route(
+                "/config/providers",
+                get(|| async {
+                    Json(json!({"providers": [{"id": "vendor", "models": {
+                        "model-1": {"limit": {"context": 200_000, "output": 8_000}}}}]}))
                 }),
             )
             .route(
@@ -1657,6 +1672,65 @@ async fn every_prompt_carries_the_sessions_model_and_effort_and_a_switch_applies
     })
     .await;
     assert!(locked(&world.shared).prompts[2].get("variant").is_none());
+}
+
+#[tokio::test]
+async fn a_step_reports_the_context_it_filled_and_compaction_is_a_note_and_a_command() {
+    use antilog_core::store::ContextStore;
+
+    let world = world().await;
+    let org = world.seed.organization.id;
+    let session = start(&world, "go").await;
+    until("a stream", async || {
+        (locked(&world.shared).streams_opened > 0).then_some(())
+    })
+    .await;
+    emit(
+        &world.shared,
+        json!({"type": "message.updated", "properties": {"sessionID": "ses_fake", "info": {
+            "id": "msg_a", "role": "assistant", "providerID": "vendor", "modelID": "model-1"}}}),
+    )
+    .await;
+    emit(
+        &world.shared,
+        json!({"type": "message.part.updated", "properties": {"sessionID": "ses_fake", "part": {
+            "id": "prt_s", "messageID": "msg_a", "sessionID": "ses_fake", "type": "step-finish",
+            "tokens": {"input": 1000, "output": 50, "reasoning": 0, "cache": {"read": 20_000, "write": 3_000}},
+            "cost": 0.01}}}),
+    )
+    .await;
+    let context = until("the context", async || {
+        let context = world.deps.store.context(org, session.id).await.unwrap();
+        context.used.is_some().then_some(context)
+    })
+    .await;
+    // The window of the latest call: input, cache read and cache write; not the output.
+    assert_eq!(context.used, Some(24_000));
+    assert_eq!(context.window, Some(200_000));
+
+    emit(
+        &world.shared,
+        json!({"type": "message.part.updated", "properties": {"sessionID": "ses_fake", "part": {
+            "id": "prt_c", "messageID": "msg_u", "sessionID": "ses_fake", "type": "compaction",
+            "auto": true, "overflow": true}}}),
+    )
+    .await;
+    until("the note", async || {
+        transcript(&world, &session)
+            .await
+            .iter()
+            .any(|line| line.contains("Context compacted (the window overflowed)"))
+            .then_some(())
+    })
+    .await;
+
+    session::compact(&*world.deps, org, session.id, Some(world.seed.owner.id))
+        .await
+        .unwrap();
+    until("OpenCode told to compact", async || {
+        (locked(&world.shared).compacts == 1).then_some(())
+    })
+    .await;
 }
 
 #[tokio::test]

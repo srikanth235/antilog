@@ -6,12 +6,12 @@ use std::sync::Arc;
 use antilog_core::deps::Deps;
 use antilog_core::organization::{self as floor, Action, Refusal};
 use antilog_core::session::{self, NewSession, SessionError};
-use antilog_core::store::{ChangesStore, OrganizationStore, SessionStore};
+use antilog_core::store::{ChangesStore, ContextStore, OrganizationStore, SessionStore};
 use antilog_core::{agents, budget, environments as env};
 use antilog_types::{
     Agent, ApiError, AutoChoice, CommitChanges, Environment, EventPage, NewAgent, NewEnvironment,
-    ProjectId, SendMessage, Session, SessionBudget, SessionChanges, SessionEnvironment, SessionId,
-    SessionModel, SessionSpend, StartSession,
+    ProjectId, SendMessage, Session, SessionBudget, SessionChanges, SessionContext,
+    SessionEnvironment, SessionId, SessionModel, SessionSpend, StartSession,
 };
 use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
@@ -33,6 +33,8 @@ use super::auth::{App, Authed, Fail};
     events,
     changes,
     commit_changes,
+    context,
+    compact,
     spend,
     set_budget,
     set_environment,
@@ -283,6 +285,51 @@ async fn message<D: Deps + 'static>(
         id,
         Some(authed.who.member),
         &body.text,
+    )
+    .await
+    .map(Json)
+    .map_err(Fail::Session)
+}
+
+#[utoipa::path(
+    get, path = "/sessions/{id}/context", security(("bearer" = [])),
+    params(("id" = SessionId, Path, description = "The session")),
+    responses(
+        (status = 200, description = "How full the model's context window is: what the latest call used, the model's window and what the request was made of. Empty before the first call", body = SessionContext),
+        (status = 404, body = ApiError),
+    )
+)]
+async fn context<D: Deps + 'static>(
+    State(app): Shared<D>,
+    authed: Authed,
+    Path(id): Path<SessionId>,
+) -> Result<Json<SessionContext>, Fail> {
+    owned(&app, &authed, id).await?;
+    Ok(Json(
+        app.store().context(authed.who.organization, id).await?,
+    ))
+}
+
+#[utoipa::path(
+    post, path = "/sessions/{id}/compact", security(("bearer" = [])),
+    params(("id" = SessionId, Path, description = "The session")),
+    responses(
+        (status = 200, description = "The agent's harness was told to compact the conversation; the transcript shows a note when it has. Editors and owners of the project, as for a message", body = Session),
+        (status = 409, description = "The session has ended", body = ApiError),
+    )
+)]
+async fn compact<D: Deps + 'static>(
+    State(app): Shared<D>,
+    authed: Authed,
+    Path(id): Path<SessionId>,
+) -> Result<Json<Session>, Fail> {
+    let row = owned(&app, &authed, id).await?;
+    permit(&app, &authed, Action::SessionMessage, row.project_id).await?;
+    session::compact(
+        &*app.deps,
+        authed.who.organization,
+        id,
+        Some(authed.who.member),
     )
     .await
     .map(Json)
@@ -654,6 +701,8 @@ pub fn routes<D: Deps + 'static>() -> Router<Arc<App<D>>> {
             "/sessions/{id}/changes/commits/{sha}",
             get(commit_changes::<D>),
         )
+        .route("/sessions/{id}/context", get(context::<D>))
+        .route("/sessions/{id}/compact", post(compact::<D>))
         .route("/sessions/{id}/stop", post(stop::<D>))
         .route("/sessions/{id}/spend", get(spend::<D>))
         .route("/sessions/{id}/budget", put(set_budget::<D>))

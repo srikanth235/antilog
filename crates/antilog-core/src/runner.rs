@@ -16,7 +16,7 @@ use crate::deps::Deps;
 use crate::environments;
 use crate::organization::Refusal;
 use crate::session::{SessionError, audit, now_ms, record, record_tool};
-use crate::store::{ApprovalStore, ChangesStore, CustomizeStore, Store};
+use crate::store::{ApprovalStore, ChangesStore, ContextStore, CustomizeStore, Store};
 use crate::store::{RunnerStore, SessionChange, SessionStore, StoreError};
 
 /// How a server reaches its runners and what it tells them. From server config.
@@ -475,6 +475,11 @@ pub async fn ingest<D: Deps>(
                     text,
                 )
                 .await?;
+            }
+            Item::Context { context } => {
+                deps.store()
+                    .put_context_use(machine.organization, session, *context, now_ms(deps))
+                    .await?;
             }
             Item::Permission { id, tool, detail } => {
                 ask_card(deps.store(), now_ms(deps), &machine, id, tool, detail).await?;

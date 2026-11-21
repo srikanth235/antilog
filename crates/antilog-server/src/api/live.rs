@@ -21,7 +21,7 @@ use antilog_core::approval;
 use antilog_core::auth;
 use antilog_core::deps::Deps;
 use antilog_core::organization::{self as floor, Principal};
-use antilog_core::store::{ChangesStore, SessionStore};
+use antilog_core::store::{ChangesStore, ContextStore, SessionStore};
 use antilog_types::{ApiError, LiveEvent, SessionId, SessionStatus};
 use axum::Router;
 use axum::extract::State;
@@ -93,6 +93,8 @@ struct Watch {
     readable: HashMap<SessionId, bool>,
     statuses: HashMap<SessionId, SessionStatus>,
     reports: HashMap<SessionId, i64>,
+    contexts: HashMap<SessionId, i64>,
+    context_since: i64,
     changed_since: i64,
     cards: HashSet<antilog_types::ApprovalId>,
 }
@@ -184,6 +186,34 @@ impl Watch {
         out
     }
 
+    async fn context_changes<D: Deps + 'static>(&mut self, app: &App<D>) -> Vec<LiveEvent> {
+        let Ok(marks) = app
+            .store()
+            .context_marks(self.who.organization, self.context_since, BATCH)
+            .await
+        else {
+            return Vec::new();
+        };
+        let mut out = Vec::new();
+        for mark in marks {
+            self.context_since = self.context_since.max(mark.reported_at);
+            if self
+                .contexts
+                .get(&mark.session)
+                .is_some_and(|seen| *seen >= mark.reported_at)
+            {
+                continue;
+            }
+            self.contexts.insert(mark.session, mark.reported_at);
+            if self.can_read(app, mark.session).await {
+                out.push(LiveEvent::Context {
+                    session_id: mark.session,
+                });
+            }
+        }
+        out
+    }
+
     async fn card_changes<D: Deps + 'static>(&mut self, app: &App<D>) -> Option<LiveEvent> {
         let waiting: HashSet<_> = approval::pending(app.store(), &self.who)
             .await
@@ -228,6 +258,8 @@ pub fn open<D: Deps + 'static>(
             readable: HashMap::new(),
             statuses: HashMap::new(),
             reports: HashMap::new(),
+            contexts: HashMap::new(),
+            context_since: app.now(),
             changed_since: app.now(),
             cards: HashSet::new(),
         };
@@ -261,6 +293,7 @@ pub fn open<D: Deps + 'static>(
             if tick.is_multiple_of(options.slow_every.max(1)) {
                 events.extend(watch.status_changes(&app).await);
                 events.extend(watch.report_changes(&app).await);
+                events.extend(watch.context_changes(&app).await);
                 events.extend(watch.card_changes(&app).await);
             }
             for event in events {

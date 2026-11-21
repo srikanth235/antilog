@@ -6,7 +6,7 @@ import { keys } from "./queries";
 
 export type LiveEvent = Schemas["LiveEvent"];
 
-const NAMES = ["hello", "resync", "message", "session", "changes", "cards"] as const;
+const NAMES = ["hello", "resync", "message", "session", "changes", "context", "cards"] as const;
 /** After the stream is refused or cut for good, try again this often; the 4 s poll runs meanwhile. */
 const RETRY_MS = 30_000;
 
@@ -22,6 +22,8 @@ export function staleBy(event: LiveEvent): QueryKey[] {
       return [keys.session(event.sessionId), keys.sessions(), keys.pending(), ["projects"]];
     case "changes":
       return [keys.changes(event.sessionId)];
+    case "context":
+      return [keys.context(event.sessionId)];
     case "cards":
       return [keys.pending(), keys.sessions()];
   }

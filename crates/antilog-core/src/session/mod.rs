@@ -400,6 +400,34 @@ pub async fn set_model<D: Deps>(
         .ok_or(SessionError::NotFound)
 }
 
+/// A person asks the agent's harness to compact the conversation now. The machine is woken if it
+/// was let go; the runner reports the compaction as a note in the transcript.
+pub async fn compact<D: Deps>(
+    deps: &D,
+    organization: OrganizationId,
+    id: SessionId,
+    actor: Option<MemberId>,
+) -> Result<Session, SessionError> {
+    let row = active(deps, organization, id).await?;
+    let now = now_ms(deps);
+    let resumed = wake(deps, id, now).await?;
+    tell(deps, organization, id, &Command::Compact).await?;
+    let change = SessionChange {
+        status: Some(resumed),
+        ..SessionChange::default()
+    };
+    Ok(deps
+        .store()
+        .update_session(
+            organization,
+            row.id,
+            &change,
+            now_ms(deps),
+            Some(&audit(deps, organization, actor, "session.message", id)),
+        )
+        .await?)
+}
+
 /// A person stops the session: Stopped, "Stopped by NAME". What it spent until now is kept.
 pub async fn stop<D: Deps>(
     deps: &D,

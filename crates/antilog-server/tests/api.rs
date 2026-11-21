@@ -1874,6 +1874,167 @@ async fn an_open_stream_announces_a_report_of_changes() {
 }
 
 #[tokio::test]
+async fn a_session_serves_its_context_use_and_an_editor_may_compact_it() {
+    use antilog_core::store::ContextStore;
+    use antilog_types::{ContextPart, ContextPartKind, ContextUse, OrganizationId, SessionId};
+
+    let (org, deps) = org_with_store().await;
+    let (_, viewer) = org.member("vi", "viewer").await;
+    let (_, editor) = org.member("ed", "editor").await;
+    let made = org
+        .call(
+            Method::POST,
+            &org.start_uri(),
+            &editor,
+            Some(json!({"prompt": "make it faster", "model": "opencode/test"})),
+        )
+        .await;
+    let id = made.body["id"].as_str().unwrap_or_default().to_owned();
+    let session = SessionId::from_uuid(id.parse().unwrap_or_default());
+    let organization = OrganizationId::from_uuid(org.organization.parse().unwrap_or_default());
+    let uri = format!("/sessions/{id}/context");
+
+    let before = org.call(Method::GET, &uri, &viewer, None).await;
+    assert_eq!(before.status, StatusCode::OK);
+    assert_eq!(before.body["used"], Value::Null);
+    assert_eq!(before.body["parts"], json!([]));
+    assert_eq!(before.body["reportedAt"], Value::Null);
+
+    deps.store
+        .put_context_use(
+            organization,
+            session,
+            ContextUse {
+                used: 129_600,
+                window: Some(1_000_000),
+            },
+            10,
+        )
+        .await
+        .unwrap_or_else(|e| unreachable!("{e}"));
+    deps.store
+        .put_context_parts(
+            organization,
+            session,
+            &[ContextPart {
+                kind: ContextPartKind::System,
+                tokens: 9_000,
+            }],
+            20,
+        )
+        .await
+        .unwrap_or_else(|e| unreachable!("{e}"));
+    let read = org.call(Method::GET, &uri, &viewer, None).await;
+    assert_eq!(read.body["used"], 129_600);
+    assert_eq!(read.body["window"], 1_000_000);
+    assert_eq!(read.body["parts"][0]["kind"], "system");
+    assert_eq!(read.body["parts"][0]["tokens"], 9_000);
+    assert_eq!(read.body["reportedAt"], 20);
+    // A use reported later keeps the parts, and a report without a window keeps the window.
+    deps.store
+        .put_context_use(
+            organization,
+            session,
+            ContextUse {
+                used: 5,
+                window: None,
+            },
+            30,
+        )
+        .await
+        .unwrap_or_else(|e| unreachable!("{e}"));
+    let again = org.call(Method::GET, &uri, &viewer, None).await;
+    assert_eq!(again.body["used"], 5);
+    assert_eq!(again.body["window"], 1_000_000);
+    assert_eq!(again.body["parts"][0]["tokens"], 9_000);
+
+    assert_eq!(
+        org.call(
+            Method::GET,
+            "/sessions/018f3b1e-0000-7000-8000-000000000000/context",
+            &viewer,
+            None
+        )
+        .await
+        .status,
+        StatusCode::NOT_FOUND
+    );
+
+    let compact = format!("/sessions/{id}/compact");
+    assert_eq!(
+        org.call(Method::POST, &compact, &viewer, None).await.status,
+        StatusCode::FORBIDDEN
+    );
+    assert_eq!(
+        org.call(Method::POST, &compact, &editor, None).await.status,
+        StatusCode::OK
+    );
+}
+
+#[tokio::test]
+async fn an_open_stream_announces_a_change_of_context() {
+    use antilog_core::store::ContextStore;
+    use antilog_types::{ContextUse, OrganizationId, SessionId};
+    use tokio_stream::StreamExt;
+
+    let (org, deps) = org_with_store().await;
+    let made = org
+        .call(
+            Method::POST,
+            &org.start_uri(),
+            &org.owner,
+            Some(json!({"prompt": "make it faster", "model": "opencode/test"})),
+        )
+        .await;
+    let id = made.body["id"].as_str().unwrap_or_default().to_owned();
+    let session = SessionId::from_uuid(id.parse().unwrap_or_default());
+    let organization = OrganizationId::from_uuid(org.organization.parse().unwrap_or_default());
+
+    let response = org
+        .app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .uri("/events/stream")
+                .header(header::AUTHORIZATION, format!("Bearer {}", org.owner))
+                .body(Body::empty())
+                .unwrap_or_else(|e| unreachable!("{e}")),
+        )
+        .await
+        .unwrap_or_else(|e| unreachable!("{e}"));
+    let mut stream = response.into_body().into_data_stream();
+    let mut seen = String::new();
+    let wait = async {
+        let mut reported = false;
+        while let Some(Ok(chunk)) = stream.next().await {
+            seen.push_str(&String::from_utf8_lossy(&chunk));
+            if !reported && seen.contains("event: hello") {
+                reported = true;
+                deps.store
+                    .put_context_use(
+                        organization,
+                        session,
+                        ContextUse {
+                            used: 100,
+                            window: Some(1000),
+                        },
+                        4_000_000_000_000,
+                    )
+                    .await
+                    .unwrap_or_else(|e| unreachable!("{e}"));
+            }
+            if seen.contains("event: context") {
+                return;
+            }
+        }
+    };
+    tokio::time::timeout(std::time::Duration::from_secs(10), wait)
+        .await
+        .unwrap_or_else(|_| unreachable!("no context event arrived: {seen}"));
+    assert!(seen.contains(&id), "the event names the session: {seen}");
+}
+
+#[tokio::test]
 async fn an_editor_moves_a_session_to_another_environment_and_a_viewer_cannot() {
     let org = org().await;
     let (_, viewer) = org.member("vi", "viewer").await;
