@@ -72,7 +72,6 @@ export function Session(props: {
     id == null
       ? w.card.allowedByPolicy
       : (members.data?.find((member) => member.id === id)?.name ?? w.card.allowedByPolicy);
-  const stopped = s.status === "done" && s.note?.toLowerCase().includes("stopped");
 
   const events = transcript.data ?? [];
   const opening = events.find((event) => event.kind === "person");
@@ -143,7 +142,7 @@ export function Session(props: {
         activity={activity}
         panel={props.panel}
         onPanel={props.onPanel}
-        canStop={s.status === "working" || s.status === "waiting_for_you"}
+        canStop={s.status === "queued" || s.status === "working" || s.status === "waiting_for_you"}
         onStop={() => setConfirmStop(true)}
         readOnly={!editor && me !== undefined}
       />
@@ -168,13 +167,14 @@ export function Session(props: {
               <TranscriptError error={transcript.error} onRetry={() => void transcript.refetch()} />
               {s.status === "failed" ? (
                 <div className="tl" role="alert">
-                  {w.experiment.sessionFailed}
+                  {s.note ? w.experiment.sessionFailedWith(s.note) : w.experiment.sessionFailed}
                 </div>
               ) : null}
+              {s.status === "stopped" ? (
+                <div className="tl">{s.note ?? w.activity.stopped}</div>
+              ) : null}
               {s.status === "done" && waiting.length === 0 ? (
-                <div className="tl">
-                  {stopped ? w.experiment.stoppedBy(w.you) : w.experiment.sessionDone}
-                </div>
+                <div className="tl">{w.experiment.sessionDone}</div>
               ) : null}
               {confirmStop ? (
                 <section className="cd ap" aria-label={w.experiment.stopSession}>

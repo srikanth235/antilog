@@ -320,6 +320,9 @@ pub struct Tracker {
     session: String,
     roles: HashMap<String, String>,
     sent: HashSet<String>,
+    /// What the errors of the turn in progress said, so a failure that arrives twice (on the
+    /// message and as a session error) is shown once.
+    errors: HashSet<String>,
 }
 
 impl Tracker {
@@ -328,6 +331,7 @@ impl Tracker {
             session: session.to_owned(),
             roles: HashMap::new(),
             sent: HashSet::new(),
+            errors: HashSet::new(),
         }
     }
 
@@ -341,12 +345,10 @@ impl Tracker {
             return Vec::new();
         };
         match event.get("type").and_then(Value::as_str) {
-            Some("message.updated") if self.mine(properties) => {
-                if let Some(info) = properties.get("info") {
-                    self.know(info);
-                }
-                Vec::new()
-            }
+            Some("message.updated") if self.mine(properties) => properties
+                .get("info")
+                .map(|info| self.know(info))
+                .unwrap_or_default(),
             Some("message.part.updated") if self.mine(properties) => properties
                 .get("part")
                 .map(|part| self.part(part))
@@ -359,26 +361,25 @@ impl Tracker {
                     .pointer("/status/type")
                     .and_then(Value::as_str)
                     .unwrap_or_default();
+                if kind == "busy" {
+                    self.errors.clear();
+                }
                 vec![Item::Status {
                     busy: kind != "idle",
                 }]
             }
             Some("session.idle") if self.mine(properties) => vec![Item::Status { busy: false }],
-            // A failed turn, such as a model the proxy refused: the person reads why.
+            // A failed turn, such as a call the provider refused: the person reads why.
             Some("session.error") if self.mine(properties) => {
-                let key = event.get("id").and_then(Value::as_str);
-                let why = properties
-                    .pointer("/error/data/message")
+                let key = event
+                    .get("id")
                     .and_then(Value::as_str)
-                    .unwrap_or("the turn failed");
-                key.map(|key| Item::Words {
-                    key: format!("error:{key}"),
-                    kind: ItemKind::Agent,
-                    text: format!("Error: {why}").chars().take(2000).collect(),
-                    tool: None,
-                })
-                .into_iter()
-                .collect()
+                    .map_or_else(|| uuid::Uuid::now_v7().to_string(), str::to_owned);
+                properties
+                    .get("error")
+                    .and_then(|error| self.failure(key, error))
+                    .into_iter()
+                    .collect()
             }
             _ => Vec::new(),
         }
@@ -386,23 +387,44 @@ impl Tracker {
 
     /// What a message read back from `GET /session/{id}/message` comes to.
     pub fn message(&mut self, message: &Value) -> Vec<Item> {
-        if let Some(info) = message.get("info") {
-            self.know(info);
+        let mut items = message
+            .get("info")
+            .map(|info| self.know(info))
+            .unwrap_or_default();
+        if let Some(parts) = message.get("parts").and_then(Value::as_array) {
+            items.extend(parts.iter().flat_map(|part| self.part(part)));
         }
-        message
-            .get("parts")
-            .and_then(Value::as_array)
-            .map(|parts| parts.iter().flat_map(|part| self.part(part)).collect())
-            .unwrap_or_default()
+        items
     }
 
-    fn know(&mut self, info: &Value) {
-        if let (Some(id), Some(role)) = (
+    /// Remembers whose message this is; an assistant message that ended in an error is an item.
+    fn know(&mut self, info: &Value) -> Vec<Item> {
+        let (Some(id), Some(role)) = (
             info.get("id").and_then(Value::as_str),
             info.get("role").and_then(Value::as_str),
-        ) {
-            self.roles.insert(id.to_owned(), role.to_owned());
+        ) else {
+            return Vec::new();
+        };
+        self.roles.insert(id.to_owned(), role.to_owned());
+        if role != "assistant" {
+            return Vec::new();
         }
+        info.get("error")
+            .and_then(|error| self.failure(id.to_owned(), error))
+            .into_iter()
+            .collect()
+    }
+
+    /// A failure as the person reads it, once: the same text twice in a turn is one error.
+    fn failure(&mut self, key: String, error: &Value) -> Option<Item> {
+        let key = format!("error:{key}");
+        if !self.sent.insert(key.clone()) {
+            return None;
+        }
+        let text = error_text(error);
+        self.errors
+            .insert(text.clone())
+            .then_some(Item::Error { key, text })
     }
 
     /// Only what an agent said or called is sent: a person's words are kept by the server when
@@ -457,6 +479,42 @@ impl Tracker {
             None => Vec::new(),
         }
     }
+}
+
+/// What a provider's refusal says, as OpenCode reports it: the error's message, and the
+/// provider's own words from the response body when they add to it.
+fn error_text(error: &Value) -> String {
+    let data = error.get("data").unwrap_or(error);
+    let message = data
+        .get("message")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|message| !message.is_empty());
+    let body: Option<String> = data
+        .get("responseBody")
+        .and_then(Value::as_str)
+        .and_then(|raw| {
+            serde_json::from_str::<Value>(raw).ok().and_then(|json| {
+                ["/error/message", "/message", "/error"]
+                    .iter()
+                    .find_map(|path| {
+                        json.pointer(path)
+                            .and_then(Value::as_str)
+                            .map(str::to_owned)
+                    })
+            })
+        });
+    let text = match (message, body) {
+        (Some(message), Some(body)) if !message.contains(&body) => format!("{message}: {body}"),
+        (Some(message), _) => message.to_owned(),
+        (None, Some(body)) => body,
+        (None, None) => error
+            .get("name")
+            .and_then(Value::as_str)
+            .unwrap_or("the model call failed")
+            .to_owned(),
+    };
+    text.chars().take(2000).collect()
 }
 
 /// What OpenCode names the tools of the `antilog` MCP entry in the managed config.
@@ -692,12 +750,33 @@ mod tests {
         let failed = json!({"id": "evt_9", "type": "session.error", "properties": {"sessionID": "ses_1", "error": {"name": "UnknownError", "data": {"message": "budget spent"}}}});
         assert_eq!(
             tracker.event(&failed),
-            vec![Item::Words {
+            vec![Item::Error {
                 key: "error:evt_9".into(),
-                kind: ItemKind::Agent,
-                text: "Error: budget spent".into(),
-                tool: None,
+                text: "budget spent".into(),
             }]
+        );
+    }
+
+    #[test]
+    fn a_refused_call_is_an_error_once_with_the_providers_words() {
+        let mut tracker = Tracker::new("ses_1");
+        let info = json!({"id": "msg_1", "role": "assistant", "error": {"name": "APIError", "data": {"message": "Payment Required", "statusCode": 402, "responseBody": "{\"error\":{\"message\":\"Insufficient balance\"}}"}}});
+        let on_message = tracker.event(
+            &json!({"type": "message.updated", "properties": {"sessionID": "ses_1", "info": info}}),
+        );
+        assert_eq!(
+            on_message,
+            vec![Item::Error {
+                key: "error:msg_1".into(),
+                text: "Payment Required: Insufficient balance".into(),
+            }]
+        );
+        // The same failure as a session error, and again from the read-back after a reconnect.
+        let again = json!({"id": "evt_1", "type": "session.error", "properties": {"sessionID": "ses_1", "error": info["error"]}});
+        assert_eq!(tracker.event(&again), Vec::new());
+        assert_eq!(
+            tracker.message(&json!({"info": info, "parts": []})),
+            Vec::new()
         );
     }
 

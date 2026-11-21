@@ -7,7 +7,7 @@ The settled product, directed by the owner, as [docs/V0.md](../../../docs/V0.md)
 - **Antilog is a chat with a coding agent in a cloud session.** A person talks to an agent that runs in a machine of its own with repos attached, started in a project. The agent asks for setup through Antilog's tools and a person approves each request.
 - **No modes, no plan step, no orchestration loop on the server.** The agent drives. The only server-side state machines are the runner's queue and the budget meter.
 - **Three things.** A **project** groups sessions for one area of the code. A **session** is one agent's work in one machine and belongs to one project. A **card** is a tool call a person approves. Reusable setup lives in one Customize page.
-- **Session.** Its fields and routes are in [session model](../session/model.md). Status: Working, Waiting for you, Done or Failed; a stopped one is Done, "Stopped by NAME". The sidebar lists projects, each with its sessions.
+- **Session.** Its fields and routes are in [session model](../session/model.md). Status: Queued, Working, Waiting for you, Done, Stopped or Failed; a stopped one is Stopped, "Stopped by NAME". The sidebar lists projects, each with its sessions.
 - **Tools.** A session's MCP endpoint (`/mcp/sessions/{id}`) serves the setup tools, each a card: `attach_repo`, `request_credential`, `set_environment`, `request_budget`, plus the tools of every organization connector (On, Off or Ask first). See [session tools](../session/tools.md). There is no `antilog mcp` and no REST tool endpoint.
 
 ## Settings are tools

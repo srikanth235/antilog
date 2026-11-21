@@ -30,6 +30,15 @@ pub enum Msg {
     Stop,
 }
 
+/// How long the session's own steps may take.
+#[derive(Clone, Copy)]
+pub struct Timing {
+    /// The environment's setup script.
+    pub setup: Duration,
+    /// How long the agent may sit idle before the machine is let go; zero keeps it.
+    pub idle: Duration,
+}
+
 /// Command ids finished since the last poll.
 pub type Done = Arc<Mutex<Vec<Uuid>>>;
 
@@ -181,6 +190,34 @@ fn tail(bytes: &[u8], spec: &SessionSpec) -> String {
         text = text.replace(token, "***");
     }
     text
+}
+
+const REASON_CHARS: usize = 400;
+
+/// Why a session did not start, as the person reads it: each repo's clone credential and any
+/// Antilog token taken out, the first lines only, cut short.
+pub(super) fn reason(error: &anyhow::Error, spec: &SessionSpec) -> String {
+    let mut text = format!("{error:#}");
+    for secret in spec
+        .repos
+        .iter()
+        .filter_map(|repo| repo.token.as_deref())
+        .chain([
+            spec.model_token.as_str(),
+            spec.mcp_token.as_str(),
+            spec.runner_token.as_str(),
+        ])
+        .filter(|secret| secret.len() >= 8)
+    {
+        text = text.replace(secret, "***");
+    }
+    let text: String = text.split_whitespace().collect::<Vec<_>>().join(" ");
+    let cut: String = text.chars().take(REASON_CHARS).collect();
+    if cut.len() < text.len() {
+        format!("{cut}…")
+    } else {
+        cut
+    }
 }
 
 /// Runs the environment's setup script as root, from the folder that holds the repo checkouts
@@ -336,6 +373,10 @@ struct Live<S: Sandbox> {
     heads_up: Option<String>,
     /// Each repo of the machine with where it was cloned from, for the Changes panel.
     repos: Vec<(String, PathBuf, Base)>,
+    /// How long the agent may sit idle before the machine is let go; zero keeps it.
+    idle_limit: Duration,
+    /// Since when nothing has happened: the agent is not busy and no one has written to it.
+    quiet_since: Option<Instant>,
 }
 
 impl<S: Sandbox> Live<S> {
@@ -405,6 +446,7 @@ impl<S: Sandbox> Live<S> {
             .and_then(serde_json::Value::as_str)
             .is_some_and(|kind| kind != "idle");
         self.outbox.push(Item::Status { busy });
+        self.quiet_since = (!busy).then(Instant::now);
         self.flush().await
     }
 
@@ -475,7 +517,11 @@ impl<S: Sandbox> Live<S> {
             .release(
                 self.spec.session,
                 &self.spec.runner_token,
-                &Release { outcome, export },
+                &Release {
+                    outcome,
+                    export,
+                    reason: None,
+                },
             )
             .await
     }
@@ -498,6 +544,11 @@ impl<S: Sandbox> Live<S> {
                     for event in batch {
                         let items = self.tracker.event(&event);
                         turn_ended |= items.iter().any(|item| matches!(item, Item::Status { busy: false }));
+                        if items.iter().any(|item| matches!(item, Item::Status { busy: true })) {
+                            self.quiet_since = None;
+                        } else if turn_ended {
+                            self.quiet_since = Some(Instant::now());
+                        }
                         self.outbox.extend(items);
                     }
                     self.flush().await?;
@@ -507,13 +558,23 @@ impl<S: Sandbox> Live<S> {
                 }
                 message = commands.recv() => match message {
                     Some(Msg::Command(envelope)) => {
+                        self.quiet_since = None;
                         if self.command(envelope).await? {
                             return Ok(true);
                         }
                     }
                     Some(Msg::Stop) | None => bail!(NotHeld),
                 },
-                _ = tick.tick() => self.flush().await?,
+                _ = tick.tick() => {
+                    self.flush().await?;
+                    if !self.idle_limit.is_zero()
+                        && self.quiet_since.is_some_and(|since| since.elapsed() >= self.idle_limit)
+                    {
+                        tracing::info!(session = %self.spec.session, "idle: exporting the session and letting the machine go");
+                        self.release(ReleaseOutcome::Idle).await?;
+                        return Ok(true);
+                    }
+                }
             }
         }
     }
@@ -525,10 +586,10 @@ async fn start<S: Sandbox>(
     server: &Server,
     spec: &SessionSpec,
     done: &Done,
-    setup_timeout: Duration,
+    timing: Timing,
 ) -> Result<Live<S>> {
     let machine = Arc::new(sandbox.start(&SandboxSpec::new(spec)).await?);
-    match prepare(&machine, opencode, server, spec, done, setup_timeout).await {
+    match prepare(&machine, opencode, server, spec, done, timing).await {
         Ok(live) => Ok(live),
         Err(error) => {
             machine.stop().await;
@@ -543,8 +604,9 @@ async fn prepare<S: Sandbox>(
     server: &Server,
     spec: &SessionSpec,
     done: &Done,
-    setup_timeout: Duration,
+    timing: Timing,
 ) -> Result<Live<S>> {
+    let setup_timeout = timing.setup;
     let root = machine.paths().work.clone();
     clone_all(&**machine, &root, spec).await?;
     // The container has its variables and the repos are in: the setup script can use both.
@@ -614,6 +676,8 @@ async fn prepare<S: Sandbox>(
         done: done.clone(),
         heads_up,
         repos,
+        idle_limit: timing.idle,
+        quiet_since: None,
     })
 }
 
@@ -625,16 +689,18 @@ pub async fn drive<S: Sandbox>(
     spec: SessionSpec,
     mut commands: mpsc::UnboundedReceiver<Msg>,
     done: Done,
-    setup_timeout: Duration,
+    timing: Timing,
 ) {
     let session: SessionId = spec.session;
-    let mut live = match start(&sandbox, &opencode, &server, &spec, &done, setup_timeout).await {
+    let mut live = match start(&sandbox, &opencode, &server, &spec, &done, timing).await {
         Ok(live) => live,
         Err(error) => {
-            tracing::error!(%session, error = %format!("{error:#}"), "the session did not start");
+            let why = reason(&error, &spec);
+            tracing::error!(%session, error = %why, "the session did not start");
             let release = Release {
                 outcome: ReleaseOutcome::Failed,
                 export: None,
+                reason: Some(why),
             };
             server
                 .release(session, &spec.runner_token, &release)
@@ -667,6 +733,9 @@ pub async fn drive<S: Sandbox>(
             let release = Release {
                 outcome: ReleaseOutcome::Failed,
                 export: None,
+                reason: Some(
+                    "OpenCode stopped answering and could not be reached again.".to_owned(),
+                ),
             };
             server
                 .release(session, &spec.runner_token, &release)

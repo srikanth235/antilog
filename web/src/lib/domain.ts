@@ -11,7 +11,7 @@ export function isOwner(role: Role | undefined): boolean {
   return role === "owner";
 }
 
-/** What needs a person comes first: Waiting for you, then Working, then Failed, then Done. */
+/** What needs a person comes first: Waiting for you, Working, Queued, then Failed, Stopped, Done. */
 export function activityOf(
   sessions: readonly Schemas["Session"][],
   pendingCards: number,
@@ -21,8 +21,17 @@ export function activityOf(
   const status = new Set(sessions.map((session) => session.status));
   if (status.has("waiting_for_you")) return "waiting_for_you";
   if (status.has("working")) return "working";
+  if (status.has("queued")) return "queued";
   if (status.has("failed") && !status.has("done")) return "failed";
+  if (status.has("stopped") && !status.has("done")) return "stopped";
   return "done";
+}
+
+/** Where the repo's work stands: its current branch, or the short sha of HEAD when no branch is checked out. */
+export function headLabel(repo: Pick<Schemas["RepoChanges"], "headBranch" | "headSha">): string {
+  return repo.headBranch === "" || repo.headBranch === "HEAD"
+    ? repo.headSha.slice(0, 7)
+    : repo.headBranch;
 }
 
 /** The lead session is the first one started. */
@@ -69,6 +78,14 @@ export function parseRepos(text: string): string[] {
 export function composerPlaceholderKey(
   status: Schemas["SessionStatus"] | "none",
   hasCard: boolean,
-): "working" | "waiting_for_you" | "waiting_no_card" | "done" | "failed" | "none" {
+):
+  | "queued"
+  | "working"
+  | "waiting_for_you"
+  | "waiting_no_card"
+  | "done"
+  | "stopped"
+  | "failed"
+  | "none" {
   return status === "waiting_for_you" && !hasCard ? "waiting_no_card" : status;
 }

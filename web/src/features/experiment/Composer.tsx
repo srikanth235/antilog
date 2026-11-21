@@ -22,7 +22,11 @@ export function Composer(props: {
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const ended = props.status === "done" || props.status === "failed" || props.status === "none";
+  const ended =
+    props.status === "done" ||
+    props.status === "stopped" ||
+    props.status === "failed" ||
+    props.status === "none";
   const placeholder = props.canSend
     ? w.experiment.composerPlaceholder[composerPlaceholderKey(props.status, props.hasCard)]
     : w.readOnly.viewersRead;

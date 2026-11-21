@@ -1,7 +1,7 @@
 ---
 name: session
 description: >-
-  How does the chat work, and where does an agent run? Use for sessions and their status (Working, Waiting for you, Done, Failed), the conversation and what the server stores of it, a session's project, model and agent, attaching repos, environments, connectors and credentials, skill packs, the setup tools (attach_repo, request_credential, set_environment, request_budget), what agents are told, spend and a session's budget, the runner, clean-up, and adding an agent, an environment, a connector or a skill pack.
+  How does the chat work, and where does an agent run? Use for sessions and their status (Queued, Working, Waiting for you, Done, Stopped, Failed), the conversation and what the server stores of it, a session's project, model and agent, attaching repos, environments, connectors and credentials, skill packs, the setup tools (attach_repo, request_credential, set_environment, request_budget), what agents are told, spend and a session's budget, the runner, clean-up, and adding an agent, an environment, a connector or a skill pack.
 ---
 
 # Session

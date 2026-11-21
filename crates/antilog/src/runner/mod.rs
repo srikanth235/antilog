@@ -18,8 +18,29 @@ pub use container::{ContainerConfig, ContainerSandbox, Docker};
 pub use opencode::Opencode;
 pub use sandbox::Sandbox;
 
-/// One session per machine in v0: OpenCode's managed config is one file for the machine.
-const SESSIONS: u32 = 1;
+/// Sessions a runner holds at once unless told otherwise, before the host's size bounds it.
+const DEFAULT_SESSIONS: u32 = 4;
+
+/// The most sessions a host of this size can hold: one per CPU and per 2 GiB of memory, never
+/// fewer than one.
+fn bound_sessions(cpus: u32, memory_gib: u32) -> u32 {
+    cpus.min(memory_gib / 2).max(1)
+}
+
+/// How many sessions to hold when nobody said: four, or fewer on a small host.
+pub fn default_sessions() -> u32 {
+    let cpus = std::thread::available_parallelism()
+        .map_or(1, |count| u32::try_from(count.get()).unwrap_or(u32::MAX));
+    let memory_gib = std::fs::read_to_string("/proc/meminfo")
+        .ok()
+        .and_then(|text| {
+            let line = text.lines().find(|line| line.starts_with("MemTotal:"))?;
+            let kib: u64 = line.split_whitespace().nth(1)?.parse().ok()?;
+            u32::try_from(kib / 1024 / 1024).ok()
+        })
+        .unwrap_or(u32::MAX);
+    DEFAULT_SESSIONS.min(bound_sessions(cpus, memory_gib))
+}
 
 pub struct Config {
     pub server: String,
@@ -37,6 +58,11 @@ pub struct Config {
     /// How long an environment's setup script may run before it is stopped. A script that fails
     /// or times out does not fail the session.
     pub setup_timeout: Duration,
+    /// How many sessions to hold at once, each in a container of its own.
+    pub sessions: u32,
+    /// How long a session waiting for a person keeps its machine. After it the runner exports the
+    /// session and lets the machine go, and a person's message starts it again. Zero keeps it.
+    pub idle_timeout: Duration,
 }
 
 impl Config {
@@ -49,6 +75,8 @@ impl Config {
             exit_after_last_session: false,
             drain_grace: Duration::from_secs(30),
             setup_timeout: Duration::from_secs(600),
+            sessions: 1,
+            idle_timeout: Duration::from_secs(600),
         }
     }
 }
@@ -139,7 +167,9 @@ async fn run_until<S: Sandbox>(
         let capacity = if draining.is_some() {
             0
         } else {
-            SESSIONS.saturating_sub(u32::try_from(held.len()).unwrap_or(SESSIONS))
+            config
+                .sessions
+                .saturating_sub(u32::try_from(held.len()).unwrap_or(u32::MAX))
         };
         let request = PollRequest {
             runner: config.name.clone(),
@@ -173,7 +203,10 @@ async fn run_until<S: Sandbox>(
                         spec,
                         receiver,
                         done.clone(),
-                        config.setup_timeout,
+                        session::Timing {
+                            setup: config.setup_timeout,
+                            idle: config.idle_timeout,
+                        },
                     ));
                     held.insert(
                         id,
@@ -213,3 +246,17 @@ async fn run_until<S: Sandbox>(
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod sizing {
+    use super::bound_sessions;
+
+    #[test]
+    fn a_small_host_holds_fewer_sessions() {
+        assert_eq!(bound_sessions(16, 64), 16);
+        assert_eq!(bound_sessions(2, 64), 2);
+        assert_eq!(bound_sessions(16, 6), 3);
+        assert_eq!(bound_sessions(1, 1), 1);
+        assert_eq!(bound_sessions(0, 0), 1);
+    }
+}

@@ -116,7 +116,13 @@ pub fn opencode_config(
         // default tool timeout is one minute.
         "experimental": {"mcp_timeout": 1_800_000},
         "skills": {"paths": ["/opt/antilog/skills"]},
-        "permission": {"bash": "allow", "edit": "allow"},
+        // Folders outside the one OpenCode started in: the other repos under /work and scratch
+        // space in /tmp are the agent's own, so they never raise a card. Anything else asks.
+        "permission": {
+            "bash": "allow",
+            "edit": "allow",
+            "external_directory": {"/work/**": "allow", "/tmp/**": "allow"},
+        },
     })
 }
 
@@ -237,6 +243,13 @@ pub async fn poll<D: Deps>(
         .await?
     {
         claims.push(spec(deps, settings, &machine).await?);
+        if store
+            .session(machine.organization, machine.session)
+            .await?
+            .is_some_and(|row| row.status == SessionStatus::Queued)
+        {
+            set_status(store, now, &machine, SessionStatus::Working).await?;
+        }
     }
     let mut commands = store.take_commands(&request.runner).await?;
     // The queue holds only the name of an attached repo; where to clone it from is the server's.
@@ -441,6 +454,17 @@ pub async fn ingest<D: Deps>(
                 )
                 .await?;
             }
+            Item::Error { key, text } => {
+                record(
+                    deps,
+                    &row,
+                    format!("error:{key}"),
+                    EventKind::Error,
+                    None,
+                    text,
+                )
+                .await?;
+            }
             Item::Permission { id, tool, detail } => {
                 ask_card(deps.store(), now_ms(deps), &machine, id, tool, detail).await?;
             }
@@ -509,7 +533,7 @@ pub async fn release<D: Deps>(
         ReleaseOutcome::Failed => (
             MachineState::Failed,
             Some(SessionStatus::Failed),
-            Some("The machine failed".to_owned()),
+            Some(failure_note(release.reason.as_deref())),
         ),
     };
     deps.store()
@@ -517,6 +541,24 @@ pub async fn release<D: Deps>(
         .await?;
     deps.credentials().revoke_all(session).await?;
     if let Some(status) = status {
+        if status == SessionStatus::Failed
+            && let Some(row) = deps.store().session(machine.organization, session).await?
+            && row.status.is_active()
+        {
+            let text = match release.reason.as_deref().map(str::trim) {
+                Some(reason) if !reason.is_empty() => format!("The session failed: {reason}"),
+                _ => "The session failed. The machine stopped without saying why.".to_owned(),
+            };
+            record(
+                deps,
+                &row,
+                format!("failed:{session}:{now}"),
+                EventKind::Error,
+                None,
+                &text,
+            )
+            .await?;
+        }
         let change = SessionChange {
             status: Some(status),
             note,
@@ -533,6 +575,25 @@ pub async fn release<D: Deps>(
         }
     }
     Ok(())
+}
+
+const NOTE_CHARS: usize = 200;
+
+/// The line a failed session shows beside its status: the runner's reason, cut short.
+fn failure_note(reason: Option<&str>) -> String {
+    let reason = reason.map(str::trim).filter(|reason| !reason.is_empty());
+    match reason {
+        Some(reason) => {
+            let line = reason.lines().next().unwrap_or(reason);
+            let cut: String = line.chars().take(NOTE_CHARS).collect();
+            if cut.len() < line.len() {
+                format!("{cut}…")
+            } else {
+                cut
+            }
+        }
+        None => "The machine failed".to_owned(),
+    }
 }
 
 /// The person's answer to a permission card reaches the machine that asked it, and the session

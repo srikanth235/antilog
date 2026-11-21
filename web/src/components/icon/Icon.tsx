@@ -79,12 +79,14 @@ export function Glyph({ name, size }: { name: GlyphName; size?: "s" | "l" }) {
   return <i aria-hidden="true" className={`ic ${size ?? ""} g-${name}`.replace("  ", " ")} />;
 }
 
-export type Activity = "working" | "waiting_for_you" | "done" | "failed";
+export type Activity = "queued" | "working" | "waiting_for_you" | "done" | "stopped" | "failed";
 
 const STATUS: Record<Activity, { cls: string; color: string; label: string }> = {
+  queued: { cls: "st-draft", color: "var(--ink3)", label: "queued" },
   working: { cls: "st-work run", color: "var(--accent)", label: "working" },
   waiting_for_you: { cls: "st-wait", color: "var(--warn)", label: "Waiting for you" },
   done: { cls: "st-done", color: "var(--good)", label: "done" },
+  stopped: { cls: "st-stop", color: "var(--ink2)", label: "stopped" },
   failed: { cls: "st-fail", color: "var(--bad)", label: "failed" },
 };
 

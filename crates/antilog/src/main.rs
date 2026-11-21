@@ -55,6 +55,15 @@ enum Command {
         /// start and runs without it.
         #[arg(long)]
         disk_gb: Option<u64>,
+        /// How many sessions this runner holds at once, each in its own container; defaults to
+        /// the ANTILOG_RUNNER_SESSIONS environment variable, then 4 bounded by the host's CPUs
+        /// and memory (at most one session per CPU and per 2 GiB).
+        #[arg(long)]
+        sessions: Option<u32>,
+        /// Seconds an idle session (waiting for a person) keeps its machine before the runner
+        /// exports it and lets the machine go; a person's message starts it again (0: never).
+        #[arg(long, default_value_t = 600)]
+        idle_timeout_sec: u64,
         /// Seconds between polls.
         #[arg(long, default_value_t = 5)]
         poll_secs: u64,
@@ -83,6 +92,8 @@ async fn main() -> anyhow::Result<()> {
             drain_grace_sec,
             setup_timeout_sec,
             disk_gb,
+            sessions,
+            idle_timeout_sec,
             poll_secs,
             pure,
             disable_project_config,
@@ -101,6 +112,20 @@ async fn main() -> anyhow::Result<()> {
             config.exit_after_last_session = exit_after_last_session;
             config.drain_grace = std::time::Duration::from_secs(drain_grace_sec);
             config.setup_timeout = std::time::Duration::from_secs(setup_timeout_sec.max(1));
+            config.idle_timeout = std::time::Duration::from_secs(idle_timeout_sec);
+            let sessions = match sessions {
+                Some(count) => count,
+                None => match std::env::var("ANTILOG_RUNNER_SESSIONS") {
+                    Ok(text) => text.trim().parse().map_err(|_| {
+                        anyhow::anyhow!("ANTILOG_RUNNER_SESSIONS is not a whole number")
+                    })?,
+                    Err(_) => runner::default_sessions(),
+                },
+            };
+            if sessions == 0 {
+                anyhow::bail!("--sessions must be at least 1");
+            }
+            config.sessions = sessions;
             let proxy_addr = proxy
                 .or_else(|| std::env::var("ANTILOG_PROXY_ADDR").ok())
                 .ok_or_else(|| anyhow::anyhow!("give --proxy or set ANTILOG_PROXY_ADDR"))?;

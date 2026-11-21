@@ -1076,10 +1076,11 @@ export interface components {
             version: number;
         };
         /**
-         * @description Who spoke: a person, an agent, or the name of a tool an agent called.
+         * @description Who spoke: a person, an agent, the name of a tool an agent called, or an error the model's
+         *     provider or the machine reported.
          * @enum {string}
          */
-        EventKind: "person" | "agent" | "tool";
+        EventKind: "person" | "agent" | "tool" | "error";
         /** @description Oldest first. `next` is the `after` for the page that follows, or `null` when this is the end so far. */
         EventPage: {
             events: components["schemas"]["SessionEvent"][];
@@ -1476,7 +1477,7 @@ export interface components {
             id: components["schemas"]["SessionId"];
             /** @description `provider/model`, as the harness names it. */
             model: string;
-            /** @description Why it ended, such as "Stopped by Ada". */
+            /** @description Why it ended, such as "Stopped by Ada", or what went wrong when it failed. */
             note?: string | null;
             organizationId: components["schemas"]["OrganizationId"];
             projectId: components["schemas"]["ProjectId"];
@@ -1537,7 +1538,7 @@ export interface components {
             tokens: number;
         };
         /** @enum {string} */
-        SessionStatus: "working" | "waiting_for_you" | "done" | "failed";
+        SessionStatus: "queued" | "working" | "waiting_for_you" | "done" | "stopped" | "failed";
         SetCredential: {
             credential: string;
         };

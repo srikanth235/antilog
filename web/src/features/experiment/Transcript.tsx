@@ -30,6 +30,18 @@ export function Message(props: { event: Schemas["SessionEvent"]; agent: string }
         </div>
       </div>
     );
+  if (event.kind === "error")
+    return (
+      <div className="fl" role="alert">
+        <span
+          role="img"
+          aria-label={w.experiment.errorLabel}
+          className="st gi st-fail"
+          style={{ color: "var(--bad)" }}
+        />
+        <span>{event.text}</span>
+      </div>
+    );
   return null;
 }
 

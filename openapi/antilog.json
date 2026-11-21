@@ -3371,11 +3371,12 @@
       },
       "EventKind": {
         "type": "string",
-        "description": "Who spoke: a person, an agent, or the name of a tool an agent called.",
+        "description": "Who spoke: a person, an agent, the name of a tool an agent called, or an error the model's\nprovider or the machine reported.",
         "enum": [
           "person",
           "agent",
-          "tool"
+          "tool",
+          "error"
         ]
       },
       "EventPage": {
@@ -4596,7 +4597,7 @@
               "string",
               "null"
             ],
-            "description": "Why it ended, such as \"Stopped by Ada\"."
+            "description": "Why it ended, such as \"Stopped by Ada\", or what went wrong when it failed."
           },
           "organizationId": {
             "$ref": "#/components/schemas/OrganizationId"
@@ -4772,9 +4773,11 @@
       "SessionStatus": {
         "type": "string",
         "enum": [
+          "queued",
           "working",
           "waiting_for_you",
           "done",
+          "stopped",
           "failed"
         ]
       },

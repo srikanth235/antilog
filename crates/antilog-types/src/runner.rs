@@ -161,6 +161,8 @@ pub enum Item {
         tool: String,
         detail: String,
     },
+    /// The model's provider refused or failed a call; shown as an error in the transcript.
+    Error { key: String, text: String },
     /// The agent is busy again or has stopped.
     Status { busy: bool },
 }
@@ -186,6 +188,10 @@ pub struct Release {
     pub outcome: ReleaseOutcome,
     /// What `opencode export` wrote, so a later claim can import it.
     pub export: Option<String>,
+    /// Why the machine failed, cut short and with credentials taken out; the session's note and
+    /// the transcript say it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reason: Option<String>,
 }
 
 /// What a session asked for when it started, kept until a runner claims it.

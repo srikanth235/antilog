@@ -62,12 +62,6 @@ export function ApprovalCard(props: {
             </span>
           </div>
         ))}
-        <div className="ap-r">
-          <span className="k">{w.card.whatCost}</span>
-          <span className="v">
-            <span>{cost == null || cost === 0 ? w.card.costsNothing : w.card.mayCost(cost)}</span>
-          </span>
-        </div>
         {credential ? (
           <div className="ap-r">
             <span className="k">{w.card.titles.add_credential}</span>

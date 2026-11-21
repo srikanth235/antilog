@@ -214,7 +214,7 @@ async fn a_claim_carries_the_spec_the_contract_lists() {
             },
             "mcp": {"antilog": {"type": "remote", "url": format!("https://antilog.example/mcp/sessions/{}", session.id), "headers": {"Authorization": format!("Bearer {mcp}")}}},
             "skills": {"paths": ["/opt/antilog/skills"]},
-            "permission": {"bash": "allow", "edit": "allow"},
+            "permission": {"bash": "allow", "edit": "allow", "external_directory": {"/work/**": "allow", "/tmp/**": "allow"}},
         })
     );
     // The person's first words come with the claim, once.
