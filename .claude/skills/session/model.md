@@ -67,13 +67,13 @@ The server keeps a ledger of a session. It runs no loop. A person can talk or in
 
 | Stores | Never stores |
 | --- | --- |
-| The conversation: what people and agents said ([../product/rulings.md](../product/rulings.md)); built as `session_events`, read by `GET /sessions/{id}/events` | Tool output |
-| Tool call names (built, in the conversation) and card states | File contents, diffs |
-| Commit ids, skill pack versions, connector status | Data |
+| The conversation: what people and agents said ([../product/rulings.md](../product/rulings.md)); built as `session_events`, read by `GET /sessions/{id}/events` | File contents, diffs, whole tool output |
+| Each finished tool call as a short label, its status (done or failed), and its input and output cut to 4 KB with credentials taken out (owner, 21 Nov), and card states | Data |
+| Commit ids, skill pack versions, connector status | |
 | Measurements | Raw logs |
 | Spend and audit rows | |
 
-Tool output and raw logs stay on the session machine and are fetched when opened. They may expire, and the session says so; a failed fetch shows as failed, never as empty.
+Whole tool output and raw logs stay on the session machine and are fetched when opened. They may expire, and the session says so; a failed fetch shows as failed, never as empty.
 
 The terminal, Changes, Preview and Files panels read from the session's machine when opened and the server keeps no copy. A person with edit access can type in the terminal, a viewer sees it read-only, and opening one is an audit row ("Opened a terminal in Claude Code session"). It is never an Antilog host. How the panels look is in [../design/behaviour.md](../design/behaviour.md).
 

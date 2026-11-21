@@ -9,7 +9,7 @@ use uuid::Uuid;
 
 use crate::id::text_enum;
 use crate::judge::{CommitRef, DatasetRef, ProtectedFile};
-use crate::{ExperimentId, OrganizationId, SessionId};
+use crate::{ExperimentId, OrganizationId, SessionId, ToolRecord};
 
 text_enum!(
     /// Where a session's machine is. A claim holds a lease; a lapsed lease is `Queued` again.
@@ -169,6 +169,9 @@ pub enum Item {
         key: String,
         kind: ItemKind,
         text: String,
+        /// For a tool call: what it did. The server cleans it again before storing.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        tool: Option<ToolRecord>,
     },
     /// The agent asked for a permission: it becomes an approval card.
     Permission {

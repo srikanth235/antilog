@@ -63,9 +63,10 @@ Add each new term to the glossary in the same change that introduces it. Prefer 
 | An agent's message | the Antilog mark and "Antilog", then the agent as a quiet label: "Antilog · Claude Code" |
 | Stopped session | Done, with "Stopped by NAME" |
 | Title menu (button "Session menu") | "Rename", "Pin" or "Unpin", "Experiment details", "Copy link", "Hand off to...", "Stop session" (inline confirm: "Stop session", "Keep working"), "Archive" |
-| Panel toggles | "Details", "Trials", "Changes", "Terminal", "Preview", "Files", each with a tooltip naming its shortcut ("Terminal (⌘⇧T)"); "Close Details panel"; "Resize panel" |
+| Panel toggles | "Overview", "Trials", "Changes", "Terminal", "Preview", "Files", each with a tooltip naming its shortcut ("Terminal (⌘⇧T)"); "Close Overview panel"; "Resize panel" |
 | More menu | "Export conversation", "Keyboard shortcuts", "Report a problem" |
-| Details panel | sections "Experiment" ("Experiment details"), "Environment" ("Change environment"), "Repos" ("Attach a repo"), "Agent", "Budget" ("$42 of $100", "Change budget"), "Sessions", "Context" ("44% used", "88k of 200k", "Compact", "Fresh session with summary") |
+| Overview panel | sections "Experiment" ("Experiment details"), "Environment" ("Environments", "Attach a repo"), "Context" ("44% used", "88k of 200k"), "Budget" ("$42 of $100", "Change budget"), "Connectors", "Sessions", "Outputs" ("Trials", "14 measured, 3 kept") |
+| Tool calls | group "Ran 19 commands (1 failed)", "Edited 2 files", "Read 3 files", "Called seal 3 times", "Ran 4 steps"; running "Running… 3 commands"; row "Ran cargo test", "Edited src/a.rs", "Failed"; detail labels "Command", "Input", "Output", "Copy" |
 | Trials panel | "14 across 3 sessions"; filter "All sessions"; "Show 6 earlier trials" |
 | Changes panel | "Against the base of BRANCH"; "Trial 12, Kept" or "Working copy"; "Protected: a change here is Rejected." |
 | Terminal panel | "Agent machine"; "The judge never runs here. Measurements run the sealed test in a fresh checkout."; "Type a command and press Return"; viewer: "Read-only. Only editors and owners can type here." |

@@ -23,7 +23,7 @@ Every light board, by canvas row (each has a generated `XDark` twin except the r
 | Components (parts) | `Sidebar`, `SettingsRail`, `SidebarRows`, `SidebarTop`, `SidebarFoot`, `SidebarEmpty` |
 | 1 Sign in | `SignIn`, `SignInError`, `SignInNoAccess` |
 | 2 Home | `Home`, `HomeEmpty` |
-| 3 Session | `SessionStart`, `SessionSeal`, `SessionWorking`, `SessionTrials`, `SessionChanges`, `SessionTerminal`, `SessionPreview`, `SessionFiles`, `SessionShare`, `SessionTitleMenu`, `SessionSpawned`, `SessionWin`, `SessionDelivered`, `SessionNoWin`, `SessionBudget`, `SessionCredential`, `SessionConnectorTool`, `SessionRepo`, `SessionRegression`, `SessionFailed`, `SessionReadOnly`, `SessionComposerExpanded`, `SessionAgentMenu`, `SessionKeepGoing`, `SessionHandOff`, `SessionFailover` |
+| 3 Session | `SessionStart`, `SessionSeal`, `SessionWorking`, `SessionTrials`, `SessionChanges`, `SessionTerminal`, `SessionPreview`, `SessionFiles`, `SessionShare`, `SessionTitleMenu`, `SessionSpawned`, `SessionWin`, `SessionDelivered`, `SessionNoWin`, `SessionBudget`, `SessionCredential`, `SessionConnectorTool`, `SessionRepo`, `SessionRegression`, `SessionFailed`, `SessionReadOnly`, `SessionComposerExpanded`, `SessionAgentMenu`, `SessionKeepGoing`, `SessionHandOff`, `SessionFailover`, `SessionToolCalls`, `SessionOverview` |
 | 4 Experiment and receipts | `ExperimentDetail`, `Receipt` |
 | 5 Search | `SearchStart`, `Search`, `SearchEmpty` |
 | 6 Projects and Report | `Projects`, `Project`, `ProjectEmpty`, `Report`, `AddValueModel` |

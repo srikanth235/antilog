@@ -6,7 +6,7 @@ use crate::spend::{BudgetError, ensure_budget};
 use crate::store::{NewEvent, RunnerStore, SessionChange, SessionStore, StoreError};
 use antilog_types::{
     AuditEntry, AuditOutcome, Command, EventKind, ExperimentId, MemberId, OrganizationId, Seed,
-    Session, SessionId, SessionStatus,
+    Session, SessionId, SessionStatus, ToolRecord,
 };
 
 pub use settle::settle;
@@ -39,8 +39,7 @@ pub(crate) fn now_ms<D: Deps>(deps: &D) -> i64 {
     deps.clock().now().as_millisecond()
 }
 
-/// Keeps one item of the conversation. Only the words said and the name of a tool called, never a
-/// tool's input or output. Keyed, so an item delivered twice is recorded once.
+/// Keeps one item of the conversation: the words said. A tool call goes through `record_tool`. Keyed, so an item delivered twice is recorded once.
 pub(crate) async fn record<D: Deps>(
     deps: &D,
     session: &Session,
@@ -57,6 +56,31 @@ pub(crate) async fn record<D: Deps>(
             kind,
             member,
             text: text.chars().take(100_000).collect(),
+            tool: None,
+            at: now_ms(deps),
+        })
+        .await?;
+    Ok(())
+}
+
+/// Keeps one finished tool call: its name as the text and a cleaned `ToolRecord` (label, how it
+/// ended, input and output cut small). Keyed by the call, so a call recorded twice is kept once.
+pub(crate) async fn record_tool<D: Deps>(
+    deps: &D,
+    session: &Session,
+    key: String,
+    name: &str,
+    tool: ToolRecord,
+) -> Result<(), SessionError> {
+    deps.store()
+        .append_event(&NewEvent {
+            organization: session.organization_id,
+            session: session.id,
+            key,
+            kind: EventKind::Tool,
+            member: None,
+            text: name.chars().take(200).collect(),
+            tool: Some(tool.cleaned()),
             at: now_ms(deps),
         })
         .await?;

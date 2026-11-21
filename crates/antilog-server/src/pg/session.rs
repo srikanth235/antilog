@@ -2,7 +2,7 @@ use antilog_core::store::{Invariant, NewEvent, SessionChange, SessionStore, Stor
 use antilog_types::{
     Agent, AuditEntry, CostTier, EvaluationKind, EvaluationTemplate, EventKind, Experiment,
     ExperimentId, ExperimentStatus, MemberId, OrganizationId, ProjectId, Session, SessionEvent,
-    SessionId, SessionStatus,
+    SessionId, SessionStatus, ToolRecord, ToolStatus,
 };
 use uuid::Uuid;
 
@@ -253,7 +253,7 @@ impl SessionStore for PgStore {
     async fn append_event(&self, event: &NewEvent) -> Result<(), StoreError> {
         let mut tx = self.scoped(event.organization).await?;
         sqlx::query!(
-            "insert into session_events (organization_id, session_id, key, kind, member_id, text, at) values ($1, $2, $3, $4, $5, $6, to_timestamp($7::bigint / 1000.0)) on conflict (session_id, key) do nothing",
+            "insert into session_events (organization_id, session_id, key, kind, member_id, text, at, tool_label, tool_status, tool_input, tool_output) values ($1, $2, $3, $4, $5, $6, to_timestamp($7::bigint / 1000.0), $8, $9, $10, $11) on conflict (session_id, key) do nothing",
             event.organization.as_uuid(),
             event.session.as_uuid(),
             event.key,
@@ -261,6 +261,10 @@ impl SessionStore for PgStore {
             event.member.map(|member| member.as_uuid()),
             event.text,
             event.at,
+            event.tool.as_ref().map(|tool| tool.label.as_str()),
+            event.tool.as_ref().map(|tool| tool.status.as_str()),
+            event.tool.as_ref().and_then(|tool| tool.input.as_deref()),
+            event.tool.as_ref().and_then(|tool| tool.output.as_deref()),
         )
         .execute(&mut *tx)
         .await
@@ -277,7 +281,7 @@ impl SessionStore for PgStore {
     ) -> Result<Vec<SessionEvent>, StoreError> {
         let mut tx = self.scoped(organization).await?;
         sqlx::query!(
-            "select seq, kind, member_id, text, (extract(epoch from at) * 1000)::bigint as \"at!\" from session_events where organization_id = $1 and session_id = $2 and seq > $3 order by seq limit $4",
+            "select seq, kind, member_id, text, tool_label, tool_status, tool_input, tool_output, (extract(epoch from at) * 1000)::bigint as \"at!\" from session_events where organization_id = $1 and session_id = $2 and seq > $3 order by seq limit $4",
             organization.as_uuid(),
             session.as_uuid(),
             after,
@@ -294,6 +298,16 @@ impl SessionStore for PgStore {
                 kind: EventKind::parse(&row.kind).ok_or_else(|| corrupt("event kind", &row.kind))?,
                 member_id: row.member_id.map(MemberId::from_uuid),
                 text: row.text,
+                tool: match (row.tool_label, row.tool_status) {
+                    (Some(label), Some(status)) => Some(ToolRecord {
+                        label,
+                        status: ToolStatus::parse(&status)
+                            .ok_or_else(|| corrupt("tool status", &status))?,
+                        input: row.tool_input,
+                        output: row.tool_output,
+                    }),
+                    _ => None,
+                },
                 at: row.at,
             })
         })

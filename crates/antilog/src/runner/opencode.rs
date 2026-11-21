@@ -5,7 +5,7 @@ use std::collections::{HashMap, HashSet};
 use std::path::Path;
 use std::time::Duration;
 
-use antilog_types::{Item, ItemKind, Reply};
+use antilog_types::{Item, ItemKind, Reply, ToolRecord, ToolStatus};
 use anyhow::{Context, Result, bail};
 use serde_json::{Value, json};
 
@@ -375,6 +375,7 @@ impl Tracker {
                     key: format!("error:{key}"),
                     kind: ItemKind::Agent,
                     text: format!("Error: {why}").chars().take(2000).collect(),
+                    tool: None,
                 })
                 .into_iter()
                 .collect()
@@ -418,6 +419,12 @@ impl Tracker {
         if self.sent.contains(&key) {
             return Vec::new();
         }
+        // The Antilog tools reach the agent through our own MCP endpoint, which records each call
+        // with its input and answer; recording OpenCode's view of it too would show it twice.
+        if text("type") == Some("tool") && text("tool").is_some_and(|n| n.starts_with(MCP_PREFIX)) {
+            self.sent.insert(key);
+            return Vec::new();
+        }
         let item = match text("type") {
             Some("text")
                 if !flag(part, "synthetic")
@@ -439,11 +446,62 @@ impl Tracker {
         match item {
             Some((kind, text)) => {
                 self.sent.insert(key.clone());
-                vec![Item::Words { key, kind, text }]
+                let tool = (kind == ItemKind::Tool).then(|| tool_record(&text, part));
+                vec![Item::Words {
+                    key,
+                    kind,
+                    text,
+                    tool,
+                }]
             }
             None => Vec::new(),
         }
     }
+}
+
+/// What OpenCode names the tools of the `antilog` MCP entry in the managed config.
+const MCP_PREFIX: &str = "antilog_";
+
+/// A finished tool part as the conversation keeps it: a short label, how it ended, and the input
+/// and output. The server cuts and cleans both again, so this only keeps the message small.
+fn tool_record(name: &str, part: &Value) -> ToolRecord {
+    let state = part.get("state").unwrap_or(&Value::Null);
+    let input = state.get("input").unwrap_or(&Value::Null);
+    let field = |key: &str| input.get(key).and_then(Value::as_str);
+    let label = match name {
+        "bash" => field("command").or_else(|| field("description")),
+        "read" | "edit" | "write" | "patch" | "multiedit" => {
+            field("filePath").or_else(|| field("path"))
+        }
+        "grep" | "glob" => field("pattern"),
+        "webfetch" => field("url"),
+        _ => None,
+    }
+    .unwrap_or(name);
+    let shown = match (name, field("command")) {
+        ("bash", Some(command)) => command.to_owned(),
+        _ if input.is_null() => String::new(),
+        _ => serde_json::to_string_pretty(input).unwrap_or_default(),
+    };
+    let exit = state.pointer("/metadata/exit").and_then(Value::as_i64);
+    let failed = state.get("status").and_then(Value::as_str) == Some("error")
+        || exit.is_some_and(|code| code != 0);
+    let output = state
+        .get("output")
+        .or_else(|| state.get("error"))
+        .and_then(Value::as_str)
+        .map(str::to_owned);
+    ToolRecord {
+        label: label.to_owned(),
+        status: if failed {
+            ToolStatus::Failed
+        } else {
+            ToolStatus::Done
+        },
+        input: (!shown.is_empty()).then_some(shown),
+        output,
+    }
+    .cleaned()
 }
 
 fn flag(part: &Value, name: &str) -> bool {
@@ -522,7 +580,8 @@ mod tests {
             vec![Item::Words {
                 key: "msg_a:prt_1".into(),
                 kind: ItemKind::Agent,
-                text: "Hello".into()
+                text: "Hello".into(),
+                tool: None,
             }]
         );
         assert!(
@@ -542,9 +601,66 @@ mod tests {
             vec![Item::Words {
                 key: "msg_a:prt_2".into(),
                 kind: ItemKind::Tool,
-                text: "bash".into()
+                text: "bash".into(),
+                tool: Some(ToolRecord {
+                    label: "bash".into(),
+                    status: ToolStatus::Done,
+                    input: None,
+                    output: None,
+                }),
             }]
         );
+    }
+
+    #[test]
+    fn a_tool_call_carries_what_it_ran_and_how_it_ended() {
+        let mut tracker = Tracker::new("ses_1");
+        assistant(&mut tracker, "msg_a");
+        let tool = |id: &str, name: &str, state: Value| {
+            json!({"type": "message.part.updated", "properties": {"sessionID": "ses_1", "part": {
+                "id": id, "messageID": "msg_a", "type": "tool", "tool": name, "callID": id, "state": state}}})
+        };
+        let failed = tracker.event(&tool(
+            "prt_1",
+            "bash",
+            json!({"status": "completed", "input": {"command": "cargo test\n--all"}, "output": "boom", "metadata": {"exit": 101}}),
+        ));
+        let [
+            Item::Words {
+                tool: Some(record), ..
+            },
+        ] = failed.as_slice()
+        else {
+            panic!("one tool item, got {failed:?}")
+        };
+        assert_eq!(record.label, "cargo test");
+        assert_eq!(record.status, ToolStatus::Failed);
+        assert_eq!(record.input.as_deref(), Some("cargo test\n--all"));
+        assert_eq!(record.output.as_deref(), Some("boom"));
+        let edit = tracker.event(&tool(
+            "prt_2",
+            "edit",
+            json!({"status": "error", "input": {"filePath": "src/a.rs"}, "error": "no match"}),
+        ));
+        let [
+            Item::Words {
+                tool: Some(record), ..
+            },
+        ] = edit.as_slice()
+        else {
+            panic!("one tool item")
+        };
+        assert_eq!(
+            (record.label.as_str(), record.status),
+            ("src/a.rs", ToolStatus::Failed)
+        );
+        // An Antilog tool is recorded by the server's MCP endpoint, not twice.
+        let ours = tool(
+            "prt_3",
+            "antilog_seal",
+            json!({"status": "completed", "input": {}}),
+        );
+        assert!(tracker.event(&ours).is_empty());
     }
 
     #[test]
@@ -579,7 +695,8 @@ mod tests {
             vec![Item::Words {
                 key: "error:evt_9".into(),
                 kind: ItemKind::Agent,
-                text: "Error: budget spent".into()
+                text: "Error: budget spent".into(),
+                tool: None,
             }]
         );
     }

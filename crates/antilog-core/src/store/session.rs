@@ -3,6 +3,7 @@ use std::future::Future;
 use antilog_types::{
     Agent, AuditEntry, EvaluationTemplate, EventKind, Experiment, ExperimentId, ExperimentStatus,
     MemberId, OrganizationId, ProjectId, Session, SessionEvent, SessionId, SessionStatus,
+    ToolRecord,
 };
 
 use super::StoreError;
@@ -24,6 +25,7 @@ pub struct NewEvent {
     pub kind: EventKind,
     pub member: Option<MemberId>,
     pub text: String,
+    pub tool: Option<ToolRecord>,
     pub at: i64,
 }
 

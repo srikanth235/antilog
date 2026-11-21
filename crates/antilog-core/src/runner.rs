@@ -15,7 +15,7 @@ use crate::credentials::{CredentialsError, Purpose, SessionCredentials};
 use crate::deps::Deps;
 use crate::environments;
 use crate::organization::Refusal;
-use crate::session::{SessionError, audit, now_ms, record};
+use crate::session::{SessionError, audit, now_ms, record, record_tool};
 use crate::store::{ApprovalStore, CustomizeStore, Store};
 use crate::store::{RunnerStore, SessionChange, SessionStore, StoreError};
 
@@ -405,7 +405,17 @@ pub async fn ingest<D: Deps>(
         .ok_or(RunnerError::NotFound)?;
     for item in items {
         match item {
-            Item::Words { key, kind, text } => {
+            Item::Words {
+                key,
+                kind: ItemKind::Tool,
+                text,
+                tool: Some(tool),
+            } => {
+                record_tool(deps, &row, format!("oc:{key}"), text, tool.clone()).await?;
+            }
+            Item::Words {
+                key, kind, text, ..
+            } => {
                 let kind = match kind {
                     ItemKind::Agent => EventKind::Agent,
                     ItemKind::Tool => EventKind::Tool,

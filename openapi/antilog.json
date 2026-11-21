@@ -6229,7 +6229,7 @@
       },
       "SessionEvent": {
         "type": "object",
-        "description": "One item of a session's conversation. A tool call carries only its name, never its input or\noutput; the server stores the words people and agents said and nothing a tool returned.",
+        "description": "One item of a session's conversation. A tool call carries what `ToolRecord` keeps, never more:\nthe server stores the words people and agents said and a short, cleaned record of each tool call.",
         "required": [
           "seq",
           "sessionId",
@@ -6266,6 +6266,17 @@
           },
           "text": {
             "type": "string"
+          },
+          "tool": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ToolRecord",
+                "description": "What a tool call did; set only when `kind` is `tool`, and absent on calls recorded before it existed."
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false
@@ -6754,6 +6765,35 @@
           "ask"
         ]
       },
+      "ToolRecord": {
+        "type": "object",
+        "description": "What one tool call did, kept small: a short label (the first line of a command, a file path,\nthe Antilog tool's name), how it ended, and its input and output cut to 4 KB each with\nanything that looks like a credential taken out.",
+        "required": [
+          "label",
+          "status"
+        ],
+        "properties": {
+          "input": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "label": {
+            "type": "string"
+          },
+          "output": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/ToolStatus"
+          }
+        },
+        "additionalProperties": false
+      },
       "ToolResult": {
         "type": "object",
         "required": [
@@ -6780,6 +6820,14 @@
           }
         },
         "additionalProperties": false
+      },
+      "ToolStatus": {
+        "type": "string",
+        "description": "How a tool call ended. A call still running is not stored: it is recorded when it ends.",
+        "enum": [
+          "done",
+          "failed"
+        ]
       },
       "TopWin": {
         "type": "object",

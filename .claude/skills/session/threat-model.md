@@ -20,7 +20,7 @@ A person's own messages in the chat are trusted as that person's, within their r
 | A connector's tools through the session endpoint | The credential stays on the server; each tool is On, Off or Ask first and each call is audited | It can use any On tool with any input, and read what the connector returns |
 | Network from its machine | Only the endpoints the environment allows | Any allowed endpoint that accepts writes is a way out |
 | The Antilog tools | Cards ask a person unless policy pre-approved them; Add credential always asks; `deliver` refuses a trial that is not Kept | It can spend the budget on trials, and write misleading hypotheses and pull request text |
-| The conversation | Stored as words only, never tool output | Whatever it writes in a message is stored, including data it read |
+| The conversation | Stored as words, plus each tool call's label, input and output cut to 4 KB with credentials taken out | Whatever it writes in a message is stored, including data it read |
 
 It never holds the holdout credential, a write credential, a model key, a cloud credential or the judge's signing key. It cannot mark a win or change a sealed experiment.
 

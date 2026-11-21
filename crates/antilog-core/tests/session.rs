@@ -401,11 +401,15 @@ async fn a_decided_card_reaches_the_agent_once_and_an_approved_repo_reaches_the_
 }
 
 #[tokio::test]
-async fn the_conversation_keeps_words_and_tool_names_and_never_what_a_tool_returned() {
+async fn the_conversation_keeps_words_and_a_cleaned_record_of_each_tool_call() {
     let (deps, seed) = world(1_000).await;
     let agent = lead(&deps, &seed).await;
     let org = seed.organization.id;
-    agent.call("c1", "history", json!({"secret-looking": "never stored"}));
+    agent.call(
+        "c1",
+        "history",
+        json!({"note": "use alc_0123abcdef", "secret-looking": "kept"}),
+    );
     agent.step(&deps).await;
     session::message(
         &deps,
@@ -435,12 +439,16 @@ async fn the_conversation_keeps_words_and_tool_names_and_never_what_a_tool_retur
     );
     assert_eq!(page.events[0].member_id, None);
     assert_eq!(page.events[2].member_id, Some(seed.owner.id));
-    assert!(
-        !serde_json::to_string(&page)
-            .unwrap()
-            .contains("never stored"),
-        "a tool's input is not kept"
-    );
+    let record = page.events[1]
+        .tool
+        .as_ref()
+        .expect("a tool call carries its record");
+    assert_eq!(record.label, "history");
+    let input = record.input.as_deref().unwrap_or_default();
+    assert!(input.contains("kept"), "the input is kept: {input}");
+    assert!(!input.contains("alc_0123"), "a credential is not: {input}");
+    assert!(record.output.is_some(), "the answer is kept, cut small");
+    assert!(page.events[0].tool.is_none() && page.events[2].tool.is_none());
     assert_eq!(page.next, None);
 
     let first = session::transcript(&deps.store, org, agent.session.id, None, Some(2))

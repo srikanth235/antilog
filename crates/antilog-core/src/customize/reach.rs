@@ -4,7 +4,7 @@
 
 use antilog_types::{
     ApprovalStatus, AuditEntry, AuditOutcome, CardKind, CardPayload, Connector, ConnectorId,
-    EventKind, ToolMode,
+    ToolMode,
 };
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -13,7 +13,7 @@ use super::connectors::{ConnectorClient, namespaced};
 use crate::deps::Deps;
 use crate::sealed::Sealer;
 use crate::session::now_ms;
-use crate::store::{ApprovalStore, CustomizeStore, SessionScope, SessionStore};
+use crate::store::{ApprovalStore, CustomizeStore, SessionScope};
 use crate::tools::{Caller, ToolDef, ToolHost, ToolReply, Toolbox, definitions};
 
 pub struct Reach<'a, D: Deps, C: ConnectorClient> {
@@ -141,8 +141,20 @@ impl<D: Deps, C: ConnectorClient> Reach<'_, D, C> {
         });
         match target {
             Some((connector, tool)) => {
-                self.connector_call(scope, caller, &connector, &tool, input)
-                    .await
+                let full = namespaced(&connector, &tool);
+                let shown = input.clone();
+                let outcome = self
+                    .connector_call(scope, caller, &connector, &tool, input)
+                    .await;
+                let (output, failed) = match &outcome {
+                    Outcome::Antilog(reply) => (
+                        reply.answer.to_string(),
+                        reply.answer.get("error").is_some(),
+                    ),
+                    Outcome::Remote { text, refused } => (text.clone(), *refused),
+                };
+                crate::tools::record_call(self.deps, caller, &full, &shown, &output, failed).await;
+                outcome
             }
             None => Outcome::Antilog(Toolbox(self.deps).call(caller, name, input).await),
         }
@@ -162,18 +174,6 @@ impl<D: Deps, C: ConnectorClient> Reach<'_, D, C> {
         input: Value,
     ) -> Outcome {
         let store = self.deps.store();
-        let full = namespaced(connector, tool);
-        if let Ok(Some(session)) = store.session(scope.organization, caller.session).await {
-            let _ = crate::session::record(
-                self.deps,
-                &session,
-                format!("tool:{}", caller.call),
-                EventKind::Tool,
-                None,
-                &full,
-            )
-            .await;
-        }
         let target = format!("{}:{tool}", connector.id);
         let Some(setting) = connector.tools.iter().find(|t| t.name == tool) else {
             return refused(format!(

@@ -984,3 +984,28 @@ a.tr-r:hover{background:var(--hover)}
 .qt .grid .r{text-align:right}
 .ap-rp3{--cols:minmax(0,1.7fr) 64px 56px 76px 70px 96px 84px}.ap-st{--cols:minmax(0,1.5fr) minmax(0,2fr) 80px}
 .ap-r>.k.ac-k{display:flex;flex-direction:column;align-items:flex-start;gap:2px}.ac-k .textbtn{min-height:28px;font-size:12.5px}
+
+/* Tool-call groups in the chat (SessionToolCalls): quiet until opened, as in Claude Code's cloud session */
+.tcg{display:flex;flex-direction:column;gap:6px;margin-left:38px;min-width:0}
+.tcg-h{display:flex;align-items:center;gap:8px;align-self:flex-start;min-height:28px;padding:0;border:0;background:none;color:var(--ink3);font-size:13px;text-align:left;cursor:pointer}
+.tcg-h:hover{color:var(--ink2)}
+.tcg-h .chev{transition:transform .14s}.tcg-h[aria-expanded="true"] .chev{transform:rotate(90deg)}
+.tcg-h .bad{color:var(--bad)}
+.tcg-h .st{flex:none}
+.tcg-l{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--r2);overflow:hidden;min-width:0}
+.tcr{border-top:1px solid var(--line);min-width:0}.tcr:first-child{border-top:0}
+.tcr-h{display:flex;align-items:center;gap:10px;width:100%;min-height:36px;padding:0 12px;border:0;background:none;color:var(--ink2);font-size:13px;text-align:left;cursor:pointer;min-width:0}
+.tcr-h:hover{background:var(--sunk);color:var(--ink)}
+.tcr-h .tcr-t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tcr-h .tcr-t code{font:400 12px/1.4 var(--font-mono);color:var(--ink)}
+.tcr-h .ic,.tcr-h .st{flex:none;color:var(--ink3)}
+.tcr-h .chev{transition:transform .14s}.tcr-h[aria-expanded="true"] .chev{transform:rotate(90deg)}
+.tcr.bad .tcr-h .st,.tcr.bad .tcr-h .tcr-f{color:var(--bad)}
+.tcr-f{flex:none;font-size:12px}
+.tcr-d{display:flex;flex-direction:column;gap:10px;padding:4px 12px 12px;background:var(--sunk)}
+.tcr-k{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--ink3)}
+.tcr-p{margin:0;padding:8px 10px;max-height:168px;overflow:auto;background:var(--raised);border:1px solid var(--line);border-radius:var(--r2);font:400 12px/1.6 var(--font-mono);color:var(--ink);white-space:pre-wrap;word-break:break-word}
+.tcr-p.bad{border-color:var(--bad)}
+.dp-leg{display:flex;flex-wrap:wrap;gap:4px 14px;padding:0 0 4px 28px;font-size:12px;color:var(--ink3)}
+.dp-leg i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;background:var(--ink3)}
+.dp-leg i.a{background:var(--accent)}.dp-leg i.b{background:var(--ink2)}

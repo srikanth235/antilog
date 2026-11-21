@@ -108,8 +108,102 @@ text_enum!(
     EventKind { Person => "person", Agent => "agent", Tool => "tool" }
 );
 
-/// One item of a session's conversation. A tool call carries only its name, never its input or
-/// output; the server stores the words people and agents said and nothing a tool returned.
+text_enum!(
+    /// How a tool call ended. A call still running is not stored: it is recorded when it ends.
+    ToolStatus { Done => "done", Failed => "failed" }
+);
+
+/// What one tool call did, kept small: a short label (the first line of a command, a file path,
+/// the Antilog tool's name), how it ended, and its input and output cut to 4 KB each with
+/// anything that looks like a credential taken out.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ToolRecord {
+    pub label: String,
+    pub status: ToolStatus,
+    pub input: Option<String>,
+    pub output: Option<String>,
+}
+
+/// The longest input or output kept, in characters.
+pub const TOOL_TEXT_CAP: usize = 4096;
+const LABEL_CAP: usize = 200;
+const REDACTED: &str = "[redacted]";
+const TOKEN_PREFIXES: [&str; 3] = ["alt_", "als_", "alc_"];
+
+impl ToolRecord {
+    /// The call as it may be stored: labels and texts cut, credentials removed. Both the runner
+    /// and the server apply it, so a runner that forgets cannot store a secret.
+    #[must_use]
+    pub fn cleaned(self) -> Self {
+        Self {
+            label: cut(
+                &redact(self.label.lines().next().unwrap_or_default()),
+                LABEL_CAP,
+            ),
+            status: self.status,
+            input: self.input.map(|text| cut(&redact(&text), TOOL_TEXT_CAP)),
+            output: self.output.map(|text| cut(&redact(&text), TOOL_TEXT_CAP)),
+        }
+    }
+}
+
+fn cut(text: &str, cap: usize) -> String {
+    if text.chars().count() <= cap {
+        return text.to_owned();
+    }
+    let mut kept: String = text.chars().take(cap).collect();
+    kept.push_str("\n… cut");
+    kept
+}
+
+/// Takes out an `Authorization` header's value, `Bearer` tokens and Antilog's own token forms.
+fn redact(text: &str) -> String {
+    let lower = text.to_ascii_lowercase();
+    let mut out = String::with_capacity(text.len());
+    let mut at = 0;
+    while at < text.len() {
+        let rest = &lower[at..];
+        let hide = if rest.starts_with("authorization") {
+            // The value runs to the end of the line or the quote that closes the header.
+            let end = rest.find(['\n', '"', '\'']).unwrap_or(rest.len());
+            Some(("authorization", end))
+        } else if let Some(after) = rest.strip_prefix("bearer ") {
+            let end = after
+                .find(|c: char| c.is_whitespace() || c == '"' || c == '\'')
+                .map_or(rest.len(), |n| n + 7);
+            Some(("bearer", end))
+        } else if TOKEN_PREFIXES.iter().any(|p| rest.starts_with(p)) {
+            let end = rest
+                .find(|c: char| !(c.is_ascii_alphanumeric() || c == '_' || c == '-'))
+                .unwrap_or(rest.len());
+            Some(("", end))
+        } else {
+            None
+        };
+        match hide {
+            Some((name, end)) if end > name.len() || name.is_empty() => {
+                out.push_str(&text[at..at + name.len()]);
+                if !name.is_empty() {
+                    out.push_str(if name == "bearer" { " " } else { ": " });
+                }
+                out.push_str(REDACTED);
+                at += end;
+            }
+            _ => {
+                let Some(c) = text[at..].chars().next() else {
+                    break;
+                };
+                out.push(c);
+                at += c.len_utf8();
+            }
+        }
+    }
+    out
+}
+
+/// One item of a session's conversation. A tool call carries what `ToolRecord` keeps, never more:
+/// the server stores the words people and agents said and a short, cleaned record of each tool call.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SessionEvent {
@@ -120,6 +214,8 @@ pub struct SessionEvent {
     /// Who said it, for a person's message.
     pub member_id: Option<MemberId>,
     pub text: String,
+    /// What a tool call did; set only when `kind` is `tool`, and absent on calls recorded before it existed.
+    pub tool: Option<ToolRecord>,
     pub at: i64,
 }
 
@@ -348,4 +444,50 @@ pub struct NewEvaluationTemplate {
     pub command: String,
     #[serde(default)]
     pub protected_paths: Vec<String>,
+}
+
+#[cfg(test)]
+mod tool_tests {
+    use super::*;
+
+    fn call(input: &str) -> ToolRecord {
+        ToolRecord {
+            label: input.into(),
+            status: ToolStatus::Done,
+            input: Some(input.into()),
+            output: None,
+        }
+        .cleaned()
+    }
+
+    #[test]
+    fn credentials_never_reach_the_store() {
+        let cleaned = call(
+            "curl -H \"Authorization: Bearer alc_0123abcd\" https://x\nuse als_aa11-bb and ALT_zz",
+        );
+        let input = cleaned.input.expect("input");
+        assert!(!input.contains("alc_0123"), "{input}");
+        assert!(!input.contains("als_aa11"), "{input}");
+        assert!(input.contains("https://x"), "{input}");
+        assert_eq!(
+            cleaned.label,
+            "curl -H \"Authorization: [redacted]\" https://x"
+        );
+    }
+
+    #[test]
+    fn a_label_is_one_short_line_and_a_text_is_cut() {
+        let long = "x".repeat(10_000);
+        let cleaned = ToolRecord {
+            label: format!("first\nsecond {long}"),
+            status: ToolStatus::Failed,
+            input: None,
+            output: Some(long),
+        }
+        .cleaned();
+        assert_eq!(cleaned.label, "first");
+        let output = cleaned.output.expect("output");
+        assert!(output.chars().count() <= TOOL_TEXT_CAP + 8);
+        assert!(output.ends_with("… cut"));
+    }
 }

@@ -113,25 +113,43 @@ pub trait ToolHost: Send + Sync {
 
 pub struct Toolbox<'a, D: Deps>(pub &'a D);
 
+/// Records one ended call of a session's tool in its conversation. A failed write never fails the call.
+pub(crate) async fn record_call<D: Deps>(
+    deps: &D,
+    caller: &Caller,
+    name: &str,
+    input: &Value,
+    output: &str,
+    failed: bool,
+) {
+    if let Ok(Some(session)) = deps
+        .store()
+        .session(caller.organization, caller.session)
+        .await
+    {
+        let _ = crate::session::record_tool(
+            deps,
+            &session,
+            format!("tool:{}", caller.call),
+            name,
+            antilog_types::ToolRecord {
+                label: name.to_owned(),
+                status: if failed {
+                    antilog_types::ToolStatus::Failed
+                } else {
+                    antilog_types::ToolStatus::Done
+                },
+                input: Some(input.to_string()),
+                output: Some(output.to_owned()),
+            },
+        )
+        .await;
+    }
+}
+
 impl<D: Deps> ToolHost for Toolbox<'_, D> {
     async fn call(&self, caller: &Caller, name: &str, input: Value) -> ToolReply {
-        // The conversation keeps the name of the tool, never its input or its answer.
-        if let Ok(Some(session)) = self
-            .0
-            .store()
-            .session(caller.organization, caller.session)
-            .await
-        {
-            let _ = crate::session::record(
-                self.0,
-                &session,
-                format!("tool:{}", caller.call),
-                antilog_types::EventKind::Tool,
-                None,
-                name,
-            )
-            .await;
-        }
+        let shown = input.clone();
         let result = match name {
             "seal" => judge::seal(self.0, caller, input).await,
             "measure" => judge::measure(self.0, caller, input).await,
@@ -150,10 +168,21 @@ impl<D: Deps> ToolHost for Toolbox<'_, D> {
                     .join(", ")
             ))),
         };
-        match result {
+        let reply = match result {
             Ok((answer, ticket)) => ToolReply { answer, ticket },
             Err(error) => ToolReply::error(error),
-        }
+        };
+        // The conversation keeps a short, cleaned record of the call once it has ended.
+        record_call(
+            self.0,
+            caller,
+            name,
+            &shown,
+            &reply.answer.to_string(),
+            reply.answer.get("error").is_some(),
+        )
+        .await;
+        reply
     }
 
     async fn finish(&self, caller: &Caller, ticket: &Ticket) -> String {

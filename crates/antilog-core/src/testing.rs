@@ -909,6 +909,7 @@ async fn experiments_and_sessions<S: Store>(store: &S) {
         kind,
         member,
         text: text.to_owned(),
+        tool: None,
         at,
     };
     for event in [
@@ -920,7 +921,15 @@ async fn experiments_and_sessions<S: Store>(store: &S) {
             T0 + 1,
         ),
         say("agent:0", EventKind::Agent, None, "On it.", T0 + 2),
-        say("tool:c1", EventKind::Tool, None, "measure", T0 + 3),
+        NewEvent {
+            tool: Some(antilog_types::ToolRecord {
+                label: "measure".to_owned(),
+                status: antilog_types::ToolStatus::Failed,
+                input: Some("{}".to_owned()),
+                output: Some("refused".to_owned()),
+            }),
+            ..say("tool:c1", EventKind::Tool, None, "measure", T0 + 3)
+        },
         say("agent:0", EventKind::Agent, None, "On it. (again)", T0 + 4),
     ] {
         store.append_event(&event).await.expect("appended");
@@ -939,6 +948,19 @@ async fn experiments_and_sessions<S: Store>(store: &S) {
             (EventKind::Tool, "measure"),
         ],
         "a key lands once, and the first word stays"
+    );
+    assert_eq!(
+        all.iter()
+            .map(|event| event.tool.is_some())
+            .collect::<Vec<_>>(),
+        vec![false, false, true],
+        "only a tool call carries its record"
+    );
+    assert_eq!(
+        all.get(2)
+            .and_then(|event| event.tool.as_ref())
+            .map(|t| (t.status, t.output.as_deref())),
+        Some((antilog_types::ToolStatus::Failed, Some("refused")))
     );
     let seqs: Vec<i64> = all.iter().map(|event| event.seq).collect();
     assert!(seqs.windows(2).all(|pair| pair.first() < pair.get(1)));

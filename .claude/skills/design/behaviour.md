@@ -44,7 +44,7 @@ One slim bar across the main area, like Claude Code's desktop header.
 
 | Panel | Shows |
 | --- | --- |
-| **Details** | Sections of rows (icon, value, trailing action): Experiment (state, version, link to the detail page); Environment (a settings icon starts the Change environment card); Repos (each with its branch; "+" posts an Attach repo card); Agent; Budget (figure, bar, "Change budget"); Sessions (status, name, spend, each linking to it); Context (share of the window used, "Compact", "Fresh session with summary") |
+| **Overview** (the toggle was "Details"; `SessionOverview`) | A calm vertical list of sections, each linking to the panel or page that shows it in full: Environment (the environment's name with its settings link; repos with "+" to attach and their branch), Context (a usage bar, "44% used", "88k of 200k" and a short legend), Spend (figure, bar, "Change budget", "Where it went"), Connectors (the ones the session may use, with their mode), Outputs (Changes, Files, Trials and the delivered pull request). A row we cannot fill honestly is left out; the web app omits the environment's name, repos, branch, Context and the pull request until the API serves them (target) |
 | **Trials** | The scoreboard and every trial across sessions, newest first, filtered by session. A row opens its trial card, or the receipt for a Kept trial |
 | **Changes** | The diff of this session's branch per repo against its base; a picker for "Trial 12, Kept" (default) or "Working copy"; files grouped by repo with +/- counts, the unified diff below. A path the sealed experiment protects carries a lock and "Protected: a change here is Rejected." The server stores no diff: the panel fetches it from the session's machine ([session model](../session/model.md)) |
 | **Terminal** | A shell in this session's machine. Editors and owners type; a viewer reads, with a line saying so. A note says the judge never runs here. Opening it is recorded in the audit log |
@@ -60,9 +60,9 @@ Pinned under the header once the experiment is sealed; absent while Not sealed. 
 
 ### The conversation
 
-In time order: messages (short sentences; text streams, ending with a cursor bar until done), tool calls (one quiet line each; a chevron expands to what was asked and the first lines back), timeline lines for what happened (a seal, a handoff, a compaction, a failover), and cards. A card is the only place structured output appears; there is no step list and no wizard.
+In time order: messages (short sentences; text streams, ending with a cursor bar until done), tool calls (consecutive calls between two messages fold into one quiet group line, "Ran 19 commands (1 failed)", muted with a chevron and no box until opened; open, a bordered list with one row per call, "Ran <command or target>", which expands to the full input and the truncated output in monospace with Copy; a failed call is marked in its row and counted in the title; the latest group is open and reads "Running… 3 commands" while the agent works and folds when it writes; titles say "Ran N commands", "Edited N files", "Read N files", "Called <tool> N times" or, mixed, "Ran N steps"; an Antilog tool shows only its Antilog name; `SessionToolCalls`), timeline lines for what happened (a seal, a handoff, a compaction, a failover), and cards. A card is the only place structured output appears; there is no step list and no wizard.
 
-**Long tool output** is collapsed and never stored by Antilog. Opening it fetches it from the session's machine ("Fetching from the session"), or says the machine has dropped it, or says it cannot be reached, with Try again. Neither is drawn as an empty block.
+**Long tool output** is stored cut to 4 KB (shown as it was kept, ending "… cut"); the rest stays on the session's machine. Opening more fetches it from there ("Fetching from the session"), or says the machine has dropped it, or says it cannot be reached, with Try again. Neither is drawn as an empty block.
 
 ### The composer
 

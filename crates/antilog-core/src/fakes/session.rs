@@ -148,6 +148,7 @@ impl SessionStore for FakeStore {
                 kind: event.kind,
                 member_id: event.member,
                 text: event.text.clone(),
+                tool: event.tool.clone(),
                 at: event.at,
             },
         ));

@@ -1143,6 +1143,7 @@ async fn pending_cards_the_transcript_and_spend_are_read_across_roles() {
                 kind,
                 member: None,
                 text: text.into(),
+                tool: None,
                 at: 1_700_000_000_000 + i64::try_from(i).unwrap_or_default(),
             })
             .await
@@ -1781,6 +1782,7 @@ mod live {
                     kind: EventKind::Agent,
                     member: None,
                     text: "Profiling.".into(),
+                    tool: None,
                     at: self.now(),
                 })
                 .await
