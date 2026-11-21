@@ -736,6 +736,10 @@ export const w = {
         name: "OpenCode Zen",
         hint: "OpenCode's own models, some free. Needed for any session that runs an opencode model.",
       },
+      "opencode-go": {
+        name: "OpenCode Go",
+        hint: "OpenCode's subscription models. Go is a subscription, so spend shown is at Go's list prices.",
+      },
       openai: { name: "OpenAI", hint: "GPT models. Needed for any session that runs a GPT model." },
       set: "Key set",
       none: "No key",

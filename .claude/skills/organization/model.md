@@ -15,7 +15,7 @@ The access words below are not in [`docs/GLOSSARY.md`](../../../docs/GLOSSARY.md
 | service account | A non-human member with its own tokens and a role | a shared login |
 | approval card | A tool call a person approves in the chat | a settings form |
 | policy | Per card kind (six): Always ask, Allow up to a limit, or Allow | a role |
-| model key | An organization's own key for one model provider (Anthropic, OpenAI or OpenCode Zen), set by an owner, kept sealed with the server's master key and never shown or sent into a session | an access token |
+| model key | An organization's own key for one model provider (Anthropic, OpenAI, OpenCode Zen or OpenCode Go), set by an owner, kept sealed with the server's master key and never shown or sent into a session | an access token |
 | session budget | A session's own optional cap, in US cents. It sits inside its project's monthly cap | a monthly cap |
 | project cap | An optional monthly limit on the spend of all of a project's sessions, and the project's default budget per session (`PUT /projects/{id}/limits`: `monthlyCapCents`, `defaultBudgetCents`). It sits inside the organization's monthly cap | a session budget |
 | monthly cap | The most an organization may spend in a month, with an organization default budget per session (`PUT /organization/limits`) | a session budget |

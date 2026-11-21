@@ -4,8 +4,10 @@
 #
 #   ZEN_KEY=... scripts/local-run.sh                  # OpenCode Zen, a free model
 #   MODEL=opencode/big-pickle ZEN_KEY=... scripts/local-run.sh
-#   SERVE_ONLY=1 ZEN_KEY=x scripts/local-run.sh      # only the stack, to drive from the web app
-#   OpenCode Go: ANTILOG_PROXY_OPENCODE_URL=https://opencode.ai/zen/go MODEL=opencode/glm-5.3-flash
+#   SERVE_ONLY=1 MODEL_KEY=x scripts/local-run.sh      # only the stack, to drive from the web app
+#   MODEL=opencode-go/glm-5.1 MODEL_KEY=oc_sk_... scripts/local-run.sh   # OpenCode Go
+# The provider is the part of MODEL before the slash (anthropic, openai, opencode, opencode-go);
+# its key is MODEL_KEY, or ZEN_KEY as before.
 #
 # Needs: Docker (running), a Rust toolchain, curl, python3, openssl. About 3 GB of disk for the
 # session image. Everything it starts is stopped on exit; its files live in .local-run/.
@@ -13,7 +15,8 @@
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
-: "${ZEN_KEY:?set ZEN_KEY to an OpenCode Zen API key}"
+: "${MODEL_KEY:=${ZEN_KEY:-}}"
+: "${MODEL_KEY:?set MODEL_KEY (or ZEN_KEY) to the API key of the provider of MODEL}"
 MODEL="${MODEL:-opencode/big-pickle}"
 PROVIDER="${MODEL%%/*}"
 PROMPT="${PROMPT:-List the tools you have from the antilog MCP server by name, then reply with the single word ready.}"
@@ -106,7 +109,7 @@ TOKEN=$(curl -fsS -b "$jar" -X POST "$SERVER/auth/fake/organization" -H 'content
   -d "{\"name\":\"local\",\"code\":\"fake:ada\",\"state\":\"$state\"}" | field "['session']['secret']")
 
 step "Saving the model key (sealed) for provider $PROVIDER"
-api PUT "/model-keys/$PROVIDER" "{\"key\":\"$ZEN_KEY\"}" >/dev/null
+api PUT "/model-keys/$PROVIDER" "{\"key\":\"$MODEL_KEY\"}" >/dev/null
 
 step "Starting the runner"
 "$BIN"/antilog runner --server "$SERVER" --name local --proxy 127.0.0.1:8081 >"$RUN/runner.log" 2>&1 &
