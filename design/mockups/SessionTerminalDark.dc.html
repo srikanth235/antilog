@@ -125,27 +125,16 @@
     </div>
     <aside class="pane" id="panel-terminal" aria-label="Terminal">
       <div class="pane-grip" role="separator" aria-orientation="vertical" aria-label="Resize panel" tabindex="0"></div>
-      <div class="pane-h"><h2>Terminal</h2><span class="grow"></span><button class="icon-btn sm" aria-label="Close Terminal panel" title="Close Terminal panel"><i class="ic s i-close"></i></button></div>
-      <div class="term-h"><div class="l1"><span class="dot" aria-hidden="true"></span><span>Session machine · OpenCode</span></div><span class="nt">Holdout measurements never run here. They run in a fresh container.</span></div>
-      <div class="term" role="log" aria-label="Terminal output"><span class="ps">agent@sandbox:~/acme/checkout$</span> git status -sb
+      <div class="pane-h"><h2>Terminal</h2><span class="sub ell term-dir" title="agent@sandbox:~/acme/checkout">checkout</span><span class="grow"></span><button class="icon-btn sm" aria-label="New terminal" title="New terminal"><i class="ic s i-plus"></i></button><button class="icon-btn sm" aria-haspopup="menu" aria-label="Terminal menu" title="Terminal menu"><i class="ic s i-more"></i></button><button class="icon-btn sm" aria-label="Open in a new window" title="Open in a new window"><i class="ic s i-ext"></i></button><button class="icon-btn sm" aria-pressed="false" aria-label="Maximise Terminal panel" title="Maximise Terminal panel"><i class="ic s i-max"></i></button><button class="icon-btn sm" aria-label="Close Terminal panel" title="Close Terminal panel"><i class="ic s i-close"></i></button></div>
+      <div class="term-tabs" role="tablist" aria-label="Terminals"><span class="tt on" role="tab" aria-selected="true" tabindex="0">Terminal 1<button class="icon-btn xs" aria-label="Close Terminal 1" title="Close Terminal 1"><i class="ic s i-close"></i></button></span><span class="tt" role="tab" aria-selected="false" tabindex="-1">Terminal 2<button class="icon-btn xs" aria-label="Close Terminal 2" title="Close Terminal 2"><i class="ic s i-close"></i></button></span></div>
+      <div class="term x" role="log" aria-label="Terminal output"><span class="ps">agent@sandbox:~/acme/checkout$</span> git status -sb
 ## antilog/p95-claude...origin/antilog/p95-claude
  M src/db/pool.ts
  M src/handlers/checkout.ts
- M src/config/defaults.ts
 ?? test/db/pool.test.ts
-<span class="ps">agent@sandbox:~/acme/checkout$</span> npm test -- pool
-
-&gt; checkout@4.12.0 test
-&gt; vitest pool
-
- <span class="ok">✓</span> test/db/pool.test.ts <span class="dim">(4 tests)</span> 212ms
-
- Test Files  1 passed (1)
-      Tests  4 passed (4)
-<span class="ps">agent@sandbox:~/acme/checkout$</span> curl -s -o /dev/null -w "%{time_total}\n" localhost:3000/checkout
-0.071
+<span class="ps">agent@sandbox:~/acme/checkout$</span> echo hi
+hi
 <span class="ps">agent@sandbox:~/acme/checkout$</span> <span class="cur" aria-hidden="true"></span></div>
-<div class="term-in"><span>Type a command and press Return</span><span class="kc" style="margin-left: auto;" aria-hidden="true">⌃C</span></div>
     </aside>
     </div>
   </main>
