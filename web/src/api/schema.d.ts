@@ -1893,8 +1893,8 @@ export interface components {
             updatedAt: number;
         };
         /**
-         * @description One item of a session's conversation. A tool call carries only its name, never its input or
-         *     output; the server stores the words people and agents said and nothing a tool returned.
+         * @description One item of a session's conversation. A tool call carries what `ToolRecord` keeps, never more:
+         *     the server stores the words people and agents said and a short, cleaned record of each tool call.
          */
         SessionEvent: {
             /** Format: int64 */
@@ -1908,6 +1908,7 @@ export interface components {
             seq: number;
             sessionId: components["schemas"]["SessionId"];
             text: string;
+            tool?: components["schemas"]["ToolRecord"] | null;
         };
         /** Format: uuid */
         SessionId: string;
@@ -2043,6 +2044,17 @@ export interface components {
          * @enum {string}
          */
         ToolMode: "on" | "off" | "ask";
+        /**
+         * @description What one tool call did, kept small: a short label (the first line of a command, a file path,
+         *     the Antilog tool's name), how it ended, and its input and output cut to 4 KB each with
+         *     anything that looks like a credential taken out.
+         */
+        ToolRecord: {
+            input?: string | null;
+            label: string;
+            output?: string | null;
+            status: components["schemas"]["ToolStatus"];
+        };
         ToolResult: {
             answer: {
                 [key: string]: unknown;
@@ -2051,6 +2063,11 @@ export interface components {
             followup?: string | null;
             session: components["schemas"]["SessionId"];
         };
+        /**
+         * @description How a tool call ended. A call still running is not stored: it is recorded when it ends.
+         * @enum {string}
+         */
+        ToolStatus: "done" | "failed";
         TopWin: {
             agent?: string | null;
             goal: string;

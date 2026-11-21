@@ -58,8 +58,21 @@ export type GlyphName =
   | "term"
   | "user";
 
-export function Icon({ name, size }: { name: IconName; size?: "s" | "l" }) {
-  return <i aria-hidden="true" className={`ic ${size ?? ""} i-${name}`.replace("  ", " ")} />;
+export function Icon({
+  name,
+  size,
+  className,
+}: {
+  name: IconName;
+  size?: "s" | "l";
+  className?: string;
+}) {
+  return (
+    <i
+      aria-hidden="true"
+      className={`ic ${size ?? ""} i-${name} ${className ?? ""}`.replace(/ +/g, " ").trim()}
+    />
+  );
 }
 
 export function Glyph({ name, size }: { name: GlyphName; size?: "s" | "l" }) {

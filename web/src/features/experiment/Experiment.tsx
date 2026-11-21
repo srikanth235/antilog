@@ -4,8 +4,10 @@ import { type ReactNode, useState } from "react";
 import {
   keys,
   useAgentLabel,
+  useConnectors,
   useExperiment,
   useExperimentApprovals,
+  useExperimentConnectors,
   useExperimentSessions,
   useExperimentSpend,
   useHistory,
@@ -20,13 +22,15 @@ import {
 import { Failed, Loading } from "../../components/state/State";
 import { activityOf, canEdit, leadSession, MCP_AGENT, pendingCards } from "../../lib/domain";
 import { parseHistory } from "../../lib/history";
+import { groupEvents } from "../../lib/toolcalls";
 import { w } from "../../words";
 import { ApprovalCard } from "./ApprovalCard";
 import { BudgetDialog } from "./BudgetDialog";
 import { Composer } from "./Composer";
 import { Header, type Panel } from "./Header";
-import { DetailsPanel, PlatformPanel, TrialsPanel } from "./Panels";
+import { OverviewPanel, PlatformPanel, TrialsPanel } from "./Panels";
 import { Scoreboard } from "./Scoreboard";
+import { ToolGroup } from "./ToolCalls";
 import { Message, TranscriptError } from "./Transcript";
 import { TrialCard } from "./TrialCard";
 import { Win } from "./Win";
@@ -47,6 +51,8 @@ export function Experiment(props: {
   const members = useMembers();
   const me = useMember();
   const spend = useExperimentSpend(experimentId);
+  const allConnectors = useConnectors();
+  const switchedOn = useExperimentConnectors(experimentId);
   const agentLabel = useAgentLabel();
   const client = useQueryClient();
   const navigate = useNavigate();
@@ -74,6 +80,10 @@ export function Experiment(props: {
   const e = experiment.data;
   const project = projects.data?.find((p) => p.id === e.projectId);
   const editor = canEdit(me?.role);
+  const onConnectors = (switchedOn.data ?? []).flatMap((id) => {
+    const found = allConnectors.data?.find((connector) => connector.id === id);
+    return found === undefined ? [] : [{ id, name: found.name }];
+  });
   const cards = approvals.data ?? [];
   const waiting = pendingCards(cards);
   const activity = activityOf(list, waiting.length);
@@ -150,8 +160,25 @@ export function Experiment(props: {
         ),
       });
   }
-  for (const event of events) {
-    if (event === opening) continue;
+  const blocks = groupEvents(events.filter((event) => event !== opening));
+  blocks.forEach((block, index) => {
+    if (block.type === "tools") {
+      const first = events.find((event) => event.seq === block.group.key);
+      timeline.push({
+        key: `tools-${block.group.key}`,
+        at: first?.at ?? 0,
+        rank: 4 + block.group.key / 1e12,
+        node: (
+          <ToolGroup
+            key={`tools-${block.group.key}`}
+            group={block.group}
+            running={index === blocks.length - 1 && active?.status === "working"}
+          />
+        ),
+      });
+      return;
+    }
+    const { event } = block;
     timeline.push({
       key: `event-${event.seq}`,
       at: event.at,
@@ -160,7 +187,7 @@ export function Experiment(props: {
         <Message key={`event-${event.seq}`} event={event} agent={agentLabel(active?.agent ?? "")} />
       ),
     });
-  }
+  });
   for (const approval of cards)
     timeline.push({
       key: `card-${approval.id}`,
@@ -319,10 +346,14 @@ export function Experiment(props: {
           />
         </div>
         {props.panel === "details" ? (
-          <DetailsPanel
+          <OverviewPanel
             experiment={e}
             sessions={list}
+            history={parsed}
+            spentCents={spend.data?.spentCents}
+            connectors={onConnectors}
             onClose={() => props.onPanel(undefined)}
+            onPanel={props.onPanel}
             onBudget={() => setBudgetOpen(true)}
             canEdit={editor}
           />
