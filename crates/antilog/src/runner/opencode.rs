@@ -268,15 +268,16 @@ impl Api {
     }
 
     /// Compacts the conversation now. OpenCode's v2 route first, the older summarize route
-    /// (which names the model) when the server does not have it.
+    /// (which names the model) when the server does not have it or refuses it.
     pub async fn compact(&self, session: &str, model: &str) -> Result<()> {
         let response = self
             .post(&format!("/api/session/{session}/compact"))
             .json(&json!({}))
             .send()
             .await?;
-        if response.status() != reqwest::StatusCode::NOT_FOUND {
-            response.error_for_status()?;
+        // OpenCode 1.19 answers the v2 route with 503 "not available yet": any refusal falls
+        // back to the route that works.
+        if response.status().is_success() {
             return Ok(());
         }
         let (provider, id) = model.split_once('/').unwrap_or(("", model));
@@ -457,6 +458,12 @@ pub struct Tracker {
     models: HashMap<String, String>,
     /// Each model's context window, from OpenCode's providers.
     limits: HashMap<String, u64>,
+    /// The assistant messages that are a compaction's summary, by the message that asked for it.
+    summaries: HashMap<String, String>,
+    /// Compactions whose summary has not come yet: the person's message that asked, and the
+    /// note's key and words. The note is sent with the summary behind it, or alone when the turn
+    /// ends without one.
+    compactions: HashMap<String, (String, String)>,
 }
 
 impl Tracker {
@@ -468,6 +475,8 @@ impl Tracker {
             errors: HashSet::new(),
             models: HashMap::new(),
             limits: HashMap::new(),
+            summaries: HashMap::new(),
+            compactions: HashMap::new(),
         }
     }
 
@@ -505,11 +514,21 @@ impl Tracker {
                 if kind == "busy" {
                     self.errors.clear();
                 }
-                vec![Item::Status {
+                let mut items = if kind == "idle" {
+                    self.unsummarized()
+                } else {
+                    Vec::new()
+                };
+                items.push(Item::Status {
                     busy: kind != "idle",
-                }]
+                });
+                items
             }
-            Some("session.idle") if self.mine(properties) => vec![Item::Status { busy: false }],
+            Some("session.idle") if self.mine(properties) => {
+                let mut items = self.unsummarized();
+                items.push(Item::Status { busy: false });
+                items
+            }
             // A failed turn, such as a call the provider refused: the person reads why.
             Some("session.error") if self.mine(properties) => {
                 let key = event
@@ -524,6 +543,14 @@ impl Tracker {
             }
             _ => Vec::new(),
         }
+    }
+
+    /// The notes of compactions that ended without a summary, so they are not lost.
+    fn unsummarized(&mut self) -> Vec<Item> {
+        self.compactions
+            .drain()
+            .map(|(_, (key, text))| Item::Note { key, text })
+            .collect()
     }
 
     /// What a message read back from `GET /session/{id}/message` comes to.
@@ -561,6 +588,11 @@ impl Tracker {
         self.roles.insert(id.to_owned(), role.to_owned());
         if role != "assistant" {
             return Vec::new();
+        }
+        if flag(info, "summary")
+            && let Some(parent) = info.get("parentID").and_then(Value::as_str)
+        {
+            self.summaries.insert(id.to_owned(), parent.to_owned());
         }
         let model = |pointer: &str| info.pointer(pointer).and_then(Value::as_str);
         if let (Some(provider), Some(model)) = (
@@ -608,10 +640,36 @@ impl Tracker {
             } else {
                 ""
             };
-            return vec![Item::Note {
-                key: format!("compaction:{key}"),
-                text: format!("Context compacted{how}."),
-            }];
+            self.compactions.insert(
+                message.to_owned(),
+                (
+                    format!("compaction:{key}"),
+                    format!("Context compacted{how}."),
+                ),
+            );
+            return Vec::new();
+        }
+        // The summary the compaction wrote is not an agent's message: it goes behind the note,
+        // after a blank line, where the timeline folds it.
+        if let Some(parent) = self.summaries.get(message).cloned()
+            && text("type") == Some("text")
+            && part.pointer("/time/end").is_some()
+        {
+            if !self.sent.insert(key.clone()) {
+                return Vec::new();
+            }
+            let summary = text("text").map(str::trim).unwrap_or_default();
+            return match self.compactions.remove(&parent) {
+                Some((note, label)) => vec![Item::Note {
+                    key: note,
+                    text: format!("{label}\n\n{summary}"),
+                }],
+                None if summary.is_empty() => Vec::new(),
+                None => vec![Item::Note {
+                    key: format!("compaction:{key}"),
+                    text: format!("Context compacted.\n\n{summary}"),
+                }],
+            };
         }
         if self.roles.get(message).map(String::as_str) != Some("assistant") {
             return Vec::new();
@@ -957,16 +1015,28 @@ mod tests {
                 "id": "prt_c", "messageID": "msg_u", "type": "compaction",
                 "auto": auto, "overflow": overflow}}})
         };
-        let first = tracker.event(&part(true, false));
-        let [Item::Note { text, .. }] = first.as_slice() else {
-            panic!("one note")
-        };
-        assert_eq!(text, "Context compacted (automatic).");
+        // The marker waits for its summary, then both are one note.
         assert!(tracker.event(&part(true, false)).is_empty());
+        tracker.event(
+            &json!({"type": "message.updated", "properties": {"sessionID": "ses_1",
+            "info": {"id": "msg_s", "role": "assistant", "summary": true, "parentID": "msg_u"}}}),
+        );
+        let summary = json!({"type": "message.part.updated", "properties": {"sessionID": "ses_1",
+            "part": {"id": "prt_t", "messageID": "msg_s", "type": "text",
+                "text": "We fixed the bug.", "time": {"start": 1, "end": 2}}}});
+        let first = tracker.event(&summary);
+        let [Item::Note { text, .. }] = first.as_slice() else {
+            panic!("one note, not an agent message")
+        };
+        assert_eq!(text, "Context compacted (automatic).\n\nWe fixed the bug.");
+        assert!(tracker.event(&summary).is_empty());
+        // Without a summary the plain note is sent when the turn ends.
         let mut other = Tracker::new("ses_1");
-        let plain = other.event(&part(false, false));
-        let [Item::Note { text, .. }] = plain.as_slice() else {
-            panic!("one note")
+        assert!(other.event(&part(false, false)).is_empty());
+        let idle =
+            other.event(&json!({"type": "session.idle", "properties": {"sessionID": "ses_1"}}));
+        let [Item::Note { text, .. }, Item::Status { busy: false }] = idle.as_slice() else {
+            panic!("the note, then idle")
         };
         assert_eq!(text, "Context compacted.");
     }

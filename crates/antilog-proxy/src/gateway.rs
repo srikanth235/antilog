@@ -74,16 +74,22 @@ fn provider_error(
     (status, axum::Json(body)).into_response()
 }
 
-fn token_of(provider: ModelProvider, headers: &HeaderMap) -> Option<String> {
-    match provider {
-        ModelProvider::Anthropic => headers.get("x-api-key")?.to_str().ok().map(str::to_owned),
-        ModelProvider::Openai | ModelProvider::Opencode | ModelProvider::OpencodeGo => headers
-            .get(header::AUTHORIZATION)?
-            .to_str()
-            .ok()?
-            .strip_prefix("Bearer ")
-            .map(|token| token.trim().to_owned()),
-    }
+/// The session's token, from whichever header the agent's SDK puts the API key in: Anthropic's
+/// SDK sends `x-api-key`, OpenAI's a bearer token, and a route can serve either (OpenCode's
+/// Claude models go through `/messages`).
+fn token_of(headers: &HeaderMap) -> Option<String> {
+    let bearer = headers
+        .get(header::AUTHORIZATION)
+        .and_then(|value| value.to_str().ok())
+        .and_then(|value| value.strip_prefix("Bearer "));
+    let key = headers
+        .get("x-api-key")
+        .and_then(|value| value.to_str().ok());
+    bearer
+        .or(key)
+        .map(str::trim)
+        .filter(|token| !token.is_empty())
+        .map(str::to_owned)
 }
 
 /// Calls whose reply carries a bill. A model list or a token count is free and passes unmetered.
@@ -142,7 +148,12 @@ where
 {
     let (parts, body) = request.into_parts();
 
-    let Some(token) = token_of(provider, &parts.headers) else {
+    let Some(token) = token_of(&parts.headers) else {
+        tracing::warn!(
+            provider = provider.as_str(),
+            path = parts.uri.path(),
+            "model call refused: no session token in x-api-key or Authorization"
+        );
         return provider_error(
             provider,
             StatusCode::UNAUTHORIZED,
@@ -552,6 +563,17 @@ mod tests {
         );
         assert!(ask("/v1/responses", r#"{"stream":true}"#).is_none());
         assert!(ask("/v1/chat/completions", "not json").is_none());
+    }
+
+    #[test]
+    fn the_token_is_read_from_either_header() {
+        let mut bearer = HeaderMap::new();
+        bearer.insert(header::AUTHORIZATION, "Bearer tok".parse().unwrap());
+        let mut key = HeaderMap::new();
+        key.insert("x-api-key", "tok".parse().unwrap());
+        assert_eq!(token_of(&bearer).as_deref(), Some("tok"));
+        assert_eq!(token_of(&key).as_deref(), Some("tok"));
+        assert_eq!(token_of(&HeaderMap::new()), None);
     }
 
     #[test]

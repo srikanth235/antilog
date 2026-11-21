@@ -788,19 +788,43 @@ async fn a_token_of_the_wrong_purpose_or_one_that_expired_is_refused_before_anyt
         .await
         .unwrap();
     assert_eq!(bare.status(), StatusCode::UNAUTHORIZED);
-    // Each provider reads its own header: a Bearer token does not open the Anthropic route.
-    let wrong_header = rig
+    assert!(rig.calls().is_empty());
+    assert_eq!(rig.booked().await, (0, 0));
+}
+
+#[tokio::test]
+async fn either_header_carries_the_session_token_on_every_route() {
+    let rig = Rig::start(Options::default()).await;
+    // OpenCode's Claude models go through /messages with x-api-key, its others through
+    // /chat/completions with a bearer token; a route takes either.
+    let bearer = rig
         .http
         .post(rig.url("/anthropic/v1/messages"))
         .bearer_auth(&rig.token)
+        .json(&json!({"model":am(),"messages":[]}))
+        .send()
+        .await
+        .unwrap();
+    assert_ne!(bearer.status(), StatusCode::UNAUTHORIZED);
+    let key = rig
+        .http
+        .post(rig.url("/openai/v1/chat/completions"))
+        .header("x-api-key", &rig.token)
+        .json(&json!({"model":om(),"messages":[]}))
+        .send()
+        .await
+        .unwrap();
+    assert_ne!(key.status(), StatusCode::UNAUTHORIZED);
+    // A wrong token is refused whichever header carries it.
+    let wrong = rig
+        .http
+        .post(rig.url("/openai/v1/messages"))
+        .header("x-api-key", "not-a-token")
         .json(&json!({}))
         .send()
         .await
         .unwrap();
-    assert_eq!(wrong_header.status(), StatusCode::UNAUTHORIZED);
-
-    assert!(rig.calls().is_empty());
-    assert_eq!(rig.booked().await, (0, 0));
+    assert_eq!(wrong.status(), StatusCode::UNAUTHORIZED);
 }
 
 #[tokio::test]

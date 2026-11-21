@@ -42,6 +42,10 @@ struct Fake {
     replies: Vec<(String, String)>,
     aborts: u32,
     compacts: u32,
+    /// Compactions the older summarize route took, after the v2 route refused.
+    summarized: u32,
+    /// When set, the v2 compact route answers with this status.
+    compact_status: Option<u16>,
     /// Messages as `GET /session/{id}/message` lists them, oldest first.
     messages: Vec<Value>,
     permissions: Vec<Value>,
@@ -106,7 +110,21 @@ async fn serve_fake(shared: Shared) -> String {
             .route(
                 "/api/session/{id}/compact",
                 post(|State(s): State<Shared>| async move {
-                    locked(&s).compacts += 1;
+                    let mut fake = locked(&s);
+                    fake.compacts += 1;
+                    match fake.compact_status {
+                        Some(code) => (
+                            axum::http::StatusCode::from_u16(code).unwrap(),
+                            Json(json!({"name": "ServiceUnavailableError"})),
+                        ),
+                        None => (axum::http::StatusCode::OK, Json(json!(true))),
+                    }
+                }),
+            )
+            .route(
+                "/session/{id}/summarize",
+                post(|State(s): State<Shared>| async move {
+                    locked(&s).summarized += 1;
                     Json(true)
                 }),
             )
@@ -1783,11 +1801,27 @@ async fn a_step_reports_the_context_it_filled_and_compaction_is_a_note_and_a_com
             "auto": true, "overflow": true}}}),
     )
     .await;
+    emit(
+        &world.shared,
+        json!({"type": "message.updated", "properties": {"sessionID": "ses_fake", "info": {
+            "id": "msg_sum", "role": "assistant", "summary": true, "parentID": "msg_u"}}}),
+    )
+    .await;
+    emit(
+        &world.shared,
+        json!({"type": "message.part.updated", "properties": {"sessionID": "ses_fake", "part": {
+            "id": "prt_sum", "messageID": "msg_sum", "sessionID": "ses_fake", "type": "text",
+            "text": "The earlier work, in brief.", "time": {"start": 1, "end": 2}}}}),
+    )
+    .await;
     until("the note", async || {
         transcript(&world, &session)
             .await
             .iter()
-            .any(|line| line.contains("Context compacted (the window overflowed)"))
+            .any(|line| {
+                line.contains("Context compacted (the window overflowed)")
+                    && line.contains("The earlier work, in brief.")
+            })
             .then_some(())
     })
     .await;
@@ -1797,6 +1831,25 @@ async fn a_step_reports_the_context_it_filled_and_compaction_is_a_note_and_a_com
         .unwrap();
     until("OpenCode told to compact", async || {
         (locked(&world.shared).compacts == 1).then_some(())
+    })
+    .await;
+}
+
+#[tokio::test]
+async fn compacting_falls_back_to_summarize_when_the_v2_route_refuses() {
+    let world = world().await;
+    let org = world.seed.organization.id;
+    let session = start(&world, "go").await;
+    until("a stream", async || {
+        (locked(&world.shared).streams_opened > 0).then_some(())
+    })
+    .await;
+    locked(&world.shared).compact_status = Some(503);
+    session::compact(&*world.deps, org, session.id, Some(world.seed.owner.id))
+        .await
+        .unwrap();
+    until("the summarize route", async || {
+        (locked(&world.shared).summarized == 1).then_some(())
     })
     .await;
 }

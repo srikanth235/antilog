@@ -261,6 +261,27 @@ impl SessionStore for PgStore {
         tx.commit().await.map_err(map)
     }
 
+    async fn remove_trailing_event(
+        &self,
+        organization: OrganizationId,
+        session: SessionId,
+        prefix: &str,
+    ) -> Result<bool, StoreError> {
+        let mut tx = self.scoped(organization).await?;
+        let removed = sqlx::query!(
+            "delete from session_events where organization_id = $1 and session_id = $2 and starts_with(key, $3) and seq = (select max(seq) from session_events where organization_id = $1 and session_id = $2)",
+            organization.as_uuid(),
+            session.as_uuid(),
+            prefix,
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(map)?
+        .rows_affected();
+        tx.commit().await.map_err(map)?;
+        Ok(removed > 0)
+    }
+
     async fn session_events(
         &self,
         organization: OrganizationId,

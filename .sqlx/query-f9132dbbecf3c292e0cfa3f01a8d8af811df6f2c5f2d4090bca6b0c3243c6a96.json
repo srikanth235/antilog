@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update session_context set parts = '[]' where session_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f9132dbbecf3c292e0cfa3f01a8d8af811df6f2c5f2d4090bca6b0c3243c6a96"
+}

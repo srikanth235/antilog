@@ -142,6 +142,35 @@ impl SessionStore for FakeStore {
         Ok(())
     }
 
+    async fn remove_trailing_event(
+        &self,
+        organization: OrganizationId,
+        session: SessionId,
+        prefix: &str,
+    ) -> Result<bool, StoreError> {
+        let mut ledger = locked(&self.ledger);
+        not_found(ledger.session(organization, session))?;
+        let own = format!("{}:", session.as_uuid());
+        let last = ledger
+            .events
+            .iter()
+            .rposition(|(key, _)| key.starts_with(&own));
+        let matches = last.is_some_and(|at| {
+            ledger
+                .events
+                .get(at)
+                .and_then(|(key, _)| key.strip_prefix(&own))
+                .is_some_and(|rest| rest.starts_with(prefix))
+        });
+        match last {
+            Some(at) if matches => {
+                ledger.events.remove(at);
+                Ok(true)
+            }
+            _ => Ok(false),
+        }
+    }
+
     async fn session_events(
         &self,
         organization: OrganizationId,

@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useCallback, useRef, useState } from "react";
 import {
   keys,
   useAgentLabel,
@@ -60,6 +60,29 @@ export function Session(props: {
   const models = useModels();
   const setModel = useSetSessionModel(sessionId);
   const recent = useRecentModels();
+  const atEnd = useRef(true);
+  const version = `${transcript.dataUpdatedAt}:${session.data?.status}`;
+
+  // The timeline stays at its end while the reader is there, and keeps clear of the composer.
+  // A ref callback that runs again whenever the conversation changes, and whenever the
+  // composer or the thread resizes.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `version` is what makes it run again.
+  const follow = useCallback(
+    (scrolled: HTMLDivElement | null) => {
+      if (scrolled === null) return;
+      const dock = scrolled.parentElement?.querySelector<HTMLElement>(".ac-dock") ?? null;
+      const settle = () => {
+        scrolled.style.setProperty("--dock-h", `${dock?.offsetHeight ?? 0}px`);
+        if (atEnd.current) scrolled.scrollTop = scrolled.scrollHeight;
+      };
+      settle();
+      const watch = new ResizeObserver(settle);
+      if (dock !== null) watch.observe(dock);
+      if (scrolled.firstElementChild !== null) watch.observe(scrolled.firstElementChild);
+      return () => watch.disconnect();
+    },
+    [version],
+  );
 
   if (session.isPending)
     return (
@@ -157,7 +180,12 @@ export function Session(props: {
       <div className="wsp">
         <div className="chat">
           <div
+            ref={follow}
             className="scroll"
+            onScroll={(event) => {
+              const el = event.currentTarget;
+              atEnd.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+            }}
             style={{
               display: "flex",
               flexDirection: "column",
@@ -165,7 +193,10 @@ export function Session(props: {
               overflow: "auto",
             }}
           >
-            <div className="c760 thread" style={{ gap: 12, paddingTop: 12, paddingBottom: 8 }}>
+            <div
+              className="c760 thread"
+              style={{ gap: 12, paddingTop: 12, paddingBottom: "calc(var(--dock-h, 96px) + 8px)" }}
+            >
               {opening === undefined && transcript.isSuccess ? (
                 <div className="bubble">
                   <span>{s.title}</span>

@@ -11,7 +11,8 @@
 #
 # Needs: Docker (running), a Rust toolchain, curl, python3, openssl. About 3 GB of disk for the
 # session image. Everything it starts is stopped on exit; its files live in .local-run/.
-# Behind a TLS-inspecting proxy set EXTRA_CA=/path/to/ca.crt so the image build trusts it.
+# Behind a TLS-inspecting proxy the image build trusts its CA: EXTRA_CA=/path/to/ca.crt, or the
+# first of SSL_CERT_FILE, REQUESTS_CA_BUNDLE and CURL_CA_BUNDLE that is set to a file.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -53,6 +54,9 @@ fi
 
 step "Building the session image"
 secret=()
+for candidate in "${EXTRA_CA:-}" "${SSL_CERT_FILE:-}" "${REQUESTS_CA_BUNDLE:-}" "${CURL_CA_BUNDLE:-}"; do
+  if [ -n "$candidate" ] && [ -f "$candidate" ]; then EXTRA_CA="$candidate"; break; fi
+done
 [ -n "${EXTRA_CA:-}" ] && secret=(--secret "id=ca,src=$EXTRA_CA")
 if [ -z "${REBUILD:-}" ] && docker image inspect antilog-session:latest >/dev/null 2>&1; then
   echo "using the existing image (REBUILD=1 rebuilds it)"
