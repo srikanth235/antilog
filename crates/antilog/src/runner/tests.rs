@@ -50,6 +50,12 @@ struct Fake {
     imported: Vec<String>,
     /// Every request's authorization header.
     auth: Vec<String>,
+    /// The fake PTY: what `POST /pty` was given, each resize, each removal and every text frame
+    /// the runner wrote to a shell. The fake shell echoes `out:` and the input; `exit` ends it.
+    ptys: Vec<Value>,
+    resizes: Vec<(String, u64, u64)>,
+    removed: Vec<String>,
+    typed: Vec<String>,
 }
 
 type Shared = Arc<Mutex<Fake>>;
@@ -109,6 +115,65 @@ async fn serve_fake(shared: Shared) -> String {
                         None => json!({}),
                     })
                 }),
+            )
+            .route(
+                "/pty",
+                post(
+                    |State(s): State<Shared>, h: HeaderMap, Json(body): Json<Value>| async move {
+                        note(&s, &h).await;
+                        let mut fake = locked(&s);
+                        fake.ptys.push(body);
+                        Json(json!({"id": format!("pty_fake{}", fake.ptys.len())}))
+                    },
+                ),
+            )
+            .route(
+                "/pty/{id}",
+                axum::routing::put(
+                    |State(s): State<Shared>,
+                     UrlPath(id): UrlPath<String>,
+                     Json(body): Json<Value>| async move {
+                        let size = &body["size"];
+                        locked(&s).resizes.push((
+                            id,
+                            size["cols"].as_u64().unwrap(),
+                            size["rows"].as_u64().unwrap(),
+                        ));
+                        Json(json!({}))
+                    },
+                )
+                .delete(
+                    |State(s): State<Shared>, UrlPath(id): UrlPath<String>| async move {
+                        locked(&s).removed.push(id);
+                        Json(true)
+                    },
+                ),
+            )
+            .route(
+                "/pty/{id}/connect",
+                get(
+                    |State(s): State<Shared>, upgrade: axum::extract::WebSocketUpgrade| async move {
+                        upgrade.on_upgrade(move |mut socket| async move {
+                            use axum::extract::ws::Message;
+                            socket
+                                .send(Message::Binary(Bytes::from_static(b"\0{\"cursor\":0}")))
+                                .await
+                                .ok();
+                            while let Some(Ok(message)) = socket.recv().await {
+                                if let Message::Text(text) = message {
+                                    locked(&s).typed.push(text.to_string());
+                                    if text.as_str() == "exit" {
+                                        break;
+                                    }
+                                    socket
+                                        .send(Message::Text(format!("out:{text}").into()))
+                                        .await
+                                        .ok();
+                                }
+                            }
+                        })
+                    },
+                ),
             )
             .route(
                 "/permission",
@@ -269,6 +334,7 @@ struct World {
     deps: Arc<FakeDeps>,
     seed: Seed,
     shared: Shared,
+    server: String,
     config_path: PathBuf,
     workdir: PathBuf,
     temp: PathBuf,
@@ -329,6 +395,7 @@ async fn backend(proxy: &str, model: &str) -> (Arc<FakeDeps>, Seed, String, Path
             runner: Some(RunnerSettings {
                 key: KEY.to_owned(),
                 core,
+                hold: std::time::Duration::ZERO,
             }),
         },
     );
@@ -365,6 +432,7 @@ async fn world_with(
     World {
         deps,
         seed,
+        server,
         shared,
         config_path,
         workdir,
@@ -1830,4 +1898,176 @@ async fn real_opencode_runs_a_session_end_to_end() {
     );
     runner.abort();
     std::fs::remove_dir_all(&temp).ok();
+}
+
+// ---- terminals -----------------------------------------------------------------------------
+
+type Browser =
+    tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>;
+
+/// What a person's browser does: ask for a terminal over HTTP, then open its WebSocket.
+async fn open_terminal(world: &World, session: &Session, who: &str) -> Browser {
+    let ticket: Value = reqwest::Client::new()
+        .post(format!(
+            "{}/sessions/{}/terminals",
+            world.server, session.id
+        ))
+        .bearer_auth(who)
+        .json(&json!({"cols": 100, "rows": 30}))
+        .send()
+        .await
+        .unwrap()
+        .json()
+        .await
+        .unwrap();
+    let url = format!(
+        "{}/terminals/{}/connect?token={}",
+        world.server.replacen("http", "ws", 1),
+        ticket["terminal"].as_str().unwrap(),
+        ticket["token"].as_str().unwrap()
+    );
+    tokio_tungstenite::connect_async(url).await.unwrap().0
+}
+
+async fn token_for(world: &World) -> String {
+    let who = Principal {
+        organization: world.seed.organization.id,
+        member: world.seed.owner.id,
+    };
+    antilog_core::organization::create_token(&world.deps.store, &who, 1_800_000_000_000, None, "t")
+        .await
+        .unwrap()
+        .secret
+}
+
+async fn machine_up(world: &World, session: &Session) {
+    until("the machine up", async || {
+        matches!(
+            state(world, session).await,
+            MachineState::Running | MachineState::Idle
+        )
+        .then_some(())
+    })
+    .await;
+    until("a stream", async || {
+        (locked(&world.shared).streams_opened > 0).then_some(())
+    })
+    .await;
+}
+
+async fn frame(socket: &mut Browser) -> Option<tokio_tungstenite::tungstenite::Message> {
+    use futures_util::StreamExt as _;
+    tokio::time::timeout(Duration::from_secs(5), socket.next())
+        .await
+        .expect("a frame within five seconds")
+        .and_then(Result::ok)
+}
+
+#[tokio::test]
+async fn a_terminal_opened_by_a_person_is_a_shell_in_the_machine_carried_over_an_outbound_socket() {
+    use futures_util::SinkExt as _;
+    use tokio_tungstenite::tungstenite::Message;
+    let world = world().await;
+    let session = start(&world, "hi").await;
+    machine_up(&world, &session).await;
+    let token = token_for(&world).await;
+
+    let mut browser = open_terminal(&world, &session, &token).await;
+    // The shell starts in the folder the agent works in, at the size the panel had, with the session's
+    // variables, and the runner's key is nowhere in it.
+    until("the shell", async || {
+        (!locked(&world.shared).resizes.is_empty()).then_some(())
+    })
+    .await;
+    {
+        let fake = locked(&world.shared);
+        let cwd = fake.ptys[0]["cwd"].as_str().unwrap().to_owned();
+        assert!(cwd.contains(&session.id.to_string()), "{cwd}");
+        assert_eq!(fake.resizes[0], ("pty_fake1".to_owned(), 100, 30));
+        assert!(!fake.ptys[0].to_string().contains(KEY));
+    }
+
+    // Keys reach the shell and its output reaches the browser, as bytes; the shell's own
+    // bookkeeping frame does not.
+    browser
+        .send(Message::Binary(b"echo hi\r".to_vec().into()))
+        .await
+        .unwrap();
+    assert_eq!(
+        frame(&mut browser).await,
+        Some(Message::Binary(b"out:echo hi\r".to_vec().into()))
+    );
+    assert_eq!(locked(&world.shared).typed, vec!["echo hi\r".to_owned()]);
+
+    // A resize from the browser resizes the shell.
+    browser
+        .send(Message::Text(
+            r#"{"type":"resize","cols":120,"rows":40}"#.into(),
+        ))
+        .await
+        .unwrap();
+    until("the resize", async || {
+        locked(&world.shared)
+            .resizes
+            .contains(&("pty_fake1".to_owned(), 120, 40))
+            .then_some(())
+    })
+    .await;
+
+    // The shell ending tells the browser and closes; the shell is removed.
+    browser
+        .send(Message::Binary(b"exit".to_vec().into()))
+        .await
+        .unwrap();
+    assert_eq!(
+        frame(&mut browser).await,
+        Some(Message::Text(r#"{"type":"exit"}"#.into()))
+    );
+    until("the shell removed", async || {
+        locked(&world.shared)
+            .removed
+            .contains(&"pty_fake1".to_owned())
+            .then_some(())
+    })
+    .await;
+}
+
+#[tokio::test]
+async fn closing_the_browser_removes_the_shell_and_stopping_the_session_closes_the_rest() {
+    let world = world().await;
+    let session = start(&world, "hi").await;
+    machine_up(&world, &session).await;
+    let token = token_for(&world).await;
+
+    let mut first = open_terminal(&world, &session, &token).await;
+    until("the first shell", async || {
+        (locked(&world.shared).ptys.len() == 1).then_some(())
+    })
+    .await;
+    first.close(None).await.ok();
+    until("the first shell removed", async || {
+        locked(&world.shared)
+            .removed
+            .contains(&"pty_fake1".to_owned())
+            .then_some(())
+    })
+    .await;
+
+    let mut second = open_terminal(&world, &session, &token).await;
+    until("the second shell", async || {
+        (locked(&world.shared).ptys.len() == 2).then_some(())
+    })
+    .await;
+    let stopped = reqwest::Client::new()
+        .post(format!("{}/sessions/{}/stop", world.server, session.id))
+        .bearer_auth(&token)
+        .json(&json!({}))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(stopped.status(), 200);
+    assert!(matches!(
+        frame(&mut second).await,
+        None | Some(tokio_tungstenite::tungstenite::Message::Close(_))
+    ));
 }
