@@ -23,7 +23,7 @@ Every light board, by canvas row (each has a generated `XDark` twin except the r
 | Components (parts) | `Sidebar`, `SettingsRail`, `SidebarRows`, `SidebarTop`, `SidebarFoot`, `SidebarEmpty` |
 | 1 Sign in | `SignIn`, `SignInError`, `SignInNoAccess` |
 | 2 Home | `Home`, `HomeEmpty` |
-| 3 Session | `SessionStart`, `SessionWorking`, `SessionChanges`, `SessionTerminal`, `SessionPreview`, `SessionFiles`, `SessionShare`, `SessionTitleMenu`, `SessionSpawned`, `SessionBudget`, `SessionCredential`, `SessionConnectorTool`, `SessionRepo`, `SessionFailed`, `SessionReadOnly`, `SessionComposerExpanded`, `SessionAgentMenu`, `SessionToolCalls`, `SessionOverview`, `SessionEnvironment`, `SessionEnvironmentCard` |
+| 3 Session | `SessionStart`, `SessionWorking`, `SessionChanges`, `SessionTerminal`, `SessionPreview`, `SessionFiles`, `SessionShare`, `SessionTitleMenu`, `SessionSpawned`, `SessionBudget`, `SessionCredential`, `SessionConnectorTool`, `SessionRepo`, `SessionFailed`, `SessionReadOnly`, `SessionComposerExpanded`, `SessionAgentMenu`, `SessionModelMenu`, `SessionModelEffort`, `SessionModelMore`, `SessionToolCalls`, `SessionOverview`, `SessionEnvironment`, `SessionEnvironmentCard` |
 | 5 Search | `SearchStart`, `Search`, `SearchEmpty` |
 | 6 Projects | `Projects`, `Project`, `ProjectEmpty` |
 | 6 Customize | `Skills`, `SkillsEmpty`, `SkillDetail`, `AddSkill`, `Connectors`, `ConnectorsEmpty`, `ConnectorDetail`, `AddConnector`, `ConnectorError`, `ConnectorRemove`, `Agents`, `AgentsEmpty`, `AgentsDiscover`, `AgentDetail`, `AddAgent`, `Plugins`, `PluginsEmpty`, `PluginDetail`, `AddPlugin`, `PluginRemove` |
